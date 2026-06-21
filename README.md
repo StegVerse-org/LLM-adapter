@@ -1,25 +1,49 @@
 # StegVerse LLM Adapter
 
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
-![License](https://img.shields.io/github/license/StegVerse-org/LLM-adapter)
+![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
 
 Release: v2.1
 
-The dual-purpose governance bridge between AI-generated content and StegVerse execution. Translates LLM outputs into canonical intents and evaluates them through the full safety stack before any code touches reality.
+`LLM-adapter` is the SDK-adjacent intake bridge for converting LLM outputs into StegVerse route-ready governance artifacts.
 
-## Dual Purpose
+The adapter does not execute LLM output directly. It normalizes output, classifies risk, produces a governance decision, and prepares admissible outputs for receipt-bound routing through the StegVerse formal testing path.
 
-| Purpose | Function |
-|---------|----------|
-| **Governance Ingress** | LLM output → canonical intent → safety stack → decision |
-| **Ecosystem Optimization** | Ecosystem metrics → LLM analysis → optimization → decision |
+---
 
-## Security Features
+## Boundary rule
 
-- **20 dangerous pattern detectors** — Automatic DENY for `os.system`, `eval`, `pickle`, `socket`, etc.
-- **Code complexity scoring** — Penalizes high-risk outputs
-- **Test/docs detection** — Rewards observable, documented code
-- **GCAT state computation** — Derives governance scores from output characteristics
+```text
+LLM output is not execution.
+Execution is not authority.
+Authority is not admissibility.
+Admissibility must be tested before consequence attaches.
+```
+
+The adapter must not create endorsement, validation, compatibility recognition, provenance recognition, collaboration, or public attribution from private review or external discussion.
+
+---
+
+## Roles
+
+| Role | Function |
+|---|---|
+| Governance ingress | LLM output → canonical intent → safety classification → decision |
+| SDK-side adapter | User / LLM Adapter submission → manifest-ready package |
+| Test-route feeder | Route admissible packages into SDK / ingestion / sandbox testing paths |
+
+---
+
+## Security features
+
+- dangerous-pattern detection for high-risk generated code;
+- code complexity scoring;
+- test and documentation signal detection;
+- GCAT/BCAT-style governance score computation;
+- deterministic decision output: `ADMIT`, `DENY`, or `DEFER`;
+- receipt-ready result structure.
+
+---
 
 ## Install
 
@@ -27,51 +51,59 @@ The dual-purpose governance bridge between AI-generated content and StegVerse ex
 pip install stegverse-llm-adapter
 ```
 
-## Quick Start
+---
+
+## Quick start
 
 ```python
 from llm_adapter import StegVerseLLMAdapter, LLMProvider
 
 adapter = StegVerseLLMAdapter()
 
-# Govern LLM-generated code
 result = adapter.govern_llm_output(
     provider=LLMProvider.OPENAI,
     model="gpt-4",
     prompt="Write a hello function",
-    output=llm_output
+    output=llm_output,
 )
 
 print(result["decision"])   # ADMIT | DENY | DEFER
-print(result["receipt"])    # verifiable hash
-print(result["gcat_score"]) # legitimacy surplus
+print(result["receipt"])    # verifiable hash / receipt-ready reference
+print(result["gcat_score"]) # governance score
 ```
 
-### Ecosystem Optimization
+---
 
-```python
-result = adapter.optimize_ecosystem(
-    ecosystem_metrics={"cpu": 0.85, "memory": 0.90, "cost_ratio": 0.8},
-    llm_analysis="System approaching limits",
-    proposed_changes={"type": "scale", "cost_increase": 5000}
-)
+## Formal route position
+
+```text
+User / LLM system
+→ LLM-adapter
+→ StegVerse-SDK intake
+→ manifest binding
+→ receipt binding
+→ StegVerse-org ingestion
+→ bounded test route
+→ returned result / reconstruction packet
 ```
+
+For adversarial or entity-specific tests, the bounded downstream route is `StegGhost/entity-sandbox-runner` after SDK intake.
+
+---
 
 ## Integration
 
 | System | Role |
-|--------|------|
-| StegVerse-SDK | Public API surface |
-| Trust Kernel | Governance evaluation |
-| Safety Stack | Layer 1 (Mathematical) |
-| demo_ingest_engine | LLM output ingestion |
-| StegDB | Adapter state monitoring |
+|---|---|
+| `StegVerse-org/StegVerse-SDK` | Public SDK intake boundary |
+| `StegVerse-org/demo_ingest_engine` | Org-side orchestration / result-return boundary |
+| `StegGhost/entity-sandbox-runner` | Bounded sandbox test path |
+| Trust Kernel | Private authority-bearing governance kernel |
+| StegVerse Admission | Private admission / threshold layer |
+
+---
 
 ## Links
 
 - Repository: https://github.com/StegVerse-org/LLM-adapter
 - Issues: https://github.com/StegVerse-org/LLM-adapter/issues
-
----
-
-**StegVerse: Execution is not assumed. Execution is admitted.**
