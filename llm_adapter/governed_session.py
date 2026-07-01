@@ -2,9 +2,9 @@
 
 A governed session joins provider request normalization, continuity search,
 provider output handling, adapter receipt generation, commit-time action routing,
-and non-authorizing commitment request generation into one deterministic runtime
-surface. Live provider clients can be injected later while preserving the same
-governance boundary.
+non-authorizing commitment request generation, and non-executing authority
+evaluation into one deterministic runtime surface. Live provider clients can be
+injected later while preserving the same governance boundary.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Mapping, Optional, Sequence
 
 from .action_router import build_action_route_packet
+from .authority_client import AuthorityClient, evaluate_commitment_request
 from .commitment_request import build_commitment_request
 from .continuity_search import FixtureContinuitySearch
 from .governed_adapter import GovernedLLMAdapter
@@ -34,6 +35,7 @@ class GovernedSessionResult:
     adapter_result: dict[str, Any]
     action_route: dict[str, Any]
     commitment_request: dict[str, Any]
+    authority_decision: dict[str, str]
     schema_version: str = SESSION_SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, Any]:
@@ -54,6 +56,7 @@ def run_governed_session(
     temperature: float = 0.0,
     metadata: Optional[Mapping[str, Any]] = None,
     action_target: str = "unresolved",
+    authority_client: Optional[AuthorityClient] = None,
 ) -> GovernedSessionResult:
     """Run a complete governed response session with fixture provider output."""
 
@@ -74,6 +77,7 @@ def run_governed_session(
         policy=policy,
         delegation=delegation,
         action_target=action_target,
+        authority_client=authority_client,
     )
 
 
@@ -85,6 +89,7 @@ def run_governed_request_session(
     policy: Optional[Mapping[str, Any]] = None,
     delegation: Optional[Mapping[str, Any]] = None,
     action_target: str = "unresolved",
+    authority_client: Optional[AuthorityClient] = None,
 ) -> GovernedSessionResult:
     """Run a complete governed response session from a normalized request."""
 
@@ -96,6 +101,7 @@ def run_governed_request_session(
         policy=policy,
         delegation=delegation,
         action_target=action_target,
+        authority_client=authority_client,
     )
 
 
@@ -107,6 +113,7 @@ def run_governed_response_session(
     policy: Optional[Mapping[str, Any]] = None,
     delegation: Optional[Mapping[str, Any]] = None,
     action_target: str = "unresolved",
+    authority_client: Optional[AuthorityClient] = None,
 ) -> GovernedSessionResult:
     """Govern an already-created provider response envelope."""
 
@@ -145,6 +152,10 @@ def run_governed_response_session(
         session_result=partial_session,
         target=action_target,
     )
+    authority_decision = evaluate_commitment_request(
+        commitment_request,
+        authority_client=authority_client,
+    )
     return GovernedSessionResult(
         provider_request=request.to_dict(),
         provider_request_hash=request.request_hash,
@@ -153,6 +164,7 @@ def run_governed_response_session(
         adapter_result=adapter_result.to_dict(),
         action_route=action_route.to_dict(),
         commitment_request=commitment_request,
+        authority_decision=authority_decision,
     )
 
 
