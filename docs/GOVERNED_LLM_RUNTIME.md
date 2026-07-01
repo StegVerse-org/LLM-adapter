@@ -23,9 +23,10 @@ The runtime path is installed when:
 11. action-bearing outputs create non-authorizing commitment requests;
 12. commitment requests receive non-executing authority decisions;
 13. authority decisions produce disabled execution handoffs;
-14. action-bearing outputs are quarantined until commit-time authority is established;
-15. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
-16. the result contains a reconstruction summary for future continuity search.
+14. fixture files can run through the full chain via CLI;
+15. action-bearing outputs are quarantined until commit-time authority is established;
+16. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
+17. the result contains a reconstruction summary for future continuity search.
 
 ## Runtime Flow
 
@@ -68,6 +69,22 @@ run_governed_session
 ```
 
 This is the preferred local test and demo path until live provider, service-backed continuity-search, and separately reviewed external executor integrations are installed.
+
+## CLI Boundary
+
+The package exposes:
+
+```text
+stegverse-llm-adapter
+```
+
+The CLI runs a JSON fixture through the same governed session path and prints the full receipt packet.
+
+```bash
+stegverse-llm-adapter fixtures/governed_response_fixture.json --pretty
+```
+
+The CLI does not call a live model provider and does not execute side effects.
 
 ## Provider Request Boundary
 
