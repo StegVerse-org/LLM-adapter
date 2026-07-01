@@ -26,6 +26,7 @@ classifiers = [
 dependencies = [
     "requests>=2.28.0",
     "pydantic>=2.0",
+    "stegverse-sdk>=1.0.13",
 ]
 
 [project.optional-dependencies]
@@ -37,3 +38,7 @@ dev = [
 Homepage = "https://github.com/StegVerse-org/LLM-adapter"
 Repository = "https://github.com/StegVerse-org/LLM-adapter"
 Issues = "https://github.com/StegVerse-org/LLM-adapter/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["llm_adapter*"]
