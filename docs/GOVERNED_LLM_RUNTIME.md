@@ -4,7 +4,7 @@
 
 `LLM-adapter` converts candidate model output into StegVerse-governed response artifacts.
 
-It does not make the LLM an authority. It classifies the transition, binds the evidence state, and emits a receipt-ready result that can be routed through SDK intake or downstream commit-time governance.
+It does not make the LLM an authority. It classifies the transition, binds the evidence state, emits a receipt-ready result, and routes consequence-bearing outputs to commit-time authority without executing them.
 
 ## Definition of Done
 
@@ -15,13 +15,14 @@ The runtime path is installed when:
 3. provider responses can be represented as request-bound output envelopes;
 4. retrieval evidence can be represented as pointers and hashes instead of duplicated payloads;
 5. continuity-search evidence can be resolved through a deterministic boundary;
-6. a one-call governed session can join request, provider response, continuity, receipt, and reconstruction;
+6. a one-call governed session can join request, provider response, continuity, receipt, reconstruction, and action routing;
 7. the adapter creates a query packet through `stegverse.governed_llm`;
 8. the adapter returns `ALLOW`, `DENY`, or `QUARANTINE`;
 9. read-only answers receive response receipts;
-10. action-bearing outputs are quarantined until commit-time authority is established;
-11. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
-12. the result contains a reconstruction summary for future continuity search.
+10. action-bearing outputs become non-executing action candidates;
+11. action-bearing outputs are quarantined until commit-time authority is established;
+12. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
+13. the result contains a reconstruction summary for future continuity search.
 
 ## Runtime Flow
 
@@ -38,6 +39,7 @@ provider request envelope
   -> adapter decision
   -> SDK governed response receipt
   -> reconstruction summary
+  -> action route packet
   -> user or downstream route
 ```
 
@@ -53,6 +55,7 @@ run_governed_session
   -> governed adapter decision
   -> response receipt
   -> reconstruction summary
+  -> action route packet
 ```
 
 This is the preferred local test and demo path until live provider and service-backed continuity-search integrations are installed.
@@ -128,6 +131,34 @@ FixtureContinuitySearch
 
 A later service-backed continuity-search engine should preserve the same boundary shape while replacing fixture lookup with indexed receipt and state retrieval.
 
+## Commit-Time Action Route Boundary
+
+`llm_adapter.action_router` turns high-consequence output into non-executing action candidates.
+
+The action route records:
+
+```text
+route_status
+action_candidates
+action_candidate_hashes
+adapter_decision
+adapter_admissibility_status
+```
+
+The action candidate records:
+
+```text
+action_type
+target
+basis_hash
+requested_by
+status
+notes
+candidate_hash
+```
+
+No commit, send, publish, memory mutation, or execution is performed by this router. It only produces a downstream route packet for authority-bearing governance.
+
 ## Decision Rules
 
 | Condition | Decision | Meaning |
@@ -136,6 +167,7 @@ A later service-backed continuity-search engine should preserve the same boundar
 | Provider response request hash mismatch | `ERROR` | The governed session fails before adapter governance. |
 | Low-risk read-only candidate | `ALLOW` | The response may be returned with reconstruction receipt. |
 | High-risk/action-bearing candidate | `QUARANTINE` | The output needs downstream commit-time standing before consequence attaches. |
+| Action-bearing output detected | `route_to_commit_time_authority` | The result contains an action candidate but no side effect occurs. |
 | Stale, revoked, or superseded evidence | `QUARANTINE` | History may be reconstructable, but current authority requires fresh retrieval. |
 
 ## Usage
@@ -146,25 +178,18 @@ from llm_adapter import run_governed_session
 result = run_governed_session(
     provider="example",
     model="example-model",
-    messages=[{"role": "user", "content": "Can the prior answer be reused?"}],
-    candidate_output="The prior answer is reconstructable but requires fresh retrieval before execution.",
-    allowed_sources=("receipt_index",),
-    evidence_fixtures=[
-        {
-            "source_type": "receipt",
-            "pointer": "master-records://example/receipt/1",
-            "payload": {"state": "historical_only"},
-            "freshness": "stale",
-            "retrieved_at": "2026-07-01T00:00:00+00:00",
-        }
-    ],
-    policy={"policy": "freshness-required"},
+    messages=[{"role": "user", "content": "Commit this governed adapter change."}],
+    candidate_output="Prepared a patch candidate. Do not commit until authority passes.",
+    purpose="execute",
+    allowed_sources=("repo_write",),
+    policy={"policy": "commit-gated"},
     delegation={"adapter": "read"},
+    action_target="repo://StegVerse-org/LLM-adapter",
 ).to_dict()
 
 print(result["adapter_result"]["decision"])
-print(result["adapter_result"]["response_receipt"])
-print(result["adapter_result"]["reconstruction"])
+print(result["action_route"]["route_status"])
+print(result["action_route"]["action_candidates"])
 ```
 
 ## Boundary
@@ -174,6 +199,7 @@ The provider request is not execution.
 The provider response is not authority.
 The governed session is not provider execution.
 The adapter governs candidate output.
+The action route is not execution.
 The SDK provides shared packet and receipt contracts.
 Continuity search reconstructs historical state.
 Commit-time governance determines whether consequence may attach.
