@@ -1,0 +1,42 @@
+{
+  "schema_version": "stegverse.llm_adapter.capabilities.v0.1",
+  "repo": "StegVerse-org/LLM-adapter",
+  "status": "adapter-boundary-complete",
+  "runtime_surfaces": {
+    "provider_request_envelope": "built",
+    "fixture_provider": "built",
+    "http_provider_clients": "built_optional_fail_closed",
+    "fixture_continuity_search": "built",
+    "service_continuity_search": "built_optional_fail_closed",
+    "governed_response_receipts": "built",
+    "action_router": "built_non_executing",
+    "commitment_request": "built_non_authorizing",
+    "authority_client": "built_non_executing_fail_closed_default",
+    "execution_gateway": "built_disabled_default",
+    "cli_fixture_runner": "built"
+  },
+  "explicit_non_claims": [
+    "No provider output is treated as authority.",
+    "No commitment request grants execution authority.",
+    "No authority decision performs side effects.",
+    "No execution gateway performs side effects by default.",
+    "Service-backed continuity search is an evidence source, not output authority."
+  ],
+  "required_external_integrations": {
+    "live_provider_credentials": [
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY"
+    ],
+    "continuity_search_service": [
+      "STEGVERSE_CONTINUITY_SEARCH_URL",
+      "STEGVERSE_CONTINUITY_SEARCH_KEY optional"
+    ],
+    "external_executor": "not included; must be separately governed"
+  },
+  "local_verification": {
+    "unit_tests": "pytest",
+    "cli_fixture": "stegverse-llm-adapter fixtures/governed_response_fixture.json --pretty",
+    "smoke_script": "python scripts/smoke_governed_session.py"
+  },
+  "activation_definition": "A fixture or provider response can move through provider request, continuity evidence, adapter receipt, action route, commitment request, authority decision, and disabled execution handoff without side effects."
+}
