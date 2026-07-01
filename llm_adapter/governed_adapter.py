@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping, Optional, Sequence
 
 try:
     from stegverse.governed_llm import (
@@ -68,12 +68,12 @@ class GovernedLLMAdapter:
         candidate_output: str,
         allowed_sources: Sequence[str] = ("model_knowledge",),
         evidence: Sequence[Any] = (),
-        purpose: str | None = None,
+        purpose: Optional[str] = None,
         transition_class: str = "candidate_response",
-        policy: Mapping[str, Any] | None = None,
-        delegation: Mapping[str, Any] | None = None,
-        model_provider: str | None = None,
-        model_name: str | None = None,
+        policy: Optional[Mapping[str, Any]] = None,
+        delegation: Optional[Mapping[str, Any]] = None,
+        model_provider: Optional[str] = None,
+        model_name: Optional[str] = None,
     ) -> GovernedAdapterResult:
         """Return a receipt-ready governance result for a candidate response."""
 
