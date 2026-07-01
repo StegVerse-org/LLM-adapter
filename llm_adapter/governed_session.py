@@ -2,9 +2,10 @@
 
 A governed session joins provider request normalization, continuity search,
 provider output handling, adapter receipt generation, commit-time action routing,
-non-authorizing commitment request generation, and non-executing authority
-evaluation into one deterministic runtime surface. Live provider clients can be
-injected later while preserving the same governance boundary.
+non-authorizing commitment request generation, non-executing authority
+evaluation, and disabled execution handoff into one deterministic runtime
+surface. Live provider clients can be injected later while preserving the same
+governance boundary.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from .action_router import build_action_route_packet
 from .authority_client import AuthorityClient, evaluate_commitment_request
 from .commitment_request import build_commitment_request
 from .continuity_search import FixtureContinuitySearch
+from .execution_gateway import ExecutionGateway, prepare_execution_handoff
 from .governed_adapter import GovernedLLMAdapter
 from .provider_client import FixtureProviderClient, ProviderClient, ProviderResponse
 from .provider_request import ProviderRequest, build_provider_request
@@ -36,6 +38,7 @@ class GovernedSessionResult:
     action_route: dict[str, Any]
     commitment_request: dict[str, Any]
     authority_decision: dict[str, str]
+    execution_handoff: dict[str, str]
     schema_version: str = SESSION_SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, Any]:
@@ -57,6 +60,7 @@ def run_governed_session(
     metadata: Optional[Mapping[str, Any]] = None,
     action_target: str = "unresolved",
     authority_client: Optional[AuthorityClient] = None,
+    execution_gateway: Optional[ExecutionGateway] = None,
 ) -> GovernedSessionResult:
     """Run a complete governed response session with fixture provider output."""
 
@@ -78,6 +82,7 @@ def run_governed_session(
         delegation=delegation,
         action_target=action_target,
         authority_client=authority_client,
+        execution_gateway=execution_gateway,
     )
 
 
@@ -90,6 +95,7 @@ def run_governed_request_session(
     delegation: Optional[Mapping[str, Any]] = None,
     action_target: str = "unresolved",
     authority_client: Optional[AuthorityClient] = None,
+    execution_gateway: Optional[ExecutionGateway] = None,
 ) -> GovernedSessionResult:
     """Run a complete governed response session from a normalized request."""
 
@@ -102,6 +108,7 @@ def run_governed_request_session(
         delegation=delegation,
         action_target=action_target,
         authority_client=authority_client,
+        execution_gateway=execution_gateway,
     )
 
 
@@ -114,6 +121,7 @@ def run_governed_response_session(
     delegation: Optional[Mapping[str, Any]] = None,
     action_target: str = "unresolved",
     authority_client: Optional[AuthorityClient] = None,
+    execution_gateway: Optional[ExecutionGateway] = None,
 ) -> GovernedSessionResult:
     """Govern an already-created provider response envelope."""
 
@@ -156,6 +164,11 @@ def run_governed_response_session(
         commitment_request,
         authority_client=authority_client,
     )
+    execution_handoff = prepare_execution_handoff(
+        commitment_request=commitment_request,
+        authority_decision=authority_decision,
+        gateway=execution_gateway,
+    )
     return GovernedSessionResult(
         provider_request=request.to_dict(),
         provider_request_hash=request.request_hash,
@@ -165,6 +178,7 @@ def run_governed_response_session(
         action_route=action_route.to_dict(),
         commitment_request=commitment_request,
         authority_decision=authority_decision,
+        execution_handoff=execution_handoff,
     )
 
 
