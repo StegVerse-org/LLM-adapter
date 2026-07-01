@@ -6,6 +6,10 @@ from .action_router import (
     build_action_route_packet,
     infer_action_type,
 )
+from .commitment_request import (
+    CommitmentRequestPacket,
+    build_commitment_request,
+)
 from .continuity_search import (
     ContinuitySearchResult,
     FixtureContinuitySearch,
@@ -46,6 +50,7 @@ __all__ = [
     "ActionCandidate",
     "ActionRoutePacket",
     "AdapterDecision",
+    "CommitmentRequestPacket",
     "ContinuitySearchResult",
     "EvidencePointer",
     "FixtureContinuitySearch",
@@ -58,6 +63,7 @@ __all__ = [
     "ProviderRequest",
     "ProviderResponse",
     "build_action_route_packet",
+    "build_commitment_request",
     "build_provider_request",
     "continuity_result_from_fixtures",
     "evidence_from_fixture",
