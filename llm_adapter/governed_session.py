@@ -1,9 +1,10 @@
 """One-call governed session runner.
 
 A governed session joins provider request normalization, continuity search,
-provider output handling, adapter receipt generation, and commit-time action
-routing into one deterministic runtime surface. Live provider clients can be
-injected later while preserving the same governance boundary.
+provider output handling, adapter receipt generation, commit-time action routing,
+and non-authorizing commitment request generation into one deterministic runtime
+surface. Live provider clients can be injected later while preserving the same
+governance boundary.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Mapping, Optional, Sequence
 
 from .action_router import build_action_route_packet
+from .commitment_request import build_commitment_request
 from .continuity_search import FixtureContinuitySearch
 from .governed_adapter import GovernedLLMAdapter
 from .provider_client import FixtureProviderClient, ProviderClient, ProviderResponse
@@ -31,6 +33,7 @@ class GovernedSessionResult:
     continuity: dict[str, Any]
     adapter_result: dict[str, Any]
     action_route: dict[str, Any]
+    commitment_request: dict[str, Any]
     schema_version: str = SESSION_SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, Any]:
@@ -130,6 +133,18 @@ def run_governed_response_session(
         purpose=request.purpose,
         target=action_target,
     )
+    partial_session = {
+        "provider_request": request.to_dict(),
+        "provider_request_hash": request.request_hash,
+        "provider_response": provider_response.to_dict(),
+        "continuity": continuity.to_dict(),
+        "adapter_result": adapter_result.to_dict(),
+        "action_route": action_route.to_dict(),
+    }
+    commitment_request = build_commitment_request(
+        session_result=partial_session,
+        target=action_target,
+    )
     return GovernedSessionResult(
         provider_request=request.to_dict(),
         provider_request_hash=request.request_hash,
@@ -137,6 +152,7 @@ def run_governed_response_session(
         continuity=continuity.to_dict(),
         adapter_result=adapter_result.to_dict(),
         action_route=action_route.to_dict(),
+        commitment_request=commitment_request,
     )
 
 
