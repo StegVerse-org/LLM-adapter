@@ -6,6 +6,12 @@ from .action_router import (
     build_action_route_packet,
     infer_action_type,
 )
+from .authority_client import (
+    AuthorityClient,
+    AuthorityDecision,
+    FixtureAuthorityClient,
+    evaluate_commitment_request,
+)
 from .commitment_request import (
     CommitmentRequestPacket,
     build_commitment_request,
@@ -50,9 +56,12 @@ __all__ = [
     "ActionCandidate",
     "ActionRoutePacket",
     "AdapterDecision",
+    "AuthorityClient",
+    "AuthorityDecision",
     "CommitmentRequestPacket",
     "ContinuitySearchResult",
     "EvidencePointer",
+    "FixtureAuthorityClient",
     "FixtureContinuitySearch",
     "FixtureProviderClient",
     "GovernedAdapterResult",
@@ -66,6 +75,7 @@ __all__ = [
     "build_commitment_request",
     "build_provider_request",
     "continuity_result_from_fixtures",
+    "evaluate_commitment_request",
     "evidence_from_fixture",
     "evidence_from_payload",
     "evidence_list_from_fixtures",
