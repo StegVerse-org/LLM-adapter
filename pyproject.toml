@@ -34,6 +34,9 @@ dev = [
     "pytest>=7.0",
 ]
 
+[project.scripts]
+stegverse-llm-adapter = "llm_adapter.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/StegVerse-org/LLM-adapter"
 Repository = "https://github.com/StegVerse-org/LLM-adapter"
