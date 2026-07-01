@@ -13,6 +13,11 @@ from .governed_adapter import (
     GovernedLLMAdapter,
     govern_response,
 )
+from .governed_session import (
+    GovernedSessionResult,
+    run_governed_request_session,
+    run_governed_session,
+)
 from .provider_request import (
     ProviderMessage,
     ProviderRequest,
@@ -32,6 +37,7 @@ __all__ = [
     "FixtureContinuitySearch",
     "GovernedAdapterResult",
     "GovernedLLMAdapter",
+    "GovernedSessionResult",
     "ProviderMessage",
     "ProviderRequest",
     "build_provider_request",
@@ -43,4 +49,6 @@ __all__ = [
     "normalize_messages",
     "run_fixture",
     "run_fixture_file",
+    "run_governed_request_session",
+    "run_governed_session",
 ]
