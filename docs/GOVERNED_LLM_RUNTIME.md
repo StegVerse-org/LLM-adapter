@@ -4,7 +4,7 @@
 
 `LLM-adapter` converts candidate model output into StegVerse-governed response artifacts.
 
-It does not make the LLM an authority. It classifies the transition, binds the evidence state, emits a receipt-ready result, and routes consequence-bearing outputs to commit-time authority without executing them.
+It does not make the LLM an authority. It classifies the transition, binds the evidence state, emits a receipt-ready result, routes consequence-bearing outputs to commit-time authority, and builds non-authorizing commitment requests without executing them.
 
 ## Definition of Done
 
@@ -15,14 +15,15 @@ The runtime path is installed when:
 3. provider responses can be represented as request-bound output envelopes;
 4. retrieval evidence can be represented as pointers and hashes instead of duplicated payloads;
 5. continuity-search evidence can be resolved through a deterministic boundary;
-6. a one-call governed session can join request, provider response, continuity, receipt, reconstruction, and action routing;
+6. a one-call governed session can join request, provider response, continuity, receipt, reconstruction, action routing, and commitment request generation;
 7. the adapter creates a query packet through `stegverse.governed_llm`;
 8. the adapter returns `ALLOW`, `DENY`, or `QUARANTINE`;
 9. read-only answers receive response receipts;
 10. action-bearing outputs become non-executing action candidates;
-11. action-bearing outputs are quarantined until commit-time authority is established;
-12. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
-13. the result contains a reconstruction summary for future continuity search.
+11. action-bearing outputs create non-authorizing commitment requests;
+12. action-bearing outputs are quarantined until commit-time authority is established;
+13. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
+14. the result contains a reconstruction summary for future continuity search.
 
 ## Runtime Flow
 
@@ -40,6 +41,7 @@ provider request envelope
   -> SDK governed response receipt
   -> reconstruction summary
   -> action route packet
+  -> commitment request packet
   -> user or downstream route
 ```
 
@@ -56,6 +58,7 @@ run_governed_session
   -> response receipt
   -> reconstruction summary
   -> action route packet
+  -> commitment request packet
 ```
 
 This is the preferred local test and demo path until live provider and service-backed continuity-search integrations are installed.
@@ -159,6 +162,25 @@ candidate_hash
 
 No commit, send, publish, memory mutation, or execution is performed by this router. It only produces a downstream route packet for authority-bearing governance.
 
+## Commitment Request Boundary
+
+`llm_adapter.commitment_request` packages routed action candidates into a non-authorizing request for downstream standing checks.
+
+The commitment request records:
+
+```text
+status
+target
+action_route_hash
+action_candidates
+adapter_reconstruction_hash
+provider_request_hash
+provider_response_hash
+commitment_request_hash
+```
+
+A commitment request is not execution authority. It is the handoff object for a downstream governance layer to decide whether the action may attach consequence at commit time.
+
 ## Decision Rules
 
 | Condition | Decision | Meaning |
@@ -168,6 +190,7 @@ No commit, send, publish, memory mutation, or execution is performed by this rou
 | Low-risk read-only candidate | `ALLOW` | The response may be returned with reconstruction receipt. |
 | High-risk/action-bearing candidate | `QUARANTINE` | The output needs downstream commit-time standing before consequence attaches. |
 | Action-bearing output detected | `route_to_commit_time_authority` | The result contains an action candidate but no side effect occurs. |
+| Action route exists | `requires_downstream_commit_time_standing` | A non-authorizing commitment request is emitted. |
 | Stale, revoked, or superseded evidence | `QUARANTINE` | History may be reconstructable, but current authority requires fresh retrieval. |
 
 ## Usage
@@ -189,7 +212,7 @@ result = run_governed_session(
 
 print(result["adapter_result"]["decision"])
 print(result["action_route"]["route_status"])
-print(result["action_route"]["action_candidates"])
+print(result["commitment_request"]["status"])
 ```
 
 ## Boundary
@@ -200,6 +223,7 @@ The provider response is not authority.
 The governed session is not provider execution.
 The adapter governs candidate output.
 The action route is not execution.
+The commitment request is not authority.
 The SDK provides shared packet and receipt contracts.
 Continuity search reconstructs historical state.
 Commit-time governance determines whether consequence may attach.
