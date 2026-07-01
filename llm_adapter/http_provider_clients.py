@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional
+from typing import Any, Optional, Union
 
 import requests
 
@@ -47,7 +47,7 @@ class OpenAIHTTPProviderClient:
         response = requests.post(
             self.base_url,
             headers={
-                "Authorization": f"Bearer {api_key}",
+                "Authorization": "Bearer {}".format(api_key),
                 "Content-Type": "application/json",
             },
             json=payload,
@@ -129,7 +129,7 @@ def build_http_provider_client(
     provider: str,
     *,
     api_key: Optional[str] = None,
-) -> OpenAIHTTPProviderClient | AnthropicHTTPProviderClient:
+) -> Union[OpenAIHTTPProviderClient, AnthropicHTTPProviderClient]:
     """Build a live HTTP provider client by provider name."""
 
     normalized = provider.lower().strip()
@@ -137,7 +137,7 @@ def build_http_provider_client(
         return OpenAIHTTPProviderClient(api_key=api_key)
     if normalized in {"anthropic", "claude", "anthropic_http"}:
         return AnthropicHTTPProviderClient(api_key=api_key)
-    raise ValueError(f"unsupported provider for HTTP client: {provider}")
+    raise ValueError("unsupported provider for HTTP client: {}".format(provider))
 
 
 __all__ = [
