@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import asdict, dataclass
-from typing import Any, Mapping, Protocol
+from dataclasses import dataclass
+from typing import Any, Mapping, Optional, Protocol
 
 from .provider_request import ProviderRequest
 
@@ -78,7 +78,7 @@ class FixtureProviderClient:
     """Deterministic provider for local tests and governed fixture sessions."""
 
     output: str
-    metadata: Mapping[str, Any] | None = None
+    metadata: Optional[Mapping[str, Any]] = None
 
     def complete(self, request: ProviderRequest) -> ProviderResponse:
         return ProviderResponse(
