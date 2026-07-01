@@ -12,26 +12,29 @@ The runtime path is installed when:
 
 1. a user query and candidate output can enter the adapter;
 2. provider request metadata can be normalized before any model call;
-3. retrieval evidence can be represented as pointers and hashes instead of duplicated payloads;
-4. continuity-search evidence can be resolved through a deterministic boundary;
-5. a one-call governed session can join request, continuity, candidate output, receipt, and reconstruction;
-6. the adapter creates a query packet through `stegverse.governed_llm`;
-7. the adapter returns `ALLOW`, `DENY`, or `QUARANTINE`;
-8. read-only answers receive response receipts;
-9. action-bearing outputs are quarantined until commit-time authority is established;
-10. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
-11. the result contains a reconstruction summary for future continuity search.
+3. provider responses can be represented as request-bound output envelopes;
+4. retrieval evidence can be represented as pointers and hashes instead of duplicated payloads;
+5. continuity-search evidence can be resolved through a deterministic boundary;
+6. a one-call governed session can join request, provider response, continuity, receipt, and reconstruction;
+7. the adapter creates a query packet through `stegverse.governed_llm`;
+8. the adapter returns `ALLOW`, `DENY`, or `QUARANTINE`;
+9. read-only answers receive response receipts;
+10. action-bearing outputs are quarantined until commit-time authority is established;
+11. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
+12. the result contains a reconstruction summary for future continuity search.
 
 ## Runtime Flow
 
 ```text
 provider request envelope
+  -> provider client boundary
+  -> provider response envelope
+  -> request-hash match check
   -> query extraction
   -> allowed source map
   -> continuity search boundary
   -> evidence pointers
   -> SDK governed query packet
-  -> candidate model output
   -> adapter decision
   -> SDK governed response receipt
   -> reconstruction summary
@@ -45,6 +48,7 @@ provider request envelope
 ```text
 run_governed_session
   -> provider request envelope
+  -> fixture provider response
   -> fixture continuity search
   -> governed adapter decision
   -> response receipt
@@ -71,6 +75,23 @@ request_hash
 ```
 
 It does not execute the provider call and does not store credentials.
+
+## Provider Client Boundary
+
+`llm_adapter.provider_client` defines the provider output seam.
+
+The provider response records:
+
+```text
+provider
+model
+output
+request_hash
+metadata
+response_hash
+```
+
+A provider response must match the request hash before the governed session proceeds. Fixture provider clients are deterministic and local; live provider clients should implement the same boundary and return through adapter governance before any user-visible or downstream effect.
 
 ## Retrieval Evidence Boundary
 
@@ -112,6 +133,7 @@ A later service-backed continuity-search engine should preserve the same boundar
 | Condition | Decision | Meaning |
 | --- | --- | --- |
 | Empty output | `DENY` | Nothing can be admitted without emitted content. |
+| Provider response request hash mismatch | `ERROR` | The governed session fails before adapter governance. |
 | Low-risk read-only candidate | `ALLOW` | The response may be returned with reconstruction receipt. |
 | High-risk/action-bearing candidate | `QUARANTINE` | The output needs downstream commit-time standing before consequence attaches. |
 | Stale, revoked, or superseded evidence | `QUARANTINE` | History may be reconstructable, but current authority requires fresh retrieval. |
@@ -149,6 +171,7 @@ print(result["adapter_result"]["reconstruction"])
 
 ```text
 The provider request is not execution.
+The provider response is not authority.
 The governed session is not provider execution.
 The adapter governs candidate output.
 The SDK provides shared packet and receipt contracts.
