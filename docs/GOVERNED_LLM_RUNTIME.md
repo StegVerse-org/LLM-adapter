@@ -4,7 +4,7 @@
 
 `LLM-adapter` converts candidate model output into StegVerse-governed response artifacts.
 
-It does not make the LLM an authority. It classifies the transition, binds the evidence state, emits a receipt-ready result, routes consequence-bearing outputs to commit-time authority, builds non-authorizing commitment requests, and records non-executing authority decisions without executing them.
+It does not make the LLM an authority. It classifies the transition, binds the evidence state, emits a receipt-ready result, routes consequence-bearing outputs to commit-time authority, builds non-authorizing commitment requests, records non-executing authority decisions, and prepares disabled execution handoffs without executing them.
 
 ## Definition of Done
 
@@ -15,16 +15,17 @@ The runtime path is installed when:
 3. provider responses can be represented as request-bound output envelopes;
 4. retrieval evidence can be represented as pointers and hashes instead of duplicated payloads;
 5. continuity-search evidence can be resolved through a deterministic boundary;
-6. a one-call governed session can join request, provider response, continuity, receipt, reconstruction, action routing, commitment request generation, and authority decision capture;
+6. a one-call governed session can join request, provider response, continuity, receipt, reconstruction, action routing, commitment request generation, authority decision capture, and execution handoff generation;
 7. the adapter creates a query packet through `stegverse.governed_llm`;
 8. the adapter returns `ALLOW`, `DENY`, or `QUARANTINE`;
 9. read-only answers receive response receipts;
 10. action-bearing outputs become non-executing action candidates;
 11. action-bearing outputs create non-authorizing commitment requests;
 12. commitment requests receive non-executing authority decisions;
-13. action-bearing outputs are quarantined until commit-time authority is established;
-14. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
-15. the result contains a reconstruction summary for future continuity search.
+13. authority decisions produce disabled execution handoffs;
+14. action-bearing outputs are quarantined until commit-time authority is established;
+15. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
+16. the result contains a reconstruction summary for future continuity search.
 
 ## Runtime Flow
 
@@ -44,7 +45,8 @@ provider request envelope
   -> action route packet
   -> commitment request packet
   -> authority decision packet
-  -> user or downstream route
+  -> disabled execution handoff packet
+  -> user or external executor boundary
 ```
 
 ## Governed Session Runner
@@ -62,9 +64,10 @@ run_governed_session
   -> action route packet
   -> commitment request packet
   -> authority decision packet
+  -> disabled execution handoff packet
 ```
 
-This is the preferred local test and demo path until live provider and service-backed continuity-search integrations are installed.
+This is the preferred local test and demo path until live provider, service-backed continuity-search, and separately reviewed external executor integrations are installed.
 
 ## Provider Request Boundary
 
@@ -201,6 +204,23 @@ authority_decision_hash
 
 The default fixture authority client fails closed for action-bearing requests and returns `NOT_REQUIRED` when no commitment request is needed. A configured fixture may return `ALLOW` for tests, but that still does not execute the action.
 
+## Disabled Execution Gateway Boundary
+
+`llm_adapter.execution_gateway` prepares an execution handoff without performing side effects.
+
+The execution handoff records:
+
+```text
+status
+reason
+authority_decision_hash
+commitment_request_hash
+target
+execution_handoff_hash
+```
+
+The default gateway never executes. If authority returns `ALLOW`, the handoff status becomes `ready_for_external_executor`; otherwise it remains `not_executable`.
+
 ## Decision Rules
 
 | Condition | Decision | Meaning |
@@ -213,6 +233,8 @@ The default fixture authority client fails closed for action-bearing requests an
 | Action route exists | `requires_downstream_commit_time_standing` | A non-authorizing commitment request is emitted. |
 | Default action-bearing authority check | `FAIL_CLOSED` | No execution authority is granted by fixture defaults. |
 | Read-only authority check | `NOT_REQUIRED` | No commitment request was needed. |
+| Authority decision is `ALLOW` | `ready_for_external_executor` | A handoff packet is produced, but the adapter still performs no side effect. |
+| Authority decision is not `ALLOW` | `not_executable` | No execution handoff is available beyond a blocked receipt. |
 | Stale, revoked, or superseded evidence | `QUARANTINE` | History may be reconstructable, but current authority requires fresh retrieval. |
 
 ## Usage
@@ -236,6 +258,7 @@ print(result["adapter_result"]["decision"])
 print(result["action_route"]["route_status"])
 print(result["commitment_request"]["status"])
 print(result["authority_decision"]["decision"])
+print(result["execution_handoff"]["status"])
 ```
 
 ## Boundary
@@ -248,6 +271,7 @@ The adapter governs candidate output.
 The action route is not execution.
 The commitment request is not authority.
 The authority decision is not side-effect execution.
+The execution handoff is not execution.
 The SDK provides shared packet and receipt contracts.
 Continuity search reconstructs historical state.
 Commit-time governance determines whether consequence may attach.
