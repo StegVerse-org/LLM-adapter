@@ -15,7 +15,7 @@ The runtime path is installed when:
 3. provider responses can be represented as request-bound output envelopes;
 4. optional HTTP provider clients fail closed unless explicitly configured;
 5. retrieval evidence can be represented as pointers and hashes instead of duplicated payloads;
-6. continuity-search evidence can be resolved through a deterministic boundary;
+6. continuity-search evidence can be resolved through fixture or service-backed boundaries;
 7. a one-call governed session can join request, provider response, continuity, receipt, reconstruction, action routing, commitment request generation, authority decision capture, and execution handoff generation;
 8. the adapter creates a query packet through `stegverse.governed_llm`;
 9. the adapter returns `ALLOW`, `DENY`, or `QUARANTINE`;
@@ -59,7 +59,7 @@ provider request envelope
 run_governed_session
   -> provider request envelope
   -> fixture provider response
-  -> fixture continuity search
+  -> fixture or injected continuity search
   -> governed adapter decision
   -> response receipt
   -> reconstruction summary
@@ -69,7 +69,7 @@ run_governed_session
   -> disabled execution handoff packet
 ```
 
-This is the preferred local test and demo path until service-backed continuity-search and separately reviewed external executor integrations are installed.
+This is the preferred local test and demo path until separately reviewed external executor integrations are installed.
 
 ## CLI Boundary
 
@@ -179,7 +179,41 @@ FixtureContinuitySearch
   -> reconstruction notes
 ```
 
-A later service-backed continuity-search engine should preserve the same boundary shape while replacing fixture lookup with indexed receipt and state retrieval.
+## Service-Backed Continuity Search Boundary
+
+`llm_adapter.continuity_service_client` provides an optional HTTP continuity-search client.
+
+It:
+
+```text
+requires STEGVERSE_CONTINUITY_SEARCH_URL or an explicit endpoint
+optionally uses STEGVERSE_CONTINUITY_SEARCH_KEY
+fails closed when no endpoint is configured
+returns the same ContinuitySearchResult shape as fixture search
+passes only evidence pointers into receipts
+```
+
+Expected service response:
+
+```json
+{
+  "freshness_status": "current",
+  "evidence": [
+    {
+      "source_type": "receipt",
+      "pointer": "master-records://example/receipt",
+      "content_hash": "abc123",
+      "retrieved_at": "2026-07-01T00:00:00+00:00",
+      "freshness": "current",
+      "authority_scope": "read",
+      "notes": "service result"
+    }
+  ],
+  "reconstruction_notes": ["service-backed continuity result"]
+}
+```
+
+A service-backed continuity response is still evidence input, not output authority.
 
 ## Commit-Time Action Route Boundary
 
@@ -269,6 +303,7 @@ The default gateway never executes. If authority returns `ALLOW`, the handoff st
 | Empty output | `DENY` | Nothing can be admitted without emitted content. |
 | Provider response request hash mismatch | `ERROR` | The governed session fails before adapter governance. |
 | HTTP provider missing credentials | `ERROR` | The provider client fails closed before model call. |
+| Continuity service missing endpoint | `ERROR` | The continuity client fails closed before retrieval. |
 | Low-risk read-only candidate | `ALLOW` | The response may be returned with reconstruction receipt. |
 | High-risk/action-bearing candidate | `QUARANTINE` | The output needs downstream commit-time standing before consequence attaches. |
 | Action-bearing output detected | `route_to_commit_time_authority` | The result contains an action candidate but no side effect occurs. |
