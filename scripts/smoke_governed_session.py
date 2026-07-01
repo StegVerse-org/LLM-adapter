@@ -19,8 +19,8 @@ def main() -> int:
 
     expected = {
         "adapter_decision": "QUARANTINE",
-        "commitment_status": "no_commitment_request_required",
-        "authority_decision": "NOT_REQUIRED",
+        "commitment_status": "requires_downstream_commit_time_standing",
+        "authority_decision": "FAIL_CLOSED",
         "execution_status": "not_executable",
     }
 
