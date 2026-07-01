@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Union
 
 from .governed_adapter import GovernedLLMAdapter
 from .provider_request import build_provider_request
@@ -41,7 +41,7 @@ def run_fixture(fixture: Mapping[str, Any]) -> dict[str, Any]:
     return result
 
 
-def run_fixture_file(path: str | Path) -> dict[str, Any]:
+def run_fixture_file(path: Union[str, Path]) -> dict[str, Any]:
     """Load and run a JSON fixture file."""
 
     fixture = json.loads(Path(path).read_text(encoding="utf-8"))
