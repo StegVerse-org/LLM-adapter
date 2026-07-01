@@ -21,6 +21,11 @@ from .continuity_search import (
     FixtureContinuitySearch,
     continuity_result_from_fixtures,
 )
+from .continuity_service_client import (
+    ContinuityServiceClient,
+    ContinuityServiceConfigurationError,
+    continuity_result_from_service_body,
+)
 from .execution_gateway import (
     DisabledExecutionGateway,
     ExecutionGateway,
@@ -36,6 +41,7 @@ from .governed_adapter import (
     govern_response,
 )
 from .governed_session import (
+    ContinuitySearchClient,
     GovernedSessionResult,
     run_governed_request_session,
     run_governed_response_session,
@@ -72,7 +78,10 @@ __all__ = [
     "AuthorityClient",
     "AuthorityDecision",
     "CommitmentRequestPacket",
+    "ContinuitySearchClient",
     "ContinuitySearchResult",
+    "ContinuityServiceClient",
+    "ContinuityServiceConfigurationError",
     "DisabledExecutionGateway",
     "EvidencePointer",
     "ExecutionGateway",
@@ -94,6 +103,7 @@ __all__ = [
     "build_http_provider_client",
     "build_provider_request",
     "continuity_result_from_fixtures",
+    "continuity_result_from_service_body",
     "evaluate_commitment_request",
     "evidence_from_fixture",
     "evidence_from_payload",
