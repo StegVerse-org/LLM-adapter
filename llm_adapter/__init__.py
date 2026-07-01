@@ -1,5 +1,6 @@
 """StegVerse LLM Adapter runtime package."""
 
+from .fixture_runner import run_fixture, run_fixture_file
 from .governed_adapter import (
     AdapterDecision,
     EvidencePointer,
@@ -32,4 +33,6 @@ __all__ = [
     "evidence_list_from_fixtures",
     "govern_response",
     "normalize_messages",
+    "run_fixture",
+    "run_fixture_file",
 ]
