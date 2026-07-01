@@ -14,12 +14,13 @@ The runtime path is installed when:
 2. provider request metadata can be normalized before any model call;
 3. retrieval evidence can be represented as pointers and hashes instead of duplicated payloads;
 4. continuity-search evidence can be resolved through a deterministic boundary;
-5. the adapter creates a query packet through `stegverse.governed_llm`;
-6. the adapter returns `ALLOW`, `DENY`, or `QUARANTINE`;
-7. read-only answers receive response receipts;
-8. action-bearing outputs are quarantined until commit-time authority is established;
-9. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
-10. the result contains a reconstruction summary for future continuity search.
+5. a one-call governed session can join request, continuity, candidate output, receipt, and reconstruction;
+6. the adapter creates a query packet through `stegverse.governed_llm`;
+7. the adapter returns `ALLOW`, `DENY`, or `QUARANTINE`;
+8. read-only answers receive response receipts;
+9. action-bearing outputs are quarantined until commit-time authority is established;
+10. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
+11. the result contains a reconstruction summary for future continuity search.
 
 ## Runtime Flow
 
@@ -36,6 +37,21 @@ provider request envelope
   -> reconstruction summary
   -> user or downstream route
 ```
+
+## Governed Session Runner
+
+`llm_adapter.governed_session` provides a single deterministic runtime surface:
+
+```text
+run_governed_session
+  -> provider request envelope
+  -> fixture continuity search
+  -> governed adapter decision
+  -> response receipt
+  -> reconstruction summary
+```
+
+This is the preferred local test and demo path until live provider and service-backed continuity-search integrations are installed.
 
 ## Provider Request Boundary
 
@@ -103,50 +119,37 @@ A later service-backed continuity-search engine should preserve the same boundar
 ## Usage
 
 ```python
-from llm_adapter import (
-    FixtureContinuitySearch,
-    GovernedLLMAdapter,
-    build_provider_request,
-)
+from llm_adapter import run_governed_session
 
-request = build_provider_request(
+result = run_governed_session(
     provider="example",
     model="example-model",
     messages=[{"role": "user", "content": "Can the prior answer be reused?"}],
-    allowed_sources=("receipt_index",),
-)
-
-search = FixtureContinuitySearch([
-    {
-        "source_type": "receipt",
-        "pointer": "master-records://example/receipt/1",
-        "payload": {"state": "historical_only"},
-        "freshness": "stale",
-        "retrieved_at": "2026-07-01T00:00:00+00:00",
-    }
-])
-continuity = search.search(request.user_query)
-
-adapter = GovernedLLMAdapter(default_provider=request.provider, default_model=request.model)
-
-result = adapter.govern_response(
-    query=request.user_query,
     candidate_output="The prior answer is reconstructable but requires fresh retrieval before execution.",
-    allowed_sources=request.allowed_sources,
-    evidence=continuity.evidence,
+    allowed_sources=("receipt_index",),
+    evidence_fixtures=[
+        {
+            "source_type": "receipt",
+            "pointer": "master-records://example/receipt/1",
+            "payload": {"state": "historical_only"},
+            "freshness": "stale",
+            "retrieved_at": "2026-07-01T00:00:00+00:00",
+        }
+    ],
     policy={"policy": "freshness-required"},
     delegation={"adapter": "read"},
-)
+).to_dict()
 
-print(result.decision)
-print(result.response_receipt)
-print(result.reconstruction)
+print(result["adapter_result"]["decision"])
+print(result["adapter_result"]["response_receipt"])
+print(result["adapter_result"]["reconstruction"])
 ```
 
 ## Boundary
 
 ```text
 The provider request is not execution.
+The governed session is not provider execution.
 The adapter governs candidate output.
 The SDK provides shared packet and receipt contracts.
 Continuity search reconstructs historical state.
