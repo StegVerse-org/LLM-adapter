@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Optional
 
 from .governed_adapter import GovernedAdapterResult, GovernedLLMAdapter
 from .provider import LLMProviderClient
@@ -14,7 +14,7 @@ from .retrieval import InMemoryRetrievalIndex, default_fixture_index
 class PipelineInput:
     query: str
     allowed_sources: tuple[str, ...] = ("receipt_index", "policy_index")
-    purpose: str | None = None
+    purpose: Optional[str] = None
     transition_class: str = "candidate_response"
 
 
@@ -24,7 +24,7 @@ class GovernedLLMPipeline:
     def __init__(
         self,
         provider: LLMProviderClient,
-        retrieval_index: InMemoryRetrievalIndex | None = None,
+        retrieval_index: Optional[InMemoryRetrievalIndex] = None,
     ) -> None:
         self.provider = provider
         self.retrieval_index = retrieval_index or default_fixture_index()
