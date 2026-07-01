@@ -4,19 +4,19 @@ A governed session joins provider request normalization, continuity search,
 provider output handling, adapter receipt generation, commit-time action routing,
 non-authorizing commitment request generation, non-executing authority
 evaluation, and disabled execution handoff into one deterministic runtime
-surface. Live provider clients can be injected later while preserving the same
-governance boundary.
+surface. Live provider and continuity clients can be injected later while
+preserving the same governance boundary.
 """
 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Mapping, Optional, Protocol, Sequence
 
 from .action_router import build_action_route_packet
 from .authority_client import AuthorityClient, evaluate_commitment_request
 from .commitment_request import build_commitment_request
-from .continuity_search import FixtureContinuitySearch
+from .continuity_search import ContinuitySearchResult, FixtureContinuitySearch
 from .execution_gateway import ExecutionGateway, prepare_execution_handoff
 from .governed_adapter import GovernedLLMAdapter
 from .provider_client import FixtureProviderClient, ProviderClient, ProviderResponse
@@ -24,6 +24,13 @@ from .provider_request import ProviderRequest, build_provider_request
 
 
 SESSION_SCHEMA_VERSION = "stegverse.llm_adapter.governed_session.v0.1"
+
+
+class ContinuitySearchClient(Protocol):
+    """Continuity search client protocol."""
+
+    def search(self, query: str) -> ContinuitySearchResult:
+        """Return continuity evidence for a query."""
 
 
 @dataclass(frozen=True)
@@ -59,6 +66,7 @@ def run_governed_session(
     temperature: float = 0.0,
     metadata: Optional[Mapping[str, Any]] = None,
     action_target: str = "unresolved",
+    continuity_client: Optional[ContinuitySearchClient] = None,
     authority_client: Optional[AuthorityClient] = None,
     execution_gateway: Optional[ExecutionGateway] = None,
 ) -> GovernedSessionResult:
@@ -81,6 +89,7 @@ def run_governed_session(
         policy=policy,
         delegation=delegation,
         action_target=action_target,
+        continuity_client=continuity_client,
         authority_client=authority_client,
         execution_gateway=execution_gateway,
     )
@@ -94,6 +103,7 @@ def run_governed_request_session(
     policy: Optional[Mapping[str, Any]] = None,
     delegation: Optional[Mapping[str, Any]] = None,
     action_target: str = "unresolved",
+    continuity_client: Optional[ContinuitySearchClient] = None,
     authority_client: Optional[AuthorityClient] = None,
     execution_gateway: Optional[ExecutionGateway] = None,
 ) -> GovernedSessionResult:
@@ -107,6 +117,7 @@ def run_governed_request_session(
         policy=policy,
         delegation=delegation,
         action_target=action_target,
+        continuity_client=continuity_client,
         authority_client=authority_client,
         execution_gateway=execution_gateway,
     )
@@ -120,6 +131,7 @@ def run_governed_response_session(
     policy: Optional[Mapping[str, Any]] = None,
     delegation: Optional[Mapping[str, Any]] = None,
     action_target: str = "unresolved",
+    continuity_client: Optional[ContinuitySearchClient] = None,
     authority_client: Optional[AuthorityClient] = None,
     execution_gateway: Optional[ExecutionGateway] = None,
 ) -> GovernedSessionResult:
@@ -128,7 +140,7 @@ def run_governed_response_session(
     if provider_response.request_hash != request.request_hash:
         raise ValueError("provider response request_hash does not match provider request")
 
-    continuity = FixtureContinuitySearch(evidence_fixtures).search(request.user_query)
+    continuity = (continuity_client or FixtureContinuitySearch(evidence_fixtures)).search(request.user_query)
     adapter = GovernedLLMAdapter(default_provider=request.provider, default_model=request.model)
     adapter_result = adapter.govern_response(
         query=request.user_query,
@@ -184,6 +196,7 @@ def run_governed_response_session(
 
 __all__ = [
     "SESSION_SCHEMA_VERSION",
+    "ContinuitySearchClient",
     "GovernedSessionResult",
     "run_governed_request_session",
     "run_governed_response_session",
