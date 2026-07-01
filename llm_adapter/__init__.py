@@ -41,6 +41,12 @@ from .governed_session import (
     run_governed_response_session,
     run_governed_session,
 )
+from .http_provider_clients import (
+    AnthropicHTTPProviderClient,
+    OpenAIHTTPProviderClient,
+    ProviderConfigurationError,
+    build_http_provider_client,
+)
 from .provider_client import (
     FixtureProviderClient,
     ProviderClient,
@@ -62,6 +68,7 @@ __all__ = [
     "ActionCandidate",
     "ActionRoutePacket",
     "AdapterDecision",
+    "AnthropicHTTPProviderClient",
     "AuthorityClient",
     "AuthorityDecision",
     "CommitmentRequestPacket",
@@ -76,12 +83,15 @@ __all__ = [
     "GovernedAdapterResult",
     "GovernedLLMAdapter",
     "GovernedSessionResult",
+    "OpenAIHTTPProviderClient",
     "ProviderClient",
+    "ProviderConfigurationError",
     "ProviderMessage",
     "ProviderRequest",
     "ProviderResponse",
     "build_action_route_packet",
     "build_commitment_request",
+    "build_http_provider_client",
     "build_provider_request",
     "continuity_result_from_fixtures",
     "evaluate_commitment_request",
