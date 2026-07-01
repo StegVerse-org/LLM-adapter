@@ -21,6 +21,12 @@ from .continuity_search import (
     FixtureContinuitySearch,
     continuity_result_from_fixtures,
 )
+from .execution_gateway import (
+    DisabledExecutionGateway,
+    ExecutionGateway,
+    ExecutionHandoff,
+    prepare_execution_handoff,
+)
 from .fixture_runner import run_fixture, run_fixture_file
 from .governed_adapter import (
     AdapterDecision,
@@ -60,7 +66,10 @@ __all__ = [
     "AuthorityDecision",
     "CommitmentRequestPacket",
     "ContinuitySearchResult",
+    "DisabledExecutionGateway",
     "EvidencePointer",
+    "ExecutionGateway",
+    "ExecutionHandoff",
     "FixtureAuthorityClient",
     "FixtureContinuitySearch",
     "FixtureProviderClient",
@@ -82,6 +91,7 @@ __all__ = [
     "govern_response",
     "infer_action_type",
     "normalize_messages",
+    "prepare_execution_handoff",
     "run_fixture",
     "run_fixture_file",
     "run_governed_request_session",
