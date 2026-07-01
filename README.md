@@ -24,6 +24,49 @@ The adapter must not create endorsement, validation, compatibility recognition, 
 
 ---
 
+## Governed runtime activation
+
+The governed runtime boundary is documented in:
+
+```text
+docs/GOVERNED_LLM_RUNTIME.md
+```
+
+The activation status is documented in:
+
+```text
+docs/ACTIVATION_STATUS.md
+```
+
+The machine-readable capability manifest is:
+
+```text
+adapter.capabilities.json
+```
+
+Current governed chain:
+
+```text
+provider request
+  -> provider response
+  -> continuity evidence
+  -> governed adapter receipt
+  -> action route
+  -> commitment request
+  -> authority decision
+  -> disabled execution handoff
+```
+
+Local verification:
+
+```bash
+pytest
+stegverse-llm-adapter fixtures/governed_response_fixture.json --pretty
+python scripts/smoke_governed_session.py
+```
+
+---
+
 ## Roles
 
 | Role | Function |
@@ -31,6 +74,7 @@ The adapter must not create endorsement, validation, compatibility recognition, 
 | Governance ingress | LLM output → canonical intent → safety classification → decision |
 | SDK-side adapter | User / LLM Adapter submission → manifest-ready package |
 | Test-route feeder | Route admissible packages into SDK / ingestion / sandbox testing paths |
+| Governed runtime boundary | Provider output → continuity evidence → receipts → disabled execution handoff |
 
 ---
 
@@ -41,7 +85,12 @@ The adapter must not create endorsement, validation, compatibility recognition, 
 - test and documentation signal detection;
 - GCAT/BCAT-style governance score computation;
 - deterministic decision output: `ADMIT`, `DENY`, or `DEFER`;
-- receipt-ready result structure.
+- receipt-ready result structure;
+- request-hash-bound provider responses;
+- optional HTTP provider clients that fail closed without credentials;
+- optional continuity service client that fails closed without endpoint configuration;
+- non-authorizing commitment requests;
+- disabled execution gateway by default.
 
 ---
 
@@ -56,20 +105,30 @@ pip install stegverse-llm-adapter
 ## Quick start
 
 ```python
-from llm_adapter import StegVerseLLMAdapter, LLMProvider
+from llm_adapter import run_governed_session
 
-adapter = StegVerseLLMAdapter()
+result = run_governed_session(
+    provider="fixture-provider",
+    model="fixture-model",
+    messages=[{"role": "user", "content": "Can the prior answer be reused?"}],
+    candidate_output="The prior answer is reconstructable but requires fresh retrieval.",
+    allowed_sources=("receipt_index",),
+    evidence_fixtures=[
+        {
+            "source_type": "receipt",
+            "pointer": "master-records://fixture/prior-answer",
+            "payload": {"standing": "historical_only"},
+            "freshness": "stale",
+            "retrieved_at": "2026-07-01T00:00:00+00:00",
+        }
+    ],
+    policy={"policy": "freshness-required"},
+    delegation={"adapter": "read"},
+).to_dict()
 
-result = adapter.govern_llm_output(
-    provider=LLMProvider.OPENAI,
-    model="gpt-4",
-    prompt="Write a hello function",
-    output=llm_output,
-)
-
-print(result["decision"])   # ADMIT | DENY | DEFER
-print(result["receipt"])    # verifiable hash / receipt-ready reference
-print(result["gcat_score"]) # governance score
+print(result["adapter_result"]["decision"])
+print(result["commitment_request"]["status"])
+print(result["execution_handoff"]["status"])
 ```
 
 ---
