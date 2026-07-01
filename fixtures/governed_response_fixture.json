@@ -1,0 +1,50 @@
+{
+  "schema_version": "stegverse.llm_adapter.fixture.v0.1",
+  "purpose": "prove a governed LLM response can be reconstructed without storing full source payloads",
+  "provider_request": {
+    "provider": "fixture-provider",
+    "model": "fixture-model",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Answer only from admitted evidence and preserve reconstruction boundaries."
+      },
+      {
+        "role": "user",
+        "content": "Can the prior answer be reused for execution?"
+      }
+    ],
+    "purpose": "answer",
+    "allowed_sources": [
+      "receipt_index"
+    ],
+    "temperature": 0.0,
+    "metadata": {
+      "route": "fixture-only",
+      "manual_provider_call_required": false
+    }
+  },
+  "evidence": [
+    {
+      "source_type": "receipt",
+      "pointer": "master-records://fixture/prior-answer",
+      "payload": {
+        "prior_answer": "The prior answer is historically reconstructable.",
+        "standing": "historical_only"
+      },
+      "freshness": "stale",
+      "retrieved_at": "2026-07-01T00:00:00+00:00",
+      "authority_scope": "read",
+      "notes": "Fixture intentionally stale to prove quarantine behavior."
+    }
+  ],
+  "candidate_output": "The prior answer can be reconstructed, but it cannot be reused for execution without fresh retrieval and commit-time standing.",
+  "policy": {
+    "policy": "freshness-required-before-execution"
+  },
+  "delegation": {
+    "adapter": "read"
+  },
+  "expected_decision": "QUARANTINE",
+  "expected_admissibility_status": "requires_fresh_retrieval"
+}
