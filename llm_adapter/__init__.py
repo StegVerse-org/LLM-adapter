@@ -1,5 +1,11 @@
 """StegVerse LLM Adapter runtime package."""
 
+from .action_router import (
+    ActionCandidate,
+    ActionRoutePacket,
+    build_action_route_packet,
+    infer_action_type,
+)
 from .continuity_search import (
     ContinuitySearchResult,
     FixtureContinuitySearch,
@@ -37,6 +43,8 @@ from .retrieval_evidence import (
 )
 
 __all__ = [
+    "ActionCandidate",
+    "ActionRoutePacket",
     "AdapterDecision",
     "ContinuitySearchResult",
     "EvidencePointer",
@@ -49,12 +57,14 @@ __all__ = [
     "ProviderMessage",
     "ProviderRequest",
     "ProviderResponse",
+    "build_action_route_packet",
     "build_provider_request",
     "continuity_result_from_fixtures",
     "evidence_from_fixture",
     "evidence_from_payload",
     "evidence_list_from_fixtures",
     "govern_response",
+    "infer_action_type",
     "normalize_messages",
     "run_fixture",
     "run_fixture_file",
