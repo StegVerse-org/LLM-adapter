@@ -13,20 +13,21 @@ The runtime path is installed when:
 1. a user query and candidate output can enter the adapter;
 2. provider request metadata can be normalized before any model call;
 3. provider responses can be represented as request-bound output envelopes;
-4. retrieval evidence can be represented as pointers and hashes instead of duplicated payloads;
-5. continuity-search evidence can be resolved through a deterministic boundary;
-6. a one-call governed session can join request, provider response, continuity, receipt, reconstruction, action routing, commitment request generation, authority decision capture, and execution handoff generation;
-7. the adapter creates a query packet through `stegverse.governed_llm`;
-8. the adapter returns `ALLOW`, `DENY`, or `QUARANTINE`;
-9. read-only answers receive response receipts;
-10. action-bearing outputs become non-executing action candidates;
-11. action-bearing outputs create non-authorizing commitment requests;
-12. commitment requests receive non-executing authority decisions;
-13. authority decisions produce disabled execution handoffs;
-14. fixture files can run through the full chain via CLI;
-15. action-bearing outputs are quarantined until commit-time authority is established;
-16. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
-17. the result contains a reconstruction summary for future continuity search.
+4. optional HTTP provider clients fail closed unless explicitly configured;
+5. retrieval evidence can be represented as pointers and hashes instead of duplicated payloads;
+6. continuity-search evidence can be resolved through a deterministic boundary;
+7. a one-call governed session can join request, provider response, continuity, receipt, reconstruction, action routing, commitment request generation, authority decision capture, and execution handoff generation;
+8. the adapter creates a query packet through `stegverse.governed_llm`;
+9. the adapter returns `ALLOW`, `DENY`, or `QUARANTINE`;
+10. read-only answers receive response receipts;
+11. action-bearing outputs become non-executing action candidates;
+12. action-bearing outputs create non-authorizing commitment requests;
+13. commitment requests receive non-executing authority decisions;
+14. authority decisions produce disabled execution handoffs;
+15. fixture files can run through the full chain via CLI;
+16. action-bearing outputs are quarantined until commit-time authority is established;
+17. stale, revoked, or superseded evidence is quarantined for fresh retrieval;
+18. the result contains a reconstruction summary for future continuity search.
 
 ## Runtime Flow
 
@@ -68,7 +69,7 @@ run_governed_session
   -> disabled execution handoff packet
 ```
 
-This is the preferred local test and demo path until live provider, service-backed continuity-search, and separately reviewed external executor integrations are installed.
+This is the preferred local test and demo path until service-backed continuity-search and separately reviewed external executor integrations are installed.
 
 ## CLI Boundary
 
@@ -121,6 +122,29 @@ response_hash
 ```
 
 A provider response must match the request hash before the governed session proceeds. Fixture provider clients are deterministic and local; live provider clients should implement the same boundary and return through adapter governance before any user-visible or downstream effect.
+
+## HTTP Provider Client Boundary
+
+`llm_adapter.http_provider_clients` provides optional OpenAI-compatible and Anthropic-compatible HTTP provider clients.
+
+These clients:
+
+```text
+require explicit API keys or environment variables
+fail closed when credentials are missing
+return ProviderResponse envelopes
+bind outputs to provider request hashes
+do not bypass adapter governance
+```
+
+Supported environment variables:
+
+```text
+OPENAI_API_KEY
+ANTHROPIC_API_KEY
+```
+
+A live provider response is still only candidate output. It must pass through adapter governance, action routing, commitment request generation, authority decision capture, and disabled execution handoff.
 
 ## Retrieval Evidence Boundary
 
@@ -244,6 +268,7 @@ The default gateway never executes. If authority returns `ALLOW`, the handoff st
 | --- | --- | --- |
 | Empty output | `DENY` | Nothing can be admitted without emitted content. |
 | Provider response request hash mismatch | `ERROR` | The governed session fails before adapter governance. |
+| HTTP provider missing credentials | `ERROR` | The provider client fails closed before model call. |
 | Low-risk read-only candidate | `ALLOW` | The response may be returned with reconstruction receipt. |
 | High-risk/action-bearing candidate | `QUARANTINE` | The output needs downstream commit-time standing before consequence attaches. |
 | Action-bearing output detected | `route_to_commit_time_authority` | The result contains an action candidate but no side effect occurs. |
