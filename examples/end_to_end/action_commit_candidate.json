@@ -1,0 +1,5 @@
+{
+  "description": "Action commit candidate query",
+  "query": "Please draft a commit message updating the README file.",
+  "expected_outcome": "QUARANTINE"
+}
