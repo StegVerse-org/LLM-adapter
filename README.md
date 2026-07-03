@@ -67,14 +67,40 @@ python scripts/smoke_governed_session.py
 
 ---
 
+## Micro-node return-path proof
+
+Goal 4 adds a fixture-bound proof that `LLM-adapter` can preserve the portable micro-node governed return-path contract.
+
+```text
+external LLM / UI
+-> LLM-adapter
+-> micro-node-compatible transition request
+-> transition-table role evaluation contract
+-> terminal decision + receipt reference
+-> governed return payload
+-> original customer path
+```
+
+Verify it with:
+
+```bash
+python scripts/verify_micro_node_return_path.py
+pytest tests/test_micro_node_return_path.py -v
+```
+
+This proof does not call a live provider, call a live continuity service, mutate a repository, post publicly, send email, or grant execution authority.
+
+---
+
 ## Roles
 
 | Role | Function |
 |---|---|
-| Governance ingress | LLM output → canonical intent → safety classification → decision |
-| SDK-side adapter | User / LLM Adapter submission → manifest-ready package |
+| Governance ingress | LLM output -> canonical intent -> safety classification -> decision |
+| SDK-side adapter | User / LLM Adapter submission -> manifest-ready package |
 | Test-route feeder | Route admissible packages into SDK / ingestion / sandbox testing paths |
-| Governed runtime boundary | Provider output → continuity evidence → receipts → disabled execution handoff |
+| Governed runtime boundary | Provider output -> continuity evidence -> receipts -> disabled execution handoff |
+| Micro-node return-path caller | Adapter fixture -> micro-node-compatible request -> governed return to origin |
 
 ---
 
@@ -90,7 +116,8 @@ python scripts/smoke_governed_session.py
 - optional HTTP provider clients that fail closed without credentials;
 - optional continuity service client that fails closed without endpoint configuration;
 - non-authorizing commitment requests;
-- disabled execution gateway by default.
+- disabled execution gateway by default;
+- micro-node-compatible governed return-path fixture verification.
 
 ---
 
@@ -137,13 +164,13 @@ print(result["execution_handoff"]["status"])
 
 ```text
 User / LLM system
-→ LLM-adapter
-→ StegVerse-SDK intake
-→ manifest binding
-→ receipt binding
-→ StegVerse-org ingestion
-→ bounded test route
-→ returned result / reconstruction packet
+-> LLM-adapter
+-> StegVerse-SDK intake
+-> manifest binding
+-> receipt binding
+-> StegVerse-org ingestion
+-> bounded test route
+-> returned result / reconstruction packet
 ```
 
 For adversarial or entity-specific tests, the bounded downstream route is `StegGhost/entity-sandbox-runner` after SDK intake.
@@ -155,6 +182,8 @@ For adversarial or entity-specific tests, the bounded downstream route is `StegG
 | System | Role |
 |---|---|
 | `StegVerse-org/StegVerse-SDK` | Public SDK intake boundary |
+| `StegVerse-002/micro-node-runtime` | Portable transition-table-native governed return-path contract |
+| `StegVerse-org/core-node-runtime-demo` | Runtime path compatibility comparison |
 | `StegVerse-org/demo_ingest_engine` | Org-side orchestration / result-return boundary |
 | `StegGhost/entity-sandbox-runner` | Bounded sandbox test path |
 | Trust Kernel | Private authority-bearing governance kernel |
