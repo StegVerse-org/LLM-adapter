@@ -1,0 +1,10 @@
+{
+  "transition_id": "llm-adapter-micro-node-demo-001",
+  "return_path": "llm-adapter://customer/session/demo-001",
+  "decision": "ALLOW",
+  "receipt_hash": "fixture-receipt-hash-generated-by-micro-node-runtime",
+  "returned_to_origin": true,
+  "execution_authority_granted": false,
+  "provider_output_is_authority": false,
+  "commitment_request_is_authority": false
+}
