@@ -1,0 +1,16 @@
+{
+  "transition_id": "llm-adapter-micro-node-demo-001",
+  "origin_system": "StegVerse-org/LLM-adapter",
+  "return_path": "llm-adapter://customer/session/demo-001",
+  "action": "return_governed_llm_output",
+  "actor": "adapter:fixture-provider",
+  "target": "customer:return-path",
+  "scope": "single governed fixture response",
+  "policy_ref": "policy:governed-llm-return-path-v1",
+  "delegation_ref": "delegation:llm-adapter-fixture-v1",
+  "payload": {
+    "fixture": "examples/end_to_end/simple_query.json",
+    "provider_output_is_authority": false,
+    "execution_authority_requested": false
+  }
+}
