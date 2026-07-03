@@ -1,0 +1,67 @@
+{
+  "$schema": "https://stegverse.org/schemas/architecture_manifest.schema.json",
+  "schema_version": "1.0.0",
+  "repo_id": "LLM-adapter",
+  "repo_type": "adapter",
+  "description": "StegVerse LLM Adapter -- SDK-adjacent bridge that converts LLM outputs into governance artifacts without granting execution authority.",
+  "inherits_from": null,
+  "enforcement": "strict",
+  "expected_structure": {
+    "README.md": {"required": true, "purpose": "Project overview and integration notes"},
+    "LICENSE": {"required": true, "purpose": "Software license"},
+    "pyproject.toml": {"required": true, "purpose": "Python packaging"},
+    "adapter.capabilities.json": {"required": true, "purpose": "Machine-readable adapter capabilities"},
+    "LLM_ADAPTER_MIRROR_HANDOFF.md": {"required": true, "purpose": "Current build handoff source of truth"},
+    "llm_adapter/": {"required": true, "purpose": "Main Python package"},
+    "docs/": {"required": true, "purpose": "Runtime and integration documentation"},
+    "examples/": {"required": true, "purpose": "Fixture-bound examples and demo inputs"},
+    "fixtures/": {"required": true, "purpose": "Governed response fixtures"},
+    "scripts/": {"required": true, "purpose": "Verification and demonstration scripts"},
+    "tests/": {"required": true, "purpose": "Automated verification tests"},
+    ".github/workflows/": {"required": true, "purpose": "Architecture and CI workflows"}
+  },
+  "file_rules": {
+    "naming_conventions": {
+      "python_modules": "snake_case",
+      "python_packages": "snake_case",
+      "test_files": "test_*.py"
+    },
+    "forbidden_patterns": [
+      ".*secret.*\\.py$",
+      ".*password.*",
+      ".*api_key.*\\.txt$",
+      ".*private_key.*",
+      "\\.env$",
+      "\\.env\\..*",
+      "\\.pyc$",
+      "__pycache__",
+      ".*\\.bak$",
+      ".*\\.tmp$",
+      ".*\\.swp$",
+      ".*~$"
+    ]
+  },
+  "migration_rules": {
+    "review_needed_path": "review_needed/",
+    "legacy_path": "legacy/",
+    "auto_migrate": false,
+    "require_approval": true,
+    "syntax_issue_patterns": [
+      ".*\\s+.*",
+      ".*[^a-zA-Z0-9_\\-\\./].*",
+      ".*\\.\\..*",
+      ".*\\.\\.$"
+    ]
+  },
+  "validation_hooks": {
+    "ci_pull_request": true,
+    "ci_push_main": true,
+    "scheduled_audit": "weekly"
+  },
+  "integration_points": {
+    "sdk": "github.com/StegVerse-org/StegVerse-SDK",
+    "micro_node_runtime": "github.com/StegVerse-002/micro-node-runtime",
+    "core_node_runtime_demo": "github.com/StegVerse-org/core-node-runtime-demo",
+    "admissibility_wiki": "github.com/StegVerse-Labs/admissibility-wiki"
+  }
+}
