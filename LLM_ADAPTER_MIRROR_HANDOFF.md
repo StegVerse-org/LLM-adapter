@@ -6,26 +6,21 @@ This file is the handoff source of truth for `StegVerse-org/LLM-adapter` until s
 
 ## Active goal
 
-Goal 3: End-to-end governed LLM demonstrator.
+Goal 4: micro-node governed return-path proof.
 
-The repository should prove:
+Goal 3 established the fixture-first governed LLM demonstrator. Goal 4 now proves that the LLM adapter can express a governed LLM response as a micro-node-compatible transition request and preserve the original customer return path without gaining execution authority.
+
+## Goal 4 proof path
 
 ```text
-fixture query
--> provider request envelope
--> fixture provider response
--> continuity evidence pointers
--> governed session packet
--> action route
--> commitment request
--> authority decision
--> disabled execution handoff
--> demo report artifacts
--> replay verification
--> reconstruction verification
+external LLM / UI
+-> LLM-adapter
+-> micro-node-compatible transition request
+-> transition-table role evaluation contract
+-> terminal decision + receipt reference
+-> governed return payload
+-> original customer path
 ```
-
-No live provider call, live continuity service, repository mutation, public posting, email sending, execution approval, or production trust-kernel execution is added by this path.
 
 ## Installed baseline already present
 
@@ -40,17 +35,14 @@ tests/
 README.md
 ```
 
-## Files to install for Goal 3
+## Installed for Goal 4 on current build branch
 
 ```text
-examples/end_to_end/simple_query.json
-examples/end_to_end/action_commit_candidate.json
-examples/end_to_end/stale_evidence_query.json
-scripts/run_end_to_end_demo.py
-scripts/replay_demo.py
-scripts/reconstruct_demo.py
-docs/END_TO_END_DEMO.md
-tests/test_end_to_end_demo.py
+docs/MICRO_NODE_RETURN_PATH.md
+examples/micro_node_return_path/request.json
+examples/micro_node_return_path/governed_return.json
+scripts/verify_micro_node_return_path.py
+tests/test_micro_node_return_path.py
 ```
 
 ## Required invariant
@@ -60,17 +52,17 @@ provider_output_is_authority == false
 commitment_request_is_authority == false
 authority_decision_executes_side_effect == false
 execution_handoff_executes_side_effect == false
+execution_authority_granted == false
 fixture_mode_default == true
 live_provider_required == false
+returned_to_origin == true
 ```
 
 ## Verification commands
 
 ```bash
-python scripts/run_end_to_end_demo.py --fixture examples/end_to_end/simple_query.json
-python scripts/replay_demo.py --session-report reports/simple_query.session.json
-python scripts/reconstruct_demo.py --session-report reports/simple_query.session.json
-pytest tests/test_end_to_end_demo.py -v
+python scripts/verify_micro_node_return_path.py
+pytest tests/test_micro_node_return_path.py -v
 pytest tests/ -v
 ```
 
@@ -78,15 +70,29 @@ pytest tests/ -v
 
 ```text
 StegVerse-org/StegVerse-SDK
-  -> validate demo session packets
-  -> build manifest
-  -> build receipt handoff
+  -> validate micro-node request and governed return fixtures
+  -> treat micro-node-runtime as callable governed runtime target after contract stabilization
 
 StegVerse-Labs/admissibility-wiki
   -> publish public demo overview
-  -> point to adapter and SDK verification commands
+  -> point to adapter, SDK, and micro-node verification commands
+```
+
+## Remaining files or modules to install
+
+Intended Org/Repo: `StegVerse-org/StegVerse-SDK`
+
+```text
+SDK-side validator for LLM-adapter micro-node return-path fixtures.
+SDK documentation naming micro-node-runtime as a governed runtime target.
+```
+
+Intended Org/Repo: `StegVerse-Labs/admissibility-wiki`
+
+```text
+Public documentation update after adapter and SDK proof paths are green.
 ```
 
 ## Archive posture
 
-Not archive-ready until the Goal 3 demo files are installed, verified locally, and reflected in SDK and wiki handoffs.
+This handoff preserves the current Goal 4 build state so the complete thread can be archived without needing additional context to continue.
