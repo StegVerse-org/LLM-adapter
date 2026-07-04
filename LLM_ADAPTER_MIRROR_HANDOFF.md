@@ -42,6 +42,7 @@ docs/MICRO_NODE_RETURN_PATH.md
 examples/micro_node_return_path/request.json
 examples/micro_node_return_path/governed_return.json
 scripts/verify_micro_node_return_path.py
+scripts/verify_goal4.py
 tests/test_micro_node_return_path.py
 ```
 
@@ -58,41 +59,39 @@ live_provider_required == false
 returned_to_origin == true
 ```
 
-## Verification commands
+## Canonical verification command
+
+```bash
+python scripts/verify_goal4.py
+```
+
+The aggregate verifier runs:
 
 ```bash
 python scripts/verify_micro_node_return_path.py
-pytest tests/test_micro_node_return_path.py -v
-pytest tests/ -v
+python -m pytest tests/test_micro_node_return_path.py -v
+python -m pytest tests/ -v
 ```
 
 ## Downstream sync targets
 
 ```text
 StegVerse-org/StegVerse-SDK
-  -> validate micro-node request and governed return fixtures
-  -> treat micro-node-runtime as callable governed runtime target after contract stabilization
+  -> validates micro-node request and governed return fixtures
+  -> includes SDK-side Goal 4 aggregate verification
+  -> treats micro-node-runtime as callable governed runtime target after contract stabilization
 
 StegVerse-Labs/admissibility-wiki
-  -> publish public demo overview
-  -> point to adapter, SDK, and micro-node verification commands
+  -> publishes public portable governed return-path overview
+  -> points to adapter, SDK, and Site verification commands
 ```
 
 ## Remaining files or modules to install
 
-Intended Org/Repo: `StegVerse-org/StegVerse-SDK`
-
 ```text
-SDK-side validator for LLM-adapter micro-node return-path fixtures.
-SDK documentation naming micro-node-runtime as a governed runtime target.
-```
-
-Intended Org/Repo: `StegVerse-Labs/admissibility-wiki`
-
-```text
-Public documentation update after adapter and SDK proof paths are green.
+None for adapter Goal 4 fixture-bound proof.
 ```
 
 ## Archive posture
 
-This handoff preserves the current Goal 4 build state so the complete thread can be archived without needing additional context to continue.
+This handoff preserves the current Goal 4 build state so the complete thread can be archived without needing additional context to continue. Live clone/Codespaces verification remains the final external confirmation surface.
