@@ -34,6 +34,7 @@ class AIEntryBackendResponse:
     comparison_outputs: list[dict[str, Any]]
     governance: dict[str, Any]
     activation: dict[str, Any]
+    receipt_capture_preview: dict[str, Any]
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -45,6 +46,21 @@ def classify_route(message: str) -> str:
         if any(keyword in lower for keyword in keywords):
             return route_id
     return "chat_answer"
+
+
+def build_receipt_capture_preview(*, message: str, route_id: str, response_id: str) -> dict[str, Any]:
+    return {
+        "schema_version": "stegverse.ai_entry.receipt_capture_preview.v0.1",
+        "preview_only": True,
+        "receipt_capture_enabled": False,
+        "real_receipt_issued": False,
+        "record_persisted": False,
+        "authority_granted": False,
+        "input_hash": sha256(message.encode("utf-8")).hexdigest(),
+        "route_id": route_id,
+        "response_id": response_id,
+        "reconstruction_metadata_required": True,
+    }
 
 
 def build_ai_entry_backend_response(message: str) -> AIEntryBackendResponse:
@@ -62,6 +78,11 @@ def build_ai_entry_backend_response(message: str) -> AIEntryBackendResponse:
         for comparison in provider_boundary.comparisons
     ]
     governed_candidate = bool(clean)
+    receipt_preview = build_receipt_capture_preview(
+        message=clean,
+        route_id=route_id,
+        response_id=response_id,
+    )
     return AIEntryBackendResponse(
         response_id=response_id,
         primary_route=route_id,
@@ -90,6 +111,7 @@ def build_ai_entry_backend_response(message: str) -> AIEntryBackendResponse:
             "provider_output_is_authority": provider_boundary.provider_output_is_authority,
             "receipt_capture_required_before_live_activation": provider_boundary.receipt_capture_required_before_live_activation,
         },
+        receipt_capture_preview=receipt_preview,
     )
 
 
