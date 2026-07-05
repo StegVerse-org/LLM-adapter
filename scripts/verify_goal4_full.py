@@ -15,6 +15,7 @@ COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "scripts/check_ai_entry_authority_boundary.py"),
     (sys.executable, "scripts/check_ai_entry_receipt_boundary.py"),
     (sys.executable, "scripts/check_ai_entry_provider_capture_boundary.py"),
+    (sys.executable, "scripts/check_ai_entry_provider_capture_fixtures.py"),
 )
 
 
