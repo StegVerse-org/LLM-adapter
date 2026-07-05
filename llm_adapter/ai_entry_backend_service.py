@@ -11,6 +11,8 @@ from hashlib import sha256
 from typing import Any
 
 from llm_adapter.ai_entry_provider_boundary import build_disabled_provider_boundary
+from llm_adapter.free_tier_limits import ReceiptReplayUsage, evaluate_receipt_replay_limits
+from llm_adapter.free_tier_quota import FreeTierUsage, evaluate_free_tier_quota
 
 ROUTE_KEYWORDS = (
     ("restricted_admin", ("secret", "token", "credential", "shell", "delete", "release", "permission", "workflow", "repo write")),
@@ -34,6 +36,7 @@ class AIEntryBackendResponse:
     comparison_outputs: list[dict[str, Any]]
     governance: dict[str, Any]
     activation: dict[str, Any]
+    free_tier_trust: dict[str, Any]
     receipt_capture_preview: dict[str, Any]
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,6 +63,41 @@ def build_receipt_capture_preview(*, message: str, route_id: str, response_id: s
         "route_id": route_id,
         "response_id": response_id,
         "reconstruction_metadata_required": True,
+    }
+
+
+def build_free_tier_trust_metadata() -> dict[str, Any]:
+    quota = evaluate_free_tier_quota(FreeTierUsage()).to_dict()
+    limits = evaluate_receipt_replay_limits(ReceiptReplayUsage()).to_dict()
+    return {
+        "schema_version": "stegverse.ai_entry.free_tier_trust.v0.1",
+        "preview_only": True,
+        "bounded_live_use": True,
+        "static_demo_only": False,
+        "quota": quota,
+        "receipt_replay_limits": limits,
+        "trust_window": {
+            "curiosity_level_meaningful_inquiries": "3-10",
+            "reliance_level_evaluation_inquiries": "20-50",
+        },
+        "upgrade_for": [
+            "higher_quota",
+            "private_connectors",
+            "premium_models",
+            "longer_retention",
+            "deeper_replay",
+            "deeper_reconstruction",
+            "team_workspace",
+            "api_access",
+            "custom_policy",
+            "exportable_audit_packet",
+        ],
+        "non_claims": {
+            "free_tier_response_is_authority": False,
+            "quota_allow_is_admissibility": False,
+            "limit_allow_is_execution_authority": False,
+            "upgrade_changes_admissibility_requirements": False,
+        },
     }
 
 
@@ -111,6 +149,7 @@ def build_ai_entry_backend_response(message: str) -> AIEntryBackendResponse:
             "provider_output_is_authority": provider_boundary.provider_output_is_authority,
             "receipt_capture_required_before_live_activation": provider_boundary.receipt_capture_required_before_live_activation,
         },
+        free_tier_trust=build_free_tier_trust_metadata(),
         receipt_capture_preview=receipt_preview,
     )
 
