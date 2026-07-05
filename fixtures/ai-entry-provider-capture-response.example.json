@@ -1,0 +1,20 @@
+{
+  "schema_version": "stegverse.adapter.ai_entry.provider_capture_response.v0.1",
+  "request_id": "provider-capture-preview-0001",
+  "activation_request_id": "backend-activation-preview-0001",
+  "capture_id": "provider-capture-preview",
+  "status": "NOT_CAPTURED",
+  "capture_preview": {
+    "provider_call_performed": false,
+    "provider_output_captured": false,
+    "provider_authority": false,
+    "persisted": false,
+    "live_calls_allowed": false
+  },
+  "missing_preconditions": [
+    "authority decision ALLOW",
+    "provider adapter credential boundary",
+    "provider response capture policy",
+    "capture persistence target"
+  ]
+}
