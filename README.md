@@ -63,6 +63,7 @@ Local verification:
 pytest
 stegverse-llm-adapter fixtures/governed_response_fixture.json --pretty
 python scripts/smoke_governed_session.py
+python scripts/verify_goal4.py
 ```
 
 ---
@@ -92,6 +93,46 @@ This proof does not call a live provider, call a live continuity service, mutate
 
 ---
 
+## AI Entry free-tier trust boundary
+
+Goal 7 adds a bounded free-tier trust layer for the StegVerse governed LLM entry point.
+
+The free tier is designed to prove the core claim through bounded live governed use rather than static demonstration material. The adapter exposes a Site-facing `free_tier_trust` response field with quota, receipt export, replay, reconstruction, retention, upgrade, and non-authority metadata.
+
+```text
+public user inquiry
+-> bounded free-tier quota envelope
+-> governed LLM adapter request
+-> Site-visible free-tier trust metadata
+-> transition receipt inspection
+-> bounded receipt export / replay / reconstruction limits
+-> upgrade only for scale, retention, connectors, premium models, or API depth
+```
+
+Free-tier policy files:
+
+```text
+docs/FREE_TIER_TRUST_POLICY.md
+examples/free_tier_trust_policy.json
+llm_adapter/free_tier_quota.py
+llm_adapter/free_tier_limits.py
+```
+
+Verify the free-tier boundary with:
+
+```bash
+python scripts/verify_free_tier_quota.py
+python scripts/verify_free_tier_limits.py
+python scripts/verify_ai_entry_free_tier_metadata.py
+pytest tests/test_free_tier_quota.py -v
+pytest tests/test_free_tier_limits.py -v
+pytest tests/test_ai_entry_free_tier_trust_metadata.py -v
+```
+
+The free-tier boundary does not claim that quota availability is admissibility, that replay or reconstruction grants commit-time standing, that receipt export is permanent retention, or that upgrading changes admissibility requirements.
+
+---
+
 ## Roles
 
 | Role | Function |
@@ -101,6 +142,7 @@ This proof does not call a live provider, call a live continuity service, mutate
 | Test-route feeder | Route admissible packages into SDK / ingestion / sandbox testing paths |
 | Governed runtime boundary | Provider output -> continuity evidence -> receipts -> disabled execution handoff |
 | Micro-node return-path caller | Adapter fixture -> micro-node-compatible request -> governed return to origin |
+| AI Entry free-tier trust boundary | Public inquiry -> bounded quota/receipt/replay metadata -> Site-visible trust envelope |
 
 ---
 
@@ -117,7 +159,8 @@ This proof does not call a live provider, call a live continuity service, mutate
 - optional continuity service client that fails closed without endpoint configuration;
 - non-authorizing commitment requests;
 - disabled execution gateway by default;
-- micro-node-compatible governed return-path fixture verification.
+- micro-node-compatible governed return-path fixture verification;
+- side-effect-free free-tier quota and receipt/replay limit evaluation.
 
 ---
 
