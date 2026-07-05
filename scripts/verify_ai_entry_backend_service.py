@@ -36,6 +36,18 @@ def assert_response(message: str, expected_route: str, expected_candidate: bool)
     for item in response.comparison_outputs:
         if item["authority"] is not False:
             fail("comparison output authority must be false")
+    preview = response.receipt_capture_preview
+    if preview["preview_only"] is not True:
+        fail("receipt capture preview must be preview_only")
+    for key in ("receipt_capture_enabled", "real_receipt_issued", "record_persisted", "authority_granted"):
+        if preview[key] is not False:
+            fail(f"{key} must be false")
+    if preview["route_id"] != expected_route:
+        fail("receipt preview route_id mismatch")
+    if preview["response_id"] != response.response_id:
+        fail("receipt preview response_id mismatch")
+    if len(preview["input_hash"]) != 64:
+        fail("receipt preview input_hash must be sha256 hex")
 
 
 def main() -> int:
