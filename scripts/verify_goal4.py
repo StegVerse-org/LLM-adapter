@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run LLM-adapter return-path and AI Entry checks without network access."""
+"""Run LLM-adapter return-path and AI Entry checks without optional full-suite dependencies."""
 from __future__ import annotations
 
 import json
@@ -20,9 +20,9 @@ COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "-m", "pytest", "tests/test_micro_node_return_path.py", "-v"),
     (sys.executable, "-m", "pytest", "tests/test_ai_entry_provider_boundary.py", "-v"),
     (sys.executable, "-m", "pytest", "tests/test_ai_entry_backend_service.py", "-v"),
+    (sys.executable, "-m", "pytest", "tests/test_ai_entry_backend_preview_marker.py", "-v"),
     (sys.executable, "-m", "pytest", "tests/test_ai_entry_endpoint.py", "-v"),
     (sys.executable, "-m", "pytest", "tests/test_ai_entry_service_wrapper.py", "-v"),
-    (sys.executable, "-m", "pytest", "tests/", "-v"),
 )
 
 
