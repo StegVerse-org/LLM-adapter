@@ -8,7 +8,7 @@ This file is the handoff source of truth for `StegVerse-org/LLM-adapter` until s
 
 Goal 7: bounded free-tier trust activation for the StegVerse governed LLM entry point.
 
-Goal 4 proved the micro-node governed return-path fixture. Goal 6 provided the adapter-side pieces needed by the StegVerse AI Entry Point: provider comparison boundary, backend response scaffold, pure endpoint function, and service wrapper scaffold. Goal 7 now adds the free-tier trust policy boundary so a public user can build confidence through bounded live governed inquiries rather than static demonstration material.
+Goal 4 proved the micro-node governed return-path fixture. Goal 6 provided the adapter-side pieces needed by the StegVerse AI Entry Point: provider comparison boundary, backend response scaffold, pure endpoint function, and service wrapper scaffold. Goal 7 now adds the free-tier trust policy and quota evaluation boundary so a public user can build confidence through bounded live governed inquiries rather than static demonstration material.
 
 ## Goal 6 proof path
 
@@ -80,6 +80,9 @@ scripts/verify_goal4.py updated to include Goal 6 checks
 ```text
 docs/FREE_TIER_TRUST_POLICY.md
 examples/free_tier_trust_policy.json
+llm_adapter/free_tier_quota.py
+scripts/verify_free_tier_quota.py
+tests/test_free_tier_quota.py
 ```
 
 ## Required invariant
@@ -97,6 +100,8 @@ fixture_mode_default == true
 returned_to_origin == true
 free_tier_is_bounded_live_use == true
 static_demo_is_sufficient_trust_proof == false
+quota_allow_is_admissibility == false
+quota_allow_is_execution_authority == false
 upgrade_changes_admissibility_requirements == false
 ```
 
@@ -104,9 +109,11 @@ upgrade_changes_admissibility_requirements == false
 
 ```bash
 python scripts/verify_goal4.py
+python scripts/verify_free_tier_quota.py
+python -m pytest tests/test_free_tier_quota.py -v
 ```
 
-The aggregate verifier now includes:
+The existing aggregate verifier still includes:
 
 ```bash
 python scripts/verify_micro_node_return_path.py
@@ -138,11 +145,10 @@ StegVerse-org/StegVerse-SDK
 
 ```text
 StegVerse-org/LLM-adapter:
-  - executable quota evaluator
-  - tests for free-tier quota limits
   - receipt export limit contract
   - replay/reconstruction limit contract
   - Site response metadata for free-tier availability
+  - optional aggregate verifier wiring into scripts/verify_goal4.py after confirming no Goal 4 naming conflict
 
 StegVerse-Labs/Site:
   - public LLM page section for bounded live trust tier
@@ -154,4 +160,4 @@ StegVerse-org/StegVerse-SDK:
 
 ## Archive posture
 
-This handoff preserves the Goal 7 bounded free-tier trust activation state so the complete thread can be archived without needing additional context to continue. Next work should add the executable quota evaluator and tests in `StegVerse-org/LLM-adapter`, then mirror the public-facing summary to `StegVerse-Labs/Site` after the current Site mirror validation task is clean.
+This handoff preserves the Goal 7 bounded free-tier trust activation state so the complete thread can be archived without needing additional context to continue. Next work should add the receipt export and replay/reconstruction limit contracts in `StegVerse-org/LLM-adapter`, then mirror the public-facing summary to `StegVerse-Labs/Site` after the current Site mirror validation task is clean.
