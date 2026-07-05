@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run adapter Goal 4 aggregate plus final workflow parity checks."""
+"""Run adapter Goal 4 aggregate plus final workflow and authority-boundary checks."""
 from __future__ import annotations
 
 import subprocess
@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "scripts/verify_goal4.py"),
     (sys.executable, "scripts/check_workflow_parity.py"),
+    (sys.executable, "scripts/check_ai_entry_authority_boundary.py"),
 )
 
 
