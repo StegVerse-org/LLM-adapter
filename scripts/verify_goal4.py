@@ -15,10 +15,12 @@ COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "scripts/verify_ai_entry_provider_boundary.py"),
     (sys.executable, "scripts/verify_ai_entry_backend_service.py"),
     (sys.executable, "scripts/verify_ai_entry_endpoint.py"),
+    (sys.executable, "scripts/verify_ai_entry_service_wrapper.py"),
     (sys.executable, "-m", "pytest", "tests/test_micro_node_return_path.py", "-v"),
     (sys.executable, "-m", "pytest", "tests/test_ai_entry_provider_boundary.py", "-v"),
     (sys.executable, "-m", "pytest", "tests/test_ai_entry_backend_service.py", "-v"),
     (sys.executable, "-m", "pytest", "tests/test_ai_entry_endpoint.py", "-v"),
+    (sys.executable, "-m", "pytest", "tests/test_ai_entry_service_wrapper.py", "-v"),
     (sys.executable, "-m", "pytest", "tests/", "-v"),
 )
 
