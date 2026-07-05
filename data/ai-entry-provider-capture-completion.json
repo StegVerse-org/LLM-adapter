@@ -1,0 +1,21 @@
+{
+  "schema_version": "stegverse.adapter.ai_entry.provider_capture_completion.v0.1",
+  "goal": "Provider Capture Boundary",
+  "state": "preview_complete_live_disabled",
+  "completed_components": {
+    "provider_capture_boundary_module": true,
+    "provider_capture_boundary_verifier": true,
+    "provider_capture_request_fixture": true,
+    "provider_capture_response_fixture": true,
+    "provider_capture_fixture_verifier": true,
+    "adapter_full_validation_wired": true
+  },
+  "current_boundary": {
+    "provider_call_performed": false,
+    "provider_output_captured": false,
+    "provider_authority": false,
+    "persisted": false,
+    "live_calls_allowed": false
+  },
+  "next_goal_candidate": "SDK access decision boundary"
+}
