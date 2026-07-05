@@ -1,0 +1,14 @@
+{
+  "schema_version": "stegverse.adapter.ai_entry.provider_capture_request.v0.1",
+  "request_id": "provider-capture-preview-0001",
+  "activation_request_id": "backend-activation-preview-0001",
+  "route_id": "activation_request_preview",
+  "provider": "none-preview",
+  "mode": "preview_only",
+  "requested_capture": {
+    "perform_provider_call": false,
+    "capture_provider_output": false,
+    "persist_capture": false,
+    "treat_provider_output_as_authority": false
+  }
+}
