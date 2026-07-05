@@ -21,6 +21,7 @@ COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "scripts/verify_free_tier_quota.py"),
     (sys.executable, "scripts/verify_free_tier_limits.py"),
     (sys.executable, "scripts/verify_ai_entry_free_tier_metadata.py"),
+    (sys.executable, "scripts/verify_free_tier_capability_manifest.py"),
     (sys.executable, "-m", "pytest", "tests/test_micro_node_return_path.py", "-v"),
     (sys.executable, "-m", "pytest", "tests/test_ai_entry_provider_boundary.py", "-v"),
     (sys.executable, "-m", "pytest", "tests/test_ai_entry_backend_service.py", "-v"),
