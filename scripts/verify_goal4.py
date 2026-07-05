@@ -11,6 +11,7 @@ from typing import Sequence
 ROOT = Path(__file__).resolve().parents[1]
 
 COMMANDS: tuple[tuple[str, ...], ...] = (
+    (sys.executable, "scripts/check_lightweight_package_init.py"),
     (sys.executable, "scripts/verify_micro_node_return_path.py"),
     (sys.executable, "scripts/verify_ai_entry_provider_boundary.py"),
     (sys.executable, "scripts/verify_ai_entry_backend_service.py"),
