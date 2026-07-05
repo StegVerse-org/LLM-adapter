@@ -8,7 +8,7 @@ This file is the handoff source of truth for `StegVerse-org/LLM-adapter` until s
 
 Goal 7: bounded free-tier trust activation for the StegVerse governed LLM entry point.
 
-Goal 4 proved the micro-node governed return-path fixture. Goal 6 provided the adapter-side pieces needed by the StegVerse AI Entry Point: provider comparison boundary, backend response scaffold, pure endpoint function, and service wrapper scaffold. Goal 7 now adds the free-tier trust policy, quota evaluation boundary, and receipt/replay/reconstruction limit boundary so a public user can build confidence through bounded live governed inquiries rather than static demonstration material.
+Goal 4 proved the micro-node governed return-path fixture. Goal 6 provided the adapter-side pieces needed by the StegVerse AI Entry Point: provider comparison boundary, backend response scaffold, pure endpoint function, and service wrapper scaffold. Goal 7 now adds the free-tier trust policy, quota evaluation boundary, receipt/replay/reconstruction limit boundary, and Site-facing response metadata so a public user can build confidence through bounded live governed inquiries rather than static demonstration material.
 
 ## Goal 6 proof path
 
@@ -27,6 +27,7 @@ Site AI Entry request
 public user inquiry
 -> bounded free-tier quota envelope
 -> governed LLM adapter request
+-> Site-visible free-tier trust metadata
 -> transition receipt inspection
 -> bounded receipt export / replay / reconstruction limits
 -> upgrade only for scale, retention, connectors, premium models, or API depth
@@ -82,10 +83,13 @@ docs/FREE_TIER_TRUST_POLICY.md
 examples/free_tier_trust_policy.json
 llm_adapter/free_tier_quota.py
 llm_adapter/free_tier_limits.py
+llm_adapter/ai_entry_backend_service.py updated with free_tier_trust metadata
 scripts/verify_free_tier_quota.py
 scripts/verify_free_tier_limits.py
+scripts/verify_ai_entry_free_tier_metadata.py
 tests/test_free_tier_quota.py
 tests/test_free_tier_limits.py
+tests/test_ai_entry_free_tier_trust_metadata.py
 ```
 
 ## Required invariant
@@ -103,6 +107,7 @@ fixture_mode_default == true
 returned_to_origin == true
 free_tier_is_bounded_live_use == true
 static_demo_is_sufficient_trust_proof == false
+site_metadata_exposes_free_tier_trust == true
 quota_allow_is_admissibility == false
 quota_allow_is_execution_authority == false
 limit_allow_is_admissibility == false
@@ -119,8 +124,10 @@ upgrade_changes_admissibility_requirements == false
 python scripts/verify_goal4.py
 python scripts/verify_free_tier_quota.py
 python scripts/verify_free_tier_limits.py
+python scripts/verify_ai_entry_free_tier_metadata.py
 python -m pytest tests/test_free_tier_quota.py -v
 python -m pytest tests/test_free_tier_limits.py -v
+python -m pytest tests/test_ai_entry_free_tier_trust_metadata.py -v
 ```
 
 The existing aggregate verifier still includes:
@@ -144,6 +151,7 @@ python -m pytest tests/ -v
 ```text
 StegVerse-Labs/Site
   -> can consume the endpoint-shaped AI Entry response contract
+  -> can now consume free_tier_trust metadata from LLM-adapter response
   -> should later display the free-tier trust envelope after Site mirror validation is clean
 
 StegVerse-org/StegVerse-SDK
@@ -155,8 +163,8 @@ StegVerse-org/StegVerse-SDK
 
 ```text
 StegVerse-org/LLM-adapter:
-  - Site response metadata for free-tier availability
   - optional aggregate verifier wiring into scripts/verify_goal4.py after confirming no Goal 4 naming conflict
+  - optional README/status documentation update for free_tier_trust response field
 
 StegVerse-Labs/Site:
   - public LLM page section for bounded live trust tier
@@ -168,4 +176,4 @@ StegVerse-org/StegVerse-SDK:
 
 ## Archive posture
 
-This handoff preserves the Goal 7 bounded free-tier trust activation state so the complete thread can be archived without needing additional context to continue. Next work should add Site-facing response metadata in `StegVerse-org/LLM-adapter`, then mirror the public-facing summary to `StegVerse-Labs/Site` after the current Site mirror validation task is clean.
+This handoff preserves the Goal 7 bounded free-tier trust activation state so the complete thread can be archived without needing additional context to continue. Next work should optionally wire the Goal 7 verifiers into an aggregate check, update README/status documentation, then mirror the public-facing summary to `StegVerse-Labs/Site` after the current Site mirror validation task is clean.
