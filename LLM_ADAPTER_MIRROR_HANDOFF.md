@@ -6,9 +6,9 @@ This file is the handoff source of truth for `StegVerse-org/LLM-adapter` until s
 
 ## Active goal
 
-Goal 6: StegVerse AI Entry interim backend boundary.
+Goal 7: bounded free-tier trust activation for the StegVerse governed LLM entry point.
 
-Goal 4 proved the micro-node governed return-path fixture. Goal 6 now provides the adapter-side pieces needed by the StegVerse AI Entry Point: provider comparison boundary, backend response scaffold, pure endpoint function, and service wrapper scaffold. All current pieces are preview-only and side-effect free by default.
+Goal 4 proved the micro-node governed return-path fixture. Goal 6 provided the adapter-side pieces needed by the StegVerse AI Entry Point: provider comparison boundary, backend response scaffold, pure endpoint function, and service wrapper scaffold. Goal 7 now adds the free-tier trust policy boundary so a public user can build confidence through bounded live governed inquiries rather than static demonstration material.
 
 ## Goal 6 proof path
 
@@ -19,6 +19,17 @@ Site AI Entry request
 -> provider comparison boundary
 -> preview metadata
 -> response shape for Site
+```
+
+## Goal 7 trust path
+
+```text
+public user inquiry
+-> bounded free-tier quota envelope
+-> governed LLM adapter request
+-> transition receipt inspection
+-> limited replay / reconstruction window
+-> upgrade only for scale, retention, connectors, premium models, or API depth
 ```
 
 ## Installed baseline already present
@@ -64,6 +75,13 @@ tests/test_ai_entry_service_wrapper.py
 scripts/verify_goal4.py updated to include Goal 6 checks
 ```
 
+## Installed for Goal 7
+
+```text
+docs/FREE_TIER_TRUST_POLICY.md
+examples/free_tier_trust_policy.json
+```
+
 ## Required invariant
 
 ```text
@@ -77,6 +95,9 @@ endpoint_side_effects_performed == false
 service_wrapper_live_calls_enabled == false
 fixture_mode_default == true
 returned_to_origin == true
+free_tier_is_bounded_live_use == true
+static_demo_is_sufficient_trust_proof == false
+upgrade_changes_admissibility_requirements == false
 ```
 
 ## Canonical verification command
@@ -106,17 +127,31 @@ python -m pytest tests/ -v
 ```text
 StegVerse-Labs/Site
   -> can consume the endpoint-shaped AI Entry response contract
+  -> should later display the free-tier trust envelope after Site mirror validation is clean
 
 StegVerse-org/StegVerse-SDK
   -> contains the SDK receipt-capture preview boundary
+  -> should later ingest quota/receipt/replay policy metadata
 ```
 
 ## Remaining files or modules to install
 
 ```text
-None for the adapter-side preview/service-wrapper boundary.
+StegVerse-org/LLM-adapter:
+  - executable quota evaluator
+  - tests for free-tier quota limits
+  - receipt export limit contract
+  - replay/reconstruction limit contract
+  - Site response metadata for free-tier availability
+
+StegVerse-Labs/Site:
+  - public LLM page section for bounded live trust tier
+  - checker coverage after active Site mirror guard path is complete
+
+StegVerse-org/StegVerse-SDK:
+  - quota/receipt/replay metadata ingestion contract
 ```
 
 ## Archive posture
 
-This handoff preserves the current Goal 6 adapter-side AI Entry backend state so the complete thread can be archived without needing additional context to continue. Next work should run the canonical verification command or sync the response contract back to the Site/SKD docs as needed.
+This handoff preserves the Goal 7 bounded free-tier trust activation state so the complete thread can be archived without needing additional context to continue. Next work should add the executable quota evaluator and tests in `StegVerse-org/LLM-adapter`, then mirror the public-facing summary to `StegVerse-Labs/Site` after the current Site mirror validation task is clean.
