@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run Goal 4 micro-node return-path verification without network access."""
+"""Run LLM-adapter governed return-path and AI Entry boundary verification without network access."""
 from __future__ import annotations
 
 import json
@@ -12,7 +12,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "scripts/verify_micro_node_return_path.py"),
+    (sys.executable, "scripts/verify_ai_entry_provider_boundary.py"),
     (sys.executable, "-m", "pytest", "tests/test_micro_node_return_path.py", "-v"),
+    (sys.executable, "-m", "pytest", "tests/test_ai_entry_provider_boundary.py", "-v"),
     (sys.executable, "-m", "pytest", "tests/", "-v"),
 )
 
@@ -38,11 +40,11 @@ def main() -> int:
     results = [run_command(command) for command in COMMANDS]
     passed = all(bool(result["passed"]) for result in results)
     report = {
-        "goal": "Goal 4 micro-node governed return-path proof",
+        "goal": "Goal 6 AI Entry provider boundary over Goal 4 return-path proof",
         "repository": "StegVerse-org/LLM-adapter",
         "complete": passed,
         "results": results,
-        "next_step": "sync SDK and Site proof state" if passed else "repair failing command output",
+        "next_step": "sync SDK receipt capture boundary" if passed else "repair failing command output",
     }
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if passed else 1
