@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run adapter Goal 4 aggregate plus final boundary checks."""
+"""Run adapter Goal 4 aggregate plus boundary checks."""
 from __future__ import annotations
 
 import subprocess
@@ -16,6 +16,7 @@ COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "scripts/check_ai_entry_receipt_boundary.py"),
     (sys.executable, "scripts/check_ai_entry_provider_capture_boundary.py"),
     (sys.executable, "scripts/check_ai_entry_provider_capture_fixtures.py"),
+    (sys.executable, "scripts/check_ai_entry_provider_capture_completion.py"),
 )
 
 
