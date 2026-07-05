@@ -1,0 +1,42 @@
+{
+  "schema": "stegverse.llm_adapter.free_tier_trust_policy.v1",
+  "status": "policy_boundary_only",
+  "tier": "free",
+  "trust_goal": "bounded_live_governed_use",
+  "quota": {
+    "governed_inquiries_per_day": 5,
+    "trial_governed_inquiries_total": 25,
+    "receipt_exports_per_day": 1,
+    "replays_per_day": 1
+  },
+  "capabilities": {
+    "receipt_inspection": true,
+    "recent_session_replay": true,
+    "recent_session_reconstruction": true,
+    "sample_connectors": true,
+    "private_connectors": false,
+    "premium_models": false,
+    "byo_provider_key": "allowed_if_separately_governed"
+  },
+  "retention": {
+    "mode": "short_window_or_hash_pointer_only",
+    "full_evidence_bundle_retention": false,
+    "exportable_audit_packet": false
+  },
+  "upgrade_triggers": [
+    "quota_needed",
+    "longer_retention_needed",
+    "private_connector_needed",
+    "premium_model_needed",
+    "team_workspace_needed",
+    "api_access_needed",
+    "custom_policy_needed"
+  ],
+  "non_claims": {
+    "provider_response_is_authority": false,
+    "free_receipt_is_permanent_retention": false,
+    "replay_grants_execution_authority": false,
+    "reconstruction_grants_commit_time_standing": false,
+    "upgrade_changes_admissibility_requirements": false
+  }
+}
