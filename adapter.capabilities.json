@@ -1,7 +1,7 @@
 {
-  "schema_version": "stegverse.llm_adapter.capabilities.v0.1",
+  "schema_version": "stegverse.llm_adapter.capabilities.v0.2",
   "repo": "StegVerse-org/LLM-adapter",
-  "status": "adapter-boundary-complete",
+  "status": "adapter-boundary-complete-with-free-tier-trust-boundary",
   "runtime_surfaces": {
     "provider_request_envelope": "built",
     "fixture_provider": "built",
@@ -13,14 +13,58 @@
     "commitment_request": "built_non_authorizing",
     "authority_client": "built_non_executing_fail_closed_default",
     "execution_gateway": "built_disabled_default",
-    "cli_fixture_runner": "built"
+    "cli_fixture_runner": "built",
+    "ai_entry_backend_response": "built_preview_only",
+    "ai_entry_free_tier_trust_metadata": "built_preview_only",
+    "free_tier_quota_evaluator": "built_side_effect_free",
+    "free_tier_receipt_replay_limits": "built_side_effect_free"
+  },
+  "ai_entry_response_fields": {
+    "free_tier_trust": {
+      "schema_version": "stegverse.ai_entry.free_tier_trust.v0.1",
+      "status": "built_preview_only",
+      "bounded_live_use": true,
+      "static_demo_only": false,
+      "quota": "ALLOW_QUOTA or DENY_QUOTA product-boundary metadata",
+      "receipt_replay_limits": "ALLOW_LIMIT or DENY_LIMIT product-boundary metadata",
+      "trust_window": {
+        "curiosity_level_meaningful_inquiries": "3-10",
+        "reliance_level_evaluation_inquiries": "20-50"
+      },
+      "upgrade_for": [
+        "higher_quota",
+        "private_connectors",
+        "premium_models",
+        "longer_retention",
+        "deeper_replay",
+        "deeper_reconstruction",
+        "team_workspace",
+        "api_access",
+        "custom_policy",
+        "exportable_audit_packet"
+      ]
+    }
+  },
+  "free_tier_policy": {
+    "policy_doc": "docs/FREE_TIER_TRUST_POLICY.md",
+    "policy_manifest": "examples/free_tier_trust_policy.json",
+    "quota_module": "llm_adapter/free_tier_quota.py",
+    "receipt_replay_limit_module": "llm_adapter/free_tier_limits.py",
+    "site_metadata_verifier": "scripts/verify_ai_entry_free_tier_metadata.py",
+    "aggregate_verifier": "scripts/verify_goal4.py"
   },
   "explicit_non_claims": [
     "No provider output is treated as authority.",
     "No commitment request grants execution authority.",
     "No authority decision performs side effects.",
     "No execution gateway performs side effects by default.",
-    "Service-backed continuity search is an evidence source, not output authority."
+    "Service-backed continuity search is an evidence source, not output authority.",
+    "Quota availability is not admissibility.",
+    "Quota availability is not execution authority.",
+    "Receipt export is not permanent retention.",
+    "Replay does not grant commit-time standing.",
+    "Reconstruction does not grant commit-time standing.",
+    "Upgrading does not change admissibility requirements."
   ],
   "required_external_integrations": {
     "live_provider_credentials": [
@@ -31,12 +75,18 @@
       "STEGVERSE_CONTINUITY_SEARCH_URL",
       "STEGVERSE_CONTINUITY_SEARCH_KEY optional"
     ],
-    "external_executor": "not included; must be separately governed"
+    "external_executor": "not included; must be separately governed",
+    "site_display": "StegVerse-Labs/Site can consume free_tier_trust metadata after mirror validation",
+    "sdk_ingestion": "StegVerse-org/StegVerse-SDK can ingest quota and receipt/replay metadata after contract alignment"
   },
   "local_verification": {
     "unit_tests": "pytest",
     "cli_fixture": "stegverse-llm-adapter fixtures/governed_response_fixture.json --pretty",
-    "smoke_script": "python scripts/smoke_governed_session.py"
+    "smoke_script": "python scripts/smoke_governed_session.py",
+    "aggregate_verifier": "python scripts/verify_goal4.py",
+    "free_tier_quota_verifier": "python scripts/verify_free_tier_quota.py",
+    "free_tier_limits_verifier": "python scripts/verify_free_tier_limits.py",
+    "ai_entry_free_tier_metadata_verifier": "python scripts/verify_ai_entry_free_tier_metadata.py"
   },
-  "activation_definition": "A fixture or provider response can move through provider request, continuity evidence, adapter receipt, action route, commitment request, authority decision, and disabled execution handoff without side effects."
+  "activation_definition": "A fixture or provider response can move through provider request, continuity evidence, adapter receipt, action route, commitment request, authority decision, disabled execution handoff, and Site-facing free-tier trust metadata without side effects."
 }
