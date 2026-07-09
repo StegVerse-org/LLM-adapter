@@ -1,0 +1,11 @@
+{
+  "fixture_type": "hps_adapter_consumption",
+  "fixture_id": "hps_adapter_allowed_001",
+  "requested_action": "tool.use",
+  "hps_route_decision": "ALLOW",
+  "adapter_action": "PROCEED_TO_NEXT_GOVERNED_BOUNDARY",
+  "execution_authority_granted": false,
+  "provider_output_is_authority": false,
+  "receipt_required": true,
+  "expected_result": "PASS"
+}
