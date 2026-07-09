@@ -1,0 +1,11 @@
+{
+  "fixture_type": "hps_adapter_consumption",
+  "fixture_id": "hps_adapter_fail_closed_001",
+  "requested_action": "external.api.action",
+  "hps_route_decision": "FAIL_CLOSED",
+  "adapter_action": "BLOCK_CONSEQUENCE_AND_PRESERVE_EVIDENCE",
+  "execution_authority_granted": false,
+  "provider_output_is_authority": false,
+  "receipt_required": true,
+  "expected_result": "PASS"
+}
