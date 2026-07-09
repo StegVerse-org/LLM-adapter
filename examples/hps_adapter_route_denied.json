@@ -1,0 +1,11 @@
+{
+  "fixture_type": "hps_adapter_consumption",
+  "fixture_id": "hps_adapter_denied_001",
+  "requested_action": "publication.handoff",
+  "hps_route_decision": "DENY",
+  "adapter_action": "BLOCK_CONSEQUENCE",
+  "execution_authority_granted": false,
+  "provider_output_is_authority": false,
+  "receipt_required": true,
+  "expected_result": "PASS"
+}
