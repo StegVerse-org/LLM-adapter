@@ -6,9 +6,76 @@ This file is the handoff source of truth for `StegVerse-org/LLM-adapter` until s
 
 ## Active goal
 
+Goal 8: HPS adapter consumption.
+
+Goal 7 bounded free-tier trust activation is preserved below as completed prior context. Goal 8 adds consumption of SDK HPS route decisions before adapter-mediated consequence.
+
+## Goal 8 upstream inputs
+
+```text
+Admissible-Existence/HPS
+  -> HPS formalism and verifiers activated
+  -> HPS Verify #12 observed successful by user screenshot
+  -> 15 tests passed
+
+StegVerse-org/StegVerse-SDK
+  -> HPS SDK route contract installed
+  -> SDK workflow observation pending/no run reported by connector
+
+master-records/orchestration
+  -> HPS ecosystem orchestration cycle installed
+  -> LLM-adapter HPS participant record installed
+```
+
+## Goal 8 route consumption rule
+
+```text
+Adapter output is not execution.
+SDK route ALLOW is not execution authority.
+HPS route DENY or FAIL_CLOSED must block adapter-mediated consequence.
+```
+
+## Installed for Goal 8
+
+```text
+docs/HPS_ADAPTER_CONSUMPTION.md
+examples/hps_adapter_route_allowed.json
+examples/hps_adapter_route_denied.json
+examples/hps_adapter_route_fail_closed.json
+scripts/verify_hps_adapter_consumption.py
+tests/test_hps_adapter_consumption.py
+LLM_ADAPTER_MIRROR_HANDOFF.md updated
+```
+
+## Goal 8 verification commands
+
+```bash
+python scripts/verify_hps_adapter_consumption.py examples/hps_adapter_route_allowed.json
+python scripts/verify_hps_adapter_consumption.py examples/hps_adapter_route_denied.json
+python scripts/verify_hps_adapter_consumption.py examples/hps_adapter_route_fail_closed.json
+pytest tests/test_hps_adapter_consumption.py -v
+```
+
+## Goal 8 downstream sync targets
+
+```text
+master-records/orchestration
+  -> update LLM-adapter participant from PENDING to INSTALLED
+
+StegVerse-Labs/Site
+  -> consume HPS visualization status and adapter consumption state
+
+StegVerse-Labs/admissibility-wiki
+  -> explain adapter HPS route consumption after Site/adapter records align
+```
+
+---
+
+## Preserved Goal 7 context
+
 Goal 7: bounded free-tier trust activation for the StegVerse governed LLM entry point.
 
-Goal 4 proved the micro-node governed return-path fixture. Goal 6 provided the adapter-side pieces needed by the StegVerse AI Entry Point: provider comparison boundary, backend response scaffold, pure endpoint function, and service wrapper scaffold. Goal 7 now adds the free-tier trust policy, quota evaluation boundary, receipt/replay/reconstruction limit boundary, Site-facing response metadata, aggregate verification wiring, README/status documentation, and machine-readable capability manifest support so a public user can build confidence through bounded live governed inquiries rather than static demonstration material.
+Goal 4 proved the micro-node governed return-path fixture. Goal 6 provided the adapter-side pieces needed by the StegVerse AI Entry Point: provider comparison boundary, backend response scaffold, pure endpoint function, and service wrapper scaffold. Goal 7 added the free-tier trust policy, quota evaluation boundary, receipt/replay/reconstruction limit boundary, Site-facing response metadata, aggregate verification wiring, README/status documentation, and machine-readable capability manifest support so a public user can build confidence through bounded live governed inquiries rather than static demonstration material.
 
 ## Goal 6 proof path
 
@@ -125,6 +192,11 @@ replay_grants_commit_time_standing == false
 reconstruction_grants_commit_time_standing == false
 receipt_export_is_permanent_retention == false
 upgrade_changes_admissibility_requirements == false
+hps_route_decision_is_execution_authority == false
+adapter_output_is_execution_authority == false
+route_deny_blocks_consequence == true
+route_fail_closed_blocks_consequence == true
+route_allow_only_allows_next_boundary == true
 ```
 
 ## Canonical verification command
@@ -133,62 +205,28 @@ upgrade_changes_admissibility_requirements == false
 python scripts/verify_goal4.py
 ```
 
-The aggregate verifier now includes:
+Additional Goal 8 verification:
 
 ```bash
-python scripts/verify_free_tier_quota.py
-python scripts/verify_free_tier_limits.py
-python scripts/verify_ai_entry_free_tier_metadata.py
-python scripts/verify_free_tier_capability_manifest.py
-python -m pytest tests/test_free_tier_quota.py -v
-python -m pytest tests/test_free_tier_limits.py -v
-python -m pytest tests/test_ai_entry_free_tier_trust_metadata.py -v
-```
-
-It also preserves the Goal 4 and Goal 6 checks:
-
-```bash
-python scripts/verify_micro_node_return_path.py
-python scripts/verify_ai_entry_provider_boundary.py
-python scripts/verify_ai_entry_backend_service.py
-python scripts/verify_ai_entry_endpoint.py
-python scripts/verify_ai_entry_service_wrapper.py
-python -m pytest tests/test_micro_node_return_path.py -v
-python -m pytest tests/test_ai_entry_provider_boundary.py -v
-python -m pytest tests/test_ai_entry_backend_service.py -v
-python -m pytest tests/test_ai_entry_endpoint.py -v
-python -m pytest tests/test_ai_entry_service_wrapper.py -v
-```
-
-## Downstream sync targets
-
-```text
-StegVerse-Labs/Site
-  -> can consume the endpoint-shaped AI Entry response contract
-  -> can consume free_tier_trust metadata from LLM-adapter response
-  -> can consume adapter.capabilities.json free-tier fields
-  -> should later display the free-tier trust envelope after Site mirror validation is clean
-
-StegVerse-org/StegVerse-SDK
-  -> contains the SDK receipt-capture preview boundary
-  -> should later ingest quota/receipt/replay policy metadata
-  -> can use adapter.capabilities.json for free-tier field discovery
+python scripts/verify_hps_adapter_consumption.py examples/hps_adapter_route_allowed.json
+python scripts/verify_hps_adapter_consumption.py examples/hps_adapter_route_denied.json
+python scripts/verify_hps_adapter_consumption.py examples/hps_adapter_route_fail_closed.json
+python -m pytest tests/test_hps_adapter_consumption.py -v
 ```
 
 ## Remaining files or modules to install
 
 ```text
 StegVerse-org/LLM-adapter:
-  - no remaining adapter-side Goal 7 files known at this handoff
+  - no known Goal 8 adapter-side files remain at this handoff
+
+master-records/orchestration:
+  - update LLM-adapter HPS participant record to INSTALLED
 
 StegVerse-Labs/Site:
-  - public LLM page section for bounded live trust tier
-  - checker coverage after active Site mirror guard path is complete
-
-StegVerse-org/StegVerse-SDK:
-  - quota/receipt/replay metadata ingestion contract
+  - public HPS visualization / ecosystem chat integration after Site handoff review
 ```
 
 ## Archive posture
 
-This handoff preserves the Goal 7 bounded free-tier trust activation state so the complete thread can be archived without needing additional context to continue. Next work should mirror the public-facing summary to `StegVerse-Labs/Site` after the current Site mirror validation task is clean, then add `StegVerse-org/StegVerse-SDK` metadata ingestion.
+This handoff preserves the Goal 8 HPS adapter consumption state and prior Goal 7 bounded free-tier trust activation state so the complete thread can be archived without needing additional context to continue.
