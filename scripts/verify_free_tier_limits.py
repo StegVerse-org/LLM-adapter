@@ -4,11 +4,15 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from llm_adapter.free_tier_limits import ReceiptReplayUsage, evaluate_receipt_replay_limits
 
-ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "examples" / "free_tier_trust_policy.json"
 MODULE_PATH = ROOT / "llm_adapter" / "free_tier_limits.py"
 TEST_PATH = ROOT / "tests" / "test_free_tier_limits.py"
