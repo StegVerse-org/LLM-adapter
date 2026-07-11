@@ -39,5 +39,25 @@ jobs:
         run: python scripts/verify_free_tier_capability_manifest.py
       - name: Verify transition candidate
         run: python scripts/verify_llm_transition_candidate.py examples/llm_transition_candidate.json
+      - name: Test micro-node return path
+        run: python -m pytest tests/test_micro_node_return_path.py -v
+      - name: Test provider boundary
+        run: python -m pytest tests/test_ai_entry_provider_boundary.py -v
+      - name: Test backend service
+        run: python -m pytest tests/test_ai_entry_backend_service.py -v
+      - name: Test backend preview marker
+        run: python -m pytest tests/test_ai_entry_backend_preview_marker.py -v
+      - name: Test endpoint
+        run: python -m pytest tests/test_ai_entry_endpoint.py -v
+      - name: Test service wrapper
+        run: python -m pytest tests/test_ai_entry_service_wrapper.py -v
+      - name: Test free-tier quota
+        run: python -m pytest tests/test_free_tier_quota.py -v
+      - name: Test free-tier limits
+        run: python -m pytest tests/test_free_tier_limits.py -v
+      - name: Test free-tier trust metadata
+        run: python -m pytest tests/test_ai_entry_free_tier_trust_metadata.py -v
+      - name: Test transition candidate
+        run: python -m pytest tests/test_transition_candidate.py -v
       - name: Run canonical Goal 4 verification
         run: python scripts/verify_goal4_full.py
