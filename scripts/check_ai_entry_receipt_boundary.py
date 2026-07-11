@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,10 +23,12 @@ def fail(message: str) -> None:
 
 
 def load_module():
-    spec = importlib.util.spec_from_file_location("ai_entry_receipt_boundary", MODULE)
+    module_name = "ai_entry_receipt_boundary"
+    spec = importlib.util.spec_from_file_location(module_name, MODULE)
     if spec is None or spec.loader is None:
         fail("cannot load module spec")
     module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
     spec.loader.exec_module(module)
     return module
 
