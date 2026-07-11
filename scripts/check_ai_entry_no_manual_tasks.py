@@ -12,26 +12,36 @@ STATUS = ROOT / "docs" / "AI_ENTRY_ADAPTER_RUN_STATUS.md"
 WORKFLOW_STATUS = ROOT / "docs" / "AI_ENTRY_WORKFLOW_STATUS.md"
 HANDOFF = ROOT / "LLM_ADAPTER_MIRROR_HANDOFF.md"
 
-REQUIRED = "python scripts/verify_goal4.py"
+SUPPORTED_WORKFLOW_COMMANDS = (
+    "python scripts/verify_goal4.py",
+    "python scripts/verify_goal4_full.py",
+)
 
 
 def fail(message: str) -> None:
     raise SystemExit(f"AI_ENTRY_ADAPTER_NO_MANUAL_TASKS_FAIL: {message}")
 
 
-def require_text(path: Path, markers: tuple[str, ...]) -> None:
+def require_text(path: Path, markers: tuple[str, ...]) -> str:
     if not path.exists():
         fail(f"missing {path.relative_to(ROOT)}")
     text = path.read_text(encoding="utf-8")
     for marker in markers:
         if marker not in text:
             fail(f"{path.relative_to(ROOT)} missing {marker}")
+    return text
+
+
+def require_supported_workflow(path: Path) -> None:
+    text = require_text(path, ("workflow_dispatch",))
+    if not any(command in text for command in SUPPORTED_WORKFLOW_COMMANDS):
+        fail(f"{path.relative_to(ROOT)} missing supported Goal 4 validation command")
 
 
 def main() -> int:
     require_text(AGGREGATE, ("verify_ai_entry_service_wrapper.py", "tests/test_ai_entry_service_wrapper.py"))
-    require_text(CANONICAL, (REQUIRED, "workflow_dispatch"))
-    require_text(MIRROR, (REQUIRED, "workflow_dispatch"))
+    require_supported_workflow(CANONICAL)
+    require_supported_workflow(MIRROR)
     require_text(STATUS, ("installation_complete == true", "workflow_run_confirmed == false"))
     require_text(WORKFLOW_STATUS, ("Canonical: .github/workflows/validate.yml", "Mirror: iosnoperiod/github/workflows/validate.yml"))
     require_text(HANDOFF, ("None for the adapter-side preview/service-wrapper boundary", "complete thread can be archived"))
