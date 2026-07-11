@@ -51,15 +51,29 @@ def run_command(command: Sequence[str]) -> dict[str, object]:
 
 def main() -> int:
     results = [run_command(command) for command in COMMANDS]
-    passed = all(bool(result["passed"]) for result in results)
+    failed_commands = [
+        {
+            "command": result["command"],
+            "returncode": result["returncode"],
+            "output": result["output"],
+        }
+        for result in results
+        if not bool(result["passed"])
+    ]
+    passed = not failed_commands
     report = {
         "goal": "AI Entry adapter, free-tier trust, and governed transition candidate checks",
         "repository": "StegVerse-org/LLM-adapter",
         "complete": passed,
         "results": results,
-        "next_step": "review command output" if passed else "repair failing command output",
+        "failed_commands": failed_commands,
+        "next_step": "none" if passed else "repair listed failed commands",
     }
     print(json.dumps(report, indent=2, sort_keys=True))
+    if failed_commands:
+        print("FAILED_COMMANDS:")
+        for item in failed_commands:
+            print(f"- {item['command']} (exit {item['returncode']})")
     return 0 if passed else 1
 
 
