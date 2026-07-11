@@ -59,5 +59,19 @@ jobs:
         run: python -m pytest tests/test_ai_entry_free_tier_trust_metadata.py -v
       - name: Test transition candidate
         run: python -m pytest tests/test_transition_candidate.py -v
+      - name: Check workflow parity
+        run: python scripts/check_workflow_parity.py
+      - name: Check authority boundary
+        run: python scripts/check_ai_entry_authority_boundary.py
+      - name: Check receipt boundary
+        run: python scripts/check_ai_entry_receipt_boundary.py
+      - name: Check provider capture boundary
+        run: python scripts/check_ai_entry_provider_capture_boundary.py
+      - name: Check provider capture fixtures
+        run: python scripts/check_ai_entry_provider_capture_fixtures.py
+      - name: Check provider capture completion
+        run: python scripts/check_ai_entry_provider_capture_completion.py
+      - name: Check recovery boundary
+        run: python scripts/check_ai_entry_recovery_boundary.py
       - name: Run canonical Goal 4 verification
         run: python scripts/verify_goal4_full.py
