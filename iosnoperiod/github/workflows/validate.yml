@@ -15,5 +15,63 @@ jobs:
           python-version: '3.11'
       - name: Install test dependency
         run: python -m pip install pytest
+      - name: Check lightweight package init
+        run: python scripts/check_lightweight_package_init.py
+      - name: Verify micro-node return path
+        run: python scripts/verify_micro_node_return_path.py
+      - name: Verify provider boundary
+        run: python scripts/verify_ai_entry_provider_boundary.py
+      - name: Verify backend service
+        run: python scripts/verify_ai_entry_backend_service.py
+      - name: Verify endpoint
+        run: python scripts/verify_ai_entry_endpoint.py
+      - name: Verify service wrapper
+        run: python scripts/verify_ai_entry_service_wrapper.py
+      - name: Check no-manual-task wiring
+        run: python scripts/check_ai_entry_no_manual_tasks.py
+      - name: Verify free-tier quota
+        run: python scripts/verify_free_tier_quota.py
+      - name: Verify free-tier limits
+        run: python scripts/verify_free_tier_limits.py
+      - name: Verify free-tier metadata
+        run: python scripts/verify_ai_entry_free_tier_metadata.py
+      - name: Verify capability manifest
+        run: python scripts/verify_free_tier_capability_manifest.py
+      - name: Verify transition candidate
+        run: python scripts/verify_llm_transition_candidate.py examples/llm_transition_candidate.json
+      - name: Test micro-node return path
+        run: python -m pytest tests/test_micro_node_return_path.py -v
+      - name: Test provider boundary
+        run: python -m pytest tests/test_ai_entry_provider_boundary.py -v
+      - name: Test backend service
+        run: python -m pytest tests/test_ai_entry_backend_service.py -v
+      - name: Test backend preview marker
+        run: python -m pytest tests/test_ai_entry_backend_preview_marker.py -v
+      - name: Test endpoint
+        run: python -m pytest tests/test_ai_entry_endpoint.py -v
+      - name: Test service wrapper
+        run: python -m pytest tests/test_ai_entry_service_wrapper.py -v
+      - name: Test free-tier quota
+        run: python -m pytest tests/test_free_tier_quota.py -v
+      - name: Test free-tier limits
+        run: python -m pytest tests/test_free_tier_limits.py -v
+      - name: Test free-tier trust metadata
+        run: python -m pytest tests/test_ai_entry_free_tier_trust_metadata.py -v
+      - name: Test transition candidate
+        run: python -m pytest tests/test_transition_candidate.py -v
+      - name: Check workflow parity
+        run: python scripts/check_workflow_parity.py
+      - name: Check authority boundary
+        run: python scripts/check_ai_entry_authority_boundary.py
+      - name: Check receipt boundary
+        run: python scripts/check_ai_entry_receipt_boundary.py
+      - name: Check provider capture boundary
+        run: python scripts/check_ai_entry_provider_capture_boundary.py
+      - name: Check provider capture fixtures
+        run: python scripts/check_ai_entry_provider_capture_fixtures.py
+      - name: Check provider capture completion
+        run: python scripts/check_ai_entry_provider_capture_completion.py
+      - name: Check recovery boundary
+        run: python scripts/check_ai_entry_recovery_boundary.py
       - name: Run canonical Goal 4 verification
         run: python scripts/verify_goal4_full.py

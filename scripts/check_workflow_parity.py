@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = ROOT / ".github" / "workflows" / "validate.yml"
 MIRROR = ROOT / "iosnoperiod" / "github" / "workflows" / "validate.yml"
-REQUIRED_COMMAND = "python scripts/verify_goal4.py"
+REQUIRED_COMMAND = "python scripts/verify_goal4_full.py"
 
 
 def fail(message: str) -> None:
