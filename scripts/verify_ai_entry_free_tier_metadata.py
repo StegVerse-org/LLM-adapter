@@ -4,11 +4,15 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from llm_adapter.ai_entry_backend_service import build_ai_entry_backend_response
 
-ROOT = Path(__file__).resolve().parents[1]
 BACKEND_PATH = ROOT / "llm_adapter" / "ai_entry_backend_service.py"
 TEST_PATH = ROOT / "tests" / "test_ai_entry_free_tier_trust_metadata.py"
 
