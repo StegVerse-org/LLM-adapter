@@ -14,7 +14,7 @@ Mirror: iosnoperiod/github/workflows/validate.yml
 Both run:
 
 ```bash
-python scripts/verify_goal4.py
+python scripts/verify_goal4_full.py
 ```
 
 ## Installed workflow mirror files
