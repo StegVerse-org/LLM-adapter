@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0.0",
+  "record_type": "governed_transition_relationship",
+  "transition_id": "transition.llm.example-001",
+  "run_id": "llm-example-001",
+  "lifecycle_state": "DECLARED",
+  "origin": {
+    "origin_class": "LLM_ADAPTER_INPUT",
+    "event_id": "llm-event:example-001",
+    "origin_manifest_id": "origin.llm-adapter.llm-example-001",
+    "observed_at": "2026-07-10T00:00:00Z",
+    "source_ref": "StegVerse-org/LLM-adapter"
+  },
+  "relationships": {
+    "parent_transition_id": null,
+    "previous_receipt_id": null,
+    "actor_ref": "llm:user-ai-pair:example",
+    "target_ref": "bridge:hybrid-collab",
+    "repository_ref": "StegVerse-org/LLM-adapter",
+    "handoff_ref": "LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "task_ref": "task:llm-origin-route-candidate",
+    "next_task_ref": null
+  },
+  "governance": {
+    "policy_refs": ["policy:llm-origin-candidate"],
+    "delegation_refs": [],
+    "evidence_refs": ["evidence:llm-request:example-001"],
+    "micro_node_manifest_ref": null,
+    "admissibility_result": "PENDING",
+    "commit_time_validity": "PENDING"
+  },
+  "execution": {"action_ref": null, "verification_ref": null, "resulting_state_ref": null},
+  "continuity": {
+    "final_receipt_id": null,
+    "master_record_ref": null,
+    "master_record_status": "NOT_YET_SUBMITTED",
+    "reconstruction_status": "NOT_YET_CHECKED"
+  },
+  "projection": {
+    "site_visibility": "SUMMARY",
+    "wiki_visibility": "SUMMARY",
+    "redaction_class": "PUBLIC_REDACTED"
+  }
+}
