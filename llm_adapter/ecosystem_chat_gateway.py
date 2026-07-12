@@ -1,10 +1,8 @@
 """Deployable governed HTTP gateway for StegVerse Ecosystem Chat.
 
-The service accepts text-only requests, preserves canonical transition identity,
-rejects restricted administration and credential-shaped input, applies bounded
-rate limiting, returns a governed non-mutating response lifecycle, persists it
-in SQLite, and submits completed records to Master-Records only when a separately
-configured custody endpoint returns an identity-matched receipt.
+The service preserves canonical transition identity, rejects restricted requests,
+applies bounded rate and provider policies, persists lifecycle state, and submits
+completed records to Master-Records only after an identity-matched custody receipt.
 """
 from __future__ import annotations
 
@@ -20,11 +18,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from llm_adapter.ai_entry_backend_service import build_ai_entry_backend_response
-from llm_adapter.governed_chat_pipeline import (
-    build_relationship,
-    get_transition_status,
-    progress_bounded_response,
-)
+from llm_adapter.governed_chat_pipeline import build_relationship, get_transition_status, progress_bounded_response
+from llm_adapter.governed_provider import enabled as provider_enabled
+from llm_adapter.governed_provider import generate as generate_provider_response
 from llm_adapter.master_records_client import enabled as master_records_enabled
 from llm_adapter.master_records_client import submit_record
 from llm_adapter.transition_store import store
@@ -110,12 +106,10 @@ class WindowRateLimiter:
 
 RATE_LIMIT = int(os.getenv("STEGVERSE_CHAT_RATE_LIMIT", "20"))
 RATE_WINDOW_SECONDS = int(os.getenv("STEGVERSE_CHAT_RATE_WINDOW_SECONDS", "3600"))
-STORAGE_DURABLE_ACROSS_RESTARTS = os.getenv(
-    "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "false"
-).lower() == "true"
+STORAGE_DURABLE_ACROSS_RESTARTS = os.getenv("STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "false").lower() == "true"
 limiter = WindowRateLimiter(RATE_LIMIT, RATE_WINDOW_SECONDS)
 
-app = FastAPI(title="StegVerse Ecosystem Chat Gateway", version="1.2.0")
+app = FastAPI(title="StegVerse Ecosystem Chat Gateway", version="1.3.0")
 allowed_origins = [
     value.strip() for value in os.getenv(
         "STEGVERSE_ALLOWED_ORIGINS",
@@ -151,7 +145,7 @@ def health() -> dict[str, Any]:
     return {
         "status": "ok",
         "service": "stegverse-ecosystem-chat-gateway",
-        "schema_version": "1.2.0",
+        "schema_version": "1.3.0",
         "native_executor": "STEGVERSE_AI_ENTITY",
         "native_executor_status": "ACTIVE",
         "bounded_response_pipeline": True,
@@ -161,6 +155,9 @@ def health() -> dict[str, Any]:
         "local_persistence_is_master_records_custody": False,
         "custody_queue": True,
         "master_records_submission_enabled": master_records_enabled(),
+        "governed_provider_enabled": provider_enabled(),
+        "provider_output_is_authority": False,
+        "provider_failure_falls_back": True,
         "execution_authority": False,
         "repository_mutation_authority": False,
         "final_response_receipt_authority": True,
@@ -184,6 +181,7 @@ def transition_status(transition_id: str) -> dict[str, Any]:
         "master_record_status": record["continuity"]["master_record_status"],
         "master_record_ref": record["continuity"].get("master_record_ref"),
         "reconstruction_status": record["continuity"]["reconstruction_status"],
+        "provider": record.get("provider"),
         "sqlite_persisted": True,
         "storage_durable_across_restarts": STORAGE_DURABLE_ACROSS_RESTARTS,
         "local_persistence_is_custody": False,
@@ -203,9 +201,10 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
             headers={"Retry-After": str(retry_after)},
         )
 
+    identity = payload.transition_identity.model_dump()
     restricted = is_restricted(payload.message, payload.requested_route)
     backend = build_ai_entry_backend_response(payload.message).to_dict()
-    identity = payload.transition_identity.model_dump()
+    provider_result = None
 
     if restricted:
         task_status = "pending_authority"
@@ -216,10 +215,15 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
         routed_module = "Restricted admin"
         next_action = "Create a separately authorized governed task with bounded scope and receipt requirements."
     else:
+        provider_result = generate_provider_response(
+            message=payload.message,
+            transition_id=identity["transition_id"],
+            run_id=identity["run_id"],
+        )
+        response_text = provider_result.text if provider_result.used and provider_result.text else backend["stegverse_response"]
         task_status = "completed_bounded_response"
-        response_text = backend["stegverse_response"]
         routed_module = payload.requested_route if payload.requested_route != "Unknown" else backend["primary_route"]
-        next_action = "Inspect the returned lifecycle, final response receipt, and custody status; no repository mutation occurred."
+        next_action = "Inspect lifecycle, provider posture, final response receipt, and custody status; no repository mutation occurred."
 
     intake_receipt_id = gateway_receipt_id(payload, task_status)
     candidate = {
@@ -251,6 +255,13 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
         message=payload.message,
         gateway_receipt_id=intake_receipt_id,
     )
+    if provider_result is not None:
+        provider_record = provider_result.to_dict()
+        relationship["provider"] = provider_record
+        relationship["governance"]["evidence_refs"].append(f"provider-status:{provider_result.status}")
+        if provider_result.provider_receipt_id:
+            relationship["governance"]["evidence_refs"].append(provider_result.provider_receipt_id)
+
     progressed = progress_bounded_response(
         relationship=relationship,
         response_text=response_text,
@@ -281,6 +292,7 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
         "master_record_status": progressed["continuity"]["master_record_status"],
         "master_record_ref": progressed["continuity"].get("master_record_ref"),
         "reconstruction_status": progressed["continuity"]["reconstruction_status"],
+        "provider": progressed.get("provider"),
         "sqlite_persisted": True,
         "storage_durable_across_restarts": STORAGE_DURABLE_ACROSS_RESTARTS,
         "custody_submission": custody_result,
@@ -289,6 +301,7 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
         "authority": {
             "native_executor_active": True,
             "bounded_response_generation_allowed": not restricted,
+            "provider_output_is_authority": False,
             "repository_mutation_allowed": False,
             "publication_allowed": False,
             "gateway_receipt_is_final": False,
