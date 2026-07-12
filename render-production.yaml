@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: stegverse-ecosystem-chat-gateway
+    runtime: python
+    plan: starter
+    autoDeploy: true
+    buildCommand: pip install --upgrade pip && pip install -e '.[service]'
+    startCommand: python -m llm_adapter.custody_worker && uvicorn llm_adapter.ecosystem_chat_gateway:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    disk:
+      name: stegverse-chat-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: STEGVERSE_ALLOWED_ORIGINS
+        value: https://stegverse-labs.github.io
+      - key: STEGVERSE_CHAT_RATE_LIMIT
+        value: 20
+      - key: STEGVERSE_CHAT_RATE_WINDOW_SECONDS
+        value: 3600
+      - key: STEGVERSE_TRANSITION_DB
+        value: /var/data/stegverse-ecosystem-chat.db
+      - key: STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS
+        value: "true"
+      - key: STEGVERSE_MASTER_RECORDS_ENDPOINT
+        sync: false
+      - key: STEGVERSE_MASTER_RECORDS_TOKEN
+        sync: false
+      - key: STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS
+        sync: false
