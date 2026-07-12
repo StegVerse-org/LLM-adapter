@@ -38,14 +38,19 @@ def setup_function() -> None:
     limiter._events.clear()
 
 
-def test_health_reports_bounded_native_executor() -> None:
+def test_health_reports_bounded_native_executor_and_storage_posture() -> None:
     response = client.get("/health")
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ok"
+    assert body["schema_version"] == "1.2.0"
     assert body["native_executor"] == "STEGVERSE_AI_ENTITY"
     assert body["native_executor_status"] == "ACTIVE"
     assert body["bounded_response_pipeline"] is True
+    assert body["sqlite_transition_store"] is True
+    assert isinstance(body["storage_durable_across_restarts"], bool)
+    assert body["local_persistence_is_master_records_custody"] is False
+    assert body["custody_queue"] is True
     assert body["execution_authority"] is False
     assert body["repository_mutation_authority"] is False
     assert body["final_response_receipt_authority"] is True
@@ -70,10 +75,13 @@ def test_request_preserves_identity_and_returns_completed_lifecycle() -> None:
     assert body["transition_candidate"]["relationships"]["target_ref"] == "executor:STEGVERSE_AI_ENTITY"
     assert body["authority"]["native_executor_active"] is True
     assert body["authority"]["repository_mutation_allowed"] is False
-    assert body["master_record_status"] == "NOT_YET_SUBMITTED"
+    assert body["authority"]["local_persistence_is_master_records_custody"] is False
+    assert body["sqlite_persisted"] is True
+    assert body["master_record_status"] in {"PENDING", "RECORDED"}
+    assert body["custody_submission"]["state"] in {"PENDING", "RETRY", "RECORDED"}
 
 
-def test_transition_status_lookup_returns_same_receipt() -> None:
+def test_transition_status_lookup_returns_same_receipt_and_queue_state() -> None:
     created = client.post("/api/ecosystem-chat", json=payload()).json()
     response = client.get(f"/api/transitions/{created['transition_id']}")
     assert response.status_code == 200
@@ -82,7 +90,10 @@ def test_transition_status_lookup_returns_same_receipt() -> None:
     assert status["run_id"] == created["run_id"]
     assert status["lifecycle_state"] == "COMPLETED"
     assert status["final_receipt_id"] == created["final_receipt_id"]
-    assert status["master_record_status"] == "NOT_YET_SUBMITTED"
+    assert status["master_record_status"] in {"PENDING", "RECORDED"}
+    assert status["sqlite_persisted"] is True
+    assert status["local_persistence_is_custody"] is False
+    assert status["custody_submission"] is not None
 
 
 def test_restricted_request_routes_to_authority_review_without_final_receipt() -> None:
@@ -96,6 +107,7 @@ def test_restricted_request_routes_to_authority_review_without_final_receipt() -
     assert body["lifecycle_state"] == "VERIFICATION_REQUIRED"
     assert body["final_receipt"] is False
     assert body["final_receipt_id"] is None
+    assert body["custody_submission"] is None
     assert body["authority"]["repository_mutation_allowed"] is False
 
 
