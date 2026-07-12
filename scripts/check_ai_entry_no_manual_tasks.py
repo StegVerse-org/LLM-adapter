@@ -48,10 +48,10 @@ def main() -> int:
         HANDOFF,
         (
             "This file is the current handoff and task source of truth for `StegVerse-org/LLM-adapter`.",
-            "Phase: governed-provider-broker-installed",
             "LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING",
-            "Provider output != authority",
-            "Verify gateway, provider, pipeline, storage, custody, and blueprint tests.",
+            "provider output != authority",
+            "SQLite persistence != Master-Records custody",
+            "Verify current-main validate",
         ),
     )
     print("AI_ENTRY_ADAPTER_NO_MANUAL_TASKS_PASS")
