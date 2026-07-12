@@ -41,6 +41,8 @@ jobs:
         run: python scripts/verify_llm_transition_candidate.py examples/llm_transition_candidate.json
       - name: Verify recursive comparison telemetry
         run: python scripts/verify_recursive_comparison.py
+      - name: Verify adapter role and provider usage
+        run: python scripts/verify_provider_usage.py
       - name: Test micro-node return path
         run: python -m pytest tests/test_micro_node_return_path.py -v
       - name: Test provider boundary
@@ -63,6 +65,8 @@ jobs:
         run: python -m pytest tests/test_transition_candidate.py -v
       - name: Test recursive comparison telemetry
         run: python -m pytest tests/test_recursive_comparison.py -v
+      - name: Test adapter role and provider usage
+        run: python -m pytest tests/test_provider_usage.py -v
       - name: Check workflow parity
         run: python scripts/check_workflow_parity.py
       - name: Check authority boundary
