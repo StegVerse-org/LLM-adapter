@@ -1,0 +1,19 @@
+{
+  "output": {
+    "answer": "The external recursive route produced a recommendation without execution authority.",
+    "decision": "RECOMMENDATION_ONLY"
+  },
+  "metrics": {
+    "total_cost_usd": {"value": "0.0927", "unit": "USD", "evidence_class": "CONFIGURED", "source_ref": "fixture"},
+    "latency_ms": {"value": "7400", "unit": "ms", "evidence_class": "CONFIGURED", "source_ref": "fixture"},
+    "model_calls": {"value": "7", "unit": "count", "evidence_class": "CONFIGURED", "source_ref": "fixture"},
+    "input_tokens": {"value": "31600", "unit": "tokens", "evidence_class": "CONFIGURED", "source_ref": "fixture"},
+    "output_tokens": {"value": "4850", "unit": "tokens", "evidence_class": "CONFIGURED", "source_ref": "fixture"},
+    "tool_calls": {"value": "2", "unit": "count", "evidence_class": "CONFIGURED", "source_ref": "fixture"},
+    "retries": {"value": "2", "unit": "count", "evidence_class": "CONFIGURED", "source_ref": "fixture"},
+    "node_or_cell_activations": {"value": null, "unit": "count", "evidence_class": "UNAVAILABLE", "source_ref": null},
+    "receipt_count": {"value": "0", "unit": "count", "evidence_class": "CONFIGURED", "source_ref": "fixture"},
+    "reconstructable": {"value": "0", "unit": "boolean", "evidence_class": "CONFIGURED", "source_ref": "fixture"}
+  },
+  "admissibility_result": "NOT_EVALUATED_BY_EXTERNAL_ROUTE"
+}
