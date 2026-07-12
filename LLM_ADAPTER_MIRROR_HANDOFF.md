@@ -7,8 +7,8 @@ This file is the current handoff and task source of truth for `StegVerse-org/LLM
 ## Active goal
 
 ```text
-Goal: live governed Ecosystem Chat plus External Chat compatibility and delegated review services
-Phase: authenticated-external-review-transport-installed
+Goal: live governed Ecosystem Chat plus External Chat compatibility, review, publication, and bounded mutation services
+Phase: external-chat-commit-time-repository-mutation-adapter-installed
 Result: LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING
 ```
 
@@ -27,9 +27,11 @@ External Chat
 -> bounded compatibility evaluation
 -> explicit cooperative-review opt-in
 -> authenticated package-only intake
--> append-only review storage
 -> delegated reviewer correction
--> HMAC-bound intake and correction receipts
+-> independently delegated publication candidate
+-> separately authorized commit-time repository mutation
+-> GitHub-confirmed commit/blob identity
+-> HMAC-bound mutation receipt
 ```
 
 ## Installed service surfaces
@@ -46,8 +48,11 @@ llm_adapter/external_framework_compatibility.py
 llm_adapter/external_chat_api.py
 llm_adapter/external_review_store.py
 llm_adapter/external_review_api.py
+llm_adapter/external_publication_mutation.py
 tests/test_external_framework_compatibility.py
 tests/test_external_review_api.py
+tests/test_external_review_publication.py
+tests/test_external_publication_mutation.py
 render.yaml
 render-production.yaml
 ```
@@ -62,8 +67,57 @@ POST /api/external-framework-compatibility
 GET  /api/external-review/health
 POST /api/external-review/packages
 GET  /api/external-review/packages/{package_id}
+GET  /api/external-review/reviewer/packages/{package_id}
 POST /api/external-review/corrections
+POST /api/external-review/publication-transitions
+GET  /api/external-review/repository-mutation/health
+POST /api/external-review/repository-mutations
 ```
+
+## Repository mutation contract
+
+The adapter is disabled by default and accepts only stored `ALLOW_PUBLICATION_CANDIDATE` transitions.
+
+```text
+STEGVERSE_EXTERNAL_MUTATION_ENABLED=false
+```
+
+A mutation requires:
+
+```text
+registered mutator token hash
+current mutator delegation window
+repository:mutate scope
+repository:StegVerse-Labs/admissibility-wiki scope
+path:docs/external-frameworks/* scope
+framework:<framework_id> scope
+matching authority, delegation, and policy references
+unexpired request freshness
+matching publication/correction/package evidence chain
+matching expected main-branch head SHA
+matching expected target blob SHA
+```
+
+The only permitted destination is:
+
+```text
+repository: StegVerse-Labs/admissibility-wiki
+branch: main
+path prefix: docs/external-frameworks/
+```
+
+A GitHub write is attempted only after every predicate passes. A mutation receipt is issued only after GitHub returns both the new commit SHA and new blob SHA.
+
+Required external configuration:
+
+```text
+STEGVERSE_EXTERNAL_MUTATORS_JSON
+STEGVERSE_EXTERNAL_GITHUB_TOKEN
+STEGVERSE_EXTERNAL_MUTATION_RECEIPT_KEY
+STEGVERSE_EXTERNAL_MUTATION_POLICY_REF
+```
+
+No credential is returned to Site or stored in transition or receipt payloads.
 
 ## Receipt and authority separation
 
@@ -71,13 +125,13 @@ POST /api/external-review/corrections
 compatibility receipt != review intake receipt
 review intake receipt != correction receipt
 correction receipt != publication authority
-correction receipt != certification
-reviewer delegation != standing
+publication candidate != repository mutation
+mutation request != successful mutation
+mutation receipt != certification
+mutation receipt != standing
 provider output != authority
 SQLite persistence != Master-Records custody
 ```
-
-Review intake returns `AWAITING_DELEGATED_REVIEW` and no wiki record, publication authority, certification, or standing.
 
 ## Parallel comparison telemetry build
 
@@ -103,7 +157,7 @@ SDK comparison package
 -> return deterministic result hash to SDK
 ```
 
-Current fixture values are classified `CONFIGURED`, not `MEASURED`. Live provider traces must supply actual call, token, latency, cost, retry, tool, and output evidence before public delta claims are allowed.
+Current fixture values remain `CONFIGURED`, not `MEASURED`.
 
 ## Parallel cross-entry role and usage build
 
@@ -118,22 +172,7 @@ docs/ENTRY_POINT_ROLE.md
 .github/workflows/validate.yml role and usage verification steps
 ```
 
-The adapter now publishes a machine-readable role declaration and emits provider-owned `TRANSITION_USAGE_RECORDED` events compatible with the SDK usage ledger.
-
-Proof path:
-
-```text
-provider/model interaction
--> preserve session_id and transition lineage
--> classify interaction_type
--> record provider-owned metrics only
--> preserve MEASURED / CONFIGURED / DERIVED / UNAVAILABLE
--> emit stable measurement_id and event SHA-256
--> return receipt references and origin entry point
--> shared cross-entry usage ledger
-```
-
-Required invariants:
+Required invariants remain:
 
 ```text
 provider_output_is_authority == false
@@ -146,46 +185,20 @@ transition_lineage_preserved == true
 configured_values_are_measured == false
 ```
 
-Canonical verification:
-
-```bash
-python scripts/verify_recursive_comparison.py
-python scripts/verify_provider_usage.py
-python -m pytest tests/test_recursive_comparison.py tests/test_provider_usage.py -v
-```
-
 No new workflow was created.
 
 ## Next task
 
 ```text
-1. Verify current-main validation after role and provider-usage installation.
-2. Wire provider usage emission into the governed provider call lifecycle.
-3. Add live provider trace capture behind explicit provider configuration.
-4. Add a callable comparison HTTP route returning recursive route results.
-5. Add Master-Records custody queue support for provider usage events.
-6. Add a reviewer-facing console and separately authorized publication transition.
-7. Record live endpoint and CI evidence before public activation claims.
-```
-
-## Remaining cross-repository integrations
-
-```text
-StegVerse-org/StegVerse-SDK
--> paired comparison orchestration and shared usage aggregation installed
--> consume adapter provider-usage events in integrated sessions
-
-StegVerse-org/core-node-runtime-demo
--> provide governed measured telemetry
--> emit runtime/node/closure usage events
-
-StegVerse-Labs/Site
--> render entry-point role, transition prepend, session ledger, comparison outputs, and receipts
-
-master-records
--> retain usage events, paired trace hashes, receipts, and reconstruction pointers
+1. Verify current-main External Chat review, publication, and mutation tests.
+2. Verify the Admissibility Wiki mutation-receipt schema through Goal 5 aggregate validation.
+3. Add live health checks for compatibility, review, reviewer, publication, and mutation surfaces.
+4. Deploy with repository mutation disabled and verify all non-mutating routes.
+5. Perform one separately authorized staging mutation against a disposable external-framework path.
+6. Inspect commit SHA, blob SHA, content hash, and mutation receipt before any production enablement.
+7. Continue provider-usage lifecycle integration and measured trace capture in the parallel workstream.
 ```
 
 ## Archive readiness
 
-This handoff contains the combined gateway, provider, custody, compatibility, authenticated review, delegation, recursive comparison contract, machine-readable adapter role, provider usage-event emitter, validation wiring, authority boundaries, and continuation order. Earlier conversation context is not required. Live CI, provider lifecycle integration, and provider-backed measurement remain pending.
+This handoff contains the combined gateway, compatibility intake, authenticated review, delegated correction, publication candidacy, commit-time-revalidated repository mutation adapter, provider/custody boundaries, recursive comparison, provider usage events, and continuation order. Production mutation remains disabled and live validation remains pending.
