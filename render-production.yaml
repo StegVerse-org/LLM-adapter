@@ -34,6 +34,16 @@ services:
         sync: false
       - key: STEGVERSE_EXTERNAL_PUBLISHERS_JSON
         sync: false
+      - key: STEGVERSE_EXTERNAL_MUTATION_ENABLED
+        value: "false"
+      - key: STEGVERSE_EXTERNAL_MUTATORS_JSON
+        sync: false
+      - key: STEGVERSE_EXTERNAL_GITHUB_TOKEN
+        sync: false
+      - key: STEGVERSE_EXTERNAL_MUTATION_RECEIPT_KEY
+        sync: false
+      - key: STEGVERSE_EXTERNAL_MUTATION_POLICY_REF
+        sync: false
       - key: STEGVERSE_MASTER_RECORDS_ENDPOINT
         sync: false
       - key: STEGVERSE_MASTER_RECORDS_TOKEN
