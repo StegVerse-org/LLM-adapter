@@ -3,7 +3,7 @@
 The service accepts text-only requests, preserves canonical transition identity,
 rejects restricted administration and credential-shaped input, applies bounded
 rate limiting, returns a governed non-mutating response lifecycle, persists it
-durably, and submits completed records to Master-Records only when a separately
+in SQLite, and submits completed records to Master-Records only when a separately
 configured custody endpoint returns an identity-matched receipt.
 """
 from __future__ import annotations
@@ -110,6 +110,9 @@ class WindowRateLimiter:
 
 RATE_LIMIT = int(os.getenv("STEGVERSE_CHAT_RATE_LIMIT", "20"))
 RATE_WINDOW_SECONDS = int(os.getenv("STEGVERSE_CHAT_RATE_WINDOW_SECONDS", "3600"))
+STORAGE_DURABLE_ACROSS_RESTARTS = os.getenv(
+    "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "false"
+).lower() == "true"
 limiter = WindowRateLimiter(RATE_LIMIT, RATE_WINDOW_SECONDS)
 
 app = FastAPI(title="StegVerse Ecosystem Chat Gateway", version="1.2.0")
@@ -153,7 +156,9 @@ def health() -> dict[str, Any]:
         "native_executor_status": "ACTIVE",
         "bounded_response_pipeline": True,
         "transition_status_lookup": True,
-        "durable_transition_store": True,
+        "sqlite_transition_store": True,
+        "storage_durable_across_restarts": STORAGE_DURABLE_ACROSS_RESTARTS,
+        "local_persistence_is_master_records_custody": False,
         "custody_queue": True,
         "master_records_submission_enabled": master_records_enabled(),
         "execution_authority": False,
@@ -179,7 +184,8 @@ def transition_status(transition_id: str) -> dict[str, Any]:
         "master_record_status": record["continuity"]["master_record_status"],
         "master_record_ref": record["continuity"].get("master_record_ref"),
         "reconstruction_status": record["continuity"]["reconstruction_status"],
-        "durable_local_persistence": record["continuity"].get("durable_local_persistence", False),
+        "sqlite_persisted": True,
+        "storage_durable_across_restarts": STORAGE_DURABLE_ACROSS_RESTARTS,
         "local_persistence_is_custody": False,
         "custody_submission": custody,
         "relationship": record,
@@ -213,7 +219,7 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
         task_status = "completed_bounded_response"
         response_text = backend["stegverse_response"]
         routed_module = payload.requested_route if payload.requested_route != "Unknown" else backend["primary_route"]
-        next_action = "Inspect the returned lifecycle and final response receipt; no repository mutation occurred."
+        next_action = "Inspect the returned lifecycle, final response receipt, and custody status; no repository mutation occurred."
 
     intake_receipt_id = gateway_receipt_id(payload, task_status)
     candidate = {
@@ -275,7 +281,8 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
         "master_record_status": progressed["continuity"]["master_record_status"],
         "master_record_ref": progressed["continuity"].get("master_record_ref"),
         "reconstruction_status": progressed["continuity"]["reconstruction_status"],
-        "durable_local_persistence": True,
+        "sqlite_persisted": True,
+        "storage_durable_across_restarts": STORAGE_DURABLE_ACROSS_RESTARTS,
         "custody_submission": custody_result,
         "transition_candidate": progressed,
         "interaction_profile": payload.interaction_profile,
