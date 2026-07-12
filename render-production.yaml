@@ -30,3 +30,27 @@ services:
         sync: false
       - key: STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS
         sync: false
+      - key: STEGVERSE_PROVIDER_ENABLED
+        value: "false"
+      - key: STEGVERSE_PROVIDER_ENDPOINT
+        sync: false
+      - key: STEGVERSE_PROVIDER_ALLOWED_HOSTS
+        sync: false
+      - key: STEGVERSE_PROVIDER_TOKEN
+        sync: false
+      - key: STEGVERSE_PROVIDER_NAME
+        sync: false
+      - key: STEGVERSE_PROVIDER_MODEL
+        sync: false
+      - key: STEGVERSE_PROVIDER_DAILY_REQUEST_LIMIT
+        value: 100
+      - key: STEGVERSE_PROVIDER_DAILY_COST_LIMIT_USD
+        value: "5.00"
+      - key: STEGVERSE_PROVIDER_MAX_REQUEST_COST_USD
+        value: "0.25"
+      - key: STEGVERSE_PROVIDER_MAX_INPUT_CHARS
+        value: 12000
+      - key: STEGVERSE_PROVIDER_MAX_OUTPUT_CHARS
+        value: 6000
+      - key: STEGVERSE_PROVIDER_TIMEOUT_SECONDS
+        value: 20
