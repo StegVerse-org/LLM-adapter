@@ -107,7 +107,7 @@ Validation uses temporary SQLite paths for chat and review storage. Production u
 
 Both profiles require externally configured submitter authentication, receipt signing, and reviewer registry values.
 
-## Prior observed validation failure
+## Observed validation failures and repairs
 
 ```text
 Workflow: validate
@@ -116,9 +116,16 @@ Commit: 4896fb08338b5a28cb9afc142ee85e8bbe6a3fa2
 First failing step: Check no-manual-task wiring
 Failure class: stale handoff-marker assertion
 Repair commit: 89a55c63522f6366ff744aaacc90f58c9deed725
+
+Workflow: validate
+Run: 29191480720
+Commit: de4f6a31d6a53dd56747fb5bac7bac199749486a
+First failing step: Check no-manual-task wiring
+Failure class: phase-specific handoff-marker assertion after handoff advancement
+Repair commit: 1d924a411a88ef22d1709eca5066b2ce78d1b11f
 ```
 
-That repair was installed, but a later green run has not yet been recorded. The External Chat review transport also requires current-main verification.
+The no-manual-task checker now validates stable source-of-truth and authority markers instead of requiring one exact phase label. A green run on `1d924a411a...` or a documented successor remains required.
 
 ## Next task
 
