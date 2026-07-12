@@ -1,9 +1,4 @@
-"""Authenticated cooperative-review transport for External Chat.
-
-The service stores only the explicit review package. Raw framework artifacts are
-rejected by contract. Reviewer corrections require a hash-bound reviewer token,
-current delegation, and field/scope authorization.
-"""
+"""Authenticated, package-only cooperative-review transport for External Chat."""
 from __future__ import annotations
 
 import hashlib
@@ -14,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Any, Literal
 
 from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from llm_adapter.external_review_store import ReviewConflict, now_iso, store
 
@@ -29,15 +24,15 @@ def digest(payload: dict[str, Any]) -> str:
     return hashlib.sha256(canonical(payload)).hexdigest()
 
 
-def receipt(prefix: str, *parts: str) -> str:
+def signed_receipt(prefix: str, *parts: str) -> str:
     key = os.getenv("STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY", "")
     if not key:
         raise HTTPException(status_code=503, detail={"reason": "review_receipt_key_not_configured"})
-    material = "\n".join(parts).encode("utf-8")
-    return f"{prefix}:hmac-sha256:" + hmac.new(key.encode("utf-8"), material, hashlib.sha256).hexdigest()
+    signature = hmac.new(key.encode(), "\n".join(parts).encode(), hashlib.sha256).hexdigest()
+    return f"{prefix}:hmac-sha256:{signature}"
 
 
-def bearer_token(authorization: str | None) -> str:
+def bearer(authorization: str | None) -> str:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail={"reason": "bearer_token_required"})
     return authorization[7:].strip()
@@ -45,49 +40,40 @@ def bearer_token(authorization: str | None) -> str:
 
 def require_submitter(authorization: str | None) -> None:
     expected = os.getenv("STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN", "")
-    supplied = bearer_token(authorization)
-    if not expected or not hmac.compare_digest(supplied, expected):
+    if not expected or not hmac.compare_digest(bearer(authorization), expected):
         raise HTTPException(status_code=403, detail={"reason": "submitter_auth_failed"})
 
 
 def reviewer_registry() -> dict[str, dict[str, Any]]:
-    raw = os.getenv("STEGVERSE_EXTERNAL_REVIEWERS_JSON", "{}")
     try:
-        value = json.loads(raw)
+        value = json.loads(os.getenv("STEGVERSE_EXTERNAL_REVIEWERS_JSON", "{}"))
     except json.JSONDecodeError as exc:
-        raise HTTPException(status_code=503, detail={"reason": "reviewer_registry_invalid", "detail": str(exc)}) from exc
+        raise HTTPException(status_code=503, detail={"reason": "reviewer_registry_invalid"}) from exc
     if not isinstance(value, dict):
         raise HTTPException(status_code=503, detail={"reason": "reviewer_registry_invalid"})
     return value
 
 
 def parse_time(value: str | None) -> datetime | None:
-    if not value:
-        return None
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return datetime.fromisoformat(value.replace("Z", "+00:00")) if value else None
 
 
-def require_reviewer(authorization: str | None, reviewer_ref: str, requested_scopes: set[str]) -> dict[str, Any]:
-    token = bearer_token(authorization)
+def require_reviewer(authorization: str | None, reviewer_ref: str, scopes: set[str]) -> dict[str, Any]:
     profile = reviewer_registry().get(reviewer_ref)
     if not profile:
         raise HTTPException(status_code=403, detail={"reason": "reviewer_not_registered"})
-    supplied_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    supplied_hash = hashlib.sha256(bearer(authorization).encode()).hexdigest()
     if not hmac.compare_digest(supplied_hash, str(profile.get("token_sha256", ""))):
         raise HTTPException(status_code=403, detail={"reason": "reviewer_auth_failed"})
     now = datetime.now(timezone.utc)
-    valid_from = parse_time(profile.get("valid_from"))
-    valid_until = parse_time(profile.get("valid_until"))
+    valid_from, valid_until = parse_time(profile.get("valid_from")), parse_time(profile.get("valid_until"))
     if valid_from and now < valid_from:
         raise HTTPException(status_code=403, detail={"reason": "reviewer_delegation_not_yet_valid"})
     if valid_until and now > valid_until:
         raise HTTPException(status_code=403, detail={"reason": "reviewer_delegation_expired"})
     allowed = set(profile.get("scopes", []))
-    if "*" not in allowed and not requested_scopes.issubset(allowed):
-        raise HTTPException(
-            status_code=403,
-            detail={"reason": "review_scope_not_delegated", "requested": sorted(requested_scopes), "allowed": sorted(allowed)},
-        )
+    if "*" not in allowed and not scopes.issubset(allowed):
+        raise HTTPException(status_code=403, detail={"reason": "review_scope_not_delegated", "requested": sorted(scopes), "allowed": sorted(allowed)})
     if not profile.get("delegation_ref"):
         raise HTTPException(status_code=403, detail={"reason": "reviewer_delegation_ref_missing"})
     return profile
@@ -95,35 +81,33 @@ def require_reviewer(authorization: str | None, reviewer_ref: str, requested_sco
 
 class CooperativeReviewPackage(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    packet_type: Literal["external_framework_cooperative_review_package"]
     schema_version: Literal["1.0.0"]
-    package_id: str = Field(min_length=1, max_length=256)
+    packet_type: Literal["external_framework_cooperative_review_package"]
+    package_id: str | None = Field(default=None, max_length=256)
     framework_id: str = Field(min_length=1, max_length=128)
-    compatibility_receipt_id: str = Field(min_length=1, max_length=256)
-    submission_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    compatibility_result: Literal[
-        "COMPATIBILITY_EVIDENCE_READY",
-        "PARTIAL_COMPATIBILITY_INTAKE",
-        "FAIL_CLOSED_BOUNDARY_REVIEW",
-    ]
+    framework_name: str | None = Field(default=None, max_length=256)
+    compatibility_receipt_id: str = Field(pattern=r"^external-compatibility-receipt:sha256:[a-f0-9]{64}$")
+    submission_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    compatibility_result: Literal["COMPATIBILITY_EVIDENCE_READY", "PARTIAL_COMPATIBILITY_INTAKE", "FAIL_CLOSED_BOUNDARY_REVIEW"]
     submitter_opt_in: Literal[True]
+    publication_requested: bool
+    raw_submission_included: Literal[False]
     review_scope: list[str] = Field(min_length=1, max_length=50)
     evidence_references: list[str] = Field(default_factory=list, max_length=100)
-    publication_requested: bool = False
-    raw_submission_included: Literal[False]
+    contact_reference: str | None = Field(default=None, max_length=512)
     boundary: dict[str, bool]
 
-    @field_validator("boundary")
-    @classmethod
-    def validate_boundary(cls, value: dict[str, bool]) -> dict[str, bool]:
+    @model_validator(mode="after")
+    def canonical_boundary(self):
         required = {
-            "package_is_not_publication_authority": True,
-            "package_is_not_certification": True,
-            "package_creates_no_standing": True,
+            "package_is_publication_authority": False,
+            "package_is_certification": False,
+            "package_creates_standing": False,
+            "review_may_change_result_without_receipt": False,
         }
-        if any(value.get(key) is not expected for key, expected in required.items()):
+        if self.boundary != required:
             raise ValueError("cooperative review package boundary mismatch")
-        return value
+        return self
 
 
 class CorrectionRequest(BaseModel):
@@ -132,7 +116,7 @@ class CorrectionRequest(BaseModel):
     schema_version: Literal["1.0.0"]
     package_id: str = Field(min_length=1, max_length=256)
     challenged_receipt_id: str = Field(min_length=1, max_length=256)
-    challenged_submission_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    challenged_submission_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     reviewer_ref: str = Field(min_length=1, max_length=256)
     decision: Literal["UPHOLD", "CORRECT", "PARTIAL_CORRECTION", "INSUFFICIENT_EVIDENCE"]
     reviewed_fields: list[str] = Field(min_length=1, max_length=50)
@@ -142,93 +126,59 @@ class CorrectionRequest(BaseModel):
     replacement_receipt_id: str | None = Field(default=None, max_length=256)
     publication_authorized: Literal[False] = False
 
-    @field_validator("replacement_receipt_id")
-    @classmethod
-    def replacement_pair(cls, value: str | None, info):
-        decision = info.data.get("decision")
-        replacement_result = info.data.get("replacement_result")
-        if decision in {"CORRECT", "PARTIAL_CORRECTION"} and (not value or not replacement_result):
-            raise ValueError("correction decisions require replacement_result and replacement_receipt_id")
-        if decision in {"UPHOLD", "INSUFFICIENT_EVIDENCE"} and (value or replacement_result):
-            raise ValueError("non-correction decisions may not create replacement results or receipts")
-        return value
+    @model_validator(mode="after")
+    def replacement_pair(self):
+        replacement = bool(self.replacement_result and self.replacement_receipt_id)
+        if self.decision in {"CORRECT", "PARTIAL_CORRECTION"} and not replacement:
+            raise ValueError("correction decisions require replacement result and receipt")
+        if self.decision in {"UPHOLD", "INSUFFICIENT_EVIDENCE"} and (self.replacement_result or self.replacement_receipt_id):
+            raise ValueError("non-correction decisions may not create replacement results")
+        return self
 
 
 @router.get("/health")
 def review_health() -> dict[str, Any]:
     return {
-        "status": "ok",
-        "service": "stegverse-external-review",
-        "schema_version": "1.0.0",
-        "package_only_storage": True,
-        "raw_artifact_storage_allowed": False,
+        "status": "ok", "service": "stegverse-external-review", "schema_version": "1.0.0",
+        "package_only_storage": True, "raw_artifact_storage_allowed": False,
         "submitter_auth_configured": bool(os.getenv("STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN")),
         "reviewer_registry_configured": bool(os.getenv("STEGVERSE_EXTERNAL_REVIEWERS_JSON")),
         "receipt_key_configured": bool(os.getenv("STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY")),
-        "publication_authority": False,
-        "certification_authority": False,
+        "publication_authority": False, "certification_authority": False,
     }
 
 
 @router.post("/packages")
-def submit_review_package(
-    payload: CooperativeReviewPackage,
-    authorization: str | None = Header(default=None),
-) -> dict[str, Any]:
+def submit_review_package(payload: CooperativeReviewPackage, authorization: str | None = Header(default=None)) -> dict[str, Any]:
     require_submitter(authorization)
-    body = payload.model_dump()
+    body = payload.model_dump(exclude={"package_id"})
     content_sha = digest(body)
-    intake_receipt_id = receipt(
-        "external-review-intake-receipt",
-        body["package_id"], body["compatibility_receipt_id"], body["submission_sha256"], content_sha,
-    )
+    package_id = payload.package_id or f"external-review-package:sha256:{hashlib.sha256((payload.compatibility_receipt_id + payload.submission_sha256).encode()).hexdigest()}"
+    intake_receipt_id = signed_receipt("external-review-intake-receipt", package_id, payload.compatibility_receipt_id, payload.submission_sha256, content_sha)
     record = {
-        "package_id": body["package_id"],
-        "framework_id": body["framework_id"],
-        "compatibility_receipt_id": body["compatibility_receipt_id"],
-        "submission_sha256": body["submission_sha256"],
-        "content_sha256": content_sha,
-        "payload": body,
-        "intake_receipt_id": intake_receipt_id,
-        "review_state": "AWAITING_DELEGATED_REVIEW",
-        "received_at": now_iso(),
+        "package_id": package_id, "framework_id": payload.framework_id,
+        "compatibility_receipt_id": payload.compatibility_receipt_id, "submission_sha256": payload.submission_sha256,
+        "content_sha256": content_sha, "payload": body, "intake_receipt_id": intake_receipt_id,
+        "review_state": "AWAITING_DELEGATED_REVIEW", "received_at": now_iso(),
     }
     try:
         stored, created = store.append_package(record)
     except ReviewConflict as exc:
         raise HTTPException(status_code=409, detail={"reason": "review_package_conflict", "detail": str(exc)}) from exc
-    return {
-        **stored,
-        "created": created,
-        "raw_submission_stored": False,
-        "wiki_record_created": False,
-        "publication_authorized": False,
-        "standing_created": False,
-    }
+    return {**stored, "created": created, "raw_submission_stored": False, "wiki_record_created": False, "publication_authorized": False, "standing_created": False}
 
 
 @router.get("/packages/{package_id}")
-def get_review_package(
-    package_id: str,
-    authorization: str | None = Header(default=None),
-) -> dict[str, Any]:
+def get_review_package(package_id: str, authorization: str | None = Header(default=None)) -> dict[str, Any]:
     require_submitter(authorization)
     package = store.get_package(package_id)
     if not package:
         raise HTTPException(status_code=404, detail={"reason": "review_package_not_found"})
-    return {
-        **package,
-        "corrections": store.list_corrections(package_id),
-        "raw_submission_stored": False,
-        "publication_authorized": False,
-    }
+    return {**package, "corrections": store.list_corrections(package_id), "raw_submission_stored": False, "publication_authorized": False}
 
 
 @router.post("/corrections")
-def issue_correction(
-    payload: CorrectionRequest,
-    authorization: str | None = Header(default=None),
-) -> dict[str, Any]:
+def issue_correction(payload: CorrectionRequest, authorization: str | None = Header(default=None)) -> dict[str, Any]:
     package = store.get_package(payload.package_id)
     if not package:
         raise HTTPException(status_code=404, detail={"reason": "review_package_not_found"})
@@ -236,40 +186,21 @@ def issue_correction(
         raise HTTPException(status_code=409, detail={"reason": "challenged_receipt_identity_mismatch"})
     if payload.challenged_submission_sha256 != package["submission_sha256"]:
         raise HTTPException(status_code=409, detail={"reason": "challenged_submission_identity_mismatch"})
-    requested_scopes = {f"field:{field}" for field in payload.reviewed_fields}
+    scopes = {f"field:{field}" for field in payload.reviewed_fields}
     if package["payload"].get("publication_requested"):
-        requested_scopes.add("publication_review")
-    profile = require_reviewer(authorization, payload.reviewer_ref, requested_scopes)
-    body = payload.model_dump()
-    issued_at = now_iso()
+        scopes.add("publication_review")
+    profile = require_reviewer(authorization, payload.reviewer_ref, scopes)
+    body, issued_at = payload.model_dump(), now_iso()
     content_sha = digest(body)
-    correction_receipt_id = receipt(
-        "external-framework-correction-receipt",
-        payload.package_id, payload.challenged_receipt_id, payload.reviewer_ref,
-        str(profile["delegation_ref"]), payload.decision, content_sha, issued_at,
-    )
+    correction_receipt_id = signed_receipt("external-framework-correction-receipt", payload.package_id, payload.challenged_receipt_id, payload.reviewer_ref, str(profile["delegation_ref"]), payload.decision, content_sha, issued_at)
     record = {
-        "correction_receipt_id": correction_receipt_id,
-        "package_id": payload.package_id,
-        "challenged_receipt_id": payload.challenged_receipt_id,
-        "reviewer_ref": payload.reviewer_ref,
-        "reviewer_delegation_ref": profile["delegation_ref"],
-        "decision": payload.decision,
-        "content_sha256": content_sha,
-        "payload": body,
-        "issued_at": issued_at,
+        "correction_receipt_id": correction_receipt_id, "package_id": payload.package_id,
+        "challenged_receipt_id": payload.challenged_receipt_id, "reviewer_ref": payload.reviewer_ref,
+        "reviewer_delegation_ref": profile["delegation_ref"], "decision": payload.decision,
+        "content_sha256": content_sha, "payload": body, "issued_at": issued_at,
     }
     try:
         stored, created = store.append_correction(record)
     except ReviewConflict as exc:
         raise HTTPException(status_code=409, detail={"reason": "correction_conflict", "detail": str(exc)}) from exc
-    return {
-        **stored,
-        "created": created,
-        "reviewer_identity_verified": True,
-        "reviewer_delegation_verified": True,
-        "review_scope_verified": True,
-        "publication_authorized": False,
-        "certification_created": False,
-        "standing_created": False,
-    }
+    return {**stored, "created": created, "reviewer_identity_verified": True, "reviewer_delegation_verified": True, "review_scope_verified": True, "publication_authorized": False, "certification_created": False, "standing_created": False}
