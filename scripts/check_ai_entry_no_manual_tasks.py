@@ -44,7 +44,16 @@ def main() -> int:
     require_supported_workflow(MIRROR)
     require_text(STATUS, ("installation_complete == true", "workflow_run_confirmed == false"))
     require_text(WORKFLOW_STATUS, ("Canonical: .github/workflows/validate.yml", "Mirror: iosnoperiod/github/workflows/validate.yml"))
-    require_text(HANDOFF, ("None for the adapter-side preview/service-wrapper boundary", "complete thread can be archived"))
+    require_text(
+        HANDOFF,
+        (
+            "This file is the current handoff and task source of truth for `StegVerse-org/LLM-adapter`.",
+            "Phase: governed-provider-broker-installed",
+            "LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING",
+            "Provider output != authority",
+            "Verify gateway, provider, pipeline, storage, custody, and blueprint tests.",
+        ),
+    )
     print("AI_ENTRY_ADAPTER_NO_MANUAL_TASKS_PASS")
     return 0
 
