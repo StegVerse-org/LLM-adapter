@@ -187,10 +187,25 @@ configured_values_are_measured == false
 
 No new workflow was created.
 
+## Latest validation failure and bounded repair
+
+```text
+Workflow: validate
+Run: 29205769216
+Commit: 63cabd4095c5ffcf5f2488798023c94a77e1e0a4
+Job: validate
+First failing step: Check no-manual-task wiring
+Failure class: handoff next-task wording drift
+Repair commit: 5eb7c21f64a44810e402333f39384da60f86fbbf
+Verification: pending on the repair commit or successor
+```
+
+The validator was still coupled to the exact phrase `Verify current-main validate`. The handoff had legitimately advanced to a longer current-main verification task. The repair now checks stable source-of-truth, authority, custody, next-task, and current-main markers without enabling mutation, deployment, credentials, or release authority.
+
 ## Next task
 
 ```text
-1. Verify current-main External Chat review, publication, and mutation tests.
+1. Verify current-main External Chat review, publication, mutation, provider-usage, and no-manual-task validation after repair commit 5eb7c21f64a44810e402333f39384da60f86fbbf.
 2. Verify the Admissibility Wiki mutation-receipt schema through Goal 5 aggregate validation.
 3. Add live health checks for compatibility, review, reviewer, publication, and mutation surfaces.
 4. Deploy with repository mutation disabled and verify all non-mutating routes.
@@ -201,4 +216,4 @@ No new workflow was created.
 
 ## Archive readiness
 
-This handoff contains the combined gateway, compatibility intake, authenticated review, delegated correction, publication candidacy, commit-time-revalidated repository mutation adapter, provider/custody boundaries, recursive comparison, provider usage events, and continuation order. Production mutation remains disabled and live validation remains pending.
+This handoff contains the combined gateway, compatibility intake, authenticated review, delegated correction, publication candidacy, commit-time-revalidated repository mutation adapter, provider/custody boundaries, recursive comparison, provider usage events, latest validation evidence, bounded repair, and continuation order. Production mutation remains disabled and live validation remains pending.
