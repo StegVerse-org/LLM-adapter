@@ -7,8 +7,8 @@ This file is the current handoff and task source of truth for `StegVerse-org/LLM
 ## Active goal
 
 ```text
-Goal: live governed Ecosystem Chat plus External Chat compatibility, review, publication, and bounded mutation services
-Phase: external-chat-commit-time-repository-mutation-adapter-installed
+Goal: live governed Ecosystem Chat plus External Chat compatibility, review, publication, bounded mutation, and staging verification
+Phase: external-chat-live-health-and-disposable-staging-verifier-installed
 Result: LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING
 ```
 
@@ -49,6 +49,7 @@ llm_adapter/external_chat_api.py
 llm_adapter/external_review_store.py
 llm_adapter/external_review_api.py
 llm_adapter/external_publication_mutation.py
+scripts/verify_external_publication_staging.py
 tests/test_external_framework_compatibility.py
 tests/test_external_review_api.py
 tests/test_external_review_publication.py
@@ -82,21 +83,7 @@ The adapter is disabled by default and accepts only stored `ALLOW_PUBLICATION_CA
 STEGVERSE_EXTERNAL_MUTATION_ENABLED=false
 ```
 
-A mutation requires:
-
-```text
-registered mutator token hash
-current mutator delegation window
-repository:mutate scope
-repository:StegVerse-Labs/admissibility-wiki scope
-path:docs/external-frameworks/* scope
-framework:<framework_id> scope
-matching authority, delegation, and policy references
-unexpired request freshness
-matching publication/correction/package evidence chain
-matching expected main-branch head SHA
-matching expected target blob SHA
-```
+A mutation requires current mutator identity, token hash, delegation window, repository/path/framework/mutation scopes, matching authority/delegation/policy references, unexpired freshness, complete publication/correction/package evidence, matching main-branch head SHA, and matching target blob SHA.
 
 The only permitted destination is:
 
@@ -108,16 +95,29 @@ path prefix: docs/external-frameworks/
 
 A GitHub write is attempted only after every predicate passes. A mutation receipt is issued only after GitHub returns both the new commit SHA and new blob SHA.
 
-Required external configuration:
+## Disposable staging verifier
+
+Installed:
 
 ```text
-STEGVERSE_EXTERNAL_MUTATORS_JSON
-STEGVERSE_EXTERNAL_GITHUB_TOKEN
-STEGVERSE_EXTERNAL_MUTATION_RECEIPT_KEY
-STEGVERSE_EXTERNAL_MUTATION_POLICY_REF
+scripts/verify_external_publication_staging.py
 ```
 
-No credential is returned to Site or stored in transition or receipt payloads.
+Default mode is non-mutating. It verifies the deployed mutation-health contract and requires `mutation_enabled = false`.
+
+A real staging mutation requires:
+
+```text
+STEGVERSE_STAGING_MUTATION_EXECUTE=true
+```
+
+plus explicit gateway, publication-transition, mutator, authority, delegation, policy, expected-head, target-path, content, and token values. The target must be under:
+
+```text
+docs/external-frameworks/staging/
+```
+
+The verifier accepts success only when the response includes a mutation receipt, commit SHA, new blob SHA, and content SHA-256 while preserving no certification or standing.
 
 ## Receipt and authority separation
 
@@ -133,87 +133,40 @@ provider output != authority
 SQLite persistence != Master-Records custody
 ```
 
-## Parallel comparison telemetry build
+## Parallel comparison and usage work
 
-Installed:
+The recursive comparison, entry-point role, and provider-usage event work remains installed and unchanged:
 
 ```text
 llm_adapter/recursive_comparison.py
-examples/llm_route_comparison/external_recursive_fixture.json
-scripts/verify_recursive_comparison.py
-tests/test_recursive_comparison.py
-.github/workflows/validate.yml comparison verification steps
-```
-
-Proof path:
-
-```text
-SDK comparison package
--> package SHA-256 verification
--> select exactly one EXTERNAL_RECURSIVE route
--> validate provider-neutral telemetry
--> preserve comparison and task identity
--> emit external recursive route result
--> return deterministic result hash to SDK
-```
-
-Current fixture values remain `CONFIGURED`, not `MEASURED`.
-
-## Parallel cross-entry role and usage build
-
-Installed:
-
-```text
 llm_adapter/entry_point_role.py
 llm_adapter/provider_usage.py
+scripts/verify_recursive_comparison.py
 scripts/verify_provider_usage.py
+tests/test_recursive_comparison.py
 tests/test_provider_usage.py
-docs/ENTRY_POINT_ROLE.md
-.github/workflows/validate.yml role and usage verification steps
 ```
 
-Required invariants remain:
+Configured values remain distinct from measured values, and provider/usage observations remain non-authorizing.
 
-```text
-provider_output_is_authority == false
-adapter_observation_is_admissibility == false
-usage_event_is_authority == false
-usage_event_is_admissibility == false
-metric_owner == llm_adapter
-session_identity_preserved == true
-transition_lineage_preserved == true
-configured_values_are_measured == false
-```
+## Latest validation state
+
+The most recently recorded validation repair addressed handoff wording drift. Current-main validation for the mutation, review, publication, provider-usage, and no-manual-task paths remains pending on the repair commit or a documented successor.
 
 No new workflow was created.
-
-## Latest validation failure and bounded repair
-
-```text
-Workflow: validate
-Run: 29205769216
-Commit: 63cabd4095c5ffcf5f2488798023c94a77e1e0a4
-Job: validate
-First failing step: Check no-manual-task wiring
-Failure class: handoff next-task wording drift
-Repair commit: 5eb7c21f64a44810e402333f39384da60f86fbbf
-Verification: pending on the repair commit or successor
-```
-
-The validator was still coupled to the exact phrase `Verify current-main validate`. The handoff had legitimately advanced to a longer current-main verification task. The repair now checks stable source-of-truth, authority, custody, next-task, and current-main markers without enabling mutation, deployment, credentials, or release authority.
 
 ## Next task
 
 ```text
-1. Verify current-main External Chat review, publication, mutation, provider-usage, and no-manual-task validation after repair commit 5eb7c21f64a44810e402333f39384da60f86fbbf.
+1. Verify current-main review, publication, mutation, provider-usage, and no-manual-task validation.
 2. Verify the Admissibility Wiki mutation-receipt schema through Goal 5 aggregate validation.
-3. Add live health checks for compatibility, review, reviewer, publication, and mutation surfaces.
-4. Deploy with repository mutation disabled and verify all non-mutating routes.
-5. Perform one separately authorized staging mutation against a disposable external-framework path.
-6. Inspect commit SHA, blob SHA, content hash, and mutation receipt before any production enablement.
+3. Deploy with repository mutation disabled.
+4. Run Site live-route verification for External Chat, reviewer console, review health, and mutation health.
+5. Perform one separately authorized staging mutation under docs/external-frameworks/staging/.
+6. Inspect commit SHA, blob SHA, content hash, and mutation receipt before production enablement.
 7. Continue provider-usage lifecycle integration and measured trace capture in the parallel workstream.
 ```
 
 ## Archive readiness
 
-This handoff contains the combined gateway, compatibility intake, authenticated review, delegated correction, publication candidacy, commit-time-revalidated repository mutation adapter, provider/custody boundaries, recursive comparison, provider usage events, latest validation evidence, bounded repair, and continuation order. Production mutation remains disabled and live validation remains pending.
+This handoff contains the combined gateway, compatibility intake, authenticated review, delegated correction, publication candidacy, commit-time-revalidated mutation adapter, non-mutating live-health verification, disposable staging verifier, provider/custody boundaries, comparison and usage work, validation state, and continuation order. Production mutation remains disabled and live validation remains pending.
