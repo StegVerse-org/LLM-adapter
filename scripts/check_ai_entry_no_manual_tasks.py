@@ -51,7 +51,8 @@ def main() -> int:
             "LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING",
             "provider output != authority",
             "SQLite persistence != Master-Records custody",
-            "Verify current-main validate",
+            "## Next task",
+            "Verify current-main",
         ),
     )
     print("AI_ENTRY_ADAPTER_NO_MANUAL_TASKS_PASS")
