@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: stegverse-ecosystem-chat-gateway
+    runtime: python
+    plan: free
+    autoDeploy: true
+    buildCommand: pip install --upgrade pip && pip install -e '.[service]'
+    startCommand: uvicorn llm_adapter.ecosystem_chat_gateway:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: STEGVERSE_ALLOWED_ORIGINS
+        value: https://stegverse-labs.github.io
+      - key: STEGVERSE_CHAT_RATE_LIMIT
+        value: 20
+      - key: STEGVERSE_CHAT_RATE_WINDOW_SECONDS
+        value: 3600
