@@ -5,6 +5,7 @@ from llm_adapter.governed_chat_pipeline import (
     get_transition_status,
     progress_bounded_response,
 )
+from llm_adapter.transition_store import store
 
 
 def candidate() -> dict:
@@ -43,11 +44,16 @@ def test_bounded_response_completes_same_transition_identity() -> None:
     assert result["governance"]["commit_time_validity"] == "VALID"
     assert result["execution"]["action_ref"] == "action:bounded-chat-response-generation"
     assert result["continuity"]["final_receipt_id"].startswith("final-response-receipt:sha256:")
-    assert result["continuity"]["master_record_status"] == "NOT_YET_SUBMITTED"
+    assert result["continuity"]["master_record_status"] == "PENDING"
     assert result["continuity"]["reconstruction_status"] == "PARTIAL"
+    assert result["continuity"]["durable_local_persistence"] is True
+    assert result["continuity"]["local_persistence_is_custody"] is False
     stored = get_transition_status(result["transition_id"])
     assert stored is not None
     assert stored["continuity"]["final_receipt_id"] == result["continuity"]["final_receipt_id"]
+    custody = store.custody_status(result["transition_id"])
+    assert custody is not None
+    assert custody["state"] in {"PENDING", "RETRY", "RECORDED"}
 
 
 def test_restricted_request_stops_at_verification_required() -> None:
