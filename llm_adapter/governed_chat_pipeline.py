@@ -1,19 +1,16 @@
 """Bounded per-request governed pipeline for Ecosystem Chat.
 
-This module advances one canonical transition relationship through the logical
-bridge, delegation, standing, executor, and response-receipt boundaries. It is
-limited to non-mutating chat response generation. It does not grant repository
-mutation, publication, credential, or Master-Records custody authority.
+This module advances one canonical transition relationship through bridge,
+delegation, standing, executor, response-receipt, durable local persistence, and
+Master-Records submission queue boundaries. Local persistence is not custody.
 """
 from __future__ import annotations
 
 from copy import deepcopy
 from hashlib import sha256
-from threading import RLock
 from typing import Any
 
-_STORE: dict[str, dict[str, Any]] = {}
-_LOCK = RLock()
+from llm_adapter.transition_store import store
 
 
 def _receipt(prefix: str, *parts: str) -> str:
@@ -32,7 +29,7 @@ def build_relationship(*, candidate: dict[str, Any], message: str, gateway_recei
     }
     origin = candidate.get("origin", {})
     relationships = candidate.get("relationships", {})
-    return {
+    record = {
         "schema_version": "1.0.0",
         "record_type": "governed_transition_relationship",
         **identity,
@@ -72,6 +69,8 @@ def build_relationship(*, candidate: dict[str, Any], message: str, gateway_recei
             "master_record_ref": None,
             "master_record_status": "NOT_YET_SUBMITTED",
             "reconstruction_status": "NOT_YET_CHECKED",
+            "durable_local_persistence": True,
+            "local_persistence_is_custody": False,
         },
         "projection": {
             "site_visibility": "SUMMARY",
@@ -83,6 +82,8 @@ def build_relationship(*, candidate: dict[str, Any], message: str, gateway_recei
             "raw_message_retained": False,
         },
     }
+    store.put(record)
+    return record
 
 
 def progress_bounded_response(
@@ -104,9 +105,7 @@ def progress_bounded_response(
             "delegation-decision:REVIEW_DELEGATION",
         )
         record["execution"]["verification_ref"] = "verification:separate-authority-required"
-        with _LOCK:
-            _STORE[transition_id] = record
-        return record
+        return store.put(record)
 
     bridge_receipt = _receipt("bridge-receipt", transition_id, run_id, "ALLOW_NEXT_BOUNDARY")
     delegation_receipt = _receipt("delegation-receipt", transition_id, run_id, "ALLOW_DELEGATION")
@@ -124,7 +123,7 @@ def progress_bounded_response(
 
     record["lifecycle_state"] = "COMPLETED"
     record["relationships"]["target_ref"] = "executor:STEGVERSE_AI_ENTITY"
-    record["relationships"]["next_task_ref"] = None
+    record["relationships"]["next_task_ref"] = "task:master-records-custody-submission"
     record["governance"]["delegation_refs"] = [delegation_receipt]
     record["governance"]["evidence_refs"] = _append_unique(
         record["governance"]["evidence_refs"],
@@ -145,16 +144,13 @@ def progress_bounded_response(
         "resulting_state_ref": f"response:sha256:{response_hash}",
     }
     record["continuity"]["final_receipt_id"] = final_receipt
-    # Persistence/custody is intentionally not claimed by this stateless service.
-    record["continuity"]["master_record_status"] = "NOT_YET_SUBMITTED"
+    record["continuity"]["master_record_status"] = "PENDING"
     record["continuity"]["reconstruction_status"] = "PARTIAL"
 
-    with _LOCK:
-        _STORE[transition_id] = record
-    return record
+    persisted = store.put(record)
+    store.enqueue_custody(persisted)
+    return persisted
 
 
 def get_transition_status(transition_id: str) -> dict[str, Any] | None:
-    with _LOCK:
-        record = _STORE.get(transition_id)
-        return deepcopy(record) if record else None
+    return store.get(transition_id)
