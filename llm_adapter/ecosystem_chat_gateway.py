@@ -1,8 +1,10 @@
 """Deployable governed HTTP gateway for StegVerse Ecosystem Chat.
 
 The service accepts text-only requests, preserves canonical transition identity,
-rejects restricted administration and credential-shaped input, applies a bounded
-in-memory rate limit, and returns a governed non-mutating response lifecycle.
+rejects restricted administration and credential-shaped input, applies bounded
+rate limiting, returns a governed non-mutating response lifecycle, persists it
+durably, and submits completed records to Master-Records only when a separately
+configured custody endpoint returns an identity-matched receipt.
 """
 from __future__ import annotations
 
@@ -23,6 +25,9 @@ from llm_adapter.governed_chat_pipeline import (
     get_transition_status,
     progress_bounded_response,
 )
+from llm_adapter.master_records_client import enabled as master_records_enabled
+from llm_adapter.master_records_client import submit_record
+from llm_adapter.transition_store import store
 
 RESTRICTED_PATTERNS = (
     re.compile(r"\b(secret|token|credential|password|api[_ -]?key|deploy key|private key)\b", re.I),
@@ -107,7 +112,7 @@ RATE_LIMIT = int(os.getenv("STEGVERSE_CHAT_RATE_LIMIT", "20"))
 RATE_WINDOW_SECONDS = int(os.getenv("STEGVERSE_CHAT_RATE_WINDOW_SECONDS", "3600"))
 limiter = WindowRateLimiter(RATE_LIMIT, RATE_WINDOW_SECONDS)
 
-app = FastAPI(title="StegVerse Ecosystem Chat Gateway", version="1.1.0")
+app = FastAPI(title="StegVerse Ecosystem Chat Gateway", version="1.2.0")
 allowed_origins = [
     value.strip() for value in os.getenv(
         "STEGVERSE_ALLOWED_ORIGINS",
@@ -143,11 +148,14 @@ def health() -> dict[str, Any]:
     return {
         "status": "ok",
         "service": "stegverse-ecosystem-chat-gateway",
-        "schema_version": "1.1.0",
+        "schema_version": "1.2.0",
         "native_executor": "STEGVERSE_AI_ENTITY",
         "native_executor_status": "ACTIVE",
         "bounded_response_pipeline": True,
         "transition_status_lookup": True,
+        "durable_transition_store": True,
+        "custody_queue": True,
+        "master_records_submission_enabled": master_records_enabled(),
         "execution_authority": False,
         "repository_mutation_authority": False,
         "final_response_receipt_authority": True,
@@ -160,6 +168,7 @@ def transition_status(transition_id: str) -> dict[str, Any]:
     record = get_transition_status(transition_id)
     if record is None:
         raise HTTPException(status_code=404, detail={"reason": "transition_not_found"})
+    custody = store.custody_status(transition_id)
     return {
         "transition_id": record["transition_id"],
         "run_id": record["run_id"],
@@ -168,7 +177,11 @@ def transition_status(transition_id: str) -> dict[str, Any]:
         "commit_time_validity": record["governance"]["commit_time_validity"],
         "final_receipt_id": record["continuity"]["final_receipt_id"],
         "master_record_status": record["continuity"]["master_record_status"],
+        "master_record_ref": record["continuity"].get("master_record_ref"),
         "reconstruction_status": record["continuity"]["reconstruction_status"],
+        "durable_local_persistence": record["continuity"].get("durable_local_persistence", False),
+        "local_persistence_is_custody": False,
+        "custody_submission": custody,
         "relationship": record,
     }
 
@@ -238,6 +251,11 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
         restricted=restricted,
     )
 
+    custody_result: dict[str, Any] | None = None
+    if progressed["lifecycle_state"] == "COMPLETED":
+        custody_result = submit_record(progressed)
+        progressed = get_transition_status(progressed["transition_id"]) or progressed
+
     return {
         "response": response_text,
         "routed_module": routed_module,
@@ -255,7 +273,10 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
         "admissibility_result": progressed["governance"]["admissibility_result"],
         "commit_time_validity": progressed["governance"]["commit_time_validity"],
         "master_record_status": progressed["continuity"]["master_record_status"],
+        "master_record_ref": progressed["continuity"].get("master_record_ref"),
         "reconstruction_status": progressed["continuity"]["reconstruction_status"],
+        "durable_local_persistence": True,
+        "custody_submission": custody_result,
         "transition_candidate": progressed,
         "interaction_profile": payload.interaction_profile,
         "authority": {
@@ -265,7 +286,8 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
             "publication_allowed": False,
             "gateway_receipt_is_final": False,
             "final_response_receipt_is_repository_execution_authority": False,
+            "local_persistence_is_master_records_custody": False,
             "site_grants_admissibility": False,
-            "master_records_installed": False,
+            "master_records_installed": progressed["continuity"]["master_record_status"] == "RECORDED",
         },
     }
