@@ -24,6 +24,14 @@ services:
         value: /var/data/stegverse-ecosystem-chat.db
       - key: STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS
         value: "true"
+      - key: STEGVERSE_EXTERNAL_REVIEW_DB
+        value: /var/data/stegverse-external-review.db
+      - key: STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN
+        sync: false
+      - key: STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY
+        sync: false
+      - key: STEGVERSE_EXTERNAL_REVIEWERS_JSON
+        sync: false
       - key: STEGVERSE_MASTER_RECORDS_ENDPOINT
         sync: false
       - key: STEGVERSE_MASTER_RECORDS_TOKEN
