@@ -2,7 +2,7 @@
 
 The service accepts text-only requests, preserves canonical transition identity,
 rejects restricted administration and credential-shaped input, applies a bounded
-in-memory rate limit, and returns a non-authorizing response contract.
+in-memory rate limit, and returns a governed non-mutating response lifecycle.
 """
 from __future__ import annotations
 
@@ -18,6 +18,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from llm_adapter.ai_entry_backend_service import build_ai_entry_backend_response
+from llm_adapter.governed_chat_pipeline import (
+    build_relationship,
+    get_transition_status,
+    progress_bounded_response,
+)
 
 RESTRICTED_PATTERNS = (
     re.compile(r"\b(secret|token|credential|password|api[_ -]?key|deploy key|private key)\b", re.I),
@@ -102,7 +107,7 @@ RATE_LIMIT = int(os.getenv("STEGVERSE_CHAT_RATE_LIMIT", "20"))
 RATE_WINDOW_SECONDS = int(os.getenv("STEGVERSE_CHAT_RATE_WINDOW_SECONDS", "3600"))
 limiter = WindowRateLimiter(RATE_LIMIT, RATE_WINDOW_SECONDS)
 
-app = FastAPI(title="StegVerse Ecosystem Chat Gateway", version="1.0.0")
+app = FastAPI(title="StegVerse Ecosystem Chat Gateway", version="1.1.0")
 allowed_origins = [
     value.strip() for value in os.getenv(
         "STEGVERSE_ALLOWED_ORIGINS",
@@ -138,10 +143,33 @@ def health() -> dict[str, Any]:
     return {
         "status": "ok",
         "service": "stegverse-ecosystem-chat-gateway",
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
+        "native_executor": "STEGVERSE_AI_ENTITY",
+        "native_executor_status": "ACTIVE",
+        "bounded_response_pipeline": True,
+        "transition_status_lookup": True,
         "execution_authority": False,
-        "final_receipt_authority": False,
+        "repository_mutation_authority": False,
+        "final_response_receipt_authority": True,
         "master_records_authority": False,
+    }
+
+
+@app.get("/api/transitions/{transition_id}")
+def transition_status(transition_id: str) -> dict[str, Any]:
+    record = get_transition_status(transition_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail={"reason": "transition_not_found"})
+    return {
+        "transition_id": record["transition_id"],
+        "run_id": record["run_id"],
+        "lifecycle_state": record["lifecycle_state"],
+        "admissibility_result": record["governance"]["admissibility_result"],
+        "commit_time_validity": record["governance"]["commit_time_validity"],
+        "final_receipt_id": record["continuity"]["final_receipt_id"],
+        "master_record_status": record["continuity"]["master_record_status"],
+        "reconstruction_status": record["continuity"]["reconstruction_status"],
+        "relationship": record,
     }
 
 
@@ -169,58 +197,74 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
         routed_module = "Restricted admin"
         next_action = "Create a separately authorized governed task with bounded scope and receipt requirements."
     else:
-        task_status = "preview_only"
+        task_status = "completed_bounded_response"
         response_text = backend["stegverse_response"]
         routed_module = payload.requested_route if payload.requested_route != "Unknown" else backend["primary_route"]
-        next_action = "Continue through hybrid-collab-bridge normalization and governed delegation evaluation."
+        next_action = "Inspect the returned lifecycle and final response receipt; no repository mutation occurred."
 
-    receipt_id = gateway_receipt_id(payload, task_status)
+    intake_receipt_id = gateway_receipt_id(payload, task_status)
+    candidate = {
+        "schema_version": "1.0.0",
+        "record_type": "governed_transition_relationship",
+        "transition_id": identity["transition_id"],
+        "run_id": identity["run_id"],
+        "lifecycle_state": "DECLARED",
+        "origin": {
+            "origin_class": "SITE_INPUT",
+            "event_id": identity["event_id"],
+            "origin_manifest_id": identity["origin_manifest_id"],
+            "observed_at": None,
+            "source_ref": "StegVerse-Labs/Site/ecosystem-chat.html",
+        },
+        "relationships": {
+            "parent_transition_id": identity.get("parent_transition_id"),
+            "previous_receipt_id": identity.get("previous_receipt_id"),
+            "actor_ref": f"site-session:{payload.session_id}",
+            "target_ref": "repository:StegVerse-Labs/hybrid-collab-bridge",
+            "repository_ref": "StegVerse-Labs/Site",
+            "handoff_ref": "docs/SITE_MIRROR_HANDOFF.md",
+            "task_ref": f"task:ecosystem-chat:{payload.transition_intent}",
+            "next_task_ref": None,
+        },
+    }
+    relationship = build_relationship(
+        candidate=candidate,
+        message=payload.message,
+        gateway_receipt_id=intake_receipt_id,
+    )
+    progressed = progress_bounded_response(
+        relationship=relationship,
+        response_text=response_text,
+        restricted=restricted,
+    )
+
     return {
         "response": response_text,
         "routed_module": routed_module,
         "task_status": task_status,
-        "receipt_id": receipt_id,
+        "receipt_id": intake_receipt_id,
         "receipt_class": "GATEWAY_INTAKE_RECEIPT",
-        "final_receipt": False,
+        "final_receipt": progressed["continuity"]["final_receipt_id"] is not None,
+        "final_receipt_id": progressed["continuity"]["final_receipt_id"],
         "next_action": next_action,
-        "transition_id": identity["transition_id"],
-        "run_id": identity["run_id"],
-        "event_id": identity["event_id"],
-        "origin_manifest_id": identity["origin_manifest_id"],
-        "transition_candidate": {
-            "schema_version": "1.0.0",
-            "record_type": "governed_transition_relationship",
-            "transition_id": identity["transition_id"],
-            "run_id": identity["run_id"],
-            "lifecycle_state": "DECLARED",
-            "origin": {
-                "origin_class": "SITE_INPUT",
-                "event_id": identity["event_id"],
-                "origin_manifest_id": identity["origin_manifest_id"],
-                "source_ref": "StegVerse-Labs/Site/ecosystem-chat.html",
-            },
-            "relationships": {
-                "parent_transition_id": identity.get("parent_transition_id"),
-                "previous_receipt_id": identity.get("previous_receipt_id"),
-                "target_ref": "repository:StegVerse-Labs/hybrid-collab-bridge",
-                "task_ref": f"task:ecosystem-chat:{payload.transition_intent}",
-            },
-            "governance": {
-                "admissibility_result": "PENDING",
-                "commit_time_validity": "PENDING",
-                "execution_authorized": False,
-            },
-            "continuity": {
-                "gateway_receipt_id": receipt_id,
-                "final_receipt_id": None,
-                "master_record_status": "NOT_YET_SUBMITTED",
-                "reconstruction_status": "NOT_YET_CHECKED",
-            },
-        },
+        "transition_id": progressed["transition_id"],
+        "run_id": progressed["run_id"],
+        "event_id": progressed["origin"]["event_id"],
+        "origin_manifest_id": progressed["origin"]["origin_manifest_id"],
+        "lifecycle_state": progressed["lifecycle_state"],
+        "admissibility_result": progressed["governance"]["admissibility_result"],
+        "commit_time_validity": progressed["governance"]["commit_time_validity"],
+        "master_record_status": progressed["continuity"]["master_record_status"],
+        "reconstruction_status": progressed["continuity"]["reconstruction_status"],
+        "transition_candidate": progressed,
         "interaction_profile": payload.interaction_profile,
         "authority": {
-            "gateway_may_execute": False,
+            "native_executor_active": True,
+            "bounded_response_generation_allowed": not restricted,
+            "repository_mutation_allowed": False,
+            "publication_allowed": False,
             "gateway_receipt_is_final": False,
+            "final_response_receipt_is_repository_execution_authority": False,
             "site_grants_admissibility": False,
             "master_records_installed": False,
         },
