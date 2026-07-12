@@ -7,8 +7,8 @@ This file is the current handoff and task source of truth for `StegVerse-org/LLM
 ## Active goal
 
 ```text
-Goal: live governed Ecosystem Chat request-response transport
-Phase: bounded-governed-lifecycle-return-installed
+Goal: live governed Ecosystem Chat request-response transport with custody continuity
+Phase: sqlite-persistence-and-master-records-submission-installed
 Result: LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING
 ```
 
@@ -18,12 +18,14 @@ Result: LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING
 StegVerse-Labs/Site Ecosystem Chat
 -> canonical SITE_INPUT transition identity
 -> POST /api/ecosystem-chat
--> governed request validation and rate limit
--> bridge/delegation/standing bounded response progression
+-> governed validation and rate limit
+-> bridge/delegation/standing bounded progression
 -> active STEGVERSE_AI_ENTITY response generation
 -> final response receipt
--> lifecycle status lookup
--> same transition identity returned to Site
+-> SQLite transition persistence
+-> Master-Records custody queue
+-> authenticated custody submission when configured
+-> lifecycle lookup using the same transition identity
 ```
 
 ## Installed service surfaces
@@ -31,8 +33,12 @@ StegVerse-Labs/Site Ecosystem Chat
 ```text
 llm_adapter/ecosystem_chat_gateway.py
 llm_adapter/governed_chat_pipeline.py
+llm_adapter/transition_store.py
+llm_adapter/master_records_client.py
+llm_adapter/custody_worker.py
 tests/test_ecosystem_chat_gateway.py
 tests/test_governed_chat_pipeline.py
+tests/test_transition_store_and_custody.py
 render.yaml
 pyproject.toml
 ```
@@ -45,9 +51,53 @@ POST /api/ecosystem-chat
 GET  /api/transitions/{transition_id}
 ```
 
-## Identity invariant
+## Persistence contract
 
-The gateway and pipeline preserve:
+Completed and restricted transitions are persisted in SQLite. Completed transitions are placed in a custody queue.
+
+```text
+SQLite persistence != Master-Records custody
+PENDING/RETRY queue state != RECORDED
+RECORDED requires a remote identity-matched custody receipt
+```
+
+The deployment blueprint currently uses:
+
+```text
+STEGVERSE_TRANSITION_DB=/tmp/stegverse-ecosystem-chat.db
+STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS=false
+```
+
+Therefore the free Render blueprint provides process-local/restart-limited persistence, not durable cross-redeploy custody. The public health contract reports this explicitly.
+
+## Master-Records client contract
+
+Submission is disabled unless all endpoint requirements are satisfied:
+
+```text
+HTTPS endpoint
+optional hostname allowlist
+bearer token when configured
+bounded timeout
+```
+
+A record is marked `RECORDED` only when the response preserves:
+
+```text
+transition_id
+run_id
+final_receipt_id
+custody_status = RECORDED
+custody_receipt_id present
+master_record_ref present
+reconstruction_status = PASS
+```
+
+Any mismatch leaves the record in `RETRY`; no custody receipt is invented.
+
+The startup command runs `llm_adapter.custody_worker` before starting Uvicorn so pending records can resume when the custody endpoint is enabled.
+
+## Identity invariant
 
 ```text
 transition_id
@@ -64,80 +114,41 @@ Any browser response with mismatched identity is rejected and falls closed to lo
 
 ```text
 DECLARED
--> bridge-decision: ALLOW_NEXT_BOUNDARY
--> delegation-decision: ALLOW_DELEGATION
--> standing-decision: ALLOW_BOUNDED_RESPONSE
--> executor: STEGVERSE_AI_ENTITY ACTIVE
--> action: bounded-chat-response-generation
--> lifecycle_state: COMPLETED
--> final-response-receipt:sha256:...
-```
-
-Returned fields include:
-
-```text
-task_status = completed_bounded_response
-lifecycle_state = COMPLETED
-admissibility_result = ALLOW
-commit_time_validity = VALID
-final_receipt_id
-master_record_status = NOT_YET_SUBMITTED
-reconstruction_status = PARTIAL
-```
-
-`PARTIAL` reconstruction means response, transition, receipts, and hashes are reconstructable within the running gateway process, but durable Master-Records custody has not yet occurred.
-
-## Restricted-request lifecycle
-
-```text
-restricted administration or credential-shaped input
--> lifecycle_state = VERIFICATION_REQUIRED
--> task_status = pending_authority
--> final_receipt_id = null
--> no execution or mutation
+-> bridge ALLOW_NEXT_BOUNDARY
+-> delegation ALLOW_DELEGATION
+-> standing ALLOW_BOUNDED_RESPONSE
+-> executor STEGVERSE_AI_ENTITY ACTIVE
+-> bounded response generation
+-> COMPLETED
+-> final-response-receipt
+-> SQLite persisted
+-> custody queue PENDING/RETRY/RECORDED
 ```
 
 ## Authority boundary
 
 ```text
 Gateway intake receipt != final response receipt
-Final response receipt authorizes only the completed bounded response record
 Final response receipt != repository mutation authority
-Final response receipt != publication authority
-Final response receipt != Master-Records custody
+SQLite persistence != Master-Records custody
+Custody submission != custody admission
+Custody admission requires remote receipt
 Native executor ACTIVE != blanket per-transition authority
 Gateway does not mutate repositories
-Gateway does not claim durable reconstruction success
-```
-
-## Deployment blueprint
-
-`render.yaml` defines `stegverse-ecosystem-chat-gateway` with:
-
-```text
-uvicorn llm_adapter.ecosystem_chat_gateway:app
-health path: /health
-allowed origin: https://stegverse-labs.github.io
-bounded hourly rate limit
-```
-
-Expected URL:
-
-```text
-https://stegverse-ecosystem-chat-gateway.onrender.com
 ```
 
 ## Next task
 
 ```text
-1. Verify current-main gateway and pipeline tests.
-2. Deploy the Render blueprint and verify GET /health.
-3. Submit a Site request and verify completed lifecycle and final_receipt_id round trip.
-4. Add durable Master-Records submission for completed response relationships.
-5. Replace in-memory transition lookup with durable custody-backed lookup.
-6. Add a live provider adapter only after provider policy, cost, and credential boundaries are installed.
+1. Verify current-main gateway, pipeline, storage, and custody tests.
+2. Deploy the gateway and verify GET /health schema 1.2.0.
+3. Deploy master-records/orchestration custody service.
+4. Configure STEGVERSE_MASTER_RECORDS_ENDPOINT/TOKEN/ALLOWED_HOSTS.
+5. Submit one public chat request and verify PENDING -> RECORDED lifecycle.
+6. Move both SQLite stores to persistent disks or managed storage before claiming durability across redeploys.
+7. Add governed provider-backed answer generation only after provider policy, cost, and credential boundaries are installed.
 ```
 
 ## Archive readiness
 
-This handoff contains the complete deployable gateway, bounded lifecycle pipeline, identity rules, authority boundaries, and continuation order. Earlier conversation context is not required.
+This handoff contains the complete gateway lifecycle, persistence, custody queue, remote submission, recovery, boundaries, and continuation order. Earlier conversation context is not required.
