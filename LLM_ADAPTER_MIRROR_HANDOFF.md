@@ -107,6 +107,50 @@ Validation uses temporary SQLite paths for chat and review storage. Production u
 
 Both profiles require externally configured submitter authentication, receipt signing, and reviewer registry values.
 
+## Parallel comparison telemetry build
+
+This work supports the Ecosystem Chat governed-vs-recursive comparison test bed without displacing the active review-services goal.
+
+Installed:
+
+```text
+llm_adapter/recursive_comparison.py
+examples/llm_route_comparison/external_recursive_fixture.json
+scripts/verify_recursive_comparison.py
+tests/test_recursive_comparison.py
+.github/workflows/validate.yml comparison verification steps
+```
+
+Proof path:
+
+```text
+SDK comparison package
+-> package SHA-256 verification
+-> select exactly one EXTERNAL_RECURSIVE route
+-> validate provider-neutral telemetry
+-> preserve comparison and task identity
+-> emit external recursive route result
+-> return deterministic result hash to SDK
+```
+
+Current fixture values are classified `CONFIGURED`, not `MEASURED`. Live provider traces must supply actual call, token, latency, cost, retry, tool, and output evidence before public delta claims are allowed.
+
+Required invariants:
+
+```text
+provider_output_is_authority == false
+adapter_observation_is_admissibility == false
+returned_to_sdk == true
+configured_values_are_measured == false
+```
+
+Canonical verification:
+
+```bash
+python scripts/verify_recursive_comparison.py
+python -m pytest tests/test_recursive_comparison.py -v
+```
+
 ## Observed validation failures and repairs
 
 ```text
@@ -125,20 +169,37 @@ Failure class: phase-specific handoff-marker assertion after handoff advancement
 Repair commit: 1d924a411a88ef22d1709eca5066b2ce78d1b11f
 ```
 
-The no-manual-task checker now validates stable source-of-truth and authority markers instead of requiring one exact phase label. A green run on `1d924a411a...` or a documented successor remains required.
+The no-manual-task checker validates stable source-of-truth and authority markers instead of one exact phase label. A green run on the current successor remains required.
 
 ## Next task
 
 ```text
-1. Verify current-main validate, provider, custody, compatibility, and external-review tests.
-2. Add a reviewer-facing console for package lookup and scoped correction requests.
-3. Add a separately authorized wiki-publication transition consuming reviewed receipts.
-4. Deploy production profiles only under explicit deployment authority.
-5. Configure review authentication, receipt signing, and reviewer registry values.
-6. Verify one public package reaches AWAITING_DELEGATED_REVIEW and one delegated correction is receipted without publication.
+1. Verify current-main validate, provider, custody, compatibility, external-review, and recursive-comparison tests.
+2. Add live provider trace capture behind explicit provider configuration.
+3. Add the paired SDK orchestration path consuming governed and recursive results.
+4. Add a reviewer-facing console for package lookup and scoped correction requests.
+5. Add a separately authorized wiki-publication transition consuming reviewed receipts.
+6. Deploy production profiles only under explicit deployment authority.
 7. Record live endpoint and CI evidence before public activation claims.
+```
+
+## Remaining cross-repository integrations
+
+```text
+StegVerse-org/StegVerse-SDK
+-> combine governed and recursive route results
+-> issue final delta receipt
+
+StegVerse-org/core-node-runtime-demo
+-> provide governed route measured telemetry
+
+StegVerse-Labs/Site
+-> render route outputs, operation bars, DeltaCost, DeltaLatency, and receipts
+
+master-records
+-> retain paired trace hashes, receipts, and reconstruction pointers
 ```
 
 ## Archive readiness
 
-This handoff contains the combined gateway, provider, custody, compatibility, authenticated review, delegation, append-only storage, latest validation evidence, authority boundaries, and continuation order. Earlier conversation context is not required.
+This handoff contains the combined gateway, provider, custody, compatibility, authenticated review, delegation, append-only storage, recursive comparison telemetry contract, latest validation evidence, authority boundaries, and continuation order. Earlier conversation context is not required. Live CI and provider-backed measurement remain pending.
