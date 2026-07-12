@@ -8,7 +8,7 @@ This file is the current handoff and task source of truth for `StegVerse-org/LLM
 
 ```text
 Goal: live governed Ecosystem Chat request-response transport
-Phase: deployable-gateway-service-installed
+Phase: bounded-governed-lifecycle-return-installed
 Result: LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING
 ```
 
@@ -18,17 +18,21 @@ Result: LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING
 StegVerse-Labs/Site Ecosystem Chat
 -> canonical SITE_INPUT transition identity
 -> POST /api/ecosystem-chat
--> governed gateway validation and rate limit
--> bounded response + gateway intake receipt
--> hybrid-collab-bridge target candidate
--> Ecosystem-Delegation / SPE / orchestration
+-> governed request validation and rate limit
+-> bridge/delegation/standing bounded response progression
+-> active STEGVERSE_AI_ENTITY response generation
+-> final response receipt
+-> lifecycle status lookup
+-> same transition identity returned to Site
 ```
 
-## Installed deployable gateway
+## Installed service surfaces
 
 ```text
 llm_adapter/ecosystem_chat_gateway.py
+llm_adapter/governed_chat_pipeline.py
 tests/test_ecosystem_chat_gateway.py
+tests/test_governed_chat_pipeline.py
 render.yaml
 pyproject.toml
 ```
@@ -36,24 +40,14 @@ pyproject.toml
 The service exposes:
 
 ```text
-GET /health
+GET  /health
 POST /api/ecosystem-chat
+GET  /api/transitions/{transition_id}
 ```
 
-The request contract requires:
+## Identity invariant
 
-```text
-text-only message
-session_id
-requested route and transition intent
-raw_shell_allowed = false
-authority_required = true
-rate_limit_required = true
-receipt_required_for_execution = true
-canonical transition_identity
-```
-
-The gateway preserves:
+The gateway and pipeline preserve:
 
 ```text
 transition_id
@@ -64,39 +58,61 @@ parent_transition_id
 previous_receipt_id
 ```
 
-## Bounded live behavior
+Any browser response with mismatched identity is rejected and falls closed to local classification.
+
+## Bounded normal-request lifecycle
 
 ```text
-normal request
--> bounded gateway response
--> task_status = preview_only
--> GATEWAY_INTAKE_RECEIPT
--> candidate target = hybrid-collab-bridge
+DECLARED
+-> bridge-decision: ALLOW_NEXT_BOUNDARY
+-> delegation-decision: ALLOW_DELEGATION
+-> standing-decision: ALLOW_BOUNDED_RESPONSE
+-> executor: STEGVERSE_AI_ENTITY ACTIVE
+-> action: bounded-chat-response-generation
+-> lifecycle_state: COMPLETED
+-> final-response-receipt:sha256:...
+```
 
+Returned fields include:
+
+```text
+task_status = completed_bounded_response
+lifecycle_state = COMPLETED
+admissibility_result = ALLOW
+commit_time_validity = VALID
+final_receipt_id
+master_record_status = NOT_YET_SUBMITTED
+reconstruction_status = PARTIAL
+```
+
+`PARTIAL` reconstruction means response, transition, receipts, and hashes are reconstructable within the running gateway process, but durable Master-Records custody has not yet occurred.
+
+## Restricted-request lifecycle
+
+```text
 restricted administration or credential-shaped input
--> no execution
+-> lifecycle_state = VERIFICATION_REQUIRED
 -> task_status = pending_authority
--> route = Restricted admin
-
-rate limit exceeded
--> HTTP 429
--> Retry-After response
+-> final_receipt_id = null
+-> no execution or mutation
 ```
 
 ## Authority boundary
 
 ```text
-Gateway receipt != final transition receipt
-Gateway response != admissibility
-Gateway route != execution authority
+Gateway intake receipt != final response receipt
+Final response receipt authorizes only the completed bounded response record
+Final response receipt != repository mutation authority
+Final response receipt != publication authority
+Final response receipt != Master-Records custody
+Native executor ACTIVE != blanket per-transition authority
 Gateway does not mutate repositories
-Gateway does not install Master-Records records
-Gateway does not claim reconstruction success
+Gateway does not claim durable reconstruction success
 ```
 
 ## Deployment blueprint
 
-`render.yaml` defines the `stegverse-ecosystem-chat-gateway` web service with:
+`render.yaml` defines `stegverse-ecosystem-chat-gateway` with:
 
 ```text
 uvicorn llm_adapter.ecosystem_chat_gateway:app
@@ -105,34 +121,23 @@ allowed origin: https://stegverse-labs.github.io
 bounded hourly rate limit
 ```
 
-Expected service URL used by Site configuration:
+Expected URL:
 
 ```text
 https://stegverse-ecosystem-chat-gateway.onrender.com
 ```
 
-The repository implementation is deployment-ready. Successful Render creation, health verification, and current-main test evidence remain required before declaring the gateway live.
-
-## Existing supporting surfaces
-
-```text
-llm_adapter/transition_candidate.py
-llm_adapter/ai_entry_backend_service.py
-llm_adapter/free_tier_quota.py
-llm_adapter/free_tier_limits.py
-scripts/verify_goal4_full.py
-```
-
 ## Next task
 
 ```text
-1. Verify current-main tests including tests/test_ecosystem_chat_gateway.py.
+1. Verify current-main gateway and pipeline tests.
 2. Deploy the Render blueprint and verify GET /health.
-3. Submit a Site request and verify transition_id/run_id round trip.
-4. Connect accepted candidates to hybrid-collab-bridge normalization transport.
-5. Return orchestration status and final receipt updates to the same chat transition.
+3. Submit a Site request and verify completed lifecycle and final_receipt_id round trip.
+4. Add durable Master-Records submission for completed response relationships.
+5. Replace in-memory transition lookup with durable custody-backed lookup.
+6. Add a live provider adapter only after provider policy, cost, and credential boundaries are installed.
 ```
 
 ## Archive readiness
 
-This handoff contains the complete deployable gateway implementation, boundaries, and activation sequence. Earlier conversation context is not required.
+This handoff contains the complete deployable gateway, bounded lifecycle pipeline, identity rules, authority boundaries, and continuation order. Earlier conversation context is not required.
