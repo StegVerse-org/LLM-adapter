@@ -20,6 +20,14 @@ services:
         value: /tmp/stegverse-ecosystem-chat.db
       - key: STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS
         value: "false"
+      - key: STEGVERSE_EXTERNAL_REVIEW_DB
+        value: /tmp/stegverse-external-review.db
+      - key: STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN
+        sync: false
+      - key: STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY
+        sync: false
+      - key: STEGVERSE_EXTERNAL_REVIEWERS_JSON
+        sync: false
       - key: STEGVERSE_MASTER_RECORDS_ENDPOINT
         sync: false
       - key: STEGVERSE_MASTER_RECORDS_TOKEN
