@@ -7,8 +7,8 @@ This file is the current handoff and task source of truth for `StegVerse-org/LLM
 ## Active goal
 
 ```text
-Goal: live governed Ecosystem Chat request-response transport with durable custody continuity
-Phase: persistent-production-blueprint-installed
+Goal: live governed Ecosystem Chat with provider-backed responses and durable custody continuity
+Phase: governed-provider-broker-installed
 Result: LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING
 ```
 
@@ -17,32 +17,32 @@ Result: LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING
 ```text
 StegVerse-Labs/Site Ecosystem Chat
 -> canonical SITE_INPUT transition identity
--> POST /api/ecosystem-chat
 -> governed validation and rate limit
+-> optional governed provider broker
+-> deterministic fallback on any provider boundary failure
 -> bridge/delegation/standing bounded progression
--> active STEGVERSE_AI_ENTITY response generation
+-> active STEGVERSE_AI_ENTITY response completion
 -> final response receipt
--> SQLite transition persistence
--> Master-Records custody queue
--> authenticated custody submission
--> lifecycle lookup using the same transition identity
+-> SQLite persistence
+-> Master-Records custody queue and authenticated submission
 ```
 
 ## Installed service surfaces
 
 ```text
 llm_adapter/ecosystem_chat_gateway.py
+llm_adapter/governed_provider.py
 llm_adapter/governed_chat_pipeline.py
 llm_adapter/transition_store.py
 llm_adapter/master_records_client.py
 llm_adapter/custody_worker.py
 tests/test_ecosystem_chat_gateway.py
+tests/test_governed_provider.py
 tests/test_governed_chat_pipeline.py
 tests/test_transition_store_and_custody.py
 tests/test_production_gateway_blueprint.py
 render.yaml
 render-production.yaml
-pyproject.toml
 ```
 
 The service exposes:
@@ -53,6 +53,54 @@ POST /api/ecosystem-chat
 GET  /api/transitions/{transition_id}
 ```
 
+## Governed provider contract
+
+The provider is vendor-neutral and disabled by default. Activation requires:
+
+```text
+STEGVERSE_PROVIDER_ENABLED=true
+HTTPS provider endpoint
+hostname allowlist match
+provider bearer token
+provider name and model
+bounded timeout
+input/output character limits
+daily request quota
+daily estimated-cost ceiling
+per-request estimated-cost ceiling
+```
+
+Provider requests carry the existing transition and run identities. Provider responses may return text, usage, request identity, and matching transition metadata.
+
+A successful response creates:
+
+```text
+provider status = USED
+provider-response-receipt:sha256:...
+provider request id
+provider/model reference
+bounded usage and estimated cost
+provider evidence in the canonical transition relationship
+```
+
+## Fail-closed provider behavior
+
+Any of the following causes deterministic StegVerse fallback rather than request failure:
+
+```text
+provider disabled
+configuration incomplete
+unapproved hostname
+quota exhausted
+request or daily cost boundary exceeded
+input/output size violation
+transport failure
+invalid response contract
+transition/run identity mismatch
+```
+
+Provider credentials are never returned to Site, stored in receipts, or included in transition records.
+
 ## Persistence profiles
 
 Validation profile:
@@ -62,6 +110,7 @@ render.yaml
 plan: free
 STEGVERSE_TRANSITION_DB=/tmp/stegverse-ecosystem-chat.db
 STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS=false
+provider disabled by default
 ```
 
 Production profile:
@@ -72,9 +121,8 @@ plan: starter
 persistent disk: /var/data
 STEGVERSE_TRANSITION_DB=/var/data/stegverse-ecosystem-chat.db
 STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS=true
+provider disabled until explicit credential and policy configuration
 ```
-
-The production blueprint retains the custody worker and requires separately configured endpoint, bearer token, and hostname allowlist values.
 
 ## Custody contract
 
@@ -84,44 +132,31 @@ PENDING/RETRY queue state != RECORDED
 RECORDED requires a remote identity-matched custody receipt
 ```
 
-A record is marked `RECORDED` only when the response preserves:
-
-```text
-transition_id
-run_id
-final_receipt_id
-custody_status = RECORDED
-custody_receipt_id present
-master_record_ref present
-reconstruction_status = PASS
-```
-
-Any mismatch leaves the record in `RETRY`; no custody receipt is invented. The startup worker retries pending records when custody configuration is present.
-
 ## Authority boundary
 
 ```text
+Provider output != authority
+Provider receipt != final response receipt
+Provider response != admissibility
+Provider failure cannot grant fallback authority
 Gateway intake receipt != final response receipt
 Final response receipt != repository mutation authority
 SQLite persistence != Master-Records custody
-Custody submission != custody admission
-Custody admission requires remote receipt
 Native executor ACTIVE != blanket per-transition authority
-Gateway does not mutate repositories
 ```
 
 ## Next task
 
 ```text
-1. Verify current-main gateway, pipeline, storage, custody, and production-blueprint tests.
-2. Deploy render-production.yaml.
-3. Deploy master-records/orchestration/render-custody-production.yaml.
-4. Configure endpoint, token, receipt key, and hostname allowlist.
-5. Run tools/verify_live_ecosystem_chat_custody_roundtrip.py from orchestration.
-6. Require one observed transition to reach RECORDED with identity continuity before public activation claims.
-7. Add governed provider-backed answer generation only after provider policy, cost, and credential boundaries are installed.
+1. Verify gateway, provider, pipeline, storage, custody, and blueprint tests.
+2. Deploy gateway and custody production profiles.
+3. Configure custody endpoint/token/receipt key/hostname allowlist.
+4. Optionally configure a governed provider broker endpoint and bounded policy values.
+5. Verify one public request returns provider USED or explicit deterministic fallback posture.
+6. Verify the same transition reaches RECORDED custody without identity drift.
+7. Run orchestration live round-trip verification before public activation claims.
 ```
 
 ## Archive readiness
 
-This handoff contains the gateway lifecycle, persistent production profile, custody queue, remote submission, recovery, boundaries, and continuation order. Earlier conversation context is not required.
+This handoff contains the provider broker, gateway lifecycle, persistent production profile, custody continuity, authority boundaries, and continuation order. Earlier conversation context is not required.
