@@ -42,7 +42,6 @@ service = [
 
 [project.scripts]
 stegverse-llm-adapter = "llm_adapter.cli:main"
-stegverse-ecosystem-chat-gateway = "llm_adapter.ecosystem_chat_gateway:app"
 
 [project.urls]
 Homepage = "https://github.com/StegVerse-org/LLM-adapter"
