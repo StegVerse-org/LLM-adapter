@@ -16,3 +16,13 @@ services:
         value: 20
       - key: STEGVERSE_CHAT_RATE_WINDOW_SECONDS
         value: 3600
+      - key: STEGVERSE_TRANSITION_DB
+        value: /tmp/stegverse-ecosystem-chat.db
+      - key: STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS
+        value: "false"
+      - key: STEGVERSE_MASTER_RECORDS_ENDPOINT
+        sync: false
+      - key: STEGVERSE_MASTER_RECORDS_TOKEN
+        sync: false
+      - key: STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS
+        sync: false
