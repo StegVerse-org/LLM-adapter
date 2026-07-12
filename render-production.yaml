@@ -32,6 +32,8 @@ services:
         sync: false
       - key: STEGVERSE_EXTERNAL_REVIEWERS_JSON
         sync: false
+      - key: STEGVERSE_EXTERNAL_PUBLISHERS_JSON
+        sync: false
       - key: STEGVERSE_MASTER_RECORDS_ENDPOINT
         sync: false
       - key: STEGVERSE_MASTER_RECORDS_TOKEN
