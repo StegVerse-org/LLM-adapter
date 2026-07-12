@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stegverse-llm-adapter"
-version = "2.1.0"
+version = "2.2.0"
 description = "Dual-purpose governance bridge between LLM outputs and StegVerse execution"
 readme = "README.md"
 license = {text = "MIT"}
@@ -32,10 +32,17 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
+    "httpx>=0.27",
+    "fastapi>=0.115",
+]
+service = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
 ]
 
 [project.scripts]
 stegverse-llm-adapter = "llm_adapter.cli:main"
+stegverse-ecosystem-chat-gateway = "llm_adapter.ecosystem_chat_gateway:app"
 
 [project.urls]
 Homepage = "https://github.com/StegVerse-org/LLM-adapter"
