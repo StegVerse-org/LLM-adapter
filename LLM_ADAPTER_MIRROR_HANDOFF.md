@@ -65,28 +65,6 @@ GET  /api/external-review/packages/{package_id}
 POST /api/external-review/corrections
 ```
 
-## Review authentication and delegation
-
-Submitter intake requires explicit opt-in, a package-only payload, non-empty review scope, the canonical non-authority boundary, and an authenticated request.
-
-Reviewer correction requires a registered reviewer reference, a matching token hash, a current validity window, a delegation reference, field scopes for every reviewed field, and publication-review scope when publication review was requested.
-
-Credentials are not stored in packages, receipts, transition records, or Site state.
-
-## Append-only review behavior
-
-```text
-package identity = compatibility receipt + submission SHA-256
-same identity / same content = idempotent
-same identity / different content = conflict
-same challenged receipt / same correction = idempotent
-same challenged receipt / different correction = conflict
-receipt or submission identity drift = fail closed
-expired or out-of-scope delegation = fail closed
-```
-
-The service stores only the explicit cooperative-review package. Raw framework artifacts remain excluded by contract.
-
 ## Receipt and authority separation
 
 ```text
@@ -101,15 +79,7 @@ SQLite persistence != Master-Records custody
 
 Review intake returns `AWAITING_DELEGATED_REVIEW` and no wiki record, publication authority, certification, or standing.
 
-## Deployment profiles
-
-Validation uses temporary SQLite paths for chat and review storage. Production uses persistent paths under `/var/data`.
-
-Both profiles require externally configured submitter authentication, receipt signing, and reviewer registry values.
-
 ## Parallel comparison telemetry build
-
-This work supports the Ecosystem Chat governed-vs-recursive comparison test bed without displacing the active review-services goal.
 
 Installed:
 
@@ -135,12 +105,44 @@ SDK comparison package
 
 Current fixture values are classified `CONFIGURED`, not `MEASURED`. Live provider traces must supply actual call, token, latency, cost, retry, tool, and output evidence before public delta claims are allowed.
 
+## Parallel cross-entry role and usage build
+
+Installed:
+
+```text
+llm_adapter/entry_point_role.py
+llm_adapter/provider_usage.py
+scripts/verify_provider_usage.py
+tests/test_provider_usage.py
+docs/ENTRY_POINT_ROLE.md
+.github/workflows/validate.yml role and usage verification steps
+```
+
+The adapter now publishes a machine-readable role declaration and emits provider-owned `TRANSITION_USAGE_RECORDED` events compatible with the SDK usage ledger.
+
+Proof path:
+
+```text
+provider/model interaction
+-> preserve session_id and transition lineage
+-> classify interaction_type
+-> record provider-owned metrics only
+-> preserve MEASURED / CONFIGURED / DERIVED / UNAVAILABLE
+-> emit stable measurement_id and event SHA-256
+-> return receipt references and origin entry point
+-> shared cross-entry usage ledger
+```
+
 Required invariants:
 
 ```text
 provider_output_is_authority == false
 adapter_observation_is_admissibility == false
-returned_to_sdk == true
+usage_event_is_authority == false
+usage_event_is_admissibility == false
+metric_owner == llm_adapter
+session_identity_preserved == true
+transition_lineage_preserved == true
 configured_values_are_measured == false
 ```
 
@@ -148,38 +150,21 @@ Canonical verification:
 
 ```bash
 python scripts/verify_recursive_comparison.py
-python -m pytest tests/test_recursive_comparison.py -v
+python scripts/verify_provider_usage.py
+python -m pytest tests/test_recursive_comparison.py tests/test_provider_usage.py -v
 ```
 
-## Observed validation failures and repairs
-
-```text
-Workflow: validate
-Run: 29191217331
-Commit: 4896fb08338b5a28cb9afc142ee85e8bbe6a3fa2
-First failing step: Check no-manual-task wiring
-Failure class: stale handoff-marker assertion
-Repair commit: 89a55c63522f6366ff744aaacc90f58c9deed725
-
-Workflow: validate
-Run: 29191480720
-Commit: de4f6a31d6a53dd56747fb5bac7bac199749486a
-First failing step: Check no-manual-task wiring
-Failure class: phase-specific handoff-marker assertion after handoff advancement
-Repair commit: 1d924a411a88ef22d1709eca5066b2ce78d1b11f
-```
-
-The no-manual-task checker validates stable source-of-truth and authority markers instead of one exact phase label. A green run on the current successor remains required.
+No new workflow was created.
 
 ## Next task
 
 ```text
-1. Verify current-main validate, provider, custody, compatibility, external-review, and recursive-comparison tests.
-2. Add live provider trace capture behind explicit provider configuration.
-3. Add the paired SDK orchestration path consuming governed and recursive results.
-4. Add a reviewer-facing console for package lookup and scoped correction requests.
-5. Add a separately authorized wiki-publication transition consuming reviewed receipts.
-6. Deploy production profiles only under explicit deployment authority.
+1. Verify current-main validation after role and provider-usage installation.
+2. Wire provider usage emission into the governed provider call lifecycle.
+3. Add live provider trace capture behind explicit provider configuration.
+4. Add a callable comparison HTTP route returning recursive route results.
+5. Add Master-Records custody queue support for provider usage events.
+6. Add a reviewer-facing console and separately authorized publication transition.
 7. Record live endpoint and CI evidence before public activation claims.
 ```
 
@@ -187,19 +172,20 @@ The no-manual-task checker validates stable source-of-truth and authority marker
 
 ```text
 StegVerse-org/StegVerse-SDK
--> combine governed and recursive route results
--> issue final delta receipt
+-> paired comparison orchestration and shared usage aggregation installed
+-> consume adapter provider-usage events in integrated sessions
 
 StegVerse-org/core-node-runtime-demo
--> provide governed route measured telemetry
+-> provide governed measured telemetry
+-> emit runtime/node/closure usage events
 
 StegVerse-Labs/Site
--> render route outputs, operation bars, DeltaCost, DeltaLatency, and receipts
+-> render entry-point role, transition prepend, session ledger, comparison outputs, and receipts
 
 master-records
--> retain paired trace hashes, receipts, and reconstruction pointers
+-> retain usage events, paired trace hashes, receipts, and reconstruction pointers
 ```
 
 ## Archive readiness
 
-This handoff contains the combined gateway, provider, custody, compatibility, authenticated review, delegation, append-only storage, recursive comparison telemetry contract, latest validation evidence, authority boundaries, and continuation order. Earlier conversation context is not required. Live CI and provider-backed measurement remain pending.
+This handoff contains the combined gateway, provider, custody, compatibility, authenticated review, delegation, recursive comparison contract, machine-readable adapter role, provider usage-event emitter, validation wiring, authority boundaries, and continuation order. Earlier conversation context is not required. Live CI, provider lifecycle integration, and provider-backed measurement remain pending.
