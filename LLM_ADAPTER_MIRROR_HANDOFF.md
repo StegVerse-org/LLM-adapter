@@ -145,18 +145,52 @@ SQLite persistence != Master-Records custody
 Native executor ACTIVE != blanket per-transition authority
 ```
 
+## Latest validation failure and repair
+
+```text
+Workflow: validate
+Run: 29191217331
+Branch: main
+Commit: 4896fb08338b5a28cb9afc142ee85e8bbe6a3fa2
+Job: validate
+First failing step: Check no-manual-task wiring
+Failure class: stale handoff-marker assertion
+```
+
+All workflow steps through package initialization, micro-node return-path verification, provider-boundary verification, backend-service verification, endpoint verification, and service-wrapper verification passed before the failure.
+
+`scripts/check_ai_entry_no_manual_tasks.py` still required superseded archive-readiness prose from an earlier adapter phase. It now validates the current governed-provider handoff identity, phase, result, authority boundary, and first declared verification task.
+
+Applied repair:
+
+```text
+89a55c63522f6366ff744aaacc90f58c9deed725
+```
+
+No provider was enabled, no credential was used, no deployment was performed, and no execution, publication, repository-mutation, final-receipt, or custody authority changed.
+
+## Verification required
+
+```text
+validate must pass on commit 89a55c63522f6366ff744aaacc90f58c9deed725 or a documented successor
+Check no-manual-task wiring must pass
+all later aggregate, test, parity, authority, receipt, provider-capture, recovery, and Goal 4 verification steps must complete
+passing run ID and commit SHA must be recorded here
+```
+
 ## Next task
 
 ```text
-1. Verify gateway, provider, pipeline, storage, custody, and blueprint tests.
-2. Deploy gateway and custody production profiles.
-3. Configure custody endpoint/token/receipt key/hostname allowlist.
-4. Optionally configure a governed provider broker endpoint and bounded policy values.
-5. Verify one public request returns provider USED or explicit deterministic fallback posture.
-6. Verify the same transition reaches RECORDED custody without identity drift.
-7. Run orchestration live round-trip verification before public activation claims.
+1. Verify the current-main validate run on 89a55c63522f6366ff744aaacc90f58c9deed725 or later.
+2. If green, verify gateway, provider, pipeline, storage, custody, and blueprint tests as complete.
+3. Deploy gateway and custody production profiles only under separate explicit deployment authority.
+4. Configure custody endpoint/token/receipt key/hostname allowlist only when credentials and authority are available.
+5. Optionally configure a governed provider broker endpoint and bounded policy values.
+6. Verify one public request returns provider USED or explicit deterministic fallback posture.
+7. Verify the same transition reaches RECORDED custody without identity drift.
+8. Run orchestration live round-trip verification before public activation claims.
 ```
 
 ## Archive readiness
 
-This handoff contains the provider broker, gateway lifecycle, persistent production profile, custody continuity, authority boundaries, and continuation order. Earlier conversation context is not required.
+This handoff contains the provider broker, gateway lifecycle, persistent production profile, custody continuity, latest validation failure and bounded repair, authority boundaries, and continuation order. Earlier conversation context is not required.
