@@ -1,4 +1,4 @@
-"""Append-only storage for External Chat cooperative review packages and receipts."""
+"""Append-only storage for External Chat review, correction, and publication transitions."""
 from __future__ import annotations
 
 import json
@@ -62,15 +62,28 @@ class ExternalReviewStore:
                 );
                 CREATE UNIQUE INDEX IF NOT EXISTS correction_identity
                 ON correction_receipts(package_id, challenged_receipt_id);
+
+                CREATE TABLE IF NOT EXISTS publication_transitions (
+                    publication_transition_id TEXT PRIMARY KEY,
+                    package_id TEXT NOT NULL,
+                    correction_receipt_id TEXT NOT NULL,
+                    publisher_ref TEXT NOT NULL,
+                    publisher_delegation_ref TEXT NOT NULL,
+                    target_path TEXT NOT NULL,
+                    decision TEXT NOT NULL,
+                    content_sha256 TEXT NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    issued_at TEXT NOT NULL,
+                    FOREIGN KEY(package_id) REFERENCES review_packages(package_id)
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS publication_identity
+                ON publication_transitions(package_id, correction_receipt_id, target_path);
                 """
             )
 
     def append_package(self, record: dict[str, Any]) -> tuple[dict[str, Any], bool]:
         with self._lock, self._connect() as db:
-            existing = db.execute(
-                "SELECT * FROM review_packages WHERE package_id = ?",
-                (record["package_id"],),
-            ).fetchone()
+            existing = db.execute("SELECT * FROM review_packages WHERE package_id = ?", (record["package_id"],)).fetchone()
             if existing:
                 row = dict(existing)
                 if row["content_sha256"] != record["content_sha256"]:
@@ -107,8 +120,7 @@ class ExternalReviewStore:
 
     def append_correction(self, record: dict[str, Any]) -> tuple[dict[str, Any], bool]:
         with self._lock, self._connect() as db:
-            package = db.execute("SELECT * FROM review_packages WHERE package_id = ?", (record["package_id"],)).fetchone()
-            if not package:
+            if not db.execute("SELECT 1 FROM review_packages WHERE package_id = ?", (record["package_id"],)).fetchone():
                 raise KeyError("review package not found")
             existing = db.execute(
                 "SELECT * FROM correction_receipts WHERE package_id = ? AND challenged_receipt_id = ?",
@@ -136,41 +148,54 @@ class ExternalReviewStore:
             db.commit()
             return record, True
 
+    def get_correction(self, correction_receipt_id: str) -> dict[str, Any] | None:
+        with self._connect() as db:
+            row = db.execute("SELECT * FROM correction_receipts WHERE correction_receipt_id = ?", (correction_receipt_id,)).fetchone()
+            return self._decode_correction(dict(row)) if row else None
+
     def list_corrections(self, package_id: str) -> list[dict[str, Any]]:
         with self._connect() as db:
-            rows = db.execute(
-                "SELECT * FROM correction_receipts WHERE package_id = ? ORDER BY issued_at",
-                (package_id,),
-            ).fetchall()
+            rows = db.execute("SELECT * FROM correction_receipts WHERE package_id = ? ORDER BY issued_at", (package_id,)).fetchall()
             return [self._decode_correction(dict(row)) for row in rows]
+
+    def append_publication(self, record: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+        with self._lock, self._connect() as db:
+            existing = db.execute(
+                "SELECT * FROM publication_transitions WHERE package_id = ? AND correction_receipt_id = ? AND target_path = ?",
+                (record["package_id"], record["correction_receipt_id"], record["target_path"]),
+            ).fetchone()
+            if existing:
+                row = dict(existing)
+                if row["content_sha256"] != record["content_sha256"]:
+                    raise ReviewConflict("conflicting publication transition already exists")
+                return self._decode_publication(row), False
+            db.execute(
+                """INSERT INTO publication_transitions
+                (publication_transition_id, package_id, correction_receipt_id, publisher_ref,
+                 publisher_delegation_ref, target_path, decision, content_sha256, payload_json, issued_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    record["publication_transition_id"], record["package_id"], record["correction_receipt_id"],
+                    record["publisher_ref"], record["publisher_delegation_ref"], record["target_path"],
+                    record["decision"], record["content_sha256"],
+                    json.dumps(record["payload"], sort_keys=True, separators=(",", ":")), record["issued_at"],
+                ),
+            )
+            db.execute("UPDATE review_packages SET review_state = ? WHERE package_id = ?", ("PUBLICATION_TRANSITION_RECORDED", record["package_id"]))
+            db.commit()
+            return record, True
 
     @staticmethod
     def _decode_package(row: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "package_id": row["package_id"],
-            "framework_id": row["framework_id"],
-            "compatibility_receipt_id": row["compatibility_receipt_id"],
-            "submission_sha256": row["submission_sha256"],
-            "content_sha256": row["content_sha256"],
-            "payload": json.loads(row["payload_json"]),
-            "intake_receipt_id": row["intake_receipt_id"],
-            "review_state": row["review_state"],
-            "received_at": row["received_at"],
-        }
+        return {**{key: row[key] for key in ("package_id", "framework_id", "compatibility_receipt_id", "submission_sha256", "content_sha256", "intake_receipt_id", "review_state", "received_at")}, "payload": json.loads(row["payload_json"])}
 
     @staticmethod
     def _decode_correction(row: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "correction_receipt_id": row["correction_receipt_id"],
-            "package_id": row["package_id"],
-            "challenged_receipt_id": row["challenged_receipt_id"],
-            "reviewer_ref": row["reviewer_ref"],
-            "reviewer_delegation_ref": row["reviewer_delegation_ref"],
-            "decision": row["decision"],
-            "content_sha256": row["content_sha256"],
-            "payload": json.loads(row["payload_json"]),
-            "issued_at": row["issued_at"],
-        }
+        return {**{key: row[key] for key in ("correction_receipt_id", "package_id", "challenged_receipt_id", "reviewer_ref", "reviewer_delegation_ref", "decision", "content_sha256", "issued_at")}, "payload": json.loads(row["payload_json"])}
+
+    @staticmethod
+    def _decode_publication(row: dict[str, Any]) -> dict[str, Any]:
+        return {**{key: row[key] for key in ("publication_transition_id", "package_id", "correction_receipt_id", "publisher_ref", "publisher_delegation_ref", "target_path", "decision", "content_sha256", "issued_at")}, "payload": json.loads(row["payload_json"])}
 
 
 store = ExternalReviewStore()
