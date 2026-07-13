@@ -8,7 +8,7 @@ This file is the current continuation source for `StegVerse-org/LLM-adapter`.
 
 ```text
 Goal: governed Ecosystem Chat and External Chat with provider telemetry, authenticated usage retrieval, bounded review, publication, and mutation
-Phase: external-review-focused-test-isolation-repair-installed
+Phase: stable-no-manual-handoff-invariants-installed
 Result: LOCAL_IMPLEMENTATION_INSTALLED_CURRENT_MAIN_GREEN_VALIDATION_PENDING
 ```
 
@@ -25,6 +25,7 @@ llm_adapter/external_review_store.py
 llm_adapter/external_publication_mutation.py
 scripts/verify_usage_session_api.py
 scripts/verify_external_publication_staging.py
+scripts/check_ai_entry_no_manual_tasks.py
 tests/test_usage_session_api.py
 tests/test_external_review_api.py
 .github/workflows/validate.yml
@@ -51,27 +52,59 @@ First failing step: Test External Chat compatibility and review
 Later steps: SKIPPED
 ```
 
-The earlier no-manual-task blocker is therefore resolved by observed workflow evidence.
+Workflow run `29228291304` on commit `14ad96565085b52a920d2403a6ff14132140f4e1` established:
 
-## Latest bounded repair
+```text
+Package and gateway checks before no-manual guard: PASS
+First failing step: Check no-manual-task wiring
+Authenticated usage and External Review steps: SKIPPED
+```
+
+The second failure was caused by the checker requiring superseded handoff sentences after the handoff was rewritten around current evidence and continuation language.
+
+## Repairs installed
+
+### External Review focused-test isolation
 
 ```text
 Commit: bc635306988daad4bbf314774791278103d16ac0
 File: tests/test_external_review_api.py
 ```
 
-The focused External Review tests now mount only the External Review router in an isolated FastAPI application. Production remains mounted through `combined_gateway.app`.
+The focused External Review tests mount only the External Review router in an isolated FastAPI application. Production remains mounted through `combined_gateway.app`.
 
-This prevents unrelated gateway routers, middleware, import-time stores, and environment state from changing focused review-contract outcomes. Authentication, delegation, evidence, publication, mutation, and fail-closed behavior remain unchanged.
+### Stable no-manual handoff verification
 
-A successor workflow result after this repair has not yet been observed.
+```text
+Commit: 7573f717a3bd4de8945560f31c71926eb5efa463
+File: scripts/check_ai_entry_no_manual_tasks.py
+```
+
+The guard now validates stable handoff structure and invariants rather than exact transient phase sentences. It requires:
+
+```text
+source-of-truth and active-goal sections
+combined gateway and usage endpoint surfaces
+External Review focused test registration
+usage-session contract
+non-custody and non-authority boundaries
+current evidence state
+explicit unobserved green-current-main posture
+continuation task list
+release boundary
+```
+
+No workflow, test, authority, receipt, recovery, provider, usage, review, publication, or mutation validation surface was removed.
+
+A successor workflow result after commit `7573f717a3bd4de8945560f31c71926eb5efa463` has not yet been observed.
 
 ## Current evidence state
 
 ```text
 Usage-session implementation: INSTALLED
-Usage-session current-main focused checks: OBSERVED PASS
-External Review focused-test repair: INSTALLED
+Usage-session current-main focused checks: OBSERVED PASS in run 29228025977
+External Review focused-test isolation repair: INSTALLED
+Stable no-manual guard repair: INSTALLED
 Successor green current-main validation: NOT OBSERVED
 Same-origin deployment: NOT OBSERVED
 Live provider usage submission: NOT OBSERVED
@@ -81,7 +114,7 @@ Master-Records usage custody: NOT OBSERVED
 ## Next task
 
 ```text
-1. Observe the validate run on bc635306988daad4bbf314774791278103d16ac0 or successor.
+1. Observe the validate run on 7573f717a3bd4de8945560f31c71926eb5efa463 or successor.
 2. Inspect and repair only the next first failing step.
 3. Preserve all existing validation surfaces.
 4. After green current-main evidence, integrate provider-owned usage submission into the live provider lifecycle.
@@ -96,4 +129,4 @@ No deployment, live transport activation, Master-Records custody claim, release,
 
 ## Archive readiness
 
-This handoff preserves the usage-session contract, observed workflow progression, focused External Review repair, authority boundaries, remaining evidence gates, and continuation order. Earlier conversation context is not required.
+This handoff preserves the usage-session contract, two observed workflow progressions, External Review test isolation, stable no-manual validation, authority boundaries, remaining evidence gates, and continuation order. Earlier conversation context is not required.
