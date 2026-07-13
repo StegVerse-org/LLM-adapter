@@ -193,7 +193,7 @@ A GitHub write is attempted only after every predicate passes. A mutation receip
 
 ## Validation workflow integration
 
-The existing `.github/workflows/validate.yml` now includes:
+The existing `.github/workflows/validate.yml` includes:
 
 ```text
 python scripts/verify_usage_session_api.py
@@ -213,7 +213,27 @@ response schema and source class match Site contract
 retrieval receipt preserves non-authority and non-custody posture
 ```
 
-No completed current-main run containing these steps has been observed.
+## Latest observed validation progression
+
+```text
+Run ID: 29225358446
+Commit: 2bf56ba34212df9a19682163cdcb8f72da2e7e2c
+Workflow/job: validate / validate
+Result: FAILED
+First failing step: Check no-manual-task wiring
+Earlier steps passed: package init, micro-node return path, provider boundary, backend service, endpoint, service wrapper
+Failure class: stale handoff-marker validation
+```
+
+The checker still required earlier handoff wording while the current handoff uses the authenticated usage-session authority vocabulary. The bounded repair is installed:
+
+```text
+Commit: 3c5eb2cb8d6f8a08b7d1fee9ad974ff506379366
+File: scripts/check_ai_entry_no_manual_tasks.py
+Repair: align stable handoff markers with provider usage, SQLite usage persistence, and current-main observation language
+```
+
+No validation surface was removed or bypassed. A completed successor run containing the repaired guard and usage-session verification has not yet been observed.
 
 ## Disposable staging verifier
 
@@ -232,22 +252,23 @@ Usage session API implementation: installed
 Combined gateway route mounting: installed
 Verifier and tests: installed
 Existing workflow integration: installed
+First current-main validation blocker: repaired
+Successor current-main green validation: not observed
 Same-origin deployed topology: not observed
-Current-main green validation: not observed
 Live provider-owned event submission: not observed
 Master-Records usage custody receipt: not observed
 ```
 
-The absence of visible validation or deployment evidence is not treated as success.
+The absence of visible successor validation or deployment evidence is not treated as success.
 
 ## Next task
 
 ```text
-1. Observe and inspect the current-main validate run containing usage-session verification.
-2. Repair the first failing step without removing existing validation surfaces.
-3. Integrate automatic provider-owned usage submission into the live provider lifecycle.
+1. Observe and inspect the successor current-main validate run after commit 3c5eb2cb8d6f8a08b7d1fee9ad974ff506379366.
+2. Repair the next first failing step without removing existing validation surfaces.
+3. After a green destination run, integrate automatic provider-owned usage submission into the live provider lifecycle.
 4. Add Master-Records usage-custody submission after local usage persistence.
-5. Deploy the combined gateway with repository mutation disabled.
+5. Deploy the combined gateway with repository mutation disabled only under explicit deployment authority.
 6. Establish an authorized same-origin gateway/proxy for Site browser retrieval.
 7. Run the Site usage-endpoint conformance suite against the deployed endpoint.
 8. Preserve retrieval and custody receipts before enabling Site live transport.
@@ -259,4 +280,4 @@ No deployment, same-origin proxy activation, credential configuration, Site tran
 
 ## Archive readiness
 
-This handoff contains the combined gateway, authenticated usage-session submission and same-origin retrieval contract, provider-usage boundaries, Site contract alignment, External Chat compatibility, review, publication, mutation, workflow registration, validation state, and continuation order. Earlier conversation context is not required.
+This handoff contains the combined gateway, authenticated usage-session submission and same-origin retrieval contract, provider-usage boundaries, Site contract alignment, External Chat compatibility, review, publication, mutation, workflow registration, observed validation progression, bounded repair, validation state, and continuation order. Earlier conversation context is not required.
