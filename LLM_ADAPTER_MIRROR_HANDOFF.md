@@ -7,8 +7,8 @@ This file is the current handoff and task source of truth for `StegVerse-org/LLM
 ## Active goal
 
 ```text
-Goal: live governed Ecosystem Chat plus External Chat compatibility, review, publication, bounded mutation, and staging verification
-Phase: full-external-chat-validation-workflow-installed
+Goal: live governed Ecosystem Chat plus External Chat compatibility, provider telemetry, authenticated usage retrieval, review, publication, bounded mutation, and staging verification
+Phase: authenticated-usage-session-endpoint-installed
 Result: LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING
 ```
 
@@ -18,7 +18,9 @@ Result: LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING
 Ecosystem Chat
 -> canonical transition identity
 -> governed validation and optional provider
--> deterministic fallback
+-> provider-owned usage event
+-> authenticated usage-session submission
+-> same-origin authenticated usage retrieval
 -> bounded response lifecycle
 -> SQLite persistence
 -> Master-Records custody queue
@@ -44,16 +46,16 @@ llm_adapter/governed_chat_pipeline.py
 llm_adapter/transition_store.py
 llm_adapter/master_records_client.py
 llm_adapter/custody_worker.py
+llm_adapter/provider_usage.py
+llm_adapter/usage_session_api.py
 llm_adapter/external_framework_compatibility.py
 llm_adapter/external_chat_api.py
 llm_adapter/external_review_store.py
 llm_adapter/external_review_api.py
 llm_adapter/external_publication_mutation.py
+scripts/verify_usage_session_api.py
 scripts/verify_external_publication_staging.py
-tests/test_external_framework_compatibility.py
-tests/test_external_review_api.py
-tests/test_external_review_publication.py
-tests/test_external_publication_mutation.py
+tests/test_usage_session_api.py
 .github/workflows/validate.yml
 render.yaml
 render-production.yaml
@@ -65,6 +67,8 @@ render-production.yaml
 GET  /health
 POST /api/ecosystem-chat
 GET  /api/transitions/{transition_id}
+POST /api/usage/sessions
+GET  /api/usage/sessions/{session_id}
 POST /api/external-framework-compatibility
 GET  /api/external-review/health
 POST /api/external-review/packages
@@ -76,9 +80,100 @@ GET  /api/external-review/repository-mutation/health
 POST /api/external-review/repository-mutations
 ```
 
+## Authenticated usage-session endpoint
+
+Installed:
+
+```text
+llm_adapter/usage_session_api.py
+scripts/verify_usage_session_api.py
+tests/test_usage_session_api.py
+```
+
+Machine submission:
+
+```text
+POST /api/usage/sessions
+Authorization: Bearer ${STEGVERSE_USAGE_SUBMIT_TOKEN}
+```
+
+Submission accepts one session-bound batch of usage events and validates:
+
+```text
+session identity
+measurement identity
+transition identity
+entry-point identity
+metric owner
+MEASURED / CONFIGURED / DERIVED / UNAVAILABLE evidence class
+UNAVAILABLE => value is null
+event SHA-256 when supplied
+metric_owner + measurement_id uniqueness
+```
+
+Exact repeated events are idempotent. Reusing one owner/measurement identity with changed session or event content fails with `409 measurement_identity_conflict`.
+
+Browser retrieval:
+
+```text
+GET /api/usage/sessions/{session_id}
+```
+
+Retrieval requires either:
+
+```text
+same-origin cookie: stegverse_session_id == requested session_id
+or
+X-SteGVerse-Session == requested session_id
+```
+
+No Site-configured bearer token, query token, local-storage token, or rendered secret is required. Missing or mismatched session identity fails closed.
+
+Response contract:
+
+```text
+schema = stegverse.usage.session.v1
+source_class = LIVE_USAGE_API
+requested session identity preserved
+events = ordered array
+retrieval_receipt required
+authority_granted = false
+custody_recorded = false
+```
+
+The route is mounted into `llm_adapter.combined_gateway`.
+
+## Site contract alignment
+
+The installed endpoint matches the prepared Site route and response contract:
+
+```text
+GET /api/usage/sessions/{session_id}
+same-origin session authentication
+stegverse.usage.session.v1
+LIVE_USAGE_API
+mandatory retrieval receipt
+authority_granted=false
+custody_recorded=false
+```
+
+The implementation does not enable Site live transport, configure browser credentials, claim same-origin deployment, or claim Master-Records custody. Deployment topology must place the endpoint behind the authorized same-origin gateway or proxy before browser credentials can be used safely.
+
+## Usage authority boundary
+
+```text
+provider usage event != authority
+usage submission != custody
+SQLite usage persistence != Master-Records custody
+usage retrieval != admissibility
+retrieval receipt != final response receipt
+retrieval receipt != custody receipt
+session identity possession != execution authority
+```
+
 ## Repository mutation contract
 
-The adapter is disabled by default and accepts only stored `ALLOW_PUBLICATION_CANDIDATE` transitions.
+The adapter remains disabled by default and accepts only stored `ALLOW_PUBLICATION_CANDIDATE` transitions.
 
 ```text
 STEGVERSE_EXTERNAL_MUTATION_ENABLED=false
@@ -86,7 +181,7 @@ STEGVERSE_EXTERNAL_MUTATION_ENABLED=false
 
 A mutation requires current mutator identity, token hash, delegation window, repository/path/framework/mutation scopes, matching authority/delegation/policy references, unexpired freshness, complete publication/correction/package evidence, matching main-branch head SHA, and matching target blob SHA.
 
-The only permitted destination is:
+The only permitted destination remains:
 
 ```text
 repository: StegVerse-Labs/admissibility-wiki
@@ -96,6 +191,30 @@ path prefix: docs/external-frameworks/
 
 A GitHub write is attempted only after every predicate passes. A mutation receipt is issued only after GitHub returns both the new commit SHA and new blob SHA.
 
+## Validation workflow integration
+
+The existing `.github/workflows/validate.yml` now includes:
+
+```text
+python scripts/verify_usage_session_api.py
+python -m pytest tests/test_usage_session_api.py -v
+```
+
+Existing recursive comparison, provider usage, provider boundary, External Chat, mutation, free-tier, transition-candidate, recovery, authority, receipt, and Goal 4 checks remain present. No workflow was added.
+
+The usage verifier proves locally:
+
+```text
+machine-authenticated submission succeeds
+unauthenticated submission fails
+unauthenticated retrieval fails
+matching session retrieval succeeds
+response schema and source class match Site contract
+retrieval receipt preserves non-authority and non-custody posture
+```
+
+No completed current-main run containing these steps has been observed.
+
 ## Disposable staging verifier
 
 Installed:
@@ -104,100 +223,40 @@ Installed:
 scripts/verify_external_publication_staging.py
 ```
 
-Default mode is non-mutating. It verifies the deployed mutation-health contract and requires `mutation_enabled = false`.
-
-A real staging mutation requires:
-
-```text
-STEGVERSE_STAGING_MUTATION_EXECUTE=true
-```
-
-plus explicit gateway, publication-transition, mutator, authority, delegation, policy, expected-head, target-path, content, and token values. The target must be under:
-
-```text
-docs/external-frameworks/staging/
-```
-
-The verifier accepts success only when the response includes a mutation receipt, commit SHA, new blob SHA, and content SHA-256 while preserving no certification or standing.
-
-## Validation workflow integration
-
-The existing `.github/workflows/validate.yml` now installs:
-
-```text
-python -m pip install -e '.[dev]'
-```
-
-and executes:
-
-```text
-python scripts/verify_external_publication_staging.py
-python -m pytest tests/test_external_framework_compatibility.py tests/test_external_review_api.py -v
-python -m pytest tests/test_external_review_publication.py tests/test_external_publication_mutation.py -v
-```
-
-The staging command runs in its default non-mutating mode because no execution flag or mutation credentials are provided to CI.
-
-Existing recursive comparison, provider usage, provider boundary, free-tier, transition-candidate, recovery, authority, receipt, and Goal 4 checks remain present. No new workflow was created.
-
-## Site deployment evidence
-
-`StegVerse-Labs/Site/scripts/check_external_chat_live_routes.py` now writes:
-
-```text
-reports/external-chat-live-verification.json
-```
-
-The receipt records each public page and gateway-health observation, timestamp, HTTP status, contract result, failure class, required disabled mutation posture, and non-authority boundary. DNS or network resolution failure is recorded separately and is not treated as deployed success or product failure.
-
-## Receipt and authority separation
-
-```text
-compatibility receipt != review intake receipt
-review intake receipt != correction receipt
-correction receipt != publication authority
-publication candidate != repository mutation
-mutation request != successful mutation
-mutation receipt != certification
-mutation receipt != standing
-live verification receipt != deployment authority
-provider output != authority
-SQLite persistence != Master-Records custody
-```
-
-## Parallel comparison and usage work
-
-The recursive comparison, entry-point role, and provider-usage event work remains installed and unchanged:
-
-```text
-llm_adapter/recursive_comparison.py
-llm_adapter/entry_point_role.py
-llm_adapter/provider_usage.py
-scripts/verify_recursive_comparison.py
-scripts/verify_provider_usage.py
-tests/test_recursive_comparison.py
-tests/test_provider_usage.py
-```
-
-Configured values remain distinct from measured values, and provider/usage observations remain non-authorizing.
+Default mode remains non-mutating. A real staging mutation still requires `STEGVERSE_STAGING_MUTATION_EXECUTE=true` and explicit authorized inputs under `docs/external-frameworks/staging/`.
 
 ## Latest validation state
 
-The validation workflow now includes all External Chat compatibility, authenticated review, publication, mutation, and non-mutating staging checks. A current-main green run on this workflow revision has not yet been observed. The current execution environment also could not resolve the public Site and gateway hostnames, so no live deployment result is claimed from that attempt.
+```text
+Usage session API implementation: installed
+Combined gateway route mounting: installed
+Verifier and tests: installed
+Existing workflow integration: installed
+Same-origin deployed topology: not observed
+Current-main green validation: not observed
+Live provider-owned event submission: not observed
+Master-Records usage custody receipt: not observed
+```
+
+The absence of visible validation or deployment evidence is not treated as success.
 
 ## Next task
 
 ```text
-1. Observe and inspect the current-main validate run containing the External Chat test and staging steps.
-2. Repair any first failing step without removing existing comparison, provider-usage, authority, receipt, or recovery checks.
-3. Verify the Admissibility Wiki mutation-receipt schema through Goal 5 aggregate validation.
-4. Deploy with repository mutation disabled.
-5. Run Site live-route verification from an environment with public DNS/network access and retain its receipt.
-6. Perform one separately authorized staging mutation under docs/external-frameworks/staging/.
-7. Inspect commit SHA, blob SHA, content hash, and mutation receipt before production enablement.
-8. Continue provider-usage lifecycle integration and measured trace capture in the parallel workstream.
+1. Observe and inspect the current-main validate run containing usage-session verification.
+2. Repair the first failing step without removing existing validation surfaces.
+3. Integrate automatic provider-owned usage submission into the live provider lifecycle.
+4. Add Master-Records usage-custody submission after local usage persistence.
+5. Deploy the combined gateway with repository mutation disabled.
+6. Establish an authorized same-origin gateway/proxy for Site browser retrieval.
+7. Run the Site usage-endpoint conformance suite against the deployed endpoint.
+8. Preserve retrieval and custody receipts before enabling Site live transport.
 ```
+
+## Release posture
+
+No deployment, same-origin proxy activation, credential configuration, Site transport activation, Master-Records custody claim, release, merge, tag, or production mutation is authorized by this handoff.
 
 ## Archive readiness
 
-This handoff contains the combined gateway, compatibility intake, authenticated review, delegated correction, publication candidacy, commit-time-revalidated mutation adapter, full existing-workflow validation registration, evidence-producing live checks, disposable staging verifier, provider/custody boundaries, comparison and usage work, validation state, and continuation order. Production mutation remains disabled and live validation remains pending.
+This handoff contains the combined gateway, authenticated usage-session submission and same-origin retrieval contract, provider-usage boundaries, Site contract alignment, External Chat compatibility, review, publication, mutation, workflow registration, validation state, and continuation order. Earlier conversation context is not required.
