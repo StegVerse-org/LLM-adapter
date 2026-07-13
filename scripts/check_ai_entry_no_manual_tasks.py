@@ -49,10 +49,10 @@ def main() -> int:
         (
             "This file is the current handoff and task source of truth for `StegVerse-org/LLM-adapter`.",
             "LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING",
-            "provider output != authority",
-            "SQLite persistence != Master-Records custody",
+            "provider usage event != authority",
+            "SQLite usage persistence != Master-Records custody",
             "## Next task",
-            "Verify current-main",
+            "Observe and inspect the current-main validate run",
         ),
     )
     print("AI_ENTRY_ADAPTER_NO_MANUAL_TASKS_PASS")
