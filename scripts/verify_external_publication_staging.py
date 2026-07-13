@@ -1,24 +1,36 @@
 #!/usr/bin/env python3
 """Verify the External Chat publication/mutation staging boundary.
 
-Default mode is non-mutating. A real disposable-path mutation requires every
-explicit environment value plus STEGVERSE_STAGING_MUTATION_EXECUTE=true.
+Default mode validates the repository-local mutation health contract without
+network access or mutation. Live health verification is explicit. A real
+staging mutation requires live mode, every required environment value, and
+STEGVERSE_STAGING_MUTATION_EXECUTE=true.
 """
 from __future__ import annotations
 
 import json
 import os
-import sys
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
+from llm_adapter.external_publication_mutation import mutation_health
+
 
 def request_json(method: str, url: str, payload: dict | None = None, token: str | None = None) -> tuple[int, dict]:
-    headers = {"Accept": "application/json", "Content-Type": "application/json", "User-Agent": "StegVerse-External-Chat-Staging-Verify"}
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "User-Agent": "StegVerse-External-Chat-Staging-Verify",
+    }
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    request = urllib.request.Request(url, data=json.dumps(payload).encode() if payload is not None else None, method=method, headers=headers)
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode() if payload is not None else None,
+        method=method,
+        headers=headers,
+    )
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             return response.status, json.loads(response.read().decode())
@@ -29,6 +41,8 @@ def request_json(method: str, url: str, payload: dict | None = None, token: str 
         except json.JSONDecodeError:
             body = {"detail": raw}
         return exc.code, body
+    except urllib.error.URLError as exc:
+        return 0, {"detail": str(exc), "reason": "gateway_transport_error"}
 
 
 def required(name: str) -> str:
@@ -38,13 +52,10 @@ def required(name: str) -> str:
     return value
 
 
-def main() -> int:
-    gateway = os.getenv("STEGVERSE_GATEWAY_BASE_URL", "https://stegverse-ecosystem-chat-gateway.onrender.com").rstrip("/")
-    status, health = request_json("GET", f"{gateway}/api/external-review/repository-mutation/health")
-    if status != 200:
-        print(f"STAGING MUTATION VERIFY: FAIL - mutation health HTTP {status}: {health}")
-        return 1
+def verify_health(health: dict) -> None:
     expected = {
+        "status": "ok",
+        "service": "stegverse-external-publication-mutation",
         "allowed_repository": "StegVerse-Labs/admissibility-wiki",
         "allowed_path_prefix": "docs/external-frameworks/",
         "commit_time_revalidation_required": True,
@@ -52,15 +63,37 @@ def main() -> int:
     }
     for key, value in expected.items():
         if health.get(key) != value:
-            print(f"STAGING MUTATION VERIFY: FAIL - health mismatch {key}={health.get(key)!r}")
-            return 1
+            raise RuntimeError(f"health mismatch {key}={health.get(key)!r}")
 
+
+def main() -> int:
     execute = os.getenv("STEGVERSE_STAGING_MUTATION_EXECUTE", "false").lower() == "true"
+    live_verify = os.getenv("STEGVERSE_STAGING_VERIFY_LIVE", "false").lower() == "true"
+
+    if execute and not live_verify:
+        raise RuntimeError("staging mutation execution requires STEGVERSE_STAGING_VERIFY_LIVE=true")
+
+    gateway = os.getenv(
+        "STEGVERSE_GATEWAY_BASE_URL",
+        "https://stegverse-ecosystem-chat-gateway.onrender.com",
+    ).rstrip("/")
+
+    if live_verify:
+        status, health = request_json("GET", f"{gateway}/api/external-review/repository-mutation/health")
+        if status != 200:
+            print(f"STAGING MUTATION VERIFY: FAIL - mutation health HTTP {status}: {health}")
+            return 1
+    else:
+        health = mutation_health()
+
+    verify_health(health)
+
     if not execute:
         if health.get("mutation_enabled") is not False:
             print("STAGING MUTATION VERIFY: FAIL - non-mutating verification requires mutation disabled")
             return 1
-        print("STAGING MUTATION VERIFY: PASS (health contract verified; mutation disabled; no write attempted)")
+        mode = "live" if live_verify else "repository-local"
+        print(f"STAGING MUTATION VERIFY: PASS ({mode} health contract verified; mutation disabled; no write attempted)")
         return 0
 
     target_path = required("STEGVERSE_STAGING_TARGET_PATH")
