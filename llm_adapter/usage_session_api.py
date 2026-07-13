@@ -12,6 +12,7 @@ import json
 import os
 import re
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 from threading import RLock
 from typing import Any
@@ -24,6 +25,8 @@ DB_PATH = os.getenv("STEGVERSE_USAGE_SESSION_DB", "/tmp/stegverse-usage-sessions
 SUBMIT_TOKEN = os.getenv("STEGVERSE_USAGE_SUBMIT_TOKEN", "")
 SESSION_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
 EVIDENCE_CLASSES = {"MEASURED", "CONFIGURED", "DERIVED", "UNAVAILABLE"}
+PRODUCER_IDENTITY = "StegVerse-org/LLM-adapter:usage_session_api"
+POLICY_REFERENCE = "policy:stegverse-site-usage-retrieval-v1"
 _LOCK = RLock()
 
 
@@ -70,19 +73,23 @@ def _canonical_hash(value: dict[str, Any]) -> str:
 
 def _validate_session_id(session_id: str) -> None:
     if not SESSION_PATTERN.fullmatch(session_id):
-        raise HTTPException(status_code=422, detail={"reason": "invalid_session_identity"})
+        raise HTTPException(status_code=400, detail={"reason": "invalid_session_identity"})
 
 
 def _validate_event(event: dict[str, Any], session_id: str) -> dict[str, Any]:
     required = {
-        "measurement_id", "session_id", "transition_id", "entry_point",
-        "metric_owner", "metrics", "receipt_refs",
+        "measurement_id", "session_id", "transition_id", "origin_entry_point",
+        "entry_point", "entry_point_role", "interaction_type", "metric_owner",
+        "measurement_source", "metrics", "timestamp", "receipt_refs",
     }
     if not required.issubset(event):
         raise HTTPException(status_code=422, detail={"reason": "usage_event_incomplete"})
     if event["session_id"] != session_id:
         raise HTTPException(status_code=409, detail={"reason": "session_identity_mismatch"})
-    for field in ("measurement_id", "transition_id", "entry_point", "metric_owner"):
+    for field in (
+        "measurement_id", "transition_id", "origin_entry_point", "entry_point",
+        "entry_point_role", "interaction_type", "metric_owner", "measurement_source",
+    ):
         if not isinstance(event[field], str) or not event[field].strip():
             raise HTTPException(status_code=422, detail={"reason": f"invalid_{field}"})
     if not isinstance(event["metrics"], dict) or not event["metrics"]:
@@ -177,9 +184,13 @@ def retrieve_usage_session(
     events = [json.loads(row["event_json"]) for row in rows]
     if not events:
         raise HTTPException(status_code=404, detail={"reason": "usage_session_not_found"})
+    retrieved_at = datetime.now(timezone.utc).isoformat()
     receipt_material = {
         "session_id": session_id,
         "event_hashes": [event["event_sha256"] for event in events],
+        "retrieved_at": retrieved_at,
+        "producer_identity": PRODUCER_IDENTITY,
+        "policy_reference": POLICY_REFERENCE,
         "authority_granted": False,
         "custody_recorded": False,
     }
@@ -191,6 +202,9 @@ def retrieve_usage_session(
         "retrieval_receipt": {
             "session_id": session_id,
             "receipt_id": "usage-retrieval:sha256:" + _canonical_hash(receipt_material),
+            "retrieved_at": retrieved_at,
+            "producer_identity": PRODUCER_IDENTITY,
+            "policy_reference": POLICY_REFERENCE,
             "event_count": len(events),
             "authority_granted": False,
             "custody_recorded": False,
