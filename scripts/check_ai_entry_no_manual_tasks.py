@@ -52,7 +52,8 @@ def main() -> int:
             "provider usage event != authority",
             "SQLite usage persistence != Master-Records custody",
             "## Next task",
-            "Observe and inspect the current-main validate run",
+            "Observe and inspect",
+            "current-main validate run",
         ),
     )
     print("AI_ENTRY_ADAPTER_NO_MANUAL_TASKS_PASS")
