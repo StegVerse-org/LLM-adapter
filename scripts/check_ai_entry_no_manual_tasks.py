@@ -47,13 +47,22 @@ def main() -> int:
     require_text(
         HANDOFF,
         (
-            "This file is the current handoff and task source of truth for `StegVerse-org/LLM-adapter`.",
-            "LOCAL_IMPLEMENTATION_INSTALLED_DEPLOYMENT_VALIDATION_PENDING",
-            "provider usage event != authority",
-            "SQLite usage persistence != Master-Records custody",
+            "# LLM Adapter Mirror Handoff",
+            "## Source of truth",
+            "## Active goal",
+            "## Installed core surfaces",
+            "llm_adapter/combined_gateway.py",
+            "llm_adapter/usage_session_api.py",
+            "tests/test_external_review_api.py",
+            "## Usage-session contract",
+            "Local persistence is not Master-Records custody",
+            "retrieval grants no authority or admissibility",
+            "## Current evidence state",
+            "Successor green current-main validation: NOT OBSERVED",
             "## Next task",
-            "Observe and inspect",
-            "current-main validate run",
+            "Preserve all existing validation surfaces",
+            "## Release posture",
+            "No deployment",
         ),
     )
     print("AI_ENTRY_ADAPTER_NO_MANUAL_TASKS_PASS")
