@@ -9,13 +9,17 @@ from llm_adapter.ecosystem_chat_gateway import app
 from llm_adapter.external_chat_api import router as external_chat_router
 from llm_adapter.external_review_api import router as external_review_router
 from llm_adapter.external_publication_mutation import router as external_mutation_router
+from llm_adapter.usage_session_api import router as usage_session_router
 
 app.include_router(external_chat_router)
 app.include_router(external_review_router)
 app.include_router(external_mutation_router)
+app.include_router(usage_session_router)
 
 # Outer CORS boundary for authenticated cooperative-review submissions. Provider,
-# custody, reviewer, publisher, mutator, and submitter credentials are never exposed.
+# custody, reviewer, publisher, mutator, submitter, and usage-submission credentials
+# are never exposed to the browser. Same-origin usage retrieval relies on a matching
+# session cookie or X-SteGVerse-Session identity rather than a Site-configured token.
 allowed_origins = [
     value.strip()
     for value in os.getenv(
