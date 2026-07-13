@@ -4,10 +4,10 @@ import hashlib
 import json
 from datetime import datetime, timedelta, timezone
 
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from llm_adapter import external_review_api
-from llm_adapter.combined_gateway import app
 from llm_adapter.external_review_store import ExternalReviewStore
 
 COMPATIBILITY_RECEIPT = "external-compatibility-receipt:sha256:" + "b" * 64
@@ -61,6 +61,12 @@ def correction() -> dict:
 
 
 def configure(monkeypatch, tmp_path) -> TestClient:
+    """Create an isolated application for the review router under test.
+
+    Production uses ``combined_gateway.app``. These focused tests intentionally mount only
+    the review router so unrelated gateway routers, middleware, import-time databases, and
+    environment configuration cannot change review-contract outcomes.
+    """
     monkeypatch.setattr(external_review_api, "store", ExternalReviewStore(str(tmp_path / "review.db")))
     monkeypatch.setenv("STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN", "submit-secret")
     monkeypatch.setenv("STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY", "receipt-secret")
@@ -77,6 +83,8 @@ def configure(monkeypatch, tmp_path) -> TestClient:
             }
         }),
     )
+    app = FastAPI()
+    app.include_router(external_review_api.router)
     return TestClient(app)
 
 
