@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0.0",
+  "record_type": "system_boundary_lifecycle_binding_installation_receipt",
+  "repository": "StegVerse-org/LLM-adapter",
+  "goal_id": "system-boundary-runtime-lifecycle-binding",
+  "installed": {
+    "lifecycle_binding_module": {
+      "path": "llm_adapter/system_boundary_lifecycle.py",
+      "commit_sha": "29b562bd1abd8dbef89fca268f8525282935202a"
+    },
+    "migration_tests": {
+      "path": "tests/test_system_boundary_lifecycle.py",
+      "commit_sha": "fec355f9fab486e668032dcfed2bda4e54911cd9"
+    },
+    "canonical_workflow_binding": {
+      "path": ".github/workflows/validate.yml",
+      "commit_sha": "f3b73c899f216ff6c97ad14e9293e9159eb0b2b3"
+    },
+    "ios_workflow_mirror": {
+      "path": "iosnoperiod/github/workflows/validate.yml",
+      "commit_sha": "9d15f54a2027242e50a82c5fec1f1b2bbbc36cd6"
+    }
+  },
+  "behavior": {
+    "automatic_gateway_binding_enabled": false,
+    "explicit_post_response_binding": true,
+    "session_transition_run_identity_required": true,
+    "final_and_gateway_receipt_evidence_preserved": true,
+    "identical_replay_is_idempotent": true,
+    "partial_prior_binding_fails_closed": true,
+    "tampered_prior_receipt_fails_closed": true,
+    "material_lifecycle_change_rotates_declaration_identity": true,
+    "receipt_chain_change_rotates_receipt_only": true
+  },
+  "preserved_boundaries": {
+    "declaration_is_execution_authority": false,
+    "receipt_is_admissibility": false,
+    "receipt_is_master_records_custody": false,
+    "production_binding_enabled": false,
+    "repository_mutation_authority": false,
+    "publication_authority": false,
+    "consciousness_classification": false,
+    "personhood_classification": false,
+    "welfare_classification": false
+  },
+  "validation": {
+    "structural_integration": "INSTALLED",
+    "canonical_and_ios_workflow_parity": "INSTALLED",
+    "observed_workflow_status": "PENDING",
+    "combined_status_observation": "NO_STATUS_REPORTED",
+    "manual_user_action_required": false
+  },
+  "next_required_action": "observe the canonical validate workflow containing commit 9d15f54a2027242e50a82c5fec1f1b2bbbc36cd6 or later; repair only the first repository-local failing step, then preserve system_boundary_declaration_ref through SDK receipt round trip"
+}
