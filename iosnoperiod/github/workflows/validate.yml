@@ -73,8 +73,8 @@ jobs:
         run: python -m pytest tests/test_provider_usage.py -v
       - name: Test authenticated usage session endpoint
         run: python -m pytest tests/test_usage_session_api.py -v
-      - name: Test system-boundary declaration lifecycle
-        run: python -m pytest tests/test_system_boundary.py tests/test_system_boundary_binding.py tests/test_system_boundary_receipt.py tests/test_system_boundary_lifecycle.py -v
+      - name: Test system-boundary declaration lifecycle and fixture provenance
+        run: python -m pytest tests/test_system_boundary.py tests/test_system_boundary_binding.py tests/test_system_boundary_receipt.py tests/test_system_boundary_lifecycle.py tests/test_system_boundary_sdk_fixture.py tests/test_system_boundary_fixture_provenance.py -v
       - name: Test External Chat compatibility
         run: python -m pytest tests/test_external_framework_compatibility.py -v
       - name: Test External Review package intake
