@@ -13,8 +13,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install test dependency
-        run: python -m pip install pytest
+      - name: Install validation dependencies
+        run: python -m pip install -e '.[dev]'
       - name: Check lightweight package init
         run: python scripts/check_lightweight_package_init.py
       - name: Verify micro-node return path
@@ -39,6 +39,14 @@ jobs:
         run: python scripts/verify_free_tier_capability_manifest.py
       - name: Verify transition candidate
         run: python scripts/verify_llm_transition_candidate.py examples/llm_transition_candidate.json
+      - name: Verify recursive comparison telemetry
+        run: python scripts/verify_recursive_comparison.py
+      - name: Verify adapter role and provider usage
+        run: python scripts/verify_provider_usage.py
+      - name: Verify authenticated usage session endpoint
+        run: python scripts/verify_usage_session_api.py
+      - name: Verify External Chat staging posture
+        run: python scripts/verify_external_publication_staging.py
       - name: Test micro-node return path
         run: python -m pytest tests/test_micro_node_return_path.py -v
       - name: Test provider boundary
@@ -59,6 +67,26 @@ jobs:
         run: python -m pytest tests/test_ai_entry_free_tier_trust_metadata.py -v
       - name: Test transition candidate
         run: python -m pytest tests/test_transition_candidate.py -v
+      - name: Test recursive comparison telemetry
+        run: python -m pytest tests/test_recursive_comparison.py -v
+      - name: Test adapter role and provider usage
+        run: python -m pytest tests/test_provider_usage.py -v
+      - name: Test authenticated usage session endpoint
+        run: python -m pytest tests/test_usage_session_api.py -v
+      - name: Test External Chat compatibility
+        run: python -m pytest tests/test_external_framework_compatibility.py -v
+      - name: Test External Review package intake
+        run: python -m pytest tests/test_external_review_api.py::test_package_only_intake_is_authenticated_append_only_and_idempotent -v
+      - name: Test External Review package conflict
+        run: python -m pytest tests/test_external_review_api.py::test_package_rejects_raw_submission_and_conflicting_content -v
+      - name: Test External Review delegated receipt
+        run: python -m pytest tests/test_external_review_api.py::test_delegated_reviewer_can_issue_one_identity_bound_receipt -v
+      - name: Test External Review identity drift
+        run: python -m pytest tests/test_external_review_api.py::test_scope_and_identity_drift_fail_closed -v
+      - name: Test External Review expired delegation
+        run: python -m pytest tests/test_external_review_api.py::test_expired_reviewer_delegation_is_rejected -v
+      - name: Test External Chat publication and mutation
+        run: python -m pytest tests/test_external_review_publication.py tests/test_external_publication_mutation.py -v
       - name: Check workflow parity
         run: python scripts/check_workflow_parity.py
       - name: Check authority boundary
