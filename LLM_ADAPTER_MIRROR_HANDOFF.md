@@ -54,17 +54,10 @@ Commit 4e74df7e4e7de6a33e3f7224f92aa5b09ae121f8: canonical/iOS workflow parity s
 
 ## Provider-owned usage lifecycle integration
 
-The following commits install automatic provider-owned usage persistence:
-
 ```text
-23cc19ac6ae2b99d9126bf928bdc3c1e3567e089
-  add internal provider usage persistence
-
-4f6abaeda313afb0c8598b9eb750a86f47ce9e30
-  attach successful provider responses to the production combined gateway lifecycle
-
-16d8b68af1bd73b28c66d2bfd947012c42ee2c46
-  test insertion, idempotency, lineage preservation, and fallback suppression
+23cc19ac6ae2b99d9126bf928bdc3c1e3567e089  internal provider usage persistence
+4f6abaeda313afb0c8598b9eb750a86f47ce9e30  combined gateway lifecycle hook
+16d8b68af1bd73b28c66d2bfd947012c42ee2c46  lifecycle tests
 ```
 
 Behavior:
@@ -87,7 +80,9 @@ Installed files:
 
 ```text
 llm_adapter/system_boundary.py
+llm_adapter/system_boundary_binding.py
 tests/test_system_boundary.py
+tests/test_system_boundary_binding.py
 docs/SYSTEM_BOUNDARY_DECLARATION.md
 adapter.capabilities.json
 ```
@@ -97,24 +92,11 @@ Source and destination chain:
 ```text
 StegVerse-Labs/admissibility-wiki doctrine and schema
 -> StegVerse-org/LLM-adapter runtime inventory and declaration generation
+-> optional governed session/response binding
 -> StegVerse-org/StegVerse-SDK validation
 -> governed session manifest field: system_boundary_declaration
 -> receipt reference field: system_boundary_declaration_ref
 -> bounded Site status display after verification
-```
-
-The adapter declaration separates:
-
-```text
-model
-orchestration
-session
-memory
-environment
-feedback paths
-evidence references
-commit boundary
-decision source
 ```
 
 Required invariants:
@@ -128,12 +110,18 @@ reconstructability requires evidence references
 consciousness_claim: not_evaluated
 personhood_claim: not_evaluated
 welfare_claim: not_evaluated
+binding authorizing: false
+binding custody_transferred: false
+binding admissibility_determined: false
 ```
 
-Local verification command:
+The opt-in binder adds a canonical SHA-256 reference and refuses reserved-field overwrite, digest drift, identifier mismatch, authority escalation, custody escalation, admissibility escalation, and consciousness/personhood/welfare claim escalation. Legacy fixtures remain valid until explicit migration.
+
+Local verification:
 
 ```text
 pytest tests/test_system_boundary.py
+pytest tests/test_system_boundary_binding.py
 ```
 
 Current system-boundary state:
@@ -143,9 +131,12 @@ runtime declaration builder: INSTALLED
 runtime surface inventory: INSTALLED
 feedback-path recorder: INSTALLED
 claim and authority guards: INSTALLED
+optional governed response/session binding: INSTALLED
+deterministic declaration reference: INSTALLED
 adapter tests: INSTALLED
 current-main workflow evidence containing these files: NOT OBSERVED
-governed response/session serialization binding: PENDING
+production gateway activation of binding: PENDING EXPLICIT MIGRATION
+SDK receipt round-trip evidence: PENDING
 Site bounded display: PENDING
 ```
 
@@ -161,6 +152,7 @@ Provider-owned usage persistence: INSTALLED
 Provider lifecycle hook: INSTALLED
 Provider lifecycle tests: INSTALLED
 System-boundary runtime declaration: INSTALLED
+System-boundary binding: INSTALLED OPT-IN
 System-boundary tests: INSTALLED
 Successor green current-main validation: NOT OBSERVED
 Same-origin deployment: NOT OBSERVED
@@ -171,10 +163,10 @@ Master-Records usage custody: NOT OBSERVED
 ## Ownership and continuation assignment
 
 ```text
-Completed session work: repository-local provider usage lifecycle integration and subordinate system-boundary declaration generation
-Completed system-boundary commits: c510046, 80ee0e1, c76e665, b3eccdc
+Completed session work: provider usage lifecycle integration plus subordinate system-boundary generation and opt-in session binding
+Completed system-boundary commits: c510046, 80ee0e1, c76e665, b3eccdc, 5c96d57, 935fc8d, 8d3e2dc
 Active task owner: successor repository continuation / orchestrator assignment
-Pending observation: successor validation containing b3eccdc4171596f1387d6cabb615de54fe08664d or later
+Pending observation: successor validation containing 8d3e2dccb206a3f51de33fb45e0933ae5d8ca158 or later
 Permitted continuation scope: bounded repository-local repair preserving every validation surface and all authority, custody, mutation, deployment, and consciousness-claim boundaries
 ```
 
@@ -183,11 +175,11 @@ All remaining work is reconstructable from this handoff, repository history, wor
 ## Next task
 
 ```text
-1. Observe successor validation containing b3eccdc4171596f1387d6cabb615de54fe08664d or later.
+1. Observe successor validation containing 8d3e2dccb206a3f51de33fb45e0933ae5d8ca158 or later.
 2. Repair only the first repository-local failing step, if any.
 3. Preserve all existing validation surfaces.
-4. Bind system_boundary_declaration into the governed response or session packet without making it mandatory for legacy fixtures until migration is explicit.
-5. Preserve system_boundary_declaration_ref through SDK receipt handoff.
+4. Add explicit gateway/session migration tests before enabling automatic system-boundary binding.
+5. Preserve system_boundary_declaration_ref through SDK receipt handoff and verify the round trip.
 6. Add Master-Records usage-custody submission after local persistence, without treating local storage as custody.
 7. Keep production mutation disabled until separately authorized.
 8. Establish the authorized same-origin Site retrieval path before enabling live transport.
