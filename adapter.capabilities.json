@@ -1,7 +1,7 @@
 {
-  "schema_version": "stegverse.llm_adapter.capabilities.v0.2",
+  "schema_version": "stegverse.llm_adapter.capabilities.v0.3",
   "repo": "StegVerse-org/LLM-adapter",
-  "status": "adapter-boundary-complete-with-free-tier-trust-boundary",
+  "status": "adapter-boundary-complete-with-system-boundary-declaration",
   "runtime_surfaces": {
     "provider_request_envelope": "built",
     "fixture_provider": "built",
@@ -17,7 +17,11 @@
     "ai_entry_backend_response": "built_preview_only",
     "ai_entry_free_tier_trust_metadata": "built_preview_only",
     "free_tier_quota_evaluator": "built_side_effect_free",
-    "free_tier_receipt_replay_limits": "built_side_effect_free"
+    "free_tier_receipt_replay_limits": "built_side_effect_free",
+    "system_boundary_runtime_inventory": "built_non_authorizing",
+    "system_boundary_declaration_builder": "built_deterministic",
+    "system_boundary_feedback_path_recorder": "built_explicit",
+    "system_boundary_claim_guard": "built_fail_closed"
   },
   "ai_entry_response_fields": {
     "free_tier_trust": {
@@ -45,6 +49,23 @@
       ]
     }
   },
+  "system_boundary_declaration": {
+    "schema_version": "0.1",
+    "source_doctrine_repo": "StegVerse-Labs/admissibility-wiki",
+    "sdk_destination_repo": "StegVerse-org/StegVerse-SDK",
+    "builder_module": "llm_adapter/system_boundary.py",
+    "documentation": "docs/SYSTEM_BOUNDARY_DECLARATION.md",
+    "tests": "tests/test_system_boundary.py",
+    "manifest_field": "system_boundary_declaration",
+    "receipt_reference_field": "system_boundary_declaration_ref",
+    "surfaces": ["model", "orchestration", "session", "memory", "environment"],
+    "required_non_claims": {
+      "model_has_execution_authority": false,
+      "consciousness_claim": "not_evaluated",
+      "personhood_claim": "not_evaluated",
+      "welfare_claim": "not_evaluated"
+    }
+  },
   "free_tier_policy": {
     "policy_doc": "docs/FREE_TIER_TRUST_POLICY.md",
     "policy_manifest": "examples/free_tier_trust_policy.json",
@@ -64,7 +85,10 @@
     "Receipt export is not permanent retention.",
     "Replay does not grant commit-time standing.",
     "Reconstruction does not grant commit-time standing.",
-    "Upgrading does not change admissibility requirements."
+    "Upgrading does not change admissibility requirements.",
+    "System recurrence is not a consciousness determination.",
+    "State continuity is not execution authority.",
+    "A system-boundary declaration is not custody or admissibility."
   ],
   "required_external_integrations": {
     "live_provider_credentials": [
@@ -76,8 +100,8 @@
       "STEGVERSE_CONTINUITY_SEARCH_KEY optional"
     ],
     "external_executor": "not included; must be separately governed",
-    "site_display": "StegVerse-Labs/Site can consume free_tier_trust metadata after mirror validation",
-    "sdk_ingestion": "StegVerse-org/StegVerse-SDK can ingest quota and receipt/replay metadata after contract alignment"
+    "site_display": "StegVerse-Labs/Site can consume free_tier_trust and bounded system-boundary metadata after mirror validation",
+    "sdk_ingestion": "StegVerse-org/StegVerse-SDK validates the system-boundary declaration and non-authorizing metadata"
   },
   "local_verification": {
     "unit_tests": "pytest",
@@ -86,7 +110,8 @@
     "aggregate_verifier": "python scripts/verify_goal4.py",
     "free_tier_quota_verifier": "python scripts/verify_free_tier_quota.py",
     "free_tier_limits_verifier": "python scripts/verify_free_tier_limits.py",
-    "ai_entry_free_tier_metadata_verifier": "python scripts/verify_ai_entry_free_tier_metadata.py"
+    "ai_entry_free_tier_metadata_verifier": "python scripts/verify_ai_entry_free_tier_metadata.py",
+    "system_boundary_tests": "pytest tests/test_system_boundary.py"
   },
-  "activation_definition": "A fixture or provider response can move through provider request, continuity evidence, adapter receipt, action route, commitment request, authority decision, disabled execution handoff, and Site-facing free-tier trust metadata without side effects."
+  "activation_definition": "A fixture or provider response can move through provider request, continuity evidence, adapter receipt, action route, commitment request, authority decision, disabled execution handoff, Site-facing free-tier trust metadata, and a non-authorizing system-boundary declaration without side effects or consciousness claims."
 }
