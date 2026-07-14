@@ -1,3 +1,10 @@
+from __future__ import annotations
+
+import importlib
+import os
+import tempfile
+from types import SimpleNamespace
+
 from llm_adapter.entry_point_role import get_llm_adapter_role
 from llm_adapter.provider_usage import ProviderMetric, ProviderUsageError, build_provider_usage_event
 
@@ -65,3 +72,75 @@ def test_unavailable_provider_metric_rejects_value() -> None:
     except ProviderUsageError:
         return
     raise AssertionError("UNAVAILABLE metric with a value must fail closed")
+
+
+def _persistence_module(temp: str):
+    os.environ["STEGVERSE_USAGE_SESSION_DB"] = os.path.join(temp, "usage.db")
+    import llm_adapter.usage_session_api as usage_api
+    usage_api = importlib.reload(usage_api)
+    import llm_adapter.provider_usage_submission as submission
+    submission = importlib.reload(submission)
+    return usage_api, submission
+
+
+def _used_provider_result() -> SimpleNamespace:
+    return SimpleNamespace(
+        used=True,
+        provider_name="fixture-provider",
+        model="fixture-model",
+        provider_receipt_id="provider-response-receipt:sha256:" + "a" * 64,
+        input_units=120,
+        output_units=40,
+        estimated_cost_usd=0.0012,
+    )
+
+
+def test_successful_provider_result_is_persisted_and_idempotent() -> None:
+    with tempfile.TemporaryDirectory() as temp:
+        usage_api, submission = _persistence_module(temp)
+        first = submission.persist_provider_usage(
+            session_id="session-auto-1",
+            transition_id="transition-auto-1",
+            run_id="run-auto-1",
+            parent_transition_id="transition-parent",
+            provider_result=_used_provider_result(),
+        )
+        assert first is not None
+        assert first["inserted"] is True
+        assert first["authority_granted"] is False
+        assert first["custody_recorded"] is False
+
+        repeated = submission.persist_provider_usage(
+            session_id="session-auto-1",
+            transition_id="transition-auto-1",
+            run_id="run-auto-1",
+            parent_transition_id="transition-parent",
+            provider_result=_used_provider_result(),
+        )
+        assert repeated is not None
+        assert repeated["inserted"] is False
+
+        with usage_api._connect() as connection:
+            row = connection.execute("SELECT event_json FROM usage_events").fetchone()
+        assert row is not None
+        event = __import__("json").loads(row["event_json"])
+        assert event["session_id"] == "session-auto-1"
+        assert event["parent_transition_id"] == "transition-parent"
+        assert event["metrics"]["model_calls"]["evidence_class"] == "MEASURED"
+        assert event["metrics"]["estimated_cost_usd"]["evidence_class"] == "DERIVED"
+
+
+def test_fallback_provider_result_creates_no_usage_event() -> None:
+    with tempfile.TemporaryDirectory() as temp:
+        usage_api, submission = _persistence_module(temp)
+        result = submission.persist_provider_usage(
+            session_id="session-auto-2",
+            transition_id="transition-auto-2",
+            run_id="run-auto-2",
+            parent_transition_id=None,
+            provider_result=SimpleNamespace(used=False),
+        )
+        assert result is None
+        with usage_api._connect() as connection:
+            count = connection.execute("SELECT COUNT(*) FROM usage_events").fetchone()[0]
+        assert count == 0
