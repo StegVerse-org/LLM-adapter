@@ -28,9 +28,10 @@ StegVerse-org/StegVerse-SDK
 
 ```text
 llm_adapter/system_boundary.py
+llm_adapter/system_boundary_binding.py
 ```
 
-The module exposes:
+The declaration builder is used as follows:
 
 ```python
 from llm_adapter.system_boundary import (
@@ -48,6 +49,41 @@ declaration = build_system_boundary_declaration(
     declaration_id="sbd-adapter-001",
 )
 ```
+
+## Governed session binding
+
+Binding is opt-in so legacy response and session fixtures remain valid until migration is explicitly activated.
+
+```python
+from llm_adapter.system_boundary import default_adapter_system_boundary
+from llm_adapter.system_boundary_binding import bind_system_boundary_declaration
+
+bound = bind_system_boundary_declaration(
+    existing_session_payload,
+    config=default_adapter_system_boundary(
+        session_ref="session://example/001",
+        receipt_refs=("receipt://adapter/001",),
+    ),
+    declaration_id="sbd-adapter-001",
+)
+```
+
+The binder adds exactly two reserved fields:
+
+```text
+system_boundary_declaration
+system_boundary_declaration_ref
+```
+
+The reference contains a canonical SHA-256 digest and fixes these non-claims:
+
+```text
+authorizing: false
+custody_transferred: false
+admissibility_determined: false
+```
+
+Existing reserved fields cannot be overwritten. Any digest drift, declaration identifier mismatch, authority escalation, or claim escalation is rejected by `verify_system_boundary_binding`.
 
 ## Declared surfaces
 
@@ -98,6 +134,7 @@ Run:
 
 ```bash
 pytest tests/test_system_boundary.py
+pytest tests/test_system_boundary_binding.py
 ```
 
 The tests cover:
@@ -106,6 +143,9 @@ The tests cover:
 - model self-modification claim rejection;
 - false trajectory-dependence rejection;
 - reconstructability-without-evidence rejection;
+- deterministic receipt-reference generation;
+- reserved-field overwrite rejection;
+- digest drift and authority escalation rejection;
 - non-authorizing and non-consciousness output invariants.
 
 ## Downstream path
@@ -114,9 +154,10 @@ The tests cover:
 LLM-adapter runtime inventory
 -> system-boundary declaration
 -> governed session manifest field
+-> canonical declaration reference
 -> StegVerse-SDK validation
--> declaration receipt reference
+-> SDK receipt handoff
 -> later Site bounded status display
 ```
 
-No step grants execution, custody, admissibility, consciousness status, or personhood by itself.
+No step grants execution, custody, admissibility, consciousness status, personhood, or welfare status by itself.
