@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "record_type": "provider_usage_replay_repair_receipt",
+  "repository": "StegVerse-org/LLM-adapter",
+  "observed_run": {
+    "run_id": 29302699128,
+    "commit_sha": "16d8b68af1bd73b28c66d2bfd947012c42ee2c46",
+    "workflow": "validate",
+    "job": "validate",
+    "result": "FAILURE",
+    "first_failing_step": "Test adapter role and provider usage",
+    "earlier_steps": "PASS",
+    "later_steps": "SKIPPED"
+  },
+  "failure": {
+    "class": "NONDETERMINISTIC_REPLAY_HASH",
+    "description": "An identical provider usage replay reused the same measurement identity but generated a new wall-clock timestamp, changing the event hash and triggering the existing measurement identity conflict guard."
+  },
+  "repair": {
+    "commit_sha": "8c04360a0cc3c294250ecc06575c73b2b9ea1821",
+    "path": "llm_adapter/provider_usage_submission.py",
+    "description": "Remove wall-clock time from the deterministic provider usage event so identical transition, run, receipt, metrics, and lineage produce the same event hash."
+  },
+  "preserved_boundaries": {
+    "measurement_conflict_guard": true,
+    "event_hash_validation": true,
+    "provider_output_is_authority": false,
+    "usage_event_is_authority": false,
+    "local_persistence_is_master_records_custody": false,
+    "repository_mutation": false,
+    "fallback_persists_usage": false
+  },
+  "ownership": {
+    "active_owner": "successor repository continuation / orchestrator assignment",
+    "pending_observation": "validate run containing 8c04360a0cc3c294250ecc06575c73b2b9ea1821 or later",
+    "permitted_scope": "bounded repository-local repair preserving all validation, authority, custody, mutation, and deployment boundaries"
+  }
+}
