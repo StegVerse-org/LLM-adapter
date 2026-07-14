@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "record_type": "system_boundary_workflow_evidence_contract_installation",
+  "repository": "StegVerse-org/LLM-adapter",
+  "installed": {
+    "validator": "llm_adapter/system_boundary_workflow_evidence.py",
+    "pending_record": "evidence/system-boundary-workflow-evidence.pending.v0.1.json",
+    "tests": "tests/test_system_boundary_workflow_evidence.py"
+  },
+  "behavior": {
+    "pending_is_verified": false,
+    "pass_requires_exact_commit": true,
+    "pass_requires_run_identity": true,
+    "missing_status_becomes_pass": false,
+    "production_binding_enabled": false,
+    "release_authorized": false
+  },
+  "validation": {
+    "contract_installed": true,
+    "canonical_workflow_binding": false,
+    "workflow_observation": "PENDING"
+  },
+  "next_required_action": "Bind tests/test_system_boundary_workflow_evidence.py into the latest canonical and iOS-safe workflows using their current blob SHAs, preserve parity, then observe a run without treating missing status as PASS."
+}
