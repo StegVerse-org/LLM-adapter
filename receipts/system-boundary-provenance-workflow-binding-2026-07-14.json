@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "record_type": "system_boundary_provenance_workflow_binding_receipt",
+  "repository": "StegVerse-org/LLM-adapter",
+  "goal_id": "cross-repository-system-boundary-provenance-validation",
+  "installed": {
+    "canonical_workflow": {
+      "path": ".github/workflows/validate.yml",
+      "commit_sha": "c1c2518a4274a6c488827de1f0e1bdf90f0968ba"
+    },
+    "ios_workflow_mirror": {
+      "path": "iosnoperiod/github/workflows/validate.yml",
+      "commit_sha": "f11e534fc21ed085cf05699bb940b48e797c2b62"
+    },
+    "tests": [
+      "tests/test_system_boundary_sdk_fixture.py",
+      "tests/test_system_boundary_fixture_provenance.py"
+    ]
+  },
+  "protected_state": {
+    "declaration_id": "sbd:sha256:9b43cec895a07d51e02c59aa4d2779d50e288bfe635d8017fcfdbdde66b73101",
+    "receipt_hash": "sha256:24b454a3426aecca2ff6f46f70b9694807e89124969ecbdad998e4310011d317",
+    "authorizing": false,
+    "custody_transferred": false,
+    "admissibility_determined": false,
+    "production_binding_enabled": false
+  },
+  "validation": {
+    "canonical_binding": "INSTALLED",
+    "ios_mirror_binding": "INSTALLED",
+    "workflow_parity": "PRESERVED_BY_IDENTICAL_CONTENT",
+    "observed_workflow_status": "PENDING",
+    "combined_status_observation": "NO_STATUS_REPORTED"
+  },
+  "next_required_event": "Observe a successful canonical validation containing f11e534fc21ed085cf05699bb940b48e797c2b62 or later; repair only the first repository-local failure if present."
+}
