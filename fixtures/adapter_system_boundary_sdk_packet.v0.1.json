@@ -1,0 +1,159 @@
+{
+  "provider_request": {
+    "provider": "fixture",
+    "model": "fixture",
+    "messages": []
+  },
+  "provider_request_hash": "request-hash",
+  "provider_response": {
+    "provider": "fixture",
+    "model": "fixture",
+    "output": "read only output",
+    "request_hash": "request-hash",
+    "response_hash": "response-hash"
+  },
+  "continuity": {
+    "freshness_status": "current",
+    "evidence": []
+  },
+  "adapter_result": {
+    "decision": "ALLOW",
+    "admissibility_status": "allowed_read_only_candidate",
+    "reconstruction": {
+      "decision": "ALLOW"
+    }
+  },
+  "action_route": {
+    "route_status": "no_action_route_required",
+    "action_candidates": []
+  },
+  "commitment_request": {
+    "status": "no_commitment_request_required"
+  },
+  "authority_decision": {
+    "decision": "NOT_REQUIRED",
+    "authority_decision_hash": "authority-hash"
+  },
+  "execution_handoff": {
+    "status": "not_executable",
+    "execution_handoff_hash": "handoff-hash"
+  },
+  "transition_id": "transition-sbd-001",
+  "run_id": "run-sbd-001",
+  "receipt_id": "receipt://adapter/001",
+  "system_boundary_declaration": {
+    "schema_version": "0.1",
+    "declaration_id": "sbd:sha256:1b6ad078f9738c4ae8a5929d826f42a1675bc9cc1272ff5fdd6b05c08d7265dd",
+    "system_id": "stegverse-llm-adapter",
+    "generated_at": "2026-07-14T15:00:00Z",
+    "surfaces": {
+      "model": {
+        "present": true,
+        "state_kind": "transient",
+        "persistence": "invocation",
+        "mutable_by_inference": false,
+        "storage_refs": []
+      },
+      "orchestration": {
+        "present": true,
+        "state_kind": "session",
+        "persistence": "session",
+        "mutable_by_inference": true,
+        "storage_refs": [
+          "session://sdk-roundtrip-001"
+        ]
+      },
+      "session": {
+        "present": true,
+        "state_kind": "session",
+        "persistence": "session",
+        "mutable_by_inference": true,
+        "storage_refs": [
+          "session://sdk-roundtrip-001"
+        ]
+      },
+      "memory": {
+        "present": true,
+        "state_kind": "durable",
+        "persistence": "cross-session",
+        "mutable_by_inference": false,
+        "storage_refs": [
+          "memory://governed-record-store"
+        ]
+      },
+      "environment": {
+        "present": true,
+        "state_kind": "external",
+        "persistence": "indefinite",
+        "mutable_by_inference": false,
+        "storage_refs": [
+          "environment://tool-observation-receipts"
+        ]
+      }
+    },
+    "continuity": {
+      "prior_state_can_affect_future_transition": true,
+      "feedback_paths": [
+        "model-output->orchestration-state",
+        "orchestration-state->future-model-input",
+        "environment-observation->session-continuity"
+      ],
+      "trajectory_dependent": true,
+      "reconstructable": true,
+      "evidence_refs": [
+        "transition://transition-sbd-001",
+        "run://run-sbd-001",
+        "receipt://adapter/001"
+      ]
+    },
+    "authority": {
+      "model_has_execution_authority": false,
+      "commit_boundary": "governed-transition/commitment-request",
+      "decision_source": "policy-engine",
+      "policy_refs": [
+        "policy://governed-llm/default"
+      ],
+      "delegation_refs": []
+    },
+    "claims_boundary": {
+      "consciousness_claim": "not_evaluated",
+      "personhood_claim": "not_evaluated",
+      "welfare_claim": "not_evaluated",
+      "scope_note": "This declaration describes operational state and authority boundaries only."
+    }
+  },
+  "system_boundary_declaration_receipt": {
+    "schema_version": "system_boundary_declaration_receipt.v1",
+    "declaration_id": "sbd:sha256:1b6ad078f9738c4ae8a5929d826f42a1675bc9cc1272ff5fdd6b05c08d7265dd",
+    "declaration_hash": "sha256:1b6ad078f9738c4ae8a5929d826f42a1675bc9cc1272ff5fdd6b05c08d7265dd",
+    "system_id": "stegverse-llm-adapter",
+    "evidence_refs": [
+      "transition://transition-sbd-001",
+      "run://run-sbd-001",
+      "receipt://adapter/001"
+    ],
+    "source_commit": "adapter-fixture-v1",
+    "previous_receipt_hash": null,
+    "authority_boundary": {
+      "receipt_is_execution_authority": false,
+      "receipt_is_admissibility": false,
+      "receipt_is_custody": false,
+      "declaration_proves_consciousness": false
+    },
+    "receipt_hash": "sha256:662c27f31a33f35d50b8ee9988a447bc0aadd20d03ac9cecc9e57f00ca1f07d8"
+  },
+  "system_boundary_declaration_ref": {
+    "algorithm": "sha256",
+    "digest": "1b6ad078f9738c4ae8a5929d826f42a1675bc9cc1272ff5fdd6b05c08d7265dd",
+    "declaration_id": "sbd:sha256:1b6ad078f9738c4ae8a5929d826f42a1675bc9cc1272ff5fdd6b05c08d7265dd",
+    "receipt_hash": "sha256:662c27f31a33f35d50b8ee9988a447bc0aadd20d03ac9cecc9e57f00ca1f07d8",
+    "authorizing": false,
+    "custody_transferred": false,
+    "admissibility_determined": false,
+    "production_binding_enabled": false
+  },
+  "authority": {
+    "system_boundary_declaration_is_execution_authority": false,
+    "system_boundary_receipt_is_master_records_custody": false
+  }
+}
