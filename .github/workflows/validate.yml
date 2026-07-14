@@ -73,8 +73,10 @@ jobs:
         run: python -m pytest tests/test_provider_usage.py -v
       - name: Test authenticated usage session endpoint
         run: python -m pytest tests/test_usage_session_api.py -v
-      - name: Test External Chat compatibility and review
-        run: python -m pytest tests/test_external_framework_compatibility.py tests/test_external_review_api.py -v
+      - name: Test External Chat compatibility
+        run: python -m pytest tests/test_external_framework_compatibility.py -v
+      - name: Test External Chat review
+        run: python -m pytest tests/test_external_review_api.py -v
       - name: Test External Chat publication and mutation
         run: python -m pytest tests/test_external_review_publication.py tests/test_external_publication_mutation.py -v
       - name: Check workflow parity
