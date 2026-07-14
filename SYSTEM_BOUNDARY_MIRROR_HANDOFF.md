@@ -39,7 +39,10 @@ automatic production gateway binding: disabled
 canonical workflow test step: installed
 ios workflow mirror test step: installed
 canonical workflow observation: pending
-sdk ingestion observation: pending
+sdk round-trip verifier: installed
+sdk round-trip tests: installed
+sdk explicit workflow step: installed
+sdk workflow observation: pending
 site publication: not authorized
 publisher propagation: not authorized
 ```
@@ -85,6 +88,35 @@ material lifecycle evidence change -> rotate declaration identity
 receipt-chain-only change -> preserve declaration identity and rotate receipt
 ```
 
+## SDK round-trip rule
+
+Destination handoff reviewed:
+
+```text
+StegVerse-org/StegVerse-SDK/SDK_MIRROR_HANDOFF.md
+```
+
+Installed destination surfaces:
+
+```text
+stegverse/system_boundary_round_trip.py
+tests/test_system_boundary_round_trip.py
+.github/workflows/sdk-demo-test.yml -> explicit round-trip test step
+receipts/system-boundary-round-trip-installation-2026-07-14.json
+```
+
+The SDK independently reconstructs canonical declaration identity, declaration content hash, receipt body, receipt hash, declaration-reference digest, declaration-reference receipt hash, and evidence-reference preservation. It fails closed on tamper, hash drift, authority escalation, custody escalation, admissibility escalation, production-binding escalation, and consciousness reclassification.
+
+Relevant SDK commits:
+
+```text
+874063c94397a11a439fa674e6cebcf69c439da6
+610c3c571086bf6884122cd061d9a74fe770252f
+49085cc67ac9a68d64feb6378c76e020cf4b822a
+37a61dfbdcf161abf51d15fc6da9f5101224e7ea
+c4d5f42fb9e11a4407000c876bb6df107a953918
+```
+
 ## Preserved boundaries
 
 ```text
@@ -97,34 +129,45 @@ system-boundary declaration != permission to execute
 receipt != master-records custody
 receipt presence != public validation
 explicit lifecycle binding != production activation
-declaration reference persistence != SDK acceptance
+declaration reference persistence != SDK execution authority
+SDK round-trip acceptance != admissibility, custody, standing, or publication authority
 ```
 
-## Completed goal
+## Completed goals
 
 ```text
 goal_id: system-boundary-runtime-lifecycle-binding
 result: STRUCTURALLY_INSTALLED_PENDING_WORKFLOW_OBSERVATION
-completed work:
+
+goal_id: system-boundary-sdk-roundtrip-installation
+result: STRUCTURALLY_INSTALLED_PENDING_SDK_WORKFLOW_OBSERVATION
+```
+
+Completed work:
+
+```text
 - lifecycle integration point
 - declaration reference persistence
 - replay/conflict handling
-- canonical and iOS-safe workflow test integration
-- durable installation receipt
+- canonical and iOS-safe adapter workflow integration
+- SDK declaration/receipt/reference verifier
+- SDK deterministic replay and tamper fixtures
+- SDK explicit workflow integration
+- durable adapter and SDK installation receipts
+- synchronized adapter and SDK handoffs
 ```
 
 ## Next goal
 
 ```text
-goal_id: system-boundary-workflow-and-sdk-roundtrip-evidence
-goal: observe canonical validation for all four system-boundary test modules, repair only the first repository-local failure if present, then preserve system_boundary_declaration_ref through an authorized SDK receipt round trip
+goal_id: system-boundary-workflow-observation-closure
+goal: observe adapter and SDK canonical workflows containing the installed system-boundary suites, repair only the first repository-local failure if present, and preserve run-bound evidence without enabling production binding
 required work:
-- workflow run containing 9d15f54a2027242e50a82c5fec1f1b2bbbc36cd6 or later
+- LLM-adapter workflow run containing 9d15f54a2027242e50a82c5fec1f1b2bbbc36cd6 or later
+- SDK workflow run containing 49085cc67ac9a68d64feb6378c76e020cf4b822a or later
 - workflow result and job evidence
 - failure repair receipt only if needed
-- SDK handoff review before downstream mutation
-- SDK declaration and receipt reference round-trip fixture
-- SDK validation evidence
+- successful run-bound observation receipt
 ```
 
 ## Remaining destination work
@@ -136,9 +179,8 @@ StegVerse-org/LLM-adapter:
 - replay conflict observation receipt from workflow evidence
 
 StegVerse-org/StegVerse-SDK:
-- destination handoff review before mutation
-- workflow observation of SDK system-boundary tests
-- receipt serialization and system_boundary_declaration_ref round-trip evidence
+- workflow PASS covering declaration and receipt round-trip tests
+- run-bound receipt preserving system_boundary_declaration_ref verification
 
 StegVerse-Labs/Site:
 - bounded public status only after adapter and SDK verification
@@ -149,8 +191,8 @@ GCAT-BCAT-Engine/Publisher:
 
 ## Permitted continuation
 
-A successor session may inspect canonical workflow evidence, repair the first repository-local failing step, update local receipts and handoffs, and review the SDK destination handoff. No automatic production binding or downstream repository mutation is authorized by this file.
+A successor session may inspect adapter and SDK canonical workflow evidence, repair the first repository-local failing step, and update local receipts and handoffs. No automatic production binding, Site publication, Publisher propagation, Master-Records custody claim, execution authority, admissibility, standing, or classification claim is authorized by this file.
 
 ## Archival status
 
-All workstream-specific decisions, installed files, remaining work, ownership, and boundaries are durable here. Earlier conversation context is not required for continuation.
+All workstream-specific decisions, installed files, destination work, remaining observations, ownership, and boundaries are durable here. Earlier conversation context is not required for continuation.
