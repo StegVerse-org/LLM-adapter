@@ -1,0 +1,22 @@
+{
+  "schema_version": "stegverse.system_boundary_fixture_provenance.v1",
+  "producer_repo": "StegVerse-org/LLM-adapter",
+  "producer_fixture": "tests/fixtures/system-boundary-sdk-session-packet.v1.json",
+  "producer_fixture_commit": "dbd6ca0bde250bdf9865532049f58d523269d305",
+  "consumer_repo": "StegVerse-org/StegVerse-SDK",
+  "consumer_fixture": "tests/fixtures/adapter-system-boundary-session-packet.v1.json",
+  "declaration_id": "sbd:sha256:9b43cec895a07d51e02c59aa4d2779d50e288bfe635d8017fcfdbdde66b73101",
+  "declaration_digest": "9b43cec895a07d51e02c59aa4d2779d50e288bfe635d8017fcfdbdde66b73101",
+  "receipt_hash": "sha256:24b454a3426aecca2ff6f46f70b9694807e89124969ecbdad998e4310011d317",
+  "source_commit": "4bf4027df724fd5fd8be128009cef31d8b036396",
+  "required_non_claims": {
+    "authorizing": false,
+    "custody_transferred": false,
+    "admissibility_determined": false,
+    "production_binding_enabled": false,
+    "model_has_execution_authority": false,
+    "consciousness_claim": "not_evaluated",
+    "personhood_claim": "not_evaluated",
+    "welfare_claim": "not_evaluated"
+  }
+}
