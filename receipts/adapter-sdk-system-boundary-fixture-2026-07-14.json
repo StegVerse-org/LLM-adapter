@@ -1,0 +1,25 @@
+{
+  "receipt_type": "adapter_sdk_system_boundary_fixture_installation",
+  "schema_version": "0.1",
+  "source_repo": "StegVerse-org/LLM-adapter",
+  "destination_repo": "StegVerse-org/StegVerse-SDK",
+  "fixture_path": "fixtures/adapter_system_boundary_sdk_packet.v0.1.json",
+  "source_fixture_commit": "0368236b34ae9536f10753656192fcf76417846c",
+  "source_test_commit": "dca76c5af0dff16569343d5c702c96b8f256d3c2",
+  "destination_fixture_commit": "206ad001fee831863a0af31b489d8ade83b2fee8",
+  "destination_test_commit": "0721d204c3b9d4bb7f4c7d6be346e3c797679640",
+  "declaration_id": "sbd:sha256:1b6ad078f9738c4ae8a5929d826f42a1675bc9cc1272ff5fdd6b05c08d7265dd",
+  "declaration_digest": "1b6ad078f9738c4ae8a5929d826f42a1675bc9cc1272ff5fdd6b05c08d7265dd",
+  "receipt_hash": "sha256:662c27f31a33f35d50b8ee9988a447bc0aadd20d03ac9cecc9e57f00ca1f07d8",
+  "transition_id": "transition-sbd-001",
+  "run_id": "run-sbd-001",
+  "binding_mode": "fixture_only_production_disabled",
+  "non_claims": {
+    "fixture_is_execution_authority": false,
+    "sdk_serialization_is_admissibility": false,
+    "receipt_is_master_records_custody": false,
+    "fixture_proves_consciousness": false,
+    "production_binding_enabled": false
+  },
+  "validation_state": "tests_installed_workflow_observation_pending"
+}
