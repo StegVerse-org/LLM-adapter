@@ -2,7 +2,7 @@
 
 ## Scope
 
-This bounded handoff records the cross-repository provenance guard for the adapter-produced system-boundary fixture consumed by `StegVerse-org/StegVerse-SDK`.
+This bounded handoff records the cross-repository provenance guard and workflow-evidence contract for the adapter-produced system-boundary fixture consumed by `StegVerse-org/StegVerse-SDK`.
 
 Repository-wide authority remains `LLM_ADAPTER_MIRROR_HANDOFF.md`.
 
@@ -12,8 +12,13 @@ Repository-wide authority remains `LLM_ADAPTER_MIRROR_HANDOFF.md`.
 tests/fixtures/system-boundary-sdk-session-packet.v1.json
 tests/fixtures/system-boundary-sdk-session-packet.v1.provenance.json
 tests/test_system_boundary_fixture_provenance.py
+llm_adapter/system_boundary_workflow_evidence.py
+evidence/system-boundary-workflow-evidence.pending.v0.1.json
+tests/test_system_boundary_workflow_evidence.py
 receipts/system-boundary-fixture-provenance-2026-07-14.json
 receipts/system-boundary-provenance-workflow-binding-2026-07-14.json
+receipts/system-boundary-workflow-evidence-contract-2026-07-14.json
+receipts/system-boundary-workflow-evidence-binding-2026-07-14.json
 .github/workflows/validate.yml
 iosnoperiod/github/workflows/validate.yml
 ```
@@ -40,15 +45,19 @@ model_has_execution_authority: false
 consciousness_claim: not_evaluated
 personhood_claim: not_evaluated
 welfare_claim: not_evaluated
+pending_is_verified: false
+missing_status_becomes_pass: false
+release_authorized: false
 ```
 
 ## Workflow binding
 
 ```text
-canonical workflow commit: c1c2518a4274a6c488827de1f0e1bdf90f0968ba
-ios workflow mirror commit: f11e534fc21ed085cf05699bb940b48e797c2b62
+canonical workflow commit: 97ad14bb61af47af6e3dac4ee546383e388e640c
+ios workflow mirror commit: cf5bbe3b9b343600d27c249a02a40fe96c37e61e
 fixture generation test: tests/test_system_boundary_sdk_fixture.py
 provenance guard: tests/test_system_boundary_fixture_provenance.py
+workflow evidence guard: tests/test_system_boundary_workflow_evidence.py
 workflow parity: synchronized identical content
 ```
 
@@ -57,20 +66,19 @@ workflow parity: synchronized identical content
 ```text
 producer provenance manifest: installed
 producer provenance validator: installed
-producer installation receipt: installed
-consumer mirror manifest: installed
-consumer mirror validator: installed
-consumer installation receipt: installed
+workflow evidence validator: installed
+pending evidence record: installed
 canonical workflow binding: installed
 ios workflow mirror binding: installed
 workflow observation: pending
 combined status observation: no status reported
 production binding: disabled
+release authorization: false
 ```
 
 ## Next event
 
-Observe a canonical `LLM-adapter` validation run containing commit `f11e534fc21ed085cf05699bb940b48e797c2b62` or later. Repair only the first repository-local failure. After success, record the workflow evidence and propagate verified status downstream without enabling production binding.
+Observe a canonical `LLM-adapter` validation run containing commit `cf5bbe3b9b343600d27c249a02a40fe96c37e61e` or later. Repair only the first repository-local failure. A `PENDING` or missing status must not be converted into `PASS`. After success, record the exact observed commit, run ID, and run URL before propagating verified status downstream.
 
 ## Archive readiness
 
