@@ -175,4 +175,4 @@ def test_expired_reviewer_delegation_is_rejected(monkeypatch, tmp_path):
     )
     response = client.post("/api/external-review/corrections", json=correction(), headers={"Authorization": "Bearer reviewer-secret"})
     assert response.status_code == 403
-    assert response.json()["detail"]["reason"] == "reviewer_delegation_expired"
+    assert response.json()["detail"]["reason"] == "reviewer_not_registered_delegation_expired"
