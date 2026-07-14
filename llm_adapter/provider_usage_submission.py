@@ -6,7 +6,6 @@ Local persistence is not Master-Records custody and grants no authority.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
 from hashlib import sha256
 from typing import Any
 
@@ -58,7 +57,9 @@ def persist_provider_usage(
             "estimated_cost_usd": ProviderMetric(str(getattr(provider_result, "estimated_cost_usd", 0.0)), "USD", "DERIVED", source_ref),
         },
         receipt_refs=[receipt_id] if receipt_id else [],
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        # The provider receipt and transition identity define this measurement.
+        # A wall-clock timestamp would make identical replay hash differently.
+        timestamp=None,
     )
 
     usage_session_api._validate_session_id(session_id)
