@@ -79,6 +79,76 @@ local usage persistence custody -> false
 repository mutation -> false
 ```
 
+## System-boundary declaration workstream
+
+This subordinate workstream preserves the active provider-usage goal while installing the runtime side of the governed system-boundary contract.
+
+Installed files:
+
+```text
+llm_adapter/system_boundary.py
+tests/test_system_boundary.py
+docs/SYSTEM_BOUNDARY_DECLARATION.md
+adapter.capabilities.json
+```
+
+Source and destination chain:
+
+```text
+StegVerse-Labs/admissibility-wiki doctrine and schema
+-> StegVerse-org/LLM-adapter runtime inventory and declaration generation
+-> StegVerse-org/StegVerse-SDK validation
+-> governed session manifest field: system_boundary_declaration
+-> receipt reference field: system_boundary_declaration_ref
+-> bounded Site status display after verification
+```
+
+The adapter declaration separates:
+
+```text
+model
+orchestration
+session
+memory
+environment
+feedback paths
+evidence references
+commit boundary
+decision source
+```
+
+Required invariants:
+
+```text
+model persistence: invocation
+model mutable_by_inference: false
+model_has_execution_authority: false
+trajectory dependence requires explicit feedback paths
+reconstructability requires evidence references
+consciousness_claim: not_evaluated
+personhood_claim: not_evaluated
+welfare_claim: not_evaluated
+```
+
+Local verification command:
+
+```text
+pytest tests/test_system_boundary.py
+```
+
+Current system-boundary state:
+
+```text
+runtime declaration builder: INSTALLED
+runtime surface inventory: INSTALLED
+feedback-path recorder: INSTALLED
+claim and authority guards: INSTALLED
+adapter tests: INSTALLED
+current-main workflow evidence containing these files: NOT OBSERVED
+governed response/session serialization binding: PENDING
+Site bounded display: PENDING
+```
+
 ## Current evidence state
 
 ```text
@@ -90,6 +160,8 @@ Workflow parity repair: INSTALLED
 Provider-owned usage persistence: INSTALLED
 Provider lifecycle hook: INSTALLED
 Provider lifecycle tests: INSTALLED
+System-boundary runtime declaration: INSTALLED
+System-boundary tests: INSTALLED
 Successor green current-main validation: NOT OBSERVED
 Same-origin deployment: NOT OBSERVED
 Live provider-owned event submission in deployed service: NOT OBSERVED
@@ -99,11 +171,11 @@ Master-Records usage custody: NOT OBSERVED
 ## Ownership and continuation assignment
 
 ```text
-Completed session work: repository-local provider usage lifecycle integration
-Completed commits: 23cc19a, 4f6abae, 16d8b68
+Completed session work: repository-local provider usage lifecycle integration and subordinate system-boundary declaration generation
+Completed system-boundary commits: c510046, 80ee0e1, c76e665, b3eccdc
 Active task owner: successor repository continuation / orchestrator assignment
-Pending observation: successor validation containing 16d8b68 or later
-Permitted continuation scope: bounded repository-local repair preserving every validation surface and all authority, custody, mutation, and deployment boundaries
+Pending observation: successor validation containing b3eccdc4171596f1387d6cabb615de54fe08664d or later
+Permitted continuation scope: bounded repository-local repair preserving every validation surface and all authority, custody, mutation, deployment, and consciousness-claim boundaries
 ```
 
 All remaining work is reconstructable from this handoff, repository history, workflow runs, and notifications.
@@ -111,19 +183,32 @@ All remaining work is reconstructable from this handoff, repository history, wor
 ## Next task
 
 ```text
-1. Observe the successor validation containing commit 16d8b68af1bd73b28c66d2bfd947012c42ee2c46 or later.
+1. Observe successor validation containing b3eccdc4171596f1387d6cabb615de54fe08664d or later.
 2. Repair only the first repository-local failing step, if any.
 3. Preserve all existing validation surfaces.
-4. Add Master-Records usage-custody submission after local persistence, without treating local storage as custody.
-5. Keep production mutation disabled until separately authorized.
-6. Establish the authorized same-origin Site retrieval path before enabling live transport.
-7. Preserve deployed retrieval and custody receipts before activation claims.
+4. Bind system_boundary_declaration into the governed response or session packet without making it mandatory for legacy fixtures until migration is explicit.
+5. Preserve system_boundary_declaration_ref through SDK receipt handoff.
+6. Add Master-Records usage-custody submission after local persistence, without treating local storage as custody.
+7. Keep production mutation disabled until separately authorized.
+8. Establish the authorized same-origin Site retrieval path before enabling live transport.
+9. Preserve deployed retrieval, declaration, and custody receipts before activation claims.
+```
+
+## Downstream destinations
+
+```text
+StegVerse-org/StegVerse-SDK
+StegVerse-Labs/Site
+GCAT-BCAT-Engine/Publisher
+StegVerse-Labs/admissibility-wiki
+StegVerse-Labs/stegguardian-wiki
+master-records/orchestration
 ```
 
 ## Release posture
 
-No deployment, live transport activation, Master-Records custody claim, release, tag, production mutation, or publication authority is granted by this handoff.
+No deployment, live transport activation, Master-Records custody claim, release, tag, production mutation, publication authority, consciousness classification, personhood classification, or welfare classification is granted by this handoff.
 
 ## Archive readiness
 
-This handoff preserves the session decisions, discovered blockers, completed work, remaining work, active ownership, pending validation requirements, and permitted continuation scope. No future continuation requires access to the conversation that created the provider usage lifecycle commits.
+This handoff preserves the session decisions, discovered blockers, completed work, remaining work, active ownership, pending validation requirements, and permitted continuation scope. No future continuation requires access to the conversation that created these commits.
