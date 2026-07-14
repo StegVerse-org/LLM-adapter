@@ -1,0 +1,12 @@
+{
+  "schema_version": "stegverse.system_boundary.workflow_evidence.v0.1",
+  "repository": "StegVerse-org/LLM-adapter",
+  "workflow": ".github/workflows/validate.yml",
+  "required_commit": "f11e534fc21ed085cf05699bb940b48e797c2b62",
+  "observed_commit": null,
+  "run_id": null,
+  "run_url": null,
+  "result": "PENDING",
+  "production_binding_enabled": false,
+  "release_authorized": false
+}
