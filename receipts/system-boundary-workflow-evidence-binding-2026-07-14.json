@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0.0",
+  "record_type": "system_boundary_workflow_evidence_binding_receipt",
+  "repository": "StegVerse-org/LLM-adapter",
+  "installed": {
+    "evidence_validator": "llm_adapter/system_boundary_workflow_evidence.py",
+    "pending_record": "evidence/system-boundary-workflow-evidence.pending.v0.1.json",
+    "evidence_tests": "tests/test_system_boundary_workflow_evidence.py",
+    "canonical_workflow_commit": "97ad14bb61af47af6e3dac4ee546383e388e640c",
+    "ios_workflow_commit": "cf5bbe3b9b343600d27c249a02a40fe96c37e61e"
+  },
+  "validation": {
+    "canonical_binding": "INSTALLED",
+    "ios_binding": "INSTALLED",
+    "workflow_parity": "IDENTICAL_CONTENT",
+    "observed_workflow_status": "PENDING"
+  },
+  "preserved_boundaries": {
+    "pending_is_verified": false,
+    "missing_status_becomes_pass": false,
+    "production_binding_enabled": false,
+    "release_authorized": false
+  },
+  "next_required_action": "Observe a canonical validation run containing cf5bbe3b9b343600d27c249a02a40fe96c37e61e or later; repair only the first repository-local failure and record exact run identity before any verified-status propagation."
+}
