@@ -75,8 +75,16 @@ jobs:
         run: python -m pytest tests/test_usage_session_api.py -v
       - name: Test External Chat compatibility
         run: python -m pytest tests/test_external_framework_compatibility.py -v
-      - name: Test External Chat review
-        run: python -m pytest tests/test_external_review_api.py -v
+      - name: Test External Review package intake
+        run: python -m pytest tests/test_external_review_api.py::test_package_only_intake_is_authenticated_append_only_and_idempotent -v
+      - name: Test External Review package conflict
+        run: python -m pytest tests/test_external_review_api.py::test_package_rejects_raw_submission_and_conflicting_content -v
+      - name: Test External Review delegated receipt
+        run: python -m pytest tests/test_external_review_api.py::test_delegated_reviewer_can_issue_one_identity_bound_receipt -v
+      - name: Test External Review identity drift
+        run: python -m pytest tests/test_external_review_api.py::test_scope_and_identity_drift_fail_closed -v
+      - name: Test External Review expired delegation
+        run: python -m pytest tests/test_external_review_api.py::test_expired_reviewer_delegation_is_rejected -v
       - name: Test External Chat publication and mutation
         run: python -m pytest tests/test_external_review_publication.py tests/test_external_publication_mutation.py -v
       - name: Check workflow parity
