@@ -1,0 +1,50 @@
+{
+  "schema": "stegverse.implementation.receipt.v1",
+  "receipt_id": "provider-usage-master-records-custody-implementation-2026-07-16",
+  "repository": "StegVerse-org/LLM-adapter",
+  "goal": "governed Ecosystem Chat provider usage custody activation path",
+  "implemented": [
+    "llm_adapter/master_records_usage_submission.py",
+    "llm_adapter/provider_usage_submission.py",
+    "llm_adapter/combined_gateway.py",
+    "tests/test_master_records_usage_submission.py",
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "Dockerfile"
+  ],
+  "behavior": {
+    "provider_usage_local_persistence": "installed",
+    "automatic_master_records_submission": "installed_after_successful_provider_usage_persistence",
+    "credential_resolution": "server_environment_at_call_time",
+    "remote_transport": "https_required",
+    "receipt_identity_validation": "fail_closed",
+    "custody_claim": "only_after_identity_bound_external_receipt",
+    "authority_granted": false,
+    "browser_secret_surface": false
+  },
+  "configuration": {
+    "master_records_base_url": "STEGVERSE_MASTER_RECORDS_ENDPOINT",
+    "optional_usage_url_override": "STEGVERSE_MASTER_RECORDS_USAGE_URL",
+    "credential": "STEGVERSE_MASTER_RECORDS_TOKEN",
+    "timeout_seconds": "STEGVERSE_MASTER_RECORDS_TIMEOUT_SECONDS"
+  },
+  "current_boundary": {
+    "repository_local_implementation": "INSTALLED",
+    "current_main_validation": "PENDING_OBSERVATION",
+    "deployed_master_records_endpoint": "NOT_VERIFIED",
+    "live_custody_receipt": "NOT_OBSERVED",
+    "same_origin_site_route": "NOT_VERIFIED",
+    "live_transport_activation": false,
+    "release_authorized": false
+  },
+  "commits": [
+    "ecb1b4c92356177b610e14b1b65a282a74523d62",
+    "3941b30895e08ef4f7e2336a5b2663d1d83d4c00",
+    "bea07bdd7f50b0d203de865731d3b3aea40641c9",
+    "b6e03ab1f06ad1b250d17a75031c2a9ffc9c9698",
+    "c36103e0dd84c413fa0a4aae9b0df629742e4c21",
+    "676f101cec5ff44e51d8f7e62fe187c9c4764dbe",
+    "1a24ef0f1657fabe22e89615ea584210e032881e",
+    "94a238e7aa794c0f6d6410bf4d9101bb6b1de535"
+  ]
+}
