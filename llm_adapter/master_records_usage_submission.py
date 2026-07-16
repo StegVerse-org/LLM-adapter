@@ -26,7 +26,9 @@ class MasterRecordsUsageConfig:
 
 
 def _configured() -> MasterRecordsUsageConfig | None:
-    endpoint = os.getenv("STEGVERSE_MASTER_RECORDS_USAGE_URL", "").strip()
+    explicit_endpoint = os.getenv("STEGVERSE_MASTER_RECORDS_USAGE_URL", "").strip()
+    base_endpoint = os.getenv("STEGVERSE_MASTER_RECORDS_ENDPOINT", "").strip().rstrip("/")
+    endpoint = explicit_endpoint or (base_endpoint + "/api/custody/provider-usage" if base_endpoint else "")
     token = os.getenv("STEGVERSE_MASTER_RECORDS_TOKEN", "").strip()
     if not endpoint and not token:
         return None
