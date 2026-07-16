@@ -94,6 +94,7 @@ def persist_provider_usage(
         "measurement_id": canonical["measurement_id"],
         "event_sha256": canonical["event_sha256"],
         "inserted": inserted,
+        "canonical_event": canonical,
         "authority_granted": False,
         "custody_recorded": False,
     }
