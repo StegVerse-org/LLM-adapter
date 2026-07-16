@@ -13,6 +13,10 @@ from llm_adapter.ecosystem_chat_gateway import app
 from llm_adapter.external_chat_api import router as external_chat_router
 from llm_adapter.external_review_api import router as external_review_router
 from llm_adapter.external_publication_mutation import router as external_mutation_router
+from llm_adapter.master_records_usage_submission import (
+    MasterRecordsUsageError,
+    submit_provider_usage_to_master_records,
+)
 from llm_adapter.provider_usage_submission import persist_provider_usage
 from llm_adapter.usage_session_api import router as usage_session_router
 
@@ -24,11 +28,11 @@ app.include_router(usage_session_router)
 
 @app.middleware("http")
 async def record_provider_usage_after_ecosystem_chat(request: Request, call_next):
-    """Record successful provider measurements after the governed response exists.
+    """Persist successful provider usage and attempt authenticated custody transfer.
 
-    Persistence failure is represented in the response and never converts provider
-    output into authority or Master-Records custody. Non-provider and failed-provider
-    paths do not create usage measurements.
+    Local persistence remains non-custodial. Master-Records custody is reported only
+    when an identity-bound external receipt validates. Transport or custody failure is
+    visible in the response but never converts provider output into authority.
     """
     if request.method != "POST" or request.url.path != "/api/ecosystem-chat":
         return await call_next(request)
@@ -48,15 +52,34 @@ async def record_provider_usage_after_ecosystem_chat(request: Request, call_next
             request_payload = json.loads(request_body.decode("utf-8"))
             response_payload = json.loads(raw_body.decode("utf-8"))
             provider = response_payload.get("provider") or {}
-            usage_submission = persist_provider_usage(
+            local_submission = persist_provider_usage(
                 session_id=str(request_payload["session_id"]),
                 transition_id=str(response_payload["transition_id"]),
                 run_id=str(response_payload["run_id"]),
                 parent_transition_id=(request_payload.get("transition_identity") or {}).get("parent_transition_id"),
                 provider_result=SimpleNamespace(**provider),
             )
-            response_payload["provider_usage_submission"] = usage_submission
-            response_payload.setdefault("authority", {})["provider_usage_is_master_records_custody"] = False
+            custody_submission = None
+            if local_submission is not None:
+                canonical_event = local_submission.pop("canonical_event")
+                try:
+                    custody_submission = submit_provider_usage_to_master_records(canonical_event)
+                except MasterRecordsUsageError as exc:
+                    custody_submission = {
+                        "schema": "stegverse.usage.master_records_submission.v1",
+                        "status": "CUSTODY_SUBMISSION_FAILED",
+                        "reason": str(exc),
+                        "authority_granted": False,
+                        "custody_recorded": False,
+                    }
+
+            response_payload["provider_usage_submission"] = local_submission
+            response_payload["master_records_usage_submission"] = custody_submission
+            authority = response_payload.setdefault("authority", {})
+            authority["provider_usage_is_master_records_custody"] = bool(
+                custody_submission and custody_submission.get("custody_recorded") is True
+            )
+            authority["provider_usage_grants_authority"] = False
             raw_body = json.dumps(response_payload, separators=(",", ":")).encode("utf-8")
         except Exception as exc:  # fail visible without invalidating the bounded response
             try:
@@ -64,6 +87,11 @@ async def record_provider_usage_after_ecosystem_chat(request: Request, call_next
                 response_payload["provider_usage_submission"] = {
                     "status": "LOCAL_USAGE_PERSISTENCE_FAILED",
                     "reason": type(exc).__name__,
+                    "authority_granted": False,
+                    "custody_recorded": False,
+                }
+                response_payload["master_records_usage_submission"] = {
+                    "status": "NOT_ATTEMPTED",
                     "authority_granted": False,
                     "custody_recorded": False,
                 }
