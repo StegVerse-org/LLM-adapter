@@ -7,31 +7,79 @@ This file is the current continuation source for `StegVerse-org/LLM-adapter`.
 ## Active goal
 
 ```text
-Goal: governed Ecosystem Chat and External Chat with provider telemetry, authenticated usage retrieval, bounded review, publication, mutation, and non-authorizing system-boundary evidence
-Phase: system-boundary-lifecycle-binding-installed
-Result: LOCAL_IMPLEMENTATION_INSTALLED_CURRENT_MAIN_GREEN_VALIDATION_PENDING
+Goal: live governed Ecosystem Chat with provider response, provider telemetry, authenticated usage retrieval, transition custody, provider-usage custody, and reconstructable evidence
+Phase: live-activation-automation-installed
+Result: LOCAL_IMPLEMENTATION_INSTALLED_CURRENT_MAIN_AND_LIVE_EVIDENCE_PENDING
 ```
 
-## Installed core surfaces
+## Installed runtime surfaces
 
 ```text
 llm_adapter/combined_gateway.py
 llm_adapter/ecosystem_chat_gateway.py
 llm_adapter/provider_usage.py
 llm_adapter/provider_usage_submission.py
+llm_adapter/master_records_usage_submission.py
 llm_adapter/usage_session_api.py
-llm_adapter/external_framework_compatibility.py
-llm_adapter/external_review_api.py
-llm_adapter/external_review_store.py
-llm_adapter/external_publication_mutation.py
-scripts/verify_usage_session_api.py
-scripts/verify_external_publication_staging.py
-scripts/check_ai_entry_no_manual_tasks.py
-tests/test_provider_usage.py
-tests/test_usage_session_api.py
-tests/test_external_review_api.py
-.github/workflows/validate.yml
-iosnoperiod/github/workflows/validate.yml
+llm_adapter/master_records_client.py
+llm_adapter/system_boundary.py
+llm_adapter/system_boundary_binding.py
+llm_adapter/system_boundary_receipt.py
+llm_adapter/system_boundary_lifecycle.py
+```
+
+## Provider usage lifecycle
+
+```text
+successful provider result
+-> canonical provider usage event
+-> local usage-session persistence
+-> automatic authenticated Master-Records submission
+-> identity-bound custody receipt validation
+-> custody and reconstruction posture included in gateway response
+```
+
+Behavior:
+
+```text
+provider used = true -> persist exactly one event
+provider disabled, blocked, failed, or fallback -> no provider event
+identical replay -> idempotent
+changed event under the same measurement identity -> fail closed
+local persistence custody -> false
+external custody accepted only after exact receipt identity validation
+usage authority -> false
+repository mutation -> false
+```
+
+## Master-Records provider usage contract
+
+Source implementation:
+
+```text
+llm_adapter/master_records_usage_submission.py
+```
+
+Destination implementation:
+
+```text
+master-records/orchestration
+services/master_records_custody_api.py
+POST /api/custody/provider-usage
+GET /api/custody/provider-usage/receipts/{receipt_id}/reconstruction
+PROVIDER_USAGE_CUSTODY_MIRROR_HANDOFF.md
+```
+
+The adapter resolves the endpoint and bearer credential only in the deployed server environment. Remote transport requires HTTPS. Browser payloads and responses never contain the credential.
+
+The adapter accepts custody only when the destination receipt exactly preserves:
+
+```text
+session_id
+measurement_id
+event_sha256
+custody_recorded = true
+authority_granted = false
 ```
 
 ## Usage-session contract
@@ -41,103 +89,63 @@ POST /api/usage/sessions
 GET  /api/usage/sessions/{session_id}
 ```
 
-The endpoint preserves session identity, validates evidence classes and event hashes, deduplicates by `metric_owner + measurement_id`, and returns a bounded retrieval receipt. Local persistence is not Master-Records custody, and retrieval grants no authority or admissibility.
+The endpoint validates event identity and evidence classes, deduplicates by `metric_owner + measurement_id`, and returns a bounded retrieval receipt. Local persistence and retrieval do not grant custody, authority, standing, or admissibility.
 
-## Completed repository-local validation progression
-
-Observed workflow evidence established that all functional checks and all External Chat compatibility, review, publication, and mutation tests passed through the workflow-parity step. Workflow parity was then repaired by synchronizing the canonical and iOS-safe workflows.
+## Production deployment posture
 
 ```text
-Run 29302364047: all functional and External Chat tests PASS; workflow parity FAIL
-Commit 4e74df7e4e7de6a33e3f7224f92aa5b09ae121f8: canonical/iOS workflow parity synchronized
+render-production.yaml
+Dockerfile
 ```
 
-## Provider-owned usage lifecycle integration
+The production blueprint now specifies:
 
 ```text
-23cc19ac6ae2b99d9126bf928bdc3c1e3567e089  internal provider usage persistence
-4f6abaeda313afb0c8598b9eb750a86f47ce9e30  combined gateway lifecycle hook
-16d8b68af1bd73b28c66d2bfd947012c42ee2c46  lifecycle tests
-8c04360a0cc3c294250ecc06575c73b2b9ea1821  deterministic replay repair
-1592c9219d16e9896fec6848470b4ed3f4646e8e  repair receipt
+Render autoDeploy: true
+persistent /var/data disk
+persistent transition database
+persistent usage-session database
+persistent external-review database
+governed provider enabled
+Master-Records endpoint and token resolved server-side
+external mutation disabled
+allowed Site origins
 ```
 
-Behavior:
+External provider and custody endpoint credentials remain platform-managed values and are not stored in the repository.
+
+## Autonomous activation evidence
+
+Installed:
 
 ```text
-provider result used == true -> persist one session-bound provider usage event
-provider disabled, blocked, failed, or fallback -> persist no provider usage event
-identical replay -> idempotent
-conflicting measurement identity -> fail closed
-usage event authority -> false
-local usage persistence custody -> false
-repository mutation -> false
+scripts/write_ecosystem_chat_destination_activation_state.py
+scripts/verify_live_ecosystem_chat_activation.py
+.github/workflows/validate.yml
+.github/workflows/ecosystem-chat-live-activation.yml
+iosnoperiod/github/workflows/validate.yml
+tests/test_live_activation_automation_contract.py
 ```
 
-## System-boundary declaration workstream
-
-This subordinate workstream preserves the active provider-usage goal while installing the runtime side of the governed system-boundary contract.
-
-Installed files:
+Automation behavior:
 
 ```text
-llm_adapter/system_boundary.py
-llm_adapter/system_boundary_binding.py
-llm_adapter/system_boundary_receipt.py
-llm_adapter/system_boundary_lifecycle.py
-tests/test_system_boundary.py
-tests/test_system_boundary_binding.py
-tests/test_system_boundary_receipt.py
-tests/test_system_boundary_lifecycle.py
-docs/SYSTEM_BOUNDARY_DECLARATION.md
-SYSTEM_BOUNDARY_MIRROR_HANDOFF.md
-receipts/system-boundary-adapter-implementation-2026-07-14.json
-receipts/system-boundary-lifecycle-binding-2026-07-14.json
-adapter.capabilities.json
+canonical validation runs on pushes, pull requests, dispatch, and schedule
+canonical and iOS-safe workflows remain byte-equivalent
+repository-local destination state is written and retained as a workflow artifact
+live activation verification runs after successful validation and hourly
+first existing VERIFIED live receipt is preserved and not replaced
+fresh governed transition identity is generated for live verification
+real provider use is required
+provider usage local persistence must remain non-custodial
+provider-usage custody and reconstruction PASS are required
+transition custody and reconstruction PASS are required
+pending results are retained as artifacts
+only the first VERIFIED live result is committed
+no browser credential or manual live-verifier command is required
 ```
 
-Source and destination chain:
-
-```text
-StegVerse-Labs/admissibility-wiki doctrine and schema
--> StegVerse-org/LLM-adapter runtime inventory and declaration generation
--> explicit governed session/response lifecycle binding
--> system_boundary_declaration_ref persistence in the bound payload
--> StegVerse-org/StegVerse-SDK validation
--> governed session manifest field: system_boundary_declaration
--> receipt reference field: system_boundary_declaration_ref
--> bounded Site status display after verification
-```
-
-Required invariants:
-
-```text
-model persistence: invocation
-model mutable_by_inference: false
-model_has_execution_authority: false
-trajectory dependence requires explicit feedback paths
-reconstructability requires evidence references
-consciousness_claim: not_evaluated
-personhood_claim: not_evaluated
-welfare_claim: not_evaluated
-binding authorizing: false
-binding custody_transferred: false
-binding admissibility_determined: false
-production_binding_enabled: false
-```
-
-The opt-in payload binder and lifecycle binder add canonical SHA-256 references and refuse reserved-field overwrite, partial prior binding, digest drift, identifier mismatch, session/transition/run mismatch, authority escalation, custody escalation, admissibility escalation, and consciousness/personhood/welfare claim escalation. Identical complete binding replay is idempotent. Material lifecycle evidence changes rotate declaration identity. Receipt-chain-only changes rotate the receipt while preserving declaration identity.
-
-Local verification is now included in both canonical and iOS-safe workflows:
-
-```text
-pytest tests/test_system_boundary.py
-pytest tests/test_system_boundary_binding.py
-pytest tests/test_system_boundary_receipt.py
-pytest tests/test_system_boundary_lifecycle.py
-```
-
-Current system-boundary state:
+## System-boundary posture
 
 ```text
 runtime declaration builder: INSTALLED
@@ -146,82 +154,78 @@ feedback-path recorder: INSTALLED
 claim and authority guards: INSTALLED
 optional governed response/session binding: INSTALLED
 explicit lifecycle binding: INSTALLED
-system_boundary_declaration_ref persistence: INSTALLED IN BOUND PAYLOAD
+system_boundary_declaration_ref persistence: INSTALLED
 replay and conflict handling: INSTALLED
-deterministic declaration and receipt identity: INSTALLED
-canonical and iOS workflow integration: INSTALLED
-current-main workflow evidence containing lifecycle files: NOT OBSERVED
-production gateway activation of binding: DISABLED PENDING SEPARATE AUTHORIZATION
-SDK receipt round-trip evidence: PENDING
-Site bounded display: PENDING
+production binding: DISABLED PENDING SEPARATE AUTHORIZATION
+consciousness/personhood/welfare claims: NOT_EVALUATED
 ```
 
 ## Current evidence state
 
 ```text
-Usage-session implementation: INSTALLED
-Usage-session focused checks: OBSERVED PASS
-External Review tests: OBSERVED PASS
-External publication and mutation tests: OBSERVED PASS
-Workflow parity repair: INSTALLED
-Provider-owned usage persistence: INSTALLED
-Provider lifecycle hook: INSTALLED
-Provider lifecycle tests: INSTALLED
-Provider replay repair: INSTALLED
-System-boundary runtime declaration: INSTALLED
-System-boundary payload binding: INSTALLED OPT-IN
-System-boundary lifecycle binding: INSTALLED EXPLICIT
-System-boundary receipt replay: INSTALLED
-System-boundary canonical workflow test step: INSTALLED
-Successor green current-main validation: NOT OBSERVED
-Same-origin deployment: NOT OBSERVED
-Live provider-owned event submission in deployed service: NOT OBSERVED
-Master-Records usage custody: NOT OBSERVED
-SDK system-boundary round trip: NOT OBSERVED
+provider usage local persistence: INSTALLED
+provider usage automatic custody submission: INSTALLED
+provider usage receipt validation: INSTALLED
+provider usage destination API: INSTALLED IN master-records/orchestration
+provider usage reconstruction API: INSTALLED IN master-records/orchestration
+production deployment blueprint: INSTALLED
+scheduled live verifier: INSTALLED
+canonical/iOS workflow parity: INSTALLED
+activation automation contract tests: INSTALLED
+current-main validation containing latest automation: NOT YET OBSERVED
+production gateway containing latest source: NOT YET OBSERVED
+production custody service containing provider-usage route: NOT YET OBSERVED
+real provider use: NOT YET OBSERVED
+live provider-usage custody receipt: NOT YET OBSERVED
+live transition custody receipt: NOT YET OBSERVED
+retained VERIFIED activation receipt: NOT YET OBSERVED
+Site activation-ledger consumption: NOT YET OBSERVED
 ```
 
-## Ownership and continuation assignment
+## Remaining work
 
 ```text
-Completed session work: provider usage lifecycle integration, deterministic replay repair, system-boundary generation, receipt support, opt-in payload binding, explicit session lifecycle binding, replay/conflict tests, and canonical/iOS workflow integration
-Latest system-boundary commits: 29b562b, fec355f, f3b73c8, 9d15f54, 63cf2a9, 840eb01
-Active task owner: successor repository continuation / orchestrator assignment
-Pending observation: canonical validate run containing 9d15f54a2027242e50a82c5fec1f1b2bbbc36cd6 or later
-Permitted continuation scope: bounded repository-local observation and repair preserving every validation surface and all authority, custody, mutation, deployment, and consciousness-claim boundaries
-```
-
-All remaining work is reconstructable from this handoff, the subordinate system-boundary handoff, repository history, workflow runs, receipts, and notifications.
-
-## Next task
-
-```text
-1. Observe successor validation containing 9d15f54a2027242e50a82c5fec1f1b2bbbc36cd6 or later.
-2. Repair only the first repository-local failing step, if any.
-3. Preserve all existing validation surfaces and canonical/iOS workflow parity.
-4. Keep automatic production gateway system-boundary binding disabled until separately authorized.
-5. Review the current StegVerse-SDK handoff before downstream mutation.
-6. Preserve system_boundary_declaration_ref through an SDK receipt round trip and verify the declaration/receipt hashes.
-7. Add Master-Records usage-custody submission after local provider-usage persistence, without treating local storage as custody.
-8. Keep production mutation disabled until separately authorized.
-9. Establish the authorized same-origin Site retrieval path before enabling live transport.
-10. Preserve deployed retrieval, declaration, SDK, and custody receipts before activation claims.
+1. Observe current-main validation containing fb07017f14710af863de1d52e793a227499192c4 or later.
+2. Repair only the first exact failing validation step without removing checks.
+3. Allow Render auto-deployment to deploy current main using render-production.yaml.
+4. Let .github/workflows/ecosystem-chat-live-activation.yml perform the live check automatically.
+5. Preserve the first VERIFIED activation receipt.
+6. Propagate that verified receipt into StegVerse-Labs/Site activation state.
+7. Enable Site live usage display only when its own handoff gates accept the retained receipt.
+8. Propagate verified status to Publisher, admissibility-wiki, stegguardian-wiki, and Sit.
+9. Tag or release only after repository validation and retained live evidence are both verified.
 ```
 
 ## Downstream destinations
 
 ```text
+master-records/orchestration
 StegVerse-org/StegVerse-SDK
 StegVerse-Labs/Site
 GCAT-BCAT-Engine/Publisher
 StegVerse-Labs/admissibility-wiki
 StegVerse-Labs/stegguardian-wiki
-master-records/orchestration
+StegVerse-Labs/Sit
+```
+
+## Authority boundary
+
+```text
+provider output != authority
+usage measurement != admissibility
+local persistence != custody
+submission != custody
+custody receipt != execution authority
+reconstruction PASS != execution authority
+system-boundary binding != authority
+workflow artifact != deployment evidence
+pending live check != activation
 ```
 
 ## Release posture
 
-No deployment, automatic production system-boundary binding, live transport activation, Master-Records custody claim, release, tag, production mutation, publication authority, consciousness classification, personhood classification, or welfare classification is granted by this handoff.
+Repository-local implementation and autonomous validation are installed. Current-main validation, production deployment, live provider use, live transition and usage custody, reconstructability, and Site consumption remain pending. No release tag is authorized.
 
 ## Archive readiness
 
-This handoff preserves the session decisions, discovered blockers, completed work, remaining work, active ownership, pending validation requirements, and permitted continuation scope. No future continuation requires access to the conversation that created these commits.
+This handoff, the Master-Records provider-usage handoff, repository history, workflows, tests, deployment blueprints, activation-state artifacts, and the eventual retained VERIFIED receipt preserve all continuation state. Earlier conversation context is not required.
