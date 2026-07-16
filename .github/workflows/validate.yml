@@ -112,6 +112,7 @@ jobs:
       - name: Write Ecosystem Chat destination activation state
         if: always()
         env:
+          VALIDATION_JOB_STATUS: ${{ job.status }}
           STEGVERSE_GATEWAY_BASE_URL: ${{ vars.STEGVERSE_GATEWAY_BASE_URL }}
           STEGVERSE_CUSTODY_BASE_URL: ${{ vars.STEGVERSE_CUSTODY_BASE_URL }}
           MASTER_RECORDS_AUTH_TOKEN: ${{ secrets.MASTER_RECORDS_AUTH_TOKEN }}
