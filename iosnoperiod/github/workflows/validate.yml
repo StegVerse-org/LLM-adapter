@@ -4,6 +4,8 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: '23 */6 * * *'
 
 jobs:
   validate:
@@ -107,3 +109,18 @@ jobs:
         run: python scripts/check_ai_entry_recovery_boundary.py
       - name: Run canonical Goal 4 verification
         run: python scripts/verify_goal4_full.py
+      - name: Write Ecosystem Chat destination activation state
+        if: always()
+        env:
+          STEGVERSE_GATEWAY_BASE_URL: ${{ vars.STEGVERSE_GATEWAY_BASE_URL }}
+          STEGVERSE_CUSTODY_BASE_URL: ${{ vars.STEGVERSE_CUSTODY_BASE_URL }}
+          MASTER_RECORDS_AUTH_TOKEN: ${{ secrets.MASTER_RECORDS_AUTH_TOKEN }}
+        run: python scripts/write_ecosystem_chat_destination_activation_state.py
+      - name: Upload destination activation state
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecosystem-chat-destination-activation-state-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/ecosystem-chat-destination-activation-state.json
+          if-no-files-found: error
+          retention-days: 30
