@@ -27,11 +27,20 @@ def main() -> int:
     commit_sha = env("GITHUB_SHA")
     event_name = env("GITHUB_EVENT_NAME")
     run_id = env("GITHUB_RUN_ID")
+    git_ref = env("GITHUB_REF")
+    validation_job_status = env("VALIDATION_JOB_STATUS")
     deployment_url = env("STEGVERSE_GATEWAY_BASE_URL")
     custody_url = env("STEGVERSE_CUSTODY_BASE_URL")
     auth_configured = bool(env("MASTER_RECORDS_AUTH_TOKEN"))
 
-    local_validation_observed = bool(commit_sha and run_id)
+    current_main_context = git_ref == "refs/heads/main"
+    validation_succeeded = validation_job_status == "success"
+    local_validation_observed = bool(
+        commit_sha
+        and run_id
+        and current_main_context
+        and validation_succeeded
+    )
     deployment_configured = bool(deployment_url)
     custody_submission_configured = bool(custody_url and auth_configured)
 
@@ -40,6 +49,14 @@ def main() -> int:
             "complete": local_validation_observed,
             "owner": repository,
             "automation": ".github/workflows/validate.yml",
+            "evidence": {
+                "commit_sha_present": bool(commit_sha),
+                "workflow_run_id_present": bool(run_id),
+                "git_ref": git_ref,
+                "current_main_context": current_main_context,
+                "validation_job_status": validation_job_status,
+                "validation_succeeded": validation_succeeded,
+            },
         },
         "same_origin_authenticated_deployment": {
             "complete": deployment_configured,
@@ -62,7 +79,7 @@ def main() -> int:
     state = "DESTINATION_ACTIVATION_EVIDENCE_COMPLETE" if complete else "DESTINATION_ACTIVATION_PENDING_EXTERNAL_EVIDENCE"
 
     payload = {
-        "schema_version": "1.0.0",
+        "schema_version": "1.0.1",
         "record_type": "ecosystem_chat_destination_activation_state",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "repository": repository,
