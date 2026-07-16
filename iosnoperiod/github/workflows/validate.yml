@@ -7,11 +7,16 @@ on:
   schedule:
     - cron: '23 */6 * * *'
 
+permissions:
+  contents: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -127,3 +132,16 @@ jobs:
           path: reports/ecosystem-chat-destination-activation-state.json
           if-no-files-found: error
           retention-days: 30
+      - name: Persist destination activation state
+        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/ecosystem-chat-destination-activation-state.json
+          if git diff --cached --quiet; then
+            echo "Destination activation state unchanged."
+          else
+            git commit -m "Update Ecosystem Chat destination activation state"
+            git pull --rebase
+            git push
+          fi
