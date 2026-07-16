@@ -15,13 +15,15 @@ services:
       - key: PYTHON_VERSION
         value: 3.12.4
       - key: STEGVERSE_ALLOWED_ORIGINS
-        value: https://stegverse-labs.github.io
+        value: https://stegverse.org,https://www.stegverse.org,https://stegverse-labs.github.io
       - key: STEGVERSE_CHAT_RATE_LIMIT
         value: 20
       - key: STEGVERSE_CHAT_RATE_WINDOW_SECONDS
         value: 3600
       - key: STEGVERSE_TRANSITION_DB
         value: /var/data/stegverse-ecosystem-chat.db
+      - key: STEGVERSE_USAGE_SESSION_DB
+        value: /var/data/stegverse-usage-sessions.db
       - key: STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS
         value: "true"
       - key: STEGVERSE_EXTERNAL_REVIEW_DB
@@ -50,8 +52,12 @@ services:
         sync: false
       - key: STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS
         sync: false
-      - key: STEGVERSE_PROVIDER_ENABLED
+      - key: STEGVERSE_MASTER_RECORDS_TIMEOUT_SECONDS
+        value: "10"
+      - key: STEGVERSE_ALLOW_LOCAL_MASTER_RECORDS_HTTP
         value: "false"
+      - key: STEGVERSE_PROVIDER_ENABLED
+        value: "true"
       - key: STEGVERSE_PROVIDER_ENDPOINT
         sync: false
       - key: STEGVERSE_PROVIDER_ALLOWED_HOSTS
