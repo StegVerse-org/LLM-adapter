@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Check out adapter
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
       - name: Preserve first verified activation receipt
         id: preserved
@@ -35,7 +37,8 @@ jobs:
           verified = False
           if path.exists():
               try:
-                  verified = json.loads(path.read_text()).get("state") == "VERIFIED"
+                  value = json.loads(path.read_text())
+                  verified = value.get("state") == "VERIFIED" and value.get("blockers") == []
               except Exception:
                   verified = False
           print(f"verified={'true' if verified else 'false'}")
@@ -49,13 +52,33 @@ jobs:
           STEGVERSE_GATEWAY_BASE_URL: ${{ vars.STEGVERSE_GATEWAY_BASE_URL || 'https://stegverse-ecosystem-chat-gateway.onrender.com' }}
         run: python scripts/verify_live_ecosystem_chat_activation.py
 
+      - name: Write stable activation blocker status
+        if: steps.preserved.outputs.verified != 'true' && always()
+        run: python scripts/write_live_activation_status.py
+
       - name: Upload current activation observation
         if: steps.preserved.outputs.verified != 'true' && always()
         uses: actions/upload-artifact@v4
         with:
           name: ecosystem-chat-live-activation-${{ github.run_id }}-${{ github.run_attempt }}
-          path: receipts/ecosystem-chat-live-activation.latest.json
+          path: |
+            receipts/ecosystem-chat-live-activation.latest.json
+            reports/ecosystem-chat-live-activation-status.json
           if-no-files-found: error
+
+      - name: Persist semantic activation status
+        if: steps.preserved.outputs.verified != 'true' && always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/ecosystem-chat-live-activation-status.json
+          if git diff --cached --quiet; then
+            echo "Semantic activation status unchanged."
+          else
+            git commit -m "chore: update Ecosystem Chat live activation blockers [skip ci]"
+            git pull --rebase
+            git push
+          fi
 
       - name: Retain first verified activation receipt
         if: steps.preserved.outputs.verified != 'true'
@@ -67,7 +90,7 @@ jobs:
           PY
           )"
           if [ "$state" != "VERIFIED" ]; then
-            echo "Activation remains pending; observation retained as a workflow artifact."
+            echo "Activation remains pending; semantic blockers are committed and the full observation is retained as an artifact."
             exit 0
           fi
           cp receipts/ecosystem-chat-live-activation.latest.json receipts/ecosystem-chat-live-activation.verified.json
@@ -92,14 +115,14 @@ jobs:
           echo "## Ecosystem Chat Live Activation" >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ steps.preserved.outputs.verified }}" = "true" ]; then
             echo "A verified activation receipt is already retained. No additional live mutation was attempted." >> "$GITHUB_STEP_SUMMARY"
-          elif [ -f receipts/ecosystem-chat-live-activation.latest.json ]; then
+          elif [ -f reports/ecosystem-chat-live-activation-status.json ]; then
             python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           from pathlib import Path
-          result = json.loads(Path('receipts/ecosystem-chat-live-activation.latest.json').read_text())
+          result = json.loads(Path('reports/ecosystem-chat-live-activation-status.json').read_text())
           print(f"State: {result.get('state')}")
           print(f"Blockers: {', '.join(result.get('blockers', [])) or 'none'}")
-          print(f"Result SHA-256: {result.get('result_sha256')}")
+          print(f"Status SHA-256: {result.get('status_sha256')}")
           print("Authority granted: false")
           PY
           fi
