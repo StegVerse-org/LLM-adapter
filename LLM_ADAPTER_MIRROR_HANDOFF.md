@@ -8,195 +8,120 @@ This file is the current continuation source for `StegVerse-org/LLM-adapter`.
 
 ```text
 Goal: live governed Ecosystem Chat with provider response, provider telemetry, authenticated usage retrieval, transition custody, provider-usage custody, and reconstructable evidence
-Phase: live-activation-automation-installed
+Phase: self-contained-private-custody-topology-installed
 Result: LOCAL_IMPLEMENTATION_INSTALLED_CURRENT_MAIN_AND_LIVE_EVIDENCE_PENDING
 ```
 
-## Installed runtime surfaces
+## Installed governed path
 
 ```text
-llm_adapter/combined_gateway.py
-llm_adapter/ecosystem_chat_gateway.py
-llm_adapter/provider_usage.py
-llm_adapter/provider_usage_submission.py
-llm_adapter/master_records_usage_submission.py
-llm_adapter/usage_session_api.py
-llm_adapter/master_records_client.py
-llm_adapter/system_boundary.py
-llm_adapter/system_boundary_binding.py
-llm_adapter/system_boundary_receipt.py
-llm_adapter/system_boundary_lifecycle.py
+Site request
+-> governed provider response
+-> canonical provider usage event
+-> durable local usage-session persistence
+-> authenticated private-network Master-Records submission
+-> identity-bound usage custody receipt
+-> completed transition custody submission
+-> reconstruction PASS
+-> retained live activation receipt
+-> Site activation state
+-> Publisher, admissibility-wiki, and StegGuardian projections
 ```
 
-## Provider usage lifecycle
+## Self-contained production topology
+
+`render-production.yaml` now declares both services:
 
 ```text
-successful provider result
--> canonical provider usage event
--> local usage-session persistence
--> automatic authenticated Master-Records submission
--> identity-bound custody receipt validation
--> custody and reconstruction posture included in gateway response
+stegverse-master-records-custody
+  type: private service
+  source: master-records/orchestration main
+  durable /var/data disk
+  generated MASTER_RECORDS_AUTH_TOKEN
+  generated MASTER_RECORDS_RECEIPT_KEY
+
+stegverse-ecosystem-chat-gateway
+  type: public web service
+  durable /var/data disk
+  private custody host:port copied from custody service
+  custody bearer token copied from custody service
+  private HTTP explicitly bounded to the Render private network
+  external mutation disabled
+```
+
+No user or CI secret must coordinate the custody URL, token, or receipt key. Render generates the custody secrets and binds the gateway to the private service. Arbitrary remote HTTP remains rejected; explicit remote endpoints must use HTTPS.
+
+Primary implementation:
+
+```text
+render-production.yaml
+llm_adapter/master_records_client.py
+llm_adapter/master_records_usage_submission.py
+scripts/write_ecosystem_chat_destination_activation_state.py
+tests/test_master_records_usage_submission.py
+tests/test_live_activation_automation_contract.py
+```
+
+## Provider boundary
+
+The model-provider endpoint, allowed host, token, provider name, and model remain provider-platform configuration. They are not exposed to browsers or repository state. The live verifier requires a real provider result and fails closed to `PENDING` if the provider is unavailable.
+
+## Autonomous evidence
+
+```text
+.github/workflows/validate.yml
+iosnoperiod/github/workflows/validate.yml
+.github/workflows/ecosystem-chat-live-activation.yml
 ```
 
 Behavior:
 
 ```text
-provider used = true -> persist exactly one event
-provider disabled, blocked, failed, or fallback -> no provider event
-identical replay -> idempotent
-changed event under the same measurement identity -> fail closed
-local persistence custody -> false
-external custody accepted only after exact receipt identity validation
-usage authority -> false
-repository mutation -> false
-```
-
-## Master-Records provider usage contract
-
-Source implementation:
-
-```text
-llm_adapter/master_records_usage_submission.py
-```
-
-Destination implementation:
-
-```text
-master-records/orchestration
-services/master_records_custody_api.py
-POST /api/custody/provider-usage
-GET /api/custody/provider-usage/receipts/{receipt_id}/reconstruction
-PROVIDER_USAGE_CUSTODY_MIRROR_HANDOFF.md
-```
-
-The adapter resolves the endpoint and bearer credential only in the deployed server environment. Remote transport requires HTTPS. Browser payloads and responses never contain the credential.
-
-The adapter accepts custody only when the destination receipt exactly preserves:
-
-```text
-session_id
-measurement_id
-event_sha256
-custody_recorded = true
-authority_granted = false
-```
-
-## Usage-session contract
-
-```text
-POST /api/usage/sessions
-GET  /api/usage/sessions/{session_id}
-```
-
-The endpoint validates event identity and evidence classes, deduplicates by `metric_owner + measurement_id`, and returns a bounded retrieval receipt. Local persistence and retrieval do not grant custody, authority, standing, or admissibility.
-
-## Production deployment posture
-
-```text
-render-production.yaml
-Dockerfile
-```
-
-The production blueprint now specifies:
-
-```text
-Render autoDeploy: true
-persistent /var/data disk
-persistent transition database
-persistent usage-session database
-persistent external-review database
-governed provider enabled
-Master-Records endpoint and token resolved server-side
-external mutation disabled
-allowed Site origins
-```
-
-External provider and custody endpoint credentials remain platform-managed values and are not stored in the repository.
-
-## Autonomous activation evidence
-
-Installed:
-
-```text
-scripts/write_ecosystem_chat_destination_activation_state.py
-scripts/verify_live_ecosystem_chat_activation.py
-.github/workflows/validate.yml
-.github/workflows/ecosystem-chat-live-activation.yml
-iosnoperiod/github/workflows/validate.yml
-tests/test_live_activation_automation_contract.py
-```
-
-Automation behavior:
-
-```text
-canonical validation runs on pushes, pull requests, dispatch, and schedule
-canonical and iOS-safe workflows remain byte-equivalent
-repository-local destination state is written and retained as a workflow artifact
-live activation verification runs after successful validation and hourly
-first existing VERIFIED live receipt is preserved and not replaced
-fresh governed transition identity is generated for live verification
-real provider use is required
-provider usage local persistence must remain non-custodial
-provider-usage custody and reconstruction PASS are required
-transition custody and reconstruction PASS are required
-pending results are retained as artifacts
-only the first VERIFIED live result is committed
-no browser credential or manual live-verifier command is required
-```
-
-## System-boundary posture
-
-```text
-runtime declaration builder: INSTALLED
-runtime surface inventory: INSTALLED
-feedback-path recorder: INSTALLED
-claim and authority guards: INSTALLED
-optional governed response/session binding: INSTALLED
-explicit lifecycle binding: INSTALLED
-system_boundary_declaration_ref persistence: INSTALLED
-replay and conflict handling: INSTALLED
-production binding: DISABLED PENDING SEPARATE AUTHORIZATION
-consciousness/personhood/welfare claims: NOT_EVALUATED
+canonical and iOS-safe validation remain byte-equivalent
+validation runs on push, pull request, dispatch, and schedule
+production deploys only after checks pass
+activation state derives custody configuration from the blueprint
+live verification runs hourly and after successful validation
+the first VERIFIED receipt is committed and never replaced
+pending results remain workflow artifacts
+no browser credential or manual verifier command is required
 ```
 
 ## Current evidence state
 
 ```text
 provider usage local persistence: INSTALLED
-provider usage automatic custody submission: INSTALLED
-provider usage receipt validation: INSTALLED
+provider usage custody submission: INSTALLED
+transition custody submission: INSTALLED
 provider usage destination API: INSTALLED IN master-records/orchestration
 provider usage reconstruction API: INSTALLED IN master-records/orchestration
-production deployment blueprint: INSTALLED
-scheduled live verifier: INSTALLED
+self-contained custody topology: INSTALLED
+custody secrets generated by platform: DECLARED
+private service identity binding: DECLARED
 canonical/iOS workflow parity: INSTALLED
-activation automation contract tests: INSTALLED
-current-main validation containing latest automation: NOT YET OBSERVED
-production gateway containing latest source: NOT YET OBSERVED
-production custody service containing provider-usage route: NOT YET OBSERVED
+current-main validation containing latest topology: NOT YET OBSERVED
+production deployment containing latest topology: NOT YET OBSERVED
 real provider use: NOT YET OBSERVED
 live provider-usage custody receipt: NOT YET OBSERVED
 live transition custody receipt: NOT YET OBSERVED
 retained VERIFIED activation receipt: NOT YET OBSERVED
-Site activation-ledger consumption: NOT YET OBSERVED
+Site and downstream ingestion: NOT YET OBSERVED
 ```
 
 ## Remaining work
 
 ```text
-1. Observe current-main validation containing fb07017f14710af863de1d52e793a227499192c4 or later.
-2. Repair only the first exact failing validation step without removing checks.
-3. Allow Render auto-deployment to deploy current main using render-production.yaml.
-4. Let .github/workflows/ecosystem-chat-live-activation.yml perform the live check automatically.
-5. Preserve the first VERIFIED activation receipt.
-6. Propagate that verified receipt into StegVerse-Labs/Site activation state.
-7. Enable Site live usage display only when its own handoff gates accept the retained receipt.
-8. Propagate verified status to Publisher, admissibility-wiki, stegguardian-wiki, and Sit.
-9. Tag or release only after repository validation and retained live evidence are both verified.
+1. Observe current-main validation containing commit 30640c7c4b04795acff4f27be03a5f7dcf23ab4b or later.
+2. Repair only the first exact failing repository-local check without removing checks.
+3. Allow the linked Render Blueprint to synchronize and deploy both services after checks pass.
+4. Let the scheduled live verifier test provider response, usage custody, transition custody, and reconstruction.
+5. Preserve the first VERIFIED activation receipt automatically.
+6. Allow Site to import the receipt and publish ACTIVATION_COMPLETE only when all gates pass.
+7. Allow Publisher, admissibility-wiki, and StegVerse-002/stegguardian-wiki to ingest the verified projection.
+8. Evaluate release or tagging only after retained live and downstream public evidence exists.
 ```
 
-## Downstream destinations
+## Canonical downstream destinations
 
 ```text
 master-records/orchestration
@@ -204,9 +129,10 @@ StegVerse-org/StegVerse-SDK
 StegVerse-Labs/Site
 GCAT-BCAT-Engine/Publisher
 StegVerse-Labs/admissibility-wiki
-StegVerse-Labs/stegguardian-wiki
-StegVerse-Labs/Sit
+StegVerse-002/stegguardian-wiki
 ```
+
+`StegVerse-Labs/Sit` does not exist and is not a destination.
 
 ## Authority boundary
 
@@ -217,15 +143,15 @@ local persistence != custody
 submission != custody
 custody receipt != execution authority
 reconstruction PASS != execution authority
-system-boundary binding != authority
-workflow artifact != deployment evidence
+private-network binding != deployment evidence
+workflow artifact != live evidence
 pending live check != activation
 ```
 
 ## Release posture
 
-Repository-local implementation and autonomous validation are installed. Current-main validation, production deployment, live provider use, live transition and usage custody, reconstructability, and Site consumption remain pending. No release tag is authorized.
+Repository-local implementation, self-contained custody deployment configuration, validation, scheduled verification, Site consumption, and downstream consumers are installed. Current-main validation, Blueprint synchronization, live provider use, live custody, reconstructability, Site completion, and downstream public observation remain pending. No release tag is authorized.
 
 ## Archive readiness
 
-This handoff, the Master-Records provider-usage handoff, repository history, workflows, tests, deployment blueprints, activation-state artifacts, and the eventual retained VERIFIED receipt preserve all continuation state. Earlier conversation context is not required.
+This handoff, repository history, machine-owned state files, scheduled workflows, deployment blueprint, tests, and the eventual retained VERIFIED receipt preserve all continuation state. Earlier conversation context is not required.
