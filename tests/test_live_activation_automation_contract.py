@@ -33,6 +33,7 @@ def test_live_activation_workflow_is_scheduled_and_retains_durable_semantic_stat
         "Persist semantic activation status",
         "reports/ecosystem-chat-live-activation-status.json",
         "receipts/ecosystem-chat-live-activation.verified.json",
+        "No full live observation was produced",
         'if [ "$state" != "VERIFIED" ]',
         "actions/upload-artifact@v4",
         "contents: write",
@@ -41,17 +42,21 @@ def test_live_activation_workflow_is_scheduled_and_retains_durable_semantic_stat
     assert "secrets." not in source
 
 
-def test_live_activation_status_writer_is_stable_and_non_authorizing() -> None:
+def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing() -> None:
     source = (ROOT / "scripts/write_live_activation_status.py").read_text()
     for required in (
         "live_activation_status.v1",
+        "live_activation_observation_file_missing",
+        "live_activation_observation_unreadable",
+        "live_activation_observation_not_object",
+        "verified_live_activation_contains_blockers",
         '"manual_user_action_required": False',
         '"continuation_mode": "scheduled_workflow_managed"',
         '"status_is_activation_authority": False',
         '"status_is_deployment_authority": False',
         '"status_is_custody": False',
         '"status_is_release_authority": False',
-        "sorted({str(item)",
+        "sorted(set(blockers))",
         "status_sha256",
     ):
         assert required in source
