@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
-from contextlib import contextmanager
 
 import pytest
 
@@ -39,9 +37,21 @@ class _Response:
         return False
 
 
+def _receipt(event: dict) -> dict:
+    return {
+        "receipt_id": "mr-usage-receipt-1",
+        "session_id": event["session_id"],
+        "measurement_id": event["measurement_id"],
+        "event_sha256": event["event_sha256"],
+        "custody_recorded": True,
+        "authority_granted": False,
+        "reconstructability": "PASS",
+    }
+
+
 def test_missing_configuration_is_visible_and_non_custodial(monkeypatch) -> None:
-    monkeypatch.delenv("STEGVERSE_MASTER_RECORDS_USAGE_URL", raising=False)
-    monkeypatch.delenv("STEGVERSE_MASTER_RECORDS_TOKEN", raising=False)
+    for name in ("STEGVERSE_MASTER_RECORDS_USAGE_URL", "STEGVERSE_MASTER_RECORDS_ENDPOINT", "STEGVERSE_MASTER_RECORDS_HOSTPORT", "STEGVERSE_MASTER_RECORDS_TOKEN"):
+        monkeypatch.delenv(name, raising=False)
     result = submit_provider_usage_to_master_records(_event())
     assert result["status"] == "NOT_CONFIGURED"
     assert result["custody_recorded"] is False
@@ -62,6 +72,29 @@ def test_remote_http_is_rejected(monkeypatch) -> None:
         submit_provider_usage_to_master_records(_event())
 
 
+def test_private_render_hostport_is_allowed_only_by_explicit_server_flag(monkeypatch) -> None:
+    monkeypatch.delenv("STEGVERSE_MASTER_RECORDS_USAGE_URL", raising=False)
+    monkeypatch.delenv("STEGVERSE_MASTER_RECORDS_ENDPOINT", raising=False)
+    monkeypatch.setenv("STEGVERSE_MASTER_RECORDS_HOSTPORT", "stegverse-master-records-custody:10000")
+    monkeypatch.setenv("STEGVERSE_MASTER_RECORDS_TOKEN", "generated-secret")
+    event = _event()
+    captured = {}
+
+    def opener(outbound, timeout):
+        captured["url"] = outbound.full_url
+        captured["authorization"] = outbound.headers["Authorization"]
+        return _Response(_receipt(event))
+
+    with pytest.raises(MasterRecordsUsageError, match="must_use_https"):
+        submit_provider_usage_to_master_records(event, opener=opener)
+    monkeypatch.setenv("STEGVERSE_ALLOW_PRIVATE_MASTER_RECORDS_HTTP", "true")
+    result = submit_provider_usage_to_master_records(event, opener=opener)
+    assert captured["url"] == "http://stegverse-master-records-custody:10000/api/custody/provider-usage"
+    assert captured["authorization"] == "Bearer generated-secret"
+    assert result["custody_recorded"] is True
+    assert "generated-secret" not in json.dumps(result)
+
+
 def test_identity_bound_receipt_records_custody_without_authority(monkeypatch) -> None:
     monkeypatch.setenv("STEGVERSE_MASTER_RECORDS_USAGE_URL", "https://records.example/api/custody/provider-usage")
     monkeypatch.setenv("STEGVERSE_MASTER_RECORDS_TOKEN", "secret")
@@ -72,17 +105,7 @@ def test_identity_bound_receipt_records_custody_without_authority(monkeypatch) -
         captured["authorization"] = outbound.headers["Authorization"]
         captured["session"] = outbound.headers["X-stegverse-session"]
         captured["body"] = json.loads(outbound.data.decode("utf-8"))
-        return _Response(
-            {
-                "receipt_id": "mr-usage-receipt-1",
-                "session_id": event["session_id"],
-                "measurement_id": event["measurement_id"],
-                "event_sha256": event["event_sha256"],
-                "custody_recorded": True,
-                "authority_granted": False,
-                "reconstructability": "PASS",
-            }
-        )
+        return _Response(_receipt(event))
 
     result = submit_provider_usage_to_master_records(event, opener=opener)
     assert result["status"] == "CUSTODY_RECORDED"
@@ -102,16 +125,9 @@ def test_receipt_identity_drift_fails_closed(monkeypatch) -> None:
     event = _event()
 
     def opener(outbound, timeout):
-        return _Response(
-            {
-                "receipt_id": "mr-usage-receipt-2",
-                "session_id": "different-session",
-                "measurement_id": event["measurement_id"],
-                "event_sha256": event["event_sha256"],
-                "custody_recorded": True,
-                "authority_granted": False,
-            }
-        )
+        receipt = _receipt(event)
+        receipt["session_id"] = "different-session"
+        return _Response(receipt)
 
     with pytest.raises(MasterRecordsUsageError, match="session_mismatch"):
         submit_provider_usage_to_master_records(event, opener=opener)
@@ -123,16 +139,9 @@ def test_authority_escalation_fails_closed(monkeypatch) -> None:
     event = _event()
 
     def opener(outbound, timeout):
-        return _Response(
-            {
-                "receipt_id": "mr-usage-receipt-3",
-                "session_id": event["session_id"],
-                "measurement_id": event["measurement_id"],
-                "event_sha256": event["event_sha256"],
-                "custody_recorded": True,
-                "authority_granted": True,
-            }
-        )
+        receipt = _receipt(event)
+        receipt["authority_granted"] = True
+        return _Response(receipt)
 
     with pytest.raises(MasterRecordsUsageError, match="authority_escalation"):
         submit_provider_usage_to_master_records(event, opener=opener)
