@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Write a stable, non-authorizing status from the latest live activation observation.
+"""Write stable, non-authorizing live activation continuation state.
 
 The output intentionally omits timestamps and volatile request evidence. It changes only
-when the deployment posture or semantic blocker set changes, making scheduled workflow
-state durable without creating hourly commit churn.
+when the semantic blocker or gate posture changes. Missing or malformed observations are
+converted into durable fail-closed blockers rather than causing the status writer itself
+to fail.
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "receipts" / "ecosystem-chat-live-activation.latest.json"
 OUTPUT = ROOT / "reports" / "ecosystem-chat-live-activation-status.json"
+DEFAULT_GATEWAY = "https://stegverse-ecosystem-chat-gateway.onrender.com"
 
 
 def canonical_sha(value: dict[str, Any]) -> str:
@@ -25,11 +27,20 @@ def canonical_sha(value: dict[str, Any]) -> str:
     ).hexdigest()
 
 
-def main() -> int:
-    observation = json.loads(SOURCE.read_text(encoding="utf-8"))
-    if not isinstance(observation, dict):
-        raise SystemExit("live activation observation must be a JSON object")
+def load_observation() -> tuple[dict[str, Any], list[str]]:
+    if not SOURCE.exists():
+        return {}, ["live_activation_observation_file_missing"]
+    try:
+        value = json.loads(SOURCE.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return {}, ["live_activation_observation_unreadable"]
+    if not isinstance(value, dict):
+        return {}, ["live_activation_observation_not_object"]
+    return value, []
 
+
+def main() -> int:
+    observation, structural_blockers = load_observation()
     evidence = observation.get("evidence") if isinstance(observation.get("evidence"), dict) else {}
     health = evidence.get("health") if isinstance(evidence.get("health"), dict) else {}
     chat = evidence.get("chat") if isinstance(evidence.get("chat"), dict) else {}
@@ -41,19 +52,29 @@ def main() -> int:
         else {}
     )
 
-    blockers = sorted({str(item) for item in observation.get("blockers", []) if str(item)})
-    state = str(observation.get("state") or "PENDING")
-    if state not in {"PENDING", "VERIFIED"}:
-        raise SystemExit("unsupported live activation state")
-    if state == "VERIFIED" and blockers:
-        raise SystemExit("verified live activation cannot retain blockers")
+    observation_blockers = observation.get("blockers", [])
+    if not isinstance(observation_blockers, list):
+        structural_blockers.append("live_activation_blockers_not_list")
+        observation_blockers = []
+    blockers = sorted(
+        {str(item) for item in [*structural_blockers, *observation_blockers] if str(item)}
+    )
+
+    requested_state = str(observation.get("state") or "PENDING")
+    if requested_state not in {"PENDING", "VERIFIED"}:
+        blockers.append("live_activation_state_invalid")
+        requested_state = "PENDING"
+    if requested_state == "VERIFIED" and blockers:
+        blockers.append("verified_live_activation_contains_blockers")
+        requested_state = "PENDING"
+    blockers = sorted(set(blockers))
 
     payload: dict[str, Any] = {
         "schema": "stegverse.ecosystem_chat.live_activation_status.v1",
         "repository": "StegVerse-org/LLM-adapter",
-        "state": state,
+        "state": requested_state,
         "blockers": blockers,
-        "gateway_base_url": observation.get("gateway_base_url"),
+        "gateway_base_url": observation.get("gateway_base_url") or DEFAULT_GATEWAY,
         "gates": {
             "gateway_health_ok": health.get("status") == "ok",
             "durable_storage": health.get("storage_durable_across_restarts") is True,
@@ -77,7 +98,7 @@ def main() -> int:
     payload["status_sha256"] = canonical_sha(payload)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"LIVE ACTIVATION STATUS: {state}")
+    print(f"LIVE ACTIVATION STATUS: {requested_state}")
     print(f"Blockers: {', '.join(blockers) or 'none'}")
     print(f"Receipt: {OUTPUT.relative_to(ROOT)}")
     return 0
