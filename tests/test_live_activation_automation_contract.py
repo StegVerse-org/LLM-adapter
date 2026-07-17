@@ -37,10 +37,19 @@ def test_live_activation_workflow_is_scheduled_and_retains_only_verified_receipt
     assert "secrets." not in source
 
 
-def test_production_blueprint_enables_durable_usage_and_provider_path() -> None:
+def test_production_blueprint_automates_durable_private_custody_and_provider_path() -> None:
     source = (ROOT / "render-production.yaml").read_text()
     for required in (
-        "autoDeploy: true",
+        "type: pserv",
+        "name: stegverse-master-records-custody",
+        "repo: https://github.com/master-records/orchestration",
+        "autoDeployTrigger: checksPass",
+        "MASTER_RECORDS_AUTH_TOKEN",
+        "generateValue: true",
+        "STEGVERSE_MASTER_RECORDS_HOSTPORT",
+        "property: hostport",
+        "envVarKey: MASTER_RECORDS_AUTH_TOKEN",
+        "STEGVERSE_ALLOW_PRIVATE_MASTER_RECORDS_HTTP",
         "mountPath: /var/data",
         "STEGVERSE_USAGE_SESSION_DB",
         "value: /var/data/stegverse-usage-sessions.db",
@@ -51,3 +60,4 @@ def test_production_blueprint_enables_durable_usage_and_provider_path() -> None:
         'value: "false"',
     ):
         assert required in source
+    assert "MASTER_RECORDS_RECEIPT_KEY\n        sync: false" not in source
