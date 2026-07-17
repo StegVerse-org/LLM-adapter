@@ -120,9 +120,6 @@ jobs:
         if: always()
         env:
           VALIDATION_JOB_STATUS: ${{ job.status }}
-          STEGVERSE_GATEWAY_BASE_URL: ${{ vars.STEGVERSE_GATEWAY_BASE_URL }}
-          STEGVERSE_CUSTODY_BASE_URL: ${{ vars.STEGVERSE_CUSTODY_BASE_URL }}
-          MASTER_RECORDS_AUTH_TOKEN: ${{ secrets.MASTER_RECORDS_AUTH_TOKEN }}
         run: python scripts/write_ecosystem_chat_destination_activation_state.py
       - name: Upload destination activation state
         if: always()
