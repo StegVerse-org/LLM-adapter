@@ -83,6 +83,10 @@ jobs:
       - name: Retain first verified activation receipt
         if: steps.preserved.outputs.verified != 'true'
         run: |
+          if [ ! -f receipts/ecosystem-chat-live-activation.latest.json ]; then
+            echo "No full live observation was produced; the durable semantic status records this fail-closed condition."
+            exit 0
+          fi
           state="$(python - <<'PY'
           import json
           from pathlib import Path
