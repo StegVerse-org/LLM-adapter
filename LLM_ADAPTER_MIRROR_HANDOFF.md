@@ -7,119 +7,90 @@ This file is the current continuation source for `StegVerse-org/LLM-adapter`.
 ## Active goal
 
 ```text
-Goal: live governed Ecosystem Chat with provider response, provider telemetry, authenticated usage retrieval, transition custody, provider-usage custody, and reconstructable evidence
-Phase: self-contained-private-custody-topology-installed
+Goal: live governed Ecosystem Chat with provider response, telemetry, authenticated usage retrieval, custody, reconstruction, and automatic downstream propagation
+Phase: immutable-verified-receipt-publication-contract-installed
 Result: LOCAL_IMPLEMENTATION_INSTALLED_CURRENT_MAIN_AND_LIVE_EVIDENCE_PENDING
+Manual user action required: false
 ```
 
-## Installed governed path
+## Installed path
 
 ```text
 Site request
 -> governed provider response
--> canonical provider usage event
--> durable local usage-session persistence
--> authenticated private-network Master-Records submission
--> identity-bound usage custody receipt
--> completed transition custody submission
+-> provider usage persistence
+-> authenticated custody submission
+-> transition custody
 -> reconstruction PASS
--> retained live activation receipt
--> Site activation state
--> Publisher, admissibility-wiki, and StegGuardian projections
+-> immutable verified activation receipt
+-> Site automatic import
+-> Publisher and wiki projections
 ```
 
-## Self-contained production topology
+## Production topology
 
-`render-production.yaml` now declares both services:
+The existing production blueprint declares the public gateway and private durable custody service. Service identity, private routing, and protected configuration are platform-managed. Browser credentials and repository-exposed secrets remain prohibited.
 
-```text
-stegverse-master-records-custody
-  type: private service
-  source: master-records/orchestration main
-  durable /var/data disk
-  generated MASTER_RECORDS_AUTH_TOKEN
-  generated MASTER_RECORDS_RECEIPT_KEY
-
-stegverse-ecosystem-chat-gateway
-  type: public web service
-  durable /var/data disk
-  private custody host:port copied from custody service
-  custody bearer token copied from custody service
-  private HTTP explicitly bounded to the Render private network
-  external mutation disabled
-```
-
-No user or CI secret must coordinate the custody URL, token, or receipt key. Render generates the custody secrets and binds the gateway to the private service. Arbitrary remote HTTP remains rejected; explicit remote endpoints must use HTTPS.
-
-Primary implementation:
-
-```text
-render-production.yaml
-llm_adapter/master_records_client.py
-llm_adapter/master_records_usage_submission.py
-scripts/write_ecosystem_chat_destination_activation_state.py
-tests/test_master_records_usage_submission.py
-tests/test_live_activation_automation_contract.py
-```
-
-## Provider boundary
-
-The model-provider endpoint, allowed host, token, provider name, and model remain provider-platform configuration. They are not exposed to browsers or repository state. The live verifier requires a real provider result and fails closed to `PENDING` if the provider is unavailable.
-
-## Autonomous evidence
+## Autonomous workflows
 
 ```text
 .github/workflows/validate.yml
-iosnoperiod/github/workflows/validate.yml
 .github/workflows/ecosystem-chat-live-activation.yml
+iosnoperiod/github/workflows/validate.yml
 ```
 
-Behavior:
+Validation runs on repository events and schedule. Live activation verification runs hourly and after successful validation. Pending observations remain workflow artifacts. The first verified observation is retained automatically and is never replaced.
+
+## Immutable receipt contract repair
+
+A propagation defect was repaired: the live workflow previously retained the mutable observation filename while Site imports the immutable verified filename.
 
 ```text
-canonical and iOS-safe validation remain byte-equivalent
-validation runs on push, pull request, dispatch, and schedule
-production deploys only after checks pass
-activation state derives custody configuration from the blueprint
-live verification runs hourly and after successful validation
-the first VERIFIED receipt is committed and never replaced
-pending results remain workflow artifacts
-no browser credential or manual verifier command is required
+e1fc89ab06bc0efad4ffa6539ebab6a14feb5584
+  publish the first verified observation at receipts/ecosystem-chat-live-activation.verified.json
+fe1341d2688d22e55fb0f72ca56ff2c62d7e692d
+  fail-closed verified-receipt publication guard
+3dc8d4bba106f3b4ddfcd679b942069cdeb06c9d
+  canonical validation integration
+dff8988b3e25b7a92d65e35a1cc2036674458498
+  iOS-safe workflow synchronization
 ```
+
+The guard requires an explicit mutable-observation to immutable-verified copy, verified state, empty blocker list, and retention of only the immutable verified path. It rejects use of the mutable observation as the durable activation receipt.
 
 ## Current evidence state
 
 ```text
-provider usage local persistence: INSTALLED
-provider usage custody submission: INSTALLED
-transition custody submission: INSTALLED
-provider usage destination API: INSTALLED IN master-records/orchestration
-provider usage reconstruction API: INSTALLED IN master-records/orchestration
+repository implementation: INSTALLED
 self-contained custody topology: INSTALLED
-custody secrets generated by platform: DECLARED
-private service identity binding: DECLARED
-canonical/iOS workflow parity: INSTALLED
-current-main validation containing latest topology: NOT YET OBSERVED
-production deployment containing latest topology: NOT YET OBSERVED
+scheduled validation: INSTALLED
+scheduled live verification: INSTALLED
+immutable verified receipt publication: INSTALLED AND GUARDED
+Site import contract alignment: INSTALLED
+current-main combined status for dff8988b: NO STATUS RECORDS EXPOSED
+live deployment containing latest topology: NOT YET OBSERVED
 real provider use: NOT YET OBSERVED
-live provider-usage custody receipt: NOT YET OBSERVED
-live transition custody receipt: NOT YET OBSERVED
-retained VERIFIED activation receipt: NOT YET OBSERVED
+live custody and reconstruction: NOT YET OBSERVED
+retained immutable verified receipt: NOT YET OBSERVED
 Site and downstream ingestion: NOT YET OBSERVED
 ```
 
-## Remaining work
+Missing status records are not treated as success and do not create a user task. Scheduled workflows own the next observations.
+
+## Machine-owned continuation
 
 ```text
-1. Observe current-main validation containing commit 30640c7c4b04795acff4f27be03a5f7dcf23ab4b or later.
-2. Repair only the first exact failing repository-local check without removing checks.
-3. Allow the linked Render Blueprint to synchronize and deploy both services after checks pass.
-4. Let the scheduled live verifier test provider response, usage custody, transition custody, and reconstruction.
-5. Preserve the first VERIFIED activation receipt automatically.
-6. Allow Site to import the receipt and publish ACTIVATION_COMPLETE only when all gates pass.
-7. Allow Publisher, admissibility-wiki, and StegVerse-002/stegguardian-wiki to ingest the verified projection.
-8. Evaluate release or tagging only after retained live and downstream public evidence exists.
+1. Scheduled validation evaluates current main.
+2. The authorized deployment platform synchronizes the declared topology.
+3. Hourly verification tests provider response, custody, identity preservation, and reconstruction.
+4. Pending results remain artifacts.
+5. The first verified result is committed automatically at the immutable path.
+6. Site imports and validates it automatically.
+7. Publisher and both wiki consumers ingest the verified projection automatically.
+8. Release readiness remains fail-closed until live and downstream evidence exists.
 ```
+
+No user confirmation, workflow dispatch, file movement, artifact download, or manual receipt construction is required.
 
 ## Canonical downstream destinations
 
@@ -132,7 +103,7 @@ StegVerse-Labs/admissibility-wiki
 StegVerse-002/stegguardian-wiki
 ```
 
-`StegVerse-Labs/Sit` does not exist and is not a destination.
+`StegVerse-Labs/Sit` and `StegVerse-Labs/stegguardian-wiki` do not exist and are not destinations.
 
 ## Authority boundary
 
@@ -143,15 +114,15 @@ local persistence != custody
 submission != custody
 custody receipt != execution authority
 reconstruction PASS != execution authority
-private-network binding != deployment evidence
 workflow artifact != live evidence
-pending live check != activation
+pending result != activation
+verified receipt != release authority
 ```
 
 ## Release posture
 
-Repository-local implementation, self-contained custody deployment configuration, validation, scheduled verification, Site consumption, and downstream consumers are installed. Current-main validation, Blueprint synchronization, live provider use, live custody, reconstructability, Site completion, and downstream public observation remain pending. No release tag is authorized.
+Implementation, topology, scheduled validation, immutable receipt retention, Site consumption, Publisher import, and wiki consumers are installed. Current-main evidence, authorized deployment, live provider use, custody, reconstruction, Site completion, and downstream public observation remain pending. No release tag is authorized.
 
 ## Archive readiness
 
-This handoff, repository history, machine-owned state files, scheduled workflows, deployment blueprint, tests, and the eventual retained VERIFIED receipt preserve all continuation state. Earlier conversation context is not required.
+This handoff, repository history, machine-owned state files, scheduled workflows, tests, and the eventual immutable verified receipt preserve all continuation state. Earlier conversation context is not required.
