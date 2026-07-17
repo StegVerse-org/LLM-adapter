@@ -31,7 +31,7 @@ jobs:
           python - <<'PY' >> "$GITHUB_OUTPUT"
           import json
           from pathlib import Path
-          path = Path("receipts/ecosystem-chat-live-activation.latest.json")
+          path = Path("receipts/ecosystem-chat-live-activation.verified.json")
           verified = False
           if path.exists():
               try:
@@ -70,9 +70,18 @@ jobs:
             echo "Activation remains pending; observation retained as a workflow artifact."
             exit 0
           fi
+          cp receipts/ecosystem-chat-live-activation.latest.json receipts/ecosystem-chat-live-activation.verified.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          latest = json.loads(Path('receipts/ecosystem-chat-live-activation.latest.json').read_text())
+          verified = json.loads(Path('receipts/ecosystem-chat-live-activation.verified.json').read_text())
+          if latest != verified or verified.get('state') != 'VERIFIED' or verified.get('blockers') != []:
+              raise SystemExit('immutable verified receipt copy failed validation')
+          PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add receipts/ecosystem-chat-live-activation.latest.json
+          git add receipts/ecosystem-chat-live-activation.verified.json
           git commit -m "chore: retain verified Ecosystem Chat live activation receipt [skip ci]"
           git pull --rebase
           git push
