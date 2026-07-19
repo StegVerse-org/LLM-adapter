@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "contract_id": "llm-adapter-ecosystem-chat-live-governance",
+  "repository": "StegVerse-org/LLM-adapter",
+  "goal": "Provide a live governed Ecosystem Chat request-response path with provider usage persistence, authenticated custody, reconstruction, and automatic downstream propagation.",
+  "required_outcomes": [
+    "gateway_health_ok",
+    "durable_storage_confirmed",
+    "governed_provider_enabled",
+    "real_provider_use_observed",
+    "provider_usage_local_persistence_non_custodial",
+    "provider_usage_custody_recorded",
+    "provider_usage_reconstructability_pass",
+    "transition_custody_recorded",
+    "transition_reconstructability_pass",
+    "immutable_verified_activation_receipt_published",
+    "site_activation_complete",
+    "downstream_verified_public_evidence"
+  ],
+  "disallowed_substitutes": [
+    "source_files_only",
+    "workflow_presence_only",
+    "workflow_artifact_only",
+    "pending_status_as_activation",
+    "provider_output_as_authority",
+    "local_persistence_as_custody",
+    "custody_receipt_as_execution_authority",
+    "verified_receipt_as_release_authority"
+  ],
+  "completion_evidence": {
+    "pending_status": "reports/ecosystem-chat-live-activation-status.json",
+    "verified_receipt": "receipts/ecosystem-chat-live-activation.verified.json",
+    "destination_state": "reports/ecosystem-chat-destination-activation-state.json"
+  },
+  "canonical_downstream_destinations": [
+    "master-records/orchestration",
+    "StegVerse-org/StegVerse-SDK",
+    "StegVerse-Labs/Site",
+    "GCAT-BCAT-Engine/Publisher",
+    "StegVerse-Labs/admissibility-wiki",
+    "StegVerse-002/stegguardian-wiki"
+  ],
+  "authority_flags_required_false": [
+    "provider_output_is_authority",
+    "usage_measurement_is_admissibility",
+    "local_persistence_is_custody",
+    "custody_receipt_is_execution_authority",
+    "verified_receipt_is_release_authority"
+  ],
+  "manual_user_action_required": false,
+  "completion_rule": "Complete only when every required outcome is supported by durable runtime evidence and all authority flags remain false."
+}
