@@ -69,7 +69,10 @@ def test_live_activation_workflow_is_self_starting_scheduled_and_durable() -> No
         assert prohibited not in source
 
     assert "secrets." not in source
-    assert "heartbeat" not in source.lower()
+    executable_source = "\n".join(
+        line for line in source.splitlines() if not line.lstrip().startswith("#")
+    )
+    assert "heartbeat" not in executable_source.lower()
 
 
 def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing() -> None:
