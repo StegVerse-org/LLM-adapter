@@ -9,7 +9,7 @@ This file is the authoritative continuation record for `StegVerse-org/LLM-adapte
 ```text
 Goal: live governed Ecosystem Chat with provider response, telemetry, authenticated usage retrieval, custody, reconstruction, and automatic downstream propagation
 Repository-local result: COMPLETE
-Continuation mode: ACCELERATED_SCHEDULED_FAIL_CLOSED_EVIDENCE_MONITOR
+Continuation mode: SELF_STARTING_ACCELERATED_FAIL_CLOSED_EVIDENCE_MONITOR
 Manual user tasks: NONE
 Recursive repository-local goal expansion: DISABLED
 ```
@@ -43,13 +43,16 @@ External model-provider credentials remain provider-issued configuration. Missin
 iosnoperiod/github/workflows/validate.yml
 ```
 
-Validation runs on repository events and schedule. Live activation verification now runs every 15 minutes and after successful validation.
+Validation runs on repository events and schedule. Live activation verification runs every 15 minutes, after successful validation, and whenever the activation workflow, verifier, status writers, contract test, or production blueprint changes. Status and heartbeat commits use `[skip ci]` and are excluded from the push path set, preventing recursive monitor runs.
 
-## Durable pending and verified evidence
+## Durable pending, monitor, and verified evidence
 
 ```text
 reports/ecosystem-chat-live-activation-status.json
   stable, hash-bound semantic pending or verified state
+
+reports/ecosystem-chat-live-activation-monitor.json
+  volatile, hash-bound proof that the monitor executed, with workflow run identity and exact blockers
 
 receipts/ecosystem-chat-live-activation.latest.json
   volatile full observation retained as workflow evidence when produced
@@ -58,20 +61,13 @@ receipts/ecosystem-chat-live-activation.verified.json
   immutable first VERIFIED receipt, created only with blockers = []
 ```
 
-The seeded pending status begins fail-closed with:
+The seeded pending semantic status begins fail-closed with `live_activation_observation_not_yet_recorded`. The seeded monitor heartbeat begins with `live_activation_monitor_run_not_yet_recorded`. Both require no user action and grant no authority.
 
-```text
-blocker: live_activation_observation_not_yet_recorded
-manual_user_action_required: false
-all live gates: false
-all authority flags: false
-```
+The status writer converts missing, unreadable, malformed, invalid-state, or internally conflicting observations into durable non-fatal blockers. The monitor writer separately records whether the workflow itself executed, so unchanged semantic state can no longer hide a missing monitor run.
 
-The status writer also converts missing, unreadable, malformed, invalid-state, or internally conflicting observations into durable non-fatal blockers. A verifier crash therefore cannot erase continuation state or create a manual artifact-inspection task.
+## Self-starting accelerated observation loop
 
-## Accelerated bounded observation loop
-
-The live verifier now applies bounded retries to gateway health, governed chat, and transition retrieval:
+The live verifier applies bounded retries to gateway health, governed chat, and transition retrieval:
 
 ```text
 attempts per request: 5
@@ -80,17 +76,19 @@ timeout per attempt: 35 seconds
 retryable HTTP states: 408, 425, 429, 500, 502, 503, 504
 workflow timeout: 12 minutes
 schedule: every 15 minutes
+bootstrap: push changes to activation implementation paths
 ```
 
-This removes the previous single-attempt dependency on a warm Render instance. Each generated observation records its retry policy and per-endpoint attempt counts. The workflow validates the observation schema, canonical hash, authority boundaries, and VERIFIED-with-zero-blockers rule before writing semantic status or retaining the immutable receipt.
+This removes both the previous single-attempt dependency on a warm Render instance and the previous dependency on waiting for the first scheduled run after monitor installation. Each observation records retry policy and endpoint attempt counts. Each monitor heartbeat records workflow run ID, attempt, trigger, semantic-status hash, observation hash, exact blockers, and the next machine action.
 
-Transient failure remains fail-closed. Retry exhaustion becomes an exact machine-readable blocker and does not create a user task.
+Transient failure remains fail-closed. Retry exhaustion and monitor non-execution become distinct machine-readable blockers and never create a user task.
 
 ## Installed continuation guards
 
 ```text
 scripts/verify_live_ecosystem_chat_activation.py
 scripts/write_live_activation_status.py
+scripts/write_live_activation_monitor_status.py
 tests/test_live_activation_automation_contract.py
 ```
 
@@ -109,7 +107,7 @@ transition reconstructability PASS
 all authority flags false
 ```
 
-The contract tests reject authority escalation, mutable receipt retention, invalid verified state, missing-observation fatal behavior, manual-task reintroduction, custody-secret exposure, loss of the 15-minute cadence, and removal of bounded retry validation.
+The contract tests reject authority escalation, mutable receipt retention, invalid verified state, missing-observation fatal behavior, manual-task reintroduction, custody-secret exposure, loss of the 15-minute cadence, removal of bounded retries, removal of monitor hashing, and removal of self-starting push triggers.
 
 ## Current evidence posture
 
@@ -118,9 +116,12 @@ repository-local implementation: COMPLETE
 self-contained private custody topology: COMPLETE
 scheduled validation: INSTALLED
 15-minute live verification: INSTALLED
+self-starting activation implementation trigger: INSTALLED
 bounded cold-start and transient retry policy: INSTALLED
 generated observation canonical validation: INSTALLED
-seeded pending status: PRESENT
+monitor heartbeat generation and validation: INSTALLED
+seeded semantic pending status: PRESENT
+seeded monitor-not-run status: PRESENT
 crash-resilient semantic blocker publication: INSTALLED
 immutable verified receipt publication: INSTALLED AND GUARDED
 Site pending-status import: INSTALLED
@@ -128,23 +129,23 @@ Site verified-receipt import: INSTALLED
 Publisher projection: INSTALLED
 admissibility-wiki projection: INSTALLED
 StegGuardian projection: INSTALLED
-runtime-derived live observation under accelerated loop: NOT YET OBSERVED
+runtime-derived heartbeat after self-start bootstrap: NOT YET OBSERVED
 immutable VERIFIED receipt: NOT CONFIRMED
 Site ACTIVATION_COMPLETE: NOT CONFIRMED
 downstream verified public evidence: NOT CONFIRMED
 release or tag authority: NOT GRANTED
 ```
 
-Absent CI, deployment, provider, custody, reconstruction, or downstream evidence does not reopen design or repository implementation work. Missing evidence remains fail-closed and is never treated as success.
+Absent CI, deployment, provider, custody, reconstruction, or downstream evidence does not reopen completed design work. Missing evidence remains fail-closed and is never treated as success. An unobserved bootstrap run remains an exact repository-owned evidence blocker rather than a manual assignment.
 
 ## Machine-owned continuation
 
 ```text
-1. Scheduled validation evaluates current main.
-2. The deployment platform synchronizes the declared topology.
+1. The push that installs or changes activation automation starts the monitor immediately.
+2. Scheduled validation evaluates current main.
 3. Fifteen-minute verification probes provider, custody, identity, and reconstruction with bounded retries.
-4. Each observation is hash-validated before semantic projection.
-5. Semantic blocker state is committed only when it changes.
+4. Each observation and monitor heartbeat is hash-validated before persistence.
+5. Semantic blocker state is committed only when it changes; heartbeat state is committed after every execution.
 6. The first VERIFIED result is committed at the immutable receipt path.
 7. Site imports pending or verified state automatically.
 8. Publisher and both wiki consumers ingest the Site projection automatically.
@@ -176,6 +177,7 @@ submission != custody
 custody receipt != execution authority
 reconstruction PASS != execution authority
 workflow artifact != live evidence
+monitor heartbeat != activation
 pending status != activation
 verified receipt != release authority
 terminal monitor != CI success
@@ -186,8 +188,6 @@ retry success != admissibility
 
 No release or tag is authorized until the existing machine gates receive visible validation, deployment, provider, custody, reconstruction, Site-completion, and downstream evidence. The decision is machine-gated and creates no manual review task.
 
-## Archive determination
+## Continuation posture
 
-No repository-local module, contract, validator, handoff, consumer, or automation remains to install for this activation workstream. The accelerated observation loop is now durable. Remaining conditions are external evidence observations owned by scheduled workflows, the deployment platform, the model provider, and authority-bearing custody systems.
-
-**ARCHIVE NOW.**
+The workstream remains active until the self-starting monitor records its first execution and either publishes exact runtime blockers or retains the immutable VERIFIED receipt. All continuation state is durable and no user action is required.
