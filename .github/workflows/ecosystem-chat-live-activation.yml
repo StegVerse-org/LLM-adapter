@@ -106,16 +106,18 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Persist semantic activation status
+      - name: Persist current activation evidence
         if: steps.preserved.outputs.verified != 'true' && always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/ecosystem-chat-live-activation-status.json
+          git add \
+            receipts/ecosystem-chat-live-activation.latest.json \
+            reports/ecosystem-chat-live-activation-status.json
           if git diff --cached --quiet; then
-            echo "Semantic activation status unchanged."
+            echo "Current activation evidence unchanged."
           else
-            git commit -m "chore: update Ecosystem Chat live activation blockers [skip ci]"
+            git commit -m "chore: retain Ecosystem Chat live activation evidence [skip ci]"
             git pull --rebase
             git push
           fi
@@ -130,7 +132,7 @@ jobs:
           PY
           )"
           if [ "$state" != "VERIFIED" ]; then
-            echo "Activation remains pending; semantic blockers are committed and the full observation is retained as an artifact."
+            echo "Activation remains pending; the detailed observation and semantic blockers are retained in the repository and as an artifact."
             exit 0
           fi
           cp receipts/ecosystem-chat-live-activation.latest.json receipts/ecosystem-chat-live-activation.verified.json
@@ -143,7 +145,7 @@ jobs:
               raise SystemExit('immutable verified receipt copy failed validation')
           PY
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "418982c7-e671-4ea6-8cda-5d5729343816@users.noreply.github.com"
           git add receipts/ecosystem-chat-live-activation.verified.json
           git commit -m "chore: retain verified Ecosystem Chat live activation receipt [skip ci]"
           git pull --rebase
