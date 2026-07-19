@@ -9,7 +9,7 @@ This file is the authoritative continuation record for `StegVerse-org/LLM-adapte
 ```text
 Goal: live governed Ecosystem Chat with provider response, telemetry, authenticated usage retrieval, custody, reconstruction, and automatic downstream propagation
 Repository-local result: COMPLETE
-Continuation mode: SCHEDULED_FAIL_CLOSED_EVIDENCE_MONITOR
+Continuation mode: ACCELERATED_SCHEDULED_FAIL_CLOSED_EVIDENCE_MONITOR
 Manual user tasks: NONE
 Recursive repository-local goal expansion: DISABLED
 ```
@@ -43,7 +43,7 @@ External model-provider credentials remain provider-issued configuration. Missin
 iosnoperiod/github/workflows/validate.yml
 ```
 
-Validation runs on repository events and schedule. Live verification runs hourly and after successful validation.
+Validation runs on repository events and schedule. Live activation verification now runs every 15 minutes and after successful validation.
 
 ## Durable pending and verified evidence
 
@@ -69,6 +69,23 @@ all authority flags: false
 
 The status writer also converts missing, unreadable, malformed, invalid-state, or internally conflicting observations into durable non-fatal blockers. A verifier crash therefore cannot erase continuation state or create a manual artifact-inspection task.
 
+## Accelerated bounded observation loop
+
+The live verifier now applies bounded retries to gateway health, governed chat, and transition retrieval:
+
+```text
+attempts per request: 5
+retry delay: 8 seconds
+timeout per attempt: 35 seconds
+retryable HTTP states: 408, 425, 429, 500, 502, 503, 504
+workflow timeout: 12 minutes
+schedule: every 15 minutes
+```
+
+This removes the previous single-attempt dependency on a warm Render instance. Each generated observation records its retry policy and per-endpoint attempt counts. The workflow validates the observation schema, canonical hash, authority boundaries, and VERIFIED-with-zero-blockers rule before writing semantic status or retaining the immutable receipt.
+
+Transient failure remains fail-closed. Retry exhaustion becomes an exact machine-readable blocker and does not create a user task.
+
 ## Installed continuation guards
 
 ```text
@@ -92,7 +109,7 @@ transition reconstructability PASS
 all authority flags false
 ```
 
-The contract tests reject authority escalation, mutable receipt retention, invalid verified state, missing-observation fatal behavior, manual-task reintroduction, and custody-secret exposure.
+The contract tests reject authority escalation, mutable receipt retention, invalid verified state, missing-observation fatal behavior, manual-task reintroduction, custody-secret exposure, loss of the 15-minute cadence, and removal of bounded retry validation.
 
 ## Current evidence posture
 
@@ -100,7 +117,9 @@ The contract tests reject authority escalation, mutable receipt retention, inval
 repository-local implementation: COMPLETE
 self-contained private custody topology: COMPLETE
 scheduled validation: INSTALLED
-scheduled live verification: INSTALLED
+15-minute live verification: INSTALLED
+bounded cold-start and transient retry policy: INSTALLED
+generated observation canonical validation: INSTALLED
 seeded pending status: PRESENT
 crash-resilient semantic blocker publication: INSTALLED
 immutable verified receipt publication: INSTALLED AND GUARDED
@@ -109,7 +128,7 @@ Site verified-receipt import: INSTALLED
 Publisher projection: INSTALLED
 admissibility-wiki projection: INSTALLED
 StegGuardian projection: INSTALLED
-runtime-derived live observation: NOT CONFIRMED
+runtime-derived live observation under accelerated loop: NOT YET OBSERVED
 immutable VERIFIED receipt: NOT CONFIRMED
 Site ACTIVATION_COMPLETE: NOT CONFIRMED
 downstream verified public evidence: NOT CONFIRMED
@@ -123,12 +142,13 @@ Absent CI, deployment, provider, custody, reconstruction, or downstream evidence
 ```text
 1. Scheduled validation evaluates current main.
 2. The deployment platform synchronizes the declared topology.
-3. Hourly verification probes provider, custody, identity, and reconstruction.
-4. Semantic blocker state is committed only when it changes.
-5. The first VERIFIED result is committed at the immutable receipt path.
-6. Site imports pending or verified state automatically.
-7. Publisher and both wiki consumers ingest the Site projection automatically.
-8. Release readiness remains machine-gated until live and downstream evidence exists.
+3. Fifteen-minute verification probes provider, custody, identity, and reconstruction with bounded retries.
+4. Each observation is hash-validated before semantic projection.
+5. Semantic blocker state is committed only when it changes.
+6. The first VERIFIED result is committed at the immutable receipt path.
+7. Site imports pending or verified state automatically.
+8. Publisher and both wiki consumers ingest the Site projection automatically.
+9. Release readiness remains machine-gated until live and downstream evidence exists.
 ```
 
 No workflow dispatch, artifact download, file movement, screenshot confirmation, receipt construction, blocker transcription, credential copying, or manual publication task is required.
@@ -159,6 +179,7 @@ workflow artifact != live evidence
 pending status != activation
 verified receipt != release authority
 terminal monitor != CI success
+retry success != admissibility
 ```
 
 ## Release posture
@@ -167,6 +188,6 @@ No release or tag is authorized until the existing machine gates receive visible
 
 ## Archive determination
 
-No repository-local module, contract, validator, handoff, consumer, or automation remains to install for this workstream. No future action requires access to the conversation that produced these records. Remaining conditions are external evidence observations owned by scheduled workflows, the deployment platform, the model provider, and authority-bearing custody systems.
+No repository-local module, contract, validator, handoff, consumer, or automation remains to install for this activation workstream. The accelerated observation loop is now durable. Remaining conditions are external evidence observations owned by scheduled workflows, the deployment platform, the model provider, and authority-bearing custody systems.
 
 **ARCHIVE NOW.**
