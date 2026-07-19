@@ -3,13 +3,15 @@
 
 The verifier requires no browser credential and never mutates a repository. It writes
 one machine-readable result suitable for workflow retention. A non-ready deployment
-is reported as PENDING rather than hidden behind a transport exception.
+is reported as PENDING rather than hidden behind a transport exception. Transient
+network and cold-start failures are retried within a bounded window.
 """
 from __future__ import annotations
 
 import json
 import os
 import sys
+import time
 import uuid
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -21,7 +23,10 @@ BASE_URL = os.getenv(
     "https://stegverse-ecosystem-chat-gateway.onrender.com",
 ).rstrip("/")
 OUTPUT = Path(os.getenv("STEGVERSE_LIVE_ACTIVATION_OUTPUT", "receipts/ecosystem-chat-live-activation.latest.json"))
-TIMEOUT = float(os.getenv("STEGVERSE_LIVE_ACTIVATION_TIMEOUT_SECONDS", "45"))
+TIMEOUT = float(os.getenv("STEGVERSE_LIVE_ACTIVATION_TIMEOUT_SECONDS", "35"))
+ATTEMPTS = max(1, int(os.getenv("STEGVERSE_LIVE_ACTIVATION_ATTEMPTS", "5")))
+RETRY_DELAY = max(0.0, float(os.getenv("STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS", "8")))
+RETRYABLE_HTTP = {408, 425, 429, 500, 502, 503, 504}
 
 
 def canonical_sha(payload: dict) -> str:
@@ -30,25 +35,53 @@ def canonical_sha(payload: dict) -> str:
     return sha256(json.dumps(material, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
-def fetch_json(url: str, *, payload: dict | None = None, headers: dict[str, str] | None = None) -> tuple[int, dict]:
+def fetch_json(
+    url: str,
+    *,
+    payload: dict | None = None,
+    headers: dict[str, str] | None = None,
+) -> tuple[int, dict, int]:
     body = None if payload is None else json.dumps(payload, separators=(",", ":")).encode("utf-8")
-    outbound = request.Request(
-        url,
-        data=body,
-        method="GET" if payload is None else "POST",
-        headers={"Accept": "application/json", "Content-Type": "application/json", **(headers or {})},
-    )
-    try:
-        with request.urlopen(outbound, timeout=TIMEOUT) as response:
-            raw = response.read()
-            status = int(getattr(response, "status", 200))
-    except error.HTTPError as exc:
-        raw = exc.read()
-        status = exc.code
-    parsed = json.loads(raw.decode("utf-8"))
-    if not isinstance(parsed, dict):
-        raise RuntimeError("live_endpoint_response_not_object")
-    return status, parsed
+    last_error: Exception | None = None
+    for attempt in range(1, ATTEMPTS + 1):
+        outbound = request.Request(
+            url,
+            data=body,
+            method="GET" if payload is None else "POST",
+            headers={
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "User-Agent": "StegVerse-Ecosystem-Chat-Live-Activation/2.0",
+                **(headers or {}),
+            },
+        )
+        try:
+            with request.urlopen(outbound, timeout=TIMEOUT) as response:
+                raw = response.read()
+                status = int(getattr(response, "status", 200))
+            parsed = json.loads(raw.decode("utf-8"))
+            if not isinstance(parsed, dict):
+                raise RuntimeError("live_endpoint_response_not_object")
+            return status, parsed, attempt
+        except error.HTTPError as exc:
+            raw = exc.read()
+            status = exc.code
+            try:
+                parsed = json.loads(raw.decode("utf-8"))
+            except Exception:
+                parsed = {"error": f"http_{status}", "body": raw.decode("utf-8", errors="replace")[:500]}
+            if status not in RETRYABLE_HTTP or attempt == ATTEMPTS:
+                if not isinstance(parsed, dict):
+                    parsed = {"error": "live_endpoint_response_not_object"}
+                return status, parsed, attempt
+            last_error = exc
+        except (error.URLError, TimeoutError, OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+            last_error = exc
+            if attempt == ATTEMPTS:
+                raise RuntimeError(f"transport_retry_exhausted:{type(exc).__name__}") from exc
+        if RETRY_DELAY:
+            time.sleep(RETRY_DELAY)
+    raise RuntimeError(f"transport_retry_exhausted:{type(last_error).__name__ if last_error else 'Unknown'}")
 
 
 def result(state: str, blockers: list[str], evidence: dict) -> dict:
@@ -57,6 +90,11 @@ def result(state: str, blockers: list[str], evidence: dict) -> dict:
         "state": state,
         "observed_at": datetime.now(timezone.utc).isoformat(),
         "gateway_base_url": BASE_URL,
+        "verification_policy": {
+            "attempts_per_request": ATTEMPTS,
+            "retry_delay_seconds": RETRY_DELAY,
+            "timeout_seconds": TIMEOUT,
+        },
         "blockers": blockers,
         "evidence": evidence,
         "authority_granted": False,
@@ -71,8 +109,9 @@ def main() -> int:
     blockers: list[str] = []
     evidence: dict = {}
     try:
-        health_status, health = fetch_json(f"{BASE_URL}/health")
+        health_status, health, health_attempts = fetch_json(f"{BASE_URL}/health")
         evidence["health"] = health
+        evidence["request_attempts"] = {"health": health_attempts}
         if health_status != 200 or health.get("status") != "ok":
             blockers.append("gateway_health_not_ok")
         if health.get("storage_durable_across_restarts") is not True:
@@ -110,8 +149,9 @@ def main() -> int:
                 "previous_receipt_id": None,
             },
         }
-        chat_status, chat = fetch_json(f"{BASE_URL}/api/ecosystem-chat", payload=chat_request)
+        chat_status, chat, chat_attempts = fetch_json(f"{BASE_URL}/api/ecosystem-chat", payload=chat_request)
         evidence["chat"] = chat
+        evidence["request_attempts"]["chat"] = chat_attempts
         evidence["requested_identity"] = {
             "session_id": session_id,
             "transition_id": transition_id,
@@ -138,8 +178,9 @@ def main() -> int:
         if authority.get("provider_usage_grants_authority") is not False:
             blockers.append("chat_authority_boundary_invalid")
 
-        transition_status, transition = fetch_json(f"{BASE_URL}/api/transitions/{transition_id}")
+        transition_status, transition, transition_attempts = fetch_json(f"{BASE_URL}/api/transitions/{transition_id}")
         evidence["transition"] = transition
+        evidence["request_attempts"]["transition"] = transition_attempts
         if transition_status != 200:
             blockers.append(f"transition_http_status_{transition_status}")
         if transition.get("transition_id") != transition_id or transition.get("run_id") != run_id:
