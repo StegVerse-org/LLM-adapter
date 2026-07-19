@@ -5,6 +5,8 @@ The verifier requires no browser credential and never mutates a repository. It w
 one machine-readable result suitable for workflow retention. A non-ready deployment
 is reported as PENDING rather than hidden behind a transport exception. Transient
 network and cold-start failures are retried within a bounded window.
+
+This comment-only marker intentionally exercises the existing push-triggered live path.
 """
 from __future__ import annotations
 
