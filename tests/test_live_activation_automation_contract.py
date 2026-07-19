@@ -36,14 +36,18 @@ def test_live_activation_workflow_is_scheduled_and_retains_durable_semantic_stat
         "Preserve first verified activation receipt",
         "Validate generated live observation",
         "Write stable activation blocker status",
-        "Persist semantic activation status",
+        "Write monitor heartbeat",
+        "Validate monitor heartbeat",
+        "Persist semantic status and monitor heartbeat",
         "reports/ecosystem-chat-live-activation-status.json",
+        "reports/ecosystem-chat-live-activation-monitor.json",
         "receipts/ecosystem-chat-live-activation.verified.json",
         'if [ "$state" != "VERIFIED" ]',
         "actions/upload-artifact@v4",
         "contents: write",
         'STEGVERSE_LIVE_ACTIVATION_ATTEMPTS: "5"',
         "result_sha256",
+        "monitor_sha256",
         "retention-days: 30",
     ):
         assert required in source
@@ -70,6 +74,23 @@ def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing
         assert required in source
     assert "observed_at" not in source
     assert "generated_at" not in source
+
+
+def test_monitor_heartbeat_distinguishes_execution_from_semantic_change() -> None:
+    source = (ROOT / "scripts/write_live_activation_monitor_status.py").read_text()
+    for required in (
+        "live_activation_monitor.v1",
+        "GITHUB_RUN_ID",
+        "GITHUB_RUN_ATTEMPT",
+        "observation_present",
+        "semantic_status_sha256",
+        "continue_bounded_fifteen_minute_verification",
+        '"manual_user_action_required": False',
+        '"monitor_is_activation_authority": False',
+        '"monitor_is_execution_authority": False',
+        "monitor_sha256",
+    ):
+        assert required in source
 
 
 def test_production_blueprint_automates_durable_private_custody_and_provider_path() -> None:
