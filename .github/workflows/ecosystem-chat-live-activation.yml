@@ -1,6 +1,14 @@
 name: Ecosystem Chat Live Activation
 
 on:
+  push:
+    paths:
+      - '.github/workflows/ecosystem-chat-live-activation.yml'
+      - 'scripts/verify_live_ecosystem_chat_activation.py'
+      - 'scripts/write_live_activation_status.py'
+      - 'scripts/write_live_activation_monitor_status.py'
+      - 'tests/test_live_activation_automation_contract.py'
+      - 'render-production.yaml'
   workflow_run:
     workflows:
       - validate
@@ -88,32 +96,38 @@ jobs:
         if: steps.preserved.outputs.verified != 'true' && always()
         run: python scripts/write_live_activation_status.py
 
-      - name: Write monitor heartbeat
+      - name: Write live activation monitor heartbeat
         if: always()
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
         run: python scripts/write_live_activation_monitor_status.py
 
-      - name: Validate monitor heartbeat
+      - name: Validate live activation monitor heartbeat
         if: always()
         run: |
           python - <<'PY'
           import hashlib
           import json
           from pathlib import Path
-          value = json.loads(Path('reports/ecosystem-chat-live-activation-monitor.json').read_text())
+          path = Path('reports/ecosystem-chat-live-activation-monitor.json')
+          value = json.loads(path.read_text())
           assert value['schema'] == 'stegverse.ecosystem_chat.live_activation_monitor.v1'
           assert value['repository'] == 'StegVerse-org/LLM-adapter'
           assert value['manual_user_action_required'] is False
-          assert value['state'] in {'PENDING', 'VERIFIED'}
+          assert value['workflow_run_id'] is not None
+          assert value['generated_at'] is not None
           assert all(flag is False for flag in value['authority_boundary'].values())
           material = dict(value)
           expected = material.pop('monitor_sha256')
-          actual = hashlib.sha256(json.dumps(material, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+          actual = hashlib.sha256(json.dumps(material, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
           assert expected == actual
           print(f"validated monitor heartbeat: {value['state']}")
           PY
 
       - name: Upload current activation observation
-        if: steps.preserved.outputs.verified != 'true' && always()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ecosystem-chat-live-activation-${{ github.run_id }}-${{ github.run_attempt }}
@@ -129,9 +143,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/ecosystem-chat-live-activation-status.json reports/ecosystem-chat-live-activation-monitor.json
+          git add \
+            reports/ecosystem-chat-live-activation-status.json \
+            reports/ecosystem-chat-live-activation-monitor.json
           if git diff --cached --quiet; then
-            echo "Activation status and monitor heartbeat unchanged."
+            echo "Activation status and heartbeat unchanged."
           else
             git commit -m "chore: persist Ecosystem Chat activation monitor [skip ci]"
             git pull --rebase
@@ -148,7 +164,7 @@ jobs:
           PY
           )"
           if [ "$state" != "VERIFIED" ]; then
-            echo "Activation remains pending; semantic blockers and monitor heartbeat are committed."
+            echo "Activation remains pending; semantic blockers are committed and the full observation is retained as an artifact."
             exit 0
           fi
           cp receipts/ecosystem-chat-live-activation.latest.json receipts/ecosystem-chat-live-activation.verified.json
@@ -178,8 +194,8 @@ jobs:
           monitor = json.loads(Path('reports/ecosystem-chat-live-activation-monitor.json').read_text())
           print(f"State: {status.get('state')}")
           print(f"Blockers: {', '.join(status.get('blockers', [])) or 'none'}")
-          print(f"Monitor generated at: {monitor.get('generated_at')}")
-          print(f"Workflow run id: {monitor.get('workflow_run_id')}")
-          print("Cadence: every 15 minutes plus successful validation runs")
+          print(f"Status SHA-256: {status.get('status_sha256')}")
+          print(f"Monitor run: {monitor.get('workflow_run_id')} attempt {monitor.get('workflow_run_attempt')}")
+          print("Cadence: every 15 minutes, successful validation runs, and activation implementation changes")
           print("Authority granted: false")
           PY
