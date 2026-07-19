@@ -6,7 +6,7 @@ one machine-readable result suitable for workflow retention. A non-ready deploym
 is reported as PENDING rather than hidden behind a transport exception. Transient
 network and cold-start failures are retried within a bounded window.
 
-This comment-only marker intentionally exercises the existing push-triggered live path.
+This comment-only marker intentionally exercises the existing post-deployment probe path.
 """
 from __future__ import annotations
 
