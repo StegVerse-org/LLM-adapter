@@ -27,17 +27,22 @@ def test_live_activation_verifier_preserves_required_boundaries() -> None:
     assert "STEGVERSE_MASTER_RECORDS_TOKEN" not in source
 
 
-def test_live_activation_workflow_is_scheduled_and_retains_durable_semantic_state() -> None:
+def test_live_activation_workflow_is_self_starting_scheduled_and_durable() -> None:
     source = (ROOT / ".github/workflows/ecosystem-chat-live-activation.yml").read_text()
     for required in (
+        "push:",
+        "paths:",
         "workflow_run:",
         "schedule:",
         'cron: "*/15 * * * *"',
+        "scripts/verify_live_ecosystem_chat_activation.py",
+        "scripts/write_live_activation_monitor_status.py",
+        "render-production.yaml",
         "Preserve first verified activation receipt",
         "Validate generated live observation",
         "Write stable activation blocker status",
-        "Write monitor heartbeat",
-        "Validate monitor heartbeat",
+        "Write live activation monitor heartbeat",
+        "Validate live activation monitor heartbeat",
         "Persist semantic status and monitor heartbeat",
         "reports/ecosystem-chat-live-activation-status.json",
         "reports/ecosystem-chat-live-activation-monitor.json",
@@ -49,9 +54,11 @@ def test_live_activation_workflow_is_scheduled_and_retains_durable_semantic_stat
         "result_sha256",
         "monitor_sha256",
         "retention-days: 30",
+        "[skip ci]",
     ):
         assert required in source
     assert "secrets." not in source
+    assert "reports/ecosystem-chat-live-activation-monitor.json'" not in source.split("push:", 1)[1].split("workflow_run:", 1)[0]
 
 
 def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing() -> None:
@@ -76,18 +83,20 @@ def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing
     assert "generated_at" not in source
 
 
-def test_monitor_heartbeat_distinguishes_execution_from_semantic_change() -> None:
+def test_live_activation_monitor_writer_records_execution_without_authority() -> None:
     source = (ROOT / "scripts/write_live_activation_monitor_status.py").read_text()
     for required in (
         "live_activation_monitor.v1",
         "GITHUB_RUN_ID",
         "GITHUB_RUN_ATTEMPT",
-        "observation_present",
-        "semantic_status_sha256",
-        "continue_bounded_fifteen_minute_verification",
+        "GITHUB_EVENT_NAME",
+        "live_activation_monitor_run_not_yet_recorded",
         '"manual_user_action_required": False',
         '"monitor_is_activation_authority": False',
         '"monitor_is_execution_authority": False',
+        '"monitor_is_deployment_authority": False',
+        '"monitor_is_custody": False',
+        '"monitor_is_release_authority": False',
         "monitor_sha256",
     ):
         assert required in source
