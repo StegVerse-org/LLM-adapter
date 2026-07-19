@@ -1,3 +1,4 @@
+# Bounded branch-only probe for the existing validate -> live-activation workflow_run path.
 name: validate
 
 on:
@@ -84,6 +85,22 @@ jobs:
         run: python -m pytest tests/test_live_activation_automation_contract.py -v
       - name: Check immutable verified activation receipt publication
         run: python scripts/check_ecosystem_chat_verified_receipt_contract.py
+      - name: Probe deployed Ecosystem Chat vertical slice
+        id: live_probe
+        continue-on-error: true
+        env:
+          STEGVERSE_LIVE_ACTIVATION_ATTEMPTS: "5"
+          STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS: "8"
+          STEGVERSE_LIVE_ACTIVATION_TIMEOUT_SECONDS: "35"
+        run: python scripts/verify_live_ecosystem_chat_activation.py
+      - name: Upload deployed Ecosystem Chat probe evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecosystem-chat-live-probe-${{ github.run_id }}-${{ github.run_attempt }}
+          path: receipts/ecosystem-chat-live-activation.latest.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Test authenticated usage session endpoint
         run: python -m pytest tests/test_usage_session_api.py -v
       - name: Test system-boundary declaration lifecycle, fixture provenance, and workflow evidence

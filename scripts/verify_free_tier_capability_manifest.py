@@ -20,8 +20,16 @@ def main() -> int:
     local = manifest["local_verification"]
 
     checks = {
-        "manifest_schema_updated": manifest["schema_version"] == "stegverse.llm_adapter.capabilities.v0.2",
-        "free_tier_status_present": manifest["status"] == "adapter-boundary-complete-with-free-tier-trust-boundary",
+        "manifest_schema_supports_free_tier": manifest["schema_version"]
+        in {
+            "stegverse.llm_adapter.capabilities.v0.2",
+            "stegverse.llm_adapter.capabilities.v0.3",
+        },
+        "free_tier_status_present": manifest["status"]
+        in {
+            "adapter-boundary-complete-with-free-tier-trust-boundary",
+            "adapter-boundary-complete-with-system-boundary-declaration",
+        },
         "quota_runtime_surface_present": runtime["free_tier_quota_evaluator"] == "built_side_effect_free",
         "limits_runtime_surface_present": runtime["free_tier_receipt_replay_limits"] == "built_side_effect_free",
         "metadata_runtime_surface_present": runtime["ai_entry_free_tier_trust_metadata"] == "built_preview_only",
