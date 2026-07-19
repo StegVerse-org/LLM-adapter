@@ -1,3 +1,4 @@
+# Bounded rerun trigger: execute the existing live activation verifier after heartbeat-contract alignment.
 name: Ecosystem Chat Live Activation
 
 on:
