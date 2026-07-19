@@ -1,3 +1,4 @@
+# Bounded branch-only probe for the existing validate -> live-activation workflow_run path.
 name: validate
 
 on:
