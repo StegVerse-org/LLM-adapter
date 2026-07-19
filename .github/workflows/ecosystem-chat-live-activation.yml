@@ -7,7 +7,7 @@ on:
     types:
       - completed
   schedule:
-    - cron: "17 * * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -21,6 +21,7 @@ jobs:
   verify-live-activation:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     steps:
       - name: Check out adapter
         uses: actions/checkout@v4
@@ -50,7 +51,38 @@ jobs:
         continue-on-error: true
         env:
           STEGVERSE_GATEWAY_BASE_URL: ${{ vars.STEGVERSE_GATEWAY_BASE_URL || 'https://stegverse-ecosystem-chat-gateway.onrender.com' }}
+          STEGVERSE_LIVE_ACTIVATION_ATTEMPTS: "5"
+          STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS: "8"
+          STEGVERSE_LIVE_ACTIVATION_TIMEOUT_SECONDS: "35"
         run: python scripts/verify_live_ecosystem_chat_activation.py
+
+      - name: Validate generated live observation
+        if: steps.preserved.outputs.verified != 'true' && always()
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          path = Path('receipts/ecosystem-chat-live-activation.latest.json')
+          if not path.exists():
+              raise SystemExit('live activation observation was not produced')
+          value = json.loads(path.read_text())
+          assert value['schema'] == 'stegverse.ecosystem_chat.live_activation.v1'
+          assert value['state'] in {'PENDING', 'VERIFIED'}
+          assert isinstance(value['blockers'], list)
+          assert value['authority_granted'] is False
+          assert value['publication_authorized'] is False
+          assert value['repository_mutation_authorized'] is False
+          policy = value['verification_policy']
+          assert int(policy['attempts_per_request']) >= 1
+          material = dict(value)
+          expected = material.pop('result_sha256')
+          actual = hashlib.sha256(json.dumps(material, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+          assert expected == actual
+          if value['state'] == 'VERIFIED':
+              assert value['blockers'] == []
+          print(f"validated live observation: {value['state']}")
+          PY
 
       - name: Write stable activation blocker status
         if: steps.preserved.outputs.verified != 'true' && always()
@@ -65,6 +97,7 @@ jobs:
             receipts/ecosystem-chat-live-activation.latest.json
             reports/ecosystem-chat-live-activation-status.json
           if-no-files-found: error
+          retention-days: 30
 
       - name: Persist semantic activation status
         if: steps.preserved.outputs.verified != 'true' && always()
@@ -83,10 +116,6 @@ jobs:
       - name: Retain first verified activation receipt
         if: steps.preserved.outputs.verified != 'true'
         run: |
-          if [ ! -f receipts/ecosystem-chat-live-activation.latest.json ]; then
-            echo "No full live observation was produced; the durable semantic status records this fail-closed condition."
-            exit 0
-          fi
           state="$(python - <<'PY'
           import json
           from pathlib import Path
@@ -127,6 +156,7 @@ jobs:
           print(f"State: {result.get('state')}")
           print(f"Blockers: {', '.join(result.get('blockers', [])) or 'none'}")
           print(f"Status SHA-256: {result.get('status_sha256')}")
+          print("Cadence: every 15 minutes plus successful validation runs")
           print("Authority granted: false")
           PY
           fi
