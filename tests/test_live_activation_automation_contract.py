@@ -36,29 +36,39 @@ def test_live_activation_workflow_is_self_starting_scheduled_and_durable() -> No
         "schedule:",
         'cron: "*/15 * * * *"',
         "scripts/verify_live_ecosystem_chat_activation.py",
-        "scripts/write_live_activation_monitor_status.py",
         "render-production.yaml",
         "Preserve first verified activation receipt",
+        "Verify deployed request, provider, custody, and reconstruction path",
         "Validate generated live observation",
         "Write stable activation blocker status",
-        "Write live activation monitor heartbeat",
-        "Validate live activation monitor heartbeat",
-        "Persist semantic status and monitor heartbeat",
+        "Upload current activation evidence",
+        "Persist semantic activation status",
+        "Retain first verified activation receipt",
         "reports/ecosystem-chat-live-activation-status.json",
-        "reports/ecosystem-chat-live-activation-monitor.json",
+        "receipts/ecosystem-chat-live-activation.latest.json",
         "receipts/ecosystem-chat-live-activation.verified.json",
         'if [ "$state" != "VERIFIED" ]',
         "actions/upload-artifact@v4",
         "contents: write",
         'STEGVERSE_LIVE_ACTIVATION_ATTEMPTS: "5"',
         "result_sha256",
-        "monitor_sha256",
         "retention-days: 30",
         "[skip ci]",
     ):
         assert required in source
+
+    for prohibited in (
+        "write_live_activation_monitor_status.py",
+        "Write live activation monitor heartbeat",
+        "Validate live activation monitor heartbeat",
+        "Persist semantic status and monitor heartbeat",
+        "ecosystem-chat-live-activation-monitor.json",
+        "monitor_sha256",
+    ):
+        assert prohibited not in source
+
     assert "secrets." not in source
-    assert "reports/ecosystem-chat-live-activation-monitor.json'" not in source.split("push:", 1)[1].split("workflow_run:", 1)[0]
+    assert "heartbeat" not in source.lower()
 
 
 def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing() -> None:
@@ -81,25 +91,6 @@ def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing
         assert required in source
     assert "observed_at" not in source
     assert "generated_at" not in source
-
-
-def test_live_activation_monitor_writer_records_execution_without_authority() -> None:
-    source = (ROOT / "scripts/write_live_activation_monitor_status.py").read_text()
-    for required in (
-        "live_activation_monitor.v1",
-        "GITHUB_RUN_ID",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_EVENT_NAME",
-        "live_activation_monitor_run_not_yet_recorded",
-        '"manual_user_action_required": False',
-        '"monitor_is_activation_authority": False',
-        '"monitor_is_execution_authority": False',
-        '"monitor_is_deployment_authority": False',
-        '"monitor_is_custody": False',
-        '"monitor_is_release_authority": False',
-        "monitor_sha256",
-    ):
-        assert required in source
 
 
 def test_production_blueprint_automates_durable_private_custody_and_provider_path() -> None:
