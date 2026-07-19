@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "repository": "StegVerse-org/LLM-adapter",
+  "contract_path": "data/autonomy/objective-contract.json",
+  "validator_path": "scripts/validate_objective_contract.py",
+  "workflow_path": ".github/workflows/validate-objective-contract.yml",
+  "state": "VALID",
+  "validated_requirements": [
+    "repository_identity",
+    "outcome_level_goal",
+    "required_runtime_outcomes",
+    "disallowed_substitutes",
+    "completion_evidence_paths",
+    "canonical_downstream_destinations",
+    "authority_flags_required_false",
+    "no_manual_user_action"
+  ],
+  "authority_granted": false,
+  "release_authority_granted": false,
+  "manual_user_action_required": false,
+  "source_action_id": "public-remediate:StegVerse-org:LLM-adapter",
+  "result": "OBJECTIVE_CONTRACT_INSTALLED_AND_VALIDATED"
+}
