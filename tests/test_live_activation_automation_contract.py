@@ -16,6 +16,11 @@ def test_live_activation_verifier_preserves_required_boundaries() -> None:
         "transition_custody_not_recorded",
         '"authority_granted": False',
         '"repository_mutation_authorized": False',
+        "STEGVERSE_LIVE_ACTIVATION_ATTEMPTS",
+        "STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS",
+        "transport_retry_exhausted",
+        "RETRYABLE_HTTP",
+        '"verification_policy"',
     ):
         assert required in source
     assert "STEGVERSE_PROVIDER_TOKEN" not in source
@@ -27,16 +32,19 @@ def test_live_activation_workflow_is_scheduled_and_retains_durable_semantic_stat
     for required in (
         "workflow_run:",
         "schedule:",
-        'cron: "17 * * * *"',
+        'cron: "*/15 * * * *"',
         "Preserve first verified activation receipt",
+        "Validate generated live observation",
         "Write stable activation blocker status",
         "Persist semantic activation status",
         "reports/ecosystem-chat-live-activation-status.json",
         "receipts/ecosystem-chat-live-activation.verified.json",
-        "No full live observation was produced",
         'if [ "$state" != "VERIFIED" ]',
         "actions/upload-artifact@v4",
         "contents: write",
+        'STEGVERSE_LIVE_ACTIVATION_ATTEMPTS: "5"',
+        "result_sha256",
+        "retention-days: 30",
     ):
         assert required in source
     assert "secrets." not in source
