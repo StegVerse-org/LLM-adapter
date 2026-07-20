@@ -1,6 +1,7 @@
 """Register the portable node to reconstruct automatically at user login."""
 from __future__ import annotations
 
+import argparse
 import json
 import os
 from pathlib import Path
@@ -11,6 +12,7 @@ import sys
 from typing import Any, Callable
 
 from llm_adapter.node_bootstrap import bootstrap, default_node_root
+from llm_adapter.node_service import start
 
 Runner = Callable[..., subprocess.CompletedProcess[Any]]
 
@@ -28,30 +30,19 @@ def materialize(root: Path, system: str | None = None, env: dict[str, str] | Non
         config_home = Path(values.get("XDG_CONFIG_HOME", Path.home() / ".config"))
         path = config_home / "systemd" / "user" / "stegverse-portable-node.service"
         content = "\n".join([
-            "[Unit]",
-            "Description=StegVerse Portable Node",
-            "After=network-online.target",
-            "",
-            "[Service]",
-            "Type=simple",
+            "[Unit]", "Description=StegVerse Portable Node", "After=network-online.target", "",
+            "[Service]", "Type=simple",
             "ExecStart=" + " ".join(f'\"{part}\"' for part in command),
-            "Restart=always",
-            "RestartSec=2",
-            f'Environment=STEGVERSE_NODE_ROOT={root}',
-            "",
-            "[Install]",
-            "WantedBy=default.target",
-            "",
+            "Restart=always", "RestartSec=2", f'Environment=STEGVERSE_NODE_ROOT={root}', "",
+            "[Install]", "WantedBy=default.target", "",
         ])
         activate = [["systemctl", "--user", "daemon-reload"], ["systemctl", "--user", "enable", "--now", path.name]]
         kind = "systemd-user"
     elif name == "darwin":
         path = Path.home() / "Library" / "LaunchAgents" / "org.stegverse.portable-node.plist"
         payload = {
-            "Label": "org.stegverse.portable-node",
-            "ProgramArguments": command,
-            "RunAtLoad": True,
-            "KeepAlive": True,
+            "Label": "org.stegverse.portable-node", "ProgramArguments": command,
+            "RunAtLoad": True, "KeepAlive": True,
             "EnvironmentVariables": {"STEGVERSE_NODE_ROOT": str(root)},
             "StandardOutPath": str(root / "state" / "node-service.stdout.log"),
             "StandardErrorPath": str(root / "state" / "node-service.stderr.log"),
@@ -70,12 +61,9 @@ def materialize(root: Path, system: str | None = None, env: dict[str, str] | Non
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
     receipt = {
-        "schema": "stegverse.portable-node-autostart.v1",
-        "platform": name,
-        "registration_kind": kind,
-        "registration_path": str(path),
-        "activation_commands": activate,
-        "manual_action_required": False,
+        "schema": "stegverse.portable-node-autostart.v1", "platform": name,
+        "registration_kind": kind, "registration_path": str(path),
+        "activation_commands": activate, "manual_action_required": False,
     }
     receipt_path = root / "receipts" / "autostart.latest.json"
     receipt_path.parent.mkdir(parents=True, exist_ok=True)
@@ -91,7 +79,24 @@ def install(root: Path, runner: Runner = subprocess.run, system: str | None = No
         results.append({"command": command, "returncode": completed.returncode})
     receipt["activation_results"] = results
     receipt["active"] = bool(results) and results[-1]["returncode"] == 0
-    receipt["fallback_detached_start_required"] = not receipt["active"]
+    if not receipt["active"]:
+        fallback = start(root)
+        receipt["fallback_detached_start"] = fallback
+        receipt["active"] = fallback.get("state") == "RUNNING"
+    receipt["manual_action_required"] = False
     path = root / "receipts" / "autostart.latest.json"
     path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return receipt
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Register and activate StegVerse portable-node autostart")
+    parser.add_argument("--root", type=Path)
+    args = parser.parse_args()
+    root = (args.root or default_node_root()).resolve()
+    print(json.dumps(install(root), indent=2, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
