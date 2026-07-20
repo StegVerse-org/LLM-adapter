@@ -7,6 +7,7 @@ on:
       - 'llm_adapter/capability_runtime.py'
       - 'llm_adapter/portable_node.py'
       - 'llm_adapter/node_bootstrap.py'
+      - 'llm_adapter/node_service.py'
       - 'pyproject.toml'
       - 'scripts/stegcap.py'
       - 'scripts/stegnode.py'
@@ -14,6 +15,7 @@ on:
       - 'tests/test_portable_node.py'
       - 'tests/test_portable_node_bootstrap.py'
       - 'tests/test_node_bootstrap.py'
+      - 'tests/test_node_service.py'
       - '.github/workflows/capability-runtime.yml'
   pull_request:
     paths:
@@ -21,6 +23,7 @@ on:
       - 'llm_adapter/capability_runtime.py'
       - 'llm_adapter/portable_node.py'
       - 'llm_adapter/node_bootstrap.py'
+      - 'llm_adapter/node_service.py'
       - 'pyproject.toml'
       - 'scripts/stegcap.py'
       - 'scripts/stegnode.py'
@@ -28,6 +31,7 @@ on:
       - 'tests/test_portable_node.py'
       - 'tests/test_portable_node_bootstrap.py'
       - 'tests/test_node_bootstrap.py'
+      - 'tests/test_node_service.py'
       - '.github/workflows/capability-runtime.yml'
   workflow_dispatch:
 
@@ -52,6 +56,8 @@ jobs:
       - name: Validate capability manifest
         run: python scripts/stegcap.py show-manifest
       - name: Test capability reconstruction and portable resolution
-        run: python -m pytest tests/test_capability_runtime.py tests/test_portable_node.py tests/test_portable_node_bootstrap.py tests/test_node_bootstrap.py -v
+        run: python -m pytest tests/test_capability_runtime.py tests/test_portable_node.py tests/test_portable_node_bootstrap.py tests/test_node_bootstrap.py tests/test_node_service.py -v
       - name: Verify installed zero-touch bootstrap command
         run: stegnode-bootstrap bootstrap --root .stegdeploy/ci-portable-node
+      - name: Verify autonomous service status command
+        run: stegnode status --root .stegdeploy/ci-portable-node
