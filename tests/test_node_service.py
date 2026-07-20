@@ -24,7 +24,7 @@ def test_start_bootstraps_and_records_detached_service(tmp_path: Path, monkeypat
     assert state["state"] == "RUNNING"
     assert state["pid"] == 4321
     assert state["manual_action_required"] is False
-    assert launched["command"][-3:] == ["--root", str(tmp_path.resolve())]
+    assert launched["command"][-3:] == ["daemon", "--root", str(tmp_path.resolve())]
 
 
 def test_start_is_idempotent_for_live_service(tmp_path: Path, monkeypatch) -> None:
