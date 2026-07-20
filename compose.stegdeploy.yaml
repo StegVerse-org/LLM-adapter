@@ -1,9 +1,7 @@
 services:
   ecosystem-chat-gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: ${STEGDEPLOY_IMAGE:-stegverse/ecosystem-chat-gateway:local}
+    image: ${STEGDEPLOY_IMAGE:-ghcr.io/stegverse-org/llm-adapter:main}
+    pull_policy: always
     restart: unless-stopped
     init: true
     ports:
