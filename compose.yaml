@@ -1,0 +1,36 @@
+services:
+  ecosystem-chat-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: stegverse/ecosystem-chat-gateway:local
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      STEGVERSE_ALLOWED_ORIGINS: "https://stegverse-labs.github.io"
+      STEGVERSE_CHAT_RATE_LIMIT: "20"
+      STEGVERSE_CHAT_RATE_WINDOW_SECONDS: "3600"
+      STEGVERSE_TRANSITION_DB: "/var/lib/stegverse/stegverse-ecosystem-chat.db"
+      STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: "true"
+      STEGVERSE_EXTERNAL_REVIEW_DB: "/var/lib/stegverse/stegverse-external-review.db"
+      STEGVERSE_EXTERNAL_MUTATION_ENABLED: "false"
+      STEGVERSE_PROVIDER_ENABLED: "false"
+      STEGVERSE_PROVIDER_ENDPOINT: "https://provider.invalid"
+      STEGVERSE_PROVIDER_ALLOWED_HOSTS: "provider.invalid"
+      STEGVERSE_PROVIDER_NAME: "disabled"
+      STEGVERSE_PROVIDER_MODEL: "disabled"
+      STEGVERSE_MASTER_RECORDS_ENDPOINT: "http://127.0.0.1:9"
+      STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS: "127.0.0.1"
+    volumes:
+      - stegverse_gateway_data:/var/lib/stegverse
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+volumes:
+  stegverse_gateway_data:
