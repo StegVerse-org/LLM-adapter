@@ -33,7 +33,7 @@ def main() -> int:
         "compose.stegdeploy.yaml",
         "restart: unless-stopped",
         "init: true",
-        "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: \"true\"",
+        'STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: "true"',
         "stegverse_gateway_data:/var/lib/stegverse",
         "STEGVERSE_PROVIDER_ENABLED: ${STEGVERSE_PROVIDER_ENABLED:-false}",
         "STEGVERSE_EXTERNAL_MUTATION_ENABLED: ${STEGVERSE_EXTERNAL_MUTATION_ENABLED:-false}",
@@ -42,9 +42,11 @@ def main() -> int:
     require(
         "scripts/stegdeploy_bootstrap.py",
         "deployment-receipt.json",
-        "sha256",
-        "docker compose",
+        "hashlib.sha256",
+        '_run("docker", "compose"',
         "/health",
+        '"render_dependency": False',
+        '"authority_effect": "RUNTIME_DEPLOYMENT_ONLY"',
     )
     print("StegDeploy runtime contract verified")
     return 0
