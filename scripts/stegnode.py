@@ -11,10 +11,20 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 CAPABILITY_DIR = ROOT / "runtime/capabilities"
+PROFILE_PATH = ROOT / "runtime/node-profile.json"
 STATE_PATH = ROOT / ".stegdeploy/node-state.json"
 
 
 def discover() -> list[Path]:
+    if PROFILE_PATH.exists():
+        profile = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
+        if profile.get("schema") != "stegverse.portable-node-profile.v1":
+            raise SystemExit("unsupported portable-node profile")
+        manifests = [ROOT / item["manifest"] for item in profile.get("capabilities", []) if item.get("auto_start", False)]
+        missing = [str(path) for path in manifests if not path.exists()]
+        if missing:
+            raise SystemExit(f"portable-node profile references missing manifests: {missing}")
+        return manifests
     manifests: list[Path] = []
     for path in sorted(CAPABILITY_DIR.glob("*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
