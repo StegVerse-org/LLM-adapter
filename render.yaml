@@ -24,31 +24,33 @@ services:
       - key: STEGVERSE_EXTERNAL_REVIEW_DB
         value: /tmp/stegverse-external-review.db
       - key: STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN
-        sync: false
+        generateValue: true
       - key: STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY
-        sync: false
+        generateValue: true
       - key: STEGVERSE_EXTERNAL_REVIEWERS_JSON
-        sync: false
+        value: "{}"
       - key: STEGVERSE_EXTERNAL_PUBLISHERS_JSON
-        sync: false
+        value: "{}"
+      - key: STEGVERSE_EXTERNAL_MUTATION_ENABLED
+        value: "false"
       - key: STEGVERSE_MASTER_RECORDS_ENDPOINT
-        sync: false
+        value: http://127.0.0.1:9
       - key: STEGVERSE_MASTER_RECORDS_TOKEN
-        sync: false
+        generateValue: true
       - key: STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS
-        sync: false
+        value: 127.0.0.1
       - key: STEGVERSE_PROVIDER_ENABLED
         value: "false"
       - key: STEGVERSE_PROVIDER_ENDPOINT
-        sync: false
+        value: https://provider.invalid
       - key: STEGVERSE_PROVIDER_ALLOWED_HOSTS
-        sync: false
+        value: provider.invalid
       - key: STEGVERSE_PROVIDER_TOKEN
-        sync: false
+        generateValue: true
       - key: STEGVERSE_PROVIDER_NAME
-        sync: false
+        value: disabled
       - key: STEGVERSE_PROVIDER_MODEL
-        sync: false
+        value: disabled
       - key: STEGVERSE_PROVIDER_DAILY_REQUEST_LIMIT
         value: 25
       - key: STEGVERSE_PROVIDER_DAILY_COST_LIMIT_USD
