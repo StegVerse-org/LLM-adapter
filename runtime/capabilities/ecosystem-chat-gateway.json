@@ -1,7 +1,7 @@
 {
   "schema": "stegverse.capability.v1",
   "capability_id": "ecosystem-chat-gateway",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "lifecycle": "reconstruct-on-demand",
   "authority_effect": "RUNTIME_ONLY",
   "entrypoint": [
@@ -44,6 +44,11 @@
     "hash": "sha256",
     "path": ".stegdeploy/capability-receipts/ecosystem-chat-gateway.latest.json"
   },
-  "backends": ["process", "container"],
-  "default_backend": "process"
+  "backends": ["process", "wasm", "container", "browser", "peer"],
+  "default_backend": "process",
+  "portability": {
+    "platform_specific_paths_forbidden": true,
+    "manual_backend_selection_required": false,
+    "durable_state_external_to_executor": true
+  }
 }
