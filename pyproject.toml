@@ -42,6 +42,7 @@ service = [
 
 [project.scripts]
 stegverse-llm-adapter = "llm_adapter.cli:main"
+stegnode-bootstrap = "llm_adapter.node_bootstrap:main"
 
 [project.urls]
 Homepage = "https://github.com/StegVerse-org/LLM-adapter"
