@@ -6,7 +6,28 @@ from pathlib import Path
 from scripts import stegnode
 
 
-def test_discovers_only_auto_start_capabilities(tmp_path: Path, monkeypatch) -> None:
+def test_discovers_profile_capabilities(tmp_path: Path, monkeypatch) -> None:
+    manifest = tmp_path / "chat.json"
+    manifest.write_text(json.dumps({"capability_id": "chat"}), encoding="utf-8")
+    profile = tmp_path / "node-profile.json"
+    profile.write_text(
+        json.dumps(
+            {
+                "schema": "stegverse.portable-node-profile.v1",
+                "capabilities": [
+                    {"manifest": "chat.json", "auto_start": True},
+                    {"manifest": "manual.json", "auto_start": False},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(stegnode, "ROOT", tmp_path)
+    monkeypatch.setattr(stegnode, "PROFILE_PATH", profile)
+    assert stegnode.discover() == [manifest]
+
+
+def test_fallback_discovers_only_auto_start_capabilities(tmp_path: Path, monkeypatch) -> None:
     capability_dir = tmp_path / "capabilities"
     capability_dir.mkdir()
     (capability_dir / "chat.json").write_text(
@@ -17,6 +38,7 @@ def test_discovers_only_auto_start_capabilities(tmp_path: Path, monkeypatch) -> 
         json.dumps({"capability_id": "manual", "node": {"auto_start": False}}),
         encoding="utf-8",
     )
+    monkeypatch.setattr(stegnode, "PROFILE_PATH", tmp_path / "missing-profile.json")
     monkeypatch.setattr(stegnode, "CAPABILITY_DIR", capability_dir)
     assert stegnode.discover() == [capability_dir / "chat.json"]
 
