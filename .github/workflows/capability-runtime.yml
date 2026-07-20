@@ -8,6 +8,7 @@ on:
       - 'llm_adapter/portable_node.py'
       - 'llm_adapter/node_bootstrap.py'
       - 'llm_adapter/node_service.py'
+      - 'llm_adapter/node_autostart.py'
       - 'pyproject.toml'
       - 'scripts/stegcap.py'
       - 'scripts/stegnode.py'
@@ -16,6 +17,7 @@ on:
       - 'tests/test_portable_node_bootstrap.py'
       - 'tests/test_node_bootstrap.py'
       - 'tests/test_node_service.py'
+      - 'tests/test_node_autostart.py'
       - '.github/workflows/capability-runtime.yml'
   pull_request:
     paths:
@@ -24,6 +26,7 @@ on:
       - 'llm_adapter/portable_node.py'
       - 'llm_adapter/node_bootstrap.py'
       - 'llm_adapter/node_service.py'
+      - 'llm_adapter/node_autostart.py'
       - 'pyproject.toml'
       - 'scripts/stegcap.py'
       - 'scripts/stegnode.py'
@@ -32,6 +35,7 @@ on:
       - 'tests/test_portable_node_bootstrap.py'
       - 'tests/test_node_bootstrap.py'
       - 'tests/test_node_service.py'
+      - 'tests/test_node_autostart.py'
       - '.github/workflows/capability-runtime.yml'
   workflow_dispatch:
 
@@ -56,8 +60,10 @@ jobs:
       - name: Validate capability manifest
         run: python scripts/stegcap.py show-manifest
       - name: Test capability reconstruction and portable resolution
-        run: python -m pytest tests/test_capability_runtime.py tests/test_portable_node.py tests/test_portable_node_bootstrap.py tests/test_node_bootstrap.py tests/test_node_service.py -v
+        run: python -m pytest tests/test_capability_runtime.py tests/test_portable_node.py tests/test_portable_node_bootstrap.py tests/test_node_bootstrap.py tests/test_node_service.py tests/test_node_autostart.py -v
       - name: Verify installed zero-touch bootstrap command
         run: stegnode-bootstrap bootstrap --root .stegdeploy/ci-portable-node
       - name: Verify autonomous service status command
         run: stegnode status --root .stegdeploy/ci-portable-node
+      - name: Verify autostart materialization without activation
+        run: python -c "from pathlib import Path; from llm_adapter.node_autostart import materialize; import platform; materialize(Path('.stegdeploy/ci-portable-node').resolve(), system=platform.system())"
