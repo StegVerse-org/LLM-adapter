@@ -5,14 +5,11 @@ The verifier requires no browser credential and never mutates a repository. It w
 one machine-readable result suitable for workflow retention. A non-ready deployment
 is reported as PENDING rather than hidden behind a transport exception. Transient
 network and cold-start failures are retried within a bounded window.
-
-This comment-only marker intentionally exercises the existing post-deployment probe path.
 """
 from __future__ import annotations
 
 import json
 import os
-import sys
 import time
 import uuid
 from datetime import datetime, timezone
@@ -29,12 +26,36 @@ TIMEOUT = float(os.getenv("STEGVERSE_LIVE_ACTIVATION_TIMEOUT_SECONDS", "35"))
 ATTEMPTS = max(1, int(os.getenv("STEGVERSE_LIVE_ACTIVATION_ATTEMPTS", "5")))
 RETRY_DELAY = max(0.0, float(os.getenv("STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS", "8")))
 RETRYABLE_HTTP = {408, 425, 429, 500, 502, 503, 504}
+RETAINED_RESPONSE_HEADERS = {
+    "content-type",
+    "date",
+    "server",
+    "via",
+    "x-render-origin-server",
+    "x-render-routing",
+    "x-request-id",
+}
 
 
 def canonical_sha(payload: dict) -> str:
     material = dict(payload)
     material.pop("result_sha256", None)
     return sha256(json.dumps(material, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def response_metadata(response: object) -> dict:
+    raw_headers = getattr(response, "headers", None)
+    headers: dict[str, str] = {}
+    if raw_headers is not None:
+        for key, value in raw_headers.items():
+            normalized = str(key).lower()
+            if normalized in RETAINED_RESPONSE_HEADERS:
+                headers[normalized] = str(value)[:500]
+    final_url = None
+    geturl = getattr(response, "geturl", None)
+    if callable(geturl):
+        final_url = str(geturl())[:1000]
+    return {"final_url": final_url, "headers": headers}
 
 
 def fetch_json(
@@ -61,20 +82,24 @@ def fetch_json(
             with request.urlopen(outbound, timeout=TIMEOUT) as response:
                 raw = response.read()
                 status = int(getattr(response, "status", 200))
+                metadata = response_metadata(response)
             parsed = json.loads(raw.decode("utf-8"))
             if not isinstance(parsed, dict):
                 raise RuntimeError("live_endpoint_response_not_object")
+            parsed.setdefault("_http_response", metadata)
             return status, parsed, attempt
         except error.HTTPError as exc:
             raw = exc.read()
             status = exc.code
+            metadata = response_metadata(exc)
             try:
                 parsed = json.loads(raw.decode("utf-8"))
             except Exception:
                 parsed = {"error": f"http_{status}", "body": raw.decode("utf-8", errors="replace")[:500]}
+            if not isinstance(parsed, dict):
+                parsed = {"error": "live_endpoint_response_not_object"}
+            parsed.setdefault("_http_response", metadata)
             if status not in RETRYABLE_HTTP or attempt == ATTEMPTS:
-                if not isinstance(parsed, dict):
-                    parsed = {"error": "live_endpoint_response_not_object"}
                 return status, parsed, attempt
             last_error = exc
         except (error.URLError, TimeoutError, OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
