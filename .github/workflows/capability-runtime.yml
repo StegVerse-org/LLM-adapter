@@ -7,8 +7,10 @@ on:
       - 'llm_adapter/capability_runtime.py'
       - 'llm_adapter/portable_node.py'
       - 'scripts/stegcap.py'
+      - 'scripts/stegnode.py'
       - 'tests/test_capability_runtime.py'
       - 'tests/test_portable_node.py'
+      - 'tests/test_portable_node_bootstrap.py'
       - '.github/workflows/capability-runtime.yml'
   pull_request:
     paths:
@@ -16,8 +18,10 @@ on:
       - 'llm_adapter/capability_runtime.py'
       - 'llm_adapter/portable_node.py'
       - 'scripts/stegcap.py'
+      - 'scripts/stegnode.py'
       - 'tests/test_capability_runtime.py'
       - 'tests/test_portable_node.py'
+      - 'tests/test_portable_node_bootstrap.py'
       - '.github/workflows/capability-runtime.yml'
   workflow_dispatch:
 
@@ -42,4 +46,4 @@ jobs:
       - name: Validate capability manifest
         run: python scripts/stegcap.py show-manifest
       - name: Test capability reconstruction and portable resolution
-        run: python -m pytest tests/test_capability_runtime.py tests/test_portable_node.py -v
+        run: python -m pytest tests/test_capability_runtime.py tests/test_portable_node.py tests/test_portable_node_bootstrap.py -v
