@@ -23,6 +23,8 @@ jobs:
           python-version: '3.11'
       - name: Install validation dependencies
         run: python -m pip install -e '.[dev]'
+      - name: Verify StegDeploy runtime contract
+        run: python scripts/verify_stegdeploy_runtime.py
       - name: Check lightweight package init
         run: python scripts/check_lightweight_package_init.py
       - name: Verify micro-node return path

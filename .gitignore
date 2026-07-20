@@ -43,3 +43,6 @@ htmlcov/
 # Reports
 reports/
 *.log
+
+# Provider-neutral runtime state and generated secrets
+.stegdeploy/

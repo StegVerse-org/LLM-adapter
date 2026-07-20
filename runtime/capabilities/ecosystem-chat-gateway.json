@@ -1,0 +1,54 @@
+{
+  "schema": "stegverse.capability.v1",
+  "capability_id": "ecosystem-chat-gateway",
+  "version": "1.1.0",
+  "lifecycle": "reconstruct-on-demand",
+  "authority_effect": "RUNTIME_ONLY",
+  "entrypoint": [
+    "python",
+    "-m",
+    "uvicorn",
+    "llm_adapter.combined_gateway:app",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "${PORT}"
+  ],
+  "health": {
+    "path": "/health",
+    "timeout_seconds": 3,
+    "attempts": 30
+  },
+  "state": {
+    "durable_root": "${STEGVERSE_DATA_DIR}",
+    "required_paths": [
+      "stegverse-ecosystem-chat.db",
+      "stegverse-external-review.db"
+    ]
+  },
+  "environment_defaults": {
+    "PORT": "8000",
+    "STEGVERSE_DATA_DIR": ".stegdeploy/data",
+    "STEGVERSE_ALLOWED_ORIGINS": "https://stegverse-labs.github.io",
+    "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS": "true",
+    "STEGVERSE_PROVIDER_ENABLED": "false",
+    "STEGVERSE_EXTERNAL_MUTATION_ENABLED": "false",
+    "STEGVERSE_MASTER_RECORDS_ENDPOINT": "http://127.0.0.1:9",
+    "STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS": "127.0.0.1"
+  },
+  "preflight": [
+    ["python", "-m", "llm_adapter.custody_worker"]
+  ],
+  "receipt": {
+    "required": true,
+    "hash": "sha256",
+    "path": ".stegdeploy/capability-receipts/ecosystem-chat-gateway.latest.json"
+  },
+  "backends": ["process", "wasm", "container", "browser", "peer"],
+  "default_backend": "process",
+  "portability": {
+    "platform_specific_paths_forbidden": true,
+    "manual_backend_selection_required": false,
+    "durable_state_external_to_executor": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "stegverse.portable-node-profile.v1",
+  "profile_id": "ecosystem-chat-portable-node",
+  "manual_capability_selection_required": false,
+  "capabilities": [
+    {
+      "manifest": "runtime/capabilities/ecosystem-chat-gateway.json",
+      "auto_start": true,
+      "required": true
+    }
+  ]
+}
