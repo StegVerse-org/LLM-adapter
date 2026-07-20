@@ -14,13 +14,19 @@ def fail(message: str) -> None:
     raise SystemExit(f"ADAPTER_WORKFLOW_PARITY_FAIL: {message}")
 
 
+def normalized_text(path: Path) -> str:
+    """Compare workflow semantics without platform newline or BOM drift."""
+    text = path.read_text(encoding="utf-8-sig")
+    return "\n".join(line.rstrip() for line in text.splitlines()).rstrip() + "\n"
+
+
 def main() -> int:
     if not CANONICAL.exists():
         fail("missing canonical workflow")
     if not MIRROR.exists():
         fail("missing iOS workflow mirror")
-    canonical = CANONICAL.read_text(encoding="utf-8")
-    mirror = MIRROR.read_text(encoding="utf-8")
+    canonical = normalized_text(CANONICAL)
+    mirror = normalized_text(MIRROR)
     if canonical != mirror:
         fail("canonical workflow and iOS mirror differ")
     for marker in ("push:", "pull_request:", "workflow_dispatch:", REQUIRED_COMMAND):
