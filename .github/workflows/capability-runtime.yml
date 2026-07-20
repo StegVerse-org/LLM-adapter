@@ -1,0 +1,36 @@
+name: capability-runtime
+
+on:
+  push:
+    paths:
+      - 'runtime/capabilities/**'
+      - 'llm_adapter/capability_runtime.py'
+      - 'scripts/stegcap.py'
+      - 'tests/test_capability_runtime.py'
+      - '.github/workflows/capability-runtime.yml'
+  pull_request:
+    paths:
+      - 'runtime/capabilities/**'
+      - 'llm_adapter/capability_runtime.py'
+      - 'scripts/stegcap.py'
+      - 'tests/test_capability_runtime.py'
+      - '.github/workflows/capability-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install runtime dependencies
+        run: python -m pip install -e '.[dev]'
+      - name: Validate capability manifest
+        run: python scripts/stegcap.py show-manifest
+      - name: Test capability reconstruction contract
+        run: python -m pytest tests/test_capability_runtime.py -v
