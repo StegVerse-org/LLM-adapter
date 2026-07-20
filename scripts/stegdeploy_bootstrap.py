@@ -9,7 +9,6 @@ import os
 from pathlib import Path
 import secrets
 import subprocess
-import sys
 import time
 import urllib.request
 
@@ -61,7 +60,8 @@ def _health(url: str, attempts: int = 30) -> dict[str, object]:
 
 def deploy(url: str) -> None:
     _write_env()
-    _compose("up", "--build", "--detach", "--remove-orphans")
+    _compose("pull")
+    _compose("up", "--detach", "--remove-orphans")
     health = _health(url)
     image_id = _compose("images", "--quiet").stdout.strip()
     source = _run("git", "rev-parse", "HEAD", check=False).stdout.strip() or "unknown"
@@ -74,6 +74,8 @@ def deploy(url: str) -> None:
         "health": health,
         "durable_storage": True,
         "render_dependency": False,
+        "manual_build_required": False,
+        "manual_credentials_required": False,
         "authority_effect": "RUNTIME_DEPLOYMENT_ONLY",
     }
     canonical = json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
