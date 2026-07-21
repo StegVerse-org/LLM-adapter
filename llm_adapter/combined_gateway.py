@@ -1,6 +1,8 @@
 """Combined governed gateway application for Ecosystem Chat and External Chat."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from types import SimpleNamespace
@@ -24,6 +26,36 @@ app.include_router(external_chat_router)
 app.include_router(external_review_router)
 app.include_router(external_mutation_router)
 app.include_router(usage_session_router)
+
+
+def _canonical_hash(payload: dict) -> str:
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+@app.get("/api/stegverse-node")
+def stegverse_node_advertisement(request: Request) -> dict:
+    """Return a health-bound, non-authorizing advertisement for this StegVerse node."""
+    base_url = str(request.base_url).rstrip("/")
+    payload = {
+        "schema": "stegverse.node.endpoint-advertisement.v1",
+        "node_id": os.getenv("STEGVERSE_NODE_ID", "ecosystem-chat-portable-node"),
+        "capability_id": "ecosystem-chat-gateway",
+        "endpoint": f"{base_url}/api/ecosystem-chat",
+        "health_endpoint": f"{base_url}/health",
+        "advertised_at": datetime.now(timezone.utc).isoformat(),
+        "health_bound": True,
+        "provider_enabled": os.getenv("STEGVERSE_PROVIDER_ENABLED", "false").lower() == "true",
+        "durable_storage": os.getenv(
+            "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "false"
+        ).lower() == "true",
+        "authority_granted": False,
+        "publication_authority": False,
+        "execution_authority": False,
+    }
+    payload["advertisement_sha256"] = _canonical_hash(payload)
+    return payload
 
 
 @app.middleware("http")
@@ -121,7 +153,7 @@ allowed_origins = [
     value.strip()
     for value in os.getenv(
         "STEGVERSE_ALLOWED_ORIGINS",
-        "https://stegverse-labs.github.io,http://localhost:8000,http://127.0.0.1:8000",
+        "https://stegverse.org,https://www.stegverse.org,https://stegverse-labs.github.io,http://localhost:8000,http://127.0.0.1:8000",
     ).split(",")
     if value.strip()
 ]
