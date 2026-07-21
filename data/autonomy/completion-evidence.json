@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "repository": "StegVerse-org/LLM-adapter",
+  "objective_id": "llm-adapter-ecosystem-chat-live-governance",
+  "runtime_observed": false,
+  "user_visible_outcome_verified": false,
+  "verifier_source": "github-actions",
+  "critical_blockers": 11,
+  "manual_completion_dependency": false,
+  "verified_at": "2026-07-21T14:16:35.822924Z",
+  "evidence_urls": [
+    "https://github.com/StegVerse-org/LLM-adapter/blob/main/reports/ecosystem-chat-live-activation-status.json",
+    "https://github.com/StegVerse-org/LLM-adapter/blob/main/receipts/ecosystem-chat-live-activation.verified.json",
+    "https://github.com/StegVerse-org/LLM-adapter/blob/main/reports/ecosystem-chat-destination-activation-state.json"
+  ],
+  "projection_state": "BLOCKED",
+  "missing_gates": [
+    "destination_activation_state_missing",
+    "durable_storage",
+    "gateway_health_ok",
+    "governed_provider_enabled",
+    "immutable_verified_activation_receipt_missing",
+    "live_activation_not_verified",
+    "provider_usage_custody_recorded",
+    "provider_usage_reconstructability_pass",
+    "provider_used",
+    "transition_custody_recorded",
+    "transition_reconstructability_pass"
+  ],
+  "source_state": "PENDING",
+  "source_blockers": [
+    "live_activation_observation_not_yet_recorded"
+  ],
+  "authority": {
+    "projection_is_execution_authority": false,
+    "projection_is_release_authority": false,
+    "pending_status_is_completion": false,
+    "workflow_success_is_completion": false,
+    "manual_user_action_required": false
+  }
+}
