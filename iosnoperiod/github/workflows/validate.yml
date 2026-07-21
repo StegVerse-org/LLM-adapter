@@ -95,14 +95,55 @@ jobs:
           STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS: "8"
           STEGVERSE_LIVE_ACTIVATION_TIMEOUT_SECONDS: "35"
         run: python scripts/verify_live_ecosystem_chat_activation.py
+      - name: Write stable activation status from validation probe
+        if: always()
+        run: python scripts/write_live_activation_status.py
       - name: Upload deployed Ecosystem Chat probe evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ecosystem-chat-live-probe-${{ github.run_id }}-${{ github.run_attempt }}
-          path: receipts/ecosystem-chat-live-activation.latest.json
+          path: |
+            receipts/ecosystem-chat-live-activation.latest.json
+            reports/ecosystem-chat-live-activation-status.json
           if-no-files-found: error
           retention-days: 30
+      - name: Retain and persist current activation evidence
+        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          state="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          print(json.loads(Path('receipts/ecosystem-chat-live-activation.latest.json').read_text()).get('state', 'PENDING'))
+          PY
+          )"
+          if [ "$state" = "VERIFIED" ] && [ ! -f receipts/ecosystem-chat-live-activation.verified.json ]; then
+            cp receipts/ecosystem-chat-live-activation.latest.json receipts/ecosystem-chat-live-activation.verified.json
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          latest = json.loads(Path('receipts/ecosystem-chat-live-activation.latest.json').read_text())
+          if latest.get('state') == 'VERIFIED':
+              verified = json.loads(Path('receipts/ecosystem-chat-live-activation.verified.json').read_text())
+              if verified != latest or verified.get('blockers') != []:
+                  raise SystemExit('verified activation receipt retention failed')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            receipts/ecosystem-chat-live-activation.latest.json \
+            reports/ecosystem-chat-live-activation-status.json
+          if [ -f receipts/ecosystem-chat-live-activation.verified.json ]; then
+            git add receipts/ecosystem-chat-live-activation.verified.json
+          fi
+          if git diff --cached --quiet; then
+            echo "Current activation evidence unchanged."
+          else
+            git commit -m "chore: retain validation-owned Ecosystem Chat activation evidence [skip ci]"
+            git pull --rebase
+            git push
+          fi
       - name: Test authenticated usage session endpoint
         run: python -m pytest tests/test_usage_session_api.py -v
       - name: Test system-boundary declaration lifecycle, fixture provenance, and workflow evidence
