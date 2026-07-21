@@ -1,0 +1,76 @@
+name: Autonomy Completion Projection
+
+on:
+  workflow_run:
+    workflows: ["validate"]
+    types: [completed]
+  push:
+    paths:
+      - 'reports/ecosystem-chat-live-activation-status.json'
+      - 'reports/ecosystem-chat-destination-activation-state.json'
+      - 'receipts/ecosystem-chat-live-activation.verified.json'
+      - 'scripts/project_autonomy_completion_evidence.py'
+      - '.github/workflows/autonomy-completion-projection.yml'
+  schedule:
+    - cron: '41 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: llm-adapter-autonomy-completion-projection
+  cancel-in-progress: false
+
+jobs:
+  project-strict-completion-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Project repository-owned completion evidence
+        run: python scripts/project_autonomy_completion_evidence.py
+      - name: Validate fail-closed projection
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          evidence = json.loads(Path('data/autonomy/completion-evidence.json').read_text())
+          assert evidence['schema_version'] == '1.0'
+          assert evidence['repository'] == 'StegVerse-org/LLM-adapter'
+          assert evidence['objective_id'] == 'llm-adapter-ecosystem-chat-live-governance'
+          assert evidence['verifier_source'] == 'github-actions'
+          assert evidence['manual_completion_dependency'] is False
+          assert evidence['authority']['pending_status_is_completion'] is False
+          assert evidence['authority']['workflow_success_is_completion'] is False
+          assert evidence['authority']['manual_user_action_required'] is False
+          if evidence['projection_state'] == 'OPERATIONALLY_VERIFIED':
+              assert evidence['runtime_observed'] is True
+              assert evidence['user_visible_outcome_verified'] is True
+              assert evidence['critical_blockers'] == 0
+              assert evidence['missing_gates'] == []
+          else:
+              assert evidence['projection_state'] == 'BLOCKED'
+              assert evidence['runtime_observed'] is False
+              assert evidence['user_visible_outcome_verified'] is False
+              assert evidence['critical_blockers'] > 0
+              assert evidence['missing_gates']
+          print('strict autonomy completion projection valid')
+          PY
+      - name: Persist destination-owned projection
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_run' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/autonomy/completion-evidence.json
+          if git diff --cached --quiet; then
+            echo "Completion projection unchanged."
+            exit 0
+          fi
+          git commit -m "chore: persist repository-owned autonomy completion projection [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
