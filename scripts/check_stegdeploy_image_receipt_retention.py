@@ -15,7 +15,7 @@ REQUIRED_WORKFLOW_SNIPPETS = (
     "repository_retained\": True",
     "package_visibility_asserted\": False",
     "git add receipts/stegdeploy-image-publication.json",
-    "chore: retain canonical StegDeploy image publication receipt [skip ci]",
+    "chore: retain canonical StegDeploy image publication evidence [skip ci]",
     "git pull --rebase",
     "git push",
 )
@@ -46,7 +46,7 @@ def validate_receipt(path: Path) -> int:
     missing = sorted(required - payload.keys())
     if missing:
         return fail(f"retained receipt missing fields: {', '.join(missing)}")
-    if payload["schema"] != "stegdeploy.image-publication.v1":
+    if payload["schema"] != "stegdeploy.image-publication.v2":
         return fail("unexpected receipt schema")
     if payload["repository_retained"] is not True:
         return fail("receipt does not assert repository retention")
