@@ -42,6 +42,7 @@ def test_disabled_provider_requires_fallback(monkeypatch: pytest.MonkeyPatch) ->
     assert result.used is False
     assert result.status == "DISABLED"
     assert result.fallback_required is True
+    assert "provider_not_enabled" in (result.reason or "")
 
 
 def test_provider_call_preserves_identity_and_writes_receipt(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -94,7 +95,42 @@ def test_identity_mismatch_fails_closed(monkeypatch: pytest.MonkeyPatch, tmp_pat
 def test_unapproved_hostname_disables_provider(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     configure(monkeypatch, tmp_path)
     monkeypatch.setenv("STEGVERSE_PROVIDER_ALLOWED_HOSTS", "approved.example.test")
+    provider_readiness = governed_provider.readiness()
+    assert provider_readiness.ready is False
+    assert "provider_endpoint_hostname_not_allowlisted" in provider_readiness.blockers
     assert governed_provider.enabled() is False
+
+
+def test_empty_allowlist_fails_closed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    configure(monkeypatch, tmp_path)
+    monkeypatch.delenv("STEGVERSE_PROVIDER_ALLOWED_HOSTS")
+    provider_readiness = governed_provider.readiness()
+    assert provider_readiness.ready is False
+    assert provider_readiness.explicit_allowlist_configured is False
+    assert "provider_allowed_hosts_missing" in provider_readiness.blockers
+    assert governed_provider.enabled() is False
+
+
+def test_readiness_is_secret_free(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    configure(monkeypatch, tmp_path)
+    payload = governed_provider.readiness().to_dict()
+    serialized = json.dumps(payload, sort_keys=True)
+    assert payload["ready"] is True
+    assert payload["state"] == "READY"
+    assert payload["blockers"] == []
+    assert payload["credential_configured"] is True
+    assert payload["authority_granted"] is False
+    assert payload["execution_authority"] is False
+    assert "test-token" not in serialized
+    assert "token" not in payload
+
+
+def test_non_https_endpoint_fails_closed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    configure(monkeypatch, tmp_path)
+    monkeypatch.setenv("STEGVERSE_PROVIDER_ENDPOINT", "http://provider.example.test/generate")
+    provider_readiness = governed_provider.readiness()
+    assert provider_readiness.ready is False
+    assert "provider_endpoint_not_https" in provider_readiness.blockers
 
 
 def test_cost_ceiling_blocks_before_transport(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
