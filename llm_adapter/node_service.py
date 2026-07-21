@@ -21,6 +21,10 @@ def _state_path(root: Path) -> Path:
     return root / "state" / "node-service.json"
 
 
+def _lock_path(root: Path) -> Path:
+    return root / "state" / "node-service.lock"
+
+
 def _read_state(root: Path) -> dict[str, Any]:
     path = _state_path(root)
     if not path.exists():
@@ -59,6 +63,44 @@ def _pid_alive(pid: int) -> bool:
     except OSError:
         return False
     return True
+
+
+def _claim_daemon(root: Path) -> bool:
+    """Atomically claim singleton ownership, repairing stale ownership automatically."""
+    path = _lock_path(root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    for _ in range(2):
+        try:
+            descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            try:
+                owner = int(path.read_text(encoding="utf-8").strip() or "0")
+            except (OSError, ValueError):
+                owner = 0
+            if _pid_alive(owner):
+                return False
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
+            continue
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(f"{os.getpid()}\n")
+        return True
+    return False
+
+
+def _release_daemon(root: Path) -> None:
+    path = _lock_path(root)
+    try:
+        owner = int(path.read_text(encoding="utf-8").strip() or "0")
+    except (FileNotFoundError, OSError, ValueError):
+        return
+    if owner == os.getpid():
+        try:
+            path.unlink()
+        except FileNotFoundError:
+            pass
 
 
 def _runtime_environment(root: Path, manifest: dict[str, Any]) -> dict[str, str]:
@@ -106,7 +148,7 @@ def start(root: Path) -> dict[str, Any]:
     bootstrap(root)
     current = _read_state(root)
     pid = int(current.get("pid", 0) or 0)
-    if current.get("state") == "RUNNING" and _pid_alive(pid):
+    if current.get("state") in {"STARTING", "RUNNING", "RECONSTRUCTING"} and _pid_alive(pid):
         return current
 
     command = [sys.executable, "-m", "llm_adapter.node_service", "daemon", "--root", str(root)]
@@ -155,6 +197,20 @@ def stop(root: Path) -> dict[str, Any]:
 
 def daemon(root: Path) -> int:
     bootstrap(root)
+    if not _claim_daemon(root):
+        _write_receipt(root, "duplicate-daemon-refused", {
+            "state": "REFUSED",
+            "node_root": str(root),
+            "pid": os.getpid(),
+        })
+        return 0
+    try:
+        return _daemon_owned(root)
+    finally:
+        _release_daemon(root)
+
+
+def _daemon_owned(root: Path) -> int:
     manifest_path = root / "capabilities" / "ecosystem-chat-gateway.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     env = _runtime_environment(root, manifest)

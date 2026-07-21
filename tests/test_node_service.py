@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -29,18 +30,17 @@ def test_start_bootstraps_and_records_detached_service(tmp_path: Path, monkeypat
     assert receipt["event"] == "service-start"
 
 
-def test_start_is_idempotent_for_live_service(tmp_path: Path, monkeypatch) -> None:
-    node_service._write_state(tmp_path, {
-        "state": "RUNNING",
-        "pid": 99,
-        "node_root": str(tmp_path),
-        "manual_action_required": False,
-    })
+def test_start_is_idempotent_for_every_live_active_state(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(node_service, "_pid_alive", lambda pid: pid == 99)
     monkeypatch.setattr(node_service.subprocess, "Popen", lambda *_a, **_k: (_ for _ in ()).throw(AssertionError("must not relaunch")))
-
-    state = node_service.start(tmp_path)
-    assert state["pid"] == 99
+    for state_name in ("STARTING", "RUNNING", "RECONSTRUCTING"):
+        node_service._write_state(tmp_path, {
+            "state": state_name,
+            "pid": 99,
+            "node_root": str(tmp_path),
+            "manual_action_required": False,
+        })
+        assert node_service.start(tmp_path)["pid"] == 99
 
 
 def test_stop_writes_dissolved_state_and_receipt(tmp_path: Path, monkeypatch) -> None:
@@ -81,3 +81,23 @@ def test_restart_delay_is_bounded_exponential() -> None:
 def test_health_url_uses_loopback_for_wildcard_host() -> None:
     manifest = {"health": {"path": "/healthz"}}
     assert node_service._health_url({"HOST": "0.0.0.0", "PORT": "8123"}, manifest) == "http://127.0.0.1:8123/healthz"
+
+
+def test_singleton_claim_refuses_live_owner(tmp_path: Path, monkeypatch) -> None:
+    lock = node_service._lock_path(tmp_path)
+    lock.parent.mkdir(parents=True)
+    lock.write_text("77\n", encoding="utf-8")
+    monkeypatch.setattr(node_service, "_pid_alive", lambda pid: pid == 77)
+    assert node_service._claim_daemon(tmp_path) is False
+    assert lock.read_text(encoding="utf-8") == "77\n"
+
+
+def test_singleton_claim_repairs_stale_owner(tmp_path: Path, monkeypatch) -> None:
+    lock = node_service._lock_path(tmp_path)
+    lock.parent.mkdir(parents=True)
+    lock.write_text("77\n", encoding="utf-8")
+    monkeypatch.setattr(node_service, "_pid_alive", lambda _pid: False)
+    assert node_service._claim_daemon(tmp_path) is True
+    assert int(lock.read_text(encoding="utf-8")) == os.getpid()
+    node_service._release_daemon(tmp_path)
+    assert not lock.exists()
