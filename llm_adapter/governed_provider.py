@@ -1,8 +1,9 @@
 """Governed, vendor-neutral provider broker for bounded chat responses.
 
 The provider is optional and disabled by default. It may generate text only after
-endpoint, credential, quota, input-size, output-size, and estimated-cost checks
-pass. Provider output is evidence for a bounded response; it is never authority.
+endpoint, credential, explicit hostname allowlist, quota, input-size,
+output-size, and estimated-cost checks pass. Provider output is evidence for a
+bounded response; it is never authority.
 """
 from __future__ import annotations
 
@@ -27,11 +28,90 @@ def _bool(name: str, default: bool = False) -> bool:
 
 
 def _allowed_hosts() -> set[str]:
-    return {item.strip().lower() for item in os.getenv("STEGVERSE_PROVIDER_ALLOWED_HOSTS", "").split(",") if item.strip()}
+    return {
+        item.strip().lower()
+        for item in os.getenv("STEGVERSE_PROVIDER_ALLOWED_HOSTS", "").split(",")
+        if item.strip()
+    }
 
 
 def _db_path() -> Path:
     return Path(os.getenv("STEGVERSE_TRANSITION_DB", "/tmp/stegverse-ecosystem-chat.db"))
+
+
+@dataclass(frozen=True)
+class ProviderReadiness:
+    ready: bool
+    state: str
+    blockers: tuple[str, ...]
+    provider_enabled_requested: bool
+    endpoint_configured: bool
+    endpoint_scheme_https: bool
+    endpoint_hostname: str | None
+    explicit_allowlist_configured: bool
+    endpoint_hostname_allowlisted: bool
+    credential_configured: bool
+    model_configured: bool
+    authority_granted: bool = False
+    execution_authority: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        payload["blockers"] = list(self.blockers)
+        return payload
+
+
+def readiness() -> ProviderReadiness:
+    """Return secret-free provider configuration readiness.
+
+    Readiness is configuration posture only. It does not test the provider,
+    authorize cost, grant execution authority, or prove that a credential is
+    valid. An empty hostname allowlist is always fail-closed.
+    """
+    endpoint = os.getenv("STEGVERSE_PROVIDER_ENDPOINT", "").strip()
+    parsed = urlparse(endpoint)
+    hostname = parsed.hostname.lower() if parsed.hostname else None
+    hosts = _allowed_hosts()
+    requested = _bool("STEGVERSE_PROVIDER_ENABLED")
+    endpoint_configured = bool(endpoint)
+    scheme_https = parsed.scheme == "https"
+    allowlist_configured = bool(hosts)
+    hostname_allowlisted = bool(hostname and hostname in hosts)
+    credential_configured = bool(os.getenv("STEGVERSE_PROVIDER_TOKEN"))
+    model_configured = bool(os.getenv("STEGVERSE_PROVIDER_MODEL"))
+
+    blockers: list[str] = []
+    if not requested:
+        blockers.append("provider_not_enabled")
+    if not endpoint_configured:
+        blockers.append("provider_endpoint_missing")
+    elif not scheme_https:
+        blockers.append("provider_endpoint_not_https")
+    elif not hostname:
+        blockers.append("provider_endpoint_hostname_missing")
+    if not allowlist_configured:
+        blockers.append("provider_allowed_hosts_missing")
+    elif not hostname_allowlisted:
+        blockers.append("provider_endpoint_hostname_not_allowlisted")
+    if not credential_configured:
+        blockers.append("provider_credential_missing")
+    if not model_configured:
+        blockers.append("provider_model_missing")
+
+    ready = not blockers
+    return ProviderReadiness(
+        ready=ready,
+        state="READY" if ready else "BLOCKED",
+        blockers=tuple(blockers),
+        provider_enabled_requested=requested,
+        endpoint_configured=endpoint_configured,
+        endpoint_scheme_https=scheme_https,
+        endpoint_hostname=hostname,
+        explicit_allowlist_configured=allowlist_configured,
+        endpoint_hostname_allowlisted=hostname_allowlisted,
+        credential_configured=credential_configured,
+        model_configured=model_configured,
+    )
 
 
 @dataclass(frozen=True)
@@ -97,17 +177,7 @@ class ProviderUsageLedger:
 
 
 def enabled() -> bool:
-    endpoint = os.getenv("STEGVERSE_PROVIDER_ENDPOINT", "")
-    parsed = urlparse(endpoint)
-    hosts = _allowed_hosts()
-    return (
-        _bool("STEGVERSE_PROVIDER_ENABLED")
-        and parsed.scheme == "https"
-        and bool(parsed.hostname)
-        and (not hosts or parsed.hostname.lower() in hosts)
-        and bool(os.getenv("STEGVERSE_PROVIDER_TOKEN"))
-        and bool(os.getenv("STEGVERSE_PROVIDER_MODEL"))
-    )
+    return readiness().ready
 
 
 def _fallback(status: str, reason: str) -> ProviderResult:
@@ -128,8 +198,10 @@ def _fallback(status: str, reason: str) -> ProviderResult:
 
 
 def generate(*, message: str, transition_id: str, run_id: str) -> ProviderResult:
-    if not enabled():
-        return _fallback("DISABLED", "provider boundary is disabled or incomplete")
+    provider_readiness = readiness()
+    if not provider_readiness.ready:
+        reason = "provider boundary blocked: " + ",".join(provider_readiness.blockers)
+        return _fallback("DISABLED", reason)
 
     provider_name = os.getenv("STEGVERSE_PROVIDER_NAME", "governed-provider")
     model = os.environ["STEGVERSE_PROVIDER_MODEL"]
