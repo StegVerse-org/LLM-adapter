@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
+
+from llm_adapter.node_bootstrap import bootstrap
+from llm_adapter.node_service import _runtime_environment
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -91,6 +95,40 @@ def test_validate_workflow_retains_live_probe_without_secondary_workflow_depende
     ):
         assert required in source
     assert "secrets." not in source
+
+
+def test_portable_node_manifest_supports_authorized_binding_and_fails_closed(tmp_path: Path) -> None:
+    receipt = bootstrap(tmp_path)
+    manifest = json.loads(Path(receipt["capability_manifest"]).read_text(encoding="utf-8"))
+
+    assert manifest["version"] == "1.3.0"
+    assert manifest["entrypoint"][-4:] == ["--host", "${HOST}", "--port", "${PORT}"]
+    assert manifest["environment_defaults"]["HOST"] == "127.0.0.1"
+    assert manifest["environment_defaults"]["STEGVERSE_PROVIDER_ENABLED"] == "false"
+    assert manifest["environment_defaults"]["STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS"] == "true"
+    assert manifest["portability"]["authorized_host_binding_supported"] is True
+    assert receipt["manual_action_required"] is False
+
+
+def test_portable_node_runtime_preserves_authorized_environment(monkeypatch, tmp_path: Path) -> None:
+    receipt = bootstrap(tmp_path)
+    manifest = json.loads(Path(receipt["capability_manifest"]).read_text(encoding="utf-8"))
+
+    monkeypatch.setenv("HOST", "0.0.0.0")
+    monkeypatch.setenv("PORT", "9010")
+    monkeypatch.setenv("STEGVERSE_PROVIDER_ENABLED", "true")
+    monkeypatch.setenv("STEGVERSE_PROVIDER_ENDPOINT", "https://provider.example/v1/chat")
+    monkeypatch.setenv("STEGVERSE_MASTER_RECORDS_ENDPOINT", "https://records.example/v1")
+
+    env = _runtime_environment(tmp_path, manifest)
+
+    assert env["HOST"] == "0.0.0.0"
+    assert env["PORT"] == "9010"
+    assert env["STEGVERSE_PROVIDER_ENABLED"] == "true"
+    assert env["STEGVERSE_PROVIDER_ENDPOINT"] == "https://provider.example/v1/chat"
+    assert env["STEGVERSE_MASTER_RECORDS_ENDPOINT"] == "https://records.example/v1"
+    assert env["STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS"] == "true"
+    assert env["STEGVERSE_NODE_ROOT"] == str(tmp_path)
 
 
 def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing() -> None:
