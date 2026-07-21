@@ -87,6 +87,8 @@ jobs:
         run: python -m pytest tests/test_master_records_usage_submission.py -v
       - name: Test live activation automation contract
         run: python -m pytest tests/test_live_activation_automation_contract.py -v
+      - name: Test StegVerse node advertisement contract
+        run: python -m pytest tests/test_node_advertisement.py -v
       - name: Check immutable verified activation receipt publication
         run: python scripts/check_ecosystem_chat_verified_receipt_contract.py
       - name: Probe deployed Ecosystem Chat vertical slice
@@ -132,7 +134,7 @@ jobs:
                   raise SystemExit('verified activation receipt retention failed')
           PY
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "4189826+github-actions[bot]@users.noreply.github.com"
           git add \
             receipts/ecosystem-chat-live-activation.latest.json \
             reports/ecosystem-chat-live-activation-status.json
@@ -197,7 +199,7 @@ jobs:
         if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "4189826+github-actions[bot]@users.noreply.github.com"
           git add reports/ecosystem-chat-destination-activation-state.json
           if git diff --cached --quiet; then
             echo "Destination activation state unchanged."
