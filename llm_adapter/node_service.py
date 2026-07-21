@@ -41,6 +41,16 @@ def _pid_alive(pid: int) -> bool:
     return True
 
 
+def _runtime_environment(root: Path, manifest: dict[str, Any]) -> dict[str, str]:
+    """Apply fail-closed defaults without overriding authorized runtime configuration."""
+    env = os.environ.copy()
+    for key, value in manifest.get("environment_defaults", {}).items():
+        env.setdefault(str(key), str(value))
+    env["STEGVERSE_NODE_ROOT"] = str(root)
+    env.setdefault("STEGVERSE_DATA_DIR", str(root / "state"))
+    return env
+
+
 def start(root: Path) -> dict[str, Any]:
     bootstrap(root)
     current = _read_state(root)
@@ -94,10 +104,7 @@ def daemon(root: Path) -> int:
     bootstrap(root)
     manifest_path = root / "capabilities" / "ecosystem-chat-gateway.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    env = os.environ.copy()
-    env.update({str(k): str(v) for k, v in manifest.get("environment_defaults", {}).items()})
-    env["STEGVERSE_NODE_ROOT"] = str(root)
-    env["STEGVERSE_DATA_DIR"] = str(root / "state")
+    env = _runtime_environment(root, manifest)
 
     stopping = False
     child: subprocess.Popen[Any] | None = None
@@ -125,6 +132,10 @@ def daemon(root: Path) -> int:
             "node_root": str(root),
             "manual_action_required": False,
             "restart_policy": "reconstruct-on-failure",
+            "host": env.get("HOST"),
+            "port": env.get("PORT"),
+            "provider_enabled": env.get("STEGVERSE_PROVIDER_ENABLED", "false").lower() == "true",
+            "durable_storage": env.get("STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "false").lower() == "true",
         })
         while not stopping and child.poll() is None:
             time.sleep(1)
