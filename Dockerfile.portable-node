@@ -1,0 +1,30 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000 \
+    STEGVERSE_BIND_HOST=0.0.0.0 \
+    STEGVERSE_NODE_ROOT=/var/lib/stegverse/portable-node
+
+WORKDIR /app
+
+COPY pyproject.toml README.md ./
+COPY llm_adapter ./llm_adapter
+
+RUN python -m pip install --no-cache-dir --upgrade pip \
+    && python -m pip install --no-cache-dir '.[service]'
+
+RUN useradd --create-home --uid 10001 stegverse \
+    && mkdir -p /var/lib/stegverse/portable-node \
+    && chown -R stegverse:stegverse /var/lib/stegverse /app
+
+USER stegverse
+
+VOLUME ["/var/lib/stegverse/portable-node"]
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD python -c "import json, os, urllib.request; r=urllib.request.urlopen('http://127.0.0.1:%s/health' % os.environ.get('PORT','8000'), timeout=3); data=json.load(r); raise SystemExit(0 if r.status == 200 and data.get('status') == 'ok' else 1)"
+
+ENTRYPOINT ["python", "-m", "llm_adapter.node_service", "daemon"]
+CMD ["--root", "/var/lib/stegverse/portable-node"]
