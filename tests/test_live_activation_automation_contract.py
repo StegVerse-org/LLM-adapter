@@ -40,8 +40,15 @@ def test_live_activation_workflow_is_self_starting_scheduled_and_durable() -> No
         "schedule:",
         'cron: "*/15 * * * *"',
         "scripts/verify_live_ecosystem_chat_activation.py",
+        "scripts/verify_authorized_provider_activation.py",
+        "tests/test_authorized_provider_activation_verifier.py",
         "render-production.yaml",
         "Preserve first verified activation receipt",
+        "Evaluate authorized provider configuration",
+        "Start authorized provider and custody runtime",
+        "Execute authorized provider, usage, custody, and reconstruction path",
+        "Upload authorized provider activation evidence",
+        "Persist authorized provider activation evidence",
         "Verify deployed request, provider, custody, and reconstruction path",
         "Validate generated live observation",
         "Write stable activation blocker status",
@@ -51,6 +58,7 @@ def test_live_activation_workflow_is_self_starting_scheduled_and_durable() -> No
         "reports/ecosystem-chat-live-activation-status.json",
         "receipts/ecosystem-chat-live-activation.latest.json",
         "receipts/ecosystem-chat-live-activation.verified.json",
+        "receipts/ecosystem-chat-authorized-provider-activation.latest.json",
         "git add \\",
         'if [ "$state" != "VERIFIED" ]',
         "actions/upload-artifact@v4",
@@ -69,10 +77,23 @@ def test_live_activation_workflow_is_self_starting_scheduled_and_durable() -> No
         "Persist semantic status and monitor heartbeat",
         "ecosystem-chat-live-activation-monitor.json",
         "monitor_sha256",
+        "echo ${{ secrets.",
+        "print(os.getenv(\"PROVIDER_TOKEN\"",
+        "print(os.getenv(\"MASTER_RECORDS_TOKEN\"",
     ):
         assert prohibited not in source
 
-    assert "secrets." not in source
+    # The workflow may consume only the two server-side credentials required by the
+    # declared runtime path. Endpoint, model, host allowlists, and cost policies remain
+    # non-secret repository variables. Credential values are never written to receipts.
+    secret_references = {
+        token.split(" }}")[0] + " }}"
+        for token in source.split("${{ secrets.")[1:]
+    }
+    assert secret_references == {
+        "STEGVERSE_PROVIDER_TOKEN }}",
+        "STEGVERSE_MASTER_RECORDS_TOKEN }}",
+    }
     executable_source = "\n".join(
         line for line in source.splitlines() if not line.lstrip().startswith("#")
     )

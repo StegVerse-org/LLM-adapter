@@ -9,15 +9,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "stegdeploy-image.yml"
 RECEIPT = ROOT / "receipts" / "stegdeploy-image-publication.json"
-SUPPORTED_RECEIPT_SCHEMAS = {
-    "stegdeploy.image-publication.v1",
-    "stegdeploy.image-publication.v2",
-}
 
 REQUIRED_WORKFLOW_SNIPPETS = (
     "contents: write",
-    "repository_retained\": True",
-    "package_visibility_asserted\": False",
+    '"schema": "stegdeploy.image-publication.v2"',
+    '"stage_outcomes": outcomes',
+    '"blockers": blockers',
+    '"consumer_pull_verified": outcomes["verification_pull"] == "success"',
+    '"repository_retained": True',
+    '"package_visibility_asserted": False',
     "git add receipts/stegdeploy-image-publication.json",
     "chore: retain canonical StegDeploy image publication evidence [skip ci]",
     "git pull --rebase",
@@ -50,8 +50,14 @@ def validate_receipt(path: Path) -> int:
     missing = sorted(required - payload.keys())
     if missing:
         return fail(f"retained receipt missing fields: {', '.join(missing)}")
-    if payload["schema"] not in SUPPORTED_RECEIPT_SCHEMAS:
+    schema = payload["schema"]
+    if schema not in {"stegdeploy.image-publication.v1", "stegdeploy.image-publication.v2"}:
         return fail("unexpected receipt schema")
+    if schema == "stegdeploy.image-publication.v2":
+        v2_required = {"state", "stage_outcomes", "blockers", "consumer_pull_verified", "verification_pull_output"}
+        v2_missing = sorted(v2_required - payload.keys())
+        if v2_missing:
+            return fail(f"v2 retained receipt missing fields: {', '.join(v2_missing)}")
     if payload["repository_retained"] is not True:
         return fail("receipt does not assert repository retention")
     if payload["package_visibility_asserted"] is not False:

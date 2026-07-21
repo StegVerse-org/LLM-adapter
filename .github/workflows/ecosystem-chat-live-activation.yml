@@ -6,8 +6,10 @@ on:
     paths:
       - '.github/workflows/ecosystem-chat-live-activation.yml'
       - 'scripts/verify_live_ecosystem_chat_activation.py'
+      - 'scripts/verify_authorized_provider_activation.py'
       - 'scripts/write_live_activation_status.py'
       - 'tests/test_live_activation_automation_contract.py'
+      - 'tests/test_authorized_provider_activation_verifier.py'
       - 'render-production.yaml'
   workflow_run:
     workflows:
@@ -29,12 +31,17 @@ jobs:
   verify-live-activation:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - name: Check out adapter
         uses: actions/checkout@v4
         with:
           persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Preserve first verified activation receipt
         id: preserved
@@ -52,6 +59,132 @@ jobs:
                   verified = False
           print(f"verified={'true' if verified else 'false'}")
           PY
+
+      - name: Evaluate authorized provider configuration
+        id: provider_config
+        env:
+          PROVIDER_ENDPOINT: ${{ vars.STEGVERSE_PROVIDER_ENDPOINT }}
+          PROVIDER_TOKEN: ${{ secrets.STEGVERSE_PROVIDER_TOKEN }}
+          PROVIDER_MODEL: ${{ vars.STEGVERSE_PROVIDER_MODEL }}
+          MASTER_RECORDS_ENDPOINT: ${{ vars.STEGVERSE_MASTER_RECORDS_ENDPOINT }}
+          MASTER_RECORDS_TOKEN: ${{ secrets.STEGVERSE_MASTER_RECORDS_TOKEN }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          required = {
+              "STEGVERSE_PROVIDER_ENDPOINT": os.getenv("PROVIDER_ENDPOINT", ""),
+              "STEGVERSE_PROVIDER_TOKEN": os.getenv("PROVIDER_TOKEN", ""),
+              "STEGVERSE_PROVIDER_MODEL": os.getenv("PROVIDER_MODEL", ""),
+              "STEGVERSE_MASTER_RECORDS_ENDPOINT": os.getenv("MASTER_RECORDS_ENDPOINT", ""),
+              "STEGVERSE_MASTER_RECORDS_TOKEN": os.getenv("MASTER_RECORDS_TOKEN", ""),
+          }
+          missing = sorted(name for name, value in required.items() if not value.strip())
+          ready = not missing
+          payload = {
+              "schema": "stegverse.ecosystem_chat.authorized_provider_activation.v1",
+              "state": "READY_FOR_EXECUTION" if ready else "CONFIGURATION_REQUIRED",
+              "observed_at": datetime.now(timezone.utc).isoformat(),
+              "runtime_path": [
+                  "governed_provider_response",
+                  "provider_usage_persistence",
+                  "provider_usage_custody",
+                  "transition_custody",
+                  "transition_reconstruction",
+              ],
+              "blockers": [f"authorized_configuration_missing:{name}" for name in missing],
+              "configuration": {
+                  "provider_endpoint_configured": bool(required["STEGVERSE_PROVIDER_ENDPOINT"]),
+                  "provider_token_configured": bool(required["STEGVERSE_PROVIDER_TOKEN"]),
+                  "provider_model_configured": bool(required["STEGVERSE_PROVIDER_MODEL"]),
+                  "master_records_endpoint_configured": bool(required["STEGVERSE_MASTER_RECORDS_ENDPOINT"]),
+                  "master_records_token_configured": bool(required["STEGVERSE_MASTER_RECORDS_TOKEN"]),
+              },
+              "provider_output_is_authority": False,
+              "custody_grants_execution_authority": False,
+              "reconstruction_grants_publication_authority": False,
+              "repository_mutation_authorized": False,
+              "publication_authorized": False,
+              "manual_user_action_required": False,
+          }
+          material = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+          payload["result_sha256"] = hashlib.sha256(material).hexdigest()
+          path = Path("receipts/ecosystem-chat-authorized-provider-activation.latest.json")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as handle:
+              handle.write(f"ready={'true' if ready else 'false'}\n")
+          print(f"authorized provider configuration ready: {ready}")
+          print(f"missing configuration fields: {len(missing)}")
+          PY
+
+      - name: Install canonical service dependencies
+        if: steps.provider_config.outputs.ready == 'true'
+        run: python -m pip install -e '.[service]'
+
+      - name: Start authorized provider and custody runtime
+        if: steps.provider_config.outputs.ready == 'true'
+        env:
+          STEGVERSE_PROVIDER_ENABLED: "true"
+          STEGVERSE_PROVIDER_ENDPOINT: ${{ vars.STEGVERSE_PROVIDER_ENDPOINT }}
+          STEGVERSE_PROVIDER_TOKEN: ${{ secrets.STEGVERSE_PROVIDER_TOKEN }}
+          STEGVERSE_PROVIDER_MODEL: ${{ vars.STEGVERSE_PROVIDER_MODEL }}
+          STEGVERSE_PROVIDER_NAME: ${{ vars.STEGVERSE_PROVIDER_NAME }}
+          STEGVERSE_PROVIDER_ALLOWED_HOSTS: ${{ vars.STEGVERSE_PROVIDER_ALLOWED_HOSTS }}
+          STEGVERSE_PROVIDER_DAILY_REQUEST_LIMIT: ${{ vars.STEGVERSE_PROVIDER_DAILY_REQUEST_LIMIT || '20' }}
+          STEGVERSE_PROVIDER_DAILY_COST_LIMIT_USD: ${{ vars.STEGVERSE_PROVIDER_DAILY_COST_LIMIT_USD || '2.00' }}
+          STEGVERSE_PROVIDER_MAX_REQUEST_COST_USD: ${{ vars.STEGVERSE_PROVIDER_MAX_REQUEST_COST_USD || '0.10' }}
+          STEGVERSE_MASTER_RECORDS_ENDPOINT: ${{ vars.STEGVERSE_MASTER_RECORDS_ENDPOINT }}
+          STEGVERSE_MASTER_RECORDS_TOKEN: ${{ secrets.STEGVERSE_MASTER_RECORDS_TOKEN }}
+          STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS: ${{ vars.STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS }}
+          STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: "true"
+          STEGVERSE_EXTERNAL_MUTATION_ENABLED: "false"
+          STEGVERSE_TRANSITION_DB: ${{ runner.temp }}/authorized-provider-transition.db
+          STEGVERSE_USAGE_SESSION_DB: ${{ runner.temp }}/authorized-provider-usage.db
+          STEGVERSE_EXTERNAL_REVIEW_DB: ${{ runner.temp }}/authorized-provider-review.db
+        run: |
+          python -m uvicorn llm_adapter.combined_gateway:app --host 127.0.0.1 --port 8110 > authorized-provider-runtime.log 2>&1 &
+          echo $! > authorized-provider-runtime.pid
+
+      - name: Execute authorized provider, usage, custody, and reconstruction path
+        if: steps.provider_config.outputs.ready == 'true'
+        run: python scripts/verify_authorized_provider_activation.py
+
+      - name: Stop authorized provider runtime
+        if: always()
+        run: |
+          if [ -f authorized-provider-runtime.pid ]; then
+            kill "$(cat authorized-provider-runtime.pid)" 2>/dev/null || true
+          fi
+
+      - name: Upload authorized provider activation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecosystem-chat-authorized-provider-activation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            receipts/ecosystem-chat-authorized-provider-activation.latest.json
+            authorized-provider-runtime.log
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Persist authorized provider activation evidence
+        if: always() && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add receipts/ecosystem-chat-authorized-provider-activation.latest.json
+          if git diff --cached --quiet; then
+            echo "Authorized provider activation evidence unchanged."
+          else
+            git commit -m "chore: retain authorized provider activation evidence [skip ci]"
+            git pull --rebase
+            git push
+          fi
 
       - name: Verify deployed request, provider, custody, and reconstruction path
         if: steps.preserved.outputs.verified != 'true'
@@ -156,14 +289,24 @@ jobs:
         if: always()
         run: |
           echo "## Ecosystem Chat Live Activation" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f receipts/ecosystem-chat-authorized-provider-activation.latest.json ]; then
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          value = json.loads(Path('receipts/ecosystem-chat-authorized-provider-activation.latest.json').read_text())
+          print(f"Authorized provider state: {value.get('state')}")
+          print(f"Authorized provider blockers: {', '.join(value.get('blockers', [])) or 'none'}")
+          print(f"Authorized provider result SHA-256: {value.get('result_sha256')}")
+          PY
+          fi
           if [ -f reports/ecosystem-chat-live-activation-status.json ]; then
             python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           from pathlib import Path
           status = json.loads(Path('reports/ecosystem-chat-live-activation-status.json').read_text())
-          print(f"State: {status.get('state')}")
-          print(f"Blockers: {', '.join(status.get('blockers', [])) or 'none'}")
-          print(f"Status SHA-256: {status.get('status_sha256')}")
+          print(f"Deployed state: {status.get('state')}")
+          print(f"Deployed blockers: {', '.join(status.get('blockers', [])) or 'none'}")
+          print(f"Deployed status SHA-256: {status.get('status_sha256')}")
           print("Authority granted: false")
           PY
           fi
