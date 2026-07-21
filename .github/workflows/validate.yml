@@ -134,7 +134,7 @@ jobs:
                   raise SystemExit('verified activation receipt retention failed')
           PY
           git config user.name "github-actions[bot]"
-          git config user.email "4189826+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add \
             receipts/ecosystem-chat-live-activation.latest.json \
             reports/ecosystem-chat-live-activation-status.json
@@ -199,7 +199,7 @@ jobs:
         if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "4189826+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add reports/ecosystem-chat-destination-activation-state.json
           if git diff --cached --quiet; then
             echo "Destination activation state unchanged."
