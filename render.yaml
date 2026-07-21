@@ -1,28 +1,59 @@
 services:
+  - type: pserv
+    name: stegverse-master-records-custody
+    repo: https://github.com/master-records/orchestration
+    branch: main
+    runtime: python
+    plan: starter
+    autoDeployTrigger: checksPass
+    buildCommand: pip install --upgrade pip && pip install -r requirements-service.txt
+    startCommand: uvicorn services.master_records_custody_api:app --host 0.0.0.0 --port $PORT
+    disk:
+      name: master-records-custody-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: MASTER_RECORDS_DB
+        value: /var/data/master-records-custody.db
+      - key: MASTER_RECORDS_STORAGE_DURABLE_ACROSS_RESTARTS
+        value: "true"
+      - key: MASTER_RECORDS_AUTH_TOKEN
+        generateValue: true
+      - key: MASTER_RECORDS_RECEIPT_KEY
+        generateValue: true
+
   - type: web
     name: stegverse-ecosystem-chat-gateway
     runtime: python
-    plan: free
-    autoDeploy: true
-    renderSubdomainPolicy: enabled
+    plan: starter
+    autoDeployTrigger: checksPass
     buildCommand: pip install --upgrade pip && pip install -e '.[service]'
     startCommand: python -m llm_adapter.custody_worker && uvicorn llm_adapter.combined_gateway:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
+    renderSubdomainPolicy: enabled
+    disk:
+      name: stegverse-chat-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.4
       - key: STEGVERSE_ALLOWED_ORIGINS
-        value: https://stegverse-labs.github.io
+        value: https://stegverse.org,https://www.stegverse.org,https://stegverse-labs.github.io
       - key: STEGVERSE_CHAT_RATE_LIMIT
         value: 20
       - key: STEGVERSE_CHAT_RATE_WINDOW_SECONDS
         value: 3600
       - key: STEGVERSE_TRANSITION_DB
-        value: /tmp/stegverse-ecosystem-chat.db
+        value: /var/data/stegverse-ecosystem-chat.db
+      - key: STEGVERSE_USAGE_SESSION_DB
+        value: /var/data/stegverse-usage-sessions.db
       - key: STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS
-        value: "false"
+        value: "true"
       - key: STEGVERSE_EXTERNAL_REVIEW_DB
-        value: /tmp/stegverse-external-review.db
+        value: /var/data/stegverse-external-review.db
       - key: STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN
         generateValue: true
       - key: STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY
@@ -33,30 +64,40 @@ services:
         value: "{}"
       - key: STEGVERSE_EXTERNAL_MUTATION_ENABLED
         value: "false"
-      - key: STEGVERSE_MASTER_RECORDS_ENDPOINT
-        value: http://127.0.0.1:9
+      - key: STEGVERSE_EXTERNAL_MUTATORS_JSON
+        value: "{}"
+      - key: STEGVERSE_MASTER_RECORDS_HOSTPORT
+        fromService:
+          type: pserv
+          name: stegverse-master-records-custody
+          property: hostport
       - key: STEGVERSE_MASTER_RECORDS_TOKEN
-        generateValue: true
-      - key: STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS
-        value: 127.0.0.1
+        fromService:
+          type: pserv
+          name: stegverse-master-records-custody
+          envVarKey: MASTER_RECORDS_AUTH_TOKEN
+      - key: STEGVERSE_ALLOW_PRIVATE_MASTER_RECORDS_HTTP
+        value: "true"
+      - key: STEGVERSE_MASTER_RECORDS_TIMEOUT_SECONDS
+        value: "10"
       - key: STEGVERSE_PROVIDER_ENABLED
-        value: "false"
+        value: "true"
       - key: STEGVERSE_PROVIDER_ENDPOINT
-        value: https://provider.invalid
+        sync: false
       - key: STEGVERSE_PROVIDER_ALLOWED_HOSTS
-        value: provider.invalid
+        sync: false
       - key: STEGVERSE_PROVIDER_TOKEN
-        generateValue: true
+        sync: false
       - key: STEGVERSE_PROVIDER_NAME
-        value: disabled
+        sync: false
       - key: STEGVERSE_PROVIDER_MODEL
-        value: disabled
+        sync: false
       - key: STEGVERSE_PROVIDER_DAILY_REQUEST_LIMIT
-        value: 25
+        value: 100
       - key: STEGVERSE_PROVIDER_DAILY_COST_LIMIT_USD
-        value: "1.00"
+        value: "5.00"
       - key: STEGVERSE_PROVIDER_MAX_REQUEST_COST_USD
-        value: "0.10"
+        value: "0.25"
       - key: STEGVERSE_PROVIDER_MAX_INPUT_CHARS
         value: 12000
       - key: STEGVERSE_PROVIDER_MAX_OUTPUT_CHARS
