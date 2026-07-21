@@ -44,6 +44,7 @@ service = [
 stegverse-llm-adapter = "llm_adapter.cli:main"
 stegnode-bootstrap = "llm_adapter.node_bootstrap:main"
 stegnode = "llm_adapter.node_service:main"
+stegnode-autostart = "llm_adapter.node_autostart:main"
 
 [project.urls]
 Homepage = "https://github.com/StegVerse-org/LLM-adapter"
