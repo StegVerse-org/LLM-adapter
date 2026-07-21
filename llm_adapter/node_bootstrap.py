@@ -41,12 +41,12 @@ def bootstrap(root: Path | None = None) -> dict[str, Any]:
     capability = {
         "schema": "stegverse.capability.v1",
         "capability_id": "ecosystem-chat-gateway",
-        "version": "1.2.0",
+        "version": "1.3.0",
         "lifecycle": "reconstruct-on-demand",
         "authority_effect": "RUNTIME_ONLY",
         "entrypoint": [
             "python", "-m", "uvicorn", "llm_adapter.combined_gateway:app",
-            "--host", "127.0.0.1", "--port", "${PORT}"
+            "--host", "${HOST}", "--port", "${PORT}"
         ],
         "health": {"path": "/health", "timeout_seconds": 3, "attempts": 30},
         "state": {
@@ -54,6 +54,7 @@ def bootstrap(root: Path | None = None) -> dict[str, Any]:
             "required_paths": ["stegverse-ecosystem-chat.db", "stegverse-external-review.db"]
         },
         "environment_defaults": {
+            "HOST": "127.0.0.1",
             "PORT": "8000",
             "STEGVERSE_DATA_DIR": str(state_dir),
             "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS": "true",
@@ -71,7 +72,8 @@ def bootstrap(root: Path | None = None) -> dict[str, Any]:
         "portability": {
             "platform_specific_paths_forbidden": True,
             "manual_backend_selection_required": False,
-            "durable_state_external_to_executor": True
+            "durable_state_external_to_executor": True,
+            "authorized_host_binding_supported": True
         },
         "node": {"auto_start": True}
     }
