@@ -75,6 +75,24 @@ def test_live_activation_workflow_is_self_starting_scheduled_and_durable() -> No
     assert "heartbeat" not in executable_source.lower()
 
 
+def test_validate_workflow_retains_live_probe_without_secondary_workflow_dependency() -> None:
+    source = (ROOT / ".github/workflows/validate.yml").read_text()
+    for required in (
+        "Probe deployed Ecosystem Chat vertical slice",
+        "Write stable activation status from validation probe",
+        "Retain and persist current activation evidence",
+        "scripts/write_live_activation_status.py",
+        "receipts/ecosystem-chat-live-activation.latest.json",
+        "reports/ecosystem-chat-live-activation-status.json",
+        "receipts/ecosystem-chat-live-activation.verified.json",
+        "github.ref == 'refs/heads/main'",
+        "github.event_name != 'pull_request'",
+        "[skip ci]",
+    ):
+        assert required in source
+    assert "secrets." not in source
+
+
 def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing() -> None:
     source = (ROOT / "scripts/write_live_activation_status.py").read_text()
     for required in (
