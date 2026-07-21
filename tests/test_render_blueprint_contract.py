@@ -4,8 +4,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_consumed_render_blueprint_uses_durable_production_contract() -> None:
-    blueprint = (ROOT / "render.yaml").read_text(encoding="utf-8")
+def test_production_render_blueprint_uses_durable_contract() -> None:
+    blueprint = (ROOT / "render-production.yaml").read_text(encoding="utf-8")
 
     required_fragments = (
         "name: stegverse-master-records-custody",
@@ -30,8 +30,8 @@ def test_consumed_render_blueprint_uses_durable_production_contract() -> None:
         assert fragment in blueprint, f"missing production Render contract fragment: {fragment}"
 
 
-def test_consumed_render_blueprint_contains_no_embedded_provider_secret() -> None:
-    blueprint = (ROOT / "render.yaml").read_text(encoding="utf-8")
+def test_production_render_blueprint_contains_no_embedded_provider_secret() -> None:
+    blueprint = (ROOT / "render-production.yaml").read_text(encoding="utf-8")
 
     provider_token_block = blueprint.split("- key: STEGVERSE_PROVIDER_TOKEN", 1)[1].split("- key:", 1)[0]
     assert "sync: false" in provider_token_block
@@ -39,9 +39,9 @@ def test_consumed_render_blueprint_contains_no_embedded_provider_secret() -> Non
     assert "generateValue:" not in provider_token_block
 
 
-def test_consumed_render_blueprint_does_not_use_ephemeral_database_paths() -> None:
+def test_default_render_blueprint_remains_fail_closed_until_approved() -> None:
     blueprint = (ROOT / "render.yaml").read_text(encoding="utf-8")
 
-    assert "/tmp/stegverse-ecosystem-chat.db" not in blueprint
-    assert "/tmp/stegverse-external-review.db" not in blueprint
-    assert 'STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS\n        value: "false"' not in blueprint
+    assert 'STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS\n        value: "false"' in blueprint
+    assert 'STEGVERSE_PROVIDER_ENABLED\n        value: "false"' in blueprint
+    assert "http://127.0.0.1:9" in blueprint
