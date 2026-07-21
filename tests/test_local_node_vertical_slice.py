@@ -56,7 +56,7 @@ def test_local_node_identity_health_and_governed_request_slice(monkeypatch) -> N
         json={
             "message": "Verify the local portable-node request path.",
             "session_id": "site-local-slice-session",
-            "requested_route": "chat_answer",
+            "requested_route": "Site",
             "transition_intent": "bounded_information_request",
             "transition_destination": "ecosystem_chat",
             "goal": "governed Ecosystem Chat request response provider usage custody and reconstruction",
@@ -65,14 +65,14 @@ def test_local_node_identity_health_and_governed_request_slice(monkeypatch) -> N
             "authority_required": True,
             "rate_limit_required": True,
             "receipt_required_for_execution": True,
-            "interaction_profile": "default",
+            "interaction_profile": {},
             "interaction_bands": [],
             "math_solver_supported": True,
             "transition_identity": transition,
         },
     )
 
-    assert request_response.status_code == 200
+    assert request_response.status_code == 200, request_response.text
     result = request_response.json()
     assert result["transition_id"] == transition["transition_id"]
     assert result["run_id"] == transition["run_id"]
