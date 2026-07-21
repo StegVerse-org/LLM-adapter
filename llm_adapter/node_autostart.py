@@ -21,6 +21,13 @@ def _command(root: Path) -> list[str]:
     return [sys.executable, "-m", "llm_adapter.node_service", "daemon", "--root", str(root)]
 
 
+def _user_id(values: dict[str, str]) -> int:
+    getter = getattr(os, "getuid", None)
+    if callable(getter):
+        return int(getter())
+    return int(values.get("UID", "0"))
+
+
 def materialize(root: Path, system: str | None = None, env: dict[str, str] | None = None) -> dict[str, Any]:
     bootstrap(root)
     name = (system or platform.system()).lower()
@@ -48,7 +55,8 @@ def materialize(root: Path, system: str | None = None, env: dict[str, str] | Non
             "StandardErrorPath": str(root / "state" / "node-service.stderr.log"),
         }
         content = plistlib.dumps(payload).decode("utf-8")
-        activate = [["launchctl", "bootout", f"gui/{os.getuid()}", str(path)], ["launchctl", "bootstrap", f"gui/{os.getuid()}", str(path)]]
+        domain = f"gui/{_user_id(values)}"
+        activate = [["launchctl", "bootout", domain, str(path)], ["launchctl", "bootstrap", domain, str(path)]]
         kind = "launch-agent"
     elif name == "windows":
         appdata = Path(values.get("APPDATA", Path.home() / "AppData" / "Roaming"))
