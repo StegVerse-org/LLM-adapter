@@ -33,6 +33,8 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
+        id: registry_login
+        continue-on-error: true
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -47,9 +49,13 @@ jobs:
           tags: |
             type=raw,value=main
             type=sha,prefix=sha-
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
       - name: Build and publish immutable image
         id: build
+        if: steps.registry_login.outcome == 'success'
+        continue-on-error: true
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -63,55 +69,131 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Attest published image
+        id: attest
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
 
-      - name: Write publication receipt
+      - name: Verify published main image pull
+        id: verify_pull
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p receipts
+          docker image rm "${REGISTRY}/${IMAGE_NAME}:main" 2>/dev/null || true
+          set -o pipefail
+          docker pull "${REGISTRY}/${IMAGE_NAME}:main" 2>&1 | tee receipts/stegdeploy-image-verification-pull.log
+
+      - name: Write publication or blocker receipt
+        if: always()
         env:
+          REGISTRY_LOGIN_OUTCOME: ${{ steps.registry_login.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          ATTEST_OUTCOME: ${{ steps.attest.outcome }}
+          VERIFY_PULL_OUTCOME: ${{ steps.verify_pull.outcome }}
           IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           mkdir -p receipts
           python - <<'PY'
-          import hashlib, json, os
+          import hashlib
+          import json
+          import os
           from pathlib import Path
+
+          outcomes = {
+              "registry_login": os.environ.get("REGISTRY_LOGIN_OUTCOME", "skipped"),
+              "build_publish": os.environ.get("BUILD_OUTCOME", "skipped"),
+              "attestation": os.environ.get("ATTEST_OUTCOME", "skipped"),
+              "verification_pull": os.environ.get("VERIFY_PULL_OUTCOME", "skipped"),
+          }
+          blockers = []
+          if outcomes["registry_login"] != "success":
+              blockers.append("registry_authentication_failed")
+          if outcomes["build_publish"] != "success":
+              blockers.append("image_build_or_publish_failed")
+          if outcomes["build_publish"] == "success" and outcomes["attestation"] != "success":
+              blockers.append("image_attestation_failed")
+          if outcomes["build_publish"] == "success" and outcomes["verification_pull"] != "success":
+              blockers.append("published_image_pull_failed")
+
+          pull_log = Path("receipts/stegdeploy-image-verification-pull.log")
+          pull_output = (
+              pull_log.read_text(encoding="utf-8", errors="replace")[-4000:]
+              if pull_log.exists()
+              else None
+          )
+          digest = os.environ.get("IMAGE_DIGEST") or None
+          published = not blockers and bool(digest)
+          if not digest and "image_build_or_publish_failed" not in blockers:
+              blockers.append("published_image_digest_missing")
+              published = False
+
           body = {
-              "schema": "stegdeploy.image-publication.v1",
+              "schema": "stegdeploy.image-publication.v2",
+              "state": "PUBLISHED" if published else "BLOCKED",
               "repository": os.environ["GITHUB_REPOSITORY"],
               "source_commit": os.environ["GITHUB_SHA"],
               "image": f"ghcr.io/{os.environ['GITHUB_REPOSITORY'].lower()}",
-              "digest": os.environ["IMAGE_DIGEST"],
+              "tag": "main",
+              "digest": digest,
               "published_by_workflow": os.environ["GITHUB_WORKFLOW"],
               "publication_run_id": os.environ["GITHUB_RUN_ID"],
               "publication_run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "stage_outcomes": outcomes,
+              "blockers": blockers,
+              "verification_pull_output": pull_output,
               "repository_retained": True,
+              "consumer_pull_verified": outcomes["verification_pull"] == "success",
               "package_visibility_asserted": False,
               "manual_credentials_required": False,
               "authority_effect": "IMAGE_PUBLICATION_ONLY",
           }
           canonical = json.dumps(body, sort_keys=True, separators=(",", ":")).encode()
           body["receipt_sha256"] = hashlib.sha256(canonical).hexdigest()
-          Path("receipts/stegdeploy-image-publication.json").write_text(json.dumps(body, indent=2, sort_keys=True) + "\n")
+          Path("receipts/stegdeploy-image-publication.json").write_text(
+              json.dumps(body, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(body, indent=2, sort_keys=True))
           PY
 
-      - name: Retain publication receipt on main
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+      - name: Retain publication evidence on main
+        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add receipts/stegdeploy-image-publication.json
+          git add receipts/stegdeploy-image-publication.json receipts/stegdeploy-image-verification-pull.log
           if git diff --cached --quiet; then
-            echo "Canonical image publication receipt unchanged."
+            echo "Canonical image publication evidence unchanged."
           else
-            git commit -m "chore: retain canonical StegDeploy image publication receipt [skip ci]"
+            git commit -m "chore: retain canonical StegDeploy image publication evidence [skip ci]"
             git pull --rebase
             git push
           fi
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload publication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: stegdeploy-image-publication-${{ github.run_id }}
-          path: receipts/stegdeploy-image-publication.json
+          path: |
+            receipts/stegdeploy-image-publication.json
+            receipts/stegdeploy-image-verification-pull.log
+          if-no-files-found: ignore
           retention-days: 90
+
+      - name: Enforce successful publication after retaining evidence
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          receipt = json.loads(Path("receipts/stegdeploy-image-publication.json").read_text())
+          if receipt["state"] != "PUBLISHED":
+              raise SystemExit("StegDeploy image publication blocked: " + ",".join(receipt.get("blockers", [])))
+          PY
