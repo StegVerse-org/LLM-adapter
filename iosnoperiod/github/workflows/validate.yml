@@ -87,6 +87,8 @@ jobs:
         run: python -m pytest tests/test_master_records_usage_submission.py -v
       - name: Test live activation automation contract
         run: python -m pytest tests/test_live_activation_automation_contract.py -v
+      - name: Test StegVerse node advertisement contract
+        run: python -m pytest tests/test_node_advertisement.py -v
       - name: Check immutable verified activation receipt publication
         run: python scripts/check_ecosystem_chat_verified_receipt_contract.py
       - name: Probe deployed Ecosystem Chat vertical slice
