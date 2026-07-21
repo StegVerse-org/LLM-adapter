@@ -39,7 +39,7 @@ def materialize(root: Path, system: str | None = None, env: dict[str, str] | Non
         content = "\n".join([
             "[Unit]", "Description=StegVerse Portable Node", "After=network-online.target", "",
             "[Service]", "Type=simple",
-            "ExecStart=" + " ".join(f'\"{part}\"' for part in command),
+            "ExecStart=" + " ".join(f'"{part}"' for part in command),
             "Restart=always", "RestartSec=2", f'Environment=STEGVERSE_NODE_ROOT={root}', "",
             "[Install]", "WantedBy=default.target", "",
         ])
@@ -90,7 +90,7 @@ def install(root: Path, runner: Runner = subprocess.run, system: str | None = No
     if not receipt["active"]:
         fallback = start(root)
         receipt["fallback_detached_start"] = fallback
-        receipt["active"] = fallback.get("state") == "RUNNING"
+        receipt["active"] = fallback.get("state") in {"STARTING", "RUNNING", "RECONSTRUCTING"}
     receipt["manual_action_required"] = False
     path = root / "receipts" / "autostart.latest.json"
     path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
