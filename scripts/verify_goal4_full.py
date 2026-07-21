@@ -15,7 +15,7 @@ COMMANDS: tuple[tuple[str, ...], ...] = (
         sys.executable,
         "-m",
         "pytest",
-        "tests/test_local_node_request_vertical_slice.py",
+        "tests/test_local_node_vertical_slice.py",
         "-v",
     ),
     (sys.executable, "scripts/check_workflow_parity.py"),
