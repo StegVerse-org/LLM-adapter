@@ -131,6 +131,42 @@ def test_portable_node_runtime_preserves_authorized_environment(monkeypatch, tmp
     assert env["STEGVERSE_NODE_ROOT"] == str(tmp_path)
 
 
+def test_portable_node_image_is_repository_owned_multi_arch_and_fail_closed() -> None:
+    dockerfile = (ROOT / "Dockerfile.portable-node").read_text()
+    workflow = (ROOT / ".github/workflows/publish-portable-node-image.yml").read_text()
+
+    for required in (
+        "FROM python:3.12-slim",
+        "STEGVERSE_BIND_HOST=0.0.0.0",
+        "STEGVERSE_NODE_ROOT=/var/lib/stegverse/portable-node",
+        "USER stegverse",
+        'VOLUME ["/var/lib/stegverse/portable-node"]',
+        'ENTRYPOINT ["python", "-m", "llm_adapter.node_service", "daemon"]',
+        "HEALTHCHECK",
+    ):
+        assert required in dockerfile
+
+    for prohibited in (
+        "STEGVERSE_PROVIDER_TOKEN=",
+        "STEGVERSE_MASTER_RECORDS_TOKEN=",
+        "STEGVERSE_PROVIDER_ENABLED=true",
+    ):
+        assert prohibited not in dockerfile
+
+    for required in (
+        "packages: write",
+        "ghcr.io/${{ github.repository_owner }}/stegverse-ecosystem-chat-node",
+        "Dockerfile.portable-node",
+        "linux/amd64,linux/arm64",
+        "provenance: mode=max",
+        "sbom: true",
+        "docker/build-push-action@v6",
+    ):
+        assert required in workflow
+
+    assert "secrets." not in workflow
+
+
 def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing() -> None:
     source = (ROOT / "scripts/write_live_activation_status.py").read_text()
     for required in (
