@@ -1,15 +1,15 @@
 {
   "authority_effect": "IMAGE_PUBLICATION_ONLY",
-  "digest": "sha256:f875dda868e87fec8938eacbca7c4aa8cb46756ccfd8dca2cdb0527b804ce4e1",
+  "digest": "sha256:71a77c2b10762fa070f01ad2f2314b9f7989f62821e972f75f2a0991b237936e",
   "image": "ghcr.io/stegverse-org/llm-adapter",
   "manual_credentials_required": false,
   "package_visibility_asserted": false,
   "publication_run_attempt": "1",
-  "publication_run_id": "29855120607",
+  "publication_run_id": "29859044640",
   "published_by_workflow": "StegDeploy image",
-  "receipt_sha256": "2d8bb016817490268f30769bf37dc92b2d047bc84a8a832e4a356ef20e08db7b",
+  "receipt_sha256": "35becdaa5d8280ed26f0ca84520a84c35212bc241e385cae7206a0936f505059",
   "repository": "StegVerse-org/LLM-adapter",
   "repository_retained": true,
   "schema": "stegdeploy.image-publication.v1",
-  "source_commit": "6a1bd64a93a0ac4c83debe68d17be5b37de8daff"
+  "source_commit": "e1628dcd5635b1e3f0d7f7fabed3ba616b4951f5"
 }
