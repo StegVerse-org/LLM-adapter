@@ -9,26 +9,34 @@ from llm_adapter.combined_gateway import app
 def _advertisement_digest(payload: dict) -> str:
     material = dict(payload)
     material.pop("advertisement_sha256", None)
-    return hashlib.sha256(json.dumps(material, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return hashlib.sha256(
+        json.dumps(material, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
 
 
 def test_local_node_vertical_slice(monkeypatch) -> None:
     monkeypatch.setenv("STEGVERSE_NODE_ID", "vertical-slice-node")
     monkeypatch.setenv("STEGVERSE_PROVIDER_ENABLED", "false")
-    monkeypatch.setenv("STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "true")
     client = TestClient(app, base_url="http://127.0.0.1:8000")
 
-    advertisement = client.get("/api/stegverse-node").json()
+    advertisement_response = client.get("/api/stegverse-node")
+    assert advertisement_response.status_code == 200
+    advertisement = advertisement_response.json()
     assert advertisement["schema"] == "stegverse.node.endpoint-advertisement.v1"
     assert advertisement["node_id"] == "vertical-slice-node"
     assert advertisement["advertisement_sha256"] == _advertisement_digest(advertisement)
     assert advertisement["health_bound"] is True
     assert advertisement["authority_granted"] is False
+    assert advertisement["execution_authority"] is False
+    assert advertisement["publication_authority"] is False
 
-    health = client.get("/health").json()
+    health_response = client.get("/health")
+    assert health_response.status_code == 200
+    health = health_response.json()
     assert health["status"] == "ok"
     assert health["governed_provider_enabled"] is False
-    assert health["storage_durable_across_restarts"] is True
+    assert health["local_persistence_is_master_records_custody"] is False
+    assert health["provider_output_is_authority"] is False
 
     transition = {
         "transition_id": "site-transition-local-slice",
@@ -65,4 +73,5 @@ def test_local_node_vertical_slice(monkeypatch) -> None:
     assert result["run_id"] == transition["run_id"]
     assert result["provider"]["used"] is False
     assert result["authority"]["provider_usage_grants_authority"] is False
+    assert result["authority"]["provider_usage_is_master_records_custody"] is False
     assert result["master_records_usage_submission"] is None
