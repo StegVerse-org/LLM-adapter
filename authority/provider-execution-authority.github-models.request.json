@@ -1,0 +1,27 @@
+{
+  "schema": "stegverse.provider_execution_authority_request.github_models.v1",
+  "state": "REQUESTED_NOT_APPROVED",
+  "provider": "github-models",
+  "protocol": "openai-chat-completions-v1",
+  "endpoint": "https://models.github.ai/inference/chat/completions",
+  "allowed_host": "models.github.ai",
+  "scope": "ecosystem-chat-single-governed-execution",
+  "required_decisions": [
+    "approved_by",
+    "model",
+    "issued_at",
+    "expires_at"
+  ],
+  "permission_required": "models: read",
+  "credential_source": "ephemeral GitHub Actions GITHUB_TOKEN",
+  "single_execution": true,
+  "provider_output_is_authority": false,
+  "external_mutation_authorized": false,
+  "publication_authorized": false,
+  "deployment_authorized": false,
+  "release_authorized": false,
+  "cost_expansion_authorized": false,
+  "request_is_execution_authority": false,
+  "manual_secret_entry_required": false,
+  "approval_destination": "receipts/provider-execution-authority.github-models.v1.json"
+}
