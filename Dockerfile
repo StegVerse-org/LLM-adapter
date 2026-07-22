@@ -10,13 +10,13 @@ WORKDIR /app
 
 RUN addgroup --system stegverse \
     && adduser --system --ingroup stegverse stegverse \
-    && mkdir -p /var/lib/stegverse \
+    && mkdir -p /var/lib/stegverse/extensions \
     && chown -R stegverse:stegverse /var/lib/stegverse /app
 
 COPY pyproject.toml README.md ./
 COPY llm_adapter ./llm_adapter
 RUN python -m pip install --upgrade pip \
-    && python -m pip install '.[service]'
+    && python -m pip install '.[service,siwe-runtime]'
 
 COPY scripts/container-entrypoint.sh /usr/local/bin/stegverse-entrypoint
 RUN chmod 0755 /usr/local/bin/stegverse-entrypoint
