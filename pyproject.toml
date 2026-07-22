@@ -39,6 +39,9 @@ service = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
 ]
+siwe-runtime = [
+    "eth-account>=0.13,<0.14",
+]
 
 [project.scripts]
 stegverse-llm-adapter = "llm_adapter.cli:main"

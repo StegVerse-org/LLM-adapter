@@ -20,12 +20,14 @@ from llm_adapter.master_records_usage_submission import (
     submit_provider_usage_to_master_records,
 )
 from llm_adapter.provider_usage_submission import persist_provider_usage
+from llm_adapter.stegwallet_siwe_api import router as stegwallet_siwe_router
 from llm_adapter.usage_session_api import router as usage_session_router
 
 app.include_router(external_chat_router)
 app.include_router(external_review_router)
 app.include_router(external_mutation_router)
 app.include_router(usage_session_router)
+app.include_router(stegwallet_siwe_router)
 
 
 def _canonical_hash(payload: dict) -> str:
@@ -47,6 +49,8 @@ def stegverse_node_advertisement(request: Request) -> dict:
         "advertised_at": datetime.now(timezone.utc).isoformat(),
         "health_bound": True,
         "provider_enabled": os.getenv("STEGVERSE_PROVIDER_ENABLED", "false").lower() == "true",
+        "siwe_authentication_enabled": os.getenv("STEGVERSE_SIWE_ENABLED", "false").lower() == "true",
+        "siwe_readiness_endpoint": f"{base_url}/api/stegwallet/siwe/readiness",
         "durable_storage": os.getenv(
             "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "false"
         ).lower() == "true",
@@ -146,9 +150,9 @@ async def record_provider_usage_after_ecosystem_chat(request: Request, call_next
 
 
 # Outer CORS boundary for authenticated cooperative-review submissions. Provider,
-# custody, reviewer, publisher, mutator, submitter, and usage-submission credentials
-# are never exposed to the browser. Same-origin usage retrieval relies on a matching
-# session cookie or X-SteGVerse-Session identity rather than a Site-configured token.
+# custody, reviewer, publisher, mutator, submitter, usage-submission, and SIWE
+# credentials are never exposed cross-origin. SIWE endpoints additionally enforce an
+# exact canonical Origin header and are intended for same-origin Site deployment.
 allowed_origins = [
     value.strip()
     for value in os.getenv(
