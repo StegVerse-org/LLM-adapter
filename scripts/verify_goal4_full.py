@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "scripts/verify_goal4.py"),
     (sys.executable, "-m", "pytest", "tests/test_local_node_vertical_slice.py", "-v"),
+    (sys.executable, "-m", "pytest", "tests/test_portable_node_process_restart.py", "-v"),
     (sys.executable, "scripts/check_workflow_parity.py"),
     (sys.executable, "scripts/check_ai_entry_authority_boundary.py"),
     (sys.executable, "scripts/check_ai_entry_receipt_boundary.py"),
