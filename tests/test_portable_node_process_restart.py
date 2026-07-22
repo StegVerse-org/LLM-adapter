@@ -76,10 +76,11 @@ def _start_node(port: int, data_dir: Path) -> subprocess.Popen[str]:
         time.sleep(0.2)
     process.terminate()
     process.wait(timeout=5)
-    raise AssertionError(f"portable node health did not become ready: {last_error}")
+    output = process.stdout.read() if process.stdout else ""
+    raise AssertionError(f"portable node health did not become ready: {last_error}; output={output}")
 
 
-def _stop_node(process: subprocess.Popen[str]) -> None:
+def _stop_node(process: subprocess.Popen[str]) -> str:
     if process.poll() is None:
         process.terminate()
         try:
@@ -87,10 +88,11 @@ def _stop_node(process: subprocess.Popen[str]) -> None:
         except subprocess.TimeoutExpired:
             process.kill()
             process.wait(timeout=5)
+    return process.stdout.read() if process.stdout else ""
 
 
 def test_transition_survives_real_process_restart(tmp_path: Path) -> None:
-    port = _free_port()
+    first_port = _free_port()
     transition_id = "portable-node-process-restart"
     request_payload = {
         "message": "Persist this governed request across a portable-node process restart.",
@@ -117,24 +119,26 @@ def test_transition_survives_real_process_restart(tmp_path: Path) -> None:
         },
     }
 
-    first = _start_node(port, tmp_path)
+    first = _start_node(first_port, tmp_path)
     try:
-        health = _json_request(f"http://127.0.0.1:{port}/health")
+        health = _json_request(f"http://127.0.0.1:{first_port}/health")
         assert health["storage_durable_across_restarts"] is True
-        created = _json_request(f"http://127.0.0.1:{port}/api/ecosystem-chat", request_payload)
+        created = _json_request(f"http://127.0.0.1:{first_port}/api/ecosystem-chat", request_payload)
         assert created["transition_id"] == transition_id
         assert created["sqlite_persisted"] is True
         assert created["storage_durable_across_restarts"] is True
         original_receipt = created["final_receipt_id"]
         assert original_receipt
     finally:
-        _stop_node(first)
+        first_output = _stop_node(first)
 
+    assert first.returncode == 0, first_output
     assert (tmp_path / "stegverse-ecosystem-chat.db").exists()
 
-    second = _start_node(port, tmp_path)
+    second_port = _free_port()
+    second = _start_node(second_port, tmp_path)
     try:
-        recovered = _json_request(f"http://127.0.0.1:{port}/api/transitions/{transition_id}")
+        recovered = _json_request(f"http://127.0.0.1:{second_port}/api/transitions/{transition_id}")
         assert recovered["transition_id"] == transition_id
         assert recovered["run_id"] == request_payload["transition_identity"]["run_id"]
         assert recovered["lifecycle_state"] == "COMPLETED"
@@ -143,4 +147,6 @@ def test_transition_survives_real_process_restart(tmp_path: Path) -> None:
         assert recovered["storage_durable_across_restarts"] is True
         assert recovered["local_persistence_is_custody"] is False
     finally:
-        _stop_node(second)
+        second_output = _stop_node(second)
+
+    assert second.returncode == 0, second_output
