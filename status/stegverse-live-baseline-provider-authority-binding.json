@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0.0",
+  "binding_id": "stegverse-live-baseline-provider-authority-binding-v1",
+  "intake_id": "llm-adapter-intake-stegverse-live-baseline-v1",
+  "requested_transition": "RUN_STEGVERSE_LIVE_BASELINE",
+  "reuse_first": true,
+  "provider_authority_path": {
+    "request_template": "authority/provider-execution-authority.github-models.request.json",
+    "approval_receipt": "receipts/provider-execution-authority.github-models.v1.json",
+    "consumption_receipt": "receipts/provider-execution-authority.github-models.consumed.json",
+    "validator": "scripts/validate_provider_execution_authority.py",
+    "workflow": ".github/workflows/ecosystem-chat-github-models-execution.yml"
+  },
+  "provider_contract": {
+    "provider": "github-models",
+    "protocol": "openai-chat-completions-v1",
+    "endpoint": "https://models.github.ai/inference/chat/completions",
+    "allowed_host": "models.github.ai",
+    "scope": "ecosystem-chat-single-governed-execution",
+    "permission_required": "models: read",
+    "credential_source": "ephemeral GitHub Actions GITHUB_TOKEN",
+    "single_execution": true
+  },
+  "current_state": {
+    "authority_request_present": true,
+    "approval_receipt_observed": false,
+    "authority_consumed": false,
+    "dispatch_authorized": false,
+    "provider_execution_authorized": false
+  },
+  "required_decisions": [
+    "approved_by",
+    "model",
+    "issued_at",
+    "expires_at"
+  ],
+  "required_before_dispatch": [
+    "valid unexpired approval receipt",
+    "exact provider contract match",
+    "single-use authority not previously consumed",
+    "Master-Records authorization bindings present"
+  ],
+  "prohibited_inferences": [
+    "authority request is not provider authorization",
+    "workflow existence is not dispatch authorization",
+    "provider permission is not publication authority",
+    "provider output is not execution authority",
+    "provider execution is not independent framework validation"
+  ],
+  "authority": {
+    "comparison": false,
+    "admissibility": false,
+    "certification": false,
+    "execution": false,
+    "custody": false,
+    "parentage": false
+  },
+  "updated_at": "2026-07-22T15:05:00Z"
+}
