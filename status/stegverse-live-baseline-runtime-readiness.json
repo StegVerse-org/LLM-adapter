@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0.0",
+  "readiness_id": "llm-adapter-stegverse-live-baseline-runtime-readiness-v1",
+  "intake_id": "llm-adapter-intake-stegverse-live-baseline-v1",
+  "runtime_owner": "StegVerse-org/LLM-adapter",
+  "state": "BLOCKED",
+  "prerequisites": {
+    "intake_received": true,
+    "authorized_provider_configuration_receipt": false,
+    "persistent_endpoint_activation_receipt": false,
+    "provider_usage_persistence_contract": false,
+    "master_records_custody_acceptance": false,
+    "transition_custody_acceptance": false,
+    "immutable_adapter_receipt_contract": false
+  },
+  "blocking_conditions": [
+    "authorized provider configuration receipt not observed",
+    "persistent endpoint activation receipt not observed",
+    "provider usage persistence contract not observed",
+    "Master-Records custody acceptance not observed",
+    "transition custody acceptance not observed",
+    "immutable adapter receipt contract not observed"
+  ],
+  "dispatch": {
+    "authorized": false,
+    "dispatch_id": null,
+    "dispatched_at": null,
+    "resulting_state_when_authorized": "EXECUTION_PENDING_OBSERVATION"
+  },
+  "execution": {
+    "authorized": false,
+    "started": false,
+    "completed": false,
+    "run_id": null
+  },
+  "required_outputs": [
+    "canonical governed event stream",
+    "provider response event",
+    "provider usage persistence receipt",
+    "Master-Records custody receipt",
+    "transition custody receipt",
+    "immutable adapter VERIFIED receipt",
+    "post-execution reconstruction report",
+    "public endpoint verification receipt"
+  ],
+  "authority": {
+    "comparison": false,
+    "admissibility": false,
+    "certification": false,
+    "execution": false,
+    "custody": false,
+    "parentage": false
+  },
+  "updated_at": "2026-07-22T15:00:00Z"
+}
