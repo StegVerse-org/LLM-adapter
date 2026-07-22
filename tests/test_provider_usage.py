@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import os
 import tempfile
+from pathlib import Path
 from types import SimpleNamespace
 
 from llm_adapter.entry_point_role import get_llm_adapter_role
@@ -144,3 +145,12 @@ def test_fallback_provider_result_creates_no_usage_event() -> None:
         with usage_api._connect() as connection:
             count = connection.execute("SELECT COUNT(*) FROM usage_events").fetchone()[0]
         assert count == 0
+
+
+def test_tls_provider_transport_is_bound_to_existing_suite(monkeypatch, tmp_path: Path) -> None:
+    path = Path(__file__).with_name("test_governed_provider_tls_transport.py")
+    spec = importlib.util.spec_from_file_location("stegverse_tls_transport_test", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.test_tls_transport_auth_identity_receipt_and_ledger(monkeypatch, tmp_path)
