@@ -1,0 +1,187 @@
+name: Ecosystem Chat GitHub Models Execution
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'receipts/provider-execution-authority.github-models.v1.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ecosystem-chat-github-models-execution
+  cancel-in-progress: false
+
+jobs:
+  validate-authority:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      model: ${{ steps.authority.outputs.model }}
+      protocol: ${{ steps.authority.outputs.protocol }}
+      endpoint: ${{ steps.authority.outputs.endpoint }}
+      allowed_host: ${{ steps.authority.outputs.allowed_host }}
+      authority_sha256: ${{ steps.authority.outputs.authority_sha256 }}
+      approved_by: ${{ steps.authority.outputs.approved_by }}
+    steps:
+      - name: Check out authority receipt
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate bounded provider execution authority
+        id: authority
+        run: python scripts/validate_provider_execution_authority.py
+
+  execute-single-governed-request:
+    needs: validate-authority
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      models: read
+    steps:
+      - name: Check out canonical adapter
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Refuse reused authority receipt
+        run: |
+          if [ -e receipts/provider-execution-authority.github-models.consumed.json ]; then
+            echo 'authority_receipt_already_consumed'
+            exit 1
+          fi
+
+      - name: Consume authority before provider execution
+        env:
+          AUTHORITY_SHA256: ${{ needs.validate-authority.outputs.authority_sha256 }}
+          APPROVED_BY: ${{ needs.validate-authority.outputs.approved_by }}
+          MODEL: ${{ needs.validate-authority.outputs.model }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          payload = {
+              'schema': 'stegverse.provider_execution_authority_consumption.github_models.v1',
+              'state': 'CONSUMED',
+              'authority_sha256': os.environ['AUTHORITY_SHA256'],
+              'approved_by': os.environ['APPROVED_BY'],
+              'model': os.environ['MODEL'],
+              'workflow_run_id': os.environ['GITHUB_RUN_ID'],
+              'workflow_run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'consumed_at': datetime.now(timezone.utc).isoformat(),
+              'provider_output_is_authority': False,
+              'external_mutation_authorized': False,
+              'publication_authorized': False,
+          }
+          material = json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()
+          payload['consumption_sha256'] = hashlib.sha256(material).hexdigest()
+          path = Path('receipts/provider-execution-authority.github-models.consumed.json')
+          path.write_text(json.dumps(payload, indent=2, sort_keys=True) + '\n')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add receipts/provider-execution-authority.github-models.consumed.json
+          git commit -m 'chore: consume bounded GitHub Models execution authority [skip ci]'
+          git pull --rebase
+          git push
+
+      - name: Require existing Master-Records authorization
+        env:
+          MASTER_RECORDS_ENDPOINT: ${{ vars.STEGVERSE_MASTER_RECORDS_ENDPOINT }}
+          MASTER_RECORDS_TOKEN: ${{ secrets.STEGVERSE_MASTER_RECORDS_TOKEN }}
+          MASTER_RECORDS_ALLOWED_HOSTS: ${{ vars.STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS }}
+        run: |
+          python - <<'PY'
+          import os
+          missing = [
+              name for name in (
+                  'MASTER_RECORDS_ENDPOINT',
+                  'MASTER_RECORDS_TOKEN',
+                  'MASTER_RECORDS_ALLOWED_HOSTS',
+              ) if not os.getenv(name, '').strip()
+          ]
+          if missing:
+              raise SystemExit('authorized_configuration_missing:' + ','.join(missing))
+          print('Master-Records authorization bindings are present.')
+          PY
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install canonical service dependencies
+        run: python -m pip install -e '.[service]'
+
+      - name: Start bounded GitHub Models provider and custody runtime
+        env:
+          STEGVERSE_PROVIDER_ENABLED: 'true'
+          STEGVERSE_PROVIDER_PROTOCOL: ${{ needs.validate-authority.outputs.protocol }}
+          STEGVERSE_PROVIDER_ENDPOINT: ${{ needs.validate-authority.outputs.endpoint }}
+          STEGVERSE_PROVIDER_ALLOWED_HOSTS: ${{ needs.validate-authority.outputs.allowed_host }}
+          STEGVERSE_PROVIDER_TOKEN: ${{ github.token }}
+          STEGVERSE_PROVIDER_MODEL: ${{ needs.validate-authority.outputs.model }}
+          STEGVERSE_PROVIDER_NAME: github-models
+          STEGVERSE_PROVIDER_DAILY_REQUEST_LIMIT: '1'
+          STEGVERSE_PROVIDER_DAILY_COST_LIMIT_USD: '0.10'
+          STEGVERSE_PROVIDER_MAX_REQUEST_COST_USD: '0.10'
+          STEGVERSE_MASTER_RECORDS_ENDPOINT: ${{ vars.STEGVERSE_MASTER_RECORDS_ENDPOINT }}
+          STEGVERSE_MASTER_RECORDS_TOKEN: ${{ secrets.STEGVERSE_MASTER_RECORDS_TOKEN }}
+          STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS: ${{ vars.STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS }}
+          STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: 'true'
+          STEGVERSE_EXTERNAL_MUTATION_ENABLED: 'false'
+          STEGVERSE_TRANSITION_DB: ${{ runner.temp }}/github-models-transition.db
+          STEGVERSE_USAGE_SESSION_DB: ${{ runner.temp }}/github-models-usage.db
+          STEGVERSE_EXTERNAL_REVIEW_DB: ${{ runner.temp }}/github-models-review.db
+        run: |
+          python -m uvicorn llm_adapter.combined_gateway:app --host 127.0.0.1 --port 8110 > github-models-runtime.log 2>&1 &
+          echo $! > github-models-runtime.pid
+
+      - name: Execute provider, usage, custody, and reconstruction path
+        run: python scripts/verify_authorized_provider_activation.py
+
+      - name: Stop bounded provider runtime
+        if: always()
+        run: |
+          if [ -f github-models-runtime.pid ]; then
+            kill "$(cat github-models-runtime.pid)" 2>/dev/null || true
+          fi
+
+      - name: Upload bounded execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecosystem-chat-github-models-execution-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            receipts/provider-execution-authority.github-models.v1.json
+            receipts/provider-execution-authority.github-models.consumed.json
+            receipts/ecosystem-chat-authorized-provider-activation.latest.json
+            github-models-runtime.log
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Persist governed execution evidence
+        if: always()
+        run: |
+          git pull --rebase
+          git add receipts/ecosystem-chat-authorized-provider-activation.latest.json
+          if git diff --cached --quiet; then
+            echo 'No new governed execution evidence to persist.'
+          else
+            git commit -m 'chore: retain bounded GitHub Models execution evidence [skip ci]'
+            git pull --rebase
+            git push
+          fi
