@@ -28,6 +28,7 @@ def configure(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("STEGVERSE_PROVIDER_TOKEN", "test-token")
     monkeypatch.setenv("STEGVERSE_PROVIDER_MODEL", "bounded-model")
     monkeypatch.setenv("STEGVERSE_PROVIDER_NAME", "test-provider")
+    monkeypatch.delenv("STEGVERSE_PROVIDER_PROTOCOL", raising=False)
     monkeypatch.setenv("STEGVERSE_TRANSITION_DB", str(tmp_path / "provider.db"))
     monkeypatch.setenv("STEGVERSE_PROVIDER_MAX_INPUT_CHARS", "12000")
     monkeypatch.setenv("STEGVERSE_PROVIDER_MAX_OUTPUT_CHARS", "6000")
@@ -76,6 +77,78 @@ def test_provider_call_preserves_identity_and_writes_receipt(monkeypatch: pytest
     assert spent > 0
 
 
+def test_openai_compatible_profile_translates_request_and_response(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    configure(monkeypatch, tmp_path)
+    monkeypatch.setenv("STEGVERSE_PROVIDER_PROTOCOL", "openai-chat-completions-v1")
+    monkeypatch.setenv(
+        "STEGVERSE_PROVIDER_ENDPOINT",
+        "https://models.github.ai/inference/chat/completions",
+    )
+    monkeypatch.setenv("STEGVERSE_PROVIDER_ALLOWED_HOSTS", "models.github.ai")
+    monkeypatch.setenv("STEGVERSE_PROVIDER_MODEL", "openai/gpt-4.1")
+
+    def fake_post(url: str, *, headers: dict, data: str, timeout: float):
+        request = json.loads(data)
+        assert url == "https://models.github.ai/inference/chat/completions"
+        assert request == {
+            "model": "openai/gpt-4.1",
+            "messages": [{"role": "user", "content": "Explain current state"}],
+        }
+        assert headers["Authorization"] == "Bearer test-token"
+        return FakeResponse({
+            "id": "github-models-request-1",
+            "choices": [
+                {"message": {"role": "assistant", "content": "Bounded model response"}}
+            ],
+            "usage": {"prompt_tokens": 5, "completion_tokens": 4, "total_tokens": 9},
+        })
+
+    monkeypatch.setattr(governed_provider.requests, "post", fake_post)
+    result = governed_provider.generate(
+        message="Explain current state",
+        transition_id="transition-1",
+        run_id="run-1",
+    )
+
+    assert result.used is True
+    assert result.status == "USED"
+    assert result.text == "Bounded model response"
+    assert result.provider_request_id == "github-models-request-1"
+    assert result.input_units == len("Explain current state")
+    assert result.output_units == len("Bounded model response")
+    assert result.provider_receipt_id.startswith("provider-response-receipt:sha256:")
+
+
+def test_openai_compatible_profile_missing_choice_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    configure(monkeypatch, tmp_path)
+    monkeypatch.setenv("STEGVERSE_PROVIDER_PROTOCOL", "openai-chat-completions-v1")
+    monkeypatch.setattr(
+        governed_provider.requests,
+        "post",
+        lambda *args, **kwargs: FakeResponse({"id": "request-without-choice", "choices": []}),
+    )
+    result = governed_provider.generate(message="hello", transition_id="t", run_id="r")
+    assert result.used is False
+    assert result.status == "CONTRACT_FAILED"
+    assert result.fallback_required is True
+
+
+def test_unsupported_protocol_fails_closed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    configure(monkeypatch, tmp_path)
+    monkeypatch.setenv("STEGVERSE_PROVIDER_PROTOCOL", "unknown-provider-wire-v9")
+    provider_readiness = governed_provider.readiness()
+    assert provider_readiness.ready is False
+    assert provider_readiness.protocol_supported is False
+    assert "provider_protocol_unsupported" in provider_readiness.blockers
+    assert governed_provider.enabled() is False
+
+
 def test_identity_mismatch_fails_closed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     configure(monkeypatch, tmp_path)
     monkeypatch.setattr(
@@ -119,6 +192,8 @@ def test_readiness_is_secret_free(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     assert payload["state"] == "READY"
     assert payload["blockers"] == []
     assert payload["credential_configured"] is True
+    assert payload["protocol"] == "stegverse-v1"
+    assert payload["protocol_supported"] is True
     assert payload["authority_granted"] is False
     assert payload["execution_authority"] is False
     assert "test-token" not in serialized
