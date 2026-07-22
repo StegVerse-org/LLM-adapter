@@ -21,6 +21,7 @@ from urllib.parse import urlparse
 import requests
 
 _LOCK = RLock()
+_SUPPORTED_PROTOCOLS = {"stegverse-v1", "openai-chat-completions-v1"}
 
 
 def _bool(name: str, default: bool = False) -> bool:
@@ -39,6 +40,10 @@ def _db_path() -> Path:
     return Path(os.getenv("STEGVERSE_TRANSITION_DB", "/tmp/stegverse-ecosystem-chat.db"))
 
 
+def _protocol() -> str:
+    return os.getenv("STEGVERSE_PROVIDER_PROTOCOL", "stegverse-v1").strip() or "stegverse-v1"
+
+
 @dataclass(frozen=True)
 class ProviderReadiness:
     ready: bool
@@ -52,6 +57,8 @@ class ProviderReadiness:
     endpoint_hostname_allowlisted: bool
     credential_configured: bool
     model_configured: bool
+    protocol: str
+    protocol_supported: bool
     authority_granted: bool = False
     execution_authority: bool = False
 
@@ -79,6 +86,8 @@ def readiness() -> ProviderReadiness:
     hostname_allowlisted = bool(hostname and hostname in hosts)
     credential_configured = bool(os.getenv("STEGVERSE_PROVIDER_TOKEN"))
     model_configured = bool(os.getenv("STEGVERSE_PROVIDER_MODEL"))
+    protocol = _protocol()
+    protocol_supported = protocol in _SUPPORTED_PROTOCOLS
 
     blockers: list[str] = []
     if not requested:
@@ -97,6 +106,8 @@ def readiness() -> ProviderReadiness:
         blockers.append("provider_credential_missing")
     if not model_configured:
         blockers.append("provider_model_missing")
+    if not protocol_supported:
+        blockers.append("provider_protocol_unsupported")
 
     ready = not blockers
     return ProviderReadiness(
@@ -111,6 +122,8 @@ def readiness() -> ProviderReadiness:
         endpoint_hostname_allowlisted=hostname_allowlisted,
         credential_configured=credential_configured,
         model_configured=model_configured,
+        protocol=protocol,
+        protocol_supported=protocol_supported,
     )
 
 
@@ -197,6 +210,60 @@ def _fallback(status: str, reason: str) -> ProviderResult:
     )
 
 
+def _request_body(
+    *,
+    protocol: str,
+    message: str,
+    model: str,
+    max_output: int,
+    transition_id: str,
+    run_id: str,
+) -> dict[str, Any]:
+    if protocol == "openai-chat-completions-v1":
+        return {
+            "model": model,
+            "messages": [{"role": "user", "content": message}],
+        }
+    return {
+        "schema_version": "1.0.0",
+        "request_type": "governed_text_generation",
+        "model": model,
+        "input": message,
+        "max_output_chars": max_output,
+        "metadata": {
+            "transition_id": transition_id,
+            "run_id": run_id,
+            "raw_shell_allowed": False,
+            "provider_output_is_authority": False,
+        },
+    }
+
+
+def _response_fields(
+    *,
+    protocol: str,
+    payload: dict[str, Any],
+    message: str,
+) -> tuple[str | None, str, int, int, dict[str, Any]]:
+    if protocol == "openai-chat-completions-v1":
+        choices = payload.get("choices")
+        choice = choices[0] if isinstance(choices, list) and choices else {}
+        message_payload = choice.get("message") if isinstance(choice, dict) else {}
+        text = message_payload.get("content") if isinstance(message_payload, dict) else None
+        request_id = str(payload.get("id") or "unreported")
+        input_units = len(message)
+        output_units = len(text) if isinstance(text, str) else 0
+        return text, request_id, input_units, output_units, {}
+
+    text = payload.get("text")
+    request_id = str(payload.get("provider_request_id") or "unreported")
+    usage = payload.get("usage") or {}
+    input_units = int(usage.get("input_chars", len(message)))
+    output_units = int(usage.get("output_chars", len(text) if isinstance(text, str) else 0))
+    metadata = payload.get("metadata") or {}
+    return text, request_id, input_units, output_units, metadata
+
+
 def generate(*, message: str, transition_id: str, run_id: str) -> ProviderResult:
     provider_readiness = readiness()
     if not provider_readiness.ready:
@@ -205,6 +272,7 @@ def generate(*, message: str, transition_id: str, run_id: str) -> ProviderResult
 
     provider_name = os.getenv("STEGVERSE_PROVIDER_NAME", "governed-provider")
     model = os.environ["STEGVERSE_PROVIDER_MODEL"]
+    protocol = provider_readiness.protocol
     max_input = int(os.getenv("STEGVERSE_PROVIDER_MAX_INPUT_CHARS", "12000"))
     max_output = int(os.getenv("STEGVERSE_PROVIDER_MAX_OUTPUT_CHARS", "6000"))
     daily_requests = int(os.getenv("STEGVERSE_PROVIDER_DAILY_REQUEST_LIMIT", "100"))
@@ -229,19 +297,14 @@ def generate(*, message: str, transition_id: str, run_id: str) -> ProviderResult
 
     endpoint = os.environ["STEGVERSE_PROVIDER_ENDPOINT"]
     timeout = float(os.getenv("STEGVERSE_PROVIDER_TIMEOUT_SECONDS", "20"))
-    request_body = {
-        "schema_version": "1.0.0",
-        "request_type": "governed_text_generation",
-        "model": model,
-        "input": message,
-        "max_output_chars": max_output,
-        "metadata": {
-            "transition_id": transition_id,
-            "run_id": run_id,
-            "raw_shell_allowed": False,
-            "provider_output_is_authority": False,
-        },
-    }
+    request_body = _request_body(
+        protocol=protocol,
+        message=message,
+        model=model,
+        max_output=max_output,
+        transition_id=transition_id,
+        run_id=run_id,
+    )
     try:
         response = requests.post(
             endpoint,
@@ -257,27 +320,27 @@ def generate(*, message: str, transition_id: str, run_id: str) -> ProviderResult
     except (requests.RequestException, ValueError, TypeError) as exc:
         return _fallback("TRANSPORT_FAILED", type(exc).__name__)
 
-    text = payload.get("text")
+    text, request_id, input_units, output_units, metadata = _response_fields(
+        protocol=protocol,
+        payload=payload,
+        message=message,
+    )
     if not isinstance(text, str) or not text.strip():
         return _fallback("CONTRACT_FAILED", "provider response text missing")
     if len(text) > max_output:
         return _fallback("POLICY_BLOCKED", "provider output exceeds governed character limit")
 
-    metadata = payload.get("metadata") or {}
     if metadata.get("transition_id") not in {None, transition_id} or metadata.get("run_id") not in {None, run_id}:
         return _fallback("IDENTITY_FAILED", "provider response identity mismatch")
 
-    usage = payload.get("usage") or {}
-    input_units = int(usage.get("input_chars", len(message)))
-    output_units = int(usage.get("output_chars", len(text)))
     actual_cost = (input_units / 1000 * input_rate) + (output_units / 1000 * output_rate)
     if actual_cost > request_cost or spent + actual_cost > daily_cost:
         return _fallback("COST_BLOCKED", "reported provider usage exceeds governed cost boundary")
 
-    request_id = str(payload.get("provider_request_id") or "unreported")
     receipt_material = "\n".join([
         provider_name,
         model,
+        protocol,
         transition_id,
         run_id,
         request_id,
