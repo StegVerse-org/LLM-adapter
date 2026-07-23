@@ -8,6 +8,9 @@ on:
       - pyproject.toml
       - llm_adapter/**
       - scripts/container-entrypoint.sh
+      - scripts/check_stegdeploy_image_publication_readiness.py
+      - status/stegdeploy-image-publication-readiness.json
+      - docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md
       - compose.stegdeploy.yaml
       - .github/workflows/stegdeploy-image.yml
   workflow_dispatch:
