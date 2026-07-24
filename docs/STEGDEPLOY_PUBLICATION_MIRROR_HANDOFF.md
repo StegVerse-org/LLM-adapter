@@ -9,8 +9,10 @@ This is the authoritative continuation record for canonical StegDeploy image pub
 ```text
 Canonical workflow: .github/workflows/stegdeploy-image.yml
 Retained receipt: receipts/stegdeploy-image-publication.json
-Observed receipt schema: stegdeploy.image-publication.v1
+Retained readiness projection: status/stegdeploy-image-publication-readiness.json
+Observed receipt schema before next publication run: stegdeploy.image-publication.v1
 Current readiness: BLOCKED
+PR #38 merge: a21aa50526487fd16a46bd62488a7965d29aa3ed
 Manual user action required: false
 Provider execution authority: false
 Persistent deployment authority: false
@@ -25,7 +27,21 @@ current retained receipt predates v2 publication contract
 fresh consumer pull verification not retained
 ```
 
-The workflow already contains the v2 contract, exact stage outcomes, fresh pull verification, durable evidence retention, and fail-closed enforcement. The repository lacked a canonical readiness validator binding the retained receipt to that contract.
+The workflow contains the v2 contract, exact stage outcomes, fresh pull verification, durable evidence retention, and fail-closed enforcement. The readiness validator is now merged into Goal 4 validation.
+
+## Retention Repair
+
+The canonical image workflow must retain the readiness projection in the same run that writes the publication receipt. Otherwise the receipt may advance to v2 while the repository-owned status remains stale because the evidence commit intentionally uses `[skip ci]`.
+
+The current repair adds:
+
+```text
+write v2 PUBLISHED or BLOCKED receipt
+→ run scripts/check_stegdeploy_image_publication_readiness.py
+→ retain receipt, pull log, and readiness status together
+→ upload all three artifacts
+→ enforce publication result fail-closed
+```
 
 ## Built Files
 
@@ -33,6 +49,8 @@ The workflow already contains the v2 contract, exact stage outcomes, fresh pull 
 scripts/check_stegdeploy_image_publication_readiness.py
 status/stegdeploy-image-publication-readiness.json
 scripts/verify_goal4_full.py
+.github/workflows/stegdeploy-image.yml
+docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md
 ```
 
 ## Validation Boundary
@@ -49,9 +67,9 @@ A passing structural validator does not mean the image is published, publicly ac
 
 ## Next Machine-Owned Actions
 
-1. Merge only after repository validation succeeds.
-2. Let the canonical main-branch image workflow execute from an applicable push or authorized workflow run.
-3. Retain the resulting v2 `PUBLISHED` or `BLOCKED` receipt automatically.
+1. Validate and merge the retention repair.
+2. Observe the canonical main-branch image workflow.
+3. Retain the resulting v2 `PUBLISHED` or `BLOCKED` receipt, pull log, and readiness status automatically.
 4. If `BLOCKED`, repair only the first exact retained blocker.
 5. If `PUBLISHED`, re-run canonical core-node image intake and retain consumer compatibility evidence.
 6. Persistent hosting and real-provider/custody configuration remain separate authority-gated boundaries.
