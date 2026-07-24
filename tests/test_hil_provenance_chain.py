@@ -1,0 +1,76 @@
+from __future__ import annotations
+
+import hashlib
+import json
+
+from fastapi.testclient import TestClient
+
+from llm_adapter.combined_gateway import app
+
+PRIMARY = "52102cccb9ba9016c76434a64e22031b6a8c3edd3b8806e7b664e609216b2946"
+PROMPT = "0ebe215318b4eeeb8ed6422e0954372c314fadc8fac9254e452bc7670a1b9922"
+
+
+def _manifest(pdf: bytes, prompt_sha256: str = PROMPT) -> bytes:
+    return json.dumps({
+        "schema_version": "HIL-RESPONSE-PROVENANCE-v1",
+        "primary_version": "v0.5",
+        "primary_sha256": PRIMARY,
+        "protocol_version": "HIL-PROTOCOL-v1.0",
+        "prompt_version": "HIL-PROMPT-v1.0",
+        "prompt_sha256": prompt_sha256,
+        "response_sha256": hashlib.sha256(pdf).hexdigest(),
+        "model": "test-model",
+        "provider": "test-provider",
+        "generated_at": "2026-07-23T00:00:00Z",
+        "producer_signature": {
+            "state": "UNAVAILABLE",
+            "scheme": None,
+            "value": None,
+            "key_id": None,
+        },
+    }).encode("utf-8")
+
+
+def _post(client: TestClient, pdf: bytes, manifest: bytes):
+    return client.post(
+        "/api/hil/submissions",
+        files={
+            "response_pdf": ("response.pdf", pdf, "application/pdf"),
+            "provenance_manifest": ("response.provenance.json", manifest, "application/json"),
+        },
+        data={
+            "participant_identifier": "tester",
+            "publication_consent": "anonymous",
+            "primary_sha256": PRIMARY,
+            "model_response_declared_unedited": "true",
+            "participant_consent_authority_acknowledged": "true",
+        },
+    )
+
+
+def test_hil_chain_receipt_and_exact_storage(monkeypatch, tmp_path):
+    monkeypatch.setenv("STEGVERSE_HIL_INTAKE_ENABLED", "true")
+    monkeypatch.setenv("STEGVERSE_HIL_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "true")
+    client = TestClient(app)
+    pdf = b"%PDF-1.7\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n"
+    response = _post(client, pdf, _manifest(pdf))
+    assert response.status_code == 200, response.text
+    receipt = response.json()
+    assert receipt["schema_version"] == "HIL-RECEIVER-RECEIPT-v2"
+    assert receipt["chain_validation_state"] == "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED"
+    assert receipt["authority"]["publication"] is False
+    assert list((tmp_path / "originals").glob("*.pdf"))[0].read_bytes() == pdf
+    assert len(list((tmp_path / "provenance").glob("*.json"))) == 1
+
+
+def test_hil_chain_rejects_wrong_prompt(monkeypatch, tmp_path):
+    monkeypatch.setenv("STEGVERSE_HIL_INTAKE_ENABLED", "true")
+    monkeypatch.setenv("STEGVERSE_HIL_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "true")
+    client = TestClient(app)
+    pdf = b"%PDF-1.7\n%%EOF\n"
+    response = _post(client, pdf, _manifest(pdf, prompt_sha256="incorrect"))
+    assert response.status_code == 400
+    assert response.json()["detail"] == "provenance_prompt_sha256_mismatch"
