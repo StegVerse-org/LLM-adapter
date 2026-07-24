@@ -18,7 +18,11 @@ REQUIRED_WORKFLOW_SNIPPETS = (
     '"consumer_pull_verified": outcomes["verification_pull"] == "success"',
     '"repository_retained": True',
     '"package_visibility_asserted": False',
-    "git add receipts/stegdeploy-image-publication.json",
+    "Refresh publication readiness status",
+    "python scripts/check_stegdeploy_image_publication_readiness.py",
+    "receipts/stegdeploy-image-publication.json",
+    "receipts/stegdeploy-image-verification-pull.log",
+    "status/stegdeploy-image-publication-readiness.json",
     "chore: retain canonical StegDeploy image publication evidence [skip ci]",
     "git pull --rebase",
     "git push",
@@ -84,6 +88,16 @@ def main() -> int:
     for snippet in REQUIRED_WORKFLOW_SNIPPETS:
         if snippet not in workflow:
             return fail(f"workflow missing retention invariant: {snippet}")
+
+    receipt_index = workflow.find("Write publication or blocker receipt")
+    readiness_index = workflow.find("Refresh publication readiness status")
+    retain_index = workflow.find("Retain publication evidence on main")
+    upload_index = workflow.find("Upload publication evidence")
+    enforce_index = workflow.find("Enforce successful publication after retaining evidence")
+    if min(receipt_index, readiness_index, retain_index, upload_index, enforce_index) < 0:
+        return fail("publication evidence lifecycle step missing")
+    if not (receipt_index < readiness_index < retain_index < upload_index < enforce_index):
+        return fail("publication evidence lifecycle is not ordered fail-closed")
 
     if RECEIPT.exists():
         result = validate_receipt(RECEIPT)
