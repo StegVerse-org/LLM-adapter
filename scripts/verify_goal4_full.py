@@ -14,6 +14,7 @@ COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "-m", "pytest", "tests/test_local_node_vertical_slice.py", "-v"),
     (sys.executable, "scripts/check_stegverse_live_baseline_runtime_readiness.py"),
     (sys.executable, "scripts/check_stegverse_live_baseline_provider_authority_binding.py"),
+    (sys.executable, "scripts/check_stegdeploy_image_publication_readiness.py"),
     (sys.executable, "scripts/check_workflow_parity.py"),
     (sys.executable, "scripts/check_ai_entry_authority_boundary.py"),
     (sys.executable, "scripts/check_ai_entry_receipt_boundary.py"),
