@@ -5,7 +5,7 @@ on:
     paths:
       - Dockerfile
       - compose.yaml
-      - .env.platform-agnostic.example
+      - platform-agnostic.env.example
       - scripts/container-entrypoint.sh
       - docs/PLATFORM_AGNOSTIC_RUNTIME.md
       - llm_adapter/**
@@ -15,7 +15,7 @@ on:
     paths:
       - Dockerfile
       - compose.yaml
-      - .env.platform-agnostic.example
+      - platform-agnostic.env.example
       - scripts/container-entrypoint.sh
       - docs/PLATFORM_AGNOSTIC_RUNTIME.md
       - llm_adapter/**
