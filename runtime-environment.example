@@ -1,0 +1,13 @@
+# Copy to .env only in the deployment environment. Never commit real secrets.
+PORT=8000
+STEGVERSE_NODE_ID=ecosystem-chat-portable-node
+STEGVERSE_ALLOWED_ORIGINS=https://stegverse.org,https://www.stegverse.org
+STEGVERSE_HIL_INTAKE_ENABLED=true
+STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS=true
+
+# These values must be distinct and supplied by the runtime secret boundary.
+STEGVERSE_HIL_REVIEW_TOKEN=replace-with-private-review-secret
+STEGVERSE_HIL_PUBLICATION_TOKEN=replace-with-publication-secret
+
+# Optional provider configuration. HIL intake does not require a provider connection.
+STEGVERSE_PROVIDER_ENABLED=false
