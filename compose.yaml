@@ -1,0 +1,28 @@
+services:
+  llm-adapter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: stegverse/llm-adapter:local
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    environment:
+      PORT: "${PORT:-8000}"
+      STEGVERSE_NODE_ID: "${STEGVERSE_NODE_ID:-ecosystem-chat-portable-node}"
+      STEGVERSE_ALLOWED_ORIGINS: "${STEGVERSE_ALLOWED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}"
+      STEGVERSE_HIL_INTAKE_ENABLED: "${STEGVERSE_HIL_INTAKE_ENABLED:-true}"
+      STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: "true"
+      STEGVERSE_HIL_REVIEW_TOKEN: "${STEGVERSE_HIL_REVIEW_TOKEN:?set STEGVERSE_HIL_REVIEW_TOKEN}"
+      STEGVERSE_HIL_PUBLICATION_TOKEN: "${STEGVERSE_HIL_PUBLICATION_TOKEN:?set STEGVERSE_HIL_PUBLICATION_TOKEN}"
+    volumes:
+      - stegverse-data:/var/lib/stegverse
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/health' % os.environ.get('PORT','8000'), timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  stegverse-data:
