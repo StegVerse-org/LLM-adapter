@@ -39,17 +39,20 @@ jobs:
       - name: Generate separated runtime credentials
         shell: bash
         run: |
-          python - <<'PY' >> "$GITHUB_ENV"
+          python - <<'PY'
+          import os
           import secrets
+
           values = {
               "STEGVERSE_HIL_REVIEW_TOKEN": secrets.token_urlsafe(48),
               "STEGVERSE_HIL_PUBLICATION_TOKEN": secrets.token_urlsafe(48),
           }
           assert len(set(values.values())) == len(values)
-          for key, value in values.items():
-              print(f"::add-mask::{value}")
-              print(f"{key}={value}")
-          print("STEGVERSE_HIL_CREDENTIAL_SEPARATION_VERIFIED=true")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
+              for key, value in values.items():
+                  print(f"::add-mask::{value}")
+                  env_file.write(f"{key}={value}\n")
+              env_file.write("STEGVERSE_HIL_CREDENTIAL_SEPARATION_VERIFIED=true\n")
           PY
       - name: Run complete governed-cycle tests
         run: |
