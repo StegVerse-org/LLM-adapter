@@ -1,0 +1,32 @@
+name: HIL Deployment Profile
+
+on:
+  pull_request:
+    paths:
+      - "docs/HIL_DEPLOYMENT_PROFILE.md"
+      - "deploy/hil.env.example"
+      - "scripts/verify_hil_deployment_profile.py"
+      - ".github/workflows/hil-deployment-profile.yml"
+  push:
+    branches: [main]
+    paths:
+      - "docs/HIL_DEPLOYMENT_PROFILE.md"
+      - "deploy/hil.env.example"
+      - "scripts/verify_hil_deployment_profile.py"
+      - ".github/workflows/hil-deployment-profile.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify fail-closed HIL deployment profile
+        run: python scripts/verify_hil_deployment_profile.py
