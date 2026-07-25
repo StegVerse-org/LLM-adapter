@@ -15,6 +15,8 @@ from llm_adapter.ecosystem_chat_gateway import app
 from llm_adapter.external_chat_api import router as external_chat_router
 from llm_adapter.external_review_api import router as external_review_router
 from llm_adapter.external_publication_mutation import router as external_mutation_router
+from llm_adapter.hil_intake_api import router as hil_intake_router
+from llm_adapter.hil_publication_api import router as hil_publication_router
 from llm_adapter.master_records_usage_submission import (
     MasterRecordsUsageError,
     submit_provider_usage_to_master_records,
@@ -26,6 +28,8 @@ app.include_router(external_chat_router)
 app.include_router(external_review_router)
 app.include_router(external_mutation_router)
 app.include_router(usage_session_router)
+app.include_router(hil_intake_router)
+app.include_router(hil_publication_router)
 
 
 def _canonical_hash(payload: dict) -> str:
@@ -44,9 +48,13 @@ def stegverse_node_advertisement(request: Request) -> dict:
         "capability_id": "ecosystem-chat-gateway",
         "endpoint": f"{base_url}/api/ecosystem-chat",
         "health_endpoint": f"{base_url}/health",
+        "hil_intake_readiness_endpoint": f"{base_url}/api/hil/readiness",
+        "hil_intake_submission_endpoint": f"{base_url}/api/hil/submissions",
+        "hil_publication_readiness_endpoint": f"{base_url}/api/hil/publication-readiness",
         "advertised_at": datetime.now(timezone.utc).isoformat(),
         "health_bound": True,
         "provider_enabled": os.getenv("STEGVERSE_PROVIDER_ENABLED", "false").lower() == "true",
+        "hil_intake_enabled": os.getenv("STEGVERSE_HIL_INTAKE_ENABLED", "false").lower() == "true",
         "durable_storage": os.getenv(
             "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "false"
         ).lower() == "true",
@@ -162,5 +170,11 @@ app.add_middleware(
     allow_origins=allowed_origins,
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-SteGVerse-Session"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "X-SteGVerse-Session",
+        "X-SteGVerse-HIL-Review-Token",
+        "X-SteGVerse-HIL-Publication-Token",
+    ],
 )
