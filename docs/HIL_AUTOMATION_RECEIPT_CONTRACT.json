@@ -1,0 +1,12 @@
+{
+  "schema_version": "HIL-AUTOMATION-RECEIPT-CONTRACT-v1",
+  "required_receipt": "HIL-LIVE-READINESS-OBSERVATION-v2",
+  "required_state": "CONTROLLED_CYCLE_READY",
+  "required_scope": "GITHUB_HOSTED_EPHEMERAL_DEPLOYMENT_PROOF",
+  "must_assert": {
+    "credential_separation_verified": true,
+    "durable_path_reused_across_process_restart": true,
+    "external_production_deployment_claimed": false,
+    "authority_granted": false
+  }
+}
