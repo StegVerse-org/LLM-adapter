@@ -22,7 +22,7 @@ No application code may depend on a provider API, provider metadata endpoint, pr
 ## Canonical container execution
 
 ```sh
-cp .env.platform-agnostic.example .env
+cp docs/runtime-environment.example .env
 # Replace both example credentials with distinct secret values.
 docker compose up --build -d
 curl -fsS http://127.0.0.1:8000/health
@@ -69,6 +69,8 @@ A runtime tranche passes portability only when:
 4. state survives container replacement while retaining the same mounted volume;
 5. no provider-specific code or configuration is necessary;
 6. the resulting evidence identifies the repository revision, image digest, runtime contract version, storage persistence test, and readiness output.
+
+PR validation may execute this contract in GitHub Actions, but the portability result is produced by the repository-owned OCI image, environment variables, health/readiness endpoints, and mounted volume rather than any hosting-provider service.
 
 ## Authority boundary
 
