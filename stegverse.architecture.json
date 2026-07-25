@@ -3,7 +3,7 @@
   "schema_version": "1.0.0",
   "repo_id": "LLM-adapter",
   "repo_type": "adapter",
-  "description": "StegVerse LLM Adapter -- SDK-adjacent bridge that converts LLM outputs into governance artifacts without granting execution authority.",
+  "description": "Common governed provider broker and reference adapter for the distributed StegVerse LLM Communications Stack; StegVerse-org deployments remain Demo and conformance surfaces unless separately accredited.",
   "inherits_from": null,
   "enforcement": "strict",
   "expected_structure": {
@@ -14,6 +14,7 @@
     "LLM_ADAPTER_MIRROR_HANDOFF.md": {"required": true, "purpose": "Current build handoff source of truth"},
     "llm_adapter/": {"required": true, "purpose": "Main Python package"},
     "docs/": {"required": true, "purpose": "Runtime and integration documentation"},
+    "docs/LLM_COMMUNICATIONS_STACK.md": {"required": true, "purpose": "Canonical distributed LLM communications stack map and repository boundary"},
     "examples/": {"required": true, "purpose": "Fixture-bound examples and demo inputs"},
     "fixtures/": {"required": true, "purpose": "Governed response fixtures"},
     "scripts/": {"required": true, "purpose": "Verification and demonstration scripts"},
@@ -59,7 +60,13 @@
     "scheduled_audit": "weekly"
   },
   "integration_points": {
+    "stack_id": "STEGVERSE-LLM-COMMS-STACK-v1",
     "sdk": "github.com/StegVerse-org/StegVerse-SDK",
+    "governed_inference_provider": "github.com/StegVerse-Labs/governed-llm",
+    "internal_collaboration_adapter": "github.com/StegVerse-Labs/hybrid-collab-bridge",
+    "communications_gateway": "github.com/StegVerse-Labs/Comms-Gateway",
+    "decision_engine": "github.com/StegVerse-Labs/StegCore",
+    "validation_orchestrator": "github.com/GCAT-BCAT-Engine/workflows",
     "micro_node_runtime": "github.com/StegVerse-002/micro-node-runtime",
     "core_node_runtime_demo": "github.com/StegVerse-org/core-node-runtime-demo",
     "admissibility_wiki": "github.com/StegVerse-Labs/admissibility-wiki"
