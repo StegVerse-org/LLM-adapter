@@ -1,0 +1,42 @@
+name: HIL Process Restart Controlled Cycle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "llm_adapter/hil_*.py"
+      - "llm_adapter/combined_gateway.py"
+      - "scripts/run_hil_process_restart_cycle.py"
+      - ".github/workflows/hil-process-restart-controlled-cycle.yml"
+  pull_request:
+    paths:
+      - "llm_adapter/hil_*.py"
+      - "llm_adapter/combined_gateway.py"
+      - "scripts/run_hil_process_restart_cycle.py"
+      - ".github/workflows/hil-process-restart-controlled-cycle.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-process-cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install service dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev,service]"
+      - name: Run real-process restart controlled cycle
+        run: python scripts/run_hil_process_restart_cycle.py
+      - name: Upload governed cycle evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hil-process-restart-controlled-cycle
+          path: reports/hil-process-cycle/
+          if-no-files-found: error
