@@ -1,0 +1,37 @@
+{
+  "schema_version": "TV-TVC-SERVICE-REQUEST-v1",
+  "request_id": "TVTVC-SR-HIL-CYCLE-0001-RUNTIME",
+  "requesting_entity": "StegVerse-org/LLM-adapter",
+  "service_id": "tvc.runtime.resolve",
+  "purpose": "Resolve the governed, platform-agnostic runtime required to execute HIL-CYCLE-0001.",
+  "scope": {
+    "experiment_id": "HIL-2026",
+    "cycle_id": "HIL-CYCLE-0001",
+    "runtime_contract": "StegVerse-Labs/TVC/config/hil_runtime_contract.json",
+    "required_successor_restart": true,
+    "required_exact_byte_persistence": true,
+    "required_follow_on_services": [
+      "tvc.state.allocate",
+      "tv.capability.issue",
+      "tvc.execution.verify"
+    ]
+  },
+  "requested_at": "2026-07-25T00:00:00Z",
+  "authority_refs": [
+    "StegVerse-Labs/TVC/config/hil_runtime_contract.json",
+    "StegVerse-Labs/TV/policies/hil_capability_roles.json"
+  ],
+  "evidence_refs": [
+    "StegVerse-Labs/Site/data/hil-activation-state.json",
+    "StegVerse-Labs/Site/data/hil-first-release-readiness.json"
+  ],
+  "cost_context": {
+    "estimated_quantity": 1,
+    "actual_quantity": 1,
+    "invoice_context": "HIL-CYCLE-0001",
+    "inline_estimate_required": true,
+    "inline_actual_required": true
+  },
+  "admissibility_decision": "PENDING_CGE",
+  "simulated_outputs": []
+}
