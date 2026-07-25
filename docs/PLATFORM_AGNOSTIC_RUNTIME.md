@@ -22,7 +22,7 @@ No application code may depend on a provider API, provider metadata endpoint, pr
 ## Canonical container execution
 
 ```sh
-cp platform-agnostic.env.example .env
+cp runtime-environment.example .env
 # Replace both example credentials with distinct secret values.
 docker compose up --build -d
 curl -fsS http://127.0.0.1:8000/health
