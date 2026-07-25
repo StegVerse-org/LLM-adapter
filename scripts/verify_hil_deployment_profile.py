@@ -33,7 +33,7 @@ def main() -> None:
         "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS",
         "STEGVERSE_HIL_REVIEW_TOKEN",
         "STEGVERSE_HIL_PUBLICATION_TOKEN",
-        "actual service restart",
+        "## Restart proof",
         "deployment configured != public acquisition authorized",
         "StegVerse-Labs/Site/data/hil-deployed-controlled-cycle-evidence.json",
     )
@@ -59,7 +59,8 @@ def main() -> None:
     require(parsed == expected, "environment example must remain exact and fail closed")
     require(parsed["STEGVERSE_HIL_REVIEW_TOKEN"] == parsed["STEGVERSE_HIL_PUBLICATION_TOKEN"],
             "example placeholders should match without implying configured separation")
-    require(not re.search(r"(?i)(token|secret)=[A-Za-z0-9_-]{24,}", env),
+    sanitized = env.replace("REPLACE_IN_SECRET_STORE", "")
+    require(not re.search(r"(?i)(token|secret)=[A-Za-z0-9_-]{20,}", sanitized),
             "environment example appears to contain a real secret")
     require("STEGVERSE_HIL_INTAKE_ENABLED=true" not in env,
             "example must not enable intake by default")
