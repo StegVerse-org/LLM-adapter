@@ -1,20 +1,29 @@
-# HIL Deployment Profile
+# HIL Runtime Activation Profile
 
-Version: `HIL-DEPLOYMENT-PROFILE-v1`
+Version: `HIL-RUNTIME-ACTIVATION-PROFILE-v2`
 
 ## Purpose
 
-This document defines the minimum deployable runtime contract for the `Humans as the Interoperability Layer` controlled cycle. It converts the merged HIL gateway implementation into an operator-verifiable deployment profile without granting activation, publication, or Master Record authority.
+This document defines the platform-agnostic runtime contract for the `Humans as the Interoperability Layer` controlled cycle.
 
-## Required application
+There is no hosting-platform dependency, hosting-provider requirement, container-platform requirement, or external secret-store requirement. Runtime construction, configuration delivery, lifecycle transitions, restart, persistence binding, and evidence emission are governed by TV/TVC.
 
-Deploy the repository default branch at or after:
+```text
+application code != hosting platform
+runtime environment != vendor environment
+configuration != unmanaged environment variables
+process restart != provider redeploy
+```
+
+## Required application boundary
+
+The runtime must execute repository code at or after:
 
 ```text
 b2e612dd74d311e0cbe66cd1c1d4758bff129fd4
 ```
 
-The service entry point must expose `llm_adapter.combined_gateway:app` and the following endpoints:
+The application boundary is `llm_adapter.combined_gateway:app` and must expose:
 
 ```text
 GET  /health
@@ -23,47 +32,54 @@ POST /api/hil/submissions
 GET  /api/hil/publication-readiness
 ```
 
-Review and publication mutation endpoints remain authenticated and are not public operator shortcuts.
+Review and publication mutation endpoints remain separately governed and authenticated.
 
-## Required runtime configuration
+## TV/TVC configuration ownership
 
-| Variable | Requirement | Secret |
-|---|---|---|
-| `STEGVERSE_HIL_INTAKE_ENABLED` | Must be `true` only for the controlled deployment | No |
-| `STEGVERSE_HIL_DATA_DIR` | Absolute path on durable mounted storage | No |
-| `STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS` | Must be `true` only after durable storage is actually attached | No |
-| `STEGVERSE_HIL_REVIEW_TOKEN` | Strong credential dedicated to private review | Yes |
-| `STEGVERSE_HIL_PUBLICATION_TOKEN` | Strong credential dedicated to publication | Yes |
+TV/TVC owns all runtime values, including values currently consumed through process-environment compatibility keys.
 
-The review and publication credentials must be distinct. Neither token may be committed, logged, returned by readiness endpoints, placed in workflow artifacts, or reused as a provider credential.
+| Compatibility key | TV/TVC-governed meaning |
+|---|---|
+| `STEGVERSE_HIL_INTAKE_ENABLED` | Controlled-cycle intake gate |
+| `STEGVERSE_HIL_DATA_DIR` | Governed durable-state namespace or resolved local projection |
+| `STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS` | TV/TVC durability attestation result |
+| `STEGVERSE_HIL_REVIEW_TOKEN` | Ephemeral or durable capability credential for private review |
+| `STEGVERSE_HIL_PUBLICATION_TOKEN` | Separate capability credential for publication |
+
+These names are adapter compatibility inputs, not a requirement that a human, hosting provider, shell, `.env` file, or platform dashboard manage them.
+
+TV/TVC may inject them into a process environment, bind them through a runtime adapter, resolve them from governed capability records, or replace the compatibility interface later without changing the HIL protocol.
 
 ## Storage contract
 
-`STEGVERSE_HIL_DATA_DIR` must refer to storage that survives:
+HIL state must survive a TV/TVC-governed runtime restart. The persistence implementation is abstract and may be local, distributed, replicated, content-addressed, database-backed, filesystem-backed, or another admissible TV/TVC storage capability.
 
-1. process restart;
-2. container replacement;
-3. service redeploy;
-4. host rescheduling within the selected platform's documented persistence boundary.
+The persistence contract must preserve:
 
-The directory contains response PDFs, normalized provenance manifests, SQLite state, receipts, and publication artifacts. Declaring durability without an attached persistent volume is a false readiness state.
+- exact response bytes;
+- normalized provenance manifests;
+- submission and review state;
+- receipts;
+- publication records;
+- stable identifiers and hashes.
 
-## Fail-closed deployment sequence
+No mounted volume, container, host, service provider, or vendor storage class is required by the protocol.
+
+## Runtime lifecycle
 
 ```text
-provision persistent volume
--> bind absolute HIL data path
--> configure separate review and publication credentials
--> deploy merged gateway
--> leave public acquisition closed
--> query readiness endpoints
--> record redacted configuration fingerprints
--> run one controlled submission
--> restart or redeploy service
--> prove exact-byte persistence
--> perform private review
--> perform append-only publication
--> export evidence to Site
+TV/TVC resolves runtime capability set
+-> TV/TVC binds governed storage namespace
+-> TV/TVC issues distinct review and publication capabilities
+-> TV/TVC starts gateway runtime
+-> readiness contracts are observed
+-> controlled response is submitted
+-> TV/TVC terminates the runtime instance
+-> TV/TVC starts a new runtime instance against the same governed state
+-> exact-byte and provenance persistence are verified
+-> private review is executed under review capability
+-> publication is executed under separate publication capability
+-> governed evidence is transferred to Site
 ```
 
 ## Readiness acceptance
@@ -77,56 +93,58 @@ state          = READY
 private_review_configured = true
 ```
 
-Publication readiness must independently report that publication configuration is present and append-only. A readiness response grants no publication authority.
+Publication readiness must independently report that publication configuration is present and append-only. Readiness grants no mutation authority.
 
-## Credential fingerprint evidence
+## Capability-separation evidence
 
-For evidence packets, compute a one-way SHA-256 fingerprint locally for each configured credential and preserve only:
+Evidence must establish that intake, private review, and publication are distinct TV/TVC capability bindings. Raw credentials or capability material must never enter repository records.
+
+A permitted projection is:
 
 ```json
 {
-  "credential_role": "private_review",
-  "fingerprint_sha256": "<64 lowercase hex characters>",
-  "secret_disclosed": false
+  "capability_role": "private_review",
+  "binding_fingerprint_sha256": "<64 lowercase hex characters>",
+  "secret_disclosed": false,
+  "tv_tvc_governed": true
 }
 ```
-
-The intake, private-review, and publication roles must not share a fingerprint. The raw values must never enter the repository.
 
 ## Restart proof
 
 A valid restart proof must bind:
 
-- deployment identifier before restart;
-- deployment identifier after restart;
-- restart or redeploy timestamps;
+- TV/TVC transition identifier for termination;
+- TV/TVC transition identifier for subsequent start;
+- prior and successor runtime-instance identifiers;
 - submission identifier;
 - response SHA-256 before and after restart;
 - provenance-manifest SHA-256 before and after restart;
-- storage path class or mounted-volume reference;
+- governed storage-state reference;
 - post-restart lookup result.
 
-An in-process test client, application object recreation, or CI fixture does not satisfy this requirement.
+An in-process application-object recreation does not satisfy this requirement. A TV/TVC-governed process or runtime-instance replacement does.
 
 ## Non-authority boundaries
 
 ```text
-deployment configured != public acquisition authorized
+runtime configured != public acquisition authorized
 readiness READY != controlled cycle complete
-credential present != mutation authorized for an actor
+capability bound != mutation authorized for every actor
 receiver receipt != private acceptance
 private acceptance != publication
 publication != Master Record custody
 restart success != evidence packet approval
+TV/TVC orchestration != automatic release authority
 ```
 
 ## Completion handoff
 
-Runtime evidence must be transferred into the Site-owned governed records:
+Runtime evidence is transferred into:
 
 ```text
 StegVerse-Labs/Site/data/hil-activation-state.json
 StegVerse-Labs/Site/data/hil-deployed-controlled-cycle-evidence.json
 ```
 
-This repository owns gateway behavior and deployment conformance. The Site repository owns public activation state and the evidence chain leading to the first HIL Master Record release.
+`LLM-adapter` owns gateway behavior. TV/TVC owns runtime configuration and lifecycle. Site owns public activation state and the evidence chain leading to the first HIL Master Record release.
