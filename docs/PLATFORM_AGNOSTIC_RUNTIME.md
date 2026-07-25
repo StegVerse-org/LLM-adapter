@@ -70,6 +70,8 @@ A runtime tranche passes portability only when:
 5. no provider-specific code or configuration is necessary;
 6. the resulting evidence identifies the repository revision, image digest, runtime contract version, storage persistence test, and readiness output.
 
+The validation PR changes this authoritative document specifically to execute the portability workflow against the current runtime package. A passing workflow is repository-level portability evidence, not live public activation.
+
 ## Authority boundary
 
 Container build success is not deployment. Deployment is not durable-state proof. Readiness is not activation authority. A receiver receipt is not private acceptance. Private acceptance is not publication. Publication is not Master Record custody.
