@@ -15,6 +15,7 @@
     "llm_adapter/": {"required": true, "purpose": "Main Python package"},
     "docs/": {"required": true, "purpose": "Runtime and integration documentation"},
     "docs/LLM_COMMUNICATIONS_STACK.md": {"required": true, "purpose": "Canonical distributed LLM communications stack map and repository boundary"},
+    "docs/llm-communications-stack.json": {"required": true, "purpose": "Machine-readable distributed stack component and deployment manifest"},
     "examples/": {"required": true, "purpose": "Fixture-bound examples and demo inputs"},
     "fixtures/": {"required": true, "purpose": "Governed response fixtures"},
     "scripts/": {"required": true, "purpose": "Verification and demonstration scripts"},
