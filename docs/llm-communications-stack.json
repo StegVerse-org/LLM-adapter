@@ -1,0 +1,78 @@
+{
+  "schema_version": "STEGVERSE-LLM-COMMS-STACK-v1",
+  "stack_id": "STEGVERSE-LLM-COMMS-STACK-v1",
+  "name": "StegVerse LLM Communications Stack",
+  "architecture": "distributed_governed_communications_stack",
+  "core_rule": "Distributed operation does not imply duplicated ownership.",
+  "components": [
+    {
+      "component_id": "stegverse-sdk",
+      "repository": "StegVerse-org/StegVerse-SDK",
+      "role": "user_facing_entry_adapter"
+    },
+    {
+      "component_id": "llm-adapter",
+      "repository": "StegVerse-org/LLM-adapter",
+      "role": "governed_provider_broker_and_reference_adapter",
+      "deployment_posture": ["demo", "conformance", "reference_implementation"]
+    },
+    {
+      "component_id": "governed-llm",
+      "repository": "StegVerse-Labs/governed-llm",
+      "role": "stegverse_controlled_inference_provider"
+    },
+    {
+      "component_id": "hybrid-collab-bridge",
+      "repository": "StegVerse-Labs/hybrid-collab-bridge",
+      "role": "internal_multi_model_collaboration_adapter"
+    },
+    {
+      "component_id": "comms-gateway",
+      "repository": "StegVerse-Labs/Comms-Gateway",
+      "role": "communication_event_normalization_and_routing"
+    },
+    {
+      "component_id": "continuity",
+      "owner": "StegID / Continuity",
+      "role": "continuity_evidence_and_standing"
+    },
+    {
+      "component_id": "stegcore",
+      "repository": "StegVerse-Labs/StegCore",
+      "role": "commit_time_decision_engine"
+    },
+    {
+      "component_id": "gcat-bcat-workflows",
+      "repository": "GCAT-BCAT-Engine/workflows",
+      "role": "deterministic_validation_and_cross_repository_orchestration"
+    },
+    {
+      "component_id": "master-records",
+      "owner": "Master Records",
+      "role": "durable_custody_replay_and_reconstruction"
+    },
+    {
+      "component_id": "stegghost",
+      "owner": "StegGhost",
+      "role": "isolated_adversarial_and_entity_specific_testing"
+    }
+  ],
+  "required_deployment_fields": [
+    "stack_id",
+    "component_id",
+    "source_repository",
+    "source_revision",
+    "deployment_environment",
+    "governance_profile",
+    "authority_scope",
+    "evidence_posture"
+  ],
+  "excluded_implicit_claims": [
+    "production_authority_from_repository_location",
+    "continuity_truth_from_adapter_output",
+    "admissibility_from_model_output",
+    "execution_authority_from_commitment_request",
+    "publication_authority_from_private_review",
+    "master_record_custody_from_local_persistence"
+  ]
+}
