@@ -1,0 +1,33 @@
+name: HIL Storage Consistency
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/check_hil_storage_consistency.py"
+      - "tests/test_hil_storage_consistency.py"
+      - ".github/workflows/hil-storage-consistency.yml"
+  pull_request:
+    paths:
+      - "scripts/check_hil_storage_consistency.py"
+      - "tests/test_hil_storage_consistency.py"
+      - ".github/workflows/hil-storage-consistency.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+      - name: Test fail-closed storage audit
+        run: python -m pytest tests/test_hil_storage_consistency.py -v
