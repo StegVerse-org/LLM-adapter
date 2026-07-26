@@ -1,0 +1,45 @@
+{
+  "schema": "stegverse.provider_usage_event.v1",
+  "event_id": "pue-fixture-001",
+  "event_type": "PROVIDER_RESPONSE",
+  "provider": {
+    "name": "fixture-provider",
+    "model": "fixture-model",
+    "model_version": "fixture-v1"
+  },
+  "request": {
+    "request_id": "req-fixture-001",
+    "request_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "response": {
+    "response_id": "resp-fixture-001",
+    "response_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "status": "SUCCESS"
+  },
+  "measurements": {
+    "input_tokens": 12,
+    "output_tokens": 8,
+    "total_tokens": 20,
+    "latency_ms": 125,
+    "compute_units": null
+  },
+  "reasoning_provenance": {
+    "mode": "bounded_reference",
+    "reference": "provider://fixture/trace-001",
+    "full_chain_of_thought_included": false
+  },
+  "authority_boundary": {
+    "adapter_is_execution_authority": false,
+    "provider_response_is_admissibility": false,
+    "model_output_is_publication_authority": false,
+    "reasoning_provenance_is_full_chain_of_thought": false,
+    "usage_measurement_is_value_claim": false,
+    "provider_identity_is_actor_authority": false
+  },
+  "return_to_origin": {
+    "origin_event_id": "origin-fixture-001",
+    "receipt_required": true
+  },
+  "manual_user_action_required": false,
+  "event_sha256": "c901980c82603b3ea4879fc52a7804c84cc10480b637da206e76c43cd5e61fe4"
+}
