@@ -1,0 +1,34 @@
+name: HIL HTTPS Receiver Probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      receiver_base_url:
+        description: Public HTTPS origin for the conforming HIL receiver
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      STEGVERSE_HIL_RECEIVER_BASE_URL: ${{ inputs.receiver_base_url }}
+      HIL_PROBE_OUTPUT: reports/hil-https-receiver-probe.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Probe exact HIL v1.1 readiness contract
+        run: python scripts/probe_hil_https_receiver.py
+      - name: Upload non-authorizing probe evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: hil-https-receiver-probe-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/hil-https-receiver-probe.json
+          if-no-files-found: error
+          retention-days: 30
