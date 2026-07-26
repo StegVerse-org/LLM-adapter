@@ -35,3 +35,7 @@ python internal_tests/run_governed_reference_suite.py
 The command writes `internal_tests/artifacts/governed-reference-results.json`.
 
 A passing run establishes only deterministic reference behavior for the declared vectors and public replayability of the generated evidence packet. It does not establish deployed runtime operation, provider invocation, durable infrastructure persistence, HIL custody, independent reproduction, or production assurance.
+
+## Current owner
+
+PR #58 is the reconciled current-main owner. PR #51 is superseded after preservation of the complete isolated implementation.
