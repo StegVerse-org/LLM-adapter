@@ -11,11 +11,17 @@
     "LICENSE": {"required": true, "purpose": "Software license"},
     "pyproject.toml": {"required": true, "purpose": "Python packaging"},
     "adapter.capabilities.json": {"required": true, "purpose": "Machine-readable adapter capabilities"},
+    "stegverse.component.json": {"required": true, "purpose": "Local machine-readable LLM communications stack component contract"},
     "LLM_ADAPTER_MIRROR_HANDOFF.md": {"required": true, "purpose": "Current build handoff source of truth"},
     "llm_adapter/": {"required": true, "purpose": "Main Python package"},
     "docs/": {"required": true, "purpose": "Runtime and integration documentation"},
     "docs/LLM_COMMUNICATIONS_STACK.md": {"required": true, "purpose": "Canonical distributed LLM communications stack map and repository boundary"},
     "docs/llm-communications-stack.json": {"required": true, "purpose": "Machine-readable distributed stack component and deployment manifest"},
+    "schema/component.schema.json": {"required": true, "purpose": "Canonical component conformance schema"},
+    "registry/components.json": {"required": true, "purpose": "Canonical component and authority registry"},
+    "scripts/validate_stack_conformance.py": {"required": true, "purpose": "Dependency-free stack conformance validator"},
+    "tests/test_stack_conformance.py": {"required": true, "purpose": "Fail-closed stack conformance tests"},
+    ".github/workflows/stack-conformance.yml": {"required": true, "purpose": "Pull-request and main-branch conformance enforcement"},
     "examples/": {"required": true, "purpose": "Fixture-bound examples and demo inputs"},
     "fixtures/": {"required": true, "purpose": "Governed response fixtures"},
     "scripts/": {"required": true, "purpose": "Verification and demonstration scripts"},
@@ -58,10 +64,14 @@
   "validation_hooks": {
     "ci_pull_request": true,
     "ci_push_main": true,
-    "scheduled_audit": "weekly"
+    "scheduled_audit": "weekly",
+    "stack_conformance": "strict"
   },
   "integration_points": {
     "stack_id": "STEGVERSE-LLM-COMMS-STACK-v1",
+    "component_manifest": "stegverse.component.json",
+    "component_schema": "schema/component.schema.json",
+    "component_registry": "registry/components.json",
     "sdk": "github.com/StegVerse-org/StegVerse-SDK",
     "governed_inference_provider": "github.com/StegVerse-Labs/governed-llm",
     "internal_collaboration_adapter": "github.com/StegVerse-Labs/hybrid-collab-bridge",
