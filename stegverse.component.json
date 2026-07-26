@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "stack_id": "STEGVERSE-LLM-COMMS-STACK-v1",
+  "component_id": "llm-adapter",
+  "repository": "StegVerse-org/LLM-adapter",
+  "role": "governed_provider_broker_and_reference_adapter",
+  "version": "2.1",
+  "deployment_posture": ["demo", "conformance", "reference_implementation"],
+  "consumes": [
+    "sdk_request",
+    "provider_capability_declaration",
+    "provider_response",
+    "policy_reference",
+    "delegation_reference",
+    "continuity_evidence"
+  ],
+  "produces": [
+    "normalized_provider_request",
+    "normalized_provider_response",
+    "governance_candidate",
+    "commitment_request",
+    "adapter_receipt",
+    "governed_return_payload"
+  ],
+  "upstream": ["stegverse-sdk", "governed-llm"],
+  "downstream": ["hybrid-collab-bridge", "comms-gateway", "continuity", "stegcore"],
+  "authority": {
+    "owns": ["provider_brokerage", "request_response_normalization", "adapter_receipt_generation", "transition_preparation"],
+    "excludes": ["identity", "continuity_truth", "admissibility", "execution", "publication", "master_record_custody"]
+  },
+  "evidence_posture": "binds supplied evidence without converting it into continuity truth or commit-time standing",
+  "documentation": "docs/LLM_COMMUNICATIONS_STACK.md"
+}
