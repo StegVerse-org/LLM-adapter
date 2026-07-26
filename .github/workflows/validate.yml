@@ -114,6 +114,7 @@ jobs:
           retention-days: 30
       - name: Retain and persist current activation evidence
         if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        continue-on-error: true
         run: |
           state="$(python - <<'PY'
           import json
@@ -197,6 +198,7 @@ jobs:
           retention-days: 30
       - name: Persist destination activation state
         if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        continue-on-error: true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
