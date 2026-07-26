@@ -3,7 +3,7 @@
   "schema_version": "1.0.0",
   "repo_id": "LLM-adapter",
   "repo_type": "adapter",
-  "description": "Common governed provider broker and reference adapter for the distributed StegVerse LLM Communications Stack; StegVerse-org deployments remain Demo and conformance surfaces unless separately accredited.",
+  "description": "SDK-adjacent user-LLM access adapter that lets an authorized external LLM interact with the StegVerse demo test suite, construct manifest-ready submissions, route bounded test data to the entity sandbox runner, and return governed results without granting execution authority.",
   "inherits_from": null,
   "enforcement": "strict",
   "expected_structure": {
@@ -62,7 +62,9 @@
   },
   "integration_points": {
     "stack_id": "STEGVERSE-LLM-COMMS-STACK-v1",
-    "sdk": "github.com/StegVerse-org/StegVerse-SDK",
+    "sdk_equivalent_user_entry": "github.com/StegVerse-org/StegVerse-SDK",
+    "demo_test_suite": "github.com/StegVerse-org/demo_ingest_engine",
+    "entity_sandbox_runner": "github.com/StegGhost/entity-sandbox-runner",
     "governed_inference_provider": "github.com/StegVerse-Labs/governed-llm",
     "internal_collaboration_adapter": "github.com/StegVerse-Labs/hybrid-collab-bridge",
     "communications_gateway": "github.com/StegVerse-Labs/Comms-Gateway",
