@@ -5,6 +5,17 @@
 
 Release: v2.1
 
+## Position in the LLM Communications Stack
+
+- **Stack ID:** `STEGVERSE-LLM-COMMS-STACK-v1`
+- **Component ID:** `llm-adapter`
+- **Bounded role:** common governed provider broker and reference LLM adapter implementation
+- **Consumes:** SDK or application requests, provider configuration, model responses, continuity evidence, policy and delegation references
+- **Produces:** normalized provider responses, governed adapter receipts, LLM transition candidates, non-authorizing commitment requests, and governed return envelopes
+- **Does not own:** model hosting, general communications routing, continuity truth, identity, commit-time authority, execution, publication authority, internal collaboration policy, or Master Records custody
+- **Deployment posture:** StegVerse-org instances remain Demo and conformance surfaces unless a separate accreditation record establishes another posture
+- **Canonical reference:** [`docs/LLM_COMMUNICATIONS_STACK.md`](docs/LLM_COMMUNICATIONS_STACK.md)
+
 `LLM-adapter` is the SDK-adjacent intake bridge for converting LLM outputs into StegVerse route-ready governance artifacts.
 
 The adapter does not execute LLM output directly. It normalizes output, classifies risk, produces a governance decision, and prepares admissible outputs for receipt-bound routing through the StegVerse formal testing path.
