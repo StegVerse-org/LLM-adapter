@@ -6,6 +6,7 @@ Importing this module does not start a server. FastAPI is imported lazily throug
 
 from __future__ import annotations
 
+import os
 from typing import Any, Mapping
 
 from .user_llm_router import RouteTransports, handle_user_llm_request
@@ -106,3 +107,34 @@ def create_app(
         }
 
     return app
+
+
+def main() -> int:
+    """Start the service only when the explicit console command is invoked."""
+    try:
+        import uvicorn
+    except ImportError as exc:  # pragma: no cover - depends on optional extra
+        raise RuntimeError(
+            "Uvicorn is not installed; install stegverse-llm-adapter[service]"
+        ) from exc
+
+    host = os.getenv("STEGVERSE_USER_LLM_HOST", "127.0.0.1")
+    port_raw = os.getenv("STEGVERSE_USER_LLM_PORT", "8080")
+    try:
+        port = int(port_raw)
+    except ValueError as exc:
+        raise RuntimeError("STEGVERSE_USER_LLM_PORT must be an integer") from exc
+    if port < 1 or port > 65535:
+        raise RuntimeError("STEGVERSE_USER_LLM_PORT must be between 1 and 65535")
+
+    uvicorn.run(
+        create_app(),
+        host=host,
+        port=port,
+        log_level=os.getenv("STEGVERSE_USER_LLM_LOG_LEVEL", "info"),
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
