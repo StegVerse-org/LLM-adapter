@@ -145,7 +145,7 @@ jobs:
             echo "Current activation evidence unchanged."
           else
             git commit -m "chore: retain validation-owned Ecosystem Chat activation evidence [skip ci]"
-            git pull --rebase
+            git pull --rebase --autostash
             git push
           fi
       - name: Test authenticated usage session endpoint
@@ -204,7 +204,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Destination activation state unchanged."
           else
-            git commit -m "Update Ecosystem Chat destination activation state"
-            git pull --rebase
+            git commit -m "Update Ecosystem Chat destination activation state [skip ci]"
+            git pull --rebase --autostash
             git push
           fi
