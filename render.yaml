@@ -2,12 +2,16 @@ services:
   - type: web
     name: stegverse-ecosystem-chat-gateway
     runtime: python
-    plan: free
+    plan: starter
     autoDeploy: true
     renderSubdomainPolicy: enabled
     buildCommand: pip install --upgrade pip && pip install -e '.[service]'
     startCommand: python -m llm_adapter.custody_worker && uvicorn llm_adapter.combined_gateway:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
+    disk:
+      name: stegverse-data
+      mountPath: /var/lib/stegverse
+      sizeGB: 1
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.4
@@ -18,9 +22,9 @@ services:
       - key: STEGVERSE_CHAT_RATE_WINDOW_SECONDS
         value: 3600
       - key: STEGVERSE_TRANSITION_DB
-        value: /tmp/stegverse-ecosystem-chat.db
+        value: /var/lib/stegverse/stegverse-ecosystem-chat.db
       - key: STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS
-        value: "false"
+        value: "true"
       - key: STEGVERSE_HIL_INTAKE_ENABLED
         value: "true"
       - key: STEGVERSE_HIL_DATA_DIR
@@ -30,7 +34,7 @@ services:
       - key: STEGVERSE_HIL_PUBLICATION_TOKEN
         generateValue: true
       - key: STEGVERSE_EXTERNAL_REVIEW_DB
-        value: /tmp/stegverse-external-review.db
+        value: /var/lib/stegverse/stegverse-external-review.db
       - key: STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN
         generateValue: true
       - key: STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY
