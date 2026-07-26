@@ -16,6 +16,7 @@ PR #38 merge: a21aa50526487fd16a46bd62488a7965d29aa3ed
 PR #39 merge: 14724798fef253b4aca34c5da6ed34fe8ed6fcb8
 Healer relay merge: 1b0d0660da8a0597137c6cb822a0ef751c2bf352
 Core-node intake merge: f742105877541f67a85abd7fbe23154ce4addee7
+Canonical evidence trigger requested: 2026-07-26
 Manual user action required: false
 Provider execution authority: false
 Persistent deployment authority: false
@@ -34,7 +35,7 @@ The workflow contains the v2 contract, exact stage outcomes, fresh pull verifica
 
 ## Canonical Publication Trigger
 
-This handoff update is intentionally within the canonical workflow's `push.paths` boundary. After merge to `main`, the repository must run `.github/workflows/stegdeploy-image.yml` automatically and retain the resulting v2 evidence set.
+This handoff update is intentionally within the canonical workflow's `push.paths` boundary. Its merge to `main` requests the repository to run `.github/workflows/stegdeploy-image.yml` automatically and retain the resulting v2 evidence set.
 
 The trigger changes no runtime code and grants no publication, deployment, provider, custody, release, or activation authority by itself. Its only purpose is to cause the already-governed publication workflow to produce fresh evidence.
 
@@ -86,10 +87,9 @@ A passing structural validator does not mean the image is published, publicly ac
 
 ## Next Machine-Owned Actions
 
-1. Validate and merge this canonical publication trigger.
-2. Observe the main-branch StegDeploy image workflow.
-3. Retain the resulting v2 `PUBLISHED` or exact `BLOCKED` receipt, pull log, and readiness status automatically.
-4. If `BLOCKED`, repair only the first exact retained blocker.
-5. If `PUBLISHED`, allow the merged Healer relay to dispatch the bounded publication event.
-6. Verify core-node intake retains matching receipt-hash and image-digest compatibility evidence.
-7. Persistent hosting and real-provider/custody configuration remain separate authority-gated boundaries.
+1. Observe the main-branch StegDeploy image workflow triggered by this handoff update.
+2. Retain the resulting v2 `PUBLISHED` or exact `BLOCKED` receipt, pull log, and readiness status automatically.
+3. If `BLOCKED`, repair only the first exact retained blocker.
+4. If `PUBLISHED`, allow the merged Healer relay to dispatch the bounded publication event.
+5. Verify core-node intake retains matching receipt-hash and image-digest compatibility evidence.
+6. Persistent hosting and real-provider/custody configuration remain separate authority-gated boundaries.
