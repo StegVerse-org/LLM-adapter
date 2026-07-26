@@ -1,0 +1,44 @@
+name: LLM Stack Conformance
+
+on:
+  pull_request:
+    paths:
+      - "stegverse.component.json"
+      - "registry/**"
+      - "schema/**"
+      - "scripts/validate_stack_conformance.py"
+      - "tests/test_stack_conformance.py"
+      - ".github/workflows/stack-conformance.yml"
+  push:
+    branches: [main]
+    paths:
+      - "stegverse.component.json"
+      - "registry/**"
+      - "schema/**"
+      - "scripts/validate_stack_conformance.py"
+      - "tests/test_stack_conformance.py"
+      - ".github/workflows/stack-conformance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate canonical stack contract
+        run: python scripts/validate_stack_conformance.py --report stack-conformance-report.json
+      - name: Run conformance tests
+        run: python -m pytest tests/test_stack_conformance.py -q
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: llm-stack-conformance-report
+          path: stack-conformance-report.json
+          if-no-files-found: warn
