@@ -15,7 +15,7 @@ from llm_adapter.ecosystem_chat_gateway import app
 from llm_adapter.external_chat_api import router as external_chat_router
 from llm_adapter.external_review_api import router as external_review_router
 from llm_adapter.external_publication_mutation import router as external_mutation_router
-from llm_adapter.hil_intake_api import router as hil_intake_router
+from llm_adapter.hil_intake_v1_1_api import router as hil_intake_router
 from llm_adapter.hil_publication_api import router as hil_publication_router
 from llm_adapter.master_records_usage_submission import (
     MasterRecordsUsageError,
@@ -121,7 +121,7 @@ async def record_provider_usage_after_ecosystem_chat(request: Request, call_next
             )
             authority["provider_usage_grants_authority"] = False
             raw_body = json.dumps(response_payload, separators=(",", ":")).encode("utf-8")
-        except Exception as exc:  # fail visible without invalidating the bounded response
+        except Exception as exc:
             try:
                 response_payload = json.loads(raw_body.decode("utf-8"))
                 response_payload["provider_usage_submission"] = {
@@ -153,10 +153,6 @@ async def record_provider_usage_after_ecosystem_chat(request: Request, call_next
     )
 
 
-# Outer CORS boundary for authenticated cooperative-review submissions. Provider,
-# custody, reviewer, publisher, mutator, submitter, and usage-submission credentials
-# are never exposed to the browser. Same-origin usage retrieval relies on a matching
-# session cookie or X-SteGVerse-Session identity rather than a Site-configured token.
 allowed_origins = [
     value.strip()
     for value in os.getenv(
