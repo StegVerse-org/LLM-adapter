@@ -10,13 +10,21 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
 
 PRIMARY = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
 PROMPT = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c"
 PROTOCOL = "HIL-PROTOCOL-v1.1"
 PROMPT_VERSION = "HIL-PROMPT-v1.1"
 PROVENANCE = "HIL-RESPONSE-PROVENANCE-v1.1"
+MAX_READINESS_BYTES = 64 * 1024
+
+
+class RejectRedirects(HTTPRedirectHandler):
+    """Fail closed instead of following a receiver-controlled redirect."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
+        raise RuntimeError(f"readiness redirect rejected: HTTP {code}")
 
 
 def canonical_hash(value: dict) -> str:
@@ -35,11 +43,23 @@ def main() -> int:
     require(parsed.scheme == "https", "receiver must use HTTPS")
     require(parsed.netloc and not parsed.username and not parsed.password, "receiver URL is invalid")
     require(not parsed.query and not parsed.fragment, "receiver URL must not contain query or fragment")
+    require(parsed.path in {"", "/"}, "receiver base URL must not contain a path")
 
-    request = Request(f"{base}/api/hil/readiness", headers={"Accept": "application/json", "User-Agent": "StegVerse-HIL-v1.1-probe"})
-    with urlopen(request, timeout=20, context=ssl.create_default_context()) as response:
+    readiness_url = f"{parsed.scheme}://{parsed.netloc}/api/hil/readiness"
+    request = Request(
+        readiness_url,
+        headers={"Accept": "application/json", "User-Agent": "StegVerse-HIL-v1.1-probe"},
+    )
+    opener = build_opener(RejectRedirects(), HTTPSHandler(context=ssl.create_default_context()))
+    with opener.open(request, timeout=20) as response:
         require(response.status == 200, f"readiness returned HTTP {response.status}")
-        payload = json.loads(response.read().decode("utf-8"))
+        require(response.geturl() == readiness_url, "readiness origin or path changed")
+        content_type = response.headers.get_content_type()
+        require(content_type == "application/json", f"readiness content type mismatch: {content_type}")
+        body = response.read(MAX_READINESS_BYTES + 1)
+        require(len(body) <= MAX_READINESS_BYTES, "readiness response exceeds size limit")
+        payload = json.loads(body.decode("utf-8"))
+    require(isinstance(payload, dict), "readiness payload must be a JSON object")
 
     expected = {
         "state": "READY",
@@ -66,6 +86,8 @@ def main() -> int:
         "receiver_origin": f"{parsed.scheme}://{parsed.netloc}",
         "readiness_path": "/api/hil/readiness",
         "tls_verified": True,
+        "redirects_followed": False,
+        "response_size_bytes": len(body),
         "http_status": 200,
         "contract_state": "CONFORMING_V1_1_READINESS_OBSERVED",
         "readiness": payload,
