@@ -21,6 +21,14 @@ services:
         value: /tmp/stegverse-ecosystem-chat.db
       - key: STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS
         value: "false"
+      - key: STEGVERSE_HIL_INTAKE_ENABLED
+        value: "true"
+      - key: STEGVERSE_HIL_DATA_DIR
+        value: /var/lib/stegverse/hil
+      - key: STEGVERSE_HIL_REVIEW_TOKEN
+        generateValue: true
+      - key: STEGVERSE_HIL_PUBLICATION_TOKEN
+        generateValue: true
       - key: STEGVERSE_EXTERNAL_REVIEW_DB
         value: /tmp/stegverse-external-review.db
       - key: STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN
