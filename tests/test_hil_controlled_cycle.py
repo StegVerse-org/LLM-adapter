@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from llm_adapter.combined_gateway import app
 
-PRIMARY = "52102cccb9ba9016c76434a64e22031b6a8c3edd3b8806e7b664e609216b2946"
+PRIMARY = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
 PROMPT = "0ebe215318b4eeeb8ed6422e0954372c314fadc8fac9254e452bc7670a1b9922"
 
 
@@ -76,7 +76,6 @@ def test_hil_complete_controlled_cycle_survives_client_restart(monkeypatch, tmp_
     assert receiver_receipt["submitted_file_sha256"] == response_hash
     assert receiver_receipt["chain_validation_state"] == "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED"
 
-    # A new TestClient exercises the same durable database and stored artifacts.
     second_client = TestClient(app)
     review_state = second_client.get(
         f"/api/hil/submissions/{submission_id}/review-state",
