@@ -46,3 +46,4 @@ reports/
 
 # Provider-neutral runtime state and generated secrets
 .stegdeploy/
+.env.hil.local
