@@ -11,16 +11,45 @@ from typing import Any, Mapping
 from .user_llm_router import RouteTransports, handle_user_llm_request
 
 
+def resolve_route_transports(
+    transports: RouteTransports | None = None,
+    *,
+    load_environment: bool = True,
+) -> RouteTransports:
+    """Resolve explicit transports first, then optional environment configuration.
+
+    Resolution is side-effect free: environment configuration only creates callable
+    bindings and does not issue network requests.
+    """
+    if transports is not None:
+        return transports
+    if not load_environment:
+        return RouteTransports()
+
+    from .user_llm_http_transport import build_http_route_transports
+
+    return build_http_route_transports()
+
+
 def handle_http_payload(
     payload: Mapping[str, Any],
     *,
     transports: RouteTransports | None = None,
+    load_environment: bool = True,
 ) -> dict[str, Any]:
     """Handle one transport-neutral HTTP/MCP-compatible request payload."""
-    return handle_user_llm_request(payload, transports=transports)
+    resolved = resolve_route_transports(
+        transports,
+        load_environment=load_environment,
+    )
+    return handle_user_llm_request(payload, transports=resolved)
 
 
-def create_app(*, transports: RouteTransports | None = None):
+def create_app(
+    *,
+    transports: RouteTransports | None = None,
+    load_environment: bool = True,
+):
     """Create a FastAPI application without starting network listeners."""
     try:
         from fastapi import FastAPI
@@ -28,6 +57,11 @@ def create_app(*, transports: RouteTransports | None = None):
         raise RuntimeError(
             "FastAPI service dependencies are not installed; install the service extra"
         ) from exc
+
+    resolved = resolve_route_transports(
+        transports,
+        load_environment=load_environment,
+    )
 
     app = FastAPI(
         title="StegVerse User-LLM Access",
@@ -50,14 +84,18 @@ def create_app(*, transports: RouteTransports | None = None):
 
     @app.post("/v1/user-llm/requests")
     def submit_request(payload: dict[str, Any]) -> dict[str, Any]:
-        return handle_http_payload(payload, transports=transports)
+        return handle_http_payload(
+            payload,
+            transports=resolved,
+            load_environment=False,
+        )
 
     @app.get("/healthz")
     def health() -> dict[str, Any]:
         configured = {
-            "demo_test_suite": bool(transports and transports.demo_test_suite),
-            "entity_sandbox_runner": bool(transports and transports.entity_sandbox_runner),
-            "hil_response_packet": bool(transports and transports.hil_response_packet),
+            "demo_test_suite": bool(resolved.demo_test_suite),
+            "entity_sandbox_runner": bool(resolved.entity_sandbox_runner),
+            "hil_response_packet": bool(resolved.hil_response_packet),
         }
         return {
             "status": "OK",
