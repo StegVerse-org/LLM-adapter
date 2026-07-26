@@ -9,14 +9,16 @@ Release: v2.1
 
 - **Stack ID:** `STEGVERSE-LLM-COMMS-STACK-v1`
 - **Component ID:** `llm-adapter`
-- **Bounded role:** common governed provider broker and reference LLM adapter implementation
-- **Consumes:** SDK or application requests, provider configuration, model responses, continuity evidence, policy and delegation references
-- **Produces:** normalized provider responses, governed adapter receipts, LLM transition candidates, non-authorizing commitment requests, and governed return envelopes
-- **Does not own:** model hosting, general communications routing, continuity truth, identity, commit-time authority, execution, publication authority, internal collaboration policy, or Master Records custody
+- **Primary bounded role:** SDK-adjacent access bridge that connects an authorized user's external LLM as a user-class participant for Demo test-suite interaction and bounded entity-sandbox submission
+- **Consumes:** authenticated user/LLM requests, Demo test-suite operations, test data, provider and model metadata, continuity evidence, policy and delegation references
+- **Produces:** manifest-ready test packages, normalized LLM-originated inputs, governed adapter receipts, bounded sandbox submissions, transition candidates, and governed results returned to the originating LLM
+- **Does not own:** user identity merely from connection, model hosting, general communications routing, continuity truth, commit-time authority, unrestricted execution, publication authority, internal collaboration policy, or Master Records custody
 - **Deployment posture:** StegVerse-org instances remain Demo and conformance surfaces unless a separate accreditation record establishes another posture
 - **Canonical reference:** [`docs/LLM_COMMUNICATIONS_STACK.md`](docs/LLM_COMMUNICATIONS_STACK.md)
 
-`LLM-adapter` is the SDK-adjacent intake bridge for converting LLM outputs into StegVerse route-ready governance artifacts.
+`LLM-adapter` is the SDK-adjacent access bridge through which a user's external LLM can connect to StegVerse, view and manipulate the bounded Demo test suite, construct test submissions, send data to `StegGhost/entity-sandbox-runner`, and receive governed results through the original user path.
+
+Provider-response normalization and metadata binding are supporting capabilities. They do not redefine the repository as a provider broker or displace its user-LLM access purpose.
 
 The adapter does not execute LLM output directly. It normalizes output, classifies risk, produces a governance decision, and prepares admissible outputs for receipt-bound routing through the StegVerse formal testing path.
 
@@ -25,6 +27,7 @@ The adapter does not execute LLM output directly. It normalizes output, classifi
 ## Boundary rule
 
 ```text
+LLM connection is not authority.
 LLM output is not execution.
 Execution is not authority.
 Authority is not admissibility.
@@ -58,14 +61,13 @@ adapter.capabilities.json
 Current governed chain:
 
 ```text
-provider request
-  -> provider response
-  -> continuity evidence
-  -> governed adapter receipt
-  -> action route
-  -> commitment request
-  -> authority decision
-  -> disabled execution handoff
+user / external LLM request
+  -> authenticated adapter access
+  -> SDK-equivalent Demo/test operation
+  -> manifest-ready package
+  -> Demo test suite or entity sandbox runner
+  -> governed receipt and result
+  -> original user / external LLM path
 ```
 
 Local verification:
@@ -148,10 +150,11 @@ The free-tier boundary does not claim that quota availability is admissibility, 
 
 | Role | Function |
 |---|---|
-| Governance ingress | LLM output -> canonical intent -> safety classification -> decision |
+| User-LLM access bridge | Authorized external LLM -> SDK-equivalent Demo/test capability -> governed return |
 | SDK-side adapter | User / LLM Adapter submission -> manifest-ready package |
+| Demo test-suite interface | View and manipulate bounded Demo test-suite state under authenticated scope |
 | Test-route feeder | Route admissible packages into SDK / ingestion / sandbox testing paths |
-| Governed runtime boundary | Provider output -> continuity evidence -> receipts -> disabled execution handoff |
+| Governed runtime boundary | LLM-originated input -> continuity evidence -> receipts -> disabled unrestricted execution handoff |
 | Micro-node return-path caller | Adapter fixture -> micro-node-compatible request -> governed return to origin |
 | AI Entry free-tier trust boundary | Public inquiry -> bounded quota/receipt/replay metadata -> Site-visible trust envelope |
 
@@ -169,7 +172,7 @@ The free-tier boundary does not claim that quota availability is admissibility, 
 - optional HTTP provider clients that fail closed without credentials;
 - optional continuity service client that fails closed without endpoint configuration;
 - non-authorizing commitment requests;
-- disabled execution gateway by default;
+- disabled unrestricted execution gateway by default;
 - micro-node-compatible governed return-path fixture verification;
 - side-effect-free free-tier quota and receipt/replay limit evaluation.
 
@@ -217,17 +220,18 @@ print(result["execution_handoff"]["status"])
 ## Formal route position
 
 ```text
-User / LLM system
--> LLM-adapter
--> StegVerse-SDK intake
+User / external LLM
+-> LLM-adapter authenticated user-access boundary
+-> StegVerse-SDK-equivalent Demo/test capabilities
 -> manifest binding
 -> receipt binding
--> StegVerse-org ingestion
--> bounded test route
+-> StegVerse-org Demo test route
+-> StegGhost/entity-sandbox-runner when adversarial or entity-specific testing is requested
 -> returned result / reconstruction packet
+-> originating user / external LLM
 ```
 
-For adversarial or entity-specific tests, the bounded downstream route is `StegGhost/entity-sandbox-runner` after SDK intake.
+For adversarial or entity-specific tests, the bounded downstream route is `StegGhost/entity-sandbox-runner` after adapter/SDK-equivalent intake.
 
 ---
 
@@ -235,10 +239,10 @@ For adversarial or entity-specific tests, the bounded downstream route is `StegG
 
 | System | Role |
 |---|---|
-| `StegVerse-org/StegVerse-SDK` | Public SDK intake boundary |
+| `StegVerse-org/StegVerse-SDK` | Parallel direct public/application entry with the same bounded Demo/test distinction |
 | `StegVerse-002/micro-node-runtime` | Portable transition-table-native governed return-path contract |
 | `StegVerse-org/core-node-runtime-demo` | Runtime path compatibility comparison |
-| `StegVerse-org/demo_ingest_engine` | Org-side orchestration / result-return boundary |
+| `StegVerse-org/demo_ingest_engine` | Demo test-suite orchestration and result-return boundary |
 | `StegGhost/entity-sandbox-runner` | Bounded sandbox test path |
 | Trust Kernel | Private authority-bearing governance kernel |
 | StegVerse Admission | Private admission / threshold layer |
