@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stegverse-llm-adapter"
-version = "2.2.0"
+version = "2.3.0"
 description = "Governed bridge for bounded user-controlled LLM access to StegVerse services"
 readme = "README.md"
 license = {text = "MIT"}
@@ -48,6 +48,7 @@ stegnode-bootstrap = "llm_adapter.node_bootstrap:main"
 stegnode = "llm_adapter.node_service:main"
 stegnode-autostart = "llm_adapter.node_autostart:main"
 stegverse-user-llm-service = "llm_adapter.user_llm_service:main"
+stegverse-service-gateway = "llm_adapter.service_gateway:main"
 
 [project.urls]
 Homepage = "https://github.com/StegVerse-org/LLM-adapter"
