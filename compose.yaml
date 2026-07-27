@@ -5,23 +5,28 @@ services:
       dockerfile: Dockerfile
     image: stegverse/llm-adapter:local
     restart: unless-stopped
+    command: ["uvicorn", "llm_adapter.deployed_gateway:app", "--host", "0.0.0.0", "--port", "8000"]
     ports:
-      - "${PORT:-8000}:${PORT:-8000}"
+      - "${PORT:-8000}:8000"
     environment:
-      PORT: "${PORT:-8000}"
+      PORT: "8000"
       STEGVERSE_NODE_ID: "${STEGVERSE_NODE_ID:-ecosystem-chat-portable-node}"
       STEGVERSE_ALLOWED_ORIGINS: "${STEGVERSE_ALLOWED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}"
       STEGVERSE_HIL_INTAKE_ENABLED: "${STEGVERSE_HIL_INTAKE_ENABLED:-true}"
       STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: "true"
       STEGVERSE_HIL_REVIEW_TOKEN: "${STEGVERSE_HIL_REVIEW_TOKEN:?set STEGVERSE_HIL_REVIEW_TOKEN}"
       STEGVERSE_HIL_PUBLICATION_TOKEN: "${STEGVERSE_HIL_PUBLICATION_TOKEN:?set STEGVERSE_HIL_PUBLICATION_TOKEN}"
+      STEGVERSE_USER_LLM_TEST_MODE: "${STEGVERSE_USER_LLM_TEST_MODE:-true}"
+      STEGVERSE_DEMO_TEST_SUITE_URL: "${STEGVERSE_DEMO_TEST_SUITE_URL:-http://127.0.0.1/user-llm-test/demo}"
+      STEGVERSE_ENTITY_SANDBOX_RUNNER_URL: "${STEGVERSE_ENTITY_SANDBOX_RUNNER_URL:-http://127.0.0.1/user-llm-test/sandbox}"
+      STEGVERSE_HIL_RESPONSE_PACKET_URL: "${STEGVERSE_HIL_RESPONSE_PACKET_URL:-http://127.0.0.1/user-llm-test/hil}"
     volumes:
       - stegverse-data:/var/lib/stegverse
     healthcheck:
-      test: ["CMD", "python", "-c", "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/health' % os.environ.get('PORT','8000'), timeout=3)"]
-      interval: 30s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/user-llm/healthz', timeout=3)"]
+      interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 6
       start_period: 20s
 
 volumes:
