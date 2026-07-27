@@ -1,0 +1,71 @@
+name: HIL Full-Cycle Artifact Contract
+
+on:
+  push:
+    paths:
+      - "scripts/verify_hil_full_cycle_artifact.py"
+      - ".github/workflows/hil-full-cycle-artifact-contract.yml"
+  pull_request:
+    paths:
+      - "scripts/verify_hil_full_cycle_artifact.py"
+      - ".github/workflows/hil-full-cycle-artifact-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build pure synthetic HIL evidence bundle
+        shell: bash
+        run: |
+          mkdir -p .hil-artifact-fixture
+          printf 'first gateway log\n' > .hil-artifact-fixture/gateway-first.log
+          printf 'restart gateway log\n' > .hil-artifact-fixture/gateway-restart.log
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+
+          receipt = {
+              "schema_version": "HIL-AUTOMATED-FULL-CYCLE-RECEIPT-v1",
+              "observation_scope": "GITHUB_HOSTED_EPHEMERAL_FULL_CYCLE_PROOF",
+              "readiness_before_restart": "READY",
+              "readiness_after_restart": "READY",
+              "actual_process_restart": True,
+              "exact_response_bytes_persisted": True,
+              "provenance_manifest_persisted": True,
+              "accept_private_completed": True,
+              "append_only_publication_completed": True,
+              "stable_public_lookup_completed": True,
+              "durable_counts": {"submissions": 1, "reviews": 1, "publications": 1},
+              "external_production_deployment_claimed": False,
+              "master_record_release_claimed": False,
+              "orchestration_authority_granted": False,
+              "authority_effect": "NONE",
+          }
+          receipt["receipt_sha256"] = hashlib.sha256(
+              json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
+          ).hexdigest()
+          Path(".hil-artifact-fixture/hil-automated-full-cycle-receipt-v1.json").write_text(
+              json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+      - name: Accept pure bounded evidence
+        run: python scripts/verify_hil_full_cycle_artifact.py .hil-artifact-fixture --output reports/hil-full-cycle-artifact-verification.json
+      - name: Reject provider-specific contamination
+        shell: bash
+        run: |
+          cp -R .hil-artifact-fixture .hil-artifact-contaminated
+          printf '{}\n' > .hil-artifact-contaminated/ecosystem-chat-live-activation-status.json
+          if python scripts/verify_hil_full_cycle_artifact.py .hil-artifact-contaminated; then
+            echo "contaminated bundle unexpectedly passed" >&2
+            exit 1
+          fi
