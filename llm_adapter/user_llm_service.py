@@ -1,10 +1,8 @@
 """Optional HTTP service for bounded user-LLM access."""
 
 from __future__ import annotations
-
 import os
 from typing import Any, Mapping
-
 from .user_llm_router import RouteTransports, handle_user_llm_request
 
 
@@ -102,6 +100,11 @@ def create_app(
     def readiness() -> JSONResponse:
         payload = _readiness_payload(resolved)
         return JSONResponse(status_code=200 if payload["state"] == "READY" else 503, content=payload)
+
+    @app.get("/v1/user-llm/activation-proof")
+    def activation_proof() -> dict[str, Any]:
+        from .user_llm_activation import build_activation_proof
+        return build_activation_proof().as_public_dict()
 
     return app
 
