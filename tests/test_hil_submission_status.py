@@ -32,6 +32,7 @@ class HILSubmissionStatusTests(unittest.TestCase):
             "submission_id": self.submission_id,
             "attempted_at": "2026-07-27T20:00:00Z",
             "notification_delivery_state": "PARTIAL",
+            "notification_retry_authority_state": "ACTIVE",
             "recipient_address_retention_state": "UNRESOLVED_ONLY",
             "participant_copy_requested": True,
         }), encoding="utf-8")
@@ -58,6 +59,7 @@ class HILSubmissionStatusTests(unittest.TestCase):
         encoded = json.dumps(status)
         self.assertEqual(status["submission_state"], "ACCEPTED")
         self.assertEqual(status["notification_delivery_state"], "PARTIAL")
+        self.assertEqual(status["notification_retry_authority_state"], "ACTIVE")
         self.assertEqual(status["recipient_address_retention_state"], "UNRESOLVED_ONLY")
         self.assertEqual(status["required_recipient_delivery_state"], "DELIVERED")
         self.assertEqual(status["participant_copy_delivery_state"], "DELIVERY_FAILED")
@@ -65,6 +67,31 @@ class HILSubmissionStatusTests(unittest.TestCase):
         self.assertFalse(status["notification_delivery_changes_submission_outcome"])
         self.assertNotIn("Rigel@stegverse.org", encoded)
         self.assertNotIn("private@example.com", encoded)
+
+    def test_terminal_retry_projection_does_not_expose_expired_address(self) -> None:
+        notification_path = self.root / "notifications" / f"{self.attempt_id}.json"
+        notification = json.loads(notification_path.read_text(encoding="utf-8"))
+        notification["notification_delivery_state"] = "PARTIAL_EXPIRED"
+        notification["notification_retry_authority_state"] = "TERMINATED"
+        notification["recipient_address_retention_state"] = "NONE_RETAINED"
+        notification_path.write_text(json.dumps(notification), encoding="utf-8")
+        outbox_path = self.root / "notification-outbox" / f"{self.attempt_id}.json"
+        outbox = json.loads(outbox_path.read_text(encoding="utf-8"))
+        outbox["recipients"][1].pop("address")
+        outbox["recipients"][1]["address_retention_state"] = "REDACTED_AFTER_RETRY_EXPIRY"
+        outbox["delivery_results"][1]["state"] = "DELIVERY_EXPIRED"
+        outbox_path.write_text(json.dumps(outbox), encoding="utf-8")
+
+        with patch.object(service_gateway_site.gateway, "_runtime", return_value={"root": self.root}):
+            status = service_gateway_site.site_hil_submission_status(
+                self.submission_id, self.receipt_id
+            )
+        self.assertEqual(status["submission_state"], "ACCEPTED")
+        self.assertEqual(status["notification_delivery_state"], "PARTIAL_EXPIRED")
+        self.assertEqual(status["notification_retry_authority_state"], "TERMINATED")
+        self.assertEqual(status["participant_copy_delivery_state"], "DELIVERY_EXPIRED")
+        self.assertEqual(status["recipient_address_retention_state"], "NONE_RETAINED")
+        self.assertNotIn("private@example.com", json.dumps(status))
 
     def test_wrong_receipt_capability_does_not_reveal_submission(self) -> None:
         with patch.object(service_gateway_site.gateway, "_runtime", return_value={"root": self.root}):
