@@ -10,6 +10,7 @@ on:
       - "scripts/verify_hil_rtg_notification_contract.py"
       - "tests/test_hil_notification_delivery.py"
       - "tests/test_hil_gateway_attempt_contract.py"
+      - "tests/test_hil_submission_status.py"
       - "docs/HIL_RTG_DEPLOYMENT_RUNBOOK.md"
       - ".github/workflows/hil-rtg-notification-contract.yml"
   pull_request:
@@ -21,6 +22,7 @@ on:
       - "scripts/verify_hil_rtg_notification_contract.py"
       - "tests/test_hil_notification_delivery.py"
       - "tests/test_hil_gateway_attempt_contract.py"
+      - "tests/test_hil_submission_status.py"
       - "docs/HIL_RTG_DEPLOYMENT_RUNBOOK.md"
       - ".github/workflows/hil-rtg-notification-contract.yml"
   workflow_dispatch:
@@ -42,5 +44,5 @@ jobs:
         run: python -m compileall -q llm_adapter tests
       - name: Verify RTG notification and privacy contract
         run: python scripts/verify_hil_rtg_notification_contract.py
-      - name: Test delivery separation and recovery
-        run: python -m pytest -q tests/test_hil_notification_delivery.py tests/test_hil_gateway_attempt_contract.py
+      - name: Test RTG attempt, delivery, and status separation
+        run: python -m pytest -q tests/test_hil_notification_delivery.py tests/test_hil_gateway_attempt_contract.py tests/test_hil_submission_status.py
