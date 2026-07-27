@@ -31,6 +31,27 @@ def handle_http_payload(
     return handle_user_llm_request(payload, transports=resolved)
 
 
+def _readiness_payload(transports: RouteTransports) -> dict[str, Any]:
+    route_status = {
+        "demo_test_suite": bool(transports.demo_test_suite),
+        "entity_sandbox_runner": bool(transports.entity_sandbox_runner),
+        "hil_response_packet": bool(transports.hil_response_packet),
+    }
+    configured = [name for name, active in route_status.items() if active]
+    missing = [name for name, active in route_status.items() if not active]
+    return {
+        "state": "READY" if not missing else "DEFERRED",
+        "configured_routes": configured,
+        "missing_routes": missing,
+        "required_routes": list(route_status),
+        "authority_attached": False,
+        "execution_authority": False,
+        "publication_authority": False,
+        "continuity_authority": False,
+        "master_record_custody": False,
+    }
+
+
 def create_app(
     *,
     transports: RouteTransports | None = None,
@@ -38,6 +59,7 @@ def create_app(
 ):
     try:
         from fastapi import FastAPI
+        from fastapi.responses import JSONResponse
     except ImportError as exc:  # pragma: no cover
         raise RuntimeError("FastAPI service dependencies are not installed") from exc
 
@@ -75,6 +97,11 @@ def create_app(
             },
             "authority_attached": False,
         }
+
+    @app.get("/readyz")
+    def readiness() -> JSONResponse:
+        payload = _readiness_payload(resolved)
+        return JSONResponse(status_code=200 if payload["state"] == "READY" else 503, content=payload)
 
     return app
 
