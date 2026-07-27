@@ -7,6 +7,7 @@ on:
     paths:
       - "llm_adapter/service_gateway.py"
       - "tests/test_service_gateway.py"
+      - "vendor/tvc/**"
       - "Dockerfile.service-gateway"
       - "pyproject.toml"
       - ".github/workflows/service-gateway-deploy.yml"
@@ -21,6 +22,7 @@ jobs:
     timeout-minutes: 15
     env:
       TVC_COMMIT: b1a817e629aff483ab80679297013b33e692b567
+      TVC_BLOB_SHA: 7c8d3965eafd6048ea38e525647b898500c30531
       STORAGE_ROOT: ${{ github.workspace }}/activation-evidence/storage
       RECEIPT_FILE: ${{ github.workspace }}/activation-evidence/tvc-decision.json
       RESULT_DIR: ${{ github.workspace }}/activation-evidence/result
@@ -38,12 +40,13 @@ jobs:
       - name: Run repository tests
         run: pytest tests/test_service_gateway.py -v
 
-      - name: Fetch canonical TVC evaluator
+      - name: Verify pinned public-safe TVC evaluator mirror
         run: |
           mkdir -p activation-evidence/tvc activation-evidence/policy "$RESULT_DIR"
-          curl --fail --silent --show-error --location \
-            "https://raw.githubusercontent.com/StegVerse-Labs/TVC/${TVC_COMMIT}/tvc_secret_governance.py" \
-            --output activation-evidence/tvc/tvc_secret_governance.py
+          SOURCE="vendor/tvc/${TVC_COMMIT}/tvc_secret_governance.py"
+          test -f "$SOURCE"
+          test "$(git hash-object "$SOURCE")" = "$TVC_BLOB_SHA"
+          cp "$SOURCE" activation-evidence/tvc/tvc_secret_governance.py
           python -m py_compile activation-evidence/tvc/tvc_secret_governance.py
 
       - name: Create bounded intake policy
@@ -113,7 +116,7 @@ jobs:
           nohup stegverse-service-gateway > activation-evidence/gateway.log 2>&1 &
           echo $! > activation-evidence/gateway.pid
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:8080/ready > "$RESULT_DIR/readiness.json"; then
+            if curl --fail --silent http://127.0.0.1:8080/api/hil/readiness > "$RESULT_DIR/readiness.json"; then
               exit 0
             fi
             sleep 1
@@ -121,55 +124,99 @@ jobs:
           cat activation-evidence/gateway.log
           exit 1
 
-      - name: Submit experiment fixture and verify durable receipt
+      - name: Build Site-format response packet fixture
         run: |
           python - <<'PY'
           import hashlib
           import json
           from pathlib import Path
 
+          result = Path("activation-evidence/result")
           pdf = b"%PDF-1.7\nStegVerse HIL activation proof\n%%EOF\n"
-          Path("activation-evidence/result/experiment-fixture.pdf").write_bytes(pdf)
-          metadata = {
-              "packet_id": "hil-activation-${{ github.run_id }}-${{ github.run_attempt }}",
-              "protocol": "HIL-RESPONSE-PACKET-v1",
-              "document_hash": "sha256:" + hashlib.sha256(pdf).hexdigest(),
-              "source_commit": "${{ github.sha }}",
-              "workflow_run_id": "${{ github.run_id }}",
+          response_hash = hashlib.sha256(pdf).hexdigest()
+          result.joinpath("experiment-fixture.pdf").write_bytes(pdf)
+          manifest = {
+              "schema_version": "HIL-RESPONSE-PROVENANCE-v1.1",
+              "primary_version": "v1.1",
+              "primary_filename": "HIL_Canonical_Paper_v1_1.pdf",
+              "primary_sha256": "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462",
+              "protocol_version": "HIL-PROTOCOL-v1.1",
+              "prompt_version": "HIL-PROMPT-v1.1",
+              "prompt_sha256": "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c",
+              "response_sha256": response_hash,
+              "model": "activation-fixture",
+              "provider": "workflow-fixture",
+              "generated_at": "2026-07-27T00:00:00Z",
+              "conversation_reference": "github-actions-activation-proof",
+              "participant_delivery_contract": {
+                  "single_downloadable_pdf": True,
+                  "visible_summary_expected": True,
+                  "participant_conversion_required": False,
+              },
+              "participant_optional_metadata": {
+                  "participant_identifier": None,
+                  "publication_consent": "not_provided",
+                  "model_response_declared_unedited": True,
+                  "participant_consent_authority_acknowledged": True,
+              },
+              "producer_signature": {
+                  "state": "UNAVAILABLE",
+                  "scheme": None,
+                  "value": None,
+                  "key_id": None,
+              },
           }
-          Path("activation-evidence/result/metadata.json").write_text(
-              json.dumps(metadata, sort_keys=True), encoding="utf-8"
+          result.joinpath("provenance.json").write_text(
+              json.dumps(manifest, sort_keys=True, indent=2) + "\n", encoding="utf-8"
           )
           PY
+
+      - name: Submit Site-format packet and verify durable receipt
+        run: |
           curl --fail --silent --show-error \
-            -F "document=@$RESULT_DIR/experiment-fixture.pdf;type=application/pdf" \
-            -F "metadata=<$RESULT_DIR/metadata.json" \
-            http://127.0.0.1:8080/v1/hil/intake \
+            -F "response_pdf=@$RESULT_DIR/experiment-fixture.pdf;type=application/pdf" \
+            -F "provenance_manifest=@$RESULT_DIR/provenance.json;type=application/json" \
+            -F "participant_identifier=not_provided" \
+            -F "publication_consent=not_provided" \
+            -F "primary_sha256=a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462" \
+            -F "prompt_sha256=cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c" \
+            -F "model_response_declared_unedited=true" \
+            -F "participant_consent_authority_acknowledged=true" \
+            http://127.0.0.1:8080/api/hil/submissions \
             > "$RESULT_DIR/intake-receipt.json"
           python - <<'PY'
+          import hashlib
           import json
           from pathlib import Path
 
-          receipt = json.loads(Path("activation-evidence/result/intake-receipt.json").read_text())
-          assert receipt["schema"] == "HIL-RECEIVER-RECEIPT-v2"
-          assert receipt["status"] == "SUBMISSION_ACCEPTED"
-          assert receipt["signature"].startswith("hmac-sha256:")
-          packet = Path("activation-evidence/storage/packets") / receipt["packet_id"]
-          durable = Path("activation-evidence/storage/receipts") / f'{receipt["packet_id"]}.json'
-          assert (packet / "document.pdf").exists()
-          assert (packet / "metadata.json").exists()
+          result = Path("activation-evidence/result")
+          receipt = json.loads(result.joinpath("intake-receipt.json").read_text())
+          assert receipt["schema_version"] == "HIL-RECEIVER-RECEIPT-v2"
+          assert receipt["chain_validation_state"] in {
+              "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED",
+              "PRIMARY_PROMPT_RESPONSE_SIGNATURE_CHAIN_VERIFIED",
+          }
+          unsigned = dict(receipt)
+          declared = unsigned.pop("receipt_sha256")
+          canonical = json.dumps(unsigned, sort_keys=True, separators=(",", ":")).encode()
+          assert hashlib.sha256(canonical).hexdigest() == declared
+          durable = Path("activation-evidence/storage/receipts") / f'{receipt["submission_id"]}.json'
           assert durable.exists()
-          Path("activation-evidence/result/ACTIVATION_PASS").write_text(
-              receipt["receipt_hash"] + "\n", encoding="utf-8"
-          )
+          result.joinpath("ACTIVATION_PASS").write_text(declared + "\n", encoding="utf-8")
           PY
 
       - name: Verify idempotent duplicate recovery
         run: |
           curl --fail --silent --show-error \
-            -F "document=@$RESULT_DIR/experiment-fixture.pdf;type=application/pdf" \
-            -F "metadata=<$RESULT_DIR/metadata.json" \
-            http://127.0.0.1:8080/v1/hil/intake \
+            -F "response_pdf=@$RESULT_DIR/experiment-fixture.pdf;type=application/pdf" \
+            -F "provenance_manifest=@$RESULT_DIR/provenance.json;type=application/json" \
+            -F "participant_identifier=not_provided" \
+            -F "publication_consent=not_provided" \
+            -F "primary_sha256=a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462" \
+            -F "prompt_sha256=cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c" \
+            -F "model_response_declared_unedited=true" \
+            -F "participant_consent_authority_acknowledged=true" \
+            http://127.0.0.1:8080/api/hil/submissions \
             > "$RESULT_DIR/duplicate-receipt.json"
           cmp "$RESULT_DIR/intake-receipt.json" "$RESULT_DIR/duplicate-receipt.json"
 
@@ -189,12 +236,14 @@ jobs:
               "commit": "${{ github.sha }}",
               "run_id": "${{ github.run_id }}",
               "run_attempt": "${{ github.run_attempt }}",
+              "tvc_source_commit": "${{ env.TVC_COMMIT }}",
+              "tvc_blob_sha": "${{ env.TVC_BLOB_SHA }}",
               "readiness": readiness,
               "intake_receipt": receipt,
               "result": "PASS" if (result / "ACTIVATION_PASS").exists() else "BLOCKED",
               "boundary": "ephemeral GitHub-hosted activation proof; not persistent public hosting",
           }
-          (result / "activation-summary.json").write_text(
+          result.joinpath("activation-summary.json").write_text(
               json.dumps(summary, sort_keys=True, indent=2) + "\n", encoding="utf-8"
           )
           PY
