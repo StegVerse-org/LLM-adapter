@@ -8,6 +8,10 @@ from typing import Any, Mapping
 from .user_llm_router import RouteTransports, handle_user_llm_request
 
 
+def _test_mode_enabled() -> bool:
+    return os.getenv("STEGVERSE_USER_LLM_TEST_MODE", "false").strip().lower() == "true"
+
+
 def resolve_route_transports(
     transports: RouteTransports | None = None,
     *,
@@ -17,7 +21,12 @@ def resolve_route_transports(
         return transports
     if not load_environment:
         return RouteTransports()
+    if _test_mode_enabled():
+        from .user_llm_test_transport import build_test_route_transports
+
+        return build_test_route_transports()
     from .user_llm_http_transport import build_http_route_transports
+
     return build_http_route_transports()
 
 
@@ -44,6 +53,8 @@ def _readiness_payload(transports: RouteTransports) -> dict[str, Any]:
         "configured_routes": configured,
         "missing_routes": missing,
         "required_routes": list(route_status),
+        "test_mode": _test_mode_enabled(),
+        "downstream_execution_verified": False,
         "authority_attached": False,
         "execution_authority": False,
         "publication_authority": False,
@@ -73,16 +84,21 @@ def create_app(
     @app.get("/v1/user-llm/capabilities")
     def capabilities() -> dict[str, Any]:
         from .user_llm_access import list_demo_capabilities
+
         return {
             "status": "OK",
             "participant_class": "authorized_user_llm",
             "capabilities": list(list_demo_capabilities()),
+            "test_mode": _test_mode_enabled(),
             "authority_attached": False,
         }
 
     @app.post("/v1/user-llm/requests")
     def submit_request(payload: dict[str, Any]) -> dict[str, Any]:
-        return handle_http_payload(payload, transports=resolved, load_environment=False)
+        result = handle_http_payload(payload, transports=resolved, load_environment=False)
+        result["test_mode"] = _test_mode_enabled()
+        result["downstream_execution_verified"] = False
+        return result
 
     @app.get("/healthz")
     def health() -> dict[str, Any]:
@@ -90,6 +106,7 @@ def create_app(
             "status": "OK",
             "service": "stegverse-user-llm-access",
             "live_network_started_by_import": False,
+            "test_mode": _test_mode_enabled(),
             "route_transports": {
                 "demo_test_suite": bool(resolved.demo_test_suite),
                 "entity_sandbox_runner": bool(resolved.entity_sandbox_runner),
@@ -106,7 +123,11 @@ def create_app(
     @app.get("/v1/user-llm/activation-proof")
     def activation_proof() -> dict[str, Any]:
         from .user_llm_activation import build_activation_proof
-        return build_activation_proof().as_public_dict()
+
+        payload = build_activation_proof().as_public_dict()
+        payload["test_mode"] = _test_mode_enabled()
+        payload["downstream_execution_verified"] = False
+        return payload
 
     return app
 
