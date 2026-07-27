@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from fastapi import File, Form, HTTPException, UploadFile
+from fastapi import File, Form, HTTPException, Query, UploadFile
 
 from . import service_gateway as gateway
 
@@ -90,7 +90,10 @@ async def site_hil_submission(
 
 
 @app.get("/api/hil/submissions/{submission_id}/status")
-def site_hil_submission_status(submission_id: str) -> Dict[str, Any]:
+def site_hil_submission_status(
+    submission_id: str,
+    receipt_id: str = Query(..., min_length=16, max_length=64),
+) -> Dict[str, Any]:
     if not submission_id.startswith("HIL-SUBMISSION-") or len(submission_id) > 64:
         raise HTTPException(status_code=404, detail="submission_status_not_found")
     runtime = gateway._runtime()
@@ -99,6 +102,9 @@ def site_hil_submission_status(submission_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail="submission_status_not_found")
 
     receipt = _load_json(receipt_path)
+    if receipt.get("receipt_id") != receipt_id:
+        raise HTTPException(status_code=404, detail="submission_status_not_found")
+
     notification = _latest_submission_notification(runtime["root"], submission_id)
     recipient_states = _recipient_states(
         runtime["root"], str(notification.get("attempt_id"))
