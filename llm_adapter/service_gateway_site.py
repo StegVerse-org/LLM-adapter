@@ -121,6 +121,10 @@ def site_hil_submission_status(
         "notification_delivery_state": (
             notification.get("notification_delivery_state") if notification else "UNKNOWN"
         ),
+        "recipient_address_retention_state": (
+            notification.get("recipient_address_retention_state")
+            if notification else "UNKNOWN"
+        ),
         "required_recipient_delivery_state": recipient_states.get(
             "STEGVERSE_STUDY_AUTHORITY", "PENDING"
         ),
