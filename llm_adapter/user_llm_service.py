@@ -103,6 +103,11 @@ def create_app(
         payload = _readiness_payload(resolved)
         return JSONResponse(status_code=200 if payload["state"] == "READY" else 503, content=payload)
 
+    @app.get("/v1/user-llm/activation-proof")
+    def activation_proof() -> dict[str, Any]:
+        from .user_llm_activation import build_activation_proof
+        return build_activation_proof().as_public_dict()
+
     return app
 
 
