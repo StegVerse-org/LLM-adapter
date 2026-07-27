@@ -9,13 +9,21 @@ services:
     autoDeploy: true
     renderSubdomainPolicy: enabled
     buildCommand: pip install --upgrade pip && pip install -e '.[service]'
-    startCommand: python -m llm_adapter.custody_worker && uvicorn llm_adapter.combined_gateway:app --host 0.0.0.0 --port $PORT
+    startCommand: python -m llm_adapter.custody_worker && uvicorn llm_adapter.deployed_gateway:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.4
       - key: STEGVERSE_ALLOWED_ORIGINS
         value: https://stegverse-labs.github.io
+      - key: STEGVERSE_USER_LLM_TEST_MODE
+        value: "true"
+      - key: STEGVERSE_DEMO_TEST_SUITE_URL
+        value: http://127.0.0.1/user-llm-test/demo
+      - key: STEGVERSE_ENTITY_SANDBOX_RUNNER_URL
+        value: http://127.0.0.1/user-llm-test/sandbox
+      - key: STEGVERSE_HIL_RESPONSE_PACKET_URL
+        value: http://127.0.0.1/user-llm-test/hil
       - key: STEGVERSE_CHAT_RATE_LIMIT
         value: 20
       - key: STEGVERSE_CHAT_RATE_WINDOW_SECONDS
