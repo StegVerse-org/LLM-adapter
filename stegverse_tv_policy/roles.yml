@@ -1,0 +1,18 @@
+schema_version: "0.2.0"
+roles:
+  service_gateway_intake:
+    ttl_minutes: 15
+    permissions:
+      kv:read:
+        - "service-gateway/hil-intake/storage-root"
+        - "service-gateway/hil-intake/receipt-key"
+  service_gateway_provider:
+    ttl_minutes: 10
+    permissions:
+      kv:read:
+        - "service-gateway/provider/*"
+  service_gateway_master_records:
+    ttl_minutes: 10
+    permissions:
+      kv:read:
+        - "service-gateway/master-records/*"
