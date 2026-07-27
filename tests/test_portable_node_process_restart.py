@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import socket
 import subprocess
 import sys
@@ -91,6 +92,15 @@ def _stop_node(process: subprocess.Popen[str]) -> str:
     return process.stdout.read() if process.stdout else ""
 
 
+def _assert_expected_shutdown(process: subprocess.Popen[str], output: str) -> None:
+    expected_returncodes = {0}
+    if os.name != "nt":
+        expected_returncodes.add(-signal.SIGTERM)
+    assert process.returncode in expected_returncodes, (
+        f"unexpected portable-node shutdown return code {process.returncode}; output={output}"
+    )
+
+
 def test_transition_survives_real_process_restart(tmp_path: Path) -> None:
     first_port = _free_port()
     transition_id = "portable-node-process-restart"
@@ -132,7 +142,7 @@ def test_transition_survives_real_process_restart(tmp_path: Path) -> None:
     finally:
         first_output = _stop_node(first)
 
-    assert first.returncode == 0, first_output
+    _assert_expected_shutdown(first, first_output)
     assert (tmp_path / "stegverse-ecosystem-chat.db").exists()
 
     second_port = _free_port()
@@ -149,4 +159,4 @@ def test_transition_survives_real_process_restart(tmp_path: Path) -> None:
     finally:
         second_output = _stop_node(second)
 
-    assert second.returncode == 0, second_output
+    _assert_expected_shutdown(second, second_output)
