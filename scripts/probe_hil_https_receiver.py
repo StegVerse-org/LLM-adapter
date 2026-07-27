@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import json
 import os
+import socket
 import ssl
 import sys
 from datetime import datetime, timezone
@@ -36,14 +38,29 @@ def require(condition: bool, message: str) -> None:
         raise RuntimeError(message)
 
 
+def public_addresses(hostname: str, port: int) -> list[str]:
+    """Resolve a host and reject loopback, private, link-local, reserved, or unspecified targets."""
+    addresses = sorted({result[4][0] for result in socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)})
+    require(addresses, "receiver hostname did not resolve")
+    for address in addresses:
+        ip = ipaddress.ip_address(address)
+        require(
+            ip.is_global and not ip.is_multicast,
+            f"receiver resolved to non-public address: {address}",
+        )
+    return addresses
+
+
 def main() -> int:
     base = os.getenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "").strip().rstrip("/")
     require(base, "STEGVERSE_HIL_RECEIVER_BASE_URL is required")
     parsed = urlparse(base)
     require(parsed.scheme == "https", "receiver must use HTTPS")
-    require(parsed.netloc and not parsed.username and not parsed.password, "receiver URL is invalid")
+    require(parsed.netloc and parsed.hostname and not parsed.username and not parsed.password, "receiver URL is invalid")
     require(not parsed.query and not parsed.fragment, "receiver URL must not contain query or fragment")
     require(parsed.path in {"", "/"}, "receiver base URL must not contain a path")
+    require(parsed.hostname.lower() != "localhost", "receiver hostname must be public")
+    resolved_addresses = public_addresses(parsed.hostname, parsed.port or 443)
 
     readiness_url = f"{parsed.scheme}://{parsed.netloc}/api/hil/readiness"
     request = Request(
@@ -84,6 +101,7 @@ def main() -> int:
         "schema_version": "HIL-HTTPS-RECEIVER-PROBE-v1",
         "observed_at": datetime.now(timezone.utc).isoformat(),
         "receiver_origin": f"{parsed.scheme}://{parsed.netloc}",
+        "resolved_public_addresses": resolved_addresses,
         "readiness_path": "/api/hil/readiness",
         "tls_verified": True,
         "redirects_followed": False,
