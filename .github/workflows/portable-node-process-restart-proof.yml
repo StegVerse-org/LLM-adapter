@@ -14,7 +14,7 @@ permissions:
 jobs:
   restart-proof:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,17 +23,26 @@ jobs:
       - name: Install focused test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install fastapi "uvicorn[standard]" pydantic pytest httpx python-multipart
+          python -m pip install -e '.[dev]'
+          python -m pip install python-multipart
       - name: Run real process restart proof
         shell: bash
         run: |
           set -o pipefail
           python -m pytest tests/test_portable_node_process_restart.py -vv -s 2>&1 | tee portable-node-process-restart-proof.log
-      - name: Retain focused failure evidence
+      - name: Run canonical Goal 4 aggregate with retained output
+        if: always()
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/verify_goal4_full.py 2>&1 | tee portable-node-goal4-full.log
+      - name: Retain focused and aggregate evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: portable-node-process-restart-proof-${{ github.run_id }}
-          path: portable-node-process-restart-proof.log
+          path: |
+            portable-node-process-restart-proof.log
+            portable-node-goal4-full.log
           if-no-files-found: error
           retention-days: 90
