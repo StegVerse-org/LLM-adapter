@@ -1,0 +1,24 @@
+schema_version: "0.2.0"
+github_oidc:
+  bindings:
+    - match:
+        org: "StegVerse-org"
+        repo: "LLM-adapter"
+        workflow: "service-gateway-deploy.yml"
+        branch: "refs/heads/main"
+      allow_roles:
+        - "service_gateway_intake"
+    - match:
+        org: "StegVerse-org"
+        repo: "LLM-adapter"
+        workflow: "service-gateway-provider.yml"
+        branch: "refs/heads/main"
+      allow_roles:
+        - "service_gateway_provider"
+    - match:
+        org: "StegVerse-org"
+        repo: "LLM-adapter"
+        workflow: "service-gateway-master-records.yml"
+        branch: "refs/heads/main"
+      allow_roles:
+        - "service_gateway_master_records"
