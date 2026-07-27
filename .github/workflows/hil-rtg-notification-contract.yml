@@ -1,0 +1,36 @@
+name: HIL RTG Notification Contract
+
+on:
+  push:
+    paths:
+      - "llm_adapter/service_gateway.py"
+      - "llm_adapter/service_gateway_site.py"
+      - "llm_adapter/notification_delivery.py"
+      - "schemas/hil-attempt-notification-v1.schema.json"
+      - "scripts/verify_hil_rtg_notification_contract.py"
+      - ".github/workflows/hil-rtg-notification-contract.yml"
+  pull_request:
+    paths:
+      - "llm_adapter/service_gateway.py"
+      - "llm_adapter/service_gateway_site.py"
+      - "llm_adapter/notification_delivery.py"
+      - "schemas/hil-attempt-notification-v1.schema.json"
+      - "scripts/verify_hil_rtg_notification_contract.py"
+      - ".github/workflows/hil-rtg-notification-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile transition runtime modules
+        run: python -m compileall -q llm_adapter
+      - name: Verify RTG notification and privacy contract
+        run: python scripts/verify_hil_rtg_notification_contract.py
