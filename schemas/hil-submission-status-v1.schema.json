@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/hil-submission-status-v1.schema.json",
+  "title": "StegVerse HIL Submission Status v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "submission_id",
+    "receipt_id",
+    "submission_state",
+    "chain_validation_state",
+    "review_state",
+    "publication_state",
+    "notification_delivery_state",
+    "notification_retry_authority_state",
+    "recipient_address_retention_state",
+    "required_recipient_delivery_state",
+    "participant_copy_requested",
+    "participant_copy_delivery_state",
+    "recipient_addresses_exposed",
+    "notification_delivery_changes_submission_outcome"
+  ],
+  "properties": {
+    "schema_version": {"const": "HIL-SUBMISSION-STATUS-v1"},
+    "submission_id": {"type": "string", "pattern": "^HIL-SUBMISSION-[A-Z0-9-]+$", "maxLength": 64},
+    "receipt_id": {"type": "string", "pattern": "^HIL-RECEIPT-[A-Z0-9-]+$", "maxLength": 64},
+    "submission_state": {"const": "ACCEPTED"},
+    "chain_validation_state": {"type": ["string", "null"]},
+    "review_state": {"type": ["string", "null"]},
+    "publication_state": {"type": ["string", "null"]},
+    "notification_delivery_state": {
+      "enum": ["PENDING", "DELIVERED", "PARTIAL", "DELIVERY_FAILED", "PARTIAL_EXPIRED", "DELIVERY_EXPIRED", "UNKNOWN"]
+    },
+    "notification_retry_authority_state": {"enum": ["ACTIVE", "TERMINATED", "UNKNOWN"]},
+    "recipient_address_retention_state": {"enum": ["UNRESOLVED_ONLY", "NONE_RETAINED", "UNKNOWN"]},
+    "required_recipient_delivery_state": {
+      "enum": ["PENDING", "DELIVERED", "DELIVERY_FAILED", "DELIVERY_EXPIRED", "UNKNOWN"]
+    },
+    "participant_copy_requested": {"type": "boolean"},
+    "participant_copy_delivery_state": {
+      "enum": ["NOT_REQUESTED", "PENDING", "DELIVERED", "DELIVERY_FAILED", "DELIVERY_EXPIRED", "UNKNOWN"]
+    },
+    "recipient_addresses_exposed": {"const": false},
+    "notification_delivery_changes_submission_outcome": {"const": false}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"participant_copy_requested": {"const": false}}},
+      "then": {"properties": {"participant_copy_delivery_state": {"const": "NOT_REQUESTED"}}}
+    },
+    {
+      "if": {"properties": {"notification_delivery_state": {"enum": ["DELIVERED", "PARTIAL_EXPIRED", "DELIVERY_EXPIRED"]}}},
+      "then": {
+        "properties": {
+          "notification_retry_authority_state": {"const": "TERMINATED"},
+          "recipient_address_retention_state": {"const": "NONE_RETAINED"}
+        }
+      }
+    }
+  ]
+}
