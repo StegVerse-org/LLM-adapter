@@ -54,45 +54,79 @@ def _message(notification: Dict[str, Any], recipient: Dict[str, str]) -> EmailMe
     return message
 
 
+def _result_key(result: Dict[str, Any]) -> tuple[str, str]:
+    return str(result.get("role") or ""), str(result.get("recipient_id") or "")
+
+
+def _recipient_key(recipient: Dict[str, str]) -> tuple[str, str]:
+    return str(recipient.get("role") or ""), str(recipient.get("recipient_id") or "")
+
+
+def _aggregate_state(results: list[Dict[str, Any]], expected_count: int) -> str:
+    delivered = sum(item.get("state") == "DELIVERED" for item in results)
+    if expected_count > 0 and delivered == expected_count:
+        return "DELIVERED"
+    if delivered:
+        return "PARTIAL"
+    return "DELIVERY_FAILED"
+
+
 def deliver_envelope(envelope_path: Path) -> Dict[str, Any]:
     envelope = _load_json(envelope_path)
     notification_path = Path(envelope["notification_path"])
     notification = _load_json(notification_path)
 
-    host = _required("STEGVERSE_SMTP_HOST")
-    port = int(os.getenv("STEGVERSE_SMTP_PORT", "587"))
-    username = _required("STEGVERSE_SMTP_USERNAME")
-    password = _required("STEGVERSE_SMTP_PASSWORD")
-    use_starttls = os.getenv("STEGVERSE_SMTP_STARTTLS", "true").strip().lower() != "false"
+    existing = {
+        _result_key(result): result
+        for result in envelope.get("delivery_results", [])
+        if result.get("state") == "DELIVERED"
+    }
+    pending = [
+        recipient
+        for recipient in envelope["recipients"]
+        if _recipient_key(recipient) not in existing
+    ]
 
-    results = []
-    with smtplib.SMTP(host, port, timeout=30) as client:
-        if use_starttls:
-            client.starttls(context=ssl.create_default_context())
-        client.login(username, password)
-        for recipient in envelope["recipients"]:
-            try:
-                client.send_message(_message(notification, recipient))
-                results.append({"role": recipient["role"], "state": "DELIVERED", "delivered_at": utc_now()})
-            except Exception as exc:  # delivery failure is recorded, never hidden
-                results.append({
+    attempt_results: list[Dict[str, Any]] = []
+    if pending:
+        host = _required("STEGVERSE_SMTP_HOST")
+        port = int(os.getenv("STEGVERSE_SMTP_PORT", "587"))
+        username = _required("STEGVERSE_SMTP_USERNAME")
+        password = _required("STEGVERSE_SMTP_PASSWORD")
+        use_starttls = os.getenv("STEGVERSE_SMTP_STARTTLS", "true").strip().lower() != "false"
+
+        with smtplib.SMTP(host, port, timeout=30) as client:
+            if use_starttls:
+                client.starttls(context=ssl.create_default_context())
+            client.login(username, password)
+            for recipient in pending:
+                base = {
                     "role": recipient["role"],
-                    "state": "DELIVERY_FAILED",
-                    "failed_at": utc_now(),
-                    "reason_code": type(exc).__name__,
-                })
+                    "recipient_id": recipient.get("recipient_id"),
+                }
+                try:
+                    client.send_message(_message(notification, recipient))
+                    attempt_results.append({**base, "state": "DELIVERED", "delivered_at": utc_now()})
+                except Exception as exc:  # delivery failure is recorded, never hidden
+                    attempt_results.append({
+                        **base,
+                        "state": "DELIVERY_FAILED",
+                        "failed_at": utc_now(),
+                        "reason_code": type(exc).__name__,
+                    })
 
-    delivered = sum(item["state"] == "DELIVERED" for item in results)
-    if delivered == len(results):
-        delivery_state = "DELIVERED"
-    elif delivered:
-        delivery_state = "PARTIAL"
-    else:
-        delivery_state = "DELIVERY_FAILED"
+    merged = dict(existing)
+    for result in attempt_results:
+        merged[_result_key(result)] = result
+    results = list(merged.values())
+    delivery_state = _aggregate_state(results, len(envelope["recipients"]))
 
     envelope["delivery_state"] = delivery_state
     envelope["delivery_results"] = results
     envelope["last_delivery_attempt_at"] = utc_now()
+    envelope["unresolved_recipient_count"] = sum(
+        result.get("state") != "DELIVERED" for result in results
+    ) + max(0, len(envelope["recipients"]) - len(results))
     _write_json(envelope_path, envelope)
 
     notification["notification_delivery_state"] = delivery_state
