@@ -9,9 +9,8 @@ from . import service_gateway as gateway
 
 app = gateway.app
 
-# Replace the original Site compatibility route so the public browser contract
-# hashes every returned field except receipt_sha256, including the receiver
-# signature. This matches assets/hil-experiment-v1.1.js exactly.
+# Replace the original Site compatibility route while preserving the public
+# browser contract and the RTG attempt-notification fields.
 app.router.routes[:] = [
     route for route in app.router.routes
     if getattr(route, "path", None) != "/api/hil/submissions"
@@ -28,6 +27,9 @@ async def site_hil_submission(
     prompt_sha256: str = Form(...),
     model_response_declared_unedited: str = Form("false"),
     participant_consent_authority_acknowledged: str = Form("false"),
+    participant_notification_requested: str = Form("false"),
+    participant_notification_email: str = Form("not_provided"),
+    participant_notification_scope: str = Form("NONE"),
 ) -> Dict[str, Any]:
     receipt = await gateway.site_hil_submission(
         response_pdf=response_pdf,
@@ -38,7 +40,12 @@ async def site_hil_submission(
         prompt_sha256=prompt_sha256,
         model_response_declared_unedited=model_response_declared_unedited,
         participant_consent_authority_acknowledged=participant_consent_authority_acknowledged,
+        participant_notification_requested=participant_notification_requested,
+        participant_notification_email=participant_notification_email,
+        participant_notification_scope=participant_notification_scope,
     )
+    # The base gateway now emits the browser-compatible receipt hash. Recompute
+    # defensively so this wrapper remains compatible with older gateway builds.
     unsigned = dict(receipt)
     unsigned.pop("receipt_sha256", None)
     receipt["receipt_sha256"] = gateway.sha256_hex(gateway.canonical_json(unsigned))
