@@ -8,17 +8,17 @@ from fastapi.testclient import TestClient
 
 from llm_adapter.combined_gateway import app
 
-PRIMARY = "52102cccb9ba9016c76434a64e22031b6a8c3edd3b8806e7b664e609216b2946"
-PROMPT = "0ebe215318b4eeeb8ed6422e0954372c314fadc8fac9254e452bc7670a1b9922"
+PRIMARY = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
+PROMPT = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c"
 
 
 def _manifest(pdf: bytes) -> dict:
     return {
-        "schema_version": "HIL-RESPONSE-PROVENANCE-v1",
-        "primary_version": "v0.5",
+        "schema_version": "HIL-RESPONSE-PROVENANCE-v1.1",
+        "primary_version": "v1.1",
         "primary_sha256": PRIMARY,
-        "protocol_version": "HIL-PROTOCOL-v1.0",
-        "prompt_version": "HIL-PROMPT-v1.0",
+        "protocol_version": "HIL-PROTOCOL-v1.1",
+        "prompt_version": "HIL-PROMPT-v1.1",
         "prompt_sha256": PROMPT,
         "response_sha256": hashlib.sha256(pdf).hexdigest(),
         "model": "controlled-cycle-model",
