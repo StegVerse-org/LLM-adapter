@@ -1,0 +1,58 @@
+{
+  "schema": "stegverse.authorized-provider.execution-boundary.v1",
+  "status": "PROPOSED",
+  "configuration_posture": {
+    "allowed_events": [
+      "pull_request",
+      "push",
+      "workflow_run",
+      "schedule",
+      "workflow_dispatch"
+    ],
+    "may_read_secret_values": false,
+    "may_start_provider_runtime": false,
+    "may_call_provider": false,
+    "may_submit_master_records_custody": false,
+    "permitted_states": [
+      "CONFIGURATION_REQUIRED",
+      "READY_FOR_AUTHORIZED_EXECUTION"
+    ]
+  },
+  "authorized_execution": {
+    "required_event": "workflow_dispatch",
+    "required_boolean_input": "execute_authorized_provider",
+    "required_boolean_value": true,
+    "protected_environment_required": true,
+    "may_start_provider_runtime": true,
+    "may_call_provider": true,
+    "may_submit_master_records_custody": true,
+    "maximum_provider_requests": 1,
+    "maximum_request_cost_usd": 0.10,
+    "maximum_run_cost_usd": 0.10
+  },
+  "required_evidence": [
+    "provider_used",
+    "provider_receipt_id",
+    "provider_usage_persisted",
+    "provider_usage_custody_recorded",
+    "transition_custody_recorded",
+    "transition_reconstruction_pass"
+  ],
+  "required_false_authority_projections": [
+    "provider_output_is_authority",
+    "provider_usage_grants_authority",
+    "custody_grants_execution_authority",
+    "reconstruction_grants_publication_authority",
+    "repository_mutation_authorized",
+    "publication_authorized"
+  ],
+  "prohibitions": [
+    "scheduled_provider_execution",
+    "pull_request_provider_execution",
+    "push_provider_execution",
+    "workflow_run_provider_execution",
+    "credential_value_publication",
+    "fallback_satisfies_provider_verification",
+    "local_persistence_misclassified_as_custody"
+  ]
+}
