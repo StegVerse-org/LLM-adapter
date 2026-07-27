@@ -121,6 +121,9 @@ def site_hil_submission_status(
         "notification_delivery_state": (
             notification.get("notification_delivery_state") if notification else "UNKNOWN"
         ),
+        "notification_retry_authority_state": (
+            notification.get("notification_retry_authority_state") if notification else "UNKNOWN"
+        ),
         "recipient_address_retention_state": (
             notification.get("recipient_address_retention_state")
             if notification else "UNKNOWN"
