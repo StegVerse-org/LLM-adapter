@@ -26,10 +26,13 @@ def _write_json(path: Path, value: Dict[str, Any]) -> None:
     path.write_bytes(canonical_json(value) + b"\n")
 
 
-def _message(notification: Dict[str, Any], recipient: Dict[str, str]) -> EmailMessage:
+def _message(notification: Dict[str, Any], recipient: Dict[str, Any]) -> EmailMessage:
+    address = str(recipient.get("address") or "").strip()
+    if not address:
+        raise RuntimeError("recipient_address_missing")
     message = EmailMessage()
     message["From"] = _required("STEGVERSE_NOTIFICATION_FROM")
-    message["To"] = recipient["address"]
+    message["To"] = address
     message["Subject"] = f"StegVerse HIL submission attempt {notification['attempt_id']}"
     message.set_content(
         "\n".join(
@@ -58,7 +61,7 @@ def _result_key(result: Dict[str, Any]) -> tuple[str, str]:
     return str(result.get("role") or ""), str(result.get("recipient_id") or "")
 
 
-def _recipient_key(recipient: Dict[str, str]) -> tuple[str, str]:
+def _recipient_key(recipient: Dict[str, Any]) -> tuple[str, str]:
     return str(recipient.get("role") or ""), str(recipient.get("recipient_id") or "")
 
 
@@ -69,6 +72,18 @@ def _aggregate_state(results: list[Dict[str, Any]], expected_count: int) -> str:
     if delivered:
         return "PARTIAL"
     return "DELIVERY_FAILED"
+
+
+def _redact_delivered_addresses(
+    recipients: list[Dict[str, Any]], delivered_keys: set[tuple[str, str]]
+) -> None:
+    redacted_at = utc_now()
+    for recipient in recipients:
+        if _recipient_key(recipient) not in delivered_keys:
+            continue
+        recipient.pop("address", None)
+        recipient["address_retention_state"] = "REDACTED_AFTER_DELIVERY"
+        recipient.setdefault("address_redacted_at", redacted_at)
 
 
 def deliver_envelope(envelope_path: Path) -> Dict[str, Any]:
@@ -119,17 +134,32 @@ def deliver_envelope(envelope_path: Path) -> Dict[str, Any]:
     for result in attempt_results:
         merged[_result_key(result)] = result
     results = list(merged.values())
-    delivery_state = _aggregate_state(results, len(envelope["recipients"]))
+    delivered_keys = {
+        _result_key(result)
+        for result in results
+        if result.get("state") == "DELIVERED"
+    }
+    _redact_delivered_addresses(envelope["recipients"], delivered_keys)
 
+    delivery_state = _aggregate_state(results, len(envelope["recipients"]))
     envelope["delivery_state"] = delivery_state
     envelope["delivery_results"] = results
     envelope["last_delivery_attempt_at"] = utc_now()
     envelope["unresolved_recipient_count"] = sum(
         result.get("state") != "DELIVERED" for result in results
     ) + max(0, len(envelope["recipients"]) - len(results))
+    envelope["retained_recipient_address_count"] = sum(
+        bool(str(recipient.get("address") or "").strip())
+        for recipient in envelope["recipients"]
+    )
+    envelope["completed_recipient_addresses_retained"] = False
     _write_json(envelope_path, envelope)
 
     notification["notification_delivery_state"] = delivery_state
+    notification["recipient_address_retention_state"] = (
+        "NONE_RETAINED" if envelope["retained_recipient_address_count"] == 0
+        else "UNRESOLVED_ONLY"
+    )
     _write_json(notification_path, notification)
     return envelope
 
