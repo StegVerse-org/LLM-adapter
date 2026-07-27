@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/hil-attempt-notification-v1.schema.json",
+  "title": "StegVerse HIL Attempt Notification v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "notification_recipient",
+    "attempt_id",
+    "attempted_at",
+    "terminal_state",
+    "last_completed_transition",
+    "custody_state",
+    "notification_delivery_state"
+  ],
+  "properties": {
+    "schema_version": {"const": "HIL-ATTEMPT-NOTIFICATION-v1"},
+    "notification_recipient": {"const": "Rigel@stegverse.org"},
+    "attempt_id": {"type": "string", "minLength": 1},
+    "submission_id": {"type": ["string", "null"]},
+    "receipt_id": {"type": ["string", "null"]},
+    "attempted_at": {"type": "string", "format": "date-time"},
+    "terminal_state": {
+      "enum": [
+        "SUBMISSION_ACCEPTED",
+        "SUBMISSION_REFUSED",
+        "SUBMISSION_FAILED",
+        "SUBMISSION_DUPLICATE_RECOVERED"
+      ]
+    },
+    "last_completed_transition": {"type": "string", "minLength": 1},
+    "submitted_file_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[a-fA-F0-9]{64}$"
+    },
+    "provenance_manifest_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[a-fA-F0-9]{64}$"
+    },
+    "chain_validation_state": {"type": ["string", "null"]},
+    "custody_state": {"type": "string", "minLength": 1},
+    "reason_code": {"type": ["string", "null"]},
+    "retry_or_reconciliation_state": {"type": ["string", "null"]},
+    "notification_delivery_state": {
+      "enum": [
+        "PENDING",
+        "DELIVERED",
+        "DELIVERY_FAILED",
+        "NOTIFICATION_DELIVERY_PENDING"
+      ]
+    },
+    "notification_delivery_reference": {"type": ["string", "null"]}
+  }
+}
