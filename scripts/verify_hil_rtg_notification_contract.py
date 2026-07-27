@@ -136,17 +136,35 @@ def main() -> None:
         "participant status schema permits delivery to mutate submission outcome",
     )
     status_delivery_states = set(status_properties.get("notification_delivery_state", {}).get("enum", []))
-    require(delivery_states | {"UNKNOWN"} <= status_delivery_states,
-            "participant status schema omits notification delivery states")
+    require(
+        delivery_states | {"UNKNOWN"} <= status_delivery_states,
+        "participant status schema omits notification delivery states",
+    )
 
-    # Receipt/public artifacts must describe notification state without disclosing an address.
+    for discovery_token in (
+        "attempt_notification_schema",
+        "submission_status_supported",
+        "submission_status_schema",
+        "submission_status_authorization",
+        "SUBMISSION_ID_PLUS_RECEIPT_ID",
+        "notification_max_attempts",
+        "terminal_notification_delivery_states",
+        "completed_recipient_addresses_retained",
+        "expired_recipient_addresses_retained",
+        "notification_delivery_changes_submission_outcome",
+    ):
+        require(discovery_token in site_gateway, f"readiness discovery omits {discovery_token}")
+    require("min(20, max(1" in site_gateway, "readiness retry advertisement is not bounded")
+
     receipt_block = gateway.split("receipt: Dict[str, Any] =", 1)[-1].split("_sign_receipt", 1)[0]
     require(
         "participant_notification_email" not in receipt_block,
         "participant email appears in receipt construction",
     )
 
-    print("PASS: HIL RTG notification, retry, participant-status, and privacy contract verified")
+    print(
+        "PASS: HIL RTG notification, retry, participant-status, discovery, and privacy contract verified"
+    )
 
 
 if __name__ == "__main__":
