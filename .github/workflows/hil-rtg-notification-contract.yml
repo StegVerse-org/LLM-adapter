@@ -8,6 +8,7 @@ on:
       - "llm_adapter/notification_delivery.py"
       - "schemas/hil-attempt-notification-v1.schema.json"
       - "scripts/verify_hil_rtg_notification_contract.py"
+      - "tests/test_hil_notification_delivery.py"
       - ".github/workflows/hil-rtg-notification-contract.yml"
   pull_request:
     paths:
@@ -16,6 +17,7 @@ on:
       - "llm_adapter/notification_delivery.py"
       - "schemas/hil-attempt-notification-v1.schema.json"
       - "scripts/verify_hil_rtg_notification_contract.py"
+      - "tests/test_hil_notification_delivery.py"
       - ".github/workflows/hil-rtg-notification-contract.yml"
   workflow_dispatch:
 
@@ -30,7 +32,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install runtime test dependencies
+        run: python -m pip install --disable-pip-version-check fastapi python-multipart
       - name: Compile transition runtime modules
-        run: python -m compileall -q llm_adapter
+        run: python -m compileall -q llm_adapter tests
       - name: Verify RTG notification and privacy contract
         run: python scripts/verify_hil_rtg_notification_contract.py
+      - name: Test delivery separation and recovery
+        run: python -m unittest -v tests.test_hil_notification_delivery
