@@ -7,11 +7,13 @@ on:
       - "llm_adapter/service_gateway_site.py"
       - "llm_adapter/notification_delivery.py"
       - "schemas/hil-attempt-notification-v1.schema.json"
+      - "schemas/hil-submission-status-v1.schema.json"
       - "scripts/verify_hil_rtg_notification_contract.py"
       - "tests/test_hil_notification_delivery.py"
       - "tests/test_hil_gateway_attempt_contract.py"
       - "tests/test_hil_submission_status.py"
       - "tests/test_hil_notification_schema.py"
+      - "tests/test_hil_submission_status_schema.py"
       - "docs/HIL_RTG_DEPLOYMENT_RUNBOOK.md"
       - ".github/workflows/hil-rtg-notification-contract.yml"
   pull_request:
@@ -20,11 +22,13 @@ on:
       - "llm_adapter/service_gateway_site.py"
       - "llm_adapter/notification_delivery.py"
       - "schemas/hil-attempt-notification-v1.schema.json"
+      - "schemas/hil-submission-status-v1.schema.json"
       - "scripts/verify_hil_rtg_notification_contract.py"
       - "tests/test_hil_notification_delivery.py"
       - "tests/test_hil_gateway_attempt_contract.py"
       - "tests/test_hil_submission_status.py"
       - "tests/test_hil_notification_schema.py"
+      - "tests/test_hil_submission_status_schema.py"
       - "docs/HIL_RTG_DEPLOYMENT_RUNBOOK.md"
       - ".github/workflows/hil-rtg-notification-contract.yml"
   workflow_dispatch:
@@ -44,7 +48,7 @@ jobs:
         run: python -m pip install --disable-pip-version-check fastapi python-multipart pytest jsonschema
       - name: Compile transition runtime modules
         run: python -m compileall -q llm_adapter tests
-      - name: Verify RTG notification, retry, and privacy contract
+      - name: Verify RTG notification, retry, participant-status, and privacy contract
         run: python scripts/verify_hil_rtg_notification_contract.py
       - name: Test RTG attempt, delivery, status, and schema separation
         run: >-
@@ -53,3 +57,4 @@ jobs:
           tests/test_hil_gateway_attempt_contract.py
           tests/test_hil_submission_status.py
           tests/test_hil_notification_schema.py
+          tests/test_hil_submission_status_schema.py
