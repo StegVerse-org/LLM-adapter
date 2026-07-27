@@ -19,6 +19,14 @@ def load_probe_module():
     return module
 
 
+def patch_public_dns(monkeypatch, module, address: str = "203.0.113.10") -> None:
+    monkeypatch.setattr(
+        module.socket,
+        "getaddrinfo",
+        lambda host, port, type: [(module.socket.AF_INET, type, 6, "", (address, port))],
+    )
+
+
 class FakeHeaders:
     def __init__(self, content_type: str = "application/json") -> None:
         self.content_type = content_type
@@ -89,11 +97,13 @@ def test_probe_accepts_exact_origin_bound_contract(monkeypatch, tmp_path: Path) 
 
     monkeypatch.setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example/")
     monkeypatch.setenv("HIL_PROBE_OUTPUT", str(output))
+    patch_public_dns(monkeypatch, module, "8.8.8.8")
     monkeypatch.setattr(module, "build_opener", lambda *handlers: opener)
 
     assert module.main() == 0
     evidence = json.loads(output.read_text(encoding="utf-8"))
     assert evidence["receiver_origin"] == "https://receiver.example"
+    assert evidence["resolved_public_addresses"] == ["8.8.8.8"]
     assert evidence["readiness_path"] == "/api/hil/readiness"
     assert evidence["redirects_followed"] is False
     assert evidence["mutation_performed"] is False
@@ -110,6 +120,7 @@ def test_probe_accepts_exact_origin_bound_contract(monkeypatch, tmp_path: Path) 
         "https://receiver.example/other",
         "https://receiver.example?next=elsewhere",
         "https://receiver.example#fragment",
+        "https://localhost",
     ],
 )
 def test_probe_rejects_unsafe_receiver_origins(monkeypatch, tmp_path: Path, base_url: str) -> None:
@@ -120,11 +131,22 @@ def test_probe_rejects_unsafe_receiver_origins(monkeypatch, tmp_path: Path, base
         module.main()
 
 
+@pytest.mark.parametrize("address", ["127.0.0.1", "10.0.0.7", "169.254.169.254", "::1", "fc00::1"])
+def test_probe_rejects_non_public_resolved_addresses(monkeypatch, tmp_path: Path, address: str) -> None:
+    module = load_probe_module()
+    monkeypatch.setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example")
+    monkeypatch.setenv("HIL_PROBE_OUTPUT", str(tmp_path / "probe.json"))
+    patch_public_dns(monkeypatch, module, address)
+    with pytest.raises(RuntimeError, match="non-public address"):
+        module.main()
+
+
 def test_probe_rejects_changed_response_url(monkeypatch, tmp_path: Path) -> None:
     module = load_probe_module()
     response = FakeResponse("https://other.example/api/hil/readiness", conforming_payload(module))
     monkeypatch.setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example")
     monkeypatch.setenv("HIL_PROBE_OUTPUT", str(tmp_path / "probe.json"))
+    patch_public_dns(monkeypatch, module, "8.8.8.8")
     monkeypatch.setattr(module, "build_opener", lambda *handlers: FakeOpener(response))
     with pytest.raises(RuntimeError, match="origin or path changed"):
         module.main()
@@ -136,6 +158,7 @@ def test_probe_rejects_non_json_content_type(monkeypatch, tmp_path: Path) -> Non
     response = FakeResponse(url, conforming_payload(module), content_type="text/html")
     monkeypatch.setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example")
     monkeypatch.setenv("HIL_PROBE_OUTPUT", str(tmp_path / "probe.json"))
+    patch_public_dns(monkeypatch, module, "8.8.8.8")
     monkeypatch.setattr(module, "build_opener", lambda *handlers: FakeOpener(response))
     with pytest.raises(RuntimeError, match="content type mismatch"):
         module.main()
