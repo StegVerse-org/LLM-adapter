@@ -2,22 +2,27 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://stegverse.org/schemas/hil-attempt-notification-v1.schema.json",
   "title": "StegVerse HIL Attempt Notification v1",
+  "description": "Privacy-minimized public notification state. Recipient addresses and response contents are prohibited.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema_version",
-    "notification_recipient",
     "attempt_id",
     "attempted_at",
     "terminal_state",
     "last_completed_transition",
+    "chain_validation_state",
     "custody_state",
-    "notification_delivery_state"
+    "retry_or_reconciliation_state",
+    "notification_delivery_state",
+    "required_recipient_role",
+    "participant_copy_requested",
+    "participant_address_retained_in_public_record",
+    "content_included"
   ],
   "properties": {
     "schema_version": {"const": "HIL-ATTEMPT-NOTIFICATION-v1"},
-    "notification_recipient": {"const": "Rigel@stegverse.org"},
-    "attempt_id": {"type": "string", "minLength": 1},
+    "attempt_id": {"type": "string", "pattern": "^HIL-ATTEMPT-[A-Z0-9-]+$"},
     "submission_id": {"type": ["string", "null"]},
     "receipt_id": {"type": ["string", "null"]},
     "attempted_at": {"type": "string", "format": "date-time"},
@@ -26,7 +31,7 @@
         "SUBMISSION_ACCEPTED",
         "SUBMISSION_REFUSED",
         "SUBMISSION_FAILED",
-        "SUBMISSION_DUPLICATE_RECOVERED"
+        "DUPLICATE_RECEIPT_RESTORED"
       ]
     },
     "last_completed_transition": {"type": "string", "minLength": 1},
@@ -38,18 +43,51 @@
       "type": ["string", "null"],
       "pattern": "^[a-fA-F0-9]{64}$"
     },
-    "chain_validation_state": {"type": ["string", "null"]},
+    "chain_validation_state": {"type": "string", "minLength": 1},
     "custody_state": {"type": "string", "minLength": 1},
     "reason_code": {"type": ["string", "null"]},
-    "retry_or_reconciliation_state": {"type": ["string", "null"]},
+    "retry_or_reconciliation_state": {"type": "string", "minLength": 1},
     "notification_delivery_state": {
       "enum": [
         "PENDING",
         "DELIVERED",
+        "PARTIAL",
         "DELIVERY_FAILED",
-        "NOTIFICATION_DELIVERY_PENDING"
+        "PARTIAL_EXPIRED",
+        "DELIVERY_EXPIRED"
       ]
     },
-    "notification_delivery_reference": {"type": ["string", "null"]}
-  }
+    "recipient_address_retention_state": {
+      "enum": ["UNRESOLVED_ONLY", "NONE_RETAINED"]
+    },
+    "notification_retry_authority_state": {
+      "enum": ["ACTIVE", "TERMINATED"]
+    },
+    "required_recipient_role": {"const": "STEGVERSE_STUDY_AUTHORITY"},
+    "participant_copy_requested": {"type": "boolean"},
+    "participant_address_retained_in_public_record": {"const": false},
+    "content_included": {"const": false}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "notification_delivery_state": {
+            "enum": ["DELIVERED", "PARTIAL_EXPIRED", "DELIVERY_EXPIRED"]
+          }
+        },
+        "required": ["notification_delivery_state"]
+      },
+      "then": {
+        "properties": {
+          "recipient_address_retention_state": {"const": "NONE_RETAINED"},
+          "notification_retry_authority_state": {"const": "TERMINATED"}
+        },
+        "required": [
+          "recipient_address_retention_state",
+          "notification_retry_authority_state"
+        ]
+      }
+    }
+  ]
 }
