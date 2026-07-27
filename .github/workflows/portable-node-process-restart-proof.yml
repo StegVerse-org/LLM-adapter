@@ -25,4 +25,15 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install fastapi "uvicorn[standard]" pydantic pytest httpx
       - name: Run real process restart proof
-        run: python -m pytest tests/test_portable_node_process_restart.py -vv -s
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m pytest tests/test_portable_node_process_restart.py -vv -s 2>&1 | tee portable-node-process-restart-proof.log
+      - name: Retain focused failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portable-node-process-restart-proof-${{ github.run_id }}
+          path: portable-node-process-restart-proof.log
+          if-no-files-found: error
+          retention-days: 90
