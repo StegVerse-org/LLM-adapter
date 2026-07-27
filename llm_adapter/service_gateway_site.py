@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import json
 import os
-from typing import Any, Dict
+from pathlib import Path
+from typing import Any, Dict, Optional
 
-from fastapi import File, Form, UploadFile
+from fastapi import File, Form, HTTPException, UploadFile
 
 from . import service_gateway as gateway
 
@@ -15,6 +17,37 @@ app.router.routes[:] = [
     route for route in app.router.routes
     if getattr(route, "path", None) != "/api/hil/submissions"
 ]
+
+
+def _load_json(path: Path) -> Dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _latest_submission_notification(root: Path, submission_id: str) -> Optional[Dict[str, Any]]:
+    matches = []
+    for path in (root / "notifications").glob("*.json"):
+        try:
+            notification = _load_json(path)
+        except (OSError, ValueError):
+            continue
+        if notification.get("submission_id") == submission_id:
+            matches.append((notification.get("attempted_at") or "", notification))
+    if not matches:
+        return None
+    matches.sort(key=lambda item: item[0], reverse=True)
+    return matches[0][1]
+
+
+def _recipient_states(root: Path, attempt_id: str) -> Dict[str, str]:
+    path = root / "notification-outbox" / f"{attempt_id}.json"
+    if not path.exists():
+        return {}
+    envelope = _load_json(path)
+    return {
+        str(result.get("role")): str(result.get("state"))
+        for result in envelope.get("delivery_results") or []
+        if result.get("role") and result.get("state")
+    }
 
 
 @app.post("/api/hil/submissions")
@@ -54,6 +87,48 @@ async def site_hil_submission(
     receipt_path = runtime["root"] / "receipts" / f"{receipt['submission_id']}.json"
     receipt_path.write_bytes(gateway.canonical_json(receipt) + b"\n")
     return receipt
+
+
+@app.get("/api/hil/submissions/{submission_id}/status")
+def site_hil_submission_status(submission_id: str) -> Dict[str, Any]:
+    if not submission_id.startswith("HIL-SUBMISSION-") or len(submission_id) > 64:
+        raise HTTPException(status_code=404, detail="submission_status_not_found")
+    runtime = gateway._runtime()
+    receipt_path = runtime["root"] / "receipts" / f"{submission_id}.json"
+    if not receipt_path.exists():
+        raise HTTPException(status_code=404, detail="submission_status_not_found")
+
+    receipt = _load_json(receipt_path)
+    notification = _latest_submission_notification(runtime["root"], submission_id)
+    recipient_states = _recipient_states(
+        runtime["root"], str(notification.get("attempt_id"))
+    ) if notification else {}
+
+    return {
+        "schema_version": "HIL-SUBMISSION-STATUS-v1",
+        "submission_id": submission_id,
+        "receipt_id": receipt.get("receipt_id"),
+        "submission_state": "ACCEPTED",
+        "chain_validation_state": receipt.get("chain_validation_state"),
+        "review_state": receipt.get("review_state"),
+        "publication_state": receipt.get("publication_state"),
+        "notification_delivery_state": (
+            notification.get("notification_delivery_state") if notification else "UNKNOWN"
+        ),
+        "required_recipient_delivery_state": recipient_states.get(
+            "STEGVERSE_STUDY_AUTHORITY", "PENDING"
+        ),
+        "participant_copy_requested": bool(
+            notification and notification.get("participant_copy_requested")
+        ),
+        "participant_copy_delivery_state": (
+            recipient_states.get("PARTICIPANT_ATTEMPT_COPY", "PENDING")
+            if notification and notification.get("participant_copy_requested")
+            else "NOT_REQUESTED"
+        ),
+        "recipient_addresses_exposed": False,
+        "notification_delivery_changes_submission_outcome": False,
+    }
 
 
 def main() -> None:
