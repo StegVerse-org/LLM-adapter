@@ -32,12 +32,13 @@ class HILSubmissionStatusTests(unittest.TestCase):
             "submission_id": self.submission_id,
             "attempted_at": "2026-07-27T20:00:00Z",
             "notification_delivery_state": "PARTIAL",
+            "recipient_address_retention_state": "UNRESOLVED_ONLY",
             "participant_copy_requested": True,
         }), encoding="utf-8")
         (self.root / "notification-outbox" / f"{self.attempt_id}.json").write_text(json.dumps({
             "attempt_id": self.attempt_id,
             "recipients": [
-                {"role": "STEGVERSE_STUDY_AUTHORITY", "address": "Rigel@stegverse.org"},
+                {"role": "STEGVERSE_STUDY_AUTHORITY", "address_retention_state": "REDACTED_AFTER_DELIVERY"},
                 {"role": "PARTICIPANT_ATTEMPT_COPY", "address": "private@example.com"},
             ],
             "delivery_results": [
@@ -57,6 +58,7 @@ class HILSubmissionStatusTests(unittest.TestCase):
         encoded = json.dumps(status)
         self.assertEqual(status["submission_state"], "ACCEPTED")
         self.assertEqual(status["notification_delivery_state"], "PARTIAL")
+        self.assertEqual(status["recipient_address_retention_state"], "UNRESOLVED_ONLY")
         self.assertEqual(status["required_recipient_delivery_state"], "DELIVERED")
         self.assertEqual(status["participant_copy_delivery_state"], "DELIVERY_FAILED")
         self.assertFalse(status["recipient_addresses_exposed"])
