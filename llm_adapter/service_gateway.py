@@ -4,17 +4,21 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import tempfile
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 SCHEMA = "HIL-RECEIVER-RECEIPT-v2"
+NOTIFICATION_SCHEMA = "HIL-ATTEMPT-NOTIFICATION-v1"
+DELIVERY_ENVELOPE_SCHEMA = "HIL-NOTIFICATION-DELIVERY-ENVELOPE-v1"
 SERVICE_ID = "stegverse-service-gateway"
+INTERNAL_NOTIFICATION_ADDRESS = "Rigel@stegverse.org"
 INTAKE_ROLE = "service_gateway_intake"
 INTAKE_KEYS = {
     "service-gateway/hil-intake/storage-root",
@@ -26,6 +30,7 @@ PROTOCOL_VERSION = "HIL-PROTOCOL-v1.1"
 PROMPT_VERSION = "HIL-PROMPT-v1.1"
 PROMPT_SHA256 = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c"
 PROVENANCE_SCHEMA = "HIL-RESPONSE-PROVENANCE-v1.1"
+EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
 
 def utc_now() -> str:
@@ -69,21 +74,106 @@ def _runtime() -> Dict[str, Any]:
     key = os.environ["STEGVERSE_HIL_RECEIPT_KEY"].encode("utf-8")
     if len(key) < 32:
         raise RuntimeError("receipt_key_too_short")
-    root.mkdir(parents=True, exist_ok=True)
-    (root / "packets").mkdir(exist_ok=True)
-    (root / "receipts").mkdir(exist_ok=True)
+    for directory in (
+        "packets",
+        "receipts",
+        "attempts",
+        "notifications",
+        "notification-outbox",
+    ):
+        (root / directory).mkdir(parents=True, exist_ok=True)
     return {"root": root, "key": key, "tvc": tvc}
 
 
 def _sign_receipt(receipt: Dict[str, Any], key: bytes) -> Dict[str, Any]:
-    receipt["receipt_sha256"] = sha256_hex(canonical_json(receipt))
+    # Browser compatibility: receipt_sha256 covers the receipt including the
+    # receiver signature and excluding only receipt_sha256 itself.
     receipt["receiver_signature"] = "hmac-sha256:" + hmac.new(
         key, canonical_json(receipt), hashlib.sha256
     ).hexdigest()
+    receipt["receipt_sha256"] = sha256_hex(canonical_json(receipt))
     return receipt
 
 
-app = FastAPI(title="StegVerse Service Gateway", version="0.2.0")
+def _normalize_participant_email(requested: str, email: str, scope: str) -> Optional[str]:
+    wants_copy = requested.strip().lower() == "true"
+    supplied = email.strip()
+    normalized_scope = scope.strip().upper()
+    if not wants_copy:
+        return None
+    if normalized_scope != "ATTEMPT_NOTIFICATION_ONLY":
+        raise HTTPException(status_code=422, detail="participant_notification_scope_invalid")
+    if not EMAIL_RE.fullmatch(supplied) or len(supplied) > 254:
+        raise HTTPException(status_code=422, detail="participant_notification_email_invalid")
+    return supplied
+
+
+def _persist_attempt_state(runtime: Dict[str, Any], attempt_id: str, state: Dict[str, Any]) -> None:
+    path = runtime["root"] / "attempts" / f"{attempt_id}.json"
+    path.write_bytes(canonical_json(state) + b"\n")
+
+
+def _record_notification(
+    *,
+    runtime: Dict[str, Any],
+    attempt_id: str,
+    terminal_state: str,
+    last_completed_transition: str,
+    submission_id: Optional[str] = None,
+    receipt_id: Optional[str] = None,
+    submitted_file_sha256: Optional[str] = None,
+    provenance_manifest_sha256: Optional[str] = None,
+    chain_validation_state: str = "NOT_REACHED",
+    custody_state: str = "NO_CUSTODY",
+    reason_code: Optional[str] = None,
+    retry_or_reconciliation_state: str = "NONE",
+    participant_email: Optional[str] = None,
+) -> Dict[str, Any]:
+    created_at = utc_now()
+    public_notification = {
+        "schema_version": NOTIFICATION_SCHEMA,
+        "attempt_id": attempt_id,
+        "submission_id": submission_id,
+        "receipt_id": receipt_id,
+        "attempted_at": created_at,
+        "terminal_state": terminal_state,
+        "last_completed_transition": last_completed_transition,
+        "submitted_file_sha256": submitted_file_sha256,
+        "provenance_manifest_sha256": provenance_manifest_sha256,
+        "chain_validation_state": chain_validation_state,
+        "custody_state": custody_state,
+        "reason_code": reason_code,
+        "retry_or_reconciliation_state": retry_or_reconciliation_state,
+        "notification_delivery_state": "PENDING",
+        "required_recipient_role": "STEGVERSE_STUDY_AUTHORITY",
+        "participant_copy_requested": participant_email is not None,
+        "participant_address_retained_in_public_record": False,
+        "content_included": False,
+    }
+    notification_path = runtime["root"] / "notifications" / f"{attempt_id}.json"
+    notification_path.write_bytes(canonical_json(public_notification) + b"\n")
+
+    recipients = [
+        {"role": "STEGVERSE_STUDY_AUTHORITY", "address": INTERNAL_NOTIFICATION_ADDRESS}
+    ]
+    if participant_email:
+        recipients.append({"role": "PARTICIPANT_ATTEMPT_COPY", "address": participant_email})
+    envelope = {
+        "schema_version": DELIVERY_ENVELOPE_SCHEMA,
+        "attempt_id": attempt_id,
+        "created_at": created_at,
+        "notification_path": str(notification_path),
+        "recipients": recipients,
+        "scope": "ATTEMPT_NOTIFICATION_ONLY",
+        "delivery_state": "PENDING",
+        "delivery_failure_does_not_change_submission_outcome": True,
+    }
+    outbox_path = runtime["root"] / "notification-outbox" / f"{attempt_id}.json"
+    outbox_path.write_bytes(canonical_json(envelope) + b"\n")
+    return public_notification
+
+
+app = FastAPI(title="StegVerse Service Gateway", version="0.3.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -115,6 +205,7 @@ def ready() -> Dict[str, Any]:
         "durable_storage": True,
         "tvc_decision_id": runtime["tvc"].get("decision_id"),
         "accepted_media_types": ["application/pdf"],
+        "attempt_notification_outbox": True,
     }
 
 
@@ -135,6 +226,8 @@ def hil_readiness() -> Dict[str, Any]:
         "provenance_manifest_required": True,
         "provenance_manifest_schema": PROVENANCE_SCHEMA,
         "participant_metadata_required": False,
+        "participant_notification_supported": True,
+        "participant_notification_scope": "ATTEMPT_NOTIFICATION_ONLY",
         "durable_storage": True,
         "tvc_decision_id": runtime["tvc"].get("decision_id"),
     }
@@ -227,55 +320,148 @@ async def site_hil_submission(
     prompt_sha256: str = Form(...),
     model_response_declared_unedited: str = Form("false"),
     participant_consent_authority_acknowledged: str = Form("false"),
+    participant_notification_requested: str = Form("false"),
+    participant_notification_email: str = Form("not_provided"),
+    participant_notification_scope: str = Form("NONE"),
 ) -> Dict[str, Any]:
+    attempt_id = f"HIL-ATTEMPT-{uuid.uuid4().hex[:20].upper()}"
+    runtime: Optional[Dict[str, Any]] = None
+    participant_email: Optional[str] = None
+    submission_id: Optional[str] = None
+    response_hash: Optional[str] = None
+    manifest_hash: Optional[str] = None
     try:
         runtime = _runtime()
+        participant_email = _normalize_participant_email(
+            participant_notification_requested,
+            participant_notification_email,
+            participant_notification_scope,
+        )
         manifest = json.loads((await provenance_manifest.read()).decode("utf-8"))
+        manifest_hash = sha256_hex(canonical_json(manifest))
+        _persist_attempt_state(runtime, attempt_id, {
+            "attempt_id": attempt_id,
+            "state": "ATTEMPT_CREATED",
+            "created_at": utc_now(),
+            "participant_copy_requested": participant_email is not None,
+        })
+        if primary_sha256 != PRIMARY_SHA256 or prompt_sha256 != PROMPT_SHA256:
+            raise HTTPException(status_code=422, detail="primary_or_prompt_hash_mismatch")
+        if manifest.get("schema_version") != PROVENANCE_SCHEMA:
+            raise HTTPException(status_code=422, detail="provenance_schema_mismatch")
+        if manifest.get("primary_sha256") != PRIMARY_SHA256 or manifest.get("prompt_sha256") != PROMPT_SHA256:
+            raise HTTPException(status_code=422, detail="provenance_chain_mismatch")
+        response_hash = str(manifest.get("response_sha256") or "")
+        if len(response_hash) != 64:
+            raise HTTPException(status_code=422, detail="response_hash_missing")
+        submission_id = f"HIL-SUBMISSION-{response_hash[:16].upper()}"
+        result, size, receipt_path = await _persist_packet(
+            runtime=runtime,
+            packet_id=submission_id,
+            upload=response_pdf,
+            metadata={
+                **manifest,
+                "participant_identifier": participant_identifier,
+                "publication_consent": publication_consent,
+                "model_response_declared_unedited": model_response_declared_unedited,
+                "participant_consent_authority_acknowledged": participant_consent_authority_acknowledged,
+                "participant_notification_requested": participant_email is not None,
+                "participant_notification_scope": "ATTEMPT_NOTIFICATION_ONLY" if participant_email else "NONE",
+            },
+        )
+        if result == "duplicate":
+            prior_receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            _record_notification(
+                runtime=runtime,
+                attempt_id=attempt_id,
+                terminal_state="DUPLICATE_RECEIPT_RESTORED",
+                last_completed_transition="RECEIPT_RESTORED",
+                submission_id=prior_receipt.get("submission_id"),
+                receipt_id=prior_receipt.get("receipt_id"),
+                submitted_file_sha256=response_hash,
+                provenance_manifest_sha256=manifest_hash,
+                chain_validation_state=prior_receipt.get("chain_validation_state", "VERIFIED_PREVIOUSLY"),
+                custody_state="DURABLE_EXISTING",
+                participant_email=participant_email,
+            )
+            return prior_receipt
+        receipt: Dict[str, Any] = {
+            "schema_version": SCHEMA,
+            "receipt_id": f"HIL-RECEIPT-{uuid.uuid4().hex[:16].upper()}",
+            "submission_id": submission_id,
+            "received_at": utc_now(),
+            "primary_sha256": PRIMARY_SHA256,
+            "prompt_sha256": PROMPT_SHA256,
+            "submitted_file_sha256": result,
+            "provenance_manifest_sha256": manifest_hash,
+            "submitted_file_size_bytes": size,
+            "chain_validation_state": "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED",
+            "review_state": "PENDING",
+            "publication_state": "NOT_PUBLISHED",
+            "notification_state": "PENDING",
+            "participant_notification_requested": participant_email is not None,
+            "tvc_decision_id": runtime["tvc"].get("decision_id"),
+            "tvc_policy_hash": runtime["tvc"].get("policy_hash"),
+        }
+        _sign_receipt(receipt, runtime["key"])
+        receipt_path.write_bytes(canonical_json(receipt) + b"\n")
+        _record_notification(
+            runtime=runtime,
+            attempt_id=attempt_id,
+            terminal_state="SUBMISSION_ACCEPTED",
+            last_completed_transition="RECEIPT_EMITTED",
+            submission_id=submission_id,
+            receipt_id=receipt["receipt_id"],
+            submitted_file_sha256=result,
+            provenance_manifest_sha256=manifest_hash,
+            chain_validation_state=receipt["chain_validation_state"],
+            custody_state="DURABLE_COMMITTED",
+            participant_email=participant_email,
+        )
+        _persist_attempt_state(runtime, attempt_id, {
+            "attempt_id": attempt_id,
+            "state": "TRANSITION_ELEMENTS_EXPIRED",
+            "terminal_state": "SUBMISSION_ACCEPTED",
+            "submission_id": submission_id,
+            "receipt_id": receipt["receipt_id"],
+            "completed_at": utc_now(),
+            "notification_delivery_state": "PENDING",
+        })
+        return receipt
+    except HTTPException as exc:
+        if runtime is not None:
+            _record_notification(
+                runtime=runtime,
+                attempt_id=attempt_id,
+                terminal_state="SUBMISSION_REFUSED" if exc.status_code < 500 else "INFRASTRUCTURE_FAILURE",
+                last_completed_transition="ATTEMPT_CREATED",
+                submission_id=submission_id,
+                submitted_file_sha256=response_hash,
+                provenance_manifest_sha256=manifest_hash,
+                chain_validation_state="REFUSED",
+                custody_state="NO_CUSTODY_OR_CLEANED",
+                reason_code=str(exc.detail),
+                retry_or_reconciliation_state="RETRY_PERMITTED" if exc.status_code >= 500 else "CORRECTION_REQUIRED",
+                participant_email=participant_email,
+            )
+        raise
     except Exception as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-    if primary_sha256 != PRIMARY_SHA256 or prompt_sha256 != PROMPT_SHA256:
-        raise HTTPException(status_code=422, detail="primary_or_prompt_hash_mismatch")
-    if manifest.get("schema_version") != PROVENANCE_SCHEMA:
-        raise HTTPException(status_code=422, detail="provenance_schema_mismatch")
-    if manifest.get("primary_sha256") != PRIMARY_SHA256 or manifest.get("prompt_sha256") != PROMPT_SHA256:
-        raise HTTPException(status_code=422, detail="provenance_chain_mismatch")
-    response_hash = str(manifest.get("response_sha256") or "")
-    if len(response_hash) != 64:
-        raise HTTPException(status_code=422, detail="response_hash_missing")
-    submission_id = f"HIL-SUBMISSION-{response_hash[:16].upper()}"
-    result, size, receipt_path = await _persist_packet(
-        runtime=runtime,
-        packet_id=submission_id,
-        upload=response_pdf,
-        metadata={
-            **manifest,
-            "participant_identifier": participant_identifier,
-            "publication_consent": publication_consent,
-            "model_response_declared_unedited": model_response_declared_unedited,
-            "participant_consent_authority_acknowledged": participant_consent_authority_acknowledged,
-        },
-    )
-    if result == "duplicate":
-        return json.loads(receipt_path.read_text(encoding="utf-8"))
-    receipt: Dict[str, Any] = {
-        "schema_version": SCHEMA,
-        "receipt_id": f"HIL-RECEIPT-{uuid.uuid4().hex[:16].upper()}",
-        "submission_id": submission_id,
-        "received_at": utc_now(),
-        "primary_sha256": PRIMARY_SHA256,
-        "prompt_sha256": PROMPT_SHA256,
-        "submitted_file_sha256": result,
-        "provenance_manifest_sha256": sha256_hex(canonical_json(manifest)),
-        "submitted_file_size_bytes": size,
-        "chain_validation_state": "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED",
-        "review_state": "PENDING",
-        "publication_state": "NOT_PUBLISHED",
-        "tvc_decision_id": runtime["tvc"].get("decision_id"),
-        "tvc_policy_hash": runtime["tvc"].get("policy_hash"),
-    }
-    _sign_receipt(receipt, runtime["key"])
-    receipt_path.write_bytes(canonical_json(receipt) + b"\n")
-    return receipt
+        if runtime is not None:
+            _record_notification(
+                runtime=runtime,
+                attempt_id=attempt_id,
+                terminal_state="INFRASTRUCTURE_FAILURE",
+                last_completed_transition="ATTEMPT_CREATED",
+                submission_id=submission_id,
+                submitted_file_sha256=response_hash,
+                provenance_manifest_sha256=manifest_hash,
+                chain_validation_state="NOT_COMPLETED",
+                custody_state="UNKNOWN_REQUIRES_RECONCILIATION",
+                reason_code=type(exc).__name__,
+                retry_or_reconciliation_state="RECONCILIATION_REQUIRED",
+                participant_email=participant_email,
+            )
+        raise HTTPException(status_code=500, detail="submission_processing_failed") from exc
 
 
 def main() -> None:
