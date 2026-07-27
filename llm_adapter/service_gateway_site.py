@@ -11,16 +11,29 @@ from . import service_gateway as gateway
 
 app = gateway.app
 
-# Replace the original Site compatibility route while preserving the public
-# browser contract and the RTG attempt-notification fields.
+STATUS_SCHEMA = "HIL-SUBMISSION-STATUS-v1"
+STATUS_SCHEMA_PATH = "/schemas/hil-submission-status-v1.schema.json"
+NOTIFICATION_SCHEMA_PATH = "/schemas/hil-attempt-notification-v1.schema.json"
+TERMINAL_NOTIFICATION_STATES = ["DELIVERED", "PARTIAL_EXPIRED", "DELIVERY_EXPIRED"]
+
+# Replace base routes while preserving the public browser contract and adding
+# explicit discovery for the governed RTG notification/status interface.
 app.router.routes[:] = [
     route for route in app.router.routes
-    if getattr(route, "path", None) != "/api/hil/submissions"
+    if getattr(route, "path", None) not in {"/api/hil/submissions", "/api/hil/readiness"}
 ]
 
 
 def _load_json(path: Path) -> Dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _notification_max_attempts() -> int:
+    try:
+        value = int(os.getenv("STEGVERSE_NOTIFICATION_MAX_ATTEMPTS", "5"))
+    except ValueError:
+        value = 5
+    return min(20, max(1, value))
 
 
 def _latest_submission_notification(root: Path, submission_id: str) -> Optional[Dict[str, Any]]:
@@ -47,6 +60,41 @@ def _recipient_states(root: Path, attempt_id: str) -> Dict[str, str]:
         str(result.get("role")): str(result.get("state"))
         for result in envelope.get("delivery_results") or []
         if result.get("role") and result.get("state")
+    }
+
+
+@app.get("/api/hil/readiness")
+def site_hil_readiness() -> Dict[str, Any]:
+    try:
+        runtime = gateway._runtime()
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return {
+        "state": "READY",
+        "service_id": gateway.SERVICE_ID,
+        "primary_version": gateway.PRIMARY_VERSION,
+        "primary_sha256": gateway.PRIMARY_SHA256,
+        "protocol_version": gateway.PROTOCOL_VERSION,
+        "prompt_version": gateway.PROMPT_VERSION,
+        "prompt_sha256": gateway.PROMPT_SHA256,
+        "provenance_manifest_required": True,
+        "provenance_manifest_schema": gateway.PROVENANCE_SCHEMA,
+        "participant_metadata_required": False,
+        "participant_notification_supported": True,
+        "participant_notification_scope": "ATTEMPT_NOTIFICATION_ONLY",
+        "attempt_notification_schema": gateway.NOTIFICATION_SCHEMA,
+        "attempt_notification_schema_path": NOTIFICATION_SCHEMA_PATH,
+        "submission_status_supported": True,
+        "submission_status_schema": STATUS_SCHEMA,
+        "submission_status_schema_path": STATUS_SCHEMA_PATH,
+        "submission_status_authorization": "SUBMISSION_ID_PLUS_RECEIPT_ID",
+        "notification_max_attempts": _notification_max_attempts(),
+        "terminal_notification_delivery_states": TERMINAL_NOTIFICATION_STATES,
+        "completed_recipient_addresses_retained": False,
+        "expired_recipient_addresses_retained": False,
+        "notification_delivery_changes_submission_outcome": False,
+        "durable_storage": True,
+        "tvc_decision_id": runtime["tvc"].get("decision_id"),
     }
 
 
@@ -77,8 +125,6 @@ async def site_hil_submission(
         participant_notification_email=participant_notification_email,
         participant_notification_scope=participant_notification_scope,
     )
-    # The base gateway now emits the browser-compatible receipt hash. Recompute
-    # defensively so this wrapper remains compatible with older gateway builds.
     unsigned = dict(receipt)
     unsigned.pop("receipt_sha256", None)
     receipt["receipt_sha256"] = gateway.sha256_hex(gateway.canonical_json(unsigned))
@@ -111,7 +157,7 @@ def site_hil_submission_status(
     ) if notification else {}
 
     return {
-        "schema_version": "HIL-SUBMISSION-STATUS-v1",
+        "schema_version": STATUS_SCHEMA,
         "submission_id": submission_id,
         "receipt_id": receipt.get("receipt_id"),
         "submission_state": "ACCEPTED",
