@@ -1,0 +1,209 @@
+name: Service Gateway Activation Proof
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "llm_adapter/service_gateway.py"
+      - "tests/test_service_gateway.py"
+      - "Dockerfile.service-gateway"
+      - "pyproject.toml"
+      - ".github/workflows/service-gateway-deploy.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  activation-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TVC_COMMIT: b1a817e629aff483ab80679297013b33e692b567
+      STORAGE_ROOT: ${{ github.workspace }}/activation-evidence/storage
+      RECEIPT_FILE: ${{ github.workspace }}/activation-evidence/tvc-decision.json
+      RESULT_DIR: ${{ github.workspace }}/activation-evidence/result
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install service and test dependencies
+        run: pip install -e '.[service,dev]' PyYAML
+
+      - name: Run repository tests
+        run: pytest tests/test_service_gateway.py -v
+
+      - name: Fetch canonical TVC evaluator
+        run: |
+          mkdir -p activation-evidence/tvc activation-evidence/policy "$RESULT_DIR"
+          curl --fail --silent --show-error --location \
+            "https://raw.githubusercontent.com/StegVerse-Labs/TVC/${TVC_COMMIT}/tvc_secret_governance.py" \
+            --output activation-evidence/tvc/tvc_secret_governance.py
+          python -m py_compile activation-evidence/tvc/tvc_secret_governance.py
+
+      - name: Create bounded intake policy
+        run: |
+          cat > activation-evidence/policy/roles.yml <<'YAML'
+          schema_version: "0.2.0"
+          roles:
+            service_gateway_intake:
+              ttl_minutes: 15
+              permissions:
+                kv:read:
+                  - service-gateway/hil-intake/storage-root
+                  - service-gateway/hil-intake/receipt-key
+          YAML
+          cat > activation-evidence/policy/issuers.yml <<'YAML'
+          schema_version: "0.2.0"
+          github_oidc:
+            bindings:
+              - match:
+                  org: "StegVerse-org"
+                  repo: "LLM-adapter"
+                  workflow: "service-gateway-deploy.yml"
+                  branch: "refs/heads/main"
+                allow_roles:
+                  - "service_gateway_intake"
+          YAML
+
+      - name: Generate canonical no-value TVC decision receipt
+        env:
+          PYTHONPATH: ${{ github.workspace }}/activation-evidence/tvc
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tvc_secret_governance import evaluate
+
+          policy_dir = Path("activation-evidence/policy")
+          decision = evaluate(
+              role="service_gateway_intake",
+              requested_keys=[
+                  "service-gateway/hil-intake/storage-root",
+                  "service-gateway/hil-intake/receipt-key",
+              ],
+              policy_dir=policy_dir,
+              oidc_ctx={
+                  "org": "StegVerse-org",
+                  "repo": "LLM-adapter",
+                  "workflow": "service-gateway-deploy.yml",
+                  "branch": "refs/heads/main",
+              },
+          )
+          receipt = decision.to_receipt(policy_dir=policy_dir, source="github_actions_runtime")
+          assert receipt["admissible"] is True
+          Path("activation-evidence/tvc-decision.json").write_text(
+              json.dumps(receipt, sort_keys=True, indent=2) + "\n", encoding="utf-8"
+          )
+          PY
+
+      - name: Start gateway with ephemeral TV/TVC-governed values
+        run: |
+          mkdir -p "$STORAGE_ROOT"
+          RECEIPT_KEY="$(python -c 'import secrets; print(secrets.token_hex(48))')"
+          echo "::add-mask::$RECEIPT_KEY"
+          export STEGVERSE_TVC_DECISION_RECEIPT_FILE="$RECEIPT_FILE"
+          export STEGVERSE_HIL_STORAGE_ROOT="$STORAGE_ROOT"
+          export STEGVERSE_HIL_RECEIPT_KEY="$RECEIPT_KEY"
+          nohup stegverse-service-gateway > activation-evidence/gateway.log 2>&1 &
+          echo $! > activation-evidence/gateway.pid
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8080/ready > "$RESULT_DIR/readiness.json"; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat activation-evidence/gateway.log
+          exit 1
+
+      - name: Submit experiment fixture and verify durable receipt
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          pdf = b"%PDF-1.7\nStegVerse HIL activation proof\n%%EOF\n"
+          Path("activation-evidence/result/experiment-fixture.pdf").write_bytes(pdf)
+          metadata = {
+              "packet_id": "hil-activation-${{ github.run_id }}-${{ github.run_attempt }}",
+              "protocol": "HIL-RESPONSE-PACKET-v1",
+              "document_hash": "sha256:" + hashlib.sha256(pdf).hexdigest(),
+              "source_commit": "${{ github.sha }}",
+              "workflow_run_id": "${{ github.run_id }}",
+          }
+          Path("activation-evidence/result/metadata.json").write_text(
+              json.dumps(metadata, sort_keys=True), encoding="utf-8"
+          )
+          PY
+          curl --fail --silent --show-error \
+            -F "document=@$RESULT_DIR/experiment-fixture.pdf;type=application/pdf" \
+            -F "metadata=<$RESULT_DIR/metadata.json" \
+            http://127.0.0.1:8080/v1/hil/intake \
+            > "$RESULT_DIR/intake-receipt.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          receipt = json.loads(Path("activation-evidence/result/intake-receipt.json").read_text())
+          assert receipt["schema"] == "HIL-RECEIVER-RECEIPT-v2"
+          assert receipt["status"] == "SUBMISSION_ACCEPTED"
+          assert receipt["signature"].startswith("hmac-sha256:")
+          packet = Path("activation-evidence/storage/packets") / receipt["packet_id"]
+          durable = Path("activation-evidence/storage/receipts") / f'{receipt["packet_id"]}.json'
+          assert (packet / "document.pdf").exists()
+          assert (packet / "metadata.json").exists()
+          assert durable.exists()
+          Path("activation-evidence/result/ACTIVATION_PASS").write_text(
+              receipt["receipt_hash"] + "\n", encoding="utf-8"
+          )
+          PY
+
+      - name: Verify idempotent duplicate recovery
+        run: |
+          curl --fail --silent --show-error \
+            -F "document=@$RESULT_DIR/experiment-fixture.pdf;type=application/pdf" \
+            -F "metadata=<$RESULT_DIR/metadata.json" \
+            http://127.0.0.1:8080/v1/hil/intake \
+            > "$RESULT_DIR/duplicate-receipt.json"
+          cmp "$RESULT_DIR/intake-receipt.json" "$RESULT_DIR/duplicate-receipt.json"
+
+      - name: Write activation summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = Path("activation-evidence/result")
+          readiness = json.loads((result / "readiness.json").read_text()) if (result / "readiness.json").exists() else None
+          receipt = json.loads((result / "intake-receipt.json").read_text()) if (result / "intake-receipt.json").exists() else None
+          summary = {
+              "schema": "STEGVERSE-SERVICE-GATEWAY-ACTIVATION-v1",
+              "repository": "StegVerse-org/LLM-adapter",
+              "commit": "${{ github.sha }}",
+              "run_id": "${{ github.run_id }}",
+              "run_attempt": "${{ github.run_attempt }}",
+              "readiness": readiness,
+              "intake_receipt": receipt,
+              "result": "PASS" if (result / "ACTIVATION_PASS").exists() else "BLOCKED",
+              "boundary": "ephemeral GitHub-hosted activation proof; not persistent public hosting",
+          }
+          (result / "activation-summary.json").write_text(
+              json.dumps(summary, sort_keys=True, indent=2) + "\n", encoding="utf-8"
+          )
+          PY
+
+      - name: Upload activation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-gateway-activation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: activation-evidence/
+          if-no-files-found: error
+          retention-days: 30
