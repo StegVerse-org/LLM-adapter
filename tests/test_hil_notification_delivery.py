@@ -94,23 +94,47 @@ class NotificationDeliveryTests(unittest.TestCase):
         self.env.stop()
         self.temp.cleanup()
 
-    def test_partial_delivery_does_not_resend_successful_recipient(self) -> None:
+    def test_partial_delivery_redacts_success_and_retries_only_unresolved(self) -> None:
         first = delivery.deliver_envelope(self.envelope_path)
         self.assertEqual(first["delivery_state"], "PARTIAL")
         self.assertEqual(first["unresolved_recipient_count"], 1)
+        self.assertEqual(first["retained_recipient_address_count"], 1)
+        self.assertFalse(first["completed_recipient_addresses_retained"])
         self.assertEqual(FakeSMTP.sent_to, ["Rigel@stegverse.org", "participant@example.com"])
+
+        by_role = {item["role"]: item for item in first["recipients"]}
+        self.assertNotIn("address", by_role["STEGVERSE_STUDY_AUTHORITY"])
+        self.assertEqual(
+            by_role["STEGVERSE_STUDY_AUTHORITY"]["address_retention_state"],
+            "REDACTED_AFTER_DELIVERY",
+        )
+        self.assertEqual(
+            by_role["PARTICIPANT_ATTEMPT_COPY"]["address"],
+            "participant@example.com",
+        )
 
         FakeSMTP.fail_participant = False
         second = delivery.deliver_envelope(self.envelope_path)
         self.assertEqual(second["delivery_state"], "DELIVERED")
         self.assertEqual(second["unresolved_recipient_count"], 0)
+        self.assertEqual(second["retained_recipient_address_count"], 0)
         self.assertEqual(
             FakeSMTP.sent_to,
             ["Rigel@stegverse.org", "participant@example.com", "participant@example.com"],
         )
+        self.assertTrue(all("address" not in item for item in second["recipients"]))
+        self.assertTrue(all(
+            item.get("address_retention_state") == "REDACTED_AFTER_DELIVERY"
+            for item in second["recipients"]
+        ))
+
+        persisted = self.envelope_path.read_text(encoding="utf-8")
+        self.assertNotIn("Rigel@stegverse.org", persisted)
+        self.assertNotIn("participant@example.com", persisted)
 
         notification = json.loads(self.notification_path.read_text(encoding="utf-8"))
         self.assertEqual(notification["notification_delivery_state"], "DELIVERED")
+        self.assertEqual(notification["recipient_address_retention_state"], "NONE_RETAINED")
         self.assertEqual(notification["terminal_state"], "SUBMISSION_ACCEPTED")
 
     def test_completed_envelope_is_skipped_by_outbox_processor(self) -> None:
