@@ -10,6 +10,7 @@
     "readiness_schema_sha256",
     "state",
     "service_id",
+    "runtime_contract_version",
     "primary_version",
     "primary_sha256",
     "protocol_version",
@@ -34,7 +35,12 @@
     "expired_recipient_addresses_retained",
     "notification_delivery_changes_submission_outcome",
     "durable_storage",
-    "tvc_decision_id"
+    "tvc_authority_role",
+    "tvc_decision_id",
+    "tvc_policy_hash",
+    "tvc_decision_receipt_sha256",
+    "tvc_admissible",
+    "tvc_binding_matched"
   ],
   "properties": {
     "schema_version": {"const": "HIL-READINESS-v1"},
@@ -42,6 +48,7 @@
     "readiness_schema_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "state": {"const": "READY"},
     "service_id": {"const": "stegverse-service-gateway"},
+    "runtime_contract_version": {"const": "HIL-RTG-RUNTIME-v1"},
     "primary_version": {"const": "v1.1"},
     "primary_sha256": {"const": "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"},
     "protocol_version": {"const": "HIL-PROTOCOL-v1.1"},
@@ -77,6 +84,11 @@
     "expired_recipient_addresses_retained": {"const": false},
     "notification_delivery_changes_submission_outcome": {"const": false},
     "durable_storage": {"const": true},
-    "tvc_decision_id": {"type": ["string", "null"]}
+    "tvc_authority_role": {"const": "service_gateway_intake"},
+    "tvc_decision_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "tvc_policy_hash": {"type": "string", "pattern": "^(sha256:)?[a-fA-F0-9]{64}$"},
+    "tvc_decision_receipt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "tvc_admissible": {"const": true},
+    "tvc_binding_matched": {"const": true}
   }
 }
