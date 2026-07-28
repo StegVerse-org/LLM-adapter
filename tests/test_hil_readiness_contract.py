@@ -8,12 +8,23 @@ from unittest.mock import patch
 from llm_adapter import service_gateway_site
 
 
+TVC_RECEIPT = {
+    "role": "service_gateway_intake",
+    "decision_id": "TVC-TEST",
+    "policy_hash": "sha256:" + "a" * 64,
+    "admissible": True,
+    "binding_matched": True,
+    "allowed_keys": sorted(service_gateway_site.gateway.INTAKE_KEYS),
+    "denied_keys": [],
+}
+
+
 class HILReadinessContractTests(unittest.TestCase):
     def _readiness(self, configured_attempts: str = "7"):
         with patch.object(
             service_gateway_site.gateway,
             "_runtime",
-            return_value={"tvc": {"decision_id": "TVC-TEST"}},
+            return_value={"tvc": dict(TVC_RECEIPT)},
         ), patch.dict(
             os.environ,
             {"STEGVERSE_NOTIFICATION_MAX_ATTEMPTS": configured_attempts},
@@ -21,11 +32,12 @@ class HILReadinessContractTests(unittest.TestCase):
         ):
             return service_gateway_site.site_hil_readiness()
 
-    def test_readiness_advertises_status_retry_privacy_and_schema_digests(self) -> None:
+    def test_readiness_advertises_status_retry_privacy_schema_and_authority(self) -> None:
         readiness = self._readiness()
 
         self.assertEqual(readiness["state"], "READY")
         self.assertEqual(readiness["schema_version"], "HIL-READINESS-v1")
+        self.assertEqual(readiness["runtime_contract_version"], "HIL-RTG-RUNTIME-v1")
         self.assertEqual(readiness["attempt_notification_schema"], "HIL-ATTEMPT-NOTIFICATION-v1")
         self.assertEqual(readiness["submission_status_schema"], "HIL-SUBMISSION-STATUS-v1")
         self.assertEqual(
@@ -40,6 +52,18 @@ class HILReadinessContractTests(unittest.TestCase):
         self.assertFalse(readiness["completed_recipient_addresses_retained"])
         self.assertFalse(readiness["expired_recipient_addresses_retained"])
         self.assertFalse(readiness["notification_delivery_changes_submission_outcome"])
+
+        self.assertEqual(readiness["tvc_authority_role"], "service_gateway_intake")
+        self.assertEqual(readiness["tvc_decision_id"], "TVC-TEST")
+        self.assertEqual(readiness["tvc_policy_hash"], TVC_RECEIPT["policy_hash"])
+        self.assertTrue(readiness["tvc_admissible"])
+        self.assertTrue(readiness["tvc_binding_matched"])
+        self.assertEqual(
+            readiness["tvc_decision_receipt_sha256"],
+            hashlib.sha256(
+                service_gateway_site.gateway.canonical_json(TVC_RECEIPT)
+            ).hexdigest(),
+        )
 
         bindings = (
             ("readiness_schema_path", "readiness_schema_sha256"),
