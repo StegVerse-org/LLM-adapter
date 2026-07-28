@@ -8,9 +8,10 @@ from typing import Any, Dict, Optional
 from fastapi import File, Form, HTTPException, Query, UploadFile
 
 from . import service_gateway as gateway
-
 app = gateway.app
 
+READINESS_SCHEMA = "HIL-READINESS-v1"
+READINESS_SCHEMA_PATH = "/schemas/hil-readiness-v1.schema.json"
 STATUS_SCHEMA = "HIL-SUBMISSION-STATUS-v1"
 STATUS_SCHEMA_PATH = "/schemas/hil-submission-status-v1.schema.json"
 NOTIFICATION_SCHEMA_PATH = "/schemas/hil-attempt-notification-v1.schema.json"
@@ -70,6 +71,8 @@ def site_hil_readiness() -> Dict[str, Any]:
     except Exception as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return {
+        "schema_version": READINESS_SCHEMA,
+        "readiness_schema_path": READINESS_SCHEMA_PATH,
         "state": "READY",
         "service_id": gateway.SERVICE_ID,
         "primary_version": gateway.PRIMARY_VERSION,
