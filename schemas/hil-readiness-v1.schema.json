@@ -16,7 +16,8 @@
     "expired_recipient_addresses_retained", "notification_delivery_changes_submission_outcome",
     "durable_storage", "tvc_authority_role", "tvc_decision_id", "tvc_policy_hash",
     "tvc_decision_receipt_sha256", "tvc_admissible", "tvc_binding_matched",
-    "authority_evidence_schema", "authority_evidence_path", "authority_evidence_sha256"
+    "authority_evidence_schema", "authority_evidence_schema_path", "authority_evidence_schema_sha256",
+    "authority_evidence_path", "authority_evidence_sha256"
   ],
   "properties": {
     "schema_version": {"const": "HIL-READINESS-v1"},
@@ -64,6 +65,8 @@
     "tvc_admissible": {"const": true},
     "tvc_binding_matched": {"const": true},
     "authority_evidence_schema": {"const": "HIL-TVC-AUTHORITY-EVIDENCE-v1"},
+    "authority_evidence_schema_path": {"const": "/schemas/hil-tvc-authority-evidence-v1.schema.json"},
+    "authority_evidence_schema_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "authority_evidence_path": {"const": "/api/hil/authority-evidence"},
     "authority_evidence_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
   }
