@@ -48,7 +48,7 @@ jobs:
           port = os.environ.get("PORT", "18080")
           base = f"http://127.0.0.1:{port}/user-llm"
           receipt = {
-              "schema": "stegverse.user-llm.portable-execution-receipt.v3",
+              "schema": "stegverse.user-llm.portable-execution-receipt.v4",
               "captured_at": datetime.now(timezone.utc).isoformat(),
               "runtime": "repository-owned-docker-compose",
               "port": int(port),
@@ -61,6 +61,7 @@ jobs:
               "endpoints": {},
               "request_return": {},
               "negative_admissibility": {},
+              "replay_integrity": {},
           }
           failures: list[str] = []
 
@@ -100,20 +101,21 @@ jobs:
               },
               "route": "demo_test_suite",
               "action": "inspect",
-              "payload": {"probe": "portable-request-return-v2"},
+              "payload": {"probe": "portable-request-return-v3"},
           }
+          first_body: dict = {}
           try:
-              status, body = post(allowed)
-              receipt["request_return"] = {"http_status": status, "request": allowed, "body": body}
-              if status != 200 or body.get("status") != "RETURNED":
+              status, first_body = post(allowed)
+              receipt["request_return"] = {"http_status": status, "request": allowed, "body": first_body}
+              if status != 200 or first_body.get("status") != "RETURNED":
                   failures.append("request_not_returned")
-              if body.get("authority_attached") is not False:
+              if first_body.get("authority_attached") is not False:
                   failures.append("authority_attached")
-              if body.get("test_mode") is not True:
+              if first_body.get("test_mode") is not True:
                   failures.append("test_mode_not_explicit")
-              if body.get("downstream_execution_verified") is not False:
+              if first_body.get("downstream_execution_verified") is not False:
                   failures.append("downstream_execution_misrepresented")
-              result = body.get("result") or {}
+              result = first_body.get("result") or {}
               if result.get("status") != "TEST_RETURNED":
                   failures.append("fixture_result_not_returned")
               for field in (
@@ -125,27 +127,18 @@ jobs:
               ):
                   if result.get(field) is not False:
                       failures.append(f"result_{field}")
-              if not body.get("result_hash"):
+              if not first_body.get("result_hash"):
                   failures.append("result_hash_missing")
-              if not (body.get("request") or {}).get("request_hash"):
+              if not (first_body.get("request") or {}).get("request_hash"):
                   failures.append("request_hash_missing")
           except Exception as exc:
               receipt["request_return"] = {"error": type(exc).__name__, "detail": str(exc), "request": allowed}
               failures.append("request_return_probe_failed")
 
           negative_cases = {
-              "missing_scope": {
-                  **allowed,
-                  "identity": {**allowed["identity"], "scopes": []},
-              },
-              "unknown_route": {
-                  **allowed,
-                  "route": "unapproved_runtime",
-              },
-              "unapproved_action": {
-                  **allowed,
-                  "action": "execute",
-              },
+              "missing_scope": {**allowed, "identity": {**allowed["identity"], "scopes": []}},
+              "unknown_route": {**allowed, "route": "unapproved_runtime"},
+              "unapproved_action": {**allowed, "action": "execute"},
               "missing_identity": {
                   **allowed,
                   "identity": {**allowed["identity"], "user_id": "", "llm_id": ""},
@@ -179,11 +172,58 @@ jobs:
                   }
                   failures.append(f"{case_name}_probe_failed")
 
+          try:
+              replay_status, replay_body = post(allowed)
+              changed = {
+                  **allowed,
+                  "payload": {"probe": "portable-request-return-v3-mutated"},
+              }
+              changed_status, changed_body = post(changed)
+              first_request_hash = (first_body.get("request") or {}).get("request_hash")
+              replay_request_hash = (replay_body.get("request") or {}).get("request_hash")
+              changed_request_hash = (changed_body.get("request") or {}).get("request_hash")
+              first_result_hash = first_body.get("result_hash")
+              replay_result_hash = replay_body.get("result_hash")
+              changed_result_hash = changed_body.get("result_hash")
+              receipt["replay_integrity"] = {
+                  "identical_replay": {
+                      "http_status": replay_status,
+                      "request_hash": replay_request_hash,
+                      "result_hash": replay_result_hash,
+                      "matches_original_request_hash": replay_request_hash == first_request_hash,
+                      "matches_original_result_hash": replay_result_hash == first_result_hash,
+                  },
+                  "mutated_payload": {
+                      "http_status": changed_status,
+                      "request_hash": changed_request_hash,
+                      "result_hash": changed_result_hash,
+                      "request_hash_changed": changed_request_hash != first_request_hash,
+                      "result_hash_changed": changed_result_hash != first_result_hash,
+                  },
+              }
+              if replay_status != 200 or replay_body.get("status") != "RETURNED":
+                  failures.append("identical_replay_not_returned")
+              if replay_request_hash != first_request_hash:
+                  failures.append("identical_replay_request_hash_drift")
+              if replay_result_hash != first_result_hash:
+                  failures.append("identical_replay_result_hash_drift")
+              if changed_status != 200 or changed_body.get("status") != "RETURNED":
+                  failures.append("mutated_request_not_returned")
+              if changed_request_hash == first_request_hash:
+                  failures.append("mutated_payload_request_hash_unchanged")
+              if changed_result_hash == first_result_hash:
+                  failures.append("mutated_payload_result_hash_unchanged")
+          except Exception as exc:
+              receipt["replay_integrity"] = {"error": type(exc).__name__, "detail": str(exc)}
+              failures.append("replay_integrity_probe_failed")
+
           receipt["verification"] = {
               "status": "PASS" if not failures else "FAIL",
               "failures": failures,
               "bounded_request_return_verified": not failures,
               "negative_admissibility_verified": not failures,
+              "deterministic_replay_verified": not failures,
+              "hash_sensitivity_verified": not failures,
               "real_downstream_execution_verified": False,
           }
           Path("artifacts/portable-user-llm-execution-receipt.json").write_text(
