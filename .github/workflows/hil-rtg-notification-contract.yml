@@ -9,6 +9,7 @@ on:
       - "schemas/hil-attempt-notification-v1.schema.json"
       - "schemas/hil-submission-status-v1.schema.json"
       - "schemas/hil-readiness-v1.schema.json"
+      - "schemas/hil-tvc-authority-evidence-v1.schema.json"
       - "scripts/verify_hil_rtg_notification_contract.py"
       - "tests/test_hil_notification_delivery.py"
       - "tests/test_hil_gateway_attempt_contract.py"
@@ -18,6 +19,7 @@ on:
       - "tests/test_hil_readiness_contract.py"
       - "tests/test_hil_readiness_schema.py"
       - "tests/test_hil_authority_evidence.py"
+      - "tests/test_hil_authority_evidence_schema.py"
       - "docs/HIL_RTG_DEPLOYMENT_RUNBOOK.md"
       - ".github/workflows/hil-rtg-notification-contract.yml"
   pull_request:
@@ -28,6 +30,7 @@ on:
       - "schemas/hil-attempt-notification-v1.schema.json"
       - "schemas/hil-submission-status-v1.schema.json"
       - "schemas/hil-readiness-v1.schema.json"
+      - "schemas/hil-tvc-authority-evidence-v1.schema.json"
       - "scripts/verify_hil_rtg_notification_contract.py"
       - "tests/test_hil_notification_delivery.py"
       - "tests/test_hil_gateway_attempt_contract.py"
@@ -37,6 +40,7 @@ on:
       - "tests/test_hil_readiness_contract.py"
       - "tests/test_hil_readiness_schema.py"
       - "tests/test_hil_authority_evidence.py"
+      - "tests/test_hil_authority_evidence_schema.py"
       - "docs/HIL_RTG_DEPLOYMENT_RUNBOOK.md"
       - ".github/workflows/hil-rtg-notification-contract.yml"
   workflow_dispatch:
@@ -69,3 +73,4 @@ jobs:
           tests/test_hil_readiness_contract.py
           tests/test_hil_readiness_schema.py
           tests/test_hil_authority_evidence.py
+          tests/test_hil_authority_evidence_schema.py
