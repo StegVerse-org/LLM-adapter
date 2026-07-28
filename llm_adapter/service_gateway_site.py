@@ -18,6 +18,8 @@ STATUS_SCHEMA = "HIL-SUBMISSION-STATUS-v1"
 STATUS_SCHEMA_PATH = "/schemas/hil-submission-status-v1.schema.json"
 NOTIFICATION_SCHEMA_PATH = "/schemas/hil-attempt-notification-v1.schema.json"
 TERMINAL_NOTIFICATION_STATES = ["DELIVERED", "PARTIAL_EXPIRED", "DELIVERY_EXPIRED"]
+RUNTIME_CONTRACT_VERSION = "HIL-RTG-RUNTIME-v1"
+TVC_AUTHORITY_ROLE = "service_gateway_intake"
 SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "schemas"
 SCHEMA_FILES = {
     READINESS_SCHEMA_PATH: "hil-readiness-v1.schema.json",
@@ -75,6 +77,20 @@ def _notification_max_attempts() -> int:
     except ValueError:
         value = 5
     return min(20, max(1, value))
+
+
+def _tvc_authority_projection(receipt: Dict[str, Any]) -> Dict[str, Any]:
+    # Bind discovery to the exact decision receipt admitted by the runtime.
+    receipt_bytes = gateway.canonical_json(receipt)
+    return {
+        "runtime_contract_version": RUNTIME_CONTRACT_VERSION,
+        "tvc_authority_role": receipt.get("role"),
+        "tvc_decision_id": receipt.get("decision_id"),
+        "tvc_policy_hash": receipt.get("policy_hash"),
+        "tvc_decision_receipt_sha256": hashlib.sha256(receipt_bytes).hexdigest(),
+        "tvc_admissible": receipt.get("admissible") is True,
+        "tvc_binding_matched": receipt.get("binding_matched") is True,
+    }
 
 
 def _latest_submission_notification(root: Path, submission_id: str) -> Optional[Dict[str, Any]]:
@@ -155,7 +171,7 @@ def site_hil_readiness() -> Dict[str, Any]:
         "expired_recipient_addresses_retained": False,
         "notification_delivery_changes_submission_outcome": False,
         "durable_storage": True,
-        "tvc_decision_id": runtime["tvc"].get("decision_id"),
+        **_tvc_authority_projection(runtime["tvc"]),
     }
 
 
