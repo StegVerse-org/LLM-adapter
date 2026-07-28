@@ -12,12 +12,7 @@ from urllib.request import Request, urlopen
 
 
 ROUTES: tuple[dict[str, Any], ...] = (
-    {
-        "route": "demo_test_suite",
-        "action": "list",
-        "required_scope": "demo:read",
-        "payload": {},
-    },
+    {"route": "demo_test_suite", "action": "list", "required_scope": "demo:read", "payload": {}},
     {
         "route": "entity_sandbox_runner",
         "action": "submit",
@@ -76,10 +71,12 @@ def main() -> int:
     port = os.environ.get("PORT", "18080")
     base_url = os.environ.get("STEGVERSE_USER_LLM_BASE_URL", f"http://127.0.0.1:{port}/user-llm")
     source_commit = os.environ.get("SOURCE_COMMIT", os.environ.get("GITHUB_SHA", ""))
+    workflow_run_id = os.environ.get("GITHUB_RUN_ID", "")
     require(
         len(source_commit) == 40 and all(c in "0123456789abcdef" for c in source_commit),
         "SOURCE_COMMIT must be a durable 40-character lowercase commit SHA",
     )
+    require(workflow_run_id.isdigit(), "GITHUB_RUN_ID must identify the hosted execution")
 
     evidence_root = Path("artifacts/receipts/user-llm-bounded-execution")
     import_root = Path("artifacts/site-imports/user-llm-bounded-execution-receipts")
@@ -121,6 +118,7 @@ def main() -> int:
             "request": request_payload,
             "response": response,
             "source_commit": source_commit,
+            "workflow_run_id": workflow_run_id,
         }
         evidence_path.write_text(json.dumps(evidence_document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         evidence_hash = hashlib.sha256(evidence_path.read_bytes()).hexdigest()
@@ -147,7 +145,10 @@ def main() -> int:
             encoding="utf-8",
         )
 
-    print(f"SITE_COMPATIBLE_ROUTE_RECEIPTS=PASS imports={len(ROUTES)} source_commit={source_commit}")
+    print(
+        f"SITE_COMPATIBLE_ROUTE_RECEIPTS=PASS imports={len(ROUTES)} "
+        f"source_commit={source_commit} workflow_run_id={workflow_run_id}"
+    )
     return 0
 
 
