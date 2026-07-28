@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/hil-tvc-authority-evidence-v1.schema.json",
+  "title": "StegVerse HIL TVC Authority Evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "runtime_contract_version",
+    "authority_role",
+    "decision_id",
+    "policy_hash",
+    "admissible",
+    "binding_matched",
+    "allowed_keys_sha256",
+    "denied_keys_sha256",
+    "allowed_key_count",
+    "denied_key_count",
+    "restricted_fields_exposed"
+  ],
+  "properties": {
+    "schema_version": {"const": "HIL-TVC-AUTHORITY-EVIDENCE-v1"},
+    "runtime_contract_version": {"const": "HIL-RTG-RUNTIME-v1"},
+    "authority_role": {"const": "service_gateway_intake"},
+    "decision_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "policy_hash": {"type": "string", "pattern": "^(sha256:)?[a-fA-F0-9]{64}$"},
+    "admissible": {"const": true},
+    "binding_matched": {"const": true},
+    "allowed_keys_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "denied_keys_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "allowed_key_count": {"const": 2},
+    "denied_key_count": {"const": 0},
+    "restricted_fields_exposed": {"const": false}
+  }
+}
