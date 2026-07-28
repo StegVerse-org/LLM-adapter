@@ -3,15 +3,20 @@ set -eu
 
 : "${STEGVERSE_HIL_REVIEW_TOKEN:=local-review-token}"
 : "${STEGVERSE_HIL_PUBLICATION_TOKEN:=local-publication-token}"
-export STEGVERSE_HIL_REVIEW_TOKEN STEGVERSE_HIL_PUBLICATION_TOKEN
+: "${PORT:=8000}"
+export STEGVERSE_HIL_REVIEW_TOKEN STEGVERSE_HIL_PUBLICATION_TOKEN PORT
 
-docker compose up --build -d
+mkdir -p artifacts
+
+docker compose up --build -d 2>&1 | tee artifacts/docker-compose-up.log
 
 python - <<'PY'
+import os
 import time
 import urllib.request
 
-url = "http://127.0.0.1:8000/user-llm/healthz"
+port = os.environ.get("PORT", "8000")
+url = f"http://127.0.0.1:{port}/user-llm/healthz"
 last = None
 for _ in range(60):
     try:
@@ -22,8 +27,8 @@ for _ in range(60):
         last = exc
         time.sleep(1)
 else:
-    raise SystemExit(f"portable user-LLM service did not become healthy: {last}")
+    raise SystemExit(f"portable user-LLM service did not become healthy at {url}: {last}")
 PY
 
-STEGVERSE_USER_LLM_BASE_URL=http://127.0.0.1:8000/user-llm \
+STEGVERSE_USER_LLM_BASE_URL="http://127.0.0.1:${PORT}/user-llm" \
 python scripts/user_llm_smoke_test.py

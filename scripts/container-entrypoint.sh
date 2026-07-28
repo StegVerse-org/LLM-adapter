@@ -13,6 +13,10 @@ export STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS="${STEGVERSE_STORAGE_DURABLE_AC
 
 python -m llm_adapter.custody_worker
 
+if [ "$#" -gt 0 ]; then
+  exec "$@"
+fi
+
 exec uvicorn llm_adapter.combined_gateway:app \
   --host 0.0.0.0 \
   --port "$PORT" \
