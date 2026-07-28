@@ -10,6 +10,7 @@ SITE_GATEWAY = ROOT / "llm_adapter" / "service_gateway_site.py"
 DELIVERY = ROOT / "llm_adapter" / "notification_delivery.py"
 NOTIFICATION_SCHEMA = ROOT / "schemas" / "hil-attempt-notification-v1.schema.json"
 STATUS_SCHEMA = ROOT / "schemas" / "hil-submission-status-v1.schema.json"
+READINESS_SCHEMA = ROOT / "schemas" / "hil-readiness-v1.schema.json"
 
 
 def require(condition: bool, message: str) -> None:
@@ -141,6 +142,16 @@ def main() -> None:
         "participant status schema omits notification delivery states",
     )
 
+    readiness_schema = load_schema(READINESS_SCHEMA)
+    readiness_required = set(readiness_schema.get("required", []))
+    for field in (
+        "readiness_schema_sha256",
+        "attempt_notification_schema_sha256",
+        "submission_status_schema_sha256",
+    ):
+        require(field in readiness_required, f"readiness schema does not require {field}")
+        require(f'"{field}"' in site_gateway, f"readiness runtime does not advertise {field}")
+
     for discovery_token in (
         "attempt_notification_schema",
         "submission_status_supported",
@@ -152,6 +163,11 @@ def main() -> None:
         "completed_recipient_addresses_retained",
         "expired_recipient_addresses_retained",
         "notification_delivery_changes_submission_outcome",
+        "application/schema+json",
+        "_schema_response",
+        "_schema_sha256",
+        "ETag",
+        "nosniff",
     ):
         require(discovery_token in site_gateway, f"readiness discovery omits {discovery_token}")
     require("min(20, max(1" in site_gateway, "readiness retry advertisement is not bounded")
@@ -163,7 +179,7 @@ def main() -> None:
     )
 
     print(
-        "PASS: HIL RTG notification, retry, participant-status, discovery, and privacy contract verified"
+        "PASS: HIL RTG notification, retry, participant-status, digest-bound discovery, and privacy contract verified"
     )
 
 
