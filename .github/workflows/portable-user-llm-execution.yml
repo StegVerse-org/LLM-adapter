@@ -8,6 +8,7 @@ on:
       - "llm_adapter/**"
       - "scripts/user_llm_smoke_test.py"
       - "scripts/run_user_llm_portable_test.sh"
+      - "scripts/capture_site_compatible_user_llm_route_receipts.py"
       - ".github/workflows/portable-user-llm-execution.yml"
   workflow_dispatch:
 
@@ -20,12 +21,16 @@ jobs:
     timeout-minutes: 15
     env:
       PORT: "18080"
+      SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Execute portable Docker test
         run: sh scripts/run_user_llm_portable_test.sh
+
+      - name: Capture Site-compatible bounded route receipts
+        run: python scripts/capture_site_compatible_user_llm_route_receipts.py
 
       - name: Capture and verify governed execution receipt
         if: always()
