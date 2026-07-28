@@ -10,13 +10,12 @@ This is the authoritative continuation record for canonical StegDeploy image pub
 Canonical workflow: .github/workflows/stegdeploy-image.yml
 Retained receipt: receipts/stegdeploy-image-publication.json
 Retained readiness projection: status/stegdeploy-image-publication-readiness.json
-Observed receipt schema before next publication run: stegdeploy.image-publication.v1
+Observed retained receipt schema: stegdeploy.image-publication.v1
 Current readiness: BLOCKED
-PR #38 merge: a21aa50526487fd16a46bd62488a7965d29aa3ed
-PR #39 merge: 14724798fef253b4aca34c5da6ed34fe8ed6fcb8
-Healer relay merge: 1b0d0660da8a0597137c6cb822a0ef751c2bf352
-Core-node intake merge: f742105877541f67a85abd7fbe23154ce4addee7
-Canonical evidence trigger requested: 2026-07-26
+Current exact blockers:
+- current retained receipt predates v2 publication contract
+- fresh consumer pull verification not retained
+Fresh canonical evidence trigger requested: 2026-07-28
 Manual user action required: false
 Provider execution authority: false
 Persistent deployment authority: false
@@ -24,44 +23,58 @@ Custody authority: false
 Site activation authority: false
 ```
 
-## Exact Blockers
+## Why This Refresh Is Required
 
-```text
-current retained receipt predates v2 publication contract
-fresh consumer pull verification not retained
-```
+The repository now contains the repaired v2 publication workflow, but the retained canonical receipt still comes from run `29866501493` and uses `stegdeploy.image-publication.v1`. That receipt does not contain the v2 state, stage outcomes, exact blockers, fresh consumer pull result, or current source commit required by the activation chain.
 
-The workflow contains the v2 contract, exact stage outcomes, fresh pull verification, durable evidence retention, and fail-closed enforcement. The readiness validator is merged into Goal 4 validation.
+This handoff update is intentionally within the canonical workflow's `push.paths` boundary. Its merge to `main` requests the repository to execute `.github/workflows/stegdeploy-image.yml` and retain a fresh v2 evidence set.
 
-## Canonical Publication Trigger
+The trigger changes no runtime code and grants no deployment, provider, custody, release, publication-policy, or Site activation authority. The workflow's authority effect remains limited to canonical image publication evidence.
 
-This handoff update is intentionally within the canonical workflow's `push.paths` boundary. Its merge to `main` requests the repository to run `.github/workflows/stegdeploy-image.yml` automatically and retain the resulting v2 evidence set.
-
-The trigger changes no runtime code and grants no publication, deployment, provider, custody, release, or activation authority by itself. Its only purpose is to cause the already-governed publication workflow to produce fresh evidence.
-
-Expected machine-owned sequence:
+## Required Machine-Owned Sequence
 
 ```text
 merge this handoff update to main
 → run StegDeploy image workflow
-→ attempt registry login, image build/publish, attestation, and fresh pull
-→ write v2 PUBLISHED or BLOCKED receipt
+→ attempt registry login
+→ build and publish immutable image
+→ attest the image
+→ remove any local main image and perform a fresh registry pull
+→ write a v2 PUBLISHED or exact BLOCKED receipt
 → refresh readiness projection
 → retain receipt, pull log, and readiness status together
-→ allow Healer to relay only a verified PUBLISHED receipt
+→ enforce the result fail-closed
 ```
 
-## Retention Repair
+## Required v2 Evidence
 
-The canonical image workflow retains the readiness projection in the same run that writes the publication receipt. This prevents the receipt from advancing while repository-owned status remains stale because evidence commits use `[skip ci]`.
+A `PUBLISHED` result must establish all of the following in the retained receipt:
 
 ```text
-write v2 PUBLISHED or BLOCKED receipt
-→ run scripts/check_stegdeploy_image_publication_readiness.py
-→ retain receipt, pull log, and readiness status together
-→ upload all three artifacts
-→ enforce publication result fail-closed
+schema = stegdeploy.image-publication.v2
+state = PUBLISHED
+digest = sha256:...
+stage_outcomes.registry_login = success
+stage_outcomes.build_publish = success
+stage_outcomes.attestation = success
+stage_outcomes.verification_pull = success
+consumer_pull_verified = true
+repository_retained = true
 ```
+
+A `BLOCKED` result must retain the exact first observable publication or pull blocker. It must not be treated as package publication, deployment readiness, provider execution, custody, or Site activation evidence.
+
+## Retention Contract
+
+The canonical image workflow retains these artifacts together:
+
+```text
+receipts/stegdeploy-image-publication.json
+receipts/stegdeploy-image-verification-pull.log
+status/stegdeploy-image-publication-readiness.json
+```
+
+The readiness checker may validate the workflow contract structurally while truthfully keeping readiness `BLOCKED` until a retained v2 receipt proves publication and fresh consumer pull success.
 
 ## Built Files
 
@@ -73,23 +86,11 @@ scripts/verify_goal4_full.py
 docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md
 ```
 
-## Validation Boundary
-
-The checker passes when the workflow contract is structurally valid, while truthfully recording `BLOCKED` until a retained v2 receipt proves:
-
-```text
-state = PUBLISHED
-digest = sha256:...
-consumer_pull_verified = true
-```
-
-A passing structural validator does not mean the image is published, publicly accessible, deployed, provider-authorized, custody-authorized, or Site-activated.
-
 ## Next Machine-Owned Actions
 
-1. Observe the main-branch StegDeploy image workflow triggered by this handoff update.
-2. Retain the resulting v2 `PUBLISHED` or exact `BLOCKED` receipt, pull log, and readiness status automatically.
-3. If `BLOCKED`, repair only the first exact retained blocker.
-4. If `PUBLISHED`, allow the merged Healer relay to dispatch the bounded publication event.
-5. Verify core-node intake retains matching receipt-hash and image-digest compatibility evidence.
-6. Persistent hosting and real-provider/custody configuration remain separate authority-gated boundaries.
+1. Merge this bounded trigger update.
+2. Observe the resulting main-branch `StegDeploy image` workflow.
+3. Retain the v2 `PUBLISHED` or exact `BLOCKED` evidence automatically.
+4. If `BLOCKED`, repair only the first retained publication or pull blocker.
+5. If `PUBLISHED`, rerun the existing core-node intake against the published image and verify matching digest and receipt-hash continuity.
+6. Persistent hosting and real provider/Master-Records configuration remain separate authority-gated boundaries.
