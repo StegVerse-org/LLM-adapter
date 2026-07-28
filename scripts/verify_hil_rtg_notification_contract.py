@@ -143,14 +143,35 @@ def main() -> None:
     )
 
     readiness_schema = load_schema(READINESS_SCHEMA)
+    readiness_properties = readiness_schema.get("properties", {})
     readiness_required = set(readiness_schema.get("required", []))
     for field in (
         "readiness_schema_sha256",
         "attempt_notification_schema_sha256",
         "submission_status_schema_sha256",
+        "runtime_contract_version",
+        "tvc_authority_role",
+        "tvc_decision_id",
+        "tvc_policy_hash",
+        "tvc_decision_receipt_sha256",
+        "tvc_admissible",
+        "tvc_binding_matched",
     ):
         require(field in readiness_required, f"readiness schema does not require {field}")
         require(f'"{field}"' in site_gateway, f"readiness runtime does not advertise {field}")
+
+    require(
+        readiness_properties.get("tvc_authority_role", {}).get("const") == "service_gateway_intake",
+        "readiness schema does not bind the intake authority role",
+    )
+    require(
+        readiness_properties.get("tvc_admissible", {}).get("const") is True,
+        "readiness schema permits inadmissible TVC authority",
+    )
+    require(
+        readiness_properties.get("tvc_binding_matched", {}).get("const") is True,
+        "readiness schema permits unmatched TVC binding",
+    )
 
     for discovery_token in (
         "attempt_notification_schema",
@@ -166,6 +187,8 @@ def main() -> None:
         "application/schema+json",
         "_schema_response",
         "_schema_sha256",
+        "_tvc_authority_projection",
+        "canonical_json",
         "ETag",
         "nosniff",
     ):
@@ -179,7 +202,7 @@ def main() -> None:
     )
 
     print(
-        "PASS: HIL RTG notification, retry, participant-status, digest-bound discovery, and privacy contract verified"
+        "PASS: HIL RTG notification, retry, participant-status, schema-digest, TVC-authority, and privacy contract verified"
     )
 
 
