@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from fastapi import File, Form, HTTPException, Query, UploadFile
+from fastapi.responses import Response
 
 from . import service_gateway as gateway
 app = gateway.app
@@ -16,17 +18,55 @@ STATUS_SCHEMA = "HIL-SUBMISSION-STATUS-v1"
 STATUS_SCHEMA_PATH = "/schemas/hil-submission-status-v1.schema.json"
 NOTIFICATION_SCHEMA_PATH = "/schemas/hil-attempt-notification-v1.schema.json"
 TERMINAL_NOTIFICATION_STATES = ["DELIVERED", "PARTIAL_EXPIRED", "DELIVERY_EXPIRED"]
+SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "schemas"
+SCHEMA_FILES = {
+    READINESS_SCHEMA_PATH: "hil-readiness-v1.schema.json",
+    NOTIFICATION_SCHEMA_PATH: "hil-attempt-notification-v1.schema.json",
+    STATUS_SCHEMA_PATH: "hil-submission-status-v1.schema.json",
+}
 
 # Replace base routes while preserving the public browser contract and adding
 # explicit discovery for the governed RTG notification/status interface.
 app.router.routes[:] = [
     route for route in app.router.routes
-    if getattr(route, "path", None) not in {"/api/hil/submissions", "/api/hil/readiness"}
+    if getattr(route, "path", None) not in {
+        "/api/hil/submissions",
+        "/api/hil/readiness",
+        *SCHEMA_FILES.keys(),
+    }
 ]
 
 
 def _load_json(path: Path) -> Dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _schema_bytes(schema_path: str) -> bytes:
+    filename = SCHEMA_FILES.get(schema_path)
+    if not filename:
+        raise HTTPException(status_code=404, detail="schema_not_found")
+    path = SCHEMA_ROOT / filename
+    if not path.is_file():
+        raise HTTPException(status_code=503, detail="governed_schema_unavailable")
+    return path.read_bytes()
+
+
+def _schema_sha256(schema_path: str) -> str:
+    return hashlib.sha256(_schema_bytes(schema_path)).hexdigest()
+
+
+def _schema_response(schema_path: str) -> Response:
+    content = _schema_bytes(schema_path)
+    digest = hashlib.sha256(content).hexdigest()
+    return Response(
+        content=content,
+        media_type="application/schema+json",
+        headers={
+            "Cache-Control": "public, max-age=300, must-revalidate",
+            "ETag": f'"sha256:{digest}"',
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 def _notification_max_attempts() -> int:
@@ -64,6 +104,21 @@ def _recipient_states(root: Path, attempt_id: str) -> Dict[str, str]:
     }
 
 
+@app.get(READINESS_SCHEMA_PATH)
+def hil_readiness_schema() -> Response:
+    return _schema_response(READINESS_SCHEMA_PATH)
+
+
+@app.get(NOTIFICATION_SCHEMA_PATH)
+def hil_attempt_notification_schema() -> Response:
+    return _schema_response(NOTIFICATION_SCHEMA_PATH)
+
+
+@app.get(STATUS_SCHEMA_PATH)
+def hil_submission_status_schema() -> Response:
+    return _schema_response(STATUS_SCHEMA_PATH)
+
+
 @app.get("/api/hil/readiness")
 def site_hil_readiness() -> Dict[str, Any]:
     try:
@@ -73,6 +128,7 @@ def site_hil_readiness() -> Dict[str, Any]:
     return {
         "schema_version": READINESS_SCHEMA,
         "readiness_schema_path": READINESS_SCHEMA_PATH,
+        "readiness_schema_sha256": _schema_sha256(READINESS_SCHEMA_PATH),
         "state": "READY",
         "service_id": gateway.SERVICE_ID,
         "primary_version": gateway.PRIMARY_VERSION,
@@ -87,9 +143,11 @@ def site_hil_readiness() -> Dict[str, Any]:
         "participant_notification_scope": "ATTEMPT_NOTIFICATION_ONLY",
         "attempt_notification_schema": gateway.NOTIFICATION_SCHEMA,
         "attempt_notification_schema_path": NOTIFICATION_SCHEMA_PATH,
+        "attempt_notification_schema_sha256": _schema_sha256(NOTIFICATION_SCHEMA_PATH),
         "submission_status_supported": True,
         "submission_status_schema": STATUS_SCHEMA,
         "submission_status_schema_path": STATUS_SCHEMA_PATH,
+        "submission_status_schema_sha256": _schema_sha256(STATUS_SCHEMA_PATH),
         "submission_status_authorization": "SUBMISSION_ID_PLUS_RECEIPT_ID",
         "notification_max_attempts": _notification_max_attempts(),
         "terminal_notification_delivery_states": TERMINAL_NOTIFICATION_STATES,
