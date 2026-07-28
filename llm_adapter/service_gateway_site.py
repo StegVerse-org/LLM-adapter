@@ -17,9 +17,10 @@ READINESS_SCHEMA_PATH = "/schemas/hil-readiness-v1.schema.json"
 STATUS_SCHEMA = "HIL-SUBMISSION-STATUS-v1"
 STATUS_SCHEMA_PATH = "/schemas/hil-submission-status-v1.schema.json"
 NOTIFICATION_SCHEMA_PATH = "/schemas/hil-attempt-notification-v1.schema.json"
-TERMINAL_NOTIFICATION_STATES = ["DELIVERED", "PARTIAL_EXPIRED", "DELIVERY_EXPIRED"]
+AUTHORITY_EVIDENCE_SCHEMA = "HIL-TVC-AUTHORITY-EVIDENCE-v1"
+AUTHORITY_EVIDENCE_PATH = "/api/hil/authority-evidence"
 RUNTIME_CONTRACT_VERSION = "HIL-RTG-RUNTIME-v1"
-TVC_AUTHORITY_ROLE = "service_gateway_intake"
+TERMINAL_NOTIFICATION_STATES = ["DELIVERED", "PARTIAL_EXPIRED", "DELIVERY_EXPIRED"]
 SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "schemas"
 SCHEMA_FILES = {
     READINESS_SCHEMA_PATH: "hil-readiness-v1.schema.json",
@@ -27,13 +28,12 @@ SCHEMA_FILES = {
     STATUS_SCHEMA_PATH: "hil-submission-status-v1.schema.json",
 }
 
-# Replace base routes while preserving the public browser contract and adding
-# explicit discovery for the governed RTG notification/status interface.
 app.router.routes[:] = [
     route for route in app.router.routes
     if getattr(route, "path", None) not in {
         "/api/hil/submissions",
         "/api/hil/readiness",
+        AUTHORITY_EVIDENCE_PATH,
         *SCHEMA_FILES.keys(),
     }
 ]
@@ -79,18 +79,31 @@ def _notification_max_attempts() -> int:
     return min(20, max(1, value))
 
 
-def _tvc_authority_projection(receipt: Dict[str, Any]) -> Dict[str, Any]:
-    # Bind discovery to the exact decision receipt admitted by the runtime.
-    receipt_bytes = gateway.canonical_json(receipt)
+def _authority_evidence(tvc: Dict[str, Any]) -> Dict[str, Any]:
+    allowed_keys = sorted(str(value) for value in (tvc.get("allowed_keys") or []))
+    denied_keys = sorted(str(value) for value in (tvc.get("denied_keys") or []))
     return {
+        "schema_version": AUTHORITY_EVIDENCE_SCHEMA,
         "runtime_contract_version": RUNTIME_CONTRACT_VERSION,
-        "tvc_authority_role": receipt.get("role"),
-        "tvc_decision_id": receipt.get("decision_id"),
-        "tvc_policy_hash": receipt.get("policy_hash"),
-        "tvc_decision_receipt_sha256": hashlib.sha256(receipt_bytes).hexdigest(),
-        "tvc_admissible": receipt.get("admissible") is True,
-        "tvc_binding_matched": receipt.get("binding_matched") is True,
+        "authority_role": str(tvc.get("role") or ""),
+        "decision_id": str(tvc.get("decision_id") or ""),
+        "policy_hash": str(tvc.get("policy_hash") or ""),
+        "admissible": tvc.get("admissible") is True,
+        "binding_matched": tvc.get("binding_matched") is True,
+        "allowed_keys_sha256": hashlib.sha256(gateway.canonical_json(allowed_keys)).hexdigest(),
+        "denied_keys_sha256": hashlib.sha256(gateway.canonical_json(denied_keys)).hexdigest(),
+        "allowed_key_count": len(allowed_keys),
+        "denied_key_count": len(denied_keys),
+        "restricted_fields_exposed": False,
     }
+
+
+def _authority_evidence_bytes(tvc: Dict[str, Any]) -> bytes:
+    return gateway.canonical_json(_authority_evidence(tvc))
+
+
+def _authority_evidence_sha256(tvc: Dict[str, Any]) -> str:
+    return hashlib.sha256(_authority_evidence_bytes(tvc)).hexdigest()
 
 
 def _latest_submission_notification(root: Path, submission_id: str) -> Optional[Dict[str, Any]]:
@@ -135,12 +148,32 @@ def hil_submission_status_schema() -> Response:
     return _schema_response(STATUS_SCHEMA_PATH)
 
 
+@app.get(AUTHORITY_EVIDENCE_PATH)
+def hil_authority_evidence() -> Response:
+    try:
+        runtime = gateway._runtime()
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    content = _authority_evidence_bytes(runtime["tvc"])
+    digest = hashlib.sha256(content).hexdigest()
+    return Response(
+        content=content,
+        media_type="application/json",
+        headers={
+            "Cache-Control": "no-store",
+            "ETag": f'"sha256:{digest}"',
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
 @app.get("/api/hil/readiness")
 def site_hil_readiness() -> Dict[str, Any]:
     try:
         runtime = gateway._runtime()
     except Exception as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    tvc = runtime["tvc"]
     return {
         "schema_version": READINESS_SCHEMA,
         "readiness_schema_path": READINESS_SCHEMA_PATH,
@@ -171,7 +204,16 @@ def site_hil_readiness() -> Dict[str, Any]:
         "expired_recipient_addresses_retained": False,
         "notification_delivery_changes_submission_outcome": False,
         "durable_storage": True,
-        **_tvc_authority_projection(runtime["tvc"]),
+        "runtime_contract_version": RUNTIME_CONTRACT_VERSION,
+        "tvc_authority_role": tvc.get("role"),
+        "tvc_decision_id": tvc.get("decision_id"),
+        "tvc_policy_hash": tvc.get("policy_hash"),
+        "tvc_decision_receipt_sha256": hashlib.sha256(gateway.canonical_json(tvc)).hexdigest(),
+        "tvc_admissible": tvc.get("admissible") is True,
+        "tvc_binding_matched": tvc.get("binding_matched") is True,
+        "authority_evidence_schema": AUTHORITY_EVIDENCE_SCHEMA,
+        "authority_evidence_path": AUTHORITY_EVIDENCE_PATH,
+        "authority_evidence_sha256": _authority_evidence_sha256(tvc),
     }
 
 
