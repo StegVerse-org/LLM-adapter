@@ -75,8 +75,11 @@ def require(condition: bool, message: str) -> None:
 def main() -> int:
     port = os.environ.get("PORT", "18080")
     base_url = os.environ.get("STEGVERSE_USER_LLM_BASE_URL", f"http://127.0.0.1:{port}/user-llm")
-    source_commit = os.environ.get("GITHUB_SHA", "")
-    require(len(source_commit) == 40 and all(c in "0123456789abcdef" for c in source_commit), "GITHUB_SHA must be a 40-character lowercase commit SHA")
+    source_commit = os.environ.get("SOURCE_COMMIT", os.environ.get("GITHUB_SHA", ""))
+    require(
+        len(source_commit) == 40 and all(c in "0123456789abcdef" for c in source_commit),
+        "SOURCE_COMMIT must be a durable 40-character lowercase commit SHA",
+    )
 
     evidence_root = Path("artifacts/receipts/user-llm-bounded-execution")
     import_root = Path("artifacts/site-imports/user-llm-bounded-execution-receipts")
@@ -144,7 +147,7 @@ def main() -> int:
             encoding="utf-8",
         )
 
-    print(f"SITE_COMPATIBLE_ROUTE_RECEIPTS=PASS imports={len(ROUTES)}")
+    print(f"SITE_COMPATIBLE_ROUTE_RECEIPTS=PASS imports={len(ROUTES)} source_commit={source_commit}")
     return 0
 
 
