@@ -27,7 +27,7 @@ jobs:
       - name: Execute portable Docker test
         run: sh scripts/run_user_llm_portable_test.sh
 
-      - name: Capture governed execution receipt
+      - name: Capture and verify governed execution receipt
         if: always()
         run: |
           mkdir -p artifacts
@@ -48,7 +48,7 @@ jobs:
               "activation": "/v1/user-llm/activation-proof",
           }
           receipt = {
-              "schema": "stegverse.user-llm.portable-execution-receipt.v1",
+              "schema": "stegverse.user-llm.portable-execution-receipt.v2",
               "captured_at": datetime.now(timezone.utc).isoformat(),
               "runtime": "repository-owned-docker-compose",
               "port": int(port),
@@ -59,7 +59,9 @@ jobs:
               "continuity_authority": False,
               "master_record_custody": False,
               "endpoints": {},
+              "request_return": {},
           }
+          failures: list[str] = []
           for name, path in endpoints.items():
               try:
                   with urllib.request.urlopen(base + path, timeout=5) as response:
@@ -72,10 +74,81 @@ jobs:
                       "error": type(exc).__name__,
                       "detail": str(exc),
                   }
+                  failures.append(f"{name}_probe_failed")
+
+          request_payload = {
+              "identity": {
+                  "user_id": "portable-ci-user",
+                  "llm_id": "portable-ci-llm",
+                  "provider": "repository-owned-fixture",
+                  "model": "deterministic-test-transport",
+                  "scopes": ["demo:read"],
+              },
+              "route": "demo_test_suite",
+              "action": "inspect",
+              "payload": {"probe": "portable-request-return-v1"},
+          }
+          try:
+              encoded = json.dumps(request_payload, sort_keys=True).encode("utf-8")
+              request = urllib.request.Request(
+                  base + "/v1/user-llm/requests",
+                  data=encoded,
+                  headers={"Accept": "application/json", "Content-Type": "application/json"},
+                  method="POST",
+              )
+              with urllib.request.urlopen(request, timeout=5) as response:
+                  body = json.loads(response.read().decode("utf-8"))
+                  receipt["request_return"] = {
+                      "http_status": response.status,
+                      "request": request_payload,
+                      "body": body,
+                  }
+                  if response.status != 200:
+                      failures.append("request_return_http_status")
+                  if body.get("status") != "RETURNED":
+                      failures.append("request_not_returned")
+                  if body.get("authority_attached") is not False:
+                      failures.append("authority_attached")
+                  if body.get("test_mode") is not True:
+                      failures.append("test_mode_not_explicit")
+                  if body.get("downstream_execution_verified") is not False:
+                      failures.append("downstream_execution_misrepresented")
+                  result = body.get("result") or {}
+                  if result.get("status") != "TEST_RETURNED":
+                      failures.append("fixture_result_not_returned")
+                  for field in (
+                      "authority_attached",
+                      "execution_authority",
+                      "publication_authority",
+                      "continuity_authority",
+                      "master_record_custody",
+                  ):
+                      if result.get(field) is not False:
+                          failures.append(f"result_{field}")
+                  if not body.get("result_hash"):
+                      failures.append("result_hash_missing")
+                  if not (body.get("request") or {}).get("request_hash"):
+                      failures.append("request_hash_missing")
+          except Exception as exc:
+              receipt["request_return"] = {
+                  "error": type(exc).__name__,
+                  "detail": str(exc),
+                  "request": request_payload,
+              }
+              failures.append("request_return_probe_failed")
+
+          receipt["verification"] = {
+              "status": "PASS" if not failures else "FAIL",
+              "failures": failures,
+              "bounded_request_return_verified": not failures,
+              "real_downstream_execution_verified": False,
+          }
           Path("artifacts/portable-user-llm-execution-receipt.json").write_text(
               json.dumps(receipt, indent=2, sort_keys=True) + "\n",
               encoding="utf-8",
           )
+          if failures:
+              raise SystemExit("portable receipt verification failed: " + ", ".join(failures))
           PY
           docker compose ps > artifacts/docker-compose-ps.txt || true
           docker compose logs --no-color > artifacts/docker-compose.log || true
