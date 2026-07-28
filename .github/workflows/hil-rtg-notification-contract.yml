@@ -17,6 +17,7 @@ on:
       - "tests/test_hil_submission_status_schema.py"
       - "tests/test_hil_readiness_contract.py"
       - "tests/test_hil_readiness_schema.py"
+      - "tests/test_hil_authority_evidence.py"
       - "docs/HIL_RTG_DEPLOYMENT_RUNBOOK.md"
       - ".github/workflows/hil-rtg-notification-contract.yml"
   pull_request:
@@ -35,6 +36,7 @@ on:
       - "tests/test_hil_submission_status_schema.py"
       - "tests/test_hil_readiness_contract.py"
       - "tests/test_hil_readiness_schema.py"
+      - "tests/test_hil_authority_evidence.py"
       - "docs/HIL_RTG_DEPLOYMENT_RUNBOOK.md"
       - ".github/workflows/hil-rtg-notification-contract.yml"
   workflow_dispatch:
@@ -54,9 +56,9 @@ jobs:
         run: python -m pip install --disable-pip-version-check fastapi python-multipart pytest jsonschema
       - name: Compile transition runtime modules
         run: python -m compileall -q llm_adapter tests
-      - name: Verify RTG notification, retry, participant-status, discovery, and privacy contract
+      - name: Verify RTG notification, retry, participant-status, discovery, authority, and privacy contract
         run: python scripts/verify_hil_rtg_notification_contract.py
-      - name: Test RTG attempt, delivery, status, discovery, and schema separation
+      - name: Test RTG attempt, delivery, status, discovery, authority, and schema separation
         run: >-
           python -m pytest -q
           tests/test_hil_notification_delivery.py
@@ -66,3 +68,4 @@ jobs:
           tests/test_hil_submission_status_schema.py
           tests/test_hil_readiness_contract.py
           tests/test_hil_readiness_schema.py
+          tests/test_hil_authority_evidence.py
