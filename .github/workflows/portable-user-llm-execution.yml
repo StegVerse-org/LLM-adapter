@@ -18,6 +18,8 @@ jobs:
   portable-execution:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      PORT: "18080"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,11 +35,13 @@ jobs:
           from __future__ import annotations
 
           import json
+          import os
           import urllib.request
           from datetime import datetime, timezone
           from pathlib import Path
 
-          base = "http://127.0.0.1:8000/user-llm"
+          port = os.environ.get("PORT", "18080")
+          base = f"http://127.0.0.1:{port}/user-llm"
           endpoints = {
               "health": "/healthz",
               "readiness": "/readyz",
@@ -47,6 +51,7 @@ jobs:
               "schema": "stegverse.user-llm.portable-execution-receipt.v1",
               "captured_at": datetime.now(timezone.utc).isoformat(),
               "runtime": "repository-owned-docker-compose",
+              "port": int(port),
               "provider_specific_host": False,
               "authority_attached": False,
               "execution_authority": False,
@@ -86,4 +91,4 @@ jobs:
 
       - name: Stop portable node
         if: always()
-        run: docker compose down -v
+        run: docker compose down -v || true
