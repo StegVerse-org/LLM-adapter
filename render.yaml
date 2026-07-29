@@ -10,6 +10,8 @@ services:
     envVars:
       - key: STEGVERSE_DATA_DIR
         value: /var/lib/stegverse
+      - key: STEGVERSE_HIL_INTAKE_ENABLED
+        value: "true"
       - key: STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS
         value: "true"
       - key: STEGVERSE_ALLOWED_ORIGINS
