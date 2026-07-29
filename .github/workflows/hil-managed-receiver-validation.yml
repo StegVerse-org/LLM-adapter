@@ -38,6 +38,8 @@ jobs:
           disk = disks[0] if isinstance(disks, list) else disks
           assert disk.get('mountPath') == '/var/lib/stegverse'
           env = {item['key']: item for item in service.get('envVars', [])}
+          assert env.get('STEGVERSE_HIL_INTAKE_ENABLED', {}).get('value') == 'true'
+          assert env.get('STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS', {}).get('value') == 'true'
           for key in ('STEGVERSE_HIL_REVIEW_TOKEN','STEGVERSE_HIL_PUBLICATION_TOKEN'):
               assert key in env and env[key].get('generateValue') is True, f'{key} must be host generated'
           print('managed-host-contract: PASS')
@@ -52,6 +54,8 @@ jobs:
           docker run -d --name stegverse-hil-ci \
             -p 18080:8000 \
             -v stegverse-hil-ci:/var/lib/stegverse \
+            -e STEGVERSE_HIL_INTAKE_ENABLED=true \
+            -e STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS=true \
             -e STEGVERSE_HIL_REVIEW_TOKEN=ci-review-token-not-production-000000000000 \
             -e STEGVERSE_HIL_PUBLICATION_TOKEN=ci-publication-token-not-production-000000 \
             -e STEGVERSE_ALLOWED_ORIGINS=https://stegverse.org,https://www.stegverse.org,https://stegverse-labs.github.io \
@@ -59,24 +63,30 @@ jobs:
 
       - name: Verify readiness
         run: |
+          mkdir -p artifacts
           python - <<'PY'
           import json, time, urllib.request
+          from pathlib import Path
+
           url='http://127.0.0.1:18080/api/hil/readiness'
           last=None
+          latest=None
           for _ in range(40):
               try:
                   with urllib.request.urlopen(url, timeout=3) as r:
-                      body=json.load(r)
-                  assert body['state']=='READY'
-                  assert body['primary_sha256']=='a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462'
-                  assert body['prompt_sha256']=='cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c'
-                  print(json.dumps(body, indent=2, sort_keys=True))
+                      latest=json.load(r)
+                  Path('artifacts/hil-readiness.json').write_text(json.dumps(latest, indent=2, sort_keys=True)+'\n')
+                  assert latest['state']=='READY', json.dumps(latest, sort_keys=True)
+                  assert latest['blockers']==[], json.dumps(latest, sort_keys=True)
+                  assert latest['primary_sha256']=='a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462'
+                  assert latest['prompt_sha256']=='cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c'
+                  print(json.dumps(latest, indent=2, sort_keys=True))
                   break
               except Exception as exc:
                   last=exc
                   time.sleep(2)
           else:
-              raise SystemExit(f'readiness failed: {last}')
+              raise SystemExit(f'readiness failed: {last}; latest={json.dumps(latest, sort_keys=True) if latest else None}')
           PY
 
       - name: Preserve validation evidence
@@ -88,12 +98,18 @@ jobs:
           import json, os
           from datetime import datetime, timezone
           from pathlib import Path
+
+          readiness_path=Path('artifacts/hil-readiness.json')
+          readiness=json.loads(readiness_path.read_text()) if readiness_path.exists() else None
+          passed=bool(readiness and readiness.get('state')=='READY' and readiness.get('blockers')==[])
           receipt={
-            'schema':'HIL-MANAGED-RUNTIME-VALIDATION-v1',
+            'schema':'HIL-MANAGED-RUNTIME-VALIDATION-v2',
             'captured_at':datetime.now(timezone.utc).isoformat(),
             'repository':os.environ.get('GITHUB_REPOSITORY'),
             'commit_sha':os.environ.get('GITHUB_SHA'),
             'execution_venue':'repository-owned-github-actions',
+            'validation_state':'PASS' if passed else 'FAIL',
+            'readiness':readiness,
             'participant_hardware_required':False,
             'public_https_deployment_verified':False,
             'hosted_persistence_verified':False,
