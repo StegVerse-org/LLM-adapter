@@ -24,11 +24,25 @@ Result: IMPLEMENTED_PORTABLE_RUNTIME_NOT_PUBLICLY_ACTIVATED
 Authority: NONE
 ```
 
+## Correct diagnosis of the current blocker
+
+The public Site upload control is `NOT READY` because no verified public HTTPS receiver is configured in `StegVerse-Labs/Site/data/hil-receiver-config.json`.
+
+The browser client already exists. The missing capability is hosted receiver deployment with HTTPS and durable storage. A loopback receiver such as `http://127.0.0.1:8000` is diagnostic only and can never satisfy public Site readiness.
+
+## Binding dependency rule
+
+The current state is `BLOCKED_PENDING_INTERNAL_UNBLOCK_SEARCH`, not a request for participant hardware.
+
+All reasonable ecosystem-owned, managed, ephemeral, serverless, or existing-host alternatives must be evaluated before any external hardware role may be proposed. A participant may not be made the hardware provider, hardware rehabilitator, installer, node operator, student, experiment operator, schema interpreter, troubleshooter, recovery mechanism, or continuity layer because those system roles are unfilled.
+
+Local validation may run only in repository-owned CI, an ephemeral managed container, an existing enrolled StegVerse node, or an already-ready developer environment. It must not require construction of participant infrastructure and must not be represented as public activation.
+
 ## Corrected provider posture
 
-`render.yaml` is an optional, fail-closed provider example. It declares storage as non-durable and therefore cannot make HIL readiness report `READY`. Render, its hostname, and its billing tiers are not dependencies or activation requirements.
+`render.yaml` and any other provider manifest are optional, fail-closed provider examples. No provider, hostname, or billing tier is an architectural dependency or participant-facing requirement.
 
-The canonical path is the OCI image plus environment, port, volume, HTTPS, and secret-injection contracts. Any conforming host may run the same revision without application-code changes.
+The canonical path is the OCI image plus environment, port, volume, HTTPS, and secret-injection contracts. Any conforming managed host may run the same revision without application-code changes.
 
 ## Completed
 
@@ -38,38 +52,54 @@ The canonical path is the OCI image plus environment, port, volume, HTTPS, and s
 - Receiver receipt generation.
 - Separate private-review and publication token boundaries.
 - Provider-neutral Dockerfile, entrypoint, named-volume Compose runtime, and readiness checks.
-- Local bootstrap that creates distinct uncommitted secrets and verifies exact v1.1 readiness.
-- Provider-neutral public HTTPS deployment instructions.
+- Local bootstrap for authorized ready environments.
+- Provider-neutral public HTTPS deployment contract.
+- Receiver-hosted browser submission surface for diagnostic and managed deployments.
 
 ## Remaining vertical slice
 
-1. Run `sh scripts/start-hil-runtime.sh` on a Docker-capable machine.
-2. Confirm local `READY` output with exact v1.1 hashes.
-3. Attach the same OCI runtime to any durable public host or standards-compatible HTTPS reverse proxy.
-4. Verify the public HTTPS readiness endpoint.
-5. Configure `StegVerse-Labs/Site/data/hil-receiver-config.json` with that proven endpoint.
-6. Submit one controlled PDF and preserve the returned receipt.
-7. Restart or replace the service while retaining the volume and prove exact bytes and manifest persist.
-8. Record one authenticated write-once private review.
-9. Record one separately authenticated append-only publication.
-10. Import the publication into the Site projection and build the first Master Record release.
+1. Run the unchanged OCI/runtime validation in repository-owned CI or another authorized ephemeral venue.
+2. Select a conforming managed/serverless host that supplies HTTPS termination, runtime secret injection, durable storage, restart/replacement support, and exportable evidence.
+3. Deploy the unchanged provider-neutral runtime without requiring participant-owned continuously live hardware.
+4. Configure separate private-review and publication credentials at the host secret boundary.
+5. Verify public `/api/hil/readiness` and `/api/hil/publication-readiness` against the exact v1.1 hashes.
+6. Perform a controlled hosted restart or replacement while retaining storage and prove exact PDF bytes and manifest persistence.
+7. Configure `StegVerse-Labs/Site/data/hil-receiver-config.json` with the proven HTTPS endpoint and `CONFORMING_HTTPS_RECEIVER_CONFIGURED`.
+8. Confirm the public Site upload control transitions from `NOT READY` to `READY`.
+9. Submit one controlled PDF through the existing Site browser client and preserve the returned receipt.
+10. Record one authenticated write-once private review.
+11. Record one separately authenticated append-only publication.
+12. Import the publication into the Site projection and build the first Master Record release.
+
+## Prohibited substitutions
+
+```text
+participant laptop as canonical receiver
+participant hardware rehabilitation as unblock work
+manual Swagger submission as the primary participant path
+manual hashes or provenance JSON assigned to the participant
+local Docker success represented as hosted activation
+local validation treated as production hosting
+external dependency declared before internal/managed alternatives are exhausted
+```
 
 ## Known remaining files and destinations
 
 ```text
 StegVerse-org/LLM-adapter
-- public runtime deployment evidence: pending
-- controlled upload evidence: pending
-- actual restart persistence evidence: pending
+- authorized-venue automated runtime validation evidence: pending
+- public managed/serverless runtime deployment evidence: pending
+- controlled Site upload evidence: pending
+- hosted restart/replacement persistence evidence: pending
 - authenticated private-review evidence: pending
 - append-only publication evidence: pending
 
 StegVerse-Labs/Site
 - data/hil-receiver-config.json: intentionally unconfigured pending proven HTTPS receiver
-- docs/HIL_SITE_MIRROR_HANDOFF.md: must track v1.1 runtime and first controlled cycle
+- docs/HIL_SITE_MIRROR_HANDOFF.md: corrected hosting and burden rules
 - data/hil-responses.json: first published response pending
 - data/hil-master-records.json: first release pending
-- issue #81: remains active
+- issue #81: active hosted-receiver activation tracker
 
 GCAT-BCAT-Engine/Publisher
 - release verification task: create only after first authorized release/tag
@@ -83,4 +113,6 @@ stegguardian-wiki
 
 ## Completion boundary
 
-The upload path is not complete merely because the browser client and API exist. Completion requires a reachable HTTPS receiver, durable-state proof across an actual restart or replacement, a valid controlled receipt, authenticated private review, append-only publication, Site projection, and Master Record release evidence.
+The upload path is not complete merely because the browser client and API exist. Completion requires a reachable HTTPS receiver on managed/serverless or already-enrolled infrastructure, durable-state proof across an actual hosted restart or replacement, a valid controlled Site receipt, authenticated private review, append-only publication, Site projection, and Master Record release evidence.
+
+Participant-owned continuously live hardware is not a completion prerequisite.
