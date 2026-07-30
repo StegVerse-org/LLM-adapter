@@ -24,8 +24,12 @@ def require(condition: bool, message: str) -> None:
         raise SystemExit(f"HIL receiver deployment evidence failed: {message}")
 
 
+def is_hex(value: object, length: int) -> bool:
+    return isinstance(value, str) and len(value) == length and all(c in "0123456789abcdef" for c in value)
+
+
 def is_sha256(value: object) -> bool:
-    return isinstance(value, str) and len(value) == 64 and all(c in "0123456789abcdef" for c in value)
+    return is_hex(value, 64)
 
 
 def main() -> None:
@@ -37,7 +41,7 @@ def main() -> None:
     require(data.get("schema_version") == "HIL-RECEIVER-DEPLOYMENT-EVIDENCE-v1", "schema mismatch")
     parsed = urlparse(data.get("receiver_base_url", ""))
     require(parsed.scheme == "https" and parsed.hostname == "receiver.stegverse.com" and not parsed.query and not parsed.fragment, "receiver URL mismatch")
-    require(is_sha256(data.get("repository_revision")), "deployed repository revision must be a full lowercase SHA-256-style hex digest")
+    require(is_hex(data.get("repository_revision"), 40), "deployed repository revision must be a full lowercase Git SHA")
 
     require(data["dns"]["publicly_resolved"] is True and data["dns"]["addresses"], "public DNS not established")
     require(data["tls"]["verified"] is True, "TLS not verified")
