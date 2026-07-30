@@ -1,0 +1,55 @@
+{
+  "schema_version": "HIL-RECEIVER-DEPLOYMENT-EVIDENCE-v1",
+  "receiver_base_url": "https://receiver.stegverse.com",
+  "repository_revision": "REPLACE_WITH_DEPLOYED_COMMIT_SHA",
+  "observed_at": "REPLACE_WITH_RFC3339_TIMESTAMP",
+  "dns": {
+    "publicly_resolved": false,
+    "addresses": []
+  },
+  "tls": {
+    "verified": false,
+    "redirects_followed": false
+  },
+  "readiness": {
+    "http_status": 0,
+    "state": "NOT_OBSERVED",
+    "primary_version": "v1.1",
+    "primary_sha256": "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462",
+    "protocol_version": "HIL-PROTOCOL-v1.1",
+    "prompt_version": "HIL-PROMPT-v1.1",
+    "prompt_sha256": "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c",
+    "provenance_manifest_required": true,
+    "provenance_manifest_schema": "HIL-RESPONSE-PROVENANCE-v1.1",
+    "participant_metadata_required": false
+  },
+  "controlled_submission": {
+    "performed": false,
+    "response_pdf_sha256": null,
+    "provenance_manifest_sha256": null,
+    "receipt_schema_version": null,
+    "receipt_sha256": null,
+    "chain_validation_state": null
+  },
+  "durability": {
+    "restart_observed": false,
+    "same_submission_reconstructed_after_restart": false,
+    "artifact_bytes_match": false,
+    "manifest_bytes_match": false
+  },
+  "site": {
+    "canonical_upload_url": "https://stegverse.org/hil/upload/",
+    "upload_enabled_observed": false
+  },
+  "master_records": {
+    "custody_state": "NOT_OBSERVED",
+    "reconstruction_state": "NOT_OBSERVED",
+    "receipt_sha256": null
+  },
+  "authority": {
+    "publication": false,
+    "review_approval": false,
+    "scientific_validation": false,
+    "master_record_append": false
+  }
+}
