@@ -1,0 +1,75 @@
+{
+  "schema_version": "HIL-LAYER-WORKBOARD-v1",
+  "layer": "managed-durable-hil-receiver",
+  "organization": "StegVerse",
+  "state": "BEING_BUILT",
+  "no_external_tasks": true,
+  "authority_effect": "NONE",
+  "tasks": [
+    {
+      "id": "HIL-BUILD-001",
+      "title": "Merge managed receiver implementation",
+      "repository": "StegVerse-org/LLM-adapter",
+      "location_type": "pull_request",
+      "location": "StegVerse-org/LLM-adapter#89",
+      "acceptance": "PR merged to main with required checks passing",
+      "next_action": "Review and merge PR #89",
+      "state": "IN_PROGRESS"
+    },
+    {
+      "id": "HIL-ACTIVATE-001",
+      "title": "Instantiate managed receiver",
+      "repository": "StegVerse-org/LLM-adapter",
+      "location_type": "issue",
+      "location": "StegVerse-org/LLM-adapter#91",
+      "source_path": "render.yaml",
+      "acceptance": "Public HTTPS service, deployed commit, durable storage fingerprint, and non-secret deployment evidence recorded",
+      "next_action": "Deploy main render.yaml inside the StegVerse-managed hosting account",
+      "state": "QUEUED"
+    },
+    {
+      "id": "HIL-VERIFY-001",
+      "title": "Verify public v1.1 readiness",
+      "repository": "StegVerse-org/LLM-adapter",
+      "location_type": "workflow",
+      "location": ".github/workflows/hil-https-receiver-probe.yml",
+      "source_path": "scripts/probe_hil_https_receiver.py",
+      "acceptance": "Retained HIL-HTTPS-RECEIVER-PROBE-v1 reports READY with exact v1.1 hashes and zero blockers",
+      "next_action": "Dispatch probe against the verified public origin",
+      "state": "QUEUED"
+    },
+    {
+      "id": "HIL-PERSIST-001",
+      "title": "Prove hosted persistence",
+      "repository": "StegVerse-org/LLM-adapter",
+      "location_type": "issue",
+      "location": "StegVerse-org/LLM-adapter#91",
+      "source_path": "scripts/verify_hil_deployed_cycle_evidence.py",
+      "acceptance": "Same submission, PDF hash, and provenance hash survive a real hosted restart or replacement",
+      "next_action": "Execute one controlled cycle across hosted restart or replacement",
+      "state": "QUEUED"
+    },
+    {
+      "id": "HIL-SITE-001",
+      "title": "Configure verified receiver in Site",
+      "repository": "StegVerse-Labs/Site",
+      "location_type": "issue",
+      "location": "StegVerse-Labs/Site#136",
+      "source_path": "data/hil-receiver-config.json",
+      "acceptance": "Verified HTTPS origin committed with CONFORMING_HTTPS_RECEIVER_CONFIGURED",
+      "next_action": "Consume upstream readiness evidence and update Site configuration",
+      "state": "QUEUED"
+    },
+    {
+      "id": "HIL-CYCLE-001",
+      "title": "Run controlled browser cycle",
+      "repository": "StegVerse-Labs/Site",
+      "location_type": "issue",
+      "location": "StegVerse-Labs/Site#136",
+      "source_path": "assets/hil-experiment-v1.1.js",
+      "acceptance": "Site reports READY and one controlled upload returns verified HIL-RECEIVER-RECEIPT-v2",
+      "next_action": "Submit one provenance-bound PDF through the public Site client",
+      "state": "QUEUED"
+    }
+  ]
+}
