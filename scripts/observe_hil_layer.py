@@ -6,6 +6,7 @@ import json
 import os
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -43,11 +44,6 @@ def api_get(path: str) -> dict[str, Any] | None:
         raise
 
 
-def content_exists(repo: str, path: str, ref: str = "main") -> bool:
-    encoded = urllib.parse.quote(path, safe="/")
-    return api_get(f"/repos/{repo}/contents/{encoded}?ref={ref}") is not None
-
-
 def issue(repo: str, number: int) -> dict[str, Any] | None:
     return api_get(f"/repos/{repo}/issues/{number}")
 
@@ -56,9 +52,12 @@ def pull(repo: str, number: int) -> dict[str, Any] | None:
     return api_get(f"/repos/{repo}/pulls/{number}")
 
 
-def main() -> int:
-    import urllib.parse
+def content_exists(repo: str, path: str, ref: str = "main") -> bool:
+    encoded = urllib.parse.quote(path, safe="/")
+    return api_get(f"/repos/{repo}/contents/{encoded}?ref={ref}") is not None
 
+
+def main() -> int:
     board = json.loads(WORKBOARD.read_text(encoding="utf-8"))
     require(board.get("schema_version") == "HIL-LAYER-WORKBOARD-v1", "workboard schema mismatch")
     require(board.get("organization") == "StegVerse", "workboard organization mismatch")
@@ -73,15 +72,19 @@ def main() -> int:
 
     pr89 = pull("StegVerse-org/LLM-adapter", 89)
     activation_issue = issue("StegVerse-org/LLM-adapter", 91)
+    observer_issue = issue("StegVerse-org/LLM-adapter", 92)
+    capacity_issue = issue("StegVerse-org/LLM-adapter", 94)
     site_issue = issue("StegVerse-Labs/Site", 136)
     site_config = api_get("/repos/StegVerse-Labs/Site/contents/data/hil-receiver-config.json?ref=main")
 
-    pr_merged = bool(pr89 and pr89.get("merged_at"))
     pr_open = bool(pr89 and pr89.get("state") == "open")
+    pr_merged = bool(pr89 and pr89.get("merged_at"))
     activation_open = bool(activation_issue and activation_issue.get("state") == "open")
+    observer_open = bool(observer_issue and observer_issue.get("state") == "open")
+    capacity_open = bool(capacity_issue and capacity_issue.get("state") == "open")
     site_open = bool(site_issue and site_issue.get("state") == "open")
     managed_files_on_main = all(
-        api_get(f"/repos/StegVerse-org/LLM-adapter/contents/{path}?ref=main") is not None
+        content_exists("StegVerse-org/LLM-adapter", path)
         for path in (
             "render.yaml",
             ".github/workflows/hil-managed-receiver-validation.yml",
@@ -93,7 +96,10 @@ def main() -> int:
     if site_config and isinstance(site_config.get("content"), str):
         import base64
         config_text = base64.b64decode(site_config["content"]).decode("utf-8")
-    receiver_configured = "CONFORMING_HTTPS_RECEIVER_CONFIGURED" in config_text and '"receiver_base_url": null' not in config_text
+    receiver_configured = (
+        "CONFORMING_HTTPS_RECEIVER_CONFIGURED" in config_text
+        and '"receiver_base_url": null' not in config_text
+    )
 
     if receiver_configured:
         state = "ACTIVATED"
@@ -102,26 +108,33 @@ def main() -> int:
             "location": "StegVerse-Labs/Site#136",
             "action": "Run and preserve the controlled browser cycle, then continue review/publication/import/Master Record gates.",
         }
-    elif pr_merged and managed_files_on_main:
+    elif managed_files_on_main:
         state = "BUILT_NOT_ACTIVATED"
-        next_task = {
-            "id": "HIL-ACTIVATE-001",
-            "location": "StegVerse-org/LLM-adapter#91",
-            "action": "Instantiate main:render.yaml in the StegVerse-managed host and record non-secret deployment evidence.",
-        }
-    elif pr_open or not managed_files_on_main:
+        if capacity_open:
+            next_task = {
+                "id": "HIL-CAPACITY-001",
+                "location": "StegVerse-org/LLM-adapter#94",
+                "action": "Restore StegVerse Render build pipeline capacity, then trigger service srv-d9l4fhijnfac73a8ou20 from main.",
+            }
+        else:
+            next_task = {
+                "id": "HIL-ACTIVATE-001",
+                "location": "StegVerse-org/LLM-adapter#91",
+                "action": "Deploy and verify the managed receiver, then preserve readiness and persistence evidence.",
+            }
+    elif pr_open:
         state = "BEING_BUILT"
         next_task = {
             "id": "HIL-BUILD-001",
             "location": "StegVerse-org/LLM-adapter#89",
-            "action": "Complete review and merge of the managed receiver implementation; keep issue #91 ready for immediate activation.",
+            "action": "Complete the managed receiver implementation and land its required files on main.",
         }
     else:
         state = "CONTRADICTORY"
         next_task = {
             "id": "HIL-REPAIR-001",
             "location": "StegVerse-org/LLM-adapter#92",
-            "action": "Repair the missing owner path or managed-runtime files before activation can proceed.",
+            "action": "Repair the missing implementation owner or managed-runtime files before activation proceeds.",
         }
 
     observation = {
@@ -135,6 +148,7 @@ def main() -> int:
             "implementation_pr": "StegVerse-org/LLM-adapter#89",
             "activation_issue": "StegVerse-org/LLM-adapter#91",
             "observer_issue": "StegVerse-org/LLM-adapter#92",
+            "capacity_issue": "StegVerse-org/LLM-adapter#94",
             "site_consumption_issue": "StegVerse-Labs/Site#136",
         },
         "observed": {
@@ -142,6 +156,8 @@ def main() -> int:
             "implementation_pr_merged": pr_merged,
             "managed_runtime_files_on_main": managed_files_on_main,
             "activation_issue_open": activation_open,
+            "observer_issue_open": observer_open,
+            "capacity_issue_open": capacity_open,
             "site_consumption_issue_open": site_open,
             "site_receiver_configured": receiver_configured,
         },
