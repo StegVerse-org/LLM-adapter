@@ -2,12 +2,14 @@
 import copy
 import importlib.util
 import json
+import sys
 from pathlib import Path
 
 MODULE = Path('va_claim_assistant/governed_retrieval.py')
 spec = importlib.util.spec_from_file_location('governed_retrieval', MODULE)
-module = importlib.util.module_from_spec(spec)
 assert spec and spec.loader
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
 spec.loader.exec_module(module)
 
 registry = {
