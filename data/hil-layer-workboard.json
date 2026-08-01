@@ -2,29 +2,40 @@
   "schema_version": "HIL-LAYER-WORKBOARD-v1",
   "layer": "managed-durable-hil-receiver",
   "organization": "StegVerse",
-  "state": "BEING_BUILT",
+  "state": "BUILT_NOT_ACTIVATED",
   "no_external_tasks": true,
   "authority_effect": "NONE",
   "tasks": [
     {
       "id": "HIL-BUILD-001",
-      "title": "Merge managed receiver implementation",
+      "title": "Managed receiver implementation present on main",
       "repository": "StegVerse-org/LLM-adapter",
-      "location_type": "pull_request",
-      "location": "StegVerse-org/LLM-adapter#89",
-      "acceptance": "PR merged to main with required checks passing",
-      "next_action": "Review and merge PR #89",
+      "location_type": "repository_paths",
+      "location": "StegVerse-org/LLM-adapter@main",
+      "source_path": "render.yaml; .github/workflows/hil-managed-receiver-validation.yml; docs/HIL_HOSTED_RECEIVER_ACTIVATION.md",
+      "acceptance": "All managed receiver implementation files exist on main with the reviewed content",
+      "next_action": "Maintain these files while activation proceeds through issue #91",
+      "state": "COMPLETE"
+    },
+    {
+      "id": "HIL-CAPACITY-001",
+      "title": "Restore managed-host build capacity",
+      "repository": "StegVerse-org/LLM-adapter",
+      "location_type": "issue",
+      "location": "StegVerse-org/LLM-adapter#94",
+      "acceptance": "Render service srv-d9l4fhijnfac73a8ou20 can start a fresh build from main and reach a terminal successful deploy",
+      "next_action": "Restore StegVerse Render build pipeline capacity, then trigger a clean deployment",
       "state": "IN_PROGRESS"
     },
     {
       "id": "HIL-ACTIVATE-001",
-      "title": "Instantiate managed receiver",
+      "title": "Deploy and verify managed receiver",
       "repository": "StegVerse-org/LLM-adapter",
       "location_type": "issue",
       "location": "StegVerse-org/LLM-adapter#91",
       "source_path": "render.yaml",
-      "acceptance": "Public HTTPS service, deployed commit, durable storage fingerprint, and non-secret deployment evidence recorded",
-      "next_action": "Deploy main render.yaml inside the StegVerse-managed hosting account",
+      "acceptance": "Public HTTPS service reaches READY with exact v1.1 hashes and non-secret deployment evidence is recorded",
+      "next_action": "After HIL-CAPACITY-001, trigger deployment of service srv-d9l4fhijnfac73a8ou20 and preserve deploy evidence",
       "state": "QUEUED"
     },
     {
@@ -35,7 +46,7 @@
       "location": ".github/workflows/hil-https-receiver-probe.yml",
       "source_path": "scripts/probe_hil_https_receiver.py",
       "acceptance": "Retained HIL-HTTPS-RECEIVER-PROBE-v1 reports READY with exact v1.1 hashes and zero blockers",
-      "next_action": "Dispatch probe against the verified public origin",
+      "next_action": "Dispatch probe against https://stegverse-hil-receiver.onrender.com after successful deployment",
       "state": "QUEUED"
     },
     {
