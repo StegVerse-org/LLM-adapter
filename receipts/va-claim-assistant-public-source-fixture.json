@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0.0",
+  "session_id": "va-evidence-requirement-fixture-001",
+  "question": "What evidence is generally needed for a disability claim?",
+  "route": "evidence_requirement",
+  "capability_state": "SOURCE_GROUNDED_ASSISTANT",
+  "contract_refs": {
+    "source_registry_commit": "e69e8421084b1343a9dc809fdb2a579089d37813",
+    "answer_schema_commit": "ae64a81df7ac91a9b2df00e9b8ff1a8358fcb9ab"
+  },
+  "propositions": [
+    {
+      "proposition_id": "P1",
+      "text": "Evidence requirements depend on the type and procedural posture of the disability claim.",
+      "kind": "PROCEDURAL_GUIDANCE",
+      "support": [
+        {
+          "source_id": "VA-EVIDENCE-NEEDED",
+          "authority_class": "OFFICIAL_OPERATIONAL",
+          "locator": "https://www.va.gov/disability/how-to-file-claim/evidence-needed/",
+          "retrieved_at": "2026-08-01T22:04:34+00:00"
+        }
+      ]
+    },
+    {
+      "proposition_id": "P2",
+      "text": "A claimant should identify current disability or symptoms, the relevant in-service event or exposure, and evidence connecting the two when that theory requires a nexus.",
+      "kind": "PROCEDURAL_GUIDANCE",
+      "support": [
+        {
+          "source_id": "VA-COMPENSATION-EVIDENCE",
+          "authority_class": "OFFICIAL_OPERATIONAL",
+          "locator": "https://www.benefits.va.gov/compensation/evidence.asp",
+          "retrieved_at": "2026-08-01T22:04:34+00:00"
+        }
+      ]
+    }
+  ],
+  "contradictions": [],
+  "uncertainties": [
+    {
+      "uncertainty_id": "U1",
+      "description": "No veteran-specific records were supplied, so the response cannot determine which evidence is present or missing in an individual claim.",
+      "material": true
+    }
+  ],
+  "referral_triggers": [],
+  "authority_flags": {
+    "adjudication": false,
+    "representation": false,
+    "medical_opinion": false,
+    "rating": false,
+    "execution": false,
+    "publication": false
+  },
+  "receipt_hash": "e68b1740b03bc0a51221cc56222fb7e5794317b26f1684572d1af5080a28aeb3"
+}
