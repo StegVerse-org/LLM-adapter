@@ -1,0 +1,51 @@
+name: VA Claim Assistant Governed Retrieval
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'va_claim_assistant/**'
+      - 'tests/test_va_claim_assistant_governed_retrieval.py'
+      - '.github/workflows/va-claim-assistant-governed-retrieval.yml'
+  pull_request:
+    paths:
+      - 'va_claim_assistant/**'
+      - 'tests/test_va_claim_assistant_governed_retrieval.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-bounded-slice:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Execute deterministic governed retrieval fixture
+        run: python tests/test_va_claim_assistant_governed_retrieval.py
+      - name: Verify secret-free receipt
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          receipt = json.loads(Path('receipts/va-claim-assistant-public-source-fixture.json').read_text())
+          assert receipt['route'] == 'evidence_requirement'
+          assert receipt['capability_state'] == 'SOURCE_GROUNDED_ASSISTANT'
+          assert not any(receipt['authority_flags'].values())
+          assert len(receipt['receipt_hash']) == 64
+          print('secret-free fixture receipt: PASS')
+          PY
+      - name: Persist receipt
+        run: |
+          if git diff --quiet -- receipts/va-claim-assistant-public-source-fixture.json; then
+            echo 'Receipt unchanged.'
+            exit 0
+          fi
+          git config user.name 'va-claim-assistant[bot]'
+          git config user.email 'va-claim-assistant[bot]@users.noreply.github.com'
+          git add receipts/va-claim-assistant-public-source-fixture.json
+          git commit -m 'receipt: persist VA governed retrieval fixture'
+          git push
