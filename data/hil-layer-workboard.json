@@ -24,19 +24,19 @@
       "location_type": "issue",
       "location": "StegVerse-org/LLM-adapter#94",
       "acceptance": "Render service srv-d9l4fhijnfac73a8ou20 can start a fresh build from main and reach a terminal successful deploy",
-      "next_action": "Restore StegVerse Render build pipeline capacity, then trigger a clean deployment",
-      "state": "IN_PROGRESS"
+      "next_action": "Closed after live deploy dep-d9n5tbrncjis739hgkug",
+      "state": "COMPLETE"
     },
     {
       "id": "HIL-ACTIVATE-001",
-      "title": "Deploy and verify managed receiver",
+      "title": "Deploy managed receiver",
       "repository": "StegVerse-org/LLM-adapter",
       "location_type": "issue",
       "location": "StegVerse-org/LLM-adapter#91",
       "source_path": "render.yaml",
-      "acceptance": "Public HTTPS service reaches READY with exact v1.1 hashes and non-secret deployment evidence is recorded",
-      "next_action": "After HIL-CAPACITY-001, trigger deployment of service srv-d9l4fhijnfac73a8ou20 and preserve deploy evidence",
-      "state": "QUEUED"
+      "acceptance": "Managed service reaches a terminal live deploy with durable storage attached",
+      "next_action": "Preserve deploy dep-d9n5tbrncjis739hgkug and advance to public readiness verification",
+      "state": "COMPLETE"
     },
     {
       "id": "HIL-VERIFY-001",
@@ -46,8 +46,8 @@
       "location": ".github/workflows/hil-https-receiver-probe.yml",
       "source_path": "scripts/probe_hil_https_receiver.py",
       "acceptance": "Retained HIL-HTTPS-RECEIVER-PROBE-v1 reports READY with exact v1.1 hashes and zero blockers",
-      "next_action": "Dispatch probe against https://stegverse-hil-receiver.onrender.com after successful deployment",
-      "state": "QUEUED"
+      "next_action": "Dispatch probe against https://stegverse-hil-receiver.onrender.com and retain the evidence on issue #91",
+      "state": "IN_PROGRESS"
     },
     {
       "id": "HIL-PERSIST-001",
@@ -57,7 +57,7 @@
       "location": "StegVerse-org/LLM-adapter#91",
       "source_path": "scripts/verify_hil_deployed_cycle_evidence.py",
       "acceptance": "Same submission, PDF hash, and provenance hash survive a real hosted restart or replacement",
-      "next_action": "Execute one controlled cycle across hosted restart or replacement",
+      "next_action": "Execute one controlled cycle across hosted restart or replacement after readiness passes",
       "state": "QUEUED"
     },
     {
