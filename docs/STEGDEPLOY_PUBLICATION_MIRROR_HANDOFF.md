@@ -16,7 +16,11 @@ PR #38 merge: a21aa50526487fd16a46bd62488a7965d29aa3ed
 PR #39 merge: 14724798fef253b4aca34c5da6ed34fe8ed6fcb8
 Healer relay merge: 1b0d0660da8a0597137c6cb822a0ef751c2bf352
 Core-node intake merge: f742105877541f67a85abd7fbe23154ce4addee7
-Canonical evidence trigger requested: 2026-07-26
+Canonical evidence trigger requested: 2026-08-02T13:04:00Z
+Trigger request commit: pending current commit
+Trigger owner: .github/workflows/stegdeploy-image.yml
+Trigger role: MACHINE_OWNED publication evidence generation
+Trigger release condition: repository retains a v2 PUBLISHED or BLOCKED receipt, pull log, and refreshed readiness projection from the same run
 Manual user action required: false
 Provider execution authority: false
 Persistent deployment authority: false
@@ -35,14 +39,14 @@ The workflow contains the v2 contract, exact stage outcomes, fresh pull verifica
 
 ## Canonical Publication Trigger
 
-This handoff update is intentionally within the canonical workflow's `push.paths` boundary. Its merge to `main` requests the repository to run `.github/workflows/stegdeploy-image.yml` automatically and retain the resulting v2 evidence set.
+This handoff update is intentionally within the canonical workflow's `push.paths` boundary. Its commit to `main` requests the repository to run `.github/workflows/stegdeploy-image.yml` automatically and retain the resulting v2 evidence set.
 
 The trigger changes no runtime code and grants no publication, deployment, provider, custody, release, or activation authority by itself. Its only purpose is to cause the already-governed publication workflow to produce fresh evidence.
 
 Expected machine-owned sequence:
 
 ```text
-merge this handoff update to main
+commit this handoff update to main
 → run StegDeploy image workflow
 → attempt registry login, image build/publish, attestation, and fresh pull
 → write v2 PUBLISHED or BLOCKED receipt
@@ -93,3 +97,7 @@ A passing structural validator does not mean the image is published, publicly ac
 4. If `PUBLISHED`, allow the merged Healer relay to dispatch the bounded publication event.
 5. Verify core-node intake retains matching receipt-hash and image-digest compatibility evidence.
 6. Persistent hosting and real-provider/custody configuration remain separate authority-gated boundaries.
+
+## Session consolidation
+
+The publication-evidence task is owned by the repository workflow above. The current session retains only a distinct observation and blocker-reconciliation role until the resulting v2 receipt is inspected and either the exact blocker is repaired or the published evidence is transferred to the next machine-owned lane. The broader session remains active until Ecosystem Chat reaches persistent provider/custody activation and Site activation, or every remaining requirement is actually transferred to verified active executors.
