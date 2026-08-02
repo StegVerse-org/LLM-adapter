@@ -1,0 +1,20 @@
+{
+  "schema": "stegverse.va_claim_assistant.governed_dispatch_validation.v1",
+  "result": "PASS",
+  "states_verified": [
+    "ANSWER_READY_PENDING_TVC_AND_CUSTODY",
+    "NOT_IMPLEMENTED_FAIL_CLOSED",
+    "REVIEW_REQUIRED"
+  ],
+  "implemented_routes": [
+    "evidence_requirement"
+  ],
+  "unimplemented_routes_fail_closed": true,
+  "authority_granted": false,
+  "activation_granted": false,
+  "evidence_dispatch_receipt_hash": "3af87df59274388269cf677937a2cfffee2a5b26c5c3f1356a7645ed6d0b711d",
+  "unimplemented_dispatch_receipt_hash": "b10b6b83a916409ad1ba9ca03cbe4e567d5c968c513a4e2aace5cf4740be7632",
+  "review_dispatch_receipt_hash": "c823fc9eeba562caeb89676a8cc96b2195c378be8315ecc99e248b7f59ea4a01",
+  "urgent_dispatch_receipt_hash": "8797e6c4237796e39ca38324cb7701938f350ee42fc1fae6b2ab6d3cf10d7afb",
+  "receipt_hash": "77fc60e0b35e40202b8eb23577d8c362fc1680b6b8c556760f7c9dbcfd430587"
+}
