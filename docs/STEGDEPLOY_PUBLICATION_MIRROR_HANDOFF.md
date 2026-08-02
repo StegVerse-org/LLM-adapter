@@ -16,10 +16,13 @@ PR #38 merge: a21aa50526487fd16a46bd62488a7965d29aa3ed
 PR #39 merge: 14724798fef253b4aca34c5da6ed34fe8ed6fcb8
 Healer relay merge: 1b0d0660da8a0597137c6cb822a0ef751c2bf352
 Core-node intake merge: f742105877541f67a85abd7fbe23154ce4addee7
-Canonical evidence trigger requested: 2026-08-02T13:04:00Z
-Trigger request commit: pending current commit
+One-shot trigger commit: d4ab0cd9c034638463a03b171ae1864e0ce2e0f3
+Recurring observer commit: af01d1e79a2e9b635ba9e8071bae08e3530818e2
 Trigger owner: .github/workflows/stegdeploy-image.yml
-Trigger role: MACHINE_OWNED publication evidence generation
+Trigger role: MACHINE_OWNED publication evidence generation and retry
+Trigger cadence: hourly at minute 17, plus owned-path push and workflow_dispatch
+Concurrency group: stegdeploy-image-publication
+Execution ceiling: 45 minutes
 Trigger release condition: repository retains a v2 PUBLISHED or BLOCKED receipt, pull log, and refreshed readiness projection from the same run
 Manual user action required: false
 Provider execution authority: false
@@ -35,24 +38,26 @@ current retained receipt predates v2 publication contract
 fresh consumer pull verification not retained
 ```
 
-The workflow contains the v2 contract, exact stage outcomes, fresh pull verification, durable evidence retention, and fail-closed enforcement. The readiness validator is merged into Goal 4 validation.
+The workflow contains the v2 contract, exact stage outcomes, fresh pull verification, durable evidence retention, scheduled retry, bounded concurrency, and fail-closed enforcement. The readiness validator is merged into Goal 4 validation.
 
 ## Canonical Publication Trigger
 
-This handoff update is intentionally within the canonical workflow's `push.paths` boundary. Its commit to `main` requests the repository to run `.github/workflows/stegdeploy-image.yml` automatically and retain the resulting v2 evidence set.
+The original handoff-path push did not produce a retained v2 evidence set or a visible commit status. The canonical workflow therefore now owns recurring execution rather than relying on a one-shot push event.
 
-The trigger changes no runtime code and grants no publication, deployment, provider, custody, release, or activation authority by itself. Its only purpose is to cause the already-governed publication workflow to produce fresh evidence.
+The recurring observer changes no runtime behavior and grants no provider, deployment, custody, release, or Site-activation authority. It repeatedly executes only the existing image publication and verification contract.
 
 Expected machine-owned sequence:
 
 ```text
-commit this handoff update to main
+owned-path push, hourly schedule, or explicit workflow dispatch
 → run StegDeploy image workflow
 → attempt registry login, image build/publish, attestation, and fresh pull
 → write v2 PUBLISHED or BLOCKED receipt
 → refresh readiness projection
 → retain receipt, pull log, and readiness status together
-→ allow Healer to relay only a verified PUBLISHED receipt
+→ upload all three artifacts
+→ enforce publication result fail-closed
+→ retry hourly while evidence remains BLOCKED or stale
 ```
 
 ## Retention Repair
@@ -91,13 +96,13 @@ A passing structural validator does not mean the image is published, publicly ac
 
 ## Next Machine-Owned Actions
 
-1. Observe the main-branch StegDeploy image workflow triggered by this handoff update.
+1. The hourly workflow retries the complete v2 publication evidence cycle.
 2. Retain the resulting v2 `PUBLISHED` or exact `BLOCKED` receipt, pull log, and readiness status automatically.
-3. If `BLOCKED`, repair only the first exact retained blocker.
+3. If `BLOCKED`, issue `StegVerse-org/LLM-adapter#18` owns repair of only the first retained stage blocker.
 4. If `PUBLISHED`, allow the merged Healer relay to dispatch the bounded publication event.
 5. Verify core-node intake retains matching receipt-hash and image-digest compatibility evidence.
 6. Persistent hosting and real-provider/custody configuration remain separate authority-gated boundaries.
 
 ## Session consolidation
 
-The publication-evidence task is owned by the repository workflow above. The current session retains only a distinct observation and blocker-reconciliation role until the resulting v2 receipt is inspected and either the exact blocker is repaired or the published evidence is transferred to the next machine-owned lane. The broader session remains active until Ecosystem Chat reaches persistent provider/custody activation and Site activation, or every remaining requirement is actually transferred to verified active executors.
+The publication-evidence task is now durably machine-owned and recurring. The current session retains a distinct observation and first-blocker-reconciliation role until a v2 receipt is inspected. Ecosystem Chat remains incomplete until persistent provider/custody execution, immutable verification, Site activation, and required downstream evidence exist or are actually transferred to verified active executors.
