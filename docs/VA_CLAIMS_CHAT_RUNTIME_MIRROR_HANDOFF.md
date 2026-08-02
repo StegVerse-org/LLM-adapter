@@ -22,7 +22,7 @@ tests/test_va_claim_assistant_*.py
 .github/workflows/va-claim-assistant-governed-retrieval.yml
 ```
 
-This task does not modify those surfaces. It owns only:
+This task did not modify those surfaces. It owns only:
 
 ```text
 contracts/va-claims-chat-runtime.json
@@ -35,11 +35,12 @@ docs/VA_CLAIMS_CHAT_RUNTIME_MIRROR_HANDOFF.md
 ## Claim
 
 ```text
-claim state: MACHINE_OWNED_VALIDATION
+claim state: RELEASED_COMPLETE
 role: INTEGRATION_CONTRACT
 claim created: 2026-08-02T20:47:00Z
-release condition: committed PASS contract receipt and accepted transfer into the active adapter implementation lane
-collision boundary: no generator, classifier, dispatcher, test, provider, custody, deployment, or filing transport implementation
+claim released: PASS receipt committed and requirements recorded in adapter issue #90
+validation evidence: receipts/va-claims-chat-runtime-contract-validation.json
+collision boundary preserved: no generator, classifier, dispatcher, test, provider, custody, deployment, or filing transport implementation
 ```
 
 ## Installed contract
@@ -57,6 +58,22 @@ The runtime contract establishes:
 - explicit filing gates and authorized-transport requirement;
 - fail-closed runtime states;
 - receipt-derived Site projection.
+
+## Validation result
+
+```text
+state: PASS
+route_count: 13
+required_routes_present: true
+raw_documents_rejected: true
+sanitized_derived_context_required: true
+automated_filing_active: false
+veteran_submission_authority_preserved: true
+authority_effect: false
+activation_effect: false
+```
+
+The contract validator and workflow remain machine-owned observers for future contract drift.
 
 ## Authority boundary
 
@@ -81,12 +98,12 @@ workflow: .github/workflows/va-claims-chat-runtime-contract.yml
 trigger: owned-path push, every six hours, or workflow dispatch
 input: contracts/va-claims-chat-runtime.json
 output: receipts/va-claims-chat-runtime-contract-validation.json
-success: state PASS, route_count 13, raw documents rejected, sanitized derived context required, automated filing false, veteran authority preserved
+current result: PASS
 ```
 
 ## Integration obligations
 
-After validation passes, the active adapter implementation lane must implement generators route by route. Each route remains fail-closed until it has:
+The active adapter implementation lane must implement generators route by route. Each route remains fail-closed until it has:
 
 1. admitted source contract;
 2. deterministic fixtures;
@@ -115,17 +132,19 @@ Transferred requirements:
 - Site projection contract;
 - release evidence required for each route.
 
-Continuation owner after a PASS contract receipt: the active, nonexpired adapter implementation claim recorded in `docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md`.
+Continuation owner: the active, nonexpired adapter implementation claim recorded in `docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md`.
 
 ## Archive conditions
 
-This subordinate contract task is archive-safe after its PASS receipt is committed and issue `#90` records acceptance. The broader session remains active while governed route expansion, substantive document execution, filing integration, and Ecosystem Chat activation remain incomplete.
+This subordinate contract task is archive-safe. Its complete state is committed in the contract, PASS receipt, workflow, issue comment, and this handoff. No chat history is required for continuation.
+
+The broader session remains active while governed route generators, substantive document execution, filing integration, deployed surface observation, and Ecosystem Chat activation remain incomplete.
 
 ## Percentages
 
 ```text
-developed files: 4/5 until receipt exists
-validation: 0/1 until PASS receipt exists
-integration: contract transferred, implementation pending
+developed files: 5/5
+validation: 1/1 PASS
+integration: transferred to active adapter implementation lane
 activation: 0 percent; contract grants no activation
 ```
