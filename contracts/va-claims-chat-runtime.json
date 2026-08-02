@@ -1,0 +1,125 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "SV-VA-CLAIMS-CHAT-RUNTIME-001",
+  "originating_goal": "Provide a governed VA Claims Chat with ChatGPT-like conversational and document-workspace benefits while preserving veteran authority and building toward veteran-approved automated claim filing.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "main",
+  "canonical_site_issue": "StegVerse-Labs/Site#113",
+  "document_workspace_issue": "StegVerse-Labs/Site#116",
+  "adapter_issue": "StegVerse-org/LLM-adapter#90",
+  "current_public_capability": "SOURCE_GROUNDED_ASSISTANT",
+  "runtime_states": [
+    "SOURCE_GROUNDED_ASSISTANT",
+    "DOCUMENT_AWARE_ASSISTANT",
+    "GOVERNED_CLAIM_SESSION",
+    "CLAIM_PACKAGE_PREPARATION",
+    "VETERAN_APPROVED_FILING_READY"
+  ],
+  "route_requirements": {
+    "claim_type": {"generator_required": true, "controlling_or_official_sources_required": true, "document_context_optional": true},
+    "evidence_requirement": {"generator_required": true, "controlling_or_official_sources_required": true, "document_context_optional": true},
+    "service_connection": {"generator_required": true, "controlling_or_official_sources_required": true, "document_context_optional": true},
+    "rating_criteria": {"generator_required": true, "controlling_or_official_sources_required": true, "document_context_optional": true},
+    "effective_date": {"generator_required": true, "controlling_or_official_sources_required": true, "document_context_optional": true},
+    "appeal_or_supplemental_claim": {"generator_required": true, "controlling_or_official_sources_required": true, "document_context_optional": true},
+    "cp_examination": {"generator_required": true, "controlling_or_official_sources_required": true, "document_context_optional": true},
+    "document_organization": {"generator_required": true, "controlling_or_official_sources_required": false, "document_context_required": true},
+    "lay_statement": {"generator_required": true, "controlling_or_official_sources_required": false, "document_context_optional": true},
+    "private_record_collection": {"generator_required": true, "controlling_or_official_sources_required": true, "document_context_optional": true},
+    "procedural_filing": {"generator_required": true, "controlling_or_official_sources_required": true, "document_context_optional": true},
+    "representation_referral": {"generator_required": true, "controlling_or_official_sources_required": true, "document_context_optional": true},
+    "urgent_safety": {"generator_required": true, "controlling_or_official_sources_required": true, "document_context_optional": true}
+  },
+  "answer_record_requirements": [
+    "route classification",
+    "claim stage",
+    "claim theory",
+    "source identifiers and authority classes",
+    "effective and retrieval dates",
+    "proposition-level support",
+    "source facts",
+    "user-record facts",
+    "assistant inferences",
+    "contrary or conflicting evidence",
+    "unresolved uncertainty",
+    "referral triggers",
+    "capability state",
+    "custody and reconstruction references",
+    "stable final receipt hash"
+  ],
+  "document_context_contract": {
+    "owner": "StegVerse-Labs/Site#116",
+    "adapter_accepts_raw_documents": false,
+    "adapter_accepts_sanitized_derived_context": true,
+    "required_fields": [
+      "session_id",
+      "source_document_hashes",
+      "page_anchors",
+      "record_facts",
+      "separately_labeled_inferences",
+      "contradictions",
+      "missing_evidence",
+      "privacy_state",
+      "consent_receipt",
+      "derived_record_hash"
+    ],
+    "raw_document_publication_allowed": false,
+    "document_context_may_grant_authority": false
+  },
+  "filing_boundary": {
+    "automated_filing_active": false,
+    "autonomous_filing_from_uploaded_documents_allowed": false,
+    "veteran_submission_authority_preserved": true,
+    "required_before_filing_ready": [
+      "veteran identity verified",
+      "processing and filing consent current",
+      "every material fact confirmed by veteran",
+      "every claimed condition selected by veteran",
+      "current forms and rules preflight passed",
+      "exact package hash generated",
+      "exact package authorization unexpired",
+      "signature or valid delegation verified",
+      "authorized VA or accredited-representative transport available",
+      "duplicate prevention active",
+      "partial-failure and retry rules active",
+      "revocation path active",
+      "submission confirmation custody active"
+    ]
+  },
+  "fail_closed_states": [
+    "REVIEW_REQUIRED",
+    "NOT_IMPLEMENTED_FAIL_CLOSED",
+    "AUTHORITY_RESOLUTION_REQUIRED",
+    "DOCUMENT_CONTEXT_REQUIRED",
+    "CUSTODY_REQUIRED",
+    "RECONSTRUCTION_REQUIRED",
+    "FILING_AUTHORIZATION_REQUIRED"
+  ],
+  "prohibited_claims": {
+    "va_authority": false,
+    "representative_authority": false,
+    "medical_opinion_authority": false,
+    "adjudication_authority": false,
+    "rating_authority": false,
+    "signature_authority": false,
+    "submission_authority": false,
+    "provider_output_is_authority": false,
+    "custody_grants_execution_authority": false
+  },
+  "site_projection_contract": {
+    "endpoint": "data/va-claim-assistant/chat-capability-state.json",
+    "projection_must_be_receipt_derived": true,
+    "future_capabilities_must_remain_disabled_until_verified": true,
+    "unsupported_routes_must_not_emit_substantive_answers": true
+  },
+  "release_conditions": [
+    "contract validation receipt PASS",
+    "route generator has deterministic tests and hash-bound receipt",
+    "TVC capability is READY and invocation evidence is present",
+    "Master Records custody is RECORDED and reconstruction is PASS",
+    "deployed request produces a secret-free reconstructable receipt",
+    "Site projection exactly matches verified runtime capability"
+  ],
+  "authority_effect": false,
+  "activation_effect": false
+}
