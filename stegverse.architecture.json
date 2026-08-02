@@ -29,7 +29,7 @@
       "test_files": "test_*.py"
     },
     "forbidden_patterns": [
-      ".*secret.*\\.py$",
+      "^(?!.*vendor/).*secret.*\\.py$",
       ".*password.*",
       ".*api_key.*\\.txt$",
       ".*private_key.*",

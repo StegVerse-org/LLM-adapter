@@ -1,0 +1,36 @@
+name: Session Provider Layer Consolidation
+
+on:
+  pull_request:
+    paths:
+      - "data/session-provider-layer-consolidation.json"
+      - "data/session-provider-layer-archive-disposition.json"
+      - "scripts/check_session_provider_layer_consolidation.py"
+      - "scripts/check_session_provider_layer_archive_disposition.py"
+      - ".github/workflows/session-provider-layer-consolidation.yml"
+      - "docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+  push:
+    paths:
+      - "data/session-provider-layer-consolidation.json"
+      - "data/session-provider-layer-archive-disposition.json"
+      - "scripts/check_session_provider_layer_consolidation.py"
+      - "scripts/check_session_provider_layer_archive_disposition.py"
+      - ".github/workflows/session-provider-layer-consolidation.yml"
+      - "docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-consolidation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate durable session inventory and claims
+        run: python scripts/check_session_provider_layer_consolidation.py
+      - name: Validate archive disposition and successor ownership
+        run: python scripts/check_session_provider_layer_archive_disposition.py

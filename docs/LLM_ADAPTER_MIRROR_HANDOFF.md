@@ -183,6 +183,79 @@ receipt import != Site activation authority
 
 No provider credential, deployment, paid host, custody, release, publication, execution, transaction, or heartbeat authority is granted by this handoff.
 
+## Session provider-layer consolidation — 2026-08-02
+
+Canonical durable inventory:
+
+```text
+data/session-provider-layer-consolidation.json
+```
+
+Validator and automation:
+
+```text
+scripts/check_session_provider_layer_consolidation.py
+.github/workflows/session-provider-layer-consolidation.yml
+```
+
+Active claim:
+
+```text
+task: LLMA-SESSION-PROVIDER-LAYER-2026-08-02
+branch: session/provider-layer-consolidation
+role: CLAIMED_FOR_INTEGRATION
+claim creation: 2026-08-02T04:21:00-05:00
+release condition: inventory and validator merged to main or transferred to a newer canonical handoff with equivalent machine-readable state
+collision boundaries: no HIL upload-path edits; no live-provider dispatch; no merge/deploy/publish/release/credentials without fresh explicit authority
+```
+
+Convergence and canonical owners:
+
+```text
+Provider authority mechanism: merged PR #32; do not create a competing gate.
+Authorized provider runtime candidate: draft PR #27; unsafe automatic trigger form must not be activated.
+Provider boundary proposal: PR #63; passing but stale and not integrated with current main.
+Image publication evidence: PR #84 and issue #18 own validation; do not duplicate.
+HIL submission client: PR #85 owns implementation; do not modify its files.
+Process restart proof: PR #60 owns integration decision.
+Internal governed reference suite: PR #58 owns integration decision.
+Ephemeral HIL full-cycle proof: PR #56 owns integration decision; compare against merged PR #37 and PR #88 before transplant.
+Site/Publisher/Master Records propagation: blocked until a canonical zero-blocker VERIFIED receipt exists.
+```
+
+Session-specific requirements transferred:
+
+```text
+1. Explicitly separate configuration posture from real provider/custody execution.
+2. Configured secrets do not create authority.
+3. Ordinary push, pull_request, schedule, and workflow_run events must not execute a provider or submit custody.
+4. Use the merged receipt-gated authority path as canonical owner.
+5. Require one bounded provider request, real provider evidence, usage persistence, authenticated custody, transition custody, reconstruction PASS, and false authority projections.
+6. Preserve local persistence != custody and CI success != activation.
+7. Preserve exact cross-repository propagation owners and fail closed until VERIFIED evidence exists.
+8. Preserve every unresolved goal in the machine-readable inventory so chat history is not required.
+```
+
+Current consolidation state:
+
+```text
+session goals transferred to durable inventory: 8/8
+unique requirements remaining only in chat: 0
+repository integration of this consolidation branch: pending
+provider execution safety reconciliation on current main: pending
+archive classification: ACTIVE — DISTINCT SUPPORT ROLE
+```
+
+Percentages for this consolidation goal:
+
+```text
+developed-files: 4/4 on branch
+validation: 0/1 hosted workflow pending
+integration: 0/1 not merged
+session-consolidation: 8/8 requirements transferred
+provider-layer goal activation: 0/1 live authorized execution not performed
+```
+
 ## Archive readiness
 
-This handoff, issue #18, issue #54, active pull requests, repository history, workflow artifacts, and orchestration state preserve continuation without requiring conversation context.
+This handoff, `data/session-provider-layer-consolidation.json`, issue #18, active pull requests, repository history, workflow artifacts, and orchestration state preserve continuation without requiring undocumented conversation context. This session remains non-archive-ready until the consolidation branch is validated and incorporated into the canonical continuation path, or an equivalent newer handoff supersedes it with inspectable evidence.
