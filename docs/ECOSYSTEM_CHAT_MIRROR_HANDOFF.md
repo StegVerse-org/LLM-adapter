@@ -62,6 +62,8 @@
 - MERGED INTO: `StegVerse-org/LLM-adapter/docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md`
 - Coordination registry: `StegVerse-Labs/StegAgents/coordination/internal_tasks.json`
 - Site continuation: `StegVerse-Labs/Site/docs/ECOSYSTEM_CHAT_ACTIVATION_MIRROR_HANDOFF.md`
+- Cross-session execution inventory: `StegVerse-Labs/Executive_Rhetoric_Ledger/docs/OSINT_SESSION_EXECUTION_INVENTORY.md`
+- Custody continuation: `master-records/orchestration/docs/ECOSYSTEM_CHAT_CUSTODY_MIRROR_HANDOFF.md`
 - No conversation-only implementation requirement remains outside these records.
 
 ## Completion accounting
@@ -76,4 +78,4 @@ Required deliverables: 8.
 
 ## Archive condition
 
-This conversation can be archived once the core-node execution evidence and all unique session requirements are durably linked from the consolidation handoff. Runtime work continues repository-natively from this file and the Site activation handoff.
+This conversation can be archived once the core-node execution evidence and all unique session requirements are durably linked from the consolidation handoff. Runtime work continues repository-natively from this file, the custody handoff, the cross-session inventory, and the Site activation handoff.
