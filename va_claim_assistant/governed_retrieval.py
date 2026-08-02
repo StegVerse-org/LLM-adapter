@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
-"""Deterministic first slice for the StegVerse VA Claim Assistant.
+"""Deterministic governed retrieval slice for the StegVerse VA Claim Assistant.
 
-This module supports only the `evidence_requirement` route. It consumes a
-commit-pinned admitted-source registry, rejects non-admitted sources, preserves
-authority ordering, emits proposition-level citations, and never grants VA,
-legal-representation, medical-opinion, rating, publication, or execution
-authority.
+The dispatcher classifies every question before answer generation. Only the
+implemented `evidence_requirement` route executes. Every other governed route,
+ambiguous input, and unsupported input fails closed without inventing an
+answer or granting authority.
 """
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 AUTHORITY_RANK = {
@@ -21,6 +23,27 @@ AUTHORITY_RANK = {
     "PROFESSIONAL_SUPPORT": 3,
     "EXPERIENTIAL": 4,
 }
+
+AUTHORITY_FLAGS = {
+    "adjudication": False,
+    "representation": False,
+    "medical_opinion": False,
+    "rating": False,
+    "execution": False,
+    "publication": False,
+}
+
+
+def _load_route_classifier() -> Any:
+    path = Path(__file__).with_name("route_classifier.py")
+    spec = importlib.util.spec_from_file_location("va_claim_assistant_route_classifier", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("route classifier could not be loaded")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
 
 @dataclass(frozen=True)
 class Source:
@@ -112,17 +135,100 @@ def build_evidence_requirement_answer(
             "material": True,
         }],
         "referral_triggers": [],
-        "authority_flags": {
-            "adjudication": False,
-            "representation": False,
-            "medical_opinion": False,
-            "rating": False,
-            "execution": False,
-            "publication": False,
-        },
+        "authority_flags": dict(AUTHORITY_FLAGS),
     }
     record["receipt_hash"] = canonical_hash(record)
     return record
+
+
+def dispatch_governed_question(
+    *, question: str, registry: dict[str, Any], registry_commit: str,
+    answer_schema_commit: str, session_id: str = "va-governed-dispatch-001"
+) -> dict[str, Any]:
+    """Classify first, execute only an implemented route, otherwise fail closed."""
+    classifier = _load_route_classifier()
+    classification = classifier.classify_question(question)
+    classifier.validate_classification(classification)
+
+    if classification["state"] != "CLASSIFIED":
+        state = "REVIEW_REQUIRED"
+        answer = None
+        blocker = classification["reason"]
+    elif classification["selected_route"] != "evidence_requirement":
+        state = "NOT_IMPLEMENTED_FAIL_CLOSED"
+        answer = None
+        blocker = f"route_not_implemented:{classification['selected_route']}"
+    else:
+        answer = build_evidence_requirement_answer(
+            question=question,
+            registry=registry,
+            registry_commit=registry_commit,
+            answer_schema_commit=answer_schema_commit,
+            session_id=session_id,
+        )
+        validate_answer(answer, registry)
+        state = "ANSWER_READY_PENDING_TVC_AND_CUSTODY"
+        blocker = "tvc_and_master_records_evidence_required"
+
+    record: dict[str, Any] = {
+        "schema_version": "1.0.0",
+        "dispatcher": "va_claim_assistant.governed_dispatch.v1",
+        "session_id": session_id,
+        "question": question,
+        "state": state,
+        "classification": classification,
+        "answer": answer,
+        "blocker": blocker,
+        "next_required_evidence": (
+            ["tvc_capability_receipt", "master_records_custody_receipt", "reconstruction_receipt"]
+            if answer is not None else []
+        ),
+        "authority_flags": dict(AUTHORITY_FLAGS),
+    }
+    record["receipt_hash"] = canonical_hash(record)
+    return record
+
+
+def validate_dispatch(record: dict[str, Any], registry: dict[str, Any]) -> None:
+    if record.get("dispatcher") != "va_claim_assistant.governed_dispatch.v1":
+        raise ValueError("unsupported dispatcher")
+    if any(record.get("authority_flags", {}).values()):
+        raise ValueError("authority escalation rejected")
+
+    classifier = _load_route_classifier()
+    classification = record.get("classification")
+    if not isinstance(classification, dict):
+        raise ValueError("classification is required")
+    classifier.validate_classification(classification)
+
+    state = record.get("state")
+    answer = record.get("answer")
+    route = classification.get("selected_route")
+    if state == "ANSWER_READY_PENDING_TVC_AND_CUSTODY":
+        if route != "evidence_requirement" or not isinstance(answer, dict):
+            raise ValueError("answer-ready dispatch route mismatch")
+        validate_answer(answer, registry)
+        required = record.get("next_required_evidence")
+        if required != [
+            "tvc_capability_receipt",
+            "master_records_custody_receipt",
+            "reconstruction_receipt",
+        ]:
+            raise ValueError("answer-ready dispatch lost required evidence gates")
+    elif state == "NOT_IMPLEMENTED_FAIL_CLOSED":
+        if classification.get("state") != "CLASSIFIED" or route == "evidence_requirement":
+            raise ValueError("invalid unimplemented-route state")
+        if answer is not None:
+            raise ValueError("unimplemented route must not emit an answer")
+    elif state == "REVIEW_REQUIRED":
+        if classification.get("state") != "REVIEW_REQUIRED" or answer is not None:
+            raise ValueError("invalid review-required dispatch")
+    else:
+        raise ValueError("invalid dispatch state")
+
+    expected = canonical_hash({key: value for key, value in record.items() if key != "receipt_hash"})
+    if record.get("receipt_hash") != expected:
+        raise ValueError("receipt hash mismatch")
 
 
 def validate_answer(record: dict[str, Any], registry: dict[str, Any]) -> None:
