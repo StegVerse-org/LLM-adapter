@@ -7,12 +7,14 @@ on:
       - 'va_claim_assistant/**'
       - 'tests/test_va_claim_assistant_governed_retrieval.py'
       - 'tests/test_va_claim_assistant_route_classifier.py'
+      - 'tests/test_va_claim_assistant_governed_dispatch.py'
       - '.github/workflows/va-claim-assistant-governed-retrieval.yml'
   pull_request:
     paths:
       - 'va_claim_assistant/**'
       - 'tests/test_va_claim_assistant_governed_retrieval.py'
       - 'tests/test_va_claim_assistant_route_classifier.py'
+      - 'tests/test_va_claim_assistant_governed_dispatch.py'
   workflow_dispatch:
 
 permissions:
@@ -38,6 +40,9 @@ jobs:
       - name: Execute deterministic governed retrieval fixture
         run: python tests/test_va_claim_assistant_governed_retrieval.py
 
+      - name: Execute deterministic governed dispatch fixtures
+        run: python tests/test_va_claim_assistant_governed_dispatch.py
+
       - name: Verify secret-free receipts
         run: |
           python - <<'PY'
@@ -57,13 +62,31 @@ jobs:
           assert classifier['unsupported_state'] == 'REVIEW_REQUIRED'
           assert classifier['urgent_route'] == 'urgent_safety'
           assert classifier['authority_granted'] is False
-          material = dict(classifier)
-          expected = material.pop('receipt_hash')
-          actual = hashlib.sha256(
-              json.dumps(material, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
+          classifier_material = dict(classifier)
+          classifier_expected = classifier_material.pop('receipt_hash')
+          classifier_actual = hashlib.sha256(
+              json.dumps(classifier_material, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
           ).hexdigest()
-          assert expected == actual
-          print('secret-free VA classifier and retrieval receipts: PASS')
+          assert classifier_expected == classifier_actual
+
+          dispatch = json.loads(Path('receipts/va-claim-assistant-governed-dispatch-validation.json').read_text())
+          assert dispatch['result'] == 'PASS'
+          assert dispatch['states_verified'] == [
+              'ANSWER_READY_PENDING_TVC_AND_CUSTODY',
+              'NOT_IMPLEMENTED_FAIL_CLOSED',
+              'REVIEW_REQUIRED',
+          ]
+          assert dispatch['implemented_routes'] == ['evidence_requirement']
+          assert dispatch['unimplemented_routes_fail_closed'] is True
+          assert dispatch['authority_granted'] is False
+          assert dispatch['activation_granted'] is False
+          dispatch_material = dict(dispatch)
+          dispatch_expected = dispatch_material.pop('receipt_hash')
+          dispatch_actual = hashlib.sha256(
+              json.dumps(dispatch_material, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
+          ).hexdigest()
+          assert dispatch_expected == dispatch_actual
+          print('secret-free VA classifier, retrieval, and dispatch receipts: PASS')
           PY
 
       - name: Persist receipts
@@ -73,11 +96,12 @@ jobs:
           git config user.email 'va-claim-assistant[bot]@users.noreply.github.com'
           git add \
             receipts/va-claim-assistant-public-source-fixture.json \
-            receipts/va-claim-assistant-route-classifier-validation.json
+            receipts/va-claim-assistant-route-classifier-validation.json \
+            receipts/va-claim-assistant-governed-dispatch-validation.json
           if git diff --cached --quiet; then
             echo 'Receipts unchanged.'
           else
-            git commit -m 'receipt: persist VA governed route and retrieval validation [skip ci]'
+            git commit -m 'receipt: persist VA governed route retrieval and dispatch validation [skip ci]'
             git pull --rebase
             git push
           fi
@@ -89,5 +113,6 @@ jobs:
           path: |
             receipts/va-claim-assistant-public-source-fixture.json
             receipts/va-claim-assistant-route-classifier-validation.json
+            receipts/va-claim-assistant-governed-dispatch-validation.json
           if-no-files-found: error
           retention-days: 30
