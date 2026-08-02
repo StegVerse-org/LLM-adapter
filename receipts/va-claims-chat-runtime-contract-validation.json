@@ -1,0 +1,16 @@
+{
+  "activation_effect": false,
+  "authority_effect": false,
+  "automated_filing_active": false,
+  "contract_id": "SV-VA-CLAIMS-CHAT-RUNTIME-001",
+  "contract_sha256": "2dca3db704e314ec61bad375cdf9aed2d83627a72e667cf52dedfaf2d49f8df6",
+  "errors": [],
+  "raw_documents_rejected": true,
+  "receipt_sha256": "08196976c094860319fffaa30a4f946aa59f72d2843482cb0b923318509ca0b3",
+  "required_routes_present": true,
+  "route_count": 13,
+  "sanitized_derived_context_required": true,
+  "schema_version": "1.0.0",
+  "state": "PASS",
+  "veteran_submission_authority_preserved": true
+}
