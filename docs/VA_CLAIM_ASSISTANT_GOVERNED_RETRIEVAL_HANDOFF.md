@@ -13,6 +13,20 @@ tvc capability issue: StegVerse-Labs/TVC#9
 master-records custody issue: master-records/orchestration#12
 ```
 
+## Active claim
+
+```text
+task_id: VACP-ADAPTER-ROUTING-001
+repository: StegVerse-org/LLM-adapter
+branch: main
+role: IMPLEMENTATION_AND_VALIDATION
+claim_state: CLAIMED_FOR_IMPLEMENTATION
+claim_created_at: 2026-08-02T09:10:00Z
+claim_expires_at: 2026-08-03T09:10:00Z
+release_condition: hosted classifier and governed-retrieval workflow produces a valid secret-free receipt, then deployed TVC/custody integration becomes the next owner
+collision_boundary: va_claim_assistant/**, tests/test_va_claim_assistant_*.py, .github/workflows/va-claim-assistant-governed-retrieval.yml
+```
+
 ## Inputs owned by Site
 
 - `StegVerse-Labs/Site/data/va-claim-assistant/source-registry.json`
@@ -51,6 +65,36 @@ The adapter must consume commit-pinned copies or immutable references. It must n
 - representation_referral
 - urgent_safety
 
+## Installed implementation
+
+```text
+va_claim_assistant/route_classifier.py
+  deterministic selection across all thirteen governed routes
+  urgent-safety priority
+  ambiguous or unsupported input -> REVIEW_REQUIRED
+  stable hash-bound classification record
+  all authority flags false
+
+va_claim_assistant/governed_retrieval.py
+  implemented evidence_requirement public-source slice
+  admitted-source enforcement
+  authority-class preservation
+  proposition-level citations
+  stable hash-bound answer record
+
+tests/test_va_claim_assistant_route_classifier.py
+tests/test_va_claim_assistant_governed_retrieval.py
+.github/workflows/va-claim-assistant-governed-retrieval.yml
+```
+
+Commits:
+
+```text
+474da441666efbfe026a418a829c1c49c5fe0215 route classifier
+552e0f565ddce667dc112e099dad86dca7a6e86a classifier tests and receipt writer
+58089180c8700657e278bf4f654014bfbe283d50 hosted workflow integration
+```
+
 ## Mandatory fail-closed rules
 
 The adapter must refuse or stop when:
@@ -58,6 +102,7 @@ The adapter must refuse or stop when:
 - no admitted source supports a material source proposition;
 - a lower authority source conflicts with controlling authority;
 - a controlling source is stale, superseded, or unresolved;
+- route classification is ambiguous or unsupported;
 - a requested answer would invent a diagnosis, nexus, event, symptom, record, or rating result;
 - a user asks for a guaranteed outcome or percentage targeting;
 - TVC returns unavailable, unauthorized, revoked, expired, or incompatible capability status;
@@ -65,18 +110,43 @@ The adapter must refuse or stop when:
 
 Missing repository-local credentials mean `AUTHORITY_RESOLUTION_REQUIRED`, not `BLOCKED`, until TVC resolution has been attempted.
 
+## Current validation posture
+
+```text
+file presence: VERIFIED
+classifier implementation: COMMITTED
+classifier deterministic fixtures: COMMITTED
+workflow binding: COMMITTED
+hosted workflow result for latest implementation: NOT YET DIRECTLY OBSERVED
+route-classifier persisted receipt: NOT YET DIRECTLY OBSERVED
+public deployment: NOT VERIFIED
+TVC capability receipt: MISSING
+Master Records custody receipt: MISSING
+Master Records reconstruction receipt: MISSING
+Site projection: NOT VERIFIED
+```
+
 ## Minimal implementation slice
 
-The first adapter slice should support a single public-source question without private documents:
+The first source-grounded adapter slice supports one public-source answer route without private documents:
 
 - route: `evidence_requirement`
-- admitted sources: official VA evidence guidance plus controlling statute or regulation when applicable
-- output: one schema-valid answer record with proposition-level citations
+- admitted sources: official VA evidence guidance
+- output: schema-oriented answer record with proposition-level citations
 - authority flags: all false
-- TVC: secret-free capability/readiness or execution receipt
-- Master Records: custody `RECORDED` and reconstruction `PASS`
 
-This slice may establish `SOURCE_GROUNDED_ASSISTANT` after deployed verification. It does not establish `DOCUMENT_AWARE_ASSISTANT` or `GOVERNED_CLAIM_SESSION`.
+The classifier can identify all required routes, but classification does not imply that every route has an implemented answer generator. Unsupported answer execution must remain fail-closed.
+
+This slice may establish `SOURCE_GROUNDED_ASSISTANT` only after deployed verification. It does not establish `DOCUMENT_AWARE_ASSISTANT` or `GOVERNED_CLAIM_SESSION`.
+
+## Exact next tasks
+
+1. Observe the hosted `VA Claim Assistant Governed Retrieval` workflow for commit `58089180c8700657e278bf4f654014bfbe283d50` or a successor receipt commit.
+2. Inspect job logs and both generated receipts; repair only exact deterministic failures.
+3. Bind classifier output to the evidence-requirement answer dispatcher while rejecting other answer routes as `NOT_IMPLEMENTED_FAIL_CLOSED`.
+4. Resolve `StegVerse-Labs/TVC#9` capability/readiness receipt without repository-local secrets.
+5. Submit the final answer record to `master-records/orchestration#12` and require custody `RECORDED` plus reconstruction `PASS`.
+6. Project only the verified capability state into `StegVerse-Labs/Site#113`.
 
 ## Exit evidence
 
@@ -91,3 +161,7 @@ Issue #90 may close only after one deployed request produces:
 - Master Records custody and reconstruction references;
 - stable final receipt hash;
 - Site projection that does not overstate the capability.
+
+## Archive condition
+
+A handoff is not execution transfer. This workstream may be treated as transferred only after a named executor with mutation authority accepts the next bounded claim and produces current inspectable execution evidence. Until then, incomplete adapter work remains active.
