@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "result": "PASS",
+  "classified_cases": 7,
+  "ambiguous_state": "REVIEW_REQUIRED",
+  "unsupported_state": "REVIEW_REQUIRED",
+  "urgent_route": "urgent_safety",
+  "authority_granted": false,
+  "receipt_hashes": [
+    "ec49dfe47d55e80ceec309219bf4bc6c81a6e7b19479caf388170b04110dd0db",
+    "6107e5c7e415c6600081bd0f687fab75333f7317b6177a9dbc3185f023c012f1",
+    "5f92b656b327c99600f652a66b5d4380f2a552c4f1a8244178b56824be72944b",
+    "a5627c6cb5b3cf74e8263570f061e5622c8f6c034cada5154182a28fb0a84eb7",
+    "771130bb3af5d5489b761318f1fc8a407b5a41d34ce4defb720cfef0b3cbfaf7",
+    "3221672eeec3350cb275aab6403d62188a7bbe9e4bc223196edc596326b0d2ba",
+    "f99978f8a6b34cc1d8ea4af1c02b8aaa1fbd43bf2221b5cc321df9a603497184",
+    "71b86e7f486712852d0fa426543a22e5ee444efdb50352a231aa141c4285de6e",
+    "32ffb1c02d2f60d4a7eeb70b871434c073a6b53a473dc51ff1790b1992dc109f",
+    "8fa7cbfebd4ad229a25373ec31e6804970b8ce68f1517cd9b64d536146a00a5d"
+  ],
+  "receipt_hash": "1bed519816229ce670d9eaf42dbaee65205f3f5dc84c5973c624899f8ff50464"
+}
