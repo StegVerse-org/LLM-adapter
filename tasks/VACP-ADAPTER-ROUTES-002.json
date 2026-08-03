@@ -1,0 +1,52 @@
+{
+  "task_id": "VACP-ADAPTER-ROUTES-002",
+  "originating_goal": "Expand Governed VA Claims Chat from one source-grounded route to every safely supportable governed route while preserving PII isolation, veteran authority, and fail-closed source gaps.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "main",
+  "canonical_issue": "StegVerse-org/LLM-adapter#90",
+  "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
+  "role": "IMPLEMENTATION_AND_VALIDATION",
+  "claim_state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claimant": "connected-repository-route-generator-lane",
+  "claim_created_at": "2026-08-03T19:47:00Z",
+  "claim_expires_at": "2026-08-04T19:47:00Z",
+  "release_condition": "Route-generator module, dispatcher integration, deterministic tests, workflow integration, committed PASS receipts, and updated handoff are present; operational TVC, custody, deployment, and Site activation remain separately gated.",
+  "supersedes_stale_claim": {
+    "task_id": "VACP-ADAPTER-DISPATCH-001",
+    "expired_at": "2026-08-03T09:10:00Z",
+    "reason": "No renewal or successor route-generator evidence was recorded after expiration."
+  },
+  "claimed_paths": [
+    "va_claim_assistant/route_generators.py",
+    "va_claim_assistant/governed_retrieval.py",
+    "tests/test_va_claim_assistant_route_generators.py",
+    "tests/test_va_claim_assistant_governed_dispatch.py",
+    ".github/workflows/va-claim-assistant-governed-retrieval.yml",
+    "receipts/va-claim-assistant-route-generators-validation.json",
+    "receipts/va-claim-assistant-governed-dispatch-validation.json",
+    "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
+    "tasks/VACP-ADAPTER-ROUTES-002.json"
+  ],
+  "collision_boundaries": [
+    "Do not modify Ecosystem Chat provider activation paths owned by issue #18.",
+    "Do not accept raw documents, direct identifiers, credentials, prompts, model traces, or medical narratives.",
+    "Do not activate private upload, filing, submission, representation, adjudication, rating, or publication.",
+    "Do not silently add or fork Site source authority; source gaps remain fail-closed."
+  ],
+  "expected_evidence": [
+    "All route generators have deterministic fixtures.",
+    "Public-source answers use only admitted Site sources and proposition-level support.",
+    "Document organization requires sanitized derived context and rejects raw-document or direct-identifier fields.",
+    "Urgent safety remains AUTHORITY_RESOLUTION_REQUIRED until an official admitted crisis source exists.",
+    "All authority and activation flags remain false.",
+    "Repository workflow persists hash-valid receipts."
+  ],
+  "next_after_release": [
+    "TVC capability invocation and expiry/revocation evidence",
+    "Master Records custody RECORDED and reconstruction PASS",
+    "deployed request observation",
+    "receipt-derived Site capability projection"
+  ],
+  "authority_effect": false,
+  "activation_effect": false
+}
