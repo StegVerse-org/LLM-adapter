@@ -1,0 +1,78 @@
+{
+  "schema": "stegverse.security.exceed_federal_baseline.v1",
+  "goal_id": "LLMA-SECURITY-EXCEED-FEDERAL-BASELINE-2026-08-02",
+  "originating_session_goal": "Treat applicable United States federal security requirements as the minimum baseline and require StegVerse controls to exceed that baseline.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "security/exceed-federal-baseline",
+  "canonical_owner": "StegVerse-org/LLM-adapter",
+  "claim": {
+    "state": "CLAIMED_FOR_INTEGRATION",
+    "claimant": "repository-native security baseline lane",
+    "created_at": "2026-08-02T19:35:00-05:00",
+    "release_condition": "Merged to main with all required checks passing, or superseded by a newer canonical security handoff carrying equivalent or stronger requirements.",
+    "collision_boundaries": [
+      "Do not weaken existing provider, custody, admissibility, receipt, or publication controls.",
+      "Do not claim federal certification, authorization, FIPS validation, FedRAMP authorization, or agency approval without independently inspectable evidence.",
+      "Do not activate provider execution, custody submission, publication, or deployment from this baseline alone."
+    ]
+  },
+  "baseline_rule": {
+    "federal_requirements_are_minimum": true,
+    "must_exceed_applicable_baseline": true,
+    "fail_closed_when_applicability_or_evidence_is_unknown": true,
+    "no_compliance_claim_without_evidence": true
+  },
+  "control_domains": [
+    {
+      "id": "identity-and-access",
+      "minimum": ["phishing-resistant MFA where applicable", "least privilege", "separation of duties", "service identity"],
+      "stegverse_exceedance": ["authority separated from provider output", "identity-bound transition and receipt chains", "deny-by-default execution"]
+    },
+    {
+      "id": "cryptography-and-key-management",
+      "minimum": ["approved cryptographic modules where required", "key lifecycle controls", "protected secrets"],
+      "stegverse_exceedance": ["cryptographic provenance for transitions and artifacts", "immutable receipt chains", "independent verification before authority"]
+    },
+    {
+      "id": "zero-trust-and-network-boundaries",
+      "minimum": ["explicit verification", "least-privilege access", "assume breach"],
+      "stegverse_exceedance": ["health-bound node advertisement", "allowlisted destinations", "local persistence explicitly not custody"]
+    },
+    {
+      "id": "software-supply-chain",
+      "minimum": ["signed releases", "dependency integrity", "build provenance", "vulnerability response"],
+      "stegverse_exceedance": ["receipt-bound build and runtime evidence", "consumer pull verification", "fail-closed artifact admission"]
+    },
+    {
+      "id": "logging-audit-and-continuity",
+      "minimum": ["tamper-evident audit records", "retention", "incident reconstruction"],
+      "stegverse_exceedance": ["deterministic replay", "transition reconstruction", "custody receipts", "continuity independent from approval"]
+    },
+    {
+      "id": "runtime-and-execution-governance",
+      "minimum": ["configuration control", "change control", "continuous monitoring"],
+      "stegverse_exceedance": ["commit-time admissibility", "execution authority reconstruction", "provider output never grants authority"]
+    }
+  ],
+  "required_evidence": [
+    "control applicability record",
+    "implementation evidence",
+    "validation evidence",
+    "integration evidence",
+    "runtime evidence where the claim concerns runtime",
+    "explicit unresolved-gap record"
+  ],
+  "prohibited_claims_without_evidence": [
+    "federal compliant",
+    "FedRAMP authorized",
+    "FIPS validated",
+    "NIST certified",
+    "agency approved",
+    "production secure"
+  ],
+  "states": ["COMPLETE", "BLOCKED", "RETRY", "REVIEW_REQUIRED", "FAILED", "CLAIMED", "SUPERSEDED", "MERGED"],
+  "current_state": "CLAIMED",
+  "next_executable_action": "Validate this contract in hosted CI, merge it to main, then map each active production surface to evidence-backed control coverage without asserting certification.",
+  "authority_effect": "NONE",
+  "manual_user_action_required": false
+}

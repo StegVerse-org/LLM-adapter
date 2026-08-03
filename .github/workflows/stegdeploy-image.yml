@@ -13,8 +13,6 @@ on:
       - docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md
       - compose.stegdeploy.yaml
       - .github/workflows/stegdeploy-image.yml
-  schedule:
-    - cron: "17 * * * *"
   workflow_dispatch:
 
 concurrency:
