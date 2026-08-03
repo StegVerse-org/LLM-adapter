@@ -231,10 +231,19 @@ def main() -> int:
         state = "READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION"
         next_action = "A workflow_dispatch-only, single-request execution lane may consume both the fresh TVC admission and explicit authority before requesting models:read."
 
+    observation_source = (
+        "GITHUB_ACTIONS_WORKFLOW"
+        if os.getenv("GITHUB_ACTIONS", "").lower() == "true"
+        else "LOCAL_DETERMINISTIC_VALIDATION"
+    )
+
     result: dict[str, Any] = {
         "schema": "stegverse.va_claim_assistant.provider_execution_preflight.v1",
         "state": state,
         "observed_at": now.isoformat().replace("+00:00", "Z"),
+        "observation_source": observation_source,
+        "workflow_run_id": os.getenv("GITHUB_RUN_ID") or None,
+        "workflow_run_attempt": os.getenv("GITHUB_RUN_ATTEMPT") or None,
         "route": EXPECTED_ROUTE,
         "caller_repository": EXPECTED_CALLER,
         "caller_commit": args.expected_caller_commit,
