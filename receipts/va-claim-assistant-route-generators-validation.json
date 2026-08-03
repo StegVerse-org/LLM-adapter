@@ -1,0 +1,41 @@
+{
+  "activation_granted": false,
+  "answer_ready_public_routes": [
+    "appeal_or_supplemental_claim",
+    "claim_type",
+    "cp_examination",
+    "effective_date",
+    "evidence_requirement",
+    "lay_statement",
+    "private_record_collection",
+    "procedural_filing",
+    "rating_criteria",
+    "representation_referral",
+    "service_connection"
+  ],
+  "authority_granted": false,
+  "document_route_generator": "PASS_WITH_SANITIZED_DERIVED_CONTEXT",
+  "document_route_receipt_hash": "86a6c77609c13896d799940c2cc00458dbbe336e6e718f170d27ebf6274fed4b",
+  "public_route_receipt_hashes": {
+    "appeal_or_supplemental_claim": "b8910100734a6fdb95a3fb5c0b6415d3de6c3385d9965b99dd64b7d07f7acd15",
+    "claim_type": "43ea0f769f55b32fc7471f5220467ecf89cc2332a7125bba630e77e598315579",
+    "cp_examination": "88d943399fe3b500780e9b2bccecdc85728611e21873312755fb79deafab6699",
+    "effective_date": "d9f748b0e6ae660903c72e46c37c2b7ea1f1c3c3bd3294067138c1cfde4ba3ab",
+    "evidence_requirement": "4319721f38ef3995f233e0727c21b651e3e0d9b38ac27f531c2ce38ab774ecb7",
+    "lay_statement": "3db5526129e53b1a51cf009dfe3bc9798f61df44ecd1d1a40328744af1a8de3d",
+    "private_record_collection": "edcdfb75976c1365fc0c0fdafa2e9e0f20cde52924eb563305d5d7c5b7523d49",
+    "procedural_filing": "e3a64192b5527b8aa3b6d45cebb216c56ce0b8f092ac45be8c99addef9ffa223",
+    "rating_criteria": "162d90bd3d71270dcb39f6d06403ad734c940bea84469809cfee047e5a95fbd3",
+    "representation_referral": "47f247d23d3b6adea52fbc9253b4d9bd166969e3a1f9fed1ba5c9539840bcd40",
+    "service_connection": "bd1f6c3e751b1adf2345383f724f133c321e0e42096b4556f682837caf73ee29"
+  },
+  "raw_document_and_direct_identifier_rejection": true,
+  "receipt_hash": "641c76f9e88c26d88aa0d0b600d158f9b053c05d1875ca4da1a59c160ce77919",
+  "result": "PASS",
+  "schema": "stegverse.va_claim_assistant.route_generators_validation.v1",
+  "site_answer_schema_additional_properties_rejected": true,
+  "source_registry_blob_sha": "a83ff2dd8343f947265981609b154693cc5deecc",
+  "source_registry_commit": "e69e8421084b1343a9dc809fdb2a579089d37813",
+  "urgent_safety_missing_source": "VA-CRISIS-LINE",
+  "urgent_safety_route": "AUTHORITY_RESOLUTION_REQUIRED"
+}

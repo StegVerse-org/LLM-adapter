@@ -3,11 +3,9 @@
   "session_id": "va-evidence-requirement-fixture-001",
   "question": "What evidence is generally needed for a disability claim?",
   "route": "evidence_requirement",
+  "claim_stage": "EVIDENCE_DEVELOPMENT",
+  "claim_theory": "UNDETERMINED",
   "capability_state": "SOURCE_GROUNDED_ASSISTANT",
-  "contract_refs": {
-    "source_registry_commit": "e69e8421084b1343a9dc809fdb2a579089d37813",
-    "answer_schema_commit": "ae64a81df7ac91a9b2df00e9b8ff1a8358fcb9ab"
-  },
   "propositions": [
     {
       "proposition_id": "P1",
@@ -18,20 +16,20 @@
           "source_id": "VA-EVIDENCE-NEEDED",
           "authority_class": "OFFICIAL_OPERATIONAL",
           "locator": "https://www.va.gov/disability/how-to-file-claim/evidence-needed/",
-          "retrieved_at": "2026-08-03T20:01:24+00:00"
+          "retrieved_at": "2026-08-03T20:03:58+00:00"
         }
       ]
     },
     {
       "proposition_id": "P2",
-      "text": "A claimant should identify current disability or symptoms, the relevant in-service event or exposure, and evidence connecting the two when that theory requires a nexus.",
+      "text": "A claimant should identify current disability or symptoms, the relevant in-service event or exposure, and evidence connecting the two when the applicable theory requires a nexus.",
       "kind": "PROCEDURAL_GUIDANCE",
       "support": [
         {
           "source_id": "VA-COMPENSATION-EVIDENCE",
           "authority_class": "OFFICIAL_OPERATIONAL",
           "locator": "https://www.benefits.va.gov/compensation/evidence.asp",
-          "retrieved_at": "2026-08-03T20:01:24+00:00"
+          "retrieved_at": "2026-08-03T20:03:58+00:00"
         }
       ]
     }
@@ -40,7 +38,7 @@
   "uncertainties": [
     {
       "uncertainty_id": "U1",
-      "description": "No veteran-specific records were supplied, so the response cannot determine which evidence is present or missing in an individual claim.",
+      "description": "No veteran-specific records were supplied, so the response cannot determine which evidence is present or missing.",
       "material": true
     }
   ],
@@ -53,5 +51,5 @@
     "execution": false,
     "publication": false
   },
-  "receipt_hash": "725189489aa738010f0b807722772b1654c6051aa37d0c7972a0b07209b1b861"
+  "receipt_hash": "8d9a5b7e443d5b55b7bfee48154f9cb425abf72160c572c4d0c5e6268436b841"
 }

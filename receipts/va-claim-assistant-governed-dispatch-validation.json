@@ -1,20 +1,62 @@
 {
-  "schema": "stegverse.va_claim_assistant.governed_dispatch_validation.v1",
+  "activation_granted": false,
+  "answer_ready_dispatch_receipt_hashes": {
+    "appeal_or_supplemental_claim": "13333bdcd460ba4a43fa3ebca016d162c81eeb2d9c69bb7c9a42161873e748f3",
+    "claim_type": "ba78530c718f2efb7fe6aaba480cfbc65c9b84a8223bf08d048a4440b91a0dad",
+    "cp_examination": "4e2d9d5b5dbe0046c7220e7d805f78d3d932cb204fe5fb794f828b8a577a5b2b",
+    "effective_date": "ddca7d5cf3fd135070bdd06400f734cad2294861dd3ff21333a3bb708f8a9c17",
+    "evidence_requirement": "172f71d47680f772accec2c5bce07b0b15399a50dc8eda8328bfd987b6598a4e",
+    "lay_statement": "bb851b5fac2dfbbe8aeae2fe81aaf90f2d375748d7894e87f985f75d1f785dcd",
+    "private_record_collection": "5dd0b5e8cce87b9797f08f5bfe385b17c6a31c45dc5967d230f934baf618e898",
+    "procedural_filing": "514d5e52e38c5cb39bf18b6826ae8278ad22a4d89ec8849fd9b3d15d17d0a4cb",
+    "rating_criteria": "022dd7396accff407540b4691c08f5c91a3bd4633d7e4c9c1426df6a62a99a11",
+    "representation_referral": "eefe09077bb527175496b8fffe9e0959d31e7b63380f2a431824f549f0f90439",
+    "service_connection": "55419dc015db717f10914c86286b3222493753545f03fb4bd675a7dd2db4bd4e"
+  },
+  "answer_ready_public_routes": [
+    "appeal_or_supplemental_claim",
+    "claim_type",
+    "cp_examination",
+    "effective_date",
+    "evidence_requirement",
+    "lay_statement",
+    "private_record_collection",
+    "procedural_filing",
+    "rating_criteria",
+    "representation_referral",
+    "service_connection"
+  ],
+  "authority_granted": false,
+  "document_dispatch_receipt_hash": "cc0903a6da59f2efbe8c07893058c7c715df5d5946a15c07fe1db5c17243cb35",
+  "document_route_answer_ready_with_sanitized_context": true,
+  "document_route_missing_context_fails_closed": true,
+  "implemented_route_generators": [
+    "claim_type",
+    "evidence_requirement",
+    "service_connection",
+    "rating_criteria",
+    "effective_date",
+    "appeal_or_supplemental_claim",
+    "cp_examination",
+    "document_organization",
+    "lay_statement",
+    "private_record_collection",
+    "procedural_filing",
+    "representation_referral",
+    "urgent_safety"
+  ],
+  "privacy_boundary_rejection_verified": true,
+  "receipt_hash": "562e5528dd44a11a9b6c3f8b965d6449c258f6942f997939f916925a61be7f02",
   "result": "PASS",
+  "review_dispatch_receipt_hash": "093befefa6b1051aafa5a14d2a8f4c0c27c22f4bf1e7d9081b3793dee1120a41",
+  "schema": "stegverse.va_claim_assistant.governed_dispatch_validation.v2",
   "states_verified": [
     "ANSWER_READY_PENDING_TVC_AND_CUSTODY",
-    "NOT_IMPLEMENTED_FAIL_CLOSED",
+    "DOCUMENT_CONTEXT_REQUIRED",
+    "AUTHORITY_RESOLUTION_REQUIRED",
     "REVIEW_REQUIRED"
   ],
-  "implemented_routes": [
-    "evidence_requirement"
-  ],
-  "unimplemented_routes_fail_closed": true,
-  "authority_granted": false,
-  "activation_granted": false,
-  "evidence_dispatch_receipt_hash": "39b01101f6343179f15fcd86dc95e0f5ada9ceaf3f9ea5ea7d131f98100bb994",
-  "unimplemented_dispatch_receipt_hash": "b10b6b83a916409ad1ba9ca03cbe4e567d5c968c513a4e2aace5cf4740be7632",
-  "review_dispatch_receipt_hash": "c823fc9eeba562caeb89676a8cc96b2195c378be8315ecc99e248b7f59ea4a01",
-  "urgent_dispatch_receipt_hash": "8797e6c4237796e39ca38324cb7701938f350ee42fc1fae6b2ab6d3cf10d7afb",
-  "receipt_hash": "310f19ea649a161b9362e8696f64a7c043563d0748c6a92d314b8aeae0f6a7e9"
+  "urgent_dispatch_receipt_hash": "b70bcd4ad1b82dfb9a48ab24fec78a88cb24aec55fd77e67410c6e18c0bc7b19",
+  "urgent_safety_authority_resolution_required": true,
+  "urgent_safety_missing_source": "VA-CRISIS-LINE"
 }
