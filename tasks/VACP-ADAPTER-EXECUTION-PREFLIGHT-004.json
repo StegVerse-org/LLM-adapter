@@ -7,6 +7,7 @@
   "branch": "main",
   "canonical_issue": "StegVerse-org/LLM-adapter#90",
   "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
+  "subordinate_handoff": "docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md",
   "role": "EXECUTION_PREFLIGHT_IMPLEMENTATION_AND_VALIDATION",
   "state": "RELEASED_COMPLETE",
   "claimant": "connected-repository-va-execution-preflight-lane",
@@ -20,7 +21,7 @@
     ".github/workflows/va-claim-assistant-provider-preflight.yml",
     "receipts/va-claim-assistant-provider-execution-preflight.json",
     "tasks/VACP-ADAPTER-EXECUTION-PREFLIGHT-004.json",
-    "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md"
+    "docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md"
   ],
   "completion_evidence": {
     "task_claim_commit": "7f41144f06daf8ab97ea0bc8dad47bb8df16980c",
@@ -29,6 +30,8 @@
     "preflight_observer_commit": "c24ff859768fd0e287561bfa0c891410adc5613a",
     "preflight_workflow_commit": "02cb8c357cccb9e27567e905c435c048d8916ec1",
     "preflight_receipt_commit": "16aed3f1ed0ae3004e8643c43d518dd8bd290a23",
+    "task_release_commit": "1f226edcf3ca539e3e558770b38217be5947bf22",
+    "subordinate_handoff_commit": "bfef167c3407b4fc788e06584b40926140221c5f",
     "preflight_state": "CONFIGURATION_REQUIRED",
     "observation_source": "LOCAL_DETERMINISTIC_VALIDATION",
     "preflight_result_sha256": "db9ca3a04c0794197907e1a5b81a2fb433d17c5a47607e6e548d7a54e0b3cf4d"
