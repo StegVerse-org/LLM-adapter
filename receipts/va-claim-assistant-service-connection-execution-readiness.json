@@ -1,0 +1,29 @@
+{
+  "activation_effect": false,
+  "authority_effect": false,
+  "blockers": [
+    "provider_execution_evidence_missing"
+  ],
+  "custody_state": "PENDING_REAL_ADAPTER_EXECUTION",
+  "evidence_present": false,
+  "execution_evidence_path": "receipts/va-claim-assistant-service-connection-execution.json",
+  "next_executable_action": "A repository-native adapter runtime must execute service_connection through the admitted TVC capability and write the schema-valid execution receipt.",
+  "next_owner": "StegVerse-org/LLM-adapter#90",
+  "observer": "va_claim_assistant.service_connection_execution_observer.v1",
+  "provider_execution_observed": false,
+  "receipt_hash": "cebcf992a866ae308c0fb23533b283abc1892c37d413122701bc7cf1f102aa83",
+  "reconstruction_state": "PENDING_REAL_ADAPTER_EXECUTION",
+  "route": "service_connection",
+  "schema_version": "1.0.0",
+  "state": "BLOCKED",
+  "tvc_admission": {
+    "answer_receipt_hash": "bd1f6c3e751b1adf2345383f724f133c321e0e42096b4556f682837caf73ee29",
+    "dispatch_receipt_hash": "55419dc015db717f10914c86286b3222493753545f03fb4bd675a7dd2db4bd4e",
+    "invocation_id": "tvc-va-service-connection-002",
+    "receipt_hash": "aec5c2fa8c2c6b73e6dd9dddbafa39314a30bd0ccf19bb881349be2d3e9724f8",
+    "source_handoff_commit": "7ddcdd03866b37d61f7ac03f19ec520fe5768a00",
+    "source_receipt_commit": "fdaa860a7e3b8bd7a5caa386e6a1448f235b9bf1",
+    "source_receipt_path": "receipts/va-claim-assistant-service-connection-invocation-002.json",
+    "source_repository": "StegVerse-Labs/TVC"
+  }
+}
