@@ -8,12 +8,12 @@
   "canonical_issue": "StegVerse-org/LLM-adapter#90",
   "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
   "role": "EXECUTION_PREFLIGHT_IMPLEMENTATION_AND_VALIDATION",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "RELEASED_COMPLETE",
   "claimant": "connected-repository-va-execution-preflight-lane",
   "claim_created_at": "2026-08-03T23:31:00Z",
-  "claim_expires_at": "2026-08-04T23:31:00Z",
-  "release_condition": "A VA-specific non-authorizing request template, authority validator, same-run TVC admission call, fail-closed preflight observer, recurring workflow, committed readiness receipt, canonical handoff update, and downstream issue transfer are present. Provider execution remains separately authorized and unexecuted.",
-  "claimed_paths": [
+  "claim_released_at": "2026-08-03T23:45:00Z",
+  "release_condition": "SATISFIED_FOR_NON_EXECUTING_PREFLIGHT_IMPLEMENTATION_AND_DETERMINISTIC_VALIDATION",
+  "completed_paths": [
     "requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json",
     "scripts/validate_va_provider_execution_authority.py",
     "scripts/observe_va_provider_execution_preflight.py",
@@ -22,25 +22,40 @@
     "tasks/VACP-ADAPTER-EXECUTION-PREFLIGHT-004.json",
     "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md"
   ],
+  "completion_evidence": {
+    "task_claim_commit": "7f41144f06daf8ab97ea0bc8dad47bb8df16980c",
+    "authority_request_commit": "c2c3516e5f45eab9e24fd76b9f2730b3f610b85b",
+    "authority_validator_commit": "fbeee7b4a84ad88ed5c99b3933543c285c65da02",
+    "preflight_observer_commit": "c24ff859768fd0e287561bfa0c891410adc5613a",
+    "preflight_workflow_commit": "02cb8c357cccb9e27567e905c435c048d8916ec1",
+    "preflight_receipt_commit": "16aed3f1ed0ae3004e8643c43d518dd8bd290a23",
+    "preflight_state": "CONFIGURATION_REQUIRED",
+    "observation_source": "LOCAL_DETERMINISTIC_VALIDATION",
+    "preflight_result_sha256": "db9ca3a04c0794197907e1a5b81a2fb433d17c5a47607e6e548d7a54e0b3cf4d"
+  },
+  "current_blockers": [
+    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS",
+    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_ENDPOINT",
+    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_TOKEN",
+    "provider_execution_authority_missing_or_invalid"
+  ],
+  "operational_state": "CONFIGURATION_REQUIRED",
+  "provider_execution_observed": false,
+  "custody_state": "NOT_SUBMITTED",
+  "reconstruction_state": "NOT_SUBMITTED",
+  "next_owner": "StegVerse-org/LLM-adapter#90 explicit-authority single-request execution lane and master-records/orchestration#15",
+  "next_release_conditions": [
+    "Configure Master Records endpoint, allowed-host list, and token in the protected GitHub execution environment.",
+    "A separately authorized owner commits a valid, unexpired VA-specific provider authority receipt for the exact caller commit.",
+    "A workflow_dispatch-only execution lane consumes fresh TVC admission and explicit authority before requesting models:read.",
+    "One provider call emits a schema-valid execution receipt, then Master Records returns custody RECORDED and reconstruction PASS."
+  ],
   "collision_boundaries": [
     "Do not modify or dispatch the Ecosystem Chat provider workflow owned by issue #18.",
     "Do not create an APPROVED authority receipt or infer approval from repository credentials.",
     "Do not read or expose Master Records token values.",
     "Do not request models:read or call a provider from the preflight workflow.",
     "Do not claim custody, reconstruction, deployment, Site activation, filing, submission, representation, adjudication, rating, medical, or publication authority."
-  ],
-  "expected_evidence": [
-    "The workflow calls the TVC reusable issuer pinned to commit d68318fc67ddb5ebf305a7fd1c6809d44dd6041e.",
-    "A fresh admission has exactly 900 seconds of validity and binds the current adapter commit plus admitted source and answer hashes.",
-    "Missing Master Records configuration is reported without exposing secret values.",
-    "Missing or invalid explicit provider authority is reported separately.",
-    "The preflight never requests provider permission and all authority/activation effects remain false."
-  ],
-  "next_after_release": [
-    "An authorized owner may commit a valid VA-specific provider authority receipt for the exact route and caller commit.",
-    "Master Records endpoint, allowed-host, and token bindings must be configured in the protected execution environment.",
-    "Only then may a separate workflow_dispatch execution lane request models:read and perform one bounded provider call.",
-    "master-records/orchestration#15 then records custody and reconstruction."
   ],
   "authority_effect": false,
   "activation_effect": false
