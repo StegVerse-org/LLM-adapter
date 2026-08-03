@@ -1,0 +1,182 @@
+name: VA Claim Assistant Provider Preflight
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json'
+      - 'receipts/va-claim-assistant-provider-execution-authority.github-models.v1.json'
+      - 'scripts/validate_va_provider_execution_authority.py'
+      - 'scripts/observe_va_provider_execution_preflight.py'
+      - '.github/workflows/va-claim-assistant-provider-preflight.yml'
+      - 'tasks/VACP-ADAPTER-EXECUTION-PREFLIGHT-004.json'
+  pull_request:
+    paths:
+      - 'requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json'
+      - 'receipts/va-claim-assistant-provider-execution-authority.github-models.v1.json'
+      - 'scripts/validate_va_provider_execution_authority.py'
+      - 'scripts/observe_va_provider_execution_preflight.py'
+      - '.github/workflows/va-claim-assistant-provider-preflight.yml'
+      - 'tasks/VACP-ADAPTER-EXECUTION-PREFLIGHT-004.json'
+  schedule:
+    - cron: '47 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: va-claim-assistant-provider-preflight-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  issue-tvc-admission:
+    uses: StegVerse-Labs/TVC/.github/workflows/va-route-ephemeral-admission.yml@d68318fc67ddb5ebf305a7fd1c6809d44dd6041e
+    with:
+      route: service_connection
+      caller_repository: StegVerse-org/LLM-adapter
+      caller_commit: ${{ github.sha }}
+      source_registry_commit: e69e8421084b1343a9dc809fdb2a579089d37813
+      source_registry_blob_sha: a83ff2dd8343f947265981609b154693cc5deecc
+      answer_schema_commit: ae64a81df7ac91a9b2df00e9b8ff1a8358fcb9ab
+      answer_receipt_hash: bd1f6c3e751b1adf2345383f724f133c321e0e42096b4556f682837caf73ee29
+      dispatch_receipt_hash: 55419dc015db717f10914c86286b3222493753545f03fb4bd675a7dd2db4bd4e
+      purpose: SOURCE_GROUNDED_VA_CLAIM_GUIDANCE
+      scope: PUBLIC_SOURCE_SERVICE_CONNECTION_PROCEDURAL_GUIDANCE
+
+  derive-preflight:
+    needs: issue-tvc-admission
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download same-run TVC admission artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: va-route-ephemeral-admission
+          path: .tvc-admission
+
+      - name: Verify non-authorizing request contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          value = json.loads(Path('requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json').read_text())
+          assert value['state'] == 'REQUESTED_NOT_APPROVED'
+          assert value['request_is_execution_authority'] is False
+          assert value['credential_presence_is_execution_authority'] is False
+          assert value['single_execution'] is True
+          assert value['maximum_provider_requests'] == 1
+          assert float(value['maximum_request_cost_usd_ceiling']) <= 0.10
+          for field in (
+              'provider_output_is_authority',
+              'external_mutation_authorized',
+              'publication_authorized',
+              'deployment_authorized',
+              'release_authorized',
+              'filing_authorized',
+              'submission_authorized',
+              'representation_authorized',
+              'adjudication_authorized',
+              'rating_authorized',
+              'medical_opinion_authorized',
+              'site_activation_authorized',
+          ):
+              assert value[field] is False, field
+          print('VA_PROVIDER_AUTHORITY_REQUEST_CONTRACT_PASS')
+          PY
+
+      - name: Validate optional explicit provider authority
+        id: authority
+        run: |
+          rm -f .va-authority-validation.json
+          authority='receipts/va-claim-assistant-provider-execution-authority.github-models.v1.json'
+          if [ ! -f "$authority" ]; then
+            echo 'authority_state=MISSING' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if python scripts/validate_va_provider_execution_authority.py \
+              --receipt "$authority" \
+              --output .va-authority-validation.json; then
+            echo 'authority_state=VALID' >> "$GITHUB_OUTPUT"
+          else
+            rm -f .va-authority-validation.json
+            echo 'authority_state=INVALID' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Derive fail-closed provider execution preflight
+        env:
+          STEGVERSE_MASTER_RECORDS_ENDPOINT: ${{ vars.STEGVERSE_MASTER_RECORDS_ENDPOINT }}
+          STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS: ${{ vars.STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS }}
+          STEGVERSE_MASTER_RECORDS_TOKEN: ${{ secrets.STEGVERSE_MASTER_RECORDS_TOKEN }}
+        run: |
+          python scripts/observe_va_provider_execution_preflight.py \
+            --admission .tvc-admission/va-route-ephemeral-admission.json \
+            --authority-validation .va-authority-validation.json \
+            --expected-caller-commit "${GITHUB_SHA}" \
+            --output receipts/va-claim-assistant-provider-execution-preflight.json
+
+      - name: Verify preflight cannot execute or grant authority
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          value = json.loads(Path('receipts/va-claim-assistant-provider-execution-preflight.json').read_text())
+          material = dict(value)
+          expected = material.pop('result_sha256')
+          actual = hashlib.sha256(
+              json.dumps(material, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
+          ).hexdigest()
+          assert expected == actual
+          assert value['state'] in {
+              'CONFIGURATION_REQUIRED',
+              'AUTHORITY_REQUIRED',
+              'READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION',
+              'REVIEW_REQUIRED',
+          }
+          assert value['provider']['permission_requested_by_preflight'] is False
+          assert value['provider']['provider_execution_observed'] is False
+          assert value['secret_values_present'] is False
+          assert value['authority_effect'] is False
+          assert value['activation_effect'] is False
+          assert value['custody_state'] == 'NOT_SUBMITTED'
+          assert value['reconstruction_state'] == 'NOT_SUBMITTED'
+          print('VA_PROVIDER_PREFLIGHT_FAIL_CLOSED_PASS:' + value['state'])
+          PY
+
+      - name: Persist preflight receipt
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name 'va-claim-assistant[bot]'
+          git config user.email 'va-claim-assistant[bot]@users.noreply.github.com'
+          git add receipts/va-claim-assistant-provider-execution-preflight.json
+          if git diff --cached --quiet; then
+            echo 'Preflight receipt unchanged.'
+          else
+            git commit -m 'receipt: retain VA provider execution preflight [skip ci]'
+            for attempt in 1 2 3; do
+              git pull --rebase && git push && exit 0
+              echo "retrying preflight receipt push: $attempt"
+              sleep $((attempt * 2))
+            done
+            exit 1
+          fi
+
+      - name: Upload preflight evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: va-claim-assistant-provider-preflight-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .tvc-admission/va-route-ephemeral-admission.json
+            requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json
+            receipts/va-claim-assistant-provider-execution-preflight.json
+          if-no-files-found: error
+          retention-days: 30
