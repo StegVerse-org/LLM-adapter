@@ -1,0 +1,43 @@
+{
+  "task_id": "VACP-ADAPTER-SERVICE-CONNECTION-EXEC-003",
+  "originating_goal": "Execute one expanded governed VA route through TVC without confusing deterministic generation or capability admission with provider/model execution.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "main",
+  "canonical_issue": "StegVerse-org/LLM-adapter#90",
+  "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
+  "role": "EXECUTION_EVIDENCE_GATE_IMPLEMENTATION_AND_VALIDATION",
+  "claim_state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claimant": "connected-repository-service-connection-execution-gate-lane",
+  "claim_created_at": "2026-08-03T21:07:00Z",
+  "claim_expires_at": "2026-08-04T21:07:00Z",
+  "release_condition": "A TVC admission projection, execution-evidence schema, fail-closed observer, existing-workflow integration, committed readiness receipt, and canonical handoff update are present. Provider execution remains BLOCKED until a genuine evidence receipt exists.",
+  "claimed_paths": [
+    "contracts/va-service-connection-execution-evidence.schema.json",
+    "tests/fixtures/tvc_va_service_connection_admission.projection.json",
+    "scripts/observe_va_service_connection_execution.py",
+    ".github/workflows/va-claim-assistant-governed-retrieval.yml",
+    "receipts/va-claim-assistant-service-connection-execution-readiness.json",
+    "tasks/VACP-ADAPTER-SERVICE-CONNECTION-EXEC-003.json",
+    "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md"
+  ],
+  "collision_boundaries": [
+    "Do not modify Ecosystem Chat provider activation paths owned by issue #18.",
+    "Do not invent a provider execution receipt or mark admission as execution.",
+    "Do not expose provider credentials, prompts, model inputs/outputs beyond the governed answer record, traces, logs, raw documents, direct identifiers, identity artifacts, or medical narratives.",
+    "Do not activate Site, filing, submission, representation, adjudication, rating, medical opinion, or publication."
+  ],
+  "expected_evidence": [
+    "Missing execution evidence emits BLOCKED with provider_execution_evidence_missing.",
+    "A qualifying evidence receipt must bind TVC admission hash aec5c2fa8c2c6b73e6dd9dddbafa39314a30bd0ccf19bb881349be2d3e9724f8.",
+    "A qualifying receipt must bind answer hash bd1f6c3e751b1adf2345383f724f133c321e0e42096b4556f682837caf73ee29 and dispatch hash 55419dc015db717f10914c86286b3222493753545f03fb4bd675a7dd2db4bd4e.",
+    "Provider/model use, bounded cost, source domains, execution time, and secret/PII refusal must be explicit.",
+    "Authority and activation effects remain false."
+  ],
+  "next_after_release": [
+    "A repository-native runtime writes receipts/va-claim-assistant-service-connection-execution.json after real provider/model execution.",
+    "The observer changes to COMPLETE only if every binding and privacy check passes.",
+    "master-records/orchestration#15 then records custody and reconstruction."
+  ],
+  "authority_effect": false,
+  "activation_effect": false
+}
