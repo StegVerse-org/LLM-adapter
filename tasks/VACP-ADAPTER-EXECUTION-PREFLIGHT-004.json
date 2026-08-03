@@ -1,0 +1,47 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "VACP-ADAPTER-EXECUTION-PREFLIGHT-004",
+  "title": "Bind fresh TVC admission to explicit VA provider execution preflight",
+  "originating_goal": "Replace the expired static VA admission with same-run TVC admission and expose the exact remaining Master Records and explicit-authority blockers before any provider call.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "main",
+  "canonical_issue": "StegVerse-org/LLM-adapter#90",
+  "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
+  "role": "EXECUTION_PREFLIGHT_IMPLEMENTATION_AND_VALIDATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claimant": "connected-repository-va-execution-preflight-lane",
+  "claim_created_at": "2026-08-03T23:31:00Z",
+  "claim_expires_at": "2026-08-04T23:31:00Z",
+  "release_condition": "A VA-specific non-authorizing request template, authority validator, same-run TVC admission call, fail-closed preflight observer, recurring workflow, committed readiness receipt, canonical handoff update, and downstream issue transfer are present. Provider execution remains separately authorized and unexecuted.",
+  "claimed_paths": [
+    "requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json",
+    "scripts/validate_va_provider_execution_authority.py",
+    "scripts/observe_va_provider_execution_preflight.py",
+    ".github/workflows/va-claim-assistant-provider-preflight.yml",
+    "receipts/va-claim-assistant-provider-execution-preflight.json",
+    "tasks/VACP-ADAPTER-EXECUTION-PREFLIGHT-004.json",
+    "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md"
+  ],
+  "collision_boundaries": [
+    "Do not modify or dispatch the Ecosystem Chat provider workflow owned by issue #18.",
+    "Do not create an APPROVED authority receipt or infer approval from repository credentials.",
+    "Do not read or expose Master Records token values.",
+    "Do not request models:read or call a provider from the preflight workflow.",
+    "Do not claim custody, reconstruction, deployment, Site activation, filing, submission, representation, adjudication, rating, medical, or publication authority."
+  ],
+  "expected_evidence": [
+    "The workflow calls the TVC reusable issuer pinned to commit d68318fc67ddb5ebf305a7fd1c6809d44dd6041e.",
+    "A fresh admission has exactly 900 seconds of validity and binds the current adapter commit plus admitted source and answer hashes.",
+    "Missing Master Records configuration is reported without exposing secret values.",
+    "Missing or invalid explicit provider authority is reported separately.",
+    "The preflight never requests provider permission and all authority/activation effects remain false."
+  ],
+  "next_after_release": [
+    "An authorized owner may commit a valid VA-specific provider authority receipt for the exact route and caller commit.",
+    "Master Records endpoint, allowed-host, and token bindings must be configured in the protected execution environment.",
+    "Only then may a separate workflow_dispatch execution lane request models:read and perform one bounded provider call.",
+    "master-records/orchestration#15 then records custody and reconstruction."
+  ],
+  "authority_effect": false,
+  "activation_effect": false
+}
