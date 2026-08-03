@@ -6,46 +6,61 @@
   "canonical_issue": "StegVerse-org/LLM-adapter#90",
   "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
   "role": "IMPLEMENTATION_AND_VALIDATION",
-  "claim_state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_state": "RELEASED_COMPLETE",
   "claimant": "connected-repository-route-generator-lane",
   "claim_created_at": "2026-08-03T19:47:00Z",
-  "claim_expires_at": "2026-08-04T19:47:00Z",
+  "claim_released_at": "2026-08-03T20:06:00Z",
   "release_condition": "Route-generator module, dispatcher integration, deterministic tests, workflow integration, committed PASS receipts, and updated handoff are present; operational TVC, custody, deployment, and Site activation remain separately gated.",
   "supersedes_stale_claim": {
     "task_id": "VACP-ADAPTER-DISPATCH-001",
     "expired_at": "2026-08-03T09:10:00Z",
     "reason": "No renewal or successor route-generator evidence was recorded after expiration."
   },
-  "claimed_paths": [
+  "completed_commits": {
+    "claim": "6e25d727921c9c5bdabe198e43c0ffaefb9bbefd",
+    "route_generators": "6b7c4eca8caabec48f884cbc53e277e21da12eb9",
+    "dispatcher": "8abdf9865251b275d35401c94aabf61105b5ec18",
+    "source_registry_projection": "80468c9bf730e9cef75d046dbb2b63ba89d8afb9",
+    "route_generator_tests": "7292992bbad30d5c5f1faf4c115caf539773d3ce",
+    "dispatch_tests": "5f27523d68f4ebe9208697a65c745b2f0c8761b7",
+    "workflow": "06cd70ac66d3eb3cdee598a3516dea8ef1721c91",
+    "receipt_commit": "3b7fab83bcd28f6a8fc9bf3dd286b6af843af963"
+  },
+  "validation": {
+    "route_generator_receipt": "receipts/va-claim-assistant-route-generators-validation.json",
+    "route_generator_state": "PASS",
+    "route_generator_receipt_sha256": "641c76f9e88c26d88aa0d0b600d158f9b053c05d1875ca4da1a59c160ce77919",
+    "dispatch_receipt": "receipts/va-claim-assistant-governed-dispatch-validation.json",
+    "dispatch_state": "PASS",
+    "dispatch_receipt_sha256": "562e5528dd44a11a9b6c3f8b965d6449c258f6942f997939f916925a61be7f02",
+    "answer_ready_public_routes": 11,
+    "document_route": "PASS_WITH_SANITIZED_DERIVED_CONTEXT",
+    "urgent_safety_route": "AUTHORITY_RESOLUTION_REQUIRED",
+    "full_hosted_run_jobs_logs_artifacts_directly_inspected": false
+  },
+  "released_paths": [
     "va_claim_assistant/route_generators.py",
     "va_claim_assistant/governed_retrieval.py",
+    "tests/fixtures/va_claim_assistant_source_registry.projection.json",
     "tests/test_va_claim_assistant_route_generators.py",
     "tests/test_va_claim_assistant_governed_dispatch.py",
     ".github/workflows/va-claim-assistant-governed-retrieval.yml",
     "receipts/va-claim-assistant-route-generators-validation.json",
-    "receipts/va-claim-assistant-governed-dispatch-validation.json",
-    "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
-    "tasks/VACP-ADAPTER-ROUTES-002.json"
+    "receipts/va-claim-assistant-governed-dispatch-validation.json"
   ],
-  "collision_boundaries": [
-    "Do not modify Ecosystem Chat provider activation paths owned by issue #18.",
-    "Do not accept raw documents, direct identifiers, credentials, prompts, model traces, or medical narratives.",
-    "Do not activate private upload, filing, submission, representation, adjudication, rating, or publication.",
-    "Do not silently add or fork Site source authority; source gaps remain fail-closed."
-  ],
-  "expected_evidence": [
-    "All route generators have deterministic fixtures.",
-    "Public-source answers use only admitted Site sources and proposition-level support.",
-    "Document organization requires sanitized derived context and rejects raw-document or direct-identifier fields.",
-    "Urgent safety remains AUTHORITY_RESOLUTION_REQUIRED until an official admitted crisis source exists.",
-    "All authority and activation flags remain false.",
-    "Repository workflow persists hash-valid receipts."
+  "remaining_blockers": [
+    "Site source registry lacks an admitted VA-CRISIS-LINE source, so urgent_safety remains AUTHORITY_RESOLUTION_REQUIRED.",
+    "TVC capability invocation and expiry/revocation evidence are not integrated for the expanded routes.",
+    "Master Records custody RECORDED and reconstruction PASS are not present for expanded route answers.",
+    "No deployed expanded-route request has been directly observed.",
+    "Site capability projection remains SOURCE_GROUNDED_ASSISTANT until cross-repository activation evidence passes.",
+    "Private document production PII, redaction, and leakage receipts remain absent."
   ],
   "next_after_release": [
-    "TVC capability invocation and expiry/revocation evidence",
-    "Master Records custody RECORDED and reconstruction PASS",
-    "deployed request observation",
-    "receipt-derived Site capability projection"
+    "Site#113 admits and validates an official urgent-safety source or retains the route fail-closed.",
+    "TVC#9 supplies secret-free route capability invocation evidence.",
+    "master-records/orchestration imports one expanded-route answer and returns custody plus reconstruction receipts.",
+    "Site#113 imports the final receipts without overstating private upload or filing capability."
   ],
   "authority_effect": false,
   "activation_effect": false
