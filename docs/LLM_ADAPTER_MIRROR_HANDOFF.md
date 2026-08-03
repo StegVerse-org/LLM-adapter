@@ -256,6 +256,71 @@ session-consolidation: 8/8 requirements transferred
 provider-layer goal activation: 0/1 live authorized execution not performed
 ```
 
+## Exceed-federal security baseline release — 2026-08-02
+
+Canonical machine contract:
+
+```text
+data/security/exceed-federal-baseline.json
+```
+
+Validation and automation:
+
+```text
+scripts/check_exceed_federal_security_baseline.py
+.github/workflows/exceed-federal-security-baseline.yml
+```
+
+Released claim:
+
+```text
+task: LLMA-SECURITY-EXCEED-FEDERAL-BASELINE-2026-08-02
+state: MERGED
+implementation PR: #96
+validated head: 0ebaf5d41cb78250d634cbaa343138fd26b8a1f5
+implementation merge: 4a35548cb4f9988cd36be2f2552f4a04b80e7326
+claim-release PR: #97
+claim-release merge: 84d48a3d8383bc7bbd0abc1bde6a836e38dfa3f8
+```
+
+Exact implementation validation evidence:
+
+```text
+Exceed Federal Security Baseline run: 30778281134 — PASS
+Validate Provider-Owned Usage Event run: 30778281082 — PASS
+Architecture Guard run: 30778281086 — PASS
+General validate run: 30778281084 — PASS
+```
+
+Security posture now durably requires applicable United States federal controls to be treated as the minimum baseline, with StegVerse-specific exceedance controls, fail-closed handling when applicability or evidence is unknown, and no certification, authorization, validation, agency-approval, or production-security claim without independently inspectable evidence.
+
+The security baseline grants no provider, custody, publication, deployment, release, execution, certification, or agency authority. It does not supersede issue #18 or any existing provider, custody, admissibility, receipt, publication, or deployment owner.
+
+Next security task:
+
+```text
+Owner: StegVerse-org/LLM-adapter repository-native security mapping lane
+Destination: data/security/production-surface-control-mapping.json
+Required companion validator: scripts/check_production_surface_control_mapping.py
+Required workflow integration: .github/workflows/exceed-federal-security-baseline.yml
+State: UNCLAIMED
+Release condition: each active production surface has evidence-backed control coverage or an explicit BLOCKED/REVIEW_REQUIRED gap; no unsupported compliance claim is emitted.
+Collision boundary: do not modify live-provider, custody, HIL submission, publication, deployment, or Site activation owner files unless admitted by the orchestration state.
+```
+
+## Session consolidation disposition — 2026-08-02
+
+```text
+MERGED INTO: StegVerse-org/LLM-adapter/docs/LLM_ADAPTER_MIRROR_HANDOFF.md
+Provider-layer inventory: data/session-provider-layer-consolidation.json
+Security baseline: data/security/exceed-federal-baseline.json
+Live activation continuation: issue #18
+Unique requirements remaining only in this chat: 0
+Session role after this handoff update: none, once this change is merged and validated
+```
+
+The original live activation goal remains incomplete but is durably owned by issue #18 and the canonical owner PRs listed above. Archival does not require that machine-owned goal to be complete; it requires that no undocumented session-specific requirement or execution responsibility remain in this conversation.
+
 ## Archive readiness
 
-This handoff, `data/session-provider-layer-consolidation.json`, issue #18, active pull requests, repository history, workflow artifacts, and orchestration state preserve continuation without requiring undocumented conversation context. This session remains non-archive-ready until the consolidation branch is validated and incorporated into the canonical continuation path, or an equivalent newer handoff supersedes it with inspectable evidence.
+This handoff, `data/session-provider-layer-consolidation.json`, `data/security/exceed-federal-baseline.json`, issue #18, active pull requests, repository history, workflow artifacts, and orchestration state preserve continuation without requiring undocumented conversation context. This session is archive-ready only after this handoff update is validated and merged, with no new unique requirement introduced before that merge.
