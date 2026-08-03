@@ -3,13 +3,24 @@
   "goal_id": "LLMA-SECURITY-EXCEED-FEDERAL-BASELINE-2026-08-02",
   "originating_session_goal": "Treat applicable United States federal security requirements as the minimum baseline and require StegVerse controls to exceed that baseline.",
   "repository": "StegVerse-org/LLM-adapter",
-  "branch": "security/exceed-federal-baseline",
+  "branch": "main",
   "canonical_owner": "StegVerse-org/LLM-adapter",
   "claim": {
-    "state": "CLAIMED_FOR_INTEGRATION",
+    "state": "MERGED",
     "claimant": "repository-native security baseline lane",
     "created_at": "2026-08-02T19:35:00-05:00",
-    "release_condition": "Merged to main with all required checks passing, or superseded by a newer canonical security handoff carrying equivalent or stronger requirements.",
+    "released_at": "2026-08-02T21:05:00-05:00",
+    "release_evidence": {
+      "pull_request": 96,
+      "validated_head": "0ebaf5d41cb78250d634cbaa343138fd26b8a1f5",
+      "merge_commit": "4a35548cb4f9988cd36be2f2552f4a04b80e7326",
+      "workflow_runs": {
+        "security_baseline": 30778281134,
+        "provider_usage_event": 30778281082,
+        "architecture_guard": 30778281086,
+        "validate": 30778281084
+      }
+    },
     "collision_boundaries": [
       "Do not weaken existing provider, custody, admissibility, receipt, or publication controls.",
       "Do not claim federal certification, authorization, FIPS validation, FedRAMP authorization, or agency approval without independently inspectable evidence.",
@@ -71,8 +82,14 @@
     "production secure"
   ],
   "states": ["COMPLETE", "BLOCKED", "RETRY", "REVIEW_REQUIRED", "FAILED", "CLAIMED", "SUPERSEDED", "MERGED"],
-  "current_state": "CLAIMED",
-  "next_executable_action": "Validate this contract in hosted CI, merge it to main, then map each active production surface to evidence-backed control coverage without asserting certification.",
+  "current_state": "MERGED",
+  "next_executable_action": "Map each active production surface to evidence-backed control coverage without asserting certification; keep provider, custody, publication, deployment, and Site activation authority under their existing canonical owners.",
+  "canonical_continuation": {
+    "handoff": "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "runtime_owner": "issue #18 and active owner PRs recorded in the handoff",
+    "security_mapping_owner": "repository-native security control-mapping lane",
+    "site_propagation_release_condition": "canonical zero-blocker VERIFIED receipt"
+  },
   "authority_effect": "NONE",
   "manual_user_action_required": false
 }
