@@ -1,0 +1,73 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "VACP-ADAPTER-AUTHORIZED-EXECUTION-005",
+  "title": "Execute one authorized VA service-connection provider request",
+  "originating_goal": "Perform one real source-grounded service_connection request only after fresh TVC admission, protected Master Records configuration, and explicit bounded provider authority all pass in the same execution run.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "main",
+  "canonical_issue": "StegVerse-org/LLM-adapter#90",
+  "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md",
+  "role": "SINGLE_REQUEST_PROVIDER_EXECUTION_AND_RECEIPT_RETURN",
+  "state": "BLOCKED",
+  "claimant": null,
+  "claim_created_at": null,
+  "claim_expires_at": null,
+  "blocked_at": "2026-08-03T23:47:00Z",
+  "machine_observable_release_condition": {
+    "preflight_path": "receipts/va-claim-assistant-provider-execution-preflight.json",
+    "required_preflight_state": "READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION",
+    "required_observation_source": "GITHUB_ACTIONS_WORKFLOW",
+    "required_configuration": [
+      "STEGVERSE_MASTER_RECORDS_ENDPOINT",
+      "STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS",
+      "STEGVERSE_MASTER_RECORDS_TOKEN"
+    ],
+    "required_authority_path": "receipts/va-claim-assistant-provider-execution-authority.github-models.v1.json",
+    "required_authority_state": "APPROVED_AND_VALID_FOR_EXACT_CALLER_COMMIT",
+    "required_tvc_mechanism": "StegVerse-Labs/TVC/.github/workflows/va-route-ephemeral-admission.yml@d68318fc67ddb5ebf305a7fd1c6809d44dd6041e"
+  },
+  "current_blockers": [
+    "hosted_preflight_ready_state_not_observed",
+    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS",
+    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_ENDPOINT",
+    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_TOKEN",
+    "provider_execution_authority_missing_or_invalid"
+  ],
+  "target_paths": [
+    ".github/workflows/va-claim-assistant-authorized-execution.yml",
+    "scripts/execute_va_service_connection_authorized.py",
+    "receipts/va-claim-assistant-provider-execution-authority.github-models.consumed.json",
+    "receipts/va-claim-assistant-service-connection-execution.json",
+    "receipts/va-claim-assistant-service-connection-execution-readiness.json",
+    "tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json"
+  ],
+  "required_sequence": [
+    "Validate an unexpired exact-commit VA provider authority receipt.",
+    "Obtain a fresh single-use 900-second TVC admission in the same workflow run.",
+    "Verify protected Master Records endpoint, allowed-host, and token bindings without logging values.",
+    "Consume both authority records before provider permission is requested.",
+    "Request models: read only in the single execution job.",
+    "Perform at most one retrieval-grounded provider request with maximum cost USD 0.10.",
+    "Persist a privacy-minimized execution receipt bound to TVC, answer, dispatch, provider, usage, custody, and reconstruction evidence.",
+    "Require the existing execution observer to emit COMPLETE.",
+    "Transfer the execution receipt to master-records/orchestration#15 and Site#113."
+  ],
+  "expected_evidence": [
+    "Provider used exactly once with approved model and endpoint.",
+    "No credential value, prompt, raw model text, PII, raw document, identity artifact, trace, prohibited log, or medical narrative enters the retained receipt.",
+    "Answer and dispatch hashes match the admitted service_connection route.",
+    "Provider usage is persisted and authenticated custody returns RECORDED.",
+    "Transition custody returns RECORDED and reconstruction returns PASS.",
+    "Every authority and activation effect remains false."
+  ],
+  "collision_boundaries": [
+    "Do not modify or dispatch the Ecosystem Chat execution workflow owned by issue #18.",
+    "Do not execute from push, schedule, pull_request, or credential presence.",
+    "Do not create or approve the authority receipt from the execution lane.",
+    "Do not exceed one provider request or USD 0.10.",
+    "Do not activate Site, filing, submission, representation, adjudication, rating, medical opinion, publication, deployment, or release."
+  ],
+  "next_executable_action": "When the machine release condition becomes true, atomically claim the target paths, install the workflow-dispatch-only executor, and validate it without executing until the exact approval remains current.",
+  "authority_effect": false,
+  "activation_effect": false
+}
