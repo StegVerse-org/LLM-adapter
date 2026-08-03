@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/va-claim-assistant/service-connection-execution-evidence.schema.json",
+  "title": "VA Claim Assistant Service Connection Execution Evidence",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "execution_id",
+    "state",
+    "route",
+    "invocation_id",
+    "tvc_admission_receipt_hash",
+    "answer_receipt_hash",
+    "dispatch_receipt_hash",
+    "provider_execution",
+    "source_domains_used",
+    "execution_started_at",
+    "execution_completed_at",
+    "cost_usd",
+    "privacy",
+    "authority_flags",
+    "activation_effect",
+    "receipt_hash"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "execution_id": {"type": "string", "minLength": 1},
+    "state": {"const": "EXECUTED"},
+    "route": {"const": "service_connection"},
+    "invocation_id": {"const": "tvc-va-service-connection-002"},
+    "tvc_admission_receipt_hash": {"const": "aec5c2fa8c2c6b73e6dd9dddbafa39314a30bd0ccf19bb881349be2d3e9724f8"},
+    "answer_receipt_hash": {"const": "bd1f6c3e751b1adf2345383f724f133c321e0e42096b4556f682837caf73ee29"},
+    "dispatch_receipt_hash": {"const": "55419dc015db717f10914c86286b3222493753545f03fb4bd675a7dd2db4bd4e"},
+    "provider_execution": {
+      "type": "object",
+      "required": ["provider_used", "provider_class", "model_class", "credential_source", "credential_value_present"],
+      "properties": {
+        "provider_used": {"const": true},
+        "provider_class": {"type": "string", "minLength": 1},
+        "model_class": {"const": "retrieval_grounded_text_generation"},
+        "credential_source": {"const": "TVC_CONTROLLED_RUNTIME"},
+        "credential_value_present": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "source_domains_used": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "uscode.house.gov",
+          "ecfr.gov",
+          "va.gov",
+          "benefits.va.gov",
+          "knowva.ebenefits.va.gov",
+          "uscourts.cavc.gov",
+          "federalregister.gov"
+        ]
+      }
+    },
+    "execution_started_at": {"type": "string", "format": "date-time"},
+    "execution_completed_at": {"type": "string", "format": "date-time"},
+    "cost_usd": {"type": "number", "minimum": 0, "maximum": 1.0},
+    "privacy": {
+      "type": "object",
+      "required": [
+        "secret_values_present",
+        "direct_identifiers_present",
+        "raw_documents_present",
+        "identity_proofing_artifacts_present",
+        "prompts_present",
+        "model_traces_present",
+        "logs_contain_prohibited_data",
+        "medical_narrative_present"
+      ],
+      "properties": {
+        "secret_values_present": {"const": false},
+        "direct_identifiers_present": {"const": false},
+        "raw_documents_present": {"const": false},
+        "identity_proofing_artifacts_present": {"const": false},
+        "prompts_present": {"const": false},
+        "model_traces_present": {"const": false},
+        "logs_contain_prohibited_data": {"const": false},
+        "medical_narrative_present": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "authority_flags": {
+      "type": "object",
+      "required": ["adjudication", "representation", "medical_opinion", "rating", "publication", "public_activation", "filing", "submission"],
+      "properties": {
+        "adjudication": {"const": false},
+        "representation": {"const": false},
+        "medical_opinion": {"const": false},
+        "rating": {"const": false},
+        "publication": {"const": false},
+        "public_activation": {"const": false},
+        "filing": {"const": false},
+        "submission": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "activation_effect": {"const": false},
+    "receipt_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false
+}
