@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_type": "PINNED_SITE_SOURCE_REGISTRY_TEST_PROJECTION",
+  "source_repository": "StegVerse-Labs/Site",
+  "source_path": "data/va-claim-assistant/source-registry.json",
+  "source_commit": "e69e8421084b1343a9dc809fdb2a579089d37813",
+  "source_blob_sha": "a83ff2dd8343f947265981609b154693cc5deecc",
+  "projection_fields": [
+    "source_id",
+    "authority_class",
+    "name",
+    "url",
+    "admitted"
+  ],
+  "registry": {
+    "sources": [
+      {
+        "source_id": "USC-TITLE-38",
+        "authority_class": "CONTROLLING",
+        "name": "Title 38",
+        "url": "https://uscode.house.gov/browse/prelim@title38&edition=prelim",
+        "admitted": true
+      },
+      {
+        "source_id": "ECFR-TITLE-38",
+        "authority_class": "CONTROLLING",
+        "name": "Title 38 CFR",
+        "url": "https://www.ecfr.gov/current/title-38",
+        "admitted": true
+      },
+      {
+        "source_id": "VA-EVIDENCE-NEEDED",
+        "authority_class": "OFFICIAL_OPERATIONAL",
+        "name": "Evidence Needed",
+        "url": "https://www.va.gov/disability/how-to-file-claim/evidence-needed/",
+        "admitted": true
+      },
+      {
+        "source_id": "VA-COMPENSATION-EVIDENCE",
+        "authority_class": "OFFICIAL_OPERATIONAL",
+        "name": "Compensation Evidence",
+        "url": "https://www.benefits.va.gov/compensation/evidence.asp",
+        "admitted": true
+      },
+      {
+        "source_id": "VA-RATING-SCHEDULE",
+        "authority_class": "CONTROLLING",
+        "name": "Rating Schedule",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
+        "admitted": true
+      },
+      {
+        "source_id": "VA-FORMS",
+        "authority_class": "OFFICIAL_OPERATIONAL",
+        "name": "VA Forms",
+        "url": "https://www.va.gov/find-forms/",
+        "admitted": true
+      },
+      {
+        "source_id": "VA-M21-1",
+        "authority_class": "OFFICIAL_OPERATIONAL",
+        "name": "M21-1",
+        "url": "https://www.knowva.ebenefits.va.gov/",
+        "admitted": true
+      },
+      {
+        "source_id": "BVA-DECISIONS",
+        "authority_class": "OFFICIAL_OPERATIONAL",
+        "name": "BVA",
+        "url": "https://www.va.gov/vetapp/search.asp",
+        "admitted": true
+      },
+      {
+        "source_id": "CAVC-OPINIONS",
+        "authority_class": "CONTROLLING",
+        "name": "CAVC",
+        "url": "https://www.uscourts.cavc.gov/opinions.php",
+        "admitted": true
+      },
+      {
+        "source_id": "FEDERAL-REGISTER-VA",
+        "authority_class": "CONTROLLING",
+        "name": "Federal Register",
+        "url": "https://www.federalregister.gov/agencies/veterans-affairs-department",
+        "admitted": true
+      }
+    ]
+  }
+}
