@@ -1,0 +1,51 @@
+{
+  "activation_effect": false,
+  "authority_effect": false,
+  "blockers": [
+    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS",
+    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_ENDPOINT",
+    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_TOKEN",
+    "provider_execution_authority_missing_or_invalid"
+  ],
+  "caller_commit": "c24ff859768fd0e287561bfa0c891410adc5613a",
+  "caller_repository": "StegVerse-org/LLM-adapter",
+  "configuration": {
+    "master_records_allowed_hosts_configured": false,
+    "master_records_endpoint_configured": false,
+    "master_records_token_configured": false
+  },
+  "custody_state": "NOT_SUBMITTED",
+  "explicit_provider_authority": {
+    "authority_sha256": null,
+    "maximum_request_cost_usd": null,
+    "model": null,
+    "present_and_valid": false
+  },
+  "manual_user_action_required": false,
+  "next_executable_action": "Configure the authorized Master Records endpoint, allowed hosts, and token in the protected GitHub execution environment.",
+  "observation_source": "LOCAL_DETERMINISTIC_VALIDATION",
+  "observed_at": "2026-08-03T23:41:52.215738Z",
+  "provider": {
+    "credential_source_if_later_authorized": "ephemeral GitHub Actions GITHUB_TOKEN",
+    "name": "github-models",
+    "permission_requested_by_preflight": false,
+    "provider_execution_observed": false
+  },
+  "reconstruction_state": "NOT_SUBMITTED",
+  "result_sha256": "db9ca3a04c0794197907e1a5b81a2fb433d17c5a47607e6e548d7a54e0b3cf4d",
+  "route": "service_connection",
+  "schema": "stegverse.va_claim_assistant.provider_execution_preflight.v1",
+  "secret_values_present": false,
+  "state": "CONFIGURATION_REQUIRED",
+  "tvc_admission": {
+    "expires_at": "2026-08-03T23:56:52.215738Z",
+    "issued_at": "2026-08-03T23:41:52.215738Z",
+    "present": true,
+    "receipt_hash": "1cf670a851c99cac35a523cba3be5dcd9e7b0c290d0920b7dae4895ae315a054",
+    "receipt_id": "tvc-va-service_connection-0-0",
+    "single_use": true,
+    "valid": true
+  },
+  "workflow_run_attempt": null,
+  "workflow_run_id": null
+}
