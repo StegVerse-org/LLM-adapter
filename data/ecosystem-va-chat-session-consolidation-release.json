@@ -1,7 +1,7 @@
 {
   "schema": "stegverse.ecosystem_va_chat.session_consolidation_release.v1",
   "base_inventory": "data/ecosystem-va-chat-session-consolidation.json",
-  "base_inventory_blob_sha": "e697ed5f4c6e23a84170bcf0ec51ff3bdd0df378",
+  "base_inventory_blob_sha": "89bf43fceb62967ff9fc30fd4436d0f903fdf7f4",
   "recorded_at": "2026-08-04T18:08:00Z",
   "posture": "ARCHIVE_READY_PENDING_MERGE_AND_FINAL_HOSTED_VALIDATION",
   "active_chat_owned_claims": 0,
