@@ -2,9 +2,9 @@
 
 ## Source of truth
 
-This document is the authoritative continuation record for issue `StegVerse-org/LLM-adapter#102` and task `LLMA-CHAT-LLM-PROFILES-009` until the work is merged or explicitly superseded.
+This document is the authoritative continuation record for the released Chat LLM profile layer established by issue `StegVerse-org/LLM-adapter#102`, pull request `#103`, and task `LLMA-CHAT-LLM-PROFILES-009`.
 
-The repository-wide source of truth remains `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`. This workload is parallel-safe because it uses new profile, contract, test, verifier, workflow, task, and documentation paths and does not modify the exclusive live-provider lane owned by issue #18.
+The repository-wide source of truth remains `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`. This workload was parallel-safe because it used new profile, contract, test, verifier, workflow, task, receipt, and documentation paths and did not modify the exclusive live-provider lane owned by issue #18.
 
 ## Governing product decision
 
@@ -15,9 +15,9 @@ VA Claims Chat is also a full-function LLM product surface.
 The two products differ by purpose and factual-source policy, not by LLM capability.
 ```
 
-Governance constrains consequence, authority, custody, publication, deployment, filing, and other side effects. It must not silently reduce the model's conversational, analytical, retrieval, creative, structured-output, multimodal, planning, or tool-candidate capability.
+Governance constrains consequence, authority, custody, publication, deployment, filing, and other side effects. It does not silently reduce conversational, analytical, retrieval, creative, structured-output, multimodal, planning, or tool-candidate capability.
 
-## Parallel lanes
+## Released parallel lanes
 
 ### Lane A — Ecosystem Chat / StegVerse Chat
 
@@ -26,6 +26,7 @@ profile: profiles/ecosystem-chat-llm.v1.json
 profile_id: ecosystem-chat-llm
 LLM surface: FULL_PROVIDER_SUPPORTED
 source mode: GENERAL_ADMITTED
+state: RELEASED_COMPLETE
 ```
 
 The profile declares the complete canonical LLM feature set:
@@ -61,6 +62,7 @@ profile: profiles/va-claims-chat-llm.v1.json
 profile_id: va-claims-chat-llm
 LLM surface: FULL_PROVIDER_SUPPORTED
 source mode: OFFICIAL_VA_ONLY
+state: RELEASED_COMPLETE
 ```
 
 VA Claims Chat exposes the same complete LLM feature set. Its purpose boundary applies to factual grounding:
@@ -85,7 +87,7 @@ VA lookalike or redirect-trick hostname
 
 The restriction does not disable conversation, analysis, document organization, multilingual output, structured output, tool-candidate generation, planning, or artifact generation. It controls what may support a factual VA claims answer.
 
-## Implemented files
+## Installed files
 
 ```text
 llm_adapter/chat_profiles.py
@@ -97,6 +99,7 @@ scripts/verify_chat_llm_profiles.py
 .github/workflows/validate-chat-llm-profiles.yml
 tasks/LLMA-CHAT-LLM-PROFILES-009.json
 docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md
+receipts/chat-llm-profiles-validation.json
 ```
 
 ## Runtime-neutral profile engine
@@ -117,19 +120,54 @@ deterministic capability matrix generation
 
 The engine performs no network request, provider execution, custody submission, Site mutation, or external action.
 
-## Verification contract
+## Hosted validation evidence
 
-Run locally or in CI:
+```text
+implementation PR: #103
+validated head: aec79bca47951116564bba34401fb4bbd7363025
+merge commit: 18a49b8856a34d03d94955637adb4a53c9ccfe81
+workflow: Validate Chat LLM Profiles
+workflow run: 30928497409
+Python 3.9: PASS
+Python 3.11: PASS
+Python 3.12: PASS
+policy tests per runtime: 16 PASS
+receipt generation per runtime: PASS
+Architecture Guard: PASS
+repository validate: PASS
+Platform-Agnostic Runtime: PASS
+Validate Provider-Owned Usage Event: PASS
+Portable User-LLM Execution Receipt: PASS
+HIL managed receiver validation: PASS
+artifact: 8900112614
+artifact digest: sha256:5c289bdd81df013d1e33dff0563a78641f689328a1fee8a9db25348eeb217d90
+retained receipt: receipts/chat-llm-profiles-validation.json
+retained receipt commit: 008f56f0de5941c30747c7d0893b57440f60b9bc
+receipt hash: 85a98e57b3a8e50fa13de3d24e2fcd39aaff99ea7071f3318719519f78275287
+```
+
+Validated receipt result:
+
+```text
+state: PASS
+feature sets equal: true
+Ecosystem Chat features: 19/19
+VA Claims Chat features: 19/19
+Ecosystem admitted general source: ALLOW_ADMITTED_SOURCE
+Claims official VA source: ALLOW_VA_SOURCE_FACT
+Claims non-VA source: DENY_SOURCE
+Claims privacy-approved user record: ALLOW_USER_RECORD_FACT
+authority effect: false
+activation effect: false
+provider execution observed: false
+Site activation observed: false
+```
+
+## Verification contract
 
 ```bash
 python -m pytest tests/test_chat_llm_profiles.py -q
 python scripts/verify_chat_llm_profiles.py --write-receipt
-```
-
-The hosted workflow validates Python 3.9, 3.11, and 3.12 and retains:
-
-```text
-receipts/chat-llm-profiles-validation.json
 ```
 
 Required negative checks include:
@@ -145,17 +183,40 @@ user record without privacy PASS, consent, or hash -> deny
 any authority policy set true -> fail
 ```
 
-## Integration sequence after profile validation
+## Next integration goals
 
-### Existing adapter owner
+### Ecosystem Chat runtime binding
 
-Issue #18 or its canonical successor may bind `ecosystem-chat-llm` into the existing provider runtime only after its independent provider, persistent endpoint, persistence, custody, reconstruction, and activation gates pass.
+Owner: `StegVerse-org/LLM-adapter#18` or its canonical successor.
 
-Issue #90 or its canonical successor may bind `va-claims-chat-llm` into the existing privacy-guarded Claims runtime only after its independent TVC, provider authority, Master Records, and execution-evidence gates pass.
+```text
+bind ecosystem-chat-llm profile to the existing provider runtime
+preserve full LLM feature projection
+retain source-decision labels and profile hash
+complete authorized persistent endpoint and real-provider gates
+persist provider usage
+obtain provider-usage and transition custody RECORDED
+obtain both reconstruction results PASS
+emit immutable zero-blocker VERIFIED activation receipt
+```
 
-### Site owner
+### VA Claims Chat runtime binding
 
-`StegVerse-Labs/Site` currently rejects external session ownership through its orchestration state. No Site paths are claimed by this task. After adapter validation and Site machine admission, Site should project:
+Owner: `StegVerse-org/LLM-adapter#90` or its canonical successor.
+
+```text
+bind va-claims-chat-llm after privacy_guarded_dispatch
+require official-VA-only source decisions before factual generation
+retain user-record facts as separately labeled non-authority records
+consume fresh TVC admission and explicit provider authority
+perform one bounded real provider request
+obtain Master Records custody RECORDED and reconstruction PASS
+project only receipt-verified capability to Site
+```
+
+### Site projection
+
+`StegVerse-Labs/Site` rejected external session ownership when this task was executed, so no Site paths were claimed. After Site machine admission, its canonical owner should project:
 
 ```text
 product profile identity
@@ -163,12 +224,13 @@ full LLM feature matrix
 source-policy mode
 source-decision labels
 false authority and activation flags
-receipt hash and validation state
+profile and receipt hashes
+validation and runtime states
 ```
 
-### Master Records owner
+### Master Records
 
-Future operational receipts may be submitted only through the existing custody owner. Profile validation itself is not custody and must not be represented as an operational Master Record.
+Profile validation is not custody. Future operational receipts may be submitted only through the existing Master Records owner after real runtime execution.
 
 ## Authority boundary
 
@@ -191,13 +253,16 @@ profile validation != live activation
 
 ```text
 issue: StegVerse-org/LLM-adapter#102
-branch: goal/chat-llm-profiles
+pull request: #103
+merge: COMPLETE
+merge commit: 18a49b8856a34d03d94955637adb4a53c9ccfe81
 task: LLMA-CHAT-LLM-PROFILES-009
-implementation: COMPLETE ON BRANCH
-hosted validation: PENDING
-merge: PENDING
-live provider binding: NOT PART OF THIS PARALLEL-SAFE SLICE
-Site projection: BLOCKED BY SITE ORCHESTRATION AND FUTURE MACHINE ADMISSION
+state: RELEASED_COMPLETE
+implementation: INSTALLED ON MAIN
+hosted validation: PASS
+receipt retained: PASS
+live provider binding: PENDING UNDER ISSUES #18 AND #90
+Site projection: PENDING FUTURE SITE MACHINE ADMISSION
 authority effect: false
 activation effect: false
 manual user action required: false
@@ -206,16 +271,20 @@ manual user action required: false
 ## Completion metrics
 
 ```text
-developed files: 9/9
+developed files: 10/10
 scaffolding or stubs: 0
 canonical LLM feature declaration: 19/19 for both profiles
-source-policy implementation: complete on branch
-negative tests: implemented
-hosted validation: pending
-mainline integration: pending
+source-policy implementation: 100 percent
+negative tests: 16/16 per Python runtime
+hosted runtime matrix: 3/3
+repository-wide checks: 6/6
+mainline integration: 100 percent
+profile-layer release: 100 percent
 live product activation: pending under existing owners
 ```
 
 ## Archive condition
 
-This workload becomes repository-archive-ready after hosted checks pass, the pull request merges to `main`, the task is changed to `RELEASED_COMPLETE`, and this handoff records the merge and validation evidence. Broader Ecosystem Chat and VA Claims Chat live activation remains owned by issues #18 and #90 and is not completed by profile installation alone.
+The profile-layer workload is complete, released, validated, merged, and durably receipted. No unique implementation or continuation state remains in the originating chat for this slice. Broader Ecosystem Chat and VA Claims Chat live activation remains owned by issues #18 and #90.
+
+ARCHIVE THIS PROFILE-LAYER WORKLOAD.
