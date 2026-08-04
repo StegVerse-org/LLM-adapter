@@ -1,0 +1,76 @@
+{
+  "schema": "stegverse.ecosystem_va_chat.session_consolidation_release.v1",
+  "base_inventory": "data/ecosystem-va-chat-session-consolidation.json",
+  "base_inventory_blob_sha": "89bf43fceb62967ff9fc30fd4436d0f903fdf7f4",
+  "recorded_at": "2026-08-04T18:08:00Z",
+  "posture": "ARCHIVE_READY_PENDING_MERGE_AND_FINAL_HOSTED_VALIDATION",
+  "active_chat_owned_claims": 0,
+  "unowned_tasks": 0,
+  "manual_user_tasks": 0,
+  "session_requirements_transferred_or_complete": 18,
+  "session_requirements_total": 18,
+  "released_claims": [
+    "LLMA-CHAT-LLM-PROFILES-009",
+    "LLMA-CHAT-SESSION-BINDING-010",
+    "LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011",
+    "VACP-ADAPTER-ROUTES-002",
+    "VACP-ADAPTER-PII-RUNTIME-006",
+    "VACP-SESSION-CONSOLIDATION-007"
+  ],
+  "blocked_unclaimed": [
+    "VACP-ADAPTER-AUTHORIZED-EXECUTION-005"
+  ],
+  "machine_owned_blocked": [
+    "StegVerse-org/LLM-adapter#18",
+    "master-records/orchestration#15",
+    "master-records/orchestration/tasks/MR-VA-PRIVACY-ADAPTER-IMPORT-002.json"
+  ],
+  "implementation_validation": {
+    "workflow_run_id": 30936984495,
+    "python_3_9": "PASS",
+    "python_3_11": "PASS",
+    "python_3_12": "PASS",
+    "architecture_guard": "PASS",
+    "repository_validate": "PASS",
+    "provider_usage_validation": "PASS",
+    "artifact_id": 8903510993,
+    "artifact_digest": "sha256:c1c109480dbf87e28deead96c41342586b30fe0a2bd370e9d6c95965c537da1e",
+    "pre_release_receipt_hash": "72a02151aa110ae7d2c3a5e0e14d8fefc26c408d7d793309b583aa4076127012"
+  },
+  "mainline_integration": {
+    "pull_request": 108,
+    "merged": false,
+    "merge_commit": null
+  },
+  "archive_assertions": {
+    "no_unique_requirement_remains_only_in_chat": true,
+    "no_active_chat_owned_claim_remains": true,
+    "no_unowned_or_manual_task_remains": true,
+    "all_incomplete_project_work_has_named_durable_owners": true,
+    "deleting_chat_impairs_execution_after_merge_and_final_validation": false,
+    "release_projection_grants_execution_authority": false,
+    "release_projection_grants_provider_authority": false,
+    "release_projection_grants_custody": false,
+    "release_projection_grants_filing_authority": false,
+    "release_projection_grants_publication_authority": false,
+    "release_projection_grants_activation_authority": false
+  },
+  "completion_metrics": {
+    "task_completion_percent": 100,
+    "developed_files_complete": 6,
+    "developed_files_required_before_receipt": 6,
+    "scaffolding_or_stubs": 0,
+    "missing_required_files_before_receipt": 0,
+    "validation_complete": 1,
+    "validation_required": 2,
+    "integration_complete": 0,
+    "integration_required": 1,
+    "propagation_complete": 0,
+    "propagation_required": 2,
+    "goal_activation_complete": 2,
+    "goal_activation_required": 5,
+    "session_consolidation_complete": 18,
+    "session_consolidation_required": 18,
+    "archival_readiness_percent": 92
+  }
+}
