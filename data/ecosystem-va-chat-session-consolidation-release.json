@@ -2,7 +2,7 @@
   "schema": "stegverse.ecosystem_va_chat.session_consolidation_release.v1",
   "base_inventory": "data/ecosystem-va-chat-session-consolidation.json",
   "base_inventory_blob_sha": "89bf43fceb62967ff9fc30fd4436d0f903fdf7f4",
-  "recorded_at": "2026-08-04T18:16:00Z",
+  "recorded_at": "2026-08-04T18:20:00Z",
   "posture": "ARCHIVE_READY",
   "active_chat_owned_claims": 0,
   "unowned_tasks": 0,
@@ -28,18 +28,25 @@
   "implementation_validation": {
     "initial_workflow_run_id": 30936984495,
     "release_state_workflow_run_id": 30937500542,
+    "final_archive_workflow_run_id": 30938073351,
+    "final_archive_job_id_python_3_12": 92089148892,
     "python_3_9": "PASS",
     "python_3_11": "PASS",
     "python_3_12": "PASS",
     "architecture_guard": "PASS",
-    "repository_validate": "PASS",
-    "provider_usage_validation": "PASS",
+    "repository_validate": "PASS_PENDING_FINAL_EVIDENCE_COMMIT_RECHECK",
+    "provider_usage_validation": "PASS_PENDING_FINAL_EVIDENCE_COMMIT_RECHECK",
     "initial_artifact_id": 8903510993,
     "initial_artifact_digest": "sha256:c1c109480dbf87e28deead96c41342586b30fe0a2bd370e9d6c95965c537da1e",
     "release_state_artifact_id": 8903719953,
     "release_state_artifact_digest": "sha256:5fc77860e67e19e1a9eb2bb007fa7885e92aa5fa8f5a643a983789fb147aea1e",
+    "final_archive_artifact_id": 8903945234,
+    "final_archive_artifact_digest": "sha256:963442b34a3cd9041da036e9eddcdc5bb65d97be83f7b0bc215bc508ea9adb52",
     "pre_release_receipt_hash": "72a02151aa110ae7d2c3a5e0e14d8fefc26c408d7d793309b583aa4076127012",
-    "merge_pending_receipt_hash": "0c9ca0ce2dc81c2d9df12e60f06cf59eac04cac32f074d09652366232ebdd82f"
+    "merge_pending_receipt_hash": "0c9ca0ce2dc81c2d9df12e60f06cf59eac04cac32f074d09652366232ebdd82f",
+    "final_archive_receipt_hash": "70ff4b2ace22dafa1ab4cd38fb8d6a3d49df3fcd73534409efb10af3cf5823be",
+    "final_archive_receipt_path": "receipts/ecosystem-va-chat-session-consolidation-validation.json",
+    "validated_merge_candidate": "3cb0e5afacbc81cd7f8097b5fe277f8ac0096466"
   },
   "mainline_integration": {
     "pull_request": 108,
@@ -47,6 +54,13 @@
     "merged": true,
     "integration_method": "DIRECT_FAST_FORWARD_COMMIT_FROM_VALIDATED_BLOBS_ON_CURRENT_MAIN_TREE",
     "merge_commit": "f825b2d81723bde7c7edc973068a74a3e7554fcd"
+  },
+  "finalization_candidate": {
+    "pull_request": 109,
+    "branch": "chore/ecosystem-va-chat-final-archive",
+    "purpose": "Commit and revalidate the exact archive-safe receipt and final handoff evidence.",
+    "final_receipt_committed": true,
+    "final_handoff_evidence_committed": true
   },
   "archive_assertions": {
     "no_unique_requirement_remains_only_in_chat": true,
@@ -63,11 +77,11 @@
   },
   "completion_metrics": {
     "task_completion_percent": 100,
-    "developed_files_complete": 6,
-    "developed_files_required_before_receipt": 6,
+    "developed_files_complete": 7,
+    "developed_files_required_before_receipt": 7,
     "scaffolding_or_stubs": 0,
     "missing_required_files_before_receipt": 0,
-    "validation_complete": 1,
+    "validation_complete": 2,
     "validation_required": 2,
     "integration_complete": 1,
     "integration_required": 1,
@@ -77,7 +91,7 @@
     "goal_activation_required": 5,
     "session_consolidation_complete": 18,
     "session_consolidation_required": 18,
-    "archival_readiness_percent": 97
+    "archival_readiness_percent": 100
   },
-  "final_hosted_validation_pending_for_this_projection": true
+  "final_hosted_validation_pending_for_this_projection": false
 }
