@@ -1,77 +1,70 @@
 {
-  "schema": "stegverse.ecosystem_chat.service_adoption.v1",
+  "schema": "stegverse.ecosystem_chat.service_sovereignty.v2",
   "goal_id": "LLMA-ECOSYSTEM-CHAT-SERVICE-ADOPTION-012",
   "canonical_owner": "StegVerse-org/LLM-adapter#18",
+  "target_state": "ZERO_EXTERNAL_PLATFORM_DEPENDENCIES",
   "policy": {
-    "unnamed_third_party_dependency_allowed": false,
-    "dependency_must_be_eliminated_or_adopted": true,
-    "adopted_service_requires_stegverse_owned_interface": true,
-    "provider_must_be_replaceable": true,
+    "external_platform_dependency_allowed_at_completion": false,
+    "temporary_external_platform_use_allowed_during_migration": true,
+    "temporary_platform_must_have_absorption_plan": true,
+    "stegverse_must_own_runtime_control_plane": true,
+    "stegverse_must_own_dns_and_routing_control_plane": true,
+    "stegverse_must_own_persistence_and_custody": true,
+    "stegverse_must_own_model_execution_or_federated_node_contract": true,
     "credentials_must_remain_out_of_repository": true,
     "provider_output_is_authority": false,
     "hosting_is_execution_authority": false,
     "custody_is_publication_authority": false
   },
-  "services": [
+  "temporary_transition_surfaces": [
     {
-      "role": "public_gateway",
-      "service": "stegverse-ecosystem-chat-gateway",
-      "owner": "Rigel's workspace",
       "platform": "Render",
-      "adoption_state": "ADOPTED_INFRASTRUCTURE",
-      "runtime_state": "LIVE_HEALTH_VERIFIED",
-      "url": "https://stegverse-ecosystem-chat-gateway.onrender.com",
-      "health_path": "/health"
+      "current_roles": ["public_gateway", "persistent_hil_receiver", "admission_service", "site_and_compute_services"],
+      "state": "TEMPORARY_TRANSITION_SURFACE",
+      "absorption_required": true,
+      "completion_condition": "All workloads run on StegVerse-owned node runtime and control plane with verified migration receipts; Render is removable without loss of service, state, authority, or continuity."
     },
     {
-      "role": "persistent_hil_receiver",
-      "service": "stegverse-hil-receiver",
-      "owner": "Rigel's workspace",
-      "platform": "Render",
-      "adoption_state": "ADOPTED_INFRASTRUCTURE",
-      "runtime_state": "DEPLOYED_WITH_PERSISTENT_DISK",
-      "url": "https://stegverse-hil-receiver.onrender.com",
-      "health_path": "/api/hil/readiness"
+      "platform": "Cloudflare",
+      "current_roles": ["dns", "edge_routing", "protection"],
+      "state": "TEMPORARY_TRANSITION_SURFACE",
+      "absorption_required": true,
+      "completion_condition": "StegVerse-owned naming, routing, certificate, edge protection, and continuity controls are active and independently verified."
     },
     {
-      "role": "admission_service",
-      "service": "TVC",
-      "owner": "Rigel's workspace",
-      "platform": "Render",
-      "adoption_state": "ADOPTED_INFRASTRUCTURE",
-      "runtime_state": "DEPLOYED",
-      "url": "https://tvc-jrdy.onrender.com"
+      "platform": "external_domain_registrar",
+      "current_roles": ["domain_registration"],
+      "state": "TEMPORARY_LEGAL_REGISTRY_INTERFACE",
+      "absorption_required": true,
+      "completion_condition": "No operational dependency remains beyond unavoidable public registry interaction; StegVerse controls naming, keys, renewal automation, continuity, and migration."
     },
     {
-      "role": "provider",
-      "service": "StegVerse Provider Interface",
-      "adoption_state": "INTERFACE_IMPLEMENTED_PROVIDER_UNBOUND",
-      "runtime_state": "CONFIGURATION_REQUIRED",
-      "required_bindings": [
-        "STEGVERSE_PROVIDER_ENDPOINT",
-        "STEGVERSE_PROVIDER_MODEL",
-        "STEGVERSE_PROVIDER_TOKEN"
-      ],
-      "completion_rule": "Bind an authorized provider behind the StegVerse provider-neutral interface or deploy a StegVerse-operated compatible model endpoint."
-    },
-    {
-      "role": "master_records_custody",
-      "service": "StegVerse Master Records Interface",
-      "adoption_state": "INTERFACE_IMPLEMENTED_ENDPOINT_UNBOUND",
-      "runtime_state": "CONFIGURATION_REQUIRED",
-      "required_bindings": [
-        "STEGVERSE_MASTER_RECORDS_ENDPOINT",
-        "STEGVERSE_MASTER_RECORDS_TOKEN"
-      ],
-      "completion_rule": "Bind an authenticated StegVerse-owned custody endpoint; do not treat local persistence or the HIL receiver as custody without protocol evidence."
+      "platform": "external_model_provider",
+      "current_roles": ["model_inference"],
+      "state": "OPTIONAL_TRANSITION_PROVIDER",
+      "absorption_required": true,
+      "completion_condition": "StegVerse-owned or StegVerse-federated model execution can satisfy the canonical provider contract without an external hosted inference dependency."
     }
+  ],
+  "stegverse_replacement_components": [
+    "micro-node-runtime",
+    "core-lite",
+    "StegGuardian",
+    "StegProfile",
+    "admissibility-gateway",
+    "capability-registry",
+    "TVC",
+    "Master Records",
+    "SCW"
   ],
   "activation_units": {
     "llm_profile": "COMPLETE",
     "provider_neutral_session": "COMPLETE",
-    "persistent_public_gateway": "COMPLETE",
+    "temporary_public_gateway": "COMPLETE",
     "authorized_provider_execution": "BLOCKED_CONFIGURATION",
-    "custody_reconstruction_site_downstream": "BLOCKED_CONFIGURATION_AND_EVIDENCE"
+    "custody_reconstruction_site_downstream": "BLOCKED_CONFIGURATION_AND_EVIDENCE",
+    "stegverse_owned_compute_and_control_plane": "MISSING",
+    "external_platform_retirement": "MISSING"
   },
   "manual_user_action_required": false,
   "archive_directive_applies_to_this_goal": false
