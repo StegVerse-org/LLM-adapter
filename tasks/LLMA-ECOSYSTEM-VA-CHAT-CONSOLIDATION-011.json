@@ -1,0 +1,44 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011",
+  "title": "Consolidate Ecosystem Chat and VA Claims Chat LLM session goals",
+  "originating_goal": "Durably preserve the session that promoted Ecosystem Chat and VA Claims Chat from bounded chat surfaces into full-function governed LLM products with distinct factual-source policies.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "goal/ecosystem-va-chat-session-consolidation",
+  "canonical_issue": "StegVerse-org/LLM-adapter#107",
+  "canonical_handoff": "docs/ECOSYSTEM_VA_CHAT_SESSION_ARCHIVE_MIRROR_HANDOFF.md",
+  "role": "SESSION_INVENTORY_VALIDATION_AND_ARCHIVE_TRANSFER",
+  "execution_class": "PARALLEL_SAFE",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claimant": "StegVerse",
+  "claim_created_at": "2026-08-04T18:00:34Z",
+  "claim_expires_at": "2026-08-05T18:00:34Z",
+  "claimed_paths": [
+    "data/ecosystem-va-chat-session-consolidation.json",
+    "scripts/validate_ecosystem_va_chat_session_consolidation.py",
+    ".github/workflows/ecosystem-va-chat-session-consolidation.yml",
+    "docs/ECOSYSTEM_VA_CHAT_SESSION_ARCHIVE_MIRROR_HANDOFF.md",
+    "tasks/LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011.json",
+    "receipts/ecosystem-va-chat-session-consolidation-validation.json"
+  ],
+  "collision_boundaries": [
+    "Do not modify or dispatch issue #18 live-provider or persistent-host execution paths.",
+    "Do not modify or dispatch issue #90 or VACP-ADAPTER-AUTHORIZED-EXECUTION-005 provider paths.",
+    "Do not claim Site, TVC, Master Records, filing, publication, deployment, custody, or activation authority.",
+    "Do not replace the profile, session-binding, VA retrieval, privacy, or repository-wide canonical handoffs.",
+    "Do not create another runtime, gateway, provider authority receipt, or custody receipt family."
+  ],
+  "expected_evidence": [
+    "Complete machine-readable inventory of primary and adjacent goals.",
+    "Exact durable owner, location, state, evidence, release condition, and next action for every unresolved item.",
+    "Hosted validation proves profile and session-binding releases remain PASS.",
+    "Hosted validation proves blocked execution tasks remain assigned and unclaimed.",
+    "Receipt proves zero active chat-owned runtime claims, zero unowned tasks, and zero manual user tasks.",
+    "Canonical handoff records MERGED INTO locations and archive conditions."
+  ],
+  "release_condition": "Merge the inventory, validator, workflow, task, and handoff; inspect the hosted run, jobs, logs, and artifact; retain the PASS receipt on main; change this task to RELEASED_COMPLETE; update the handoff with final evidence; close issue #107.",
+  "next_task_after_release": "Runtime continuation remains exclusively with issue #18, issue #90 and VACP-ADAPTER-AUTHORIZED-EXECUTION-005, Site#113/#116, TVC#9, and master-records/orchestration#15 plus MR-VA-PRIVACY-ADAPTER-IMPORT-002.",
+  "manual_user_action_required": false,
+  "authority_effect": false,
+  "activation_effect": false
+}
