@@ -1,0 +1,39 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "VACP-SESSION-CONSOLIDATION-007",
+  "title": "Consolidate governed VA Claim Session for archival",
+  "originating_goal": "Durably preserve every primary and adjacent goal, completed implementation, unresolved dependency, authority boundary, and canonical continuation location so this ChatGPT session can be archived without impairing future execution.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "main",
+  "canonical_issue": "StegVerse-org/LLM-adapter#90",
+  "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_SESSION_ARCHIVE_MIRROR_HANDOFF.md",
+  "role": "CROSS_REPOSITORY_SESSION_CONSOLIDATION_AND_ARCHIVE_VALIDATION",
+  "state": "CLAIMED_FOR_INTEGRATION",
+  "claimant": "connected-repository-va-session-consolidation-lane",
+  "claim_created_at": "2026-08-04T03:28:00Z",
+  "claim_expires_at": "2026-08-05T03:28:00Z",
+  "release_condition": "A complete machine-readable inventory, fail-closed validator, recurring workflow, hosted PASS receipt, archive handoff, issue transfer, and released task record prove that no unique chat-owned work or undocumented project state remains.",
+  "claimed_paths": [
+    "data/va-claim-assistant-session-consolidation.json",
+    "scripts/validate_va_claim_assistant_session_consolidation.py",
+    ".github/workflows/va-claim-assistant-session-consolidation.yml",
+    "receipts/va-claim-assistant-session-consolidation-validation.json",
+    "tasks/VACP-SESSION-CONSOLIDATION-007.json",
+    "docs/VA_CLAIM_ASSISTANT_SESSION_ARCHIVE_MIRROR_HANDOFF.md"
+  ],
+  "collision_boundaries": [
+    "Do not modify or claim implementation paths owned by Site#113, Site#116, TVC#9, master-records/orchestration#15, adapter task 005, Ecosystem Chat issue #18, or Site#24.",
+    "Do not convert transferred or blocked project work into completed capability claims.",
+    "Do not treat session archival as provider, custody, filing, publication, deployment, compliance, or activation authority.",
+    "Do not archive until every unique requirement has an exact durable owner and location."
+  ],
+  "expected_evidence": [
+    "Every primary and adjacent session goal has a canonical repository, issue or task, handoff, state, validation state, integration state, release condition, and next executable action.",
+    "All session-created implementation claims are released or converted to durable BLOCKED tasks with machine-observable release conditions.",
+    "No unresolved item is labeled external, future, manual, or unowned.",
+    "Every incomplete operational capability remains truthfully incomplete.",
+    "The archive disposition grants no authority and deleting the chat does not remove execution state."
+  ],
+  "authority_effect": false,
+  "activation_effect": false
+}
