@@ -1,0 +1,73 @@
+name: Validate Chat LLM Profiles
+
+on:
+  pull_request:
+    paths:
+      - "llm_adapter/chat_profiles.py"
+      - "profiles/ecosystem-chat-llm.v1.json"
+      - "profiles/va-claims-chat-llm.v1.json"
+      - "contracts/chat-llm-profile.schema.json"
+      - "tests/test_chat_llm_profiles.py"
+      - "scripts/verify_chat_llm_profiles.py"
+      - "docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md"
+      - "tasks/LLMA-CHAT-LLM-PROFILES-009.json"
+      - ".github/workflows/validate-chat-llm-profiles.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "llm_adapter/chat_profiles.py"
+      - "profiles/ecosystem-chat-llm.v1.json"
+      - "profiles/va-claims-chat-llm.v1.json"
+      - "contracts/chat-llm-profile.schema.json"
+      - "tests/test_chat_llm_profiles.py"
+      - "scripts/verify_chat_llm_profiles.py"
+      - "docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md"
+      - "tasks/LLMA-CHAT-LLM-PROFILES-009.json"
+      - ".github/workflows/validate-chat-llm-profiles.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-chat-llm-profiles-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.9"
+          - "3.11"
+          - "3.12"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependency
+        run: python -m pip install --disable-pip-version-check pytest
+
+      - name: Run profile tests
+        run: python -m pytest tests/test_chat_llm_profiles.py -q
+
+      - name: Build deterministic validation receipt
+        run: python scripts/verify_chat_llm_profiles.py --write-receipt
+
+      - name: Upload validation receipt
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-llm-profiles-validation
+          path: receipts/chat-llm-profiles-validation.json
+          if-no-files-found: error
+          retention-days: 30
