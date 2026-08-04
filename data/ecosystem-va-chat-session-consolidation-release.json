@@ -2,7 +2,7 @@
   "schema": "stegverse.ecosystem_va_chat.session_consolidation_release.v1",
   "base_inventory": "data/ecosystem-va-chat-session-consolidation.json",
   "base_inventory_blob_sha": "89bf43fceb62967ff9fc30fd4436d0f903fdf7f4",
-  "recorded_at": "2026-08-04T18:16:00Z",
+  "recorded_at": "2026-08-04T18:18:30Z",
   "posture": "ARCHIVE_READY",
   "active_chat_owned_claims": 0,
   "unowned_tasks": 0,
@@ -47,6 +47,12 @@
     "merged": true,
     "integration_method": "DIRECT_FAST_FORWARD_COMMIT_FROM_VALIDATED_BLOBS_ON_CURRENT_MAIN_TREE",
     "merge_commit": "f825b2d81723bde7c7edc973068a74a3e7554fcd"
+  },
+  "finalization_candidate": {
+    "branch": "chore/ecosystem-va-chat-final-archive",
+    "purpose": "Obtain inspectable pull-request validation for the exact archive-ready mainline projection.",
+    "final_receipt_committed": false,
+    "final_handoff_evidence_committed": false
   },
   "archive_assertions": {
     "no_unique_requirement_remains_only_in_chat": true,
