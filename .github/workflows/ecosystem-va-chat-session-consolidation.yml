@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "data/ecosystem-va-chat-session-consolidation.json"
+      - "data/ecosystem-va-chat-session-consolidation-release.json"
       - "scripts/validate_ecosystem_va_chat_session_consolidation.py"
       - "docs/ECOSYSTEM_VA_CHAT_SESSION_ARCHIVE_MIRROR_HANDOFF.md"
       - "tasks/LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011.json"
@@ -18,6 +19,7 @@ on:
     branches: [main]
     paths:
       - "data/ecosystem-va-chat-session-consolidation.json"
+      - "data/ecosystem-va-chat-session-consolidation-release.json"
       - "scripts/validate_ecosystem_va_chat_session_consolidation.py"
       - "docs/ECOSYSTEM_VA_CHAT_SESSION_ARCHIVE_MIRROR_HANDOFF.md"
       - "tasks/LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011.json"
