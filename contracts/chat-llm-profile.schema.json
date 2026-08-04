@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/contracts/chat-llm-profile.schema.json",
+  "title": "StegVerse Chat LLM Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "profile_id",
+    "display_name",
+    "purpose",
+    "llm_surface",
+    "features",
+    "source_policy",
+    "authority_policy",
+    "product_invariants"
+  ],
+  "properties": {
+    "schema": {
+      "const": "stegverse.chat_llm_profile.v1"
+    },
+    "profile_id": {
+      "enum": [
+        "ecosystem-chat-llm",
+        "va-claims-chat-llm"
+      ]
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "llm_surface": {
+      "const": "FULL_PROVIDER_SUPPORTED"
+    },
+    "features": {
+      "type": "array",
+      "minItems": 19,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "source_policy": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "boolean",
+          "string",
+          "array"
+        ]
+      },
+      "required": [
+        "mode",
+        "official_va_only",
+        "allowed_external_host_suffixes",
+        "allow_general_web",
+        "allow_model_memory_as_factual_source",
+        "allow_user_record_facts",
+        "user_records_are_va_authority",
+        "admission_required_for_external_sources",
+        "source_scope_changes_llm_capability"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "GENERAL_ADMITTED",
+            "OFFICIAL_VA_ONLY"
+          ]
+        },
+        "official_va_only": {
+          "type": "boolean"
+        },
+        "allowed_external_host_suffixes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "allow_general_web": {
+          "type": "boolean"
+        },
+        "allow_model_memory_as_factual_source": {
+          "type": "boolean"
+        },
+        "allow_user_record_facts": {
+          "type": "boolean"
+        },
+        "user_records_are_va_authority": {
+          "const": false
+        },
+        "admission_required_for_external_sources": {
+          "const": true
+        },
+        "source_scope_changes_llm_capability": {
+          "const": false
+        }
+      }
+    },
+    "authority_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_output_is_execution_authority",
+        "tool_candidate_is_execution_authority",
+        "source_acceptance_is_admissibility",
+        "provider_response_is_publication_authority",
+        "user_record_is_government_authority"
+      ],
+      "properties": {
+        "model_output_is_execution_authority": {
+          "const": false
+        },
+        "tool_candidate_is_execution_authority": {
+          "const": false
+        },
+        "source_acceptance_is_admissibility": {
+          "const": false
+        },
+        "provider_response_is_publication_authority": {
+          "const": false
+        },
+        "user_record_is_government_authority": {
+          "const": false
+        }
+      }
+    },
+    "product_invariants": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    }
+  }
+}
