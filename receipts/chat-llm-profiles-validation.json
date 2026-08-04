@@ -1,0 +1,31 @@
+{
+  "activation_effect": false,
+  "authority_effect": false,
+  "feature_sets_equal": true,
+  "profiles": {
+    "ecosystem-chat-llm": {
+      "feature_count": 19,
+      "full_llm_surface": true,
+      "manifest_sha256": "112f564589285cf32e118232d143cce086a0762fe76c4214c2d05bb1c4f1ac32",
+      "source_mode": "GENERAL_ADMITTED"
+    },
+    "va-claims-chat-llm": {
+      "feature_count": 19,
+      "full_llm_surface": true,
+      "manifest_sha256": "82d93733852d523323a7d34533b38ad62a67d712ae89a542627b6d19829a1da4",
+      "source_mode": "OFFICIAL_VA_ONLY"
+    }
+  },
+  "provider_execution_observed": false,
+  "receipt_sha256": "85a98e57b3a8e50fa13de3d24e2fcd39aaff99ea7071f3318719519f78275287",
+  "required_feature_count": 19,
+  "schema": "stegverse.chat_llm_profiles.validation.v1",
+  "site_activation_observed": false,
+  "source_policy_checks": {
+    "claims_non_va_source": "DENY_SOURCE",
+    "claims_official_va_source": "ALLOW_VA_SOURCE_FACT",
+    "claims_privacy_approved_user_record": "ALLOW_USER_RECORD_FACT",
+    "ecosystem_admitted_general_source": "ALLOW_ADMITTED_SOURCE"
+  },
+  "state": "PASS"
+}
