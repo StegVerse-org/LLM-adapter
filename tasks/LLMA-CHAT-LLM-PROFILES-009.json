@@ -1,0 +1,59 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "LLMA-CHAT-LLM-PROFILES-009",
+  "title": "Promote Ecosystem Chat and VA Claims Chat to governed LLM profiles",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "goal/chat-llm-profiles",
+  "canonical_issue": "StegVerse-org/LLM-adapter#102",
+  "canonical_handoff": "docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md",
+  "execution_class": "PARALLEL_SAFE",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claimant": "StegVerse",
+  "claimed_at": "2026-08-04T16:12:25Z",
+  "goal": "Expose the same full provider-supported LLM surface through Ecosystem Chat and VA Claims Chat while enforcing distinct factual-source policies and preserving all downstream authority gates.",
+  "parallel_lanes": {
+    "ecosystem_chat_llm": {
+      "profile": "profiles/ecosystem-chat-llm.v1.json",
+      "capability_scope": "FULL_PROVIDER_SUPPORTED",
+      "source_scope": "GENERAL_ADMITTED",
+      "state": "IMPLEMENTED_PENDING_HOSTED_VALIDATION"
+    },
+    "va_claims_chat_llm": {
+      "profile": "profiles/va-claims-chat-llm.v1.json",
+      "capability_scope": "FULL_PROVIDER_SUPPORTED",
+      "source_scope": "OFFICIAL_VA_ONLY_WITH_SEPARATELY_LABELED_USER_RECORD_FACTS",
+      "state": "IMPLEMENTED_PENDING_HOSTED_VALIDATION"
+    }
+  },
+  "claimed_paths": [
+    "llm_adapter/chat_profiles.py",
+    "profiles/ecosystem-chat-llm.v1.json",
+    "profiles/va-claims-chat-llm.v1.json",
+    "contracts/chat-llm-profile.schema.json",
+    "tests/test_chat_llm_profiles.py",
+    "scripts/verify_chat_llm_profiles.py",
+    ".github/workflows/validate-chat-llm-profiles.yml",
+    "docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md",
+    "tasks/LLMA-CHAT-LLM-PROFILES-009.json"
+  ],
+  "collision_boundaries": [
+    "Do not modify or dispatch issue #18 live-provider or persistent-endpoint paths.",
+    "Do not create, consume, expose, or infer provider credentials or execution authority.",
+    "Do not weaken VA privacy, route, TVC, custody, reconstruction, filing, or Site activation gates.",
+    "Do not treat complete LLM capability as consequence authority.",
+    "Do not modify Site repository paths while its orchestration state rejects external task ownership."
+  ],
+  "release_condition": [
+    "Both profiles validate on Python 3.9, 3.11, and 3.12.",
+    "Both profiles expose every canonical FULL_LLM_FEATURES entry.",
+    "Official va.gov sources pass for VA Claims Chat only when admitted.",
+    "General web, model memory, and VA lookalike domains fail closed as VA factual sources.",
+    "Privacy-approved user records are accepted only as separately labeled user_record_fact and never as VA authority.",
+    "All authority and activation effects remain false.",
+    "Pull request is merged to main and the task is released complete."
+  ],
+  "next_executable_action": "Run hosted validation, repair the first exact failure, merge only after all required checks pass, then bind the profiles into the existing provider runtime and Site projection through their canonical owners.",
+  "manual_user_action_required": false,
+  "authority_effect": false,
+  "activation_effect": false
+}
