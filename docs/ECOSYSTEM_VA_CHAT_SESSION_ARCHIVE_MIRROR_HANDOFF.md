@@ -1,43 +1,40 @@
 # Ecosystem Chat and VA Claims Chat LLM Session Archive Mirror Handoff
 
-## Active goal and identity
+## Canonical identity
 
 ```yaml
 goal_id: LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011
-active_goal: durably consolidate the session that established both Chat products as full-function governed LLMs
-originating_session_goal: Ecosystem Chat contains StegVerse Chat with the complete LLM surface; VA Claims Chat has the same LLM surface while external factual grounding is restricted to admitted official VA sources
+originating_session_goal: Ecosystem Chat contains StegVerse Chat with the complete provider-supported LLM surface; VA Claims Chat has the identical LLM surface while external factual grounding is restricted to admitted official VA sources
 repository: StegVerse-org/LLM-adapter
-branch: goal/ecosystem-va-chat-session-consolidation
+implementation_branch: goal/ecosystem-va-chat-session-consolidation
 canonical_issue: StegVerse-org/LLM-adapter#107
+canonical_pull_request: StegVerse-org/LLM-adapter#108
 canonical_task: tasks/LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011.json
-claim_state: CLAIMED_FOR_IMPLEMENTATION
+claim_state: RELEASED_COMPLETE
 claim_created_at: 2026-08-04T18:00:34Z
-claim_expires_at: 2026-08-05T18:00:34Z
-release_condition: hosted validation PASS, receipt retained, task released, handoff finalized, issue closed
+claim_released_at: 2026-08-04T18:08:00Z
+current_posture: ARCHIVE_READY_PENDING_MERGE_AND_FINAL_HOSTED_VALIDATION
 manual_user_action_required: false
 ```
 
-This handoff is a session-level index and archive proof. It does not replace the repository-wide `docs/LLM_ADAPTER_MIRROR_HANDOFF.md` or any capability-specific handoff.
+This subordinate handoff indexes and consolidates this session. Repository-wide orchestration remains governed by `docs/LLM_ADAPTER_MIRROR_HANDOFF.md` and `data/llm-adapter-orchestration-state.json`.
 
-## Mandatory continuation order
-
-1. Read `docs/LLM_ADAPTER_MIRROR_HANDOFF.md` and `data/llm-adapter-orchestration-state.json`.
-2. Read this handoff and `data/ecosystem-va-chat-session-consolidation.json`.
-3. Follow the exact canonical owner listed for the target capability.
-4. Do not create a competing provider, deployment, custody, Site, TVC, or filing lane.
-5. Treat blocked tasks as machine-observable states rather than chat-owned work.
-
-## Authoritative files
+## Authoritative records
 
 ```text
 data/ecosystem-va-chat-session-consolidation.json
+  immutable claim-creation inventory: 15 goal groups, 18/18 requirements
+
+data/ecosystem-va-chat-session-consolidation-release.json
+  authoritative current-state release projection
+
 scripts/validate_ecosystem_va_chat_session_consolidation.py
 .github/workflows/ecosystem-va-chat-session-consolidation.yml
 tasks/LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011.json
 receipts/ecosystem-va-chat-session-consolidation-validation.json
 ```
 
-Capability sources of truth:
+Capability handoffs remain canonical and are not replaced:
 
 ```text
 docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md
@@ -48,99 +45,76 @@ docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md
 docs/VA_CLAIM_ASSISTANT_SESSION_ARCHIVE_MIRROR_HANDOFF.md
 ```
 
-## Governing product decision
+## Product decision preserved
 
 ```text
 Ecosystem Chat contains StegVerse Chat.
-Ecosystem Chat is a full-function LLM product surface.
-VA Claims Chat is a full-function LLM product surface.
-The products differ by purpose and factual-source policy, not by model capability.
-Governance constrains consequence and authority; it does not silently remove reasoning, conversation, retrieval, multimodal, structured-output, planning, or candidate-tool capability.
+Both products expose the same complete provider-supported LLM feature surface.
+VA Claims Chat differs by purpose and factual-source policy, not by LLM capability.
+Official admitted va.gov sources may ground Claims facts.
+Privacy-approved user records remain separately labeled user_record_fact and never become VA authority.
+General web, model memory, and VA lookalike domains fail closed as Claims factual sources.
+Governance constrains consequence and authority; it does not silently remove reasoning, conversation, retrieval, multimodal, planning, structured-output, or candidate-tool capability.
 ```
 
-## Completed work
+## Completed and released implementation
 
 ### Full LLM profiles
 
 ```text
-task: LLMA-CHAT-LLM-PROFILES-009
-state: RELEASED_COMPLETE
-PR: #103
-merge: 18a49b8856a34d03d94955637adb4a53c9ccfe81
-workflow run: 30928497409
-Python: 3.9 PASS, 3.11 PASS, 3.12 PASS
-policy tests: 16 per runtime
-artifact: 8900112614
-artifact digest: sha256:5c289bdd81df013d1e33dff0563a78641f689328a1fee8a9db25348eeb217d90
-receipt: receipts/chat-llm-profiles-validation.json
-receipt hash: 85a98e57b3a8e50fa13de3d24e2fcd39aaff99ea7071f3318719519f78275287
+task: LLMA-CHAT-LLM-PROFILES-009 — RELEASED_COMPLETE
+PR #103; merge 18a49b8856a34d03d94955637adb4a53c9ccfe81
+workflow run 30928497409
+Python 3.9/3.11/3.12 PASS; 16 tests per runtime
+artifact 8900112614
+digest sha256:5c289bdd81df013d1e33dff0563a78641f689328a1fee8a9db25348eeb217d90
+receipt hash 85a98e57b3a8e50fa13de3d24e2fcd39aaff99ea7071f3318719519f78275287
+features: 19/19 for both profiles
 ```
 
-Both profiles declare 19/19 canonical LLM capabilities. Ecosystem Chat uses `GENERAL_ADMITTED`. VA Claims Chat uses `OFFICIAL_VA_ONLY`; official `va.gov` and genuine subdomains may ground Claims facts when admitted. General web, model memory, and VA lookalike hosts fail closed. Privacy-approved user records remain `user_record_fact` and never become VA authority.
-
-### Provider-neutral session binding
+### Provider-neutral sessions
 
 ```text
-task: LLMA-CHAT-SESSION-BINDING-010
-state: RELEASED_COMPLETE
-PR: #106
-merge: 5ee90dd1f1cc3d6b20ecb3bce3991d8b59d869e5
-workflow run: 30929473927
-Python: 3.9 PASS, 3.11 PASS, 3.12 PASS
-session tests: 17 per runtime
-artifact: 8900506930
-artifact digest: sha256:5458d91baf79c4287b25034f58e6f174f27e64032837483229cb9597cbc307b3
-receipt: receipts/chat-llm-session-binding-validation.json
-receipt hash: b1f9f56e8dc087ee04c49a011d351855a762030e2886d484def025a29e2e09b0
+task: LLMA-CHAT-SESSION-BINDING-010 — RELEASED_COMPLETE
+PR #106; merge 5ee90dd1f1cc3d6b20ecb3bce3991d8b59d869e5
+workflow run 30929473927
+Python 3.9/3.11/3.12 PASS; 17 tests per runtime
+artifact 8900506930
+digest sha256:5458d91baf79c4287b25034f58e6f174f27e64032837483229cb9597cbc307b3
+receipt hash b1f9f56e8dc087ee04c49a011d351855a762030e2886d484def025a29e2e09b0
 ```
 
-The binding creates deterministic multi-turn provider-neutral envelopes. Required denied VA grounding blocks before an envelope exists. Candidate responses reject unknown citations, incorrect fact labels, undeclared or executed-tool claims, side effects, authority, publication, and custody claims.
+Required denied VA grounding blocks before provider-envelope creation. Candidate responses reject unknown citations, incorrect fact labels, undeclared or executed-tool claims, side effects, authority, publication, and custody claims.
 
-### VA route and privacy implementation
+### VA routes and privacy
 
 ```text
-route task: VACP-ADAPTER-ROUTES-002 — RELEASED_COMPLETE
-public-source answer-ready routes: 11
-document_organization: sanitized derived context only
-urgent_safety: AUTHORITY_RESOLUTION_REQUIRED until an official source is admitted
-route receipt: 641c76f9e88c26d88aa0d0b600d158f9b053c05d1875ca4da1a59c160ce77919
-dispatch receipt: 562e5528dd44a11a9b6c3f8b965d6449c258f6942f997939f916925a61be7f02
+VACP-ADAPTER-ROUTES-002 — RELEASED_COMPLETE
+13 routes implemented; 11 public-source routes answer-ready
+route receipt 641c76f9e88c26d88aa0d0b600d158f9b053c05d1875ca4da1a59c160ce77919
+dispatch receipt 562e5528dd44a11a9b6c3f8b965d6449c258f6942f997939f916925a61be7f02
 
-privacy task: VACP-ADAPTER-PII-RUNTIME-006 — RELEASED_COMPLETE
-PR: #99
-merge: cd2b010f35be3673f7853b03c951025db7225b32
-workflow run: 30874416525
-job: 91882865431
-artifact: 8879004626
-artifact digest: sha256:c6078147307ef853887a3618394c4758b6ed422b7ec815b1f22e92a554960961
-receipt hash: bcd39b3689ba0fbe7f18b99e114984543d784c80d3fd8ad5842cc551926df34c
+VACP-ADAPTER-PII-RUNTIME-006 — RELEASED_COMPLETE
+PR #99; merge cd2b010f35be3673f7853b03c951025db7225b32
+run 30874416525; job 91882865431; artifact 8879004626
+digest sha256:c6078147307ef853887a3618394c4758b6ed422b7ec815b1f22e92a554960961
+privacy receipt hash bcd39b3689ba0fbe7f18b99e114984543d784c80d3fd8ad5842cc551926df34c
 ```
 
-## Current canonical runtime owners
+## Current canonical continuation and blockers
 
-### Ecosystem Chat activation
+### Ecosystem Chat
 
 ```text
 MERGED INTO: StegVerse-org/LLM-adapter#18
-state: MACHINE_OWNED_BLOCKED
-latest receipt: receipts/ecosystem-chat-authorized-provider-activation.latest.json
+latest state: CONFIGURATION_REQUIRED
+receipt: receipts/ecosystem-chat-authorized-provider-activation.latest.json
 observed_at: 2026-08-04T17:19:57.702516+00:00
-state: CONFIGURATION_REQUIRED
 result_sha256: b92ad8ff8386fd6a611429f315d5956e7efe88c25c7ead8793e77e13c39d6a56
 manual_user_action_required: false
 ```
 
-Missing protected runtime bindings:
-
-```text
-STEGVERSE_PROVIDER_ENDPOINT
-STEGVERSE_PROVIDER_MODEL
-STEGVERSE_PROVIDER_TOKEN
-STEGVERSE_MASTER_RECORDS_ENDPOINT
-STEGVERSE_MASTER_RECORDS_TOKEN
-```
-
-The existing observer owns the transition from provider response through usage persistence, provider-usage custody, transition custody, and transition reconstruction. No secret may be synthesized or stored in repository source, logs, receipts, or artifacts.
+Missing protected bindings are provider endpoint/model/token and Master Records endpoint/token. The existing machine lane owns provider response, usage persistence, provider-usage custody, transition custody, reconstruction, immutable VERIFIED receipt, Site activation, and downstream ingestion. This session created no competing runtime or deployment lane.
 
 ### VA Claims provider execution
 
@@ -149,158 +123,94 @@ MERGED INTO: StegVerse-org/LLM-adapter#90
 canonical task: tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json
 state: BLOCKED
 claimant: null
-execution limit: one request; maximum USD 0.10
+one request maximum; USD 0.10 maximum
 ```
 
-Machine-observable release conditions:
+Release requires hosted preflight `READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION`, protected Master Records endpoint/allowlist/token, valid unexpired exact-caller provider authority, fresh TVC admission, and the exact hosted privacy PASS receipt. `privacy_guarded_dispatch` must run before authority consumption, provider permission, or model input. Push, schedule, pull request, credential presence, and privacy PASS alone cannot execute it.
 
-```text
-hosted provider preflight = READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION
-observation source = GITHUB_ACTIONS_WORKFLOW
-protected Master Records endpoint, allowed-host, and token bindings present
-valid unexpired exact-caller VA provider authority
-fresh single-use TVC admission from the pinned reusable workflow
-hosted privacy receipt PASS with exact hash bcd39b3689ba0fbe7f18b99e114984543d784c80d3fd8ad5842cc551926df34c
-privacy_guarded_dispatch executes before authority consumption, provider permission, or model input
-```
-
-The task cannot execute from push, schedule, pull request, credential presence, or privacy PASS alone.
-
-### Master Records custody
+### Master Records
 
 ```text
 MERGED INTO: master-records/orchestration#15
-machine task: master-records/orchestration/tasks/MR-VA-PRIVACY-ADAPTER-IMPORT-002.json
-machine owner: .github/workflows/runtime-evidence-validation.yml
+machine task: tasks/MR-VA-PRIVACY-ADAPTER-IMPORT-002.json
+machine workflow: .github/workflows/runtime-evidence-validation.yml
 state: MACHINE_OWNED_BLOCKED
 ```
 
-Released import evidence:
+Released import lane evidence: PR `master-records/orchestration#18`, merge `e855fc32f60ac7bb6348d76cb0251356aaf70542`, run `30930512789`, job `92063699933`, artifact `8900933300`, digest `sha256:ada53bbdc053662355be176bf1bfb6fc30dba23f6ae8c2565d19ebbb176609ce`, receipt hash `91a754b2ba46954e02c3fcb1eb9fa5f1fb0d8f1626bebc810789d162ac4f1da2`.
+
+Exact blockers: `operational_privacy_event_missing`, `provider_execution_evidence_missing`, and `provider_execution_receipt_missing`. Operational custody is not recorded and reconstruction has not run.
+
+### Site and TVC
 
 ```text
-PR: master-records/orchestration#18
-merge: e855fc32f60ac7bb6348d76cb0251356aaf70542
-run: 30930512789
-job: 92063699933
-artifact: 8900933300
-digest: sha256:ada53bbdc053662355be176bf1bfb6fc30dba23f6ae8c2565d19ebbb176609ce
-import receipt hash: 91a754b2ba46954e02c3fcb1eb9fa5f1fb0d8f1626bebc810789d162ac4f1da2
-```
-
-Exact blockers:
-
-```text
-operational_privacy_event_missing
-provider_execution_evidence_missing
-provider_execution_receipt_missing
-```
-
-The existing workflow will append custody and reconstruction records automatically only after both genuine adapter events exist.
-
-### Site and source authority
-
-```text
-MERGED INTO: StegVerse-Labs/Site#113 — governed session and receipt-derived projection
+MERGED INTO: StegVerse-Labs/Site#113 — source authority and receipt-derived session projection
 MERGED INTO: StegVerse-Labs/Site#116 — production document privacy and execution
-MERGED INTO: StegVerse-Labs/TVC#9 — ephemeral route admission and credential linkage
+MERGED INTO: StegVerse-Labs/TVC#9 — scoped admission, expiry, revocation, and credential linkage
 ```
 
-Site must not display `GOVERNED_CLAIM_SESSION`, enable private upload, or infer filing authority before the applicable receipts pass. `urgent_safety` remains fail closed until the Site source registry admits a current official source with authority, effective, retrieval, supersession, and proposition-support fields.
+Site may not display `GOVERNED_CLAIM_SESSION`, enable private upload, or infer filing authority before the required receipts pass. `urgent_safety` remains `AUTHORITY_RESOLUTION_REQUIRED` until Site admits a current official source.
 
-## Adjacent goals durably transferred
-
-The machine-readable inventory preserves:
-
-- persistent package publication and authorized public hosting;
-- provider usage persistence and both custody/reconstruction chains;
-- Site activation and downstream ingestion;
-- VA route generation and proposition-level provenance;
-- raw-PII and raw-document rejection before model input;
-- TVC admission, expiry, revocation, and exact caller binding;
-- privacy-minimized operational custody;
-- production document detection, redaction, leakage, page anchors, retention, deletion, and export;
-- official urgent-safety source admission;
-- veteran-retained fact confirmation, signature, filing, revocation, duplicate prevention, confirmation, and custody;
-- downstream verification for Site, Publisher, admissibility-wiki, and stegguardian-wiki after activation evidence exists.
-
-No adjacent goal remains only in chat.
-
-## Duplicate and converged work disposition
+## Duplicate and convergence disposition
 
 ```text
-Profile implementation: COMPLETE; do not recreate.
-Session binding: COMPLETE; do not recreate.
-Ecosystem live runtime: issue #18 is canonical; no second gateway or host architecture.
-VA provider execution: VACP-ADAPTER-AUTHORIZED-EXECUTION-005 is canonical; no competing workflow or authority receipt.
-VA route and privacy implementation: released; no competing generator or PII runtime.
-TVC: TVC#9 reusable admission is canonical; no adapter-owned credential duplicate.
-Master Records: issue #15 and MR-VA-PRIVACY-ADAPTER-IMPORT-002 are canonical; no local custody simulation.
-Site: Site#113/#116 are canonical; no external session may mutate Site paths without Site machine admission.
-Earlier VA session archive: preserved and extended, not replaced; this handoff adds the later profile and session-binding slices.
+Profiles: complete; do not recreate.
+Session binding: complete; do not recreate.
+Ecosystem runtime: issue #18 is sole owner.
+VA provider execution: VACP-ADAPTER-AUTHORIZED-EXECUTION-005 is sole owner.
+VA route/privacy implementations: released; do not fork.
+TVC admission: TVC#9 is sole authority owner.
+Custody/reconstruction: master-records/orchestration#15 and its machine task are sole owners.
+Site projection/document privacy: Site#113/#116 are sole owners.
+Earlier VA session archive: preserved and extended; this handoff adds the later profile and session-binding slices.
 ```
 
-## Automation
+## Session-specific requirements transferred
 
-Workflow:
+The inventory durably preserves all 18 requirements, including complete LLM parity, official-VA-only factual grounding, separately labeled user records, fail-closed source decisions, candidate-only tools, privacy-before-provider enforcement, one-request/cost bounds, both custody chains, Site activation, urgent-safety source admission, veteran-retained filing authority, and downstream verification. No unique requirement remains only in chat.
+
+## Automation and validation
 
 ```text
-.github/workflows/ecosystem-va-chat-session-consolidation.yml
+workflow: .github/workflows/ecosystem-va-chat-session-consolidation.yml
+triggers: owned/dependency path PR and main push; daily schedule; workflow dispatch
+matrix: Python 3.9, 3.11, 3.12
+output: receipts/ecosystem-va-chat-session-consolidation-validation.json
 ```
 
-Triggers:
+The first hosted implementation validation passed:
 
 ```text
-pull request on owned or dependency paths
-push to main on owned or dependency paths
-daily schedule
-workflow dispatch
+run: 30936984495
+Python 3.9: PASS
+Python 3.11: PASS
+Python 3.12: PASS
+Architecture Guard: PASS
+repository validate: PASS
+Provider-Owned Usage Event validation: PASS
+artifact: 8903510993
+artifact digest: sha256:c1c109480dbf87e28deead96c41342586b30fe0a2bd370e9d6c95965c537da1e
+pre-release receipt state: PASS_PENDING_CLAIM_RELEASE
+pre-release receipt hash: 72a02151aa110ae7d2c3a5e0e14d8fefc26c408d7d793309b583aa4076127012
 ```
 
-Deterministic outputs:
+The task claim is now released. A second hosted run must validate the release projection and return `PASS_PENDING_MERGE`; mainline merge and a final hosted `PASS` remain required for archive safety.
+
+## Current percentages
 
 ```text
-receipts/ecosystem-va-chat-session-consolidation-validation.json
-artifact ecosystem-va-chat-session-consolidation-validation
-```
-
-The validator fails closed on missing inventory fields, duplicate or vague work assignments, changed profile/session receipt hashes, unreleased implementation tasks, a claimed VA provider task, an invalid Ecosystem runtime authority projection, unassigned work, manual user tasks, or archive assertions that imply authority.
-
-Validation command:
-
-```bash
-python scripts/validate_ecosystem_va_chat_session_consolidation.py
-```
-
-## Current completion state
-
-```text
-inventory items: 15/15
-session requirements transferred: 18/18
-profile implementation: 100 percent
-session-binding implementation: 100 percent
-VA route implementation: 100 percent
-VA privacy implementation: 100 percent
-combined archive package files before receipt: 5/5
+task completion: 100 percent
+developed source files before final receipt: 6/6
 scaffolding or stubs: 0
-hosted validation: pending
-mainline integration: pending
-active chat-owned claim: LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011 only
-unowned tasks: 0
-manual user tasks: 0
-goal activation: profile and session layers complete; live runtime activation remains with named owners
+validation: 1/2
+mainline integration: 0/1
+session consolidation: 18/18
+goal activation: 2/5 — profiles and provider-neutral sessions complete; live Ecosystem and Claims execution plus cross-repository activation remain under named owners
+archival readiness: 92 percent
 ```
 
-## Claim release and archive conditions
+## Archive condition
 
-This session becomes archive-safe only after:
-
-1. hosted Python 3.9, 3.11, and 3.12 jobs pass;
-2. repository-wide checks pass;
-3. the validation artifact and digest are inspected;
-4. the receipt is retained on `main`;
-5. task `LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011` becomes `RELEASED_COMPLETE` with no claimant;
-6. the inventory records zero active chat-owned claims and posture `ARCHIVE_READY`;
-7. this handoff records the final merge, run, jobs, artifact, digest, receipt commit, and receipt hash;
-8. issue #107 closes completed.
+This session is not yet archive-safe because PR #108 is not merged and the final mainline archive receipt is not retained. After merge, the release projection must record the merge commit, a final hosted run must emit `PASS` with `archive_safe=true`, the final receipt must be retained on `main`, this handoff must record that evidence, and issue #107 must close.
 
 Archive disposition grants no provider, execution, custody, filing, publication, deployment, release, Site mutation, or activation authority.
