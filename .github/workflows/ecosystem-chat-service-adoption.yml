@@ -1,0 +1,35 @@
+name: Validate Ecosystem Chat Service Adoption
+
+on:
+  pull_request:
+    paths:
+      - data/ecosystem-chat-service-adoption.json
+      - scripts/check_ecosystem_chat_service_adoption.py
+      - tasks/LLMA-ECOSYSTEM-CHAT-SERVICE-ADOPTION-012.json
+      - docs/ECOSYSTEM_CHAT_SERVICE_ADOPTION_MIRROR_HANDOFF.md
+      - .github/workflows/ecosystem-chat-service-adoption.yml
+  push:
+    branches: [main]
+    paths:
+      - data/ecosystem-chat-service-adoption.json
+      - scripts/check_ecosystem_chat_service_adoption.py
+      - tasks/LLMA-ECOSYSTEM-CHAT-SERVICE-ADOPTION-012.json
+      - docs/ECOSYSTEM_CHAT_SERVICE_ADOPTION_MIRROR_HANDOFF.md
+      - .github/workflows/ecosystem-chat-service-adoption.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python scripts/check_ecosystem_chat_service_adoption.py
