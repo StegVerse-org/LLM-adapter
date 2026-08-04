@@ -1,0 +1,60 @@
+{
+  "schema": "stegverse.chat_llm_profile.v1",
+  "profile_id": "va-claims-chat-llm",
+  "display_name": "VA Claims Chat LLM",
+  "purpose": "Full-function LLM assistance for VA claims using only admitted official VA external sourcing and separately labeled privacy-approved user-record facts.",
+  "llm_surface": "FULL_PROVIDER_SUPPORTED",
+  "features": [
+    "multi_turn_conversation",
+    "system_developer_user_instruction_layers",
+    "long_context",
+    "streaming_response",
+    "structured_output",
+    "function_and_tool_calling",
+    "retrieval_augmented_generation",
+    "web_retrieval",
+    "file_understanding",
+    "image_understanding",
+    "audio_understanding",
+    "code_generation",
+    "artifact_generation",
+    "multilingual_generation",
+    "planning_and_multi_step_reasoning",
+    "memory_candidate_generation",
+    "model_routing",
+    "citation_and_provenance_output",
+    "candidate_action_generation"
+  ],
+  "source_policy": {
+    "mode": "OFFICIAL_VA_ONLY",
+    "official_va_only": true,
+    "allowed_external_host_suffixes": [
+      "va.gov"
+    ],
+    "allow_general_web": false,
+    "allow_model_memory_as_factual_source": false,
+    "allow_user_record_facts": true,
+    "user_records_are_va_authority": false,
+    "admission_required_for_external_sources": true,
+    "source_scope_changes_llm_capability": false,
+    "unsupported_external_claims_fail_closed": true,
+    "user_record_fact_label_required": true,
+    "va_source_fact_label_required": true
+  },
+  "authority_policy": {
+    "model_output_is_execution_authority": false,
+    "tool_candidate_is_execution_authority": false,
+    "source_acceptance_is_admissibility": false,
+    "provider_response_is_publication_authority": false,
+    "user_record_is_government_authority": false
+  },
+  "product_invariants": {
+    "full_llm_surface_enabled": true,
+    "purpose_is_va_claims_assistance": true,
+    "external_factual_grounding_is_official_va_only": true,
+    "user_records_remain_separately_labeled": true,
+    "general_web_is_not_a_claims_source": true,
+    "governance_constrains_consequence_not_reasoning": true,
+    "filing_signature_submission_and_adjudication_require_independent_authority": true
+  }
+}
