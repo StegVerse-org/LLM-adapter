@@ -6,14 +6,15 @@
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "main",
   "canonical_issue": "StegVerse-org/LLM-adapter#90",
-  "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
+  "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_PRIVACY_RUNTIME_MIRROR_HANDOFF.md",
+  "parent_handoff": "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
   "role": "PII_RUNTIME_IMPLEMENTATION_AND_VALIDATION",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "RELEASED_COMPLETE",
   "claimant": "connected-repository-pii-runtime-lane",
   "claim_created_at": "2026-08-04T03:07:00Z",
-  "claim_expires_at": "2026-08-05T03:07:00Z",
-  "release_condition": "Production privacy gate, privacy-guarded dispatcher, machine-readable event schema, negative fixtures, deterministic validator, recurring workflow, committed PASS receipt, subordinate mirror handoff, issue transfer, and provider-executor dependency binding are installed and inspected.",
-  "claimed_paths": [
+  "claim_released_at": "2026-08-04T03:24:00Z",
+  "release_condition": "SATISFIED_FOR_PRODUCTION_GATE_IMPLEMENTATION_HOSTED_VALIDATION_RECEIPT_RETENTION_AND_EXECUTOR_BINDING",
+  "completed_paths": [
     "va_claim_assistant/privacy_runtime.py",
     "va_claim_assistant/privacy_guarded_dispatch.py",
     "contracts/va-claim-assistant-privacy-runtime.schema.json",
@@ -24,25 +25,54 @@
     "tasks/VACP-ADAPTER-PII-RUNTIME-006.json",
     "docs/VA_CLAIM_ASSISTANT_PRIVACY_RUNTIME_MIRROR_HANDOFF.md"
   ],
-  "collision_boundaries": [
-    "Do not modify or dispatch the blocked provider-authority executor task VACP-ADAPTER-AUTHORIZED-EXECUTION-005 except to add this privacy gate as a release dependency.",
-    "Do not modify Site#116 document processors, TVC credentialing, Master Records custody implementation, or Ecosystem Chat issue #18 workflows.",
-    "Do not retain rejected values or reversible hashes of rejected PII.",
-    "Do not treat regex coverage as proof of production PII detection in Site#116.",
-    "Do not grant provider, custody, filing, submission, representation, adjudication, rating, medical, publication, deployment, or Site activation authority."
-  ],
-  "expected_evidence": [
+  "completion_evidence": {
+    "task_claim_commit": "0574695ec089a3d708a2817b6ed5d8f9f8ee21ad",
+    "privacy_runtime_commit": "e14e70be89f24d418d28a2a44c091d3349414ebc",
+    "privacy_guarded_dispatch_commit": "e007689277cc2f3961bbcd9361b7b2373e1340ce",
+    "receipt_schema_commit": "c5352d8f3da069e392e2cf52cb88cd84dda3dd15",
+    "negative_fixture_commit": "ea1c8829e3acff4102c739adbd18ba398467f445",
+    "validator_commit": "cc1b13031f4837460112f5c97224a1c15e2e29c7",
+    "workflow_commit": "1065e58e5fc30b1e5831be329a8f20f6df55bad3",
+    "validation_pull_request": 99,
+    "validation_handoff_merge_commit": "cd2b010f35be3673f7853b03c951025db7225b32",
+    "workflow_run_id": 30874416525,
+    "workflow_conclusion": "success",
+    "job_id": 91882865431,
+    "job_conclusion": "success",
+    "artifact_id": 8879004626,
+    "artifact_digest": "sha256:c6078147307ef853887a3618394c4758b6ed422b7ec815b1f22e92a554960961",
+    "artifact_file_count": 3,
+    "artifact_receipt_hash": "bcd39b3689ba0fbe7f18b99e114984543d784c80d3fd8ad5842cc551926df34c",
+    "main_receipt_commit": "97767eb8dbca4a2fd75e1a6052195ca680bd1148",
+    "main_receipt_state": "PASS",
+    "observation_source": "GITHUB_ACTIONS_WORKFLOW",
+    "provider_executor_dependency_commit": "3d7345b08547c51fa22cde8a443982d77ae80c5b"
+  },
+  "validated_properties": [
     "Raw-PII questions are rejected before classifier invocation.",
-    "Raw-document, credential, identity, and direct-identifier fields are rejected before generator invocation.",
-    "Rejected values are absent from dispatcher records, privacy events, receipts, and logs.",
-    "Accepted sanitized context remains session-bound and hash-bound.",
-    "Privacy events contain classifications, lengths, hashes only for accepted non-PII inputs, and false authority flags.",
-    "Negative fixtures and governed runtime validation receipt PASS."
+    "Raw-document, credential, identity, prompt, trace, log, model-content, name, address, birth-date, token, and direct-identifier fields fail closed before generator invocation.",
+    "Rejected values and hashes of rejected inputs are absent from dispatcher records, privacy events, receipts, and hosted logs.",
+    "Accepted public and sanitized-document routes remain governed and hash-bound.",
+    "Ten negative fixture classes pass in GitHub Actions.",
+    "The retained event is privacy-minimized and suitable for later custody intake without claiming custody or reconstruction.",
+    "Provider, filing, adjudication, medical, publication, deployment, and activation authority remain false."
   ],
-  "next_after_release": [
-    "master-records/orchestration#15 imports the privacy-minimized event and returns custody RECORDED plus reconstruction PASS for PII-RDY-07.",
-    "VACP-ADAPTER-AUTHORIZED-EXECUTION-005 must call privacy_guarded_dispatch before provider permission or model input.",
-    "StegVerse-Labs/Site readiness may mark PII-RDY-06 complete only after importing the adapter PASS receipt; this does not complete Site PII-RDY-01 through PII-RDY-03."
+  "integration_state": {
+    "provider_executor_release_dependency_bound": true,
+    "site_pii_rdy_06_import_pending": true,
+    "master_records_operational_custody_pending": true,
+    "site_production_detection_redaction_leakage_pending": true
+  },
+  "next_owners": [
+    "StegVerse-org/LLM-adapter#90 task VACP-ADAPTER-AUTHORIZED-EXECUTION-005",
+    "master-records/orchestration#15 for PII-RDY-07 operational custody and reconstruction",
+    "StegVerse-Labs/Site#113 for receipt-derived PII-RDY-06 projection",
+    "StegVerse-Labs/Site#116 for PII-RDY-01 through PII-RDY-03 production evidence"
+  ],
+  "collision_boundaries": [
+    "Do not treat this PASS as Site#116 production detector, redaction, or leakage completion.",
+    "Do not treat privacy validation as provider execution, custody, reconstruction, filing, submission, representation, adjudication, rating, medical, publication, deployment, or Site activation authority.",
+    "Do not bypass privacy_guarded_dispatch in the future permission-bearing executor."
   ],
   "authority_effect": false,
   "activation_effect": false
