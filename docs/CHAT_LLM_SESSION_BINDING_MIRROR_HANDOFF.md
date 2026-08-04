@@ -2,9 +2,9 @@
 
 ## Source of truth
 
-This is the authoritative continuation record for issue `StegVerse-org/LLM-adapter#105` and task `LLMA-CHAT-SESSION-BINDING-010` until merged or superseded.
+This is the authoritative continuation record for the released provider-neutral session-binding layer established by issue `StegVerse-org/LLM-adapter#105`, pull request `#106`, and task `LLMA-CHAT-SESSION-BINDING-010`.
 
-Repository-wide orchestration remains governed by `docs/LLM_ADAPTER_MIRROR_HANDOFF.md` and `data/llm-adapter-orchestration-state.json`. This integration is parallel-safe because it creates new paths and performs no provider execution, permission request, custody submission, Site mutation, publication, filing, deployment, or activation.
+Repository-wide orchestration remains governed by `docs/LLM_ADAPTER_MIRROR_HANDOFF.md` and `data/llm-adapter-orchestration-state.json`. This integration was parallel-safe: it created new paths and performed no provider execution, permission request, custody submission, Site mutation, publication, filing, deployment, or activation.
 
 ## Dependency
 
@@ -16,9 +16,9 @@ profile receipt: receipts/chat-llm-profiles-validation.json
 profile receipt hash: 85a98e57b3a8e50fa13de3d24e2fcd39aaff99ea7071f3318719519f78275287
 ```
 
-## Goal
+## Released goal
 
-Convert both released full-function LLM profiles into the same deterministic provider-neutral session contract.
+Both full-function LLM profiles now use the same deterministic provider-neutral session contract:
 
 ```text
 profile + messages + requested features + candidate tools + source metadata
@@ -42,9 +42,10 @@ LLM surface: FULL_PROVIDER_SUPPORTED
 sources: any admitted source class allowed by the profile
 tools: candidate-only
 provider binding: separate downstream action
+state: RELEASED_COMPLETE
 ```
 
-The envelope may carry multi-turn messages, any requested subset of the 19 canonical LLM capabilities, response format, admitted grounding metadata, and candidate tool definitions.
+The envelope carries multi-turn messages, any requested subset of the 19 canonical LLM capabilities, response format, admitted grounding metadata, and candidate tool definitions.
 
 ## VA Claims Chat behavior
 
@@ -58,9 +59,10 @@ user record authority: false
 general web as VA factual support: denied
 model memory as VA factual support: denied
 required denied source: blocks before provider envelope creation
+state: RELEASED_COMPLETE
 ```
 
-Operational binding under issue #90 must call `privacy_guarded_dispatch` before this session envelope can be sent to a provider. This slice does not modify or bypass that path.
+Operational consumption under issue #90 must call `privacy_guarded_dispatch` before this session envelope can be sent to a provider. This integration does not modify or bypass that path.
 
 ## Installed files
 
@@ -72,6 +74,7 @@ scripts/verify_chat_session_binding.py
 .github/workflows/validate-chat-session-binding.yml
 tasks/LLMA-CHAT-SESSION-BINDING-010.json
 docs/CHAT_LLM_SESSION_BINDING_MIRROR_HANDOFF.md
+receipts/chat-llm-session-binding-validation.json
 ```
 
 ## Session preparation states
@@ -110,6 +113,54 @@ make no publication or custody claim
 
 The result is `ACCEPT_CANDIDATE` or `REJECT_CANDIDATE`. Acceptance is not authority, admissibility, publication, custody, filing, or activation.
 
+## Hosted validation evidence
+
+```text
+implementation PR: #106
+validated head: 45ba9cabcca412836a51ee6b5a4b2342b29957d9
+merge commit: 5ee90dd1f1cc3d6b20ecb3bce3991d8b59d869e5
+workflow: Validate Chat Session Binding
+workflow run: 30929473927
+Python 3.9: PASS
+Python 3.11: PASS
+Python 3.12: PASS
+tests per runtime: 17 PASS
+receipt generation per runtime: PASS
+Architecture Guard: PASS
+repository validate: PASS
+Platform-Agnostic Runtime: PASS
+Validate Provider-Owned Usage Event: PASS
+Portable User-LLM Execution Receipt: PASS
+HIL managed receiver validation: PASS
+artifact: 8900506930
+artifact digest: sha256:5458d91baf79c4287b25034f58e6f174f27e64032837483229cb9597cbc307b3
+retained receipt: receipts/chat-llm-session-binding-validation.json
+retained receipt commit: 66222a09d05377727f0273674ca29917ebcbc99a
+receipt hash: b1f9f56e8dc087ee04c49a011d351855a762030e2886d484def025a29e2e09b0
+```
+
+Validated result:
+
+```text
+state: PASS
+Ecosystem session: READY_FOR_PROVIDER_BINDING
+Claims session: READY_FOR_PROVIDER_BINDING
+Claims source mode: official VA only
+Claims allowed labels: va_source_fact, user_record_fact
+Required non-VA Claims source: BLOCKED_SOURCE_POLICY
+Provider envelope created for blocked request: false
+Valid candidate: ACCEPT_CANDIDATE
+Side-effect/unknown-citation candidate: REJECT_CANDIDATE
+provider configuration attached: false
+provider permission requested: false
+provider call performed: false
+tools executed: false
+custody submitted: false
+Site mutated: false
+authority effect: false
+activation effect: false
+```
+
 ## Deterministic evidence
 
 The implementation hashes:
@@ -133,21 +184,41 @@ python -m pytest tests/test_chat_session_binding.py -q
 python scripts/verify_chat_session_binding.py --write-receipt
 ```
 
-Hosted workflow matrix:
+## Next integration owners
+
+### Ecosystem Chat
+
+Owner: issue `#18` or its canonical successor.
 
 ```text
-Python 3.9
-Python 3.11
-Python 3.12
+consume the released ecosystem-chat-llm envelope
+attach authorized provider configuration only through the existing secret boundary
+execute one real governed provider request when independently authorized
+persist provider usage
+obtain provider-usage and transition custody RECORDED
+obtain reconstruction PASS for both chains
+emit immutable zero-blocker VERIFIED receipt
 ```
 
-Expected retained artifact after successful validation:
+### VA Claims Chat
+
+Owner: issue `#90` or its canonical successor.
 
 ```text
-receipts/chat-llm-session-binding-validation.json
+run privacy_guarded_dispatch before envelope transmission
+consume the released va-claims-chat-llm envelope
+obtain fresh TVC admission and exact provider authority
+execute one bounded real source-grounded request
+submit only privacy-minimized evidence to Master Records
+obtain custody RECORDED and reconstruction PASS
+project only receipt-verified capability to Site
 ```
 
-## Collision boundaries
+### Site
+
+No Site paths were claimed because Site orchestration rejected external session ownership. Projection waits for Site machine admission.
+
+## Collision and authority boundaries
 
 ```text
 issue #18 live-provider and persistent endpoint paths: untouched
@@ -159,17 +230,22 @@ provider call: not performed
 Master Records custody: not submitted
 Site paths: not claimed
 filing / publication / deployment / activation: false
+provider-neutral envelope readiness != provider execution
+candidate acceptance != authority or admissibility
 ```
 
 ## Current state
 
 ```text
 issue: StegVerse-org/LLM-adapter#105
-branch: goal/chat-session-binding
+pull request: #106
+merge: COMPLETE
+merge commit: 5ee90dd1f1cc3d6b20ecb3bce3991d8b59d869e5
 task: LLMA-CHAT-SESSION-BINDING-010
-implementation: COMPLETE ON BRANCH
-hosted validation: PENDING
-merge: PENDING
+state: RELEASED_COMPLETE
+implementation: INSTALLED ON MAIN
+hosted validation: PASS
+receipt retained: PASS
 provider execution: false
 authority effect: false
 activation effect: false
@@ -179,17 +255,22 @@ manual user action required: false
 ## Completion metrics
 
 ```text
-developed files: 7/7
+developed files: 8/8
 scaffolding or stubs: 0
-session preparation implementation: complete on branch
-VA source enforcement: complete on branch
-candidate response enforcement: complete on branch
-deterministic verifier: complete on branch
-hosted validation: pending
-mainline integration: pending
+session preparation implementation: 100 percent
+VA source enforcement: 100 percent
+candidate response enforcement: 100 percent
+deterministic verifier: 100 percent
+hosted runtime matrix: 3/3
+session tests: 17/17 per runtime
+repository-wide checks: 6/6
+mainline integration: 100 percent
+session-binding release: 100 percent
 live provider runtime consumption: pending under issues #18 and #90
 ```
 
 ## Archive condition
 
-This session-binding workload becomes archive-ready after hosted checks pass, its pull request merges to `main`, the validation receipt is retained, and the task is released complete. Live provider execution and product activation remain separate owner-gated work.
+The session-binding workload is complete, released, validated, merged, and durably receipted. No unique implementation or continuation state remains in the originating chat for this slice. Live provider execution and product activation remain separately owner-gated.
+
+ARCHIVE THIS SESSION-BINDING WORKLOAD.
