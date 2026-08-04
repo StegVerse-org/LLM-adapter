@@ -1,0 +1,68 @@
+name: Validate Ecosystem and VA Chat Session Consolidation
+
+on:
+  pull_request:
+    paths:
+      - "data/ecosystem-va-chat-session-consolidation.json"
+      - "scripts/validate_ecosystem_va_chat_session_consolidation.py"
+      - "docs/ECOSYSTEM_VA_CHAT_SESSION_ARCHIVE_MIRROR_HANDOFF.md"
+      - "tasks/LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011.json"
+      - "tasks/LLMA-CHAT-LLM-PROFILES-009.json"
+      - "tasks/LLMA-CHAT-SESSION-BINDING-010.json"
+      - "tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json"
+      - "receipts/chat-llm-profiles-validation.json"
+      - "receipts/chat-llm-session-binding-validation.json"
+      - "receipts/ecosystem-chat-authorized-provider-activation.latest.json"
+      - ".github/workflows/ecosystem-va-chat-session-consolidation.yml"
+  push:
+    branches: [main]
+    paths:
+      - "data/ecosystem-va-chat-session-consolidation.json"
+      - "scripts/validate_ecosystem_va_chat_session_consolidation.py"
+      - "docs/ECOSYSTEM_VA_CHAT_SESSION_ARCHIVE_MIRROR_HANDOFF.md"
+      - "tasks/LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011.json"
+      - "tasks/LLMA-CHAT-LLM-PROFILES-009.json"
+      - "tasks/LLMA-CHAT-SESSION-BINDING-010.json"
+      - "tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json"
+      - "receipts/chat-llm-profiles-validation.json"
+      - "receipts/chat-llm-session-binding-validation.json"
+      - "receipts/ecosystem-chat-authorized-provider-activation.latest.json"
+      - ".github/workflows/ecosystem-va-chat-session-consolidation.yml"
+  schedule:
+    - cron: "37 15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ecosystem-va-chat-session-consolidation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11", "3.12"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Validate complete session inventory and archive transfer
+        run: python scripts/validate_ecosystem_va_chat_session_consolidation.py
+
+      - name: Upload validation receipt
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecosystem-va-chat-session-consolidation-validation
+          path: receipts/ecosystem-va-chat-session-consolidation-validation.json
+          if-no-files-found: error
+          retention-days: 30
