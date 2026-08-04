@@ -1,0 +1,314 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/contracts/chat-llm-session-envelope.schema.json",
+  "title": "StegVerse Chat LLM Session Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "state",
+    "profile",
+    "messages",
+    "requested_features",
+    "response_format",
+    "candidate_tools",
+    "grounding_sources",
+    "source_decisions",
+    "policy_instructions",
+    "return_contract",
+    "request_sha256",
+    "envelope_sha256",
+    "provider_configuration_attached",
+    "provider_permission_requested",
+    "provider_call_performed",
+    "tools_executed",
+    "authority_effect",
+    "activation_effect"
+  ],
+  "properties": {
+    "schema": {
+      "const": "stegverse.chat_llm_session_envelope.v1"
+    },
+    "state": {
+      "const": "READY_FOR_PROVIDER_BINDING"
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_id",
+        "display_name",
+        "purpose",
+        "llm_surface",
+        "profile_manifest_sha256"
+      ],
+      "properties": {
+        "profile_id": {
+          "enum": [
+            "ecosystem-chat-llm",
+            "va-claims-chat-llm"
+          ]
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "llm_surface": {
+          "const": "FULL_PROVIDER_SUPPORTED"
+        },
+        "profile_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "messages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "enum": [
+              "system",
+              "developer",
+              "user",
+              "assistant",
+              "tool"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "requested_features": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "response_format": {
+      "enum": [
+        "text",
+        "json",
+        "json_schema",
+        "artifact"
+      ]
+    },
+    "candidate_tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "description",
+          "input_schema",
+          "execution_state",
+          "execution_authority"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "input_schema": {
+            "type": "object"
+          },
+          "execution_state": {
+            "const": "CANDIDATE_ONLY_NOT_EXECUTED"
+          },
+          "execution_authority": {
+            "const": false
+          }
+        }
+      }
+    },
+    "grounding_sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/sourceRecord"
+      }
+    },
+    "source_decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/sourceRecord"
+      }
+    },
+    "policy_instructions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "return_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "require_source_ids_for_factual_claims",
+        "require_fact_labels",
+        "require_candidate_tool_status",
+        "side_effects_executed",
+        "authority_claimed"
+      ],
+      "properties": {
+        "require_source_ids_for_factual_claims": {
+          "type": "boolean"
+        },
+        "require_fact_labels": {
+          "const": true
+        },
+        "require_candidate_tool_status": {
+          "const": "CANDIDATE_NOT_EXECUTED"
+        },
+        "side_effects_executed": {
+          "const": false
+        },
+        "authority_claimed": {
+          "const": false
+        }
+      }
+    },
+    "request_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "envelope_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "provider_configuration_attached": {
+      "const": false
+    },
+    "provider_permission_requested": {
+      "const": false
+    },
+    "provider_call_performed": {
+      "const": false
+    },
+    "tools_executed": {
+      "const": false
+    },
+    "authority_effect": {
+      "const": false
+    },
+    "activation_effect": {
+      "const": false
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "sourceRecord": {
+      "type": "object",
+      "required": [
+        "source_id",
+        "source_type",
+        "uri",
+        "admitted",
+        "authority_class",
+        "privacy_status",
+        "consent_present",
+        "content_hash",
+        "required_for_answer",
+        "source_metadata_sha256",
+        "decision"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uri": {
+          "type": "string"
+        },
+        "admitted": {
+          "type": "boolean"
+        },
+        "authority_class": {
+          "type": "string"
+        },
+        "privacy_status": {
+          "type": "string"
+        },
+        "consent_present": {
+          "type": "boolean"
+        },
+        "content_hash": {
+          "type": "string"
+        },
+        "required_for_answer": {
+          "type": "boolean"
+        },
+        "source_metadata_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "decision": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "allowed_for_factual_grounding",
+            "allowed_as_authority",
+            "fact_label",
+            "reasons",
+            "normalized_host"
+          ],
+          "properties": {
+            "status": {
+              "type": "string",
+              "minLength": 1
+            },
+            "allowed_for_factual_grounding": {
+              "type": "boolean"
+            },
+            "allowed_as_authority": {
+              "type": "boolean"
+            },
+            "fact_label": {
+              "type": "string"
+            },
+            "reasons": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "normalized_host": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
