@@ -62,6 +62,7 @@ jobs:
           assert actual == value['receipt_hash']
           assert value['state'] == 'PASS'
           assert value['posture'] == 'ARCHIVE_READY'
+          assert value['consolidation_task_state'] == 'RELEASED_COMPLETE'
           assert value['archive_safe'] is True
           assert value['deleting_chat_impairs_execution'] is False
           assert value['active_chat_owned_claims'] == 0
