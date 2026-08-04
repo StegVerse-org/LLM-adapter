@@ -1,0 +1,78 @@
+{
+  "schema": "stegverse.ecosystem_chat.service_adoption.v1",
+  "goal_id": "LLMA-ECOSYSTEM-CHAT-SERVICE-ADOPTION-012",
+  "canonical_owner": "StegVerse-org/LLM-adapter#18",
+  "policy": {
+    "unnamed_third_party_dependency_allowed": false,
+    "dependency_must_be_eliminated_or_adopted": true,
+    "adopted_service_requires_stegverse_owned_interface": true,
+    "provider_must_be_replaceable": true,
+    "credentials_must_remain_out_of_repository": true,
+    "provider_output_is_authority": false,
+    "hosting_is_execution_authority": false,
+    "custody_is_publication_authority": false
+  },
+  "services": [
+    {
+      "role": "public_gateway",
+      "service": "stegverse-ecosystem-chat-gateway",
+      "owner": "Rigel's workspace",
+      "platform": "Render",
+      "adoption_state": "ADOPTED_INFRASTRUCTURE",
+      "runtime_state": "LIVE_HEALTH_VERIFIED",
+      "url": "https://stegverse-ecosystem-chat-gateway.onrender.com",
+      "health_path": "/health"
+    },
+    {
+      "role": "persistent_hil_receiver",
+      "service": "stegverse-hil-receiver",
+      "owner": "Rigel's workspace",
+      "platform": "Render",
+      "adoption_state": "ADOPTED_INFRASTRUCTURE",
+      "runtime_state": "DEPLOYED_WITH_PERSISTENT_DISK",
+      "url": "https://stegverse-hil-receiver.onrender.com",
+      "health_path": "/api/hil/readiness"
+    },
+    {
+      "role": "admission_service",
+      "service": "TVC",
+      "owner": "Rigel's workspace",
+      "platform": "Render",
+      "adoption_state": "ADOPTED_INFRASTRUCTURE",
+      "runtime_state": "DEPLOYED",
+      "url": "https://tvc-jrdy.onrender.com"
+    },
+    {
+      "role": "provider",
+      "service": "StegVerse Provider Interface",
+      "adoption_state": "INTERFACE_IMPLEMENTED_PROVIDER_UNBOUND",
+      "runtime_state": "CONFIGURATION_REQUIRED",
+      "required_bindings": [
+        "STEGVERSE_PROVIDER_ENDPOINT",
+        "STEGVERSE_PROVIDER_MODEL",
+        "STEGVERSE_PROVIDER_TOKEN"
+      ],
+      "completion_rule": "Bind an authorized provider behind the StegVerse provider-neutral interface or deploy a StegVerse-operated compatible model endpoint."
+    },
+    {
+      "role": "master_records_custody",
+      "service": "StegVerse Master Records Interface",
+      "adoption_state": "INTERFACE_IMPLEMENTED_ENDPOINT_UNBOUND",
+      "runtime_state": "CONFIGURATION_REQUIRED",
+      "required_bindings": [
+        "STEGVERSE_MASTER_RECORDS_ENDPOINT",
+        "STEGVERSE_MASTER_RECORDS_TOKEN"
+      ],
+      "completion_rule": "Bind an authenticated StegVerse-owned custody endpoint; do not treat local persistence or the HIL receiver as custody without protocol evidence."
+    }
+  ],
+  "activation_units": {
+    "llm_profile": "COMPLETE",
+    "provider_neutral_session": "COMPLETE",
+    "persistent_public_gateway": "COMPLETE",
+    "authorized_provider_execution": "BLOCKED_CONFIGURATION",
+    "custody_reconstruction_site_downstream": "BLOCKED_CONFIGURATION_AND_EVIDENCE"
+  },
+  "manual_user_action_required": false,
+  "archive_directive_applies_to_this_goal": false
+}
