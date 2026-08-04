@@ -1,0 +1,48 @@
+{
+  "activation_effect": false,
+  "authority_effect": false,
+  "candidate_validation": {
+    "invalid_reasons": [
+      "unknown_citations:unknown",
+      "tool_call_0_execution_status_invalid",
+      "side_effects_must_remain_false",
+      "authority_claimed_must_remain_false",
+      "publication_claim_not_allowed"
+    ],
+    "invalid_side_effect_candidate": "REJECT_CANDIDATE",
+    "valid_candidate": "ACCEPT_CANDIDATE"
+  },
+  "claims_non_va_required_source": {
+    "blockers": [
+      "required_source_denied:non-va:external_source_not_official_va",
+      "factual_grounding_required_but_no_allowed_source"
+    ],
+    "provider_envelope_created": false,
+    "state": "BLOCKED_SOURCE_POLICY"
+  },
+  "claims_session": {
+    "allowed_fact_labels": [
+      "user_record_fact",
+      "va_source_fact"
+    ],
+    "envelope_sha256": "e50e4958444f944960ae7c1901e1f518e566e12d0e8d3f4378da0723027d1d81",
+    "official_va_only": true,
+    "state": "READY_FOR_PROVIDER_BINDING"
+  },
+  "custody_submitted": false,
+  "ecosystem_session": {
+    "allowed_grounding_source_count": 1,
+    "candidate_tool_count": 1,
+    "envelope_sha256": "293ce9e1ef593f8416c5cffd78015ce904c1ffc15d4da3c734d1c6d0f30717ed",
+    "requested_feature_count": 4,
+    "state": "READY_FOR_PROVIDER_BINDING"
+  },
+  "provider_call_performed": false,
+  "provider_configuration_attached": false,
+  "provider_permission_requested": false,
+  "receipt_sha256": "b1f9f56e8dc087ee04c49a011d351855a762030e2886d484def025a29e2e09b0",
+  "schema": "stegverse.chat_llm_session_binding.validation.v1",
+  "site_mutated": false,
+  "state": "PASS",
+  "tools_executed": false
+}
