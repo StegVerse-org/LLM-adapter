@@ -6,6 +6,7 @@
   "blocked_unclaimed_tasks": [
     "VACP-ADAPTER-AUTHORIZED-EXECUTION-005"
   ],
+  "consolidation_task_state": "RELEASED_COMPLETE",
   "custody_claimed": false,
   "deleting_chat_impairs_execution": false,
   "filing_authorized": false,
@@ -14,7 +15,7 @@
   "posture": "ARCHIVE_READY",
   "privacy_runtime_receipt_hash": "bcd39b3689ba0fbe7f18b99e114984543d784c80d3fd8ad5842cc551926df34c",
   "publication_authorized": false,
-  "receipt_hash": "34559e27a0ae9f201fdf8ffc3409e6720fb680fb3ec215d954b58fd3b320c8f1",
+  "receipt_hash": "eb11aa38365a7c529663b1cb0e7ad9be14eb8e7fac9fd8bb2344a4615aefae16",
   "schema": "stegverse.va_claim_assistant.session_consolidation_validation.v1",
   "session_requirements_total": 27,
   "session_requirements_transferred_or_complete": 27,
