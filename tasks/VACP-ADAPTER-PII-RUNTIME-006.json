@@ -1,0 +1,49 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "VACP-ADAPTER-PII-RUNTIME-006",
+  "title": "Enforce raw-PII rejection and privacy-minimized VA runtime traces",
+  "originating_goal": "Complete PII-RDY-06 by installing a production privacy gate before VA route classification or generation, accepting only sanitized derived context, and proving retained runtime evidence excludes prompts, raw documents, direct identifiers, credentials, model content, traces, logs, and medical narrative.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "main",
+  "canonical_issue": "StegVerse-org/LLM-adapter#90",
+  "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
+  "role": "PII_RUNTIME_IMPLEMENTATION_AND_VALIDATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claimant": "connected-repository-pii-runtime-lane",
+  "claim_created_at": "2026-08-04T03:07:00Z",
+  "claim_expires_at": "2026-08-05T03:07:00Z",
+  "release_condition": "Production privacy gate, privacy-guarded dispatcher, machine-readable event schema, negative fixtures, deterministic validator, recurring workflow, committed PASS receipt, subordinate mirror handoff, issue transfer, and provider-executor dependency binding are installed and inspected.",
+  "claimed_paths": [
+    "va_claim_assistant/privacy_runtime.py",
+    "va_claim_assistant/privacy_guarded_dispatch.py",
+    "contracts/va-claim-assistant-privacy-runtime.schema.json",
+    "tests/test_va_claim_assistant_privacy_runtime.py",
+    "scripts/validate_va_claim_assistant_privacy_runtime.py",
+    ".github/workflows/va-claim-assistant-privacy-runtime.yml",
+    "receipts/va-claim-assistant-privacy-runtime-validation.json",
+    "tasks/VACP-ADAPTER-PII-RUNTIME-006.json",
+    "docs/VA_CLAIM_ASSISTANT_PRIVACY_RUNTIME_MIRROR_HANDOFF.md"
+  ],
+  "collision_boundaries": [
+    "Do not modify or dispatch the blocked provider-authority executor task VACP-ADAPTER-AUTHORIZED-EXECUTION-005 except to add this privacy gate as a release dependency.",
+    "Do not modify Site#116 document processors, TVC credentialing, Master Records custody implementation, or Ecosystem Chat issue #18 workflows.",
+    "Do not retain rejected values or reversible hashes of rejected PII.",
+    "Do not treat regex coverage as proof of production PII detection in Site#116.",
+    "Do not grant provider, custody, filing, submission, representation, adjudication, rating, medical, publication, deployment, or Site activation authority."
+  ],
+  "expected_evidence": [
+    "Raw-PII questions are rejected before classifier invocation.",
+    "Raw-document, credential, identity, and direct-identifier fields are rejected before generator invocation.",
+    "Rejected values are absent from dispatcher records, privacy events, receipts, and logs.",
+    "Accepted sanitized context remains session-bound and hash-bound.",
+    "Privacy events contain classifications, lengths, hashes only for accepted non-PII inputs, and false authority flags.",
+    "Negative fixtures and governed runtime validation receipt PASS."
+  ],
+  "next_after_release": [
+    "master-records/orchestration#15 imports the privacy-minimized event and returns custody RECORDED plus reconstruction PASS for PII-RDY-07.",
+    "VACP-ADAPTER-AUTHORIZED-EXECUTION-005 must call privacy_guarded_dispatch before provider permission or model input.",
+    "StegVerse-Labs/Site readiness may mark PII-RDY-06 complete only after importing the adapter PASS receipt; this does not complete Site PII-RDY-01 through PII-RDY-03."
+  ],
+  "authority_effect": false,
+  "activation_effect": false
+}
