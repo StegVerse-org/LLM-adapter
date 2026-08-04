@@ -1,0 +1,52 @@
+{
+  "schema": "stegverse.chat_llm_profile.v1",
+  "profile_id": "ecosystem-chat-llm",
+  "display_name": "Ecosystem Chat / StegVerse Chat",
+  "purpose": "General-purpose StegVerse LLM conversation, creation, analysis, retrieval, tool-candidate generation, and governed ecosystem interaction.",
+  "llm_surface": "FULL_PROVIDER_SUPPORTED",
+  "features": [
+    "multi_turn_conversation",
+    "system_developer_user_instruction_layers",
+    "long_context",
+    "streaming_response",
+    "structured_output",
+    "function_and_tool_calling",
+    "retrieval_augmented_generation",
+    "web_retrieval",
+    "file_understanding",
+    "image_understanding",
+    "audio_understanding",
+    "code_generation",
+    "artifact_generation",
+    "multilingual_generation",
+    "planning_and_multi_step_reasoning",
+    "memory_candidate_generation",
+    "model_routing",
+    "citation_and_provenance_output",
+    "candidate_action_generation"
+  ],
+  "source_policy": {
+    "mode": "GENERAL_ADMITTED",
+    "official_va_only": false,
+    "allowed_external_host_suffixes": [],
+    "allow_general_web": true,
+    "allow_model_memory_as_factual_source": false,
+    "allow_user_record_facts": true,
+    "user_records_are_va_authority": false,
+    "admission_required_for_external_sources": true,
+    "source_scope_changes_llm_capability": false
+  },
+  "authority_policy": {
+    "model_output_is_execution_authority": false,
+    "tool_candidate_is_execution_authority": false,
+    "source_acceptance_is_admissibility": false,
+    "provider_response_is_publication_authority": false,
+    "user_record_is_government_authority": false
+  },
+  "product_invariants": {
+    "stegverse_chat_is_contained_in_ecosystem_chat": true,
+    "full_llm_surface_enabled": true,
+    "governance_constrains_consequence_not_reasoning": true,
+    "external_actions_require_independent_admission": true
+  }
+}
