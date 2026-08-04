@@ -9,14 +9,26 @@ Goal ID: VACP-ADAPTER-PII-RUNTIME-006
 Originating session goal: reject raw PII before VA route classification or generation, admit only sanitized derived context, and retain privacy-minimized runtime evidence suitable for later Master Records custody
 Repository: StegVerse-org/LLM-adapter
 Branch: main
-Validation branch: validation/va-pii-runtime-006
 Canonical issue: StegVerse-org/LLM-adapter#90
 Site readiness requirement: PII-RDY-06
 Site document owner: StegVerse-Labs/Site#116
 Master Records dependency: master-records/orchestration#15
-Provider execution: NOT AUTHORIZED
+Provider execution: NOT AUTHORIZED AND NOT EXECUTED
 Public activation: NOT AUTHORIZED
 ```
+
+## Claim state
+
+```text
+Implementation claim: RELEASED_COMPLETE
+Validation claim: RELEASED_COMPLETE
+Claim created: 2026-08-04T03:07:00Z
+Claim released: 2026-08-04T03:24:00Z
+Task record: tasks/VACP-ADAPTER-PII-RUNTIME-006.json
+Active claim on these paths: NONE
+```
+
+The release covers production privacy-gate implementation, privacy-first dispatcher binding, strict receipt schema, negative fixtures, independent validation, recurring automation, directly inspected hosted execution, artifact inspection, `main` receipt retention, blocked-executor dependency binding, and durable transfer. It does not cover provider execution, operational custody, reconstruction, Site production document processing, filing, or activation.
 
 ## Authoritative files
 
@@ -32,18 +44,7 @@ tasks/VACP-ADAPTER-PII-RUNTIME-006.json
 docs/VA_CLAIM_ASSISTANT_PRIVACY_RUNTIME_MIRROR_HANDOFF.md
 ```
 
-## Claim state
-
-```text
-Implementation claim: CLAIMED_FOR_IMPLEMENTATION
-Validation claim: CLAIMED_FOR_VALIDATION
-Claim created: 2026-08-04T03:07:00Z
-Claim expires: 2026-08-05T03:07:00Z
-Task record: tasks/VACP-ADAPTER-PII-RUNTIME-006.json
-Release condition: production gate, wrapper, schema, negative fixtures, validator, recurring workflow, PASS receipt, hosted PR run inspection, artifact inspection, provider-executor dependency binding, issue transfer, and final task release
-```
-
-## Installed implementation
+## Installed commits
 
 ```text
 task claim: 0574695ec089a3d708a2817b6ed5d8f9f8ee21ad
@@ -53,11 +54,15 @@ receipt schema: c5352d8f3da069e392e2cf52cb88cd84dda3dd15
 negative fixtures: ea1c8829e3acff4102c739adbd18ba398467f445
 independent validator: cc1b13031f4837460112f5c97224a1c15e2e29c7
 recurring workflow: 1065e58e5fc30b1e5831be329a8f20f6df55bad3
+validation handoff merge: cd2b010f35be3673f7853b03c951025db7225b32
+main hosted receipt: 97767eb8dbca4a2fd75e1a6052195ca680bd1148
+provider-executor dependency binding: 3d7345b08547c51fa22cde8a443982d77ae80c5b
+task release: 467eb279a526799774607c1ddfdc8c01767ddeb7
 ```
 
 ## Runtime behavior
 
-The privacy gate executes before route classification and answer generation.
+The privacy gate executes before route classification, governed generation, authority consumption, provider permission, or model input.
 
 Accepted input:
 
@@ -75,6 +80,32 @@ Rejected input:
 - retains no rejected value and no hash of rejected PII;
 - retains no raw document, credential, prompt, model input/output, trace, log, or medical narrative.
 
+## Hosted validation evidence
+
+```text
+Validation PR: #99
+PR head: eb77deeac77598a81c3d80b5f07c8cc987ef0e44
+Privacy workflow run: 30874416525
+Workflow conclusion: success
+Privacy job: 91882865431
+Job conclusion: success
+Fixture step: success
+Hosted-provenance step: success
+Independent-validator step: success
+Artifact-upload step: success
+Decoded logs: directly inspected
+Artifact: 8879004626
+Artifact name: va-claim-assistant-privacy-runtime-30874416525-1
+Artifact digest: sha256:c6078147307ef853887a3618394c4758b6ed422b7ec815b1f22e92a554960961
+Artifact files: 3
+Artifact expiry: 2026-11-02T03:19:24Z
+Receipt state: PASS
+Observation source: GITHUB_ACTIONS_WORKFLOW
+Receipt hash: bcd39b3689ba0fbe7f18b99e114984543d784c80d3fd8ad5842cc551926df34c
+```
+
+The downloaded artifact digest matched the GitHub artifact digest. It contained the strict schema, task record, and the exact hosted receipt. All PR checks—Privacy Runtime, Architecture Guard, Validate Provider-Owned Usage Event, and repository `validate`—completed successfully.
+
 ## Negative fixtures
 
 ```text
@@ -90,28 +121,7 @@ veteran_name field
 email field inside document context
 ```
 
-Each fixture requires `governed_dispatch = null`, `state = REVIEW_REQUIRED`, no rejected value in serialized output, and no rejected input hash.
-
-## Validation state
-
-```text
-Source syntax and isolated privacy-event validation: PASS
-Production wrapper installation: COMPLETE
-Negative fixture suite: INSTALLED
-Independent receipt validator: INSTALLED
-Recurring hosted workflow: INSTALLED
-Push-run receipt: NOT OBSERVED
-PR validation run: PENDING
-Job logs: PENDING
-Artifact inspection: PENDING
-Provider execution: NOT EXECUTED
-Custody: NOT SUBMITTED
-Reconstruction: NOT SUBMITTED
-Authority effect: false
-Activation effect: false
-```
-
-No hosted workflow success is claimed until the pull-request run, job steps, decoded logs, and artifact are inspected directly.
+All ten fixtures require `governed_dispatch = null`, `state = REVIEW_REQUIRED`, no rejected value in serialized output, and no rejected input hash. Accepted `service_connection` and sanitized `document_organization` fixtures remain `ANSWER_READY_PENDING_TVC_AND_CUSTODY`.
 
 ## Machine-owned continuation
 
@@ -125,64 +135,75 @@ provider permission: absent
 provider call: prohibited
 ```
 
-## Cross-repository obligations
+The blocked provider task `tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json` now requires this exact hosted receipt and commits. It must call `va_claim_assistant/privacy_guarded_dispatch.py` before authority consumption, provider permission, or model input. Privacy `PASS` alone does not release provider execution.
+
+## Cross-repository continuation
 
 ```text
 StegVerse-org/LLM-adapter#90
-  owns runtime privacy implementation and execution binding
+  PII-RDY-06 implementation and hosted validation complete
+  provider execution remains blocked in task VACP-ADAPTER-AUTHORIZED-EXECUTION-005
 
 master-records/orchestration#15
-  may ingest only the privacy-minimized event after operational execution
-  must return custody RECORDED and reconstruction PASS for PII-RDY-07
+  next owner for genuine privacy-event custody and reconstruction
+  PII-RDY-07 remains BLOCKED until custody RECORDED and reconstruction PASS
 
 StegVerse-Labs/Site#113
-  may import the adapter PASS receipt for PII-RDY-06 projection
+  may import the exact adapter PASS receipt for PII-RDY-06 projection
 
 StegVerse-Labs/Site#116
-  remains owner of production document detection, redaction, and leakage evidence
+  remains owner of production document detection, redaction, and model-leakage evidence
   adapter PASS does not complete PII-RDY-01, PII-RDY-02, or PII-RDY-03
 ```
 
-## Collision and authority boundaries
-
-- do not modify or dispatch `VACP-ADAPTER-AUTHORIZED-EXECUTION-005` except to add this privacy runtime as a release dependency;
-- do not modify Site document processors, TVC credentialing, or Master Records implementation;
-- regex fixture coverage is not Site production-detector certification;
-- privacy validation is not custody or reconstruction;
-- privacy validation is not provider, filing, submission, representation, adjudication, rating, medical, publication, deployment, or activation authority.
-
 ## Exact incomplete tasks
 
-1. Inspect the PR-triggered privacy workflow run, all job steps, decoded logs, and artifact.
-2. Persist the hosted `GITHUB_ACTIONS_WORKFLOW` receipt on `main` or preserve the exact failed blocker.
-3. Bind `VACP-ADAPTER-AUTHORIZED-EXECUTION-005` to call `privacy_guarded_dispatch` before provider permission or model input.
-4. Release task `VACP-ADAPTER-PII-RUNTIME-006` only after the evidence above is complete.
-5. Transfer the final receipt to adapter issue `#90`, Master Records issue `#15`, and Site issues `#113` and `#116`.
-6. Keep PII-RDY-07 blocked until a genuine operational event is custodied and reconstructed.
+1. `VACP-ADAPTER-AUTHORIZED-EXECUTION-005` remains blocked by the hosted provider preflight, protected Master Records configuration, and a valid exact-commit provider authority receipt.
+2. A future permission-bearing executor must invoke the privacy-guarded dispatcher before any provider permission or model input.
+3. `master-records/orchestration#15` must custody and reconstruct a genuine operational privacy event for PII-RDY-07.
+4. `StegVerse-Labs/Site#113` must import the receipt through its repository-owned readiness automation.
+5. `StegVerse-Labs/Site#116` must complete production PII detection, redaction, and leakage verification for PII-RDY-01 through PII-RDY-03.
+6. Credential linkage, filing transport, deployment, and broader governed activation remain in their existing canonical workstreams.
 
-## Session consolidation
+## Authority boundary
+
+```text
+privacy fixture PASS != Site production detector certification
+privacy validation != provider authority
+privacy validation != custody
+custody != execution
+reconstruction != filing or publication authority
+provider output != claim authority
+adapter PASS != Site activation
+```
+
+No provider, credential, custody, filing, submission, representation, adjudication, rating, medical, publication, deployment, release, or Site activation authority is granted.
+
+## Integration and consolidation
 
 ```text
 MERGED INTO: StegVerse-org/LLM-adapter#90
+MERGED INTO: StegVerse-org/LLM-adapter/tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json
 MERGED INTO: master-records/orchestration#15
 MERGED INTO: StegVerse-Labs/Site#113
 MERGED INTO: StegVerse-Labs/Site#116
 ```
 
-All unique design requirements for this privacy-runtime slice are now durable. The implementation claim remains active only for hosted validation, execution-task binding, final receipt retention, issue transfer, and claim release.
+All unique implementation and validation requirements from this privacy-runtime slice are preserved in code, tests, schema, workflow, hosted logs, artifact, receipt, task records, this handoff, and canonical issue transfers.
 
 ## Metrics
 
 ```text
-developed files: 8/9
+developed files: 9/9
 scaffolding or stubs: 0
-missing required files: 1 hosted receipt
-validation: 3/7
-integration: 2/5
-goal activation: 55 percent to PII-RDY-06 completion
+missing required files: 0
+validation: 7/7
+integration: 4/5
+PII-RDY-06 adapter completion: 100 percent
+operational privacy custody: incomplete
 session consolidation: 1/1
 ```
 
 ## Archive condition
 
-This privacy-runtime slice becomes archive-safe when the hosted PR workflow, job logs, and artifact pass; the receipt is committed; the blocked provider executor depends on the privacy gate; the task claim is released; and all continuation owners receive the exact evidence. Broader VA Claim Session archival still requires the remaining provider, custody, Site privacy, identity-linkage, filing, and activation lanes.
+The bounded PII-RDY-06 adapter slice is archive-safe. Broader project execution continues through the named adapter provider task, Master Records custody task, Site production privacy tasks, TVC credential-linkage task, veteran-approved filing task, and Ecosystem Chat activation workstream. No prior chat context is required to continue this slice.
