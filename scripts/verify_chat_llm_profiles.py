@@ -7,9 +7,15 @@ import argparse
 from hashlib import sha256
 import json
 from pathlib import Path
+import sys
 from typing import Any, Dict, Mapping
 
-from llm_adapter.chat_profiles import (
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from llm_adapter.chat_profiles import (  # noqa: E402
     FULL_LLM_FEATURES,
     SourceCandidate,
     capability_matrix,
@@ -19,7 +25,6 @@ from llm_adapter.chat_profiles import (
 )
 
 
-ROOT = Path(__file__).resolve().parents[1]
 ECOSYSTEM_PATH = ROOT / "profiles" / "ecosystem-chat-llm.v1.json"
 CLAIMS_PATH = ROOT / "profiles" / "va-claims-chat-llm.v1.json"
 DEFAULT_RECEIPT = ROOT / "receipts" / "chat-llm-profiles-validation.json"
