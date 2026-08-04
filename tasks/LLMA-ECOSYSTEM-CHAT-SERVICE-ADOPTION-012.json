@@ -1,37 +1,55 @@
 {
   "task_id": "LLMA-ECOSYSTEM-CHAT-SERVICE-ADOPTION-012",
-  "title": "Adopt or eliminate Ecosystem Chat external service dependencies",
+  "title": "Eliminate Ecosystem Chat external platform dependencies",
   "canonical_owner": "StegVerse-org/LLM-adapter#18",
   "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claimant": null,
   "implementation_pr": 110,
   "merge_commit": "b12b59767831d7a9aacfe6c209eb00075cc9754a",
+  "correction_commits": [
+    "20409e7d3b1b2e035ba64afc69f0369aed96d025",
+    "3bdc70ecc2232f73c0fc59a4bdef04dc1309053c"
+  ],
   "claim_released_at": "2026-08-04T18:53:57Z",
+  "target_state": "ZERO_EXTERNAL_PLATFORM_DEPENDENCIES",
   "completed": [
     "full LLM profile",
     "provider-neutral session binding",
-    "persistent public gateway deployment",
+    "temporary public gateway deployment",
     "gateway health verification",
-    "StegVerse-owned service adoption policy",
-    "external dependency eliminate-or-adopt contract",
-    "repository-native validator and workflow"
+    "repository-native sovereignty contract",
+    "validator requiring absorption of every temporary external platform"
   ],
   "remaining_machine_work": [
-    "bind or deploy authorized StegVerse provider endpoint",
-    "bind authenticated StegVerse Master Records endpoint",
-    "execute one governed provider request",
-    "retain provider usage persistence and custody evidence",
-    "reconstruct transition and emit immutable zero-blocker receipt",
-    "activate Site projection and verify downstream ingestion"
+    "build StegVerse-owned compute and deployment control plane using micro-node-runtime and core-lite",
+    "build StegVerse-owned naming, routing, certificate, and edge-protection control plane",
+    "migrate Render-hosted gateway, HIL receiver, TVC, Site, and SCW workloads to StegVerse-owned nodes",
+    "bind authenticated StegVerse Master Records custody",
+    "provide StegVerse-owned or StegVerse-federated model execution",
+    "execute one governed provider request through the sovereign path",
+    "retain persistence, custody, reconstruction, and zero-blocker activation evidence",
+    "retire Render, Cloudflare, hosted inference, and other external operational dependencies after verified cutover"
+  ],
+  "replacement_components": [
+    "micro-node-runtime",
+    "core-lite",
+    "StegGuardian",
+    "StegProfile",
+    "admissibility-gateway",
+    "capability-registry",
+    "TVC",
+    "Master Records",
+    "SCW"
   ],
   "continuation": "StegVerse-org/LLM-adapter#18",
-  "release_condition_observer": "Issue #18 and repository-native activation receipts",
+  "release_condition_observer": "Issue #18 plus repository-native migration, custody, reconstruction, and retirement receipts",
   "forbidden_shortcuts": [
+    "external platform accepted as permanent architecture",
     "repository-stored credentials",
     "provider output treated as authority",
     "local persistence treated as custody",
-    "HIL receiver treated as Master Records without protocol evidence",
-    "unnamed third-party dependency"
+    "external hosting treated as StegVerse ownership",
+    "retirement claimed before verified workload and state migration"
   ],
   "manual_user_action_required": false,
   "session_unique_requirements_remaining": 0
