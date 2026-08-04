@@ -12,6 +12,7 @@ INVENTORY = ROOT / "data" / "va-claim-assistant-session-consolidation.json"
 PRIVACY_RECEIPT = ROOT / "receipts" / "va-claim-assistant-privacy-runtime-validation.json"
 PRIVACY_TASK = ROOT / "tasks" / "VACP-ADAPTER-PII-RUNTIME-006.json"
 PROVIDER_TASK = ROOT / "tasks" / "VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json"
+ARCHIVE_TASK = ROOT / "tasks" / "VACP-SESSION-CONSOLIDATION-007.json"
 OUTPUT = ROOT / "receipts" / "va-claim-assistant-session-consolidation-validation.json"
 
 REQUIRED_INVENTORY_FIELDS = {
@@ -182,6 +183,19 @@ def main() -> int:
     if privacy_dependency != privacy_receipt.get("receipt_hash"):
         fail("provider_task_privacy_dependency_not_bound")
 
+    archive_task = json.loads(ARCHIVE_TASK.read_text(encoding="utf-8"))
+    if archive_task.get("state") != "RELEASED_COMPLETE":
+        fail("consolidation_task_claim_not_released")
+    completion = archive_task.get("completion_evidence") or {}
+    if completion.get("archive_posture") != "ARCHIVE_READY":
+        fail("consolidation_task_archive_posture_invalid")
+    if completion.get("active_chat_owned_claims") != 0:
+        fail("consolidation_task_active_claims_remain")
+    if completion.get("unowned_tasks") != 0 or completion.get("manual_user_tasks") != 0:
+        fail("consolidation_task_unowned_or_manual_work_remains")
+    if completion.get("deleting_chat_impairs_execution") is not False:
+        fail("consolidation_task_chat_still_required")
+
     receipt: dict[str, Any] = {
         "schema": "stegverse.va_claim_assistant.session_consolidation_validation.v1",
         "state": "PASS",
@@ -194,6 +208,7 @@ def main() -> int:
         "manual_user_tasks": value["manual_user_tasks"],
         "blocked_unclaimed_tasks": claims["blocked_unclaimed"],
         "privacy_runtime_receipt_hash": privacy_receipt["receipt_hash"],
+        "consolidation_task_state": archive_task["state"],
         "archive_safe": True,
         "deleting_chat_impairs_execution": False,
         "authority_effect": False,
