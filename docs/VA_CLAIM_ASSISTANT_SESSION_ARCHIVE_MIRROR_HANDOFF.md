@@ -2,7 +2,7 @@
 
 This is the canonical archive-disposition handoff for the ChatGPT session that established and advanced the governed VA Claims Guide, Claims Chat, private document workspace, veteran-approved filing boundary, federal-plus security, PII realignment, provider execution, custody, and adjacent Ecosystem Chat work.
 
-It does not replace capability-specific handoffs. It proves that all unique session state is complete, superseded, or durably transferred to those handoffs, issues, tasks, workflows, receipts, and machine release conditions.
+It does not replace capability-specific handoffs. It proves that all unique session state is complete, superseded, or durably transferred to repository handoffs, issues, tasks, workflows, receipts, and machine-observable release conditions.
 
 ## Goal identity
 
@@ -48,7 +48,7 @@ StegVerse-org/LLM-adapter#18
 StegVerse-Labs/Site#24
 ```
 
-The machine-readable inventory contains thirteen goal groups and all 27 session requirements. Every item records its destination repository, branch, exact location, owner, claim state, completion state, validation state, integration state, evidence, release condition, and next executable action.
+The machine-readable inventory contains 13 goal groups and all 27 session requirements. Every item records its destination repository, branch, exact location, owner, claim state, completion state, validation state, integration state, evidence, release condition, and next executable action.
 
 ## Final claim posture
 
@@ -72,32 +72,37 @@ Manual user tasks:
   NONE
 ```
 
-The final consolidation task is released at commit `a0e3538d3af7b9884dc5011ed2b6151a0c97cdea`.
+The consolidation task is `RELEASED_COMPLETE`. Its final evidence is committed at `087206745a1f843abf9aaef40f93054d22cfd5ea`.
 
-## Hosted archive validation
+## Final hosted release-proof validation
 
 ```text
-Validation PR: #100
-Archive handoff merge: 32260e3eec559cf49959742401bddb1b840becbd
-Workflow run: 30874931858
+Validation PR: #101
+Validator/workflow merge: 0569fdddfd3160eb661425e18c355716615841c4
+Workflow run: 30875265849
 Workflow conclusion: success
-Job: 91884403199
+Job: 91885352717
 Job conclusion: success
 Inventory-validator step: success
-Non-authority receipt step: success
+Released-task assertion step: success
 Decoded logs: directly inspected
-Artifact: 8879184301
-Artifact name: va-claim-assistant-session-consolidation-30874931858-1
-Artifact digest: sha256:526c96a0b65c64ff05fe5773dad802f158840e3ae5ecba919039b1b03dc80d7c
+Artifact: 8879295395
+Artifact name: va-claim-assistant-session-consolidation-30875265849-1
+Artifact digest: sha256:10a9f4f4f9f24fd8bda2033957a20742442964e4999230f39bbc8ac188978be6
 Artifact files: 3
-Artifact expiry: 2026-11-02T03:30:11Z
-Main receipt commit: 918eeed46444b31d9dcccff0941c4fe8b92cfc7a
+Artifact expiry: 2026-11-02T03:37:06Z
+Main receipt commit: 4250a39d8a68877532c939a785300b42a1b22985
 Receipt state: PASS
 Receipt posture: ARCHIVE_READY
-Receipt hash: 34559e27a0ae9f201fdf8ffc3409e6720fb680fb3ec215d954b58fd3b320c8f1
+Consolidation task state: RELEASED_COMPLETE
+Receipt hash: eb11aa38365a7c529663b1cb0e7ad9be14eb8e7fac9fd8bb2344a4615aefae16
 ```
 
-The downloaded artifact digest matched GitHub’s retained digest. It contains the complete 13-group inventory, the active-at-run consolidation task, and the exact `ARCHIVE_READY` validation receipt. All PR checks—Session Consolidation, Architecture Guard, Validate Provider-Owned Usage Event, and repository `validate`—completed successfully.
+The downloaded artifact digest matched GitHub’s retained digest. The artifact contains the complete inventory, the released consolidation task, and the exact final receipt. All PR checks—Session Consolidation, Architecture Guard, Validate Provider-Owned Usage Event, and repository `validate`—completed successfully.
+
+### Superseded archive proof
+
+PR `#100`, run `30874931858`, and receipt `34559e27a0ae9f201fdf8ffc3409e6720fb680fb3ec215d954b58fd3b320c8f1` proved the inventory but did not directly inspect the consolidation task’s own state. PR `#101` and receipt `eb11aa38365a7c529663b1cb0e7ad9be14eb8e7fac9fd8bb2344a4615aefae16` supersede that proof by requiring `VACP-SESSION-CONSOLIDATION-007 = RELEASED_COMPLETE`.
 
 ## Completed final implementation slice
 
@@ -133,13 +138,12 @@ Session archival does not mark the program operationally complete. These remain 
 
 Each has a named repository owner, exact durable location, machine-observable release condition, evidence requirement, and next executable action in the inventory or its canonical handoff/task.
 
-## Archive validation assertions
-
-The hosted validator proved:
+## Final archive assertions
 
 ```text
 inventory goal groups: 13
 session requirements transferred or complete: 27/27
+consolidation task state: RELEASED_COMPLETE
 active chat-owned claims: 0
 unowned tasks: 0
 manual user tasks: 0
@@ -185,7 +189,7 @@ All unique requirements, implementation history, validation evidence, unresolved
 developed files: 6/6
 scaffolding or stubs: 0
 missing required files: 0
-validation: 6/6
+validation: 7/7
 integration: 5/5
 session requirements transferred or complete: 27/27
 session consolidation: 27/27
