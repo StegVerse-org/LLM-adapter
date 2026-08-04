@@ -2,14 +2,19 @@
   "task_id": "LLMA-ECOSYSTEM-CHAT-SERVICE-ADOPTION-012",
   "title": "Adopt or eliminate Ecosystem Chat external service dependencies",
   "canonical_owner": "StegVerse-org/LLM-adapter#18",
-  "state": "ACTIVE_BLOCKED_CONFIGURATION",
-  "claimant": "goal/ecosystem-chat-service-adoption",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
+  "claimant": null,
+  "implementation_pr": 110,
+  "merge_commit": "b12b59767831d7a9aacfe6c209eb00075cc9754a",
+  "claim_released_at": "2026-08-04T18:53:57Z",
   "completed": [
     "full LLM profile",
     "provider-neutral session binding",
     "persistent public gateway deployment",
     "gateway health verification",
-    "StegVerse-owned service adoption policy"
+    "StegVerse-owned service adoption policy",
+    "external dependency eliminate-or-adopt contract",
+    "repository-native validator and workflow"
   ],
   "remaining_machine_work": [
     "bind or deploy authorized StegVerse provider endpoint",
@@ -19,14 +24,15 @@
     "reconstruct transition and emit immutable zero-blocker receipt",
     "activate Site projection and verify downstream ingestion"
   ],
+  "continuation": "StegVerse-org/LLM-adapter#18",
+  "release_condition_observer": "Issue #18 and repository-native activation receipts",
   "forbidden_shortcuts": [
     "repository-stored credentials",
     "provider output treated as authority",
     "local persistence treated as custody",
     "HIL receiver treated as Master Records without protocol evidence",
-    "unnamed third-party dependency",
-    "archive directive applied before activation work is transferred or complete"
+    "unnamed third-party dependency"
   ],
   "manual_user_action_required": false,
-  "release_condition": "All five activation units are complete and independently evidenced."
+  "session_unique_requirements_remaining": 0
 }
