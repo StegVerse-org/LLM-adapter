@@ -1,0 +1,54 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "LLMA-CHAT-SESSION-BINDING-010",
+  "title": "Bind Chat LLM profiles to provider-neutral governed sessions",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "goal/chat-session-binding",
+  "canonical_issue": "StegVerse-org/LLM-adapter#105",
+  "canonical_handoff": "docs/CHAT_LLM_SESSION_BINDING_MIRROR_HANDOFF.md",
+  "execution_class": "PARALLEL_SAFE",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claimant": "StegVerse",
+  "claimed_at": "2026-08-04T16:25:20Z",
+  "goal": "Turn the released Ecosystem Chat and VA Claims Chat LLM profiles into deterministic provider-neutral session envelopes and enforce source-bound candidate responses without invoking a provider or side effect.",
+  "claimed_paths": [
+    "llm_adapter/chat_session_binding.py",
+    "contracts/chat-llm-session-envelope.schema.json",
+    "tests/test_chat_session_binding.py",
+    "scripts/verify_chat_session_binding.py",
+    ".github/workflows/validate-chat-session-binding.yml",
+    "docs/CHAT_LLM_SESSION_BINDING_MIRROR_HANDOFF.md",
+    "tasks/LLMA-CHAT-SESSION-BINDING-010.json"
+  ],
+  "dependencies": {
+    "profile_layer": {
+      "task": "LLMA-CHAT-LLM-PROFILES-009",
+      "state": "RELEASED_COMPLETE",
+      "merge_commit": "18a49b8856a34d03d94955637adb4a53c9ccfe81",
+      "receipt": "receipts/chat-llm-profiles-validation.json",
+      "receipt_hash": "85a98e57b3a8e50fa13de3d24e2fcd39aaff99ea7071f3318719519f78275287"
+    }
+  },
+  "collision_boundaries": [
+    "Do not modify or dispatch issue #18 live-provider or persistent-endpoint paths.",
+    "Do not modify issue #90 authorized execution paths or bypass privacy_guarded_dispatch.",
+    "Do not consume provider credentials, request provider permissions, submit custody, mutate Site, publish, file, deploy, or activate.",
+    "Do not modify Site paths while Site orchestration rejects external ownership.",
+    "Do not represent provider-neutral envelope readiness as provider execution."
+  ],
+  "release_condition": [
+    "Ecosystem Chat produces a deterministic provider-ready envelope with requested full-profile capabilities.",
+    "VA Claims Chat produces the same envelope shape with official-VA-only factual-source enforcement.",
+    "Required denied VA sources block before a provider envelope exists.",
+    "Privacy-approved user records remain separately labeled non-authority facts.",
+    "Tool calls remain candidate-only and non-executed.",
+    "Candidate validation rejects unknown citations, incorrect fact labels, undeclared tools, claimed execution, authority, publication, or custody.",
+    "Tests and deterministic receipt generation pass on Python 3.9, 3.11, and 3.12.",
+    "Architecture and repository-wide checks pass and the pull request merges to main."
+  ],
+  "next_executable_action": "Run hosted validation, repair only the first exact failure, merge after all required checks pass, retain the validation receipt, and release this task. Runtime consumption remains owned by issues #18 and #90.",
+  "manual_user_action_required": false,
+  "provider_execution_observed": false,
+  "authority_effect": false,
+  "activation_effect": false
+}
