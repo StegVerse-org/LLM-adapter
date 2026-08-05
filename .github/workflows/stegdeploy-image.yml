@@ -1,5 +1,8 @@
 name: StegDeploy image
 
+# Recurrence is owned by StegVerse-Labs/StegVerse-Healer through
+# .github/workflows/stegdeploy-publication-relay.yml. This repository remains
+# event-driven and accepts bounded push or explicit workflow dispatch only.
 on:
   push:
     branches: [main]
@@ -13,8 +16,6 @@ on:
       - docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md
       - compose.stegdeploy.yaml
       - .github/workflows/stegdeploy-image.yml
-  schedule:
-    - cron: "17 * * * *"
   workflow_dispatch:
 
 concurrency:
