@@ -1,108 +1,142 @@
 # StegDeploy Publication Mirror Handoff
 
-## Purpose
+## Source of truth
 
-This is the authoritative continuation record for canonical StegDeploy image publication readiness owned by `StegVerse-org/LLM-adapter`.
+This is the authoritative scoped continuation record for canonical StegDeploy image publication readiness in `StegVerse-org/LLM-adapter`.
 
-## Current State
+Live workflow contents, retained receipts, workflow runs, artifacts, issue #18, task records, and default-branch history are authoritative over earlier handoff claims.
+
+## Active goal and claim
 
 ```text
-Canonical workflow: .github/workflows/stegdeploy-image.yml
-Retained receipt: receipts/stegdeploy-image-publication.json
-Retained readiness projection: status/stegdeploy-image-publication-readiness.json
-Observed receipt schema before next publication run: stegdeploy.image-publication.v1
-Current readiness: BLOCKED
-PR #38 merge: a21aa50526487fd16a46bd62488a7965d29aa3ed
-PR #39 merge: 14724798fef253b4aca34c5da6ed34fe8ed6fcb8
-Healer relay merge: 1b0d0660da8a0597137c6cb822a0ef751c2bf352
-Core-node intake merge: f742105877541f67a85abd7fbe23154ce4addee7
-One-shot trigger commit: d4ab0cd9c034638463a03b171ae1864e0ce2e0f3
-Recurring observer commit: af01d1e79a2e9b635ba9e8071bae08e3530818e2
-Trigger owner: .github/workflows/stegdeploy-image.yml
-Trigger role: MACHINE_OWNED publication evidence generation and retry
-Trigger cadence: hourly at minute 17, plus owned-path push and workflow_dispatch
-Concurrency group: stegdeploy-image-publication
-Execution ceiling: 45 minutes
-Trigger release condition: repository retains a v2 PUBLISHED or BLOCKED receipt, pull log, and refreshed readiness projection from the same run
-Manual user action required: false
-Provider execution authority: false
-Persistent deployment authority: false
-Custody authority: false
+task_id: LLMA-PUBLICATION-ACTIVATION-013
+originating_goal: complete tasks while active and activate finished Ecosystem Chat tasks
+canonical_issue: StegVerse-org/LLM-adapter#18
+branch: fix/activate-stegdeploy-publication-observer
+claim_state: CLAIMED_FOR_IMPLEMENTATION_AND_INTEGRATION
+claimed_at: 2026-08-04T19:33:00-05:00
+release_condition: merge, inspect hosted validation and the main publication run, retain exact v2 evidence, and release the claim
+```
+
+Task record:
+
+```text
+tasks/LLMA-PUBLICATION-ACTIVATION-013.json
+```
+
+## Current retained truth
+
+```text
+canonical workflow: .github/workflows/stegdeploy-image.yml
+retained receipt: receipts/stegdeploy-image-publication.json
+retained pull log: receipts/stegdeploy-image-verification-pull.log
+retained readiness: status/stegdeploy-image-publication-readiness.json
+observed receipt schema: stegdeploy.image-publication.v1
+observed readiness: BLOCKED
+observed consumer_pull_verified: false
+observed blockers:
+  - current retained receipt predates v2 publication contract
+  - fresh consumer pull verification not retained
+provider execution authority: false
+persistent deployment authority: false
+custody authority: false
 Site activation authority: false
+manual user action required: false
 ```
 
-## Exact Blockers
+A structurally valid v2 workflow is not itself proof that an image is published or consumable. The repository remains `BLOCKED` until the same run retains a v2 receipt, fresh pull log, and readiness projection.
+
+## Activation defect and correction
+
+The prior handoff stated that the workflow retried hourly, but the live workflow contained only `push` and `workflow_dispatch` triggers. Therefore the recurring machine observer was described but not activated.
+
+This claim installs the missing repository-native trigger:
+
+```yaml
+schedule:
+  - cron: "17 * * * *"
+```
+
+The workflow path itself is an owned-path trigger, so merging the correction causes an immediate main-branch evidence attempt and leaves the hourly observer active afterward.
+
+## Canonical workflow behavior
 
 ```text
-current retained receipt predates v2 publication contract
-fresh consumer pull verification not retained
+owned-path push, hourly schedule, or workflow dispatch
+-> authenticate to GHCR using GITHUB_TOKEN
+-> build and publish linux/amd64 image
+-> attest image provenance
+-> remove local main tag and perform a fresh consumer pull
+-> write stegdeploy.image-publication.v2 receipt
+-> write exact PUBLISHED or BLOCKED state and stage outcomes
+-> refresh readiness projection
+-> retain receipt, pull log, and readiness together on main
+-> upload evidence artifact
+-> fail closed when state is not PUBLISHED
 ```
 
-The workflow contains the v2 contract, exact stage outcomes, fresh pull verification, durable evidence retention, scheduled retry, bounded concurrency, and fail-closed enforcement. The readiness validator is merged into Goal 4 validation.
+The workflow grants only bounded image-publication evidence activity. It grants no provider execution, persistent deployment, custody, release, Site activation, or general publication authority.
 
-## Canonical Publication Trigger
+## Orchestration reconciliation
 
-The original handoff-path push did not produce a retained v2 evidence set or a visible commit status. The canonical workflow therefore now owns recurring execution rather than relying on a one-shot push event.
-
-The recurring observer changes no runtime behavior and grants no provider, deployment, custody, release, or Site-activation authority. It repeatedly executes only the existing image publication and verification contract.
-
-Expected machine-owned sequence:
+The durable orchestration state is corrected as follows:
 
 ```text
-owned-path push, hourly schedule, or explicit workflow dispatch
-→ run StegDeploy image workflow
-→ attempt registry login, image build/publish, attestation, and fresh pull
-→ write v2 PUBLISHED or BLOCKED receipt
-→ refresh readiness projection
-→ retain receipt, pull log, and readiness status together
-→ upload all three artifacts
-→ enforce publication result fail-closed
-→ retry hourly while evidence remains BLOCKED or stale
+closed PR #44: no longer an active owner
+current HIL full-cycle owner: PR #56
+provider-layer consolidation PR #95: merged and released
+publication evidence owner: issue #18
+publication activation task: LLMA-PUBLICATION-ACTIVATION-013
+exclusive live-provider task: remains queued and blocked
 ```
 
-## Retention Repair
+The publication observer is parallel-safe. Activating it does not satisfy the idle barrier for provider execution and does not bypass authorized provider, persistent endpoint, or Master Records configuration requirements.
 
-The canonical image workflow retains the readiness projection in the same run that writes the publication receipt. This prevents the receipt from advancing while repository-owned status remains stale because evidence commits use `[skip ci]`.
+## PR #84 disposition
+
+PR #84 requested a one-shot handoff refresh against an older main state. Main subsequently received the v2 receipt writer, fresh pull check, readiness validator, evidence retention, and hardened workflow commits. The remaining defect is the absent live schedule, now owned by `LLMA-PUBLICATION-ACTIVATION-013`.
+
+After this activation merges and validates, PR #84 is superseded and should be closed without merging its stale handoff replacement.
+
+## Validation commands and evidence path
 
 ```text
-write v2 PUBLISHED or BLOCKED receipt
-→ run scripts/check_stegdeploy_image_publication_readiness.py
-→ retain receipt, pull log, and readiness status together
-→ upload all three artifacts
-→ enforce publication result fail-closed
+python scripts/check_stegdeploy_image_publication_readiness.py
+python scripts/check_session_provider_layer_consolidation.py
+python -m json.tool data/llm-adapter-orchestration-state.json
+python -m json.tool data/session-provider-layer-consolidation.json
 ```
 
-## Built Files
+Hosted evidence required before claim release:
 
 ```text
-scripts/check_stegdeploy_image_publication_readiness.py
-status/stegdeploy-image-publication-readiness.json
-scripts/verify_goal4_full.py
-.github/workflows/stegdeploy-image.yml
-docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md
+pull-request workflow results
+main-branch StegDeploy image workflow result
+publish job and step outcomes
+retained v2 receipt
+same-run pull log
+refreshed readiness projection
+uploaded publication artifact
 ```
 
-## Validation Boundary
+## Next executable action
 
-The checker passes when the workflow contract is structurally valid, while truthfully recording `BLOCKED` until a retained v2 receipt proves:
+1. Merge the activation branch after hosted validation passes.
+2. Inspect the push-triggered `StegDeploy image` run.
+3. If `PUBLISHED`, verify the retained digest and fresh pull evidence, release this task, and transfer continuation to the existing Healer/core-node intake.
+4. If `BLOCKED`, retain the exact first stage blocker, repair only that blocker, and leave provider execution queued.
+5. Keep the hourly observer active until a current v2 result is retained.
+
+## Collision boundaries
 
 ```text
-state = PUBLISHED
-digest = sha256:...
-consumer_pull_verified = true
+do not dispatch provider execution
+do not access or introduce provider or Master Records credentials
+do not modify PR #56 HIL implementation paths
+do not create a competing image, gateway, host, or deployment runtime
+do not claim persistent deployment, custody, Site activation, release, or sovereign completion
 ```
-
-A passing structural validator does not mean the image is published, publicly accessible, deployed, provider-authorized, custody-authorized, or Site-activated.
-
-## Next Machine-Owned Actions
-
-1. The hourly workflow retries the complete v2 publication evidence cycle.
-2. Retain the resulting v2 `PUBLISHED` or exact `BLOCKED` receipt, pull log, and readiness status automatically.
-3. If `BLOCKED`, issue `StegVerse-org/LLM-adapter#18` owns repair of only the first retained stage blocker.
-4. If `PUBLISHED`, allow the merged Healer relay to dispatch the bounded publication event.
-5. Verify core-node intake retains matching receipt-hash and image-digest compatibility evidence.
-6. Persistent hosting and real-provider/custody configuration remain separate authority-gated boundaries.
 
 ## Session consolidation
 
-The publication-evidence task is now durably machine-owned and recurring. The current session retains a distinct observation and first-blocker-reconciliation role until a v2 receipt is inspected. Ecosystem Chat remains incomplete until persistent provider/custody execution, immutable verification, Site activation, and required downstream evidence exist or are actually transferred to verified active executors.
+The stale task-owner correction, missing schedule defect, activation task, release condition, and exact continuation path are durably preserved in this handoff, the orchestration state, the provider-layer inventory, task `LLMA-PUBLICATION-ACTIVATION-013`, and issue #18. This session remains active only until the activation is merged and the resulting publication evidence is inspected and assigned.
