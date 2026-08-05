@@ -1,0 +1,52 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "LLMA-PUBLICATION-ACTIVATION-013",
+  "title": "Activate StegDeploy publication evidence and reconcile stale orchestration state",
+  "repository": "StegVerse-org/LLM-adapter",
+  "implementation_branch": "fix/activate-stegdeploy-publication-observer",
+  "canonical_issue": "StegVerse-org/LLM-adapter#18",
+  "canonical_handoff": "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
+  "scheduler_owner": "StegVerse-Labs/StegVerse-Healer",
+  "scheduler_workflow": ".github/workflows/stegdeploy-publication-relay.yml",
+  "execution_class": "PARALLEL_SAFE",
+  "state": "CLAIMED_FOR_IMPLEMENTATION_AND_INTEGRATION",
+  "claimant": "publication-evidence-activation-lane",
+  "claimed_at": "2026-08-04T19:33:00-05:00",
+  "goal": "Trigger the already-implemented v2 image publication evidence path through a bounded main-branch event, repair stale task ownership, bind recurrence to the canonical Healer clock, and retain the exact first PUBLISHED or BLOCKED result without opening provider or custody authority.",
+  "owned_paths": [
+    ".github/workflows/stegdeploy-image.yml",
+    "data/llm-adapter-orchestration-state.json",
+    "data/session-provider-layer-consolidation.json",
+    "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
+    "scripts/check_llm_adapter_orchestration_state.py",
+    "tasks/LLMA-PUBLICATION-ACTIVATION-013.json"
+  ],
+  "release_condition": "Merge to main; verify hosted validation; inspect the push-triggered StegDeploy image run; retain a v2 PUBLISHED or exact BLOCKED receipt, pull log, and readiness projection; assign recurring observation to StegVerse-Healer; release this claim with evidence.",
+  "expected_evidence": [
+    "no managed schedule remains in LLM-adapter",
+    "canonical recurrence is assigned to StegVerse-Labs/StegVerse-Healer",
+    "closed PR #44 removed as an active owner and redirected to PR #56",
+    "merged PR #95 integration claim released",
+    "issue #18 publication task active and repository observed",
+    "workflow run jobs, logs, artifacts, and retained v2 receipt"
+  ],
+  "known_scheduler_blocker": {
+    "owner": "StegVerse-Labs/StegVerse-Healer",
+    "location": "docs/HEALER_MIRROR_HANDOFF.md and data/summary/stegdeploy_publication_dispatch.json",
+    "state": "BLOCKED",
+    "release_condition": "HEALER_GH_TOKEN successfully creates the bounded LLM-adapter workflow-dispatch event without exposing the token.",
+    "observed_result": "HTTP 403"
+  },
+  "collision_boundaries": [
+    "Do not add a schedule trigger outside StegVerse-Healer.",
+    "Do not dispatch provider execution.",
+    "Do not access or introduce provider or Master Records credentials.",
+    "Do not modify active HIL upload paths or PR #56 files.",
+    "Do not create a competing image, gateway, host, scheduler, or deployment runtime.",
+    "Do not claim persistent deployment, provider execution, custody, Site activation, publication authority, or release."
+  ],
+  "next_executable_action": "Merge the bounded event activation, inspect the push-triggered image publication run, and repair only its first retained blocker if state is BLOCKED.",
+  "manual_user_action_required": false,
+  "authority_effect": false,
+  "activation_effect": "ONE_SHOT_PUBLICATION_EVIDENCE_ATTEMPT_WITH_HEALER_OWNED_RECURRENCE"
+}

@@ -5,18 +5,28 @@ on:
     paths:
       - "data/session-provider-layer-consolidation.json"
       - "data/session-provider-layer-archive-disposition.json"
+      - "data/llm-adapter-orchestration-state.json"
+      - "tasks/LLMA-PUBLICATION-ACTIVATION-013.json"
       - "scripts/check_session_provider_layer_consolidation.py"
       - "scripts/check_session_provider_layer_archive_disposition.py"
+      - "scripts/check_llm_adapter_orchestration_state.py"
       - ".github/workflows/session-provider-layer-consolidation.yml"
+      - ".github/workflows/stegdeploy-image.yml"
       - "docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+      - "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md"
   push:
     paths:
       - "data/session-provider-layer-consolidation.json"
       - "data/session-provider-layer-archive-disposition.json"
+      - "data/llm-adapter-orchestration-state.json"
+      - "tasks/LLMA-PUBLICATION-ACTIVATION-013.json"
       - "scripts/check_session_provider_layer_consolidation.py"
       - "scripts/check_session_provider_layer_archive_disposition.py"
+      - "scripts/check_llm_adapter_orchestration_state.py"
       - ".github/workflows/session-provider-layer-consolidation.yml"
+      - ".github/workflows/stegdeploy-image.yml"
       - "docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+      - "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md"
   workflow_dispatch:
 
 permissions:
@@ -34,3 +44,5 @@ jobs:
         run: python scripts/check_session_provider_layer_consolidation.py
       - name: Validate archive disposition and successor ownership
         run: python scripts/check_session_provider_layer_archive_disposition.py
+      - name: Validate live orchestration ownership and publication observer activation
+        run: python scripts/check_llm_adapter_orchestration_state.py
