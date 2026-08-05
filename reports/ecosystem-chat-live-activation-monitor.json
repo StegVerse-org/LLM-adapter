@@ -6,10 +6,10 @@
     "monitor_is_release_authority": false
   },
   "manual_user_action_required": false,
-  "monitor_sha256": "f24ce8777547a096ca0e9bc0523eafb5700fee253c2b2bce2e15ad9a66b7db8b",
+  "monitor_sha256": "84609d8b2ccad889bffeb29042853ee50ca852edbee7b08190b3e8ca19fdfd3b",
   "next_machine_action": "repeat_scheduled_live_activation_verification",
   "observation_sha256": null,
-  "observed_at": "2026-08-05T16:21:49.409543+00:00",
+  "observed_at": "2026-08-05T16:23:57.913394+00:00",
   "repository": "StegVerse-org/LLM-adapter",
   "schema": "stegverse.ecosystem_chat.live_activation_monitor.v1",
   "semantic_blockers": [
@@ -18,10 +18,10 @@
   "semantic_state": "PENDING",
   "semantic_status_sha256": "6f9fdb905bc9e7bd84324f776b3f4fb1fa064ea6881cf26ca7695ed0fca9ed4c",
   "workflow": {
-    "event_name": "workflow_run",
+    "event_name": "schedule",
     "run_attempt": "1",
-    "run_id": "31024896211",
-    "sha": "10aae515abb18733eefd8284c97bf6cd7dd3a768",
+    "run_id": "31025068437",
+    "sha": "b1faf58b949483799fddc3ff9a11cfe4ef3330e2",
     "workflow_ref": "StegVerse-org/LLM-adapter/.github/workflows/ecosystem-chat-live-activation-monitor.yml@refs/heads/main"
   }
 }
