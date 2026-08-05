@@ -1,0 +1,40 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "LLMA-PUBLICATION-ACTIVATION-013",
+  "title": "Activate recurring StegDeploy publication evidence and reconcile stale orchestration state",
+  "repository": "StegVerse-org/LLM-adapter",
+  "implementation_branch": "fix/activate-stegdeploy-publication-observer",
+  "canonical_issue": "StegVerse-org/LLM-adapter#18",
+  "canonical_handoff": "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
+  "execution_class": "PARALLEL_SAFE",
+  "state": "CLAIMED_FOR_IMPLEMENTATION_AND_INTEGRATION",
+  "claimant": "publication-observer-activation-lane",
+  "claimed_at": "2026-08-04T19:33:00-05:00",
+  "goal": "Make the already-implemented v2 image publication evidence path actually recur, repair stale task ownership, and retain the exact first PUBLISHED or BLOCKED result without opening provider or custody authority.",
+  "owned_paths": [
+    ".github/workflows/stegdeploy-image.yml",
+    "data/llm-adapter-orchestration-state.json",
+    "data/session-provider-layer-consolidation.json",
+    "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-PUBLICATION-ACTIVATION-013.json"
+  ],
+  "release_condition": "Merge to main; verify hosted validation; inspect the resulting StegDeploy image run; retain a v2 PUBLISHED or exact BLOCKED receipt, pull log, and readiness projection; release this claim with evidence.",
+  "expected_evidence": [
+    "hourly schedule in the live workflow",
+    "closed PR #44 removed as an active owner and redirected to PR #56",
+    "merged PR #95 integration claim released",
+    "issue #18 publication task active and repository observed",
+    "workflow run jobs, logs, artifacts, and retained v2 receipt"
+  ],
+  "collision_boundaries": [
+    "Do not dispatch provider execution.",
+    "Do not access or introduce provider or Master Records credentials.",
+    "Do not modify active HIL upload paths or PR #56 files.",
+    "Do not create a competing image, gateway, host, or deployment runtime.",
+    "Do not claim persistent deployment, provider execution, custody, Site activation, publication authority, or release."
+  ],
+  "next_executable_action": "Merge the observer activation, inspect the push-triggered image publication run, and repair only its first retained blocker if state is BLOCKED.",
+  "manual_user_action_required": false,
+  "authority_effect": false,
+  "activation_effect": "PUBLICATION_EVIDENCE_OBSERVER_ONLY"
+}
