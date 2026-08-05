@@ -19,6 +19,8 @@
     "data/llm-adapter-orchestration-state.json",
     "scripts/check_llm_adapter_orchestration_state.py",
     "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
     "tasks/LLMA-SEQUENCE-0001-RELEASE-015.json"
   ],
   "collision_boundaries": [
@@ -28,6 +30,22 @@
     "Do not create another gateway, runtime, scheduler, or provider adapter."
   ],
   "completed_dependencies": {
+    "latest_image_publication": {
+      "state": "COMPLETE",
+      "workflow_run": 30965343262,
+      "workflow_job": 92177973489,
+      "source_commit": "7f70c326db25e5a2cb6fce9a03858ec9de537ec4",
+      "evidence_retention_commit": "0afd1fab8e339b2b7f358eca05e2379ddcb9e8bd",
+      "image_digest": "sha256:980d76c7a1bc43cb7d828ebc9153db8dec8295d92c10bd56e56c9ce0d4ef2a92",
+      "receipt_sha256": "745ae55bde7de8f883497f29485922ba73938995e298c977ffe9270e6e8abc65",
+      "publication_artifact": 8914506620,
+      "publication_artifact_digest": "sha256:0861bc65d64f8b6532ef7ec85a9396679ca6a8a5e63dbc32db1a2f05541461e3",
+      "build_record_artifact": 8914506923,
+      "build_record_digest": "sha256:fad06982940329abae2eb569113a1603e641cc435eb2ef015a9a967e397e4340",
+      "attestation_id": 38927431,
+      "rekor_log_index": 2341858582,
+      "superseded_run": 30964767464
+    },
     "hil_full_cycle": {
       "state": "COMPLETE",
       "pull_request": 56,
@@ -42,11 +60,7 @@
     "provider_usage_validation": {
       "state": "COMPLETE",
       "workflow_run": 30966031661,
-      "python_versions": [
-        "3.9",
-        "3.11",
-        "3.12"
-      ],
+      "python_versions": ["3.9", "3.11", "3.12"],
       "canonical_fixture_and_adversarial_tests": true,
       "main_integration_commit": "e320c33189c1b6cf9d51a666a4505592b6fb981b",
       "authority_effect": false
@@ -61,17 +75,21 @@
     }
   },
   "repair": {
-    "observed_failure_run": 30307740784,
+    "observed_failure_runs": [30307740784, 30966718025, 30966817503],
     "root_causes": [
       "The Site receipt test removed receiver_signature before recomputing receipt_sha256 even though HIL-RECEIVER-RECEIPT-v2 hashes the signature and excludes only receipt_sha256.",
-      "The always-run activation summary did not create activation-evidence/result after an early failure, preventing deterministic BLOCKED evidence retention."
+      "The always-run activation summary did not create activation-evidence/result after an early failure, preventing deterministic BLOCKED evidence retention.",
+      "The Service Gateway workflow expected stale TVC blob 7c8d3965eafd6048ea38e525647b898500c30531 instead of the repository-retained vendored blob e376f2c276bda75ff497709637aac693853bf9cc.",
+      "The orchestration validator and handoffs retained superseded publication run 30964767464 after later successful run 30965343262 became authoritative."
     ],
     "implemented_changes": [
       "Align the unit test with the production v2 receipt-hash contract.",
       "Create the result directory before writing the always-run activation summary.",
-      "Keep the pinned public-safe TVC evaluator mirror and no-value decision boundary unchanged."
+      "Add a pull-request trigger so the complete Service Gateway proof is validated before merge.",
+      "Pin the vendored TVC evaluator to commit b1a817e629aff483ab80679297013b33e692b567 and exact blob e376f2c276bda75ff497709637aac693853bf9cc.",
+      "Rebind publication task, orchestration, validator, and handoffs to the latest retained PUBLISHED receipt and READY projection."
     ],
-    "validation_state": "PENDING_HOSTED_VALIDATION"
+    "validation_state": "PENDING_HOSTED_REVALIDATION"
   },
   "remaining_blockers_after_sequence_release": [
     "authorized provider configuration and scoped execution grant",
