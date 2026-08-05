@@ -12,14 +12,17 @@
   "claimant": null,
   "claimed_at": "2026-08-04T19:33:00-05:00",
   "released_at": "2026-08-04T19:55:07-05:00",
-  "goal": "Trigger the already-implemented v2 image publication evidence path through a bounded main-branch event, repair stale task ownership, bind recurrence to the canonical Healer clock, and retain the exact PUBLISHED result without opening provider or custody authority.",
+  "goal": "Trigger the already-implemented v2 image publication evidence path through a bounded main-branch event, repair stale task ownership, bind recurrence to the canonical Healer clock, and retain the latest exact PUBLISHED result without opening provider or custody authority.",
   "implementation": {
     "activation_pr": 111,
     "activation_merge": "260e4b851a8b0e6ee72c361675670b2a4d92b515",
     "repair_pr": 112,
     "repair_merge": "4c6d8a47a4695adc793ad0ab4577c1e9aa0488dc",
-    "evidence_retention_commit": "5290030",
-    "current_main_observed": "402b896975a6041f0d9da5b00b943aec9c71a8f3"
+    "claim_release_pr": 113,
+    "claim_release_merge": "7f70c326db25e5a2cb6fce9a03858ec9de537ec4",
+    "evidence_retention_commit": "0afd1fab8e339b2b7f358eca05e2379ddcb9e8bd",
+    "latest_source_commit": "7f70c326db25e5a2cb6fce9a03858ec9de537ec4",
+    "superseded_publication_run": 30964767464
   },
   "validation": {
     "activation_pr_head": "667be063f471d9bc0ca1347a99f525538d2d517d",
@@ -36,27 +39,28 @@
       "provider_usage_event": 30964720135,
       "full_validate": 30964720127
     },
-    "publication_run": 30964767464,
-    "publication_job": 92176237360,
+    "publication_run": 30965343262,
+    "publication_job": 92177973489,
     "publication_state": "PUBLISHED",
-    "publication_receipt_sha256": "2ebacb9f5efc426a38bbbb58492b70575b9408127f5f57a34f066b51a43ba7a9",
-    "image_digest": "sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55",
+    "publication_receipt_sha256": "745ae55bde7de8f883497f29485922ba73938995e298c977ffe9270e6e8abc65",
+    "image_digest": "sha256:980d76c7a1bc43cb7d828ebc9153db8dec8295d92c10bd56e56c9ce0d4ef2a92",
     "consumer_pull_verified": true,
     "readiness_state": "READY",
-    "publication_artifact": 8914297100,
-    "publication_artifact_digest": "sha256:f1feb11a55986ae4e32bd40967e67bf5df32060ecb0bb9d287b47cddb84a03f1",
-    "build_record_artifact": 8914297626,
-    "build_record_digest": "sha256:81bd420c8de44189794bc8dfae6aba3a71b825a229821832e10c123122c02342",
-    "attestation_id": 38926411,
-    "rekor_log_index": 2341838465
+    "publication_artifact": 8914506620,
+    "publication_artifact_digest": "sha256:0861bc65d64f8b6532ef7ec85a9396679ca6a8a5e63dbc32db1a2f05541461e3",
+    "build_record_artifact": 8914506923,
+    "build_record_digest": "sha256:fad06982940329abae2eb569113a1603e641cc435eb2ef015a9a967e397e4340",
+    "attestation_id": 38927431,
+    "rekor_log_index": 2341858582
   },
   "completed_requirements": [
     "LLM-adapter contains no managed schedule.",
     "Recurring publication observation is assigned to StegVerse-Labs/StegVerse-Healer.",
-    "Closed PR #44 is no longer an active owner; PR #56 is canonical for the HIL full-cycle integration decision.",
+    "Closed PR #44 is superseded and merged PR #56 owns the completed HIL full-cycle evidence.",
     "Merged PR #95 provider-layer consolidation claim is released.",
-    "The canonical image was built, published, attested, freshly pulled, and retained with a v2 PUBLISHED receipt and READY projection.",
-    "The publication evidence artifact and Docker build record are retained.",
+    "The latest canonical image was built, published, attested, freshly pulled, and retained with a zero-blocker v2 PUBLISHED receipt and READY projection.",
+    "The latest publication evidence artifact and Docker build record are retained.",
+    "The earlier publication run remains historical evidence and is superseded by run 30965343262.",
     "No provider, persistent deployment, custody, Site activation, release, or general publication authority was granted."
   ],
   "remaining_machine_owned_dependency": {
@@ -65,10 +69,10 @@
     "state": "BLOCKED",
     "release_condition": "HEALER_GH_TOKEN successfully creates the bounded LLM-adapter workflow-dispatch event without exposing the token.",
     "observed_result": "HTTP 403",
-    "effect_on_completed_task": "NONE; one-shot publication activation and evidence retention are complete."
+    "effect_on_completed_task": "NONE; latest one-shot publication and evidence retention are complete."
   },
-  "next_executable_action": "Healer or the existing core-node consumer verifies and consumes the published digest; issue #18 remains the sole owner of persistent deployment, provider execution, custody, reconstruction, Site activation, and downstream ingestion.",
+  "next_executable_action": "Issue #18 consumes the retained digest on an authorized persistent runtime only after provider and custody authority boundaries clear; StegVerse-Healer retains recurring observation ownership.",
   "manual_user_action_required": false,
   "authority_effect": false,
-  "activation_effect": "CANONICAL_IMAGE_PUBLISHED_AND_CONSUMER_PULL_VERIFIED"
+  "activation_effect": "LATEST_CANONICAL_IMAGE_PUBLISHED_ATTESTED_AND_CONSUMER_PULL_VERIFIED"
 }
