@@ -121,15 +121,17 @@
       "originating_session_goal": "Retain exact v2 StegDeploy publication and fresh consumer-pull evidence.",
       "destination": "StegVerse-org/LLM-adapter",
       "branch": "fix/activate-stegdeploy-publication-observer",
-      "location": "issue #18; .github/workflows/stegdeploy-image.yml; tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
+      "location": "issue #18; .github/workflows/stegdeploy-image.yml; tasks/LLMA-PUBLICATION-ACTIVATION-013.json; StegVerse-Labs/StegVerse-Healer/.github/workflows/stegdeploy-publication-relay.yml",
       "owner": "issue #18",
+      "scheduler_owner": "StegVerse-Labs/StegVerse-Healer",
       "claim_state": "CLAIMED_FOR_IMPLEMENTATION",
-      "completion_state": "recurring_observer_activation_in_progress",
-      "validation_state": "live workflow v2 contract exists; missing hourly trigger repaired on activation branch pending hosted validation",
+      "completion_state": "one_shot_activation_and_scheduler_delegation_in_progress",
+      "validation_state": "v2 publication contract exists; local schedule rejected by canonical validation; workflow is event-driven and recurring dispatch remains Healer-owned",
       "integration_state": "pending merge and first retained v2 publication result",
       "archival_dependency": true,
-      "evidence": "issue #18; task LLMA-PUBLICATION-ACTIVATION-013; status/stegdeploy-image-publication-readiness.json",
-      "next_action": "Merge the hourly observer activation and inspect the resulting main-branch v2 PUBLISHED or exact BLOCKED receipt."
+      "evidence": "issue #18; task LLMA-PUBLICATION-ACTIVATION-013; status/stegdeploy-image-publication-readiness.json; StegVerse-Healer docs/HEALER_MIRROR_HANDOFF.md",
+      "scheduler_blocker": "HEALER_GH_TOKEN dispatch returns HTTP 403 until repository or organization token scope changes",
+      "next_action": "Merge the bounded event activation, inspect the resulting main-branch v2 PUBLISHED or exact BLOCKED receipt, and leave recurrence with StegVerse-Healer."
     },
     {
       "task_id": "LLMA-SITE-PROPAGATION",
@@ -152,7 +154,7 @@
     "transferred_or_complete": 8,
     "unique_chat_only_requirements_remaining": 0,
     "archive_state": "COMPLETE_ARCHIVE",
-    "canonical_continuation": "StegVerse-org/LLM-adapter issue #18, data/session-provider-layer-consolidation.json, docs/LLM_ADAPTER_MIRROR_HANDOFF.md, and tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
+    "canonical_continuation": "StegVerse-org/LLM-adapter issue #18, data/session-provider-layer-consolidation.json, docs/LLM_ADAPTER_MIRROR_HANDOFF.md, tasks/LLMA-PUBLICATION-ACTIVATION-013.json, and StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md",
     "reason_not_archive_ready": null
   }
 }
