@@ -17,9 +17,12 @@ RECEIPT_PATH = ROOT / "receipts" / "stegdeploy-image-publication.json"
 READINESS_PATH = ROOT / "status" / "stegdeploy-image-publication-readiness.json"
 PULL_LOG_PATH = ROOT / "receipts" / "stegdeploy-image-verification-pull.log"
 
-EXPECTED_DIGEST = "sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55"
-EXPECTED_PUBLICATION_RECEIPT = "2ebacb9f5efc426a38bbbb58492b70575b9408127f5f57a34f066b51a43ba7a9"
-EXPECTED_PUBLICATION_RUN = "30964767464"
+EXPECTED_DIGEST = "sha256:980d76c7a1bc43cb7d828ebc9153db8dec8295d92c10bd56e56c9ce0d4ef2a92"
+EXPECTED_PUBLICATION_RECEIPT = "745ae55bde7de8f883497f29485922ba73938995e298c977ffe9270e6e8abc65"
+EXPECTED_PUBLICATION_RUN = "30965343262"
+EXPECTED_PUBLICATION_JOB = 92177973489
+EXPECTED_TVC_COMMIT = "b1a817e629aff483ab80679297013b33e692b567"
+EXPECTED_TVC_BLOB = "e376f2c276bda75ff497709637aac693853bf9cc"
 EXPECTED_HIL_MERGE = "e320c33189c1b6cf9d51a666a4505592b6fb981b"
 EXPECTED_HIL_RUN = 30966031698
 EXPECTED_HIL_RECEIPT = "f4d0a8b90b05017b5abf77f3c96c3b8ad3efb99eb57d9c68b90a611b928888da"
@@ -98,6 +101,10 @@ def main() -> int:
         fail("publication task digest mismatch")
     if publication.get("publication_receipt_sha256") != EXPECTED_PUBLICATION_RECEIPT:
         fail("publication task receipt mismatch")
+    if publication.get("publication_run") != int(EXPECTED_PUBLICATION_RUN):
+        fail("publication task run mismatch")
+    if publication.get("publication_job") != EXPECTED_PUBLICATION_JOB:
+        fail("publication task job mismatch")
     if publication.get("consumer_pull_verified") is not True:
         fail("publication task lacks consumer pull evidence")
 
@@ -142,12 +149,7 @@ def main() -> int:
     if blockers != required_blockers:
         fail("live-provider blocker set does not match current proven state")
     completed_dependencies = "\n".join(live.get("completed_dependency_evidence") or [])
-    for required in (
-        EXPECTED_DIGEST,
-        EXPECTED_PUBLICATION_RUN,
-        str(EXPECTED_HIL_RUN),
-        str(EXPECTED_PROVIDER_RUN),
-    ):
+    for required in (EXPECTED_DIGEST, EXPECTED_PUBLICATION_RUN, str(EXPECTED_HIL_RUN), str(EXPECTED_PROVIDER_RUN)):
         if required not in completed_dependencies:
             fail(f"completed dependency evidence missing {required}")
 
@@ -178,8 +180,7 @@ def main() -> int:
     dependencies = sequence_task.get("completed_dependencies") or {}
     if (dependencies.get("hil_full_cycle") or {}).get("workflow_run") != EXPECTED_HIL_RUN:
         fail("sequence task HIL evidence mismatch")
-    provider_validation = dependencies.get("provider_usage_validation") or {}
-    if provider_validation.get("workflow_run") != EXPECTED_PROVIDER_RUN:
+    if (dependencies.get("provider_usage_validation") or {}).get("workflow_run") != EXPECTED_PROVIDER_RUN:
         fail("sequence task provider validation evidence mismatch")
     if (dependencies.get("architecture_guard") or {}).get("workflow_run") != EXPECTED_ARCHITECTURE_RUN:
         fail("sequence task architecture evidence mismatch")
@@ -191,10 +192,15 @@ def main() -> int:
     if publication_task.get("state") != "COMPLETE" or publication_task.get("claimant") is not None:
         fail("publication activation claim is not released")
     publication_validation = publication_task.get("validation") or {}
-    if publication_validation.get("publication_state") != "PUBLISHED":
-        fail("publication task does not record PUBLISHED")
-    if publication_validation.get("image_digest") != EXPECTED_DIGEST:
-        fail("publication task digest mismatch")
+    for key, expected in (
+        ("publication_state", "PUBLISHED"),
+        ("image_digest", EXPECTED_DIGEST),
+        ("publication_receipt_sha256", EXPECTED_PUBLICATION_RECEIPT),
+        ("publication_run", int(EXPECTED_PUBLICATION_RUN)),
+        ("publication_job", EXPECTED_PUBLICATION_JOB),
+    ):
+        if publication_validation.get(key) != expected:
+            fail(f"publication task {key} mismatch")
 
     if receipt.get("schema") != "stegdeploy.image-publication.v2":
         fail("retained publication receipt is not v2")
@@ -215,19 +221,13 @@ def main() -> int:
         fail("readiness digest mismatch")
     if readiness.get("consumer_pull_verified") is not True:
         fail("readiness lacks consumer pull verification")
-    for authority_key in (
-        "provider_execution_authorized",
-        "persistent_deployment_authorized",
-        "custody_authorized",
-        "site_activation_authorized",
-    ):
+    for authority_key in ("provider_execution_authorized", "persistent_deployment_authorized", "custody_authorized", "site_activation_authorized"):
         if readiness.get(authority_key) is not False:
             fail(f"readiness grants {authority_key}")
 
     if not PULL_LOG_PATH.is_file():
         fail("retained pull log missing")
-    pull_log = PULL_LOG_PATH.read_text(encoding="utf-8")
-    if EXPECTED_DIGEST not in pull_log:
+    if EXPECTED_DIGEST not in PULL_LOG_PATH.read_text(encoding="utf-8"):
         fail("retained pull log digest mismatch")
 
     publication_workflow = PUBLICATION_WORKFLOW_PATH.read_text(encoding="utf-8")
@@ -240,7 +240,10 @@ def main() -> int:
 
     gateway_workflow = SERVICE_GATEWAY_WORKFLOW_PATH.read_text(encoding="utf-8")
     for required in (
+        "pull_request:",
         "Verify pinned public-safe TVC evaluator mirror",
+        f"TVC_COMMIT: {EXPECTED_TVC_COMMIT}",
+        f"TVC_BLOB_SHA: {EXPECTED_TVC_BLOB}",
         "vendor/tvc/${TVC_COMMIT}/tvc_secret_governance.py",
         "result.mkdir(parents=True, exist_ok=True)",
         "ephemeral GitHub-hosted activation proof; not persistent public hosting",
@@ -268,8 +271,10 @@ def main() -> int:
 
     print("LLM_ADAPTER_ORCHESTRATION_STATE_PASS")
     print(f"active_tasks={len(active)} completed_tasks={len(completed)} queued_exclusive={len(queued)}")
+    print(f"publication=COMPLETE run={EXPECTED_PUBLICATION_RUN} digest={EXPECTED_DIGEST}")
     print(f"hil_cycle=COMPLETE run={EXPECTED_HIL_RUN} receipt={EXPECTED_HIL_RECEIPT}")
     print(f"provider_usage_validation=COMPLETE run={EXPECTED_PROVIDER_RUN}")
+    print(f"service_gateway_tvc_pin={EXPECTED_TVC_COMMIT}:{EXPECTED_TVC_BLOB}")
     print("sequence_0002=CLAIMED_FOR_VALIDATION service_gateway_proof=PENDING")
     return 0
 
