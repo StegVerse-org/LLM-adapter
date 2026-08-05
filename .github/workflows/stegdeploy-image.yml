@@ -2,7 +2,9 @@ name: StegDeploy image
 
 # Recurrence is owned by StegVerse-Labs/StegVerse-Healer through
 # .github/workflows/stegdeploy-publication-relay.yml. This repository remains
-# event-driven and accepts bounded push or explicit workflow dispatch only.
+# event-driven and accepts bounded runtime-affecting pushes or explicit
+# workflow dispatch only. Documentation, receipts, readiness projections, and
+# validation-only changes do not rebuild or supersede the canonical image.
 on:
   push:
     branches: [main]
@@ -11,9 +13,6 @@ on:
       - pyproject.toml
       - llm_adapter/**
       - scripts/container-entrypoint.sh
-      - scripts/check_stegdeploy_image_publication_readiness.py
-      - status/stegdeploy-image-publication-readiness.json
-      - docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md
       - compose.stegdeploy.yaml
       - .github/workflows/stegdeploy-image.yml
   workflow_dispatch:
