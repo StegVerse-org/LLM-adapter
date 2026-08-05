@@ -6,9 +6,9 @@
   "canonical_handoff": "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
   "created_at": "2026-08-02T04:21:00-05:00",
   "claim": {
-    "state": "CLAIMED_FOR_INTEGRATION",
-    "claimant": "session/provider-layer-consolidation",
-    "branch": "session/provider-layer-consolidation",
+    "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
+    "claimant": null,
+    "branch": "main",
     "surfaces": [
       "data/session-provider-layer-consolidation.json",
       "scripts/check_session_provider_layer_consolidation.py",
@@ -19,9 +19,11 @@
       "Do not modify active HIL upload paths.",
       "Do not dispatch live-provider workflows.",
       "Do not merge, deploy, publish, release, or introduce credentials without fresh explicit authority.",
-      "Do not duplicate implementation owned by PR #85 or publication refresh owned by PR #84."
+      "Do not duplicate implementation owned by PR #85 or publication evidence owned by issue #18."
     ],
-    "release_condition": "Release when the inventory and validator are merged into main or transferred to a newer canonical handoff with equivalent machine-readable state."
+    "release_condition": "Satisfied by PR #95 merge into main with the complete machine-readable inventory and canonical handoff update.",
+    "released_at": "2026-08-03T00:37:06Z",
+    "merge_commit": "1505aac0073bc6466769ca84c6ae28d887abdefd"
   },
   "inventory": [
     {
@@ -104,30 +106,30 @@
       "originating_session_goal": "Prove exact-byte HIL persistence, restart, review, append-only publication, and stable lookup.",
       "destination": "StegVerse-org/LLM-adapter",
       "branch": "hil-automated-full-cycle-v2",
-      "location": "PR #56",
+      "location": "PR #56; supersedes closed PR #44",
       "owner": "PR #56",
       "claim_state": "CLAIMED_FOR_INTEGRATION",
       "completion_state": "ephemeral_full_cycle_green",
       "validation_state": "artifact 8637052090 retained",
       "integration_state": "repository main later merged HIL gateway and deployment evidence work; compare before any transplant",
       "archival_dependency": true,
-      "evidence": "PR #56; run 30220483578; PR #37; PR #88",
+      "evidence": "PR #56; run 30220483578; PR #37; PR #88; PR #44 closed as superseded",
       "next_action": "Determine whether current main fully supersedes the ephemeral proof; preserve only missing assertions."
     },
     {
       "task_id": "LLMA-IMAGE-PUBLICATION",
       "originating_session_goal": "Retain exact v2 StegDeploy publication and fresh consumer-pull evidence.",
       "destination": "StegVerse-org/LLM-adapter",
-      "branch": "agent/refresh-stegdeploy-v2-publication-evidence",
-      "location": "PR #84; issue #18",
-      "owner": "PR #84",
-      "claim_state": "CLAIMED_FOR_VALIDATION",
-      "completion_state": "pending_fresh_main_evidence",
-      "validation_state": "current retained evidence previously stale v1",
-      "integration_state": "not complete",
+      "branch": "fix/activate-stegdeploy-publication-observer",
+      "location": "issue #18; .github/workflows/stegdeploy-image.yml; tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
+      "owner": "issue #18",
+      "claim_state": "CLAIMED_FOR_IMPLEMENTATION",
+      "completion_state": "recurring_observer_activation_in_progress",
+      "validation_state": "live workflow v2 contract exists; missing hourly trigger repaired on activation branch pending hosted validation",
+      "integration_state": "pending merge and first retained v2 publication result",
       "archival_dependency": true,
-      "evidence": "PR #84; issue #18; status/stegdeploy-image-publication-readiness.json",
-      "next_action": "Allow repository-native publication workflow to produce PUBLISHED or exact BLOCKED evidence; do not duplicate."
+      "evidence": "issue #18; task LLMA-PUBLICATION-ACTIVATION-013; status/stegdeploy-image-publication-readiness.json",
+      "next_action": "Merge the hourly observer activation and inspect the resulting main-branch v2 PUBLISHED or exact BLOCKED receipt."
     },
     {
       "task_id": "LLMA-SITE-PROPAGATION",
@@ -149,8 +151,8 @@
     "total_session_goals": 8,
     "transferred_or_complete": 8,
     "unique_chat_only_requirements_remaining": 0,
-    "archive_state": "ACTIVE_DISTINCT_SUPPORT_ROLE",
-    "canonical_continuation": "StegVerse-org/LLM-adapter data/session-provider-layer-consolidation.json and docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
-    "reason_not_archive_ready": "The durable inventory is installed on a branch but not yet merged or otherwise incorporated into main, and current-main reconciliation of provider execution safety remains unvalidated."
+    "archive_state": "COMPLETE_ARCHIVE",
+    "canonical_continuation": "StegVerse-org/LLM-adapter issue #18, data/session-provider-layer-consolidation.json, docs/LLM_ADAPTER_MIRROR_HANDOFF.md, and tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
+    "reason_not_archive_ready": null
   }
 }
