@@ -18,8 +18,8 @@
     "collision_boundaries": [
       "Do not modify active HIL upload paths.",
       "Do not dispatch live-provider workflows.",
-      "Do not merge, deploy, publish, release, or introduce credentials without fresh explicit authority.",
-      "Do not duplicate implementation owned by PR #85 or publication evidence owned by issue #18."
+      "Do not deploy, release, or introduce credentials without fresh explicit authority.",
+      "Do not duplicate publication, provider, custody, or HIL owner work."
     ],
     "release_condition": "Satisfied by PR #95 merge into main with the complete machine-readable inventory and canonical handoff update.",
     "released_at": "2026-08-03T00:37:06Z",
@@ -36,25 +36,25 @@
       "claim_state": "CLAIMED_FOR_IMPLEMENTATION",
       "completion_state": "implemented_on_stale_branch",
       "validation_state": "all PR-head workflows passed",
-      "integration_state": "not merged; not bound to current main live workflow",
+      "integration_state": "not merged; current-main reconciliation required",
       "archival_dependency": true,
       "evidence": "PR #63 and workflow run 30237018248",
-      "next_action": "Reconcile contract onto current main and bind non-executing CI to it without dispatching provider execution."
+      "next_action": "Reconcile the contract onto current main without dispatching provider execution."
     },
     {
       "task_id": "LLMA-AUTHORIZED-RUNTIME",
       "originating_session_goal": "Execute exactly one real governed provider request with usage persistence, authenticated custody, transition custody, and reconstruction PASS.",
       "destination": "StegVerse-org/LLM-adapter",
       "branch": "agent/bind-authorized-provider-runtime",
-      "location": "draft PR #27; .github/workflows/ecosystem-chat-live-activation.yml",
-      "owner": "draft PR #27",
+      "location": "draft PR #27; .github/workflows/ecosystem-chat-live-activation.yml; issue #18",
+      "owner": "issue #18 with draft PR #27 retained as a noncanonical candidate",
       "claim_state": "BLOCKED",
-      "completion_state": "unsafe_trigger_form_superseded_by_required_reconciliation",
+      "completion_state": "unsafe_trigger_form_not_activated",
       "validation_state": "not acceptable for activation",
-      "integration_state": "main contains earlier PR #29 implementation; execution safety must be re-evaluated against PR #32 authority gate",
+      "integration_state": "receipt-gated authority from merged PR #32 remains canonical",
       "archival_dependency": true,
-      "evidence": "PR #27 safety comments; merged PR #29; merged PR #32",
-      "next_action": "Create a current-main reconciliation that separates posture observation from receipt-gated execution and fails closed on boundary drift."
+      "evidence": "PR #27 safety comments; merged PR #29; merged PR #32; issue #18",
+      "next_action": "Use issue #18 and the merged authority gate for one bounded execution only after all declared blockers clear."
     },
     {
       "task_id": "LLMA-PROVIDER-AUTHORITY-GATE",
@@ -66,10 +66,10 @@
       "claim_state": "COMPLETE",
       "completion_state": "merged",
       "validation_state": "merged workflow and tests",
-      "integration_state": "available as canonical authority mechanism",
+      "integration_state": "canonical authority mechanism",
       "archival_dependency": false,
       "evidence": "PR #32",
-      "next_action": "Use this gate as the canonical authority owner rather than creating a competing execution mechanism."
+      "next_action": "Preserve this gate as the sole provider-execution authority mechanism."
     },
     {
       "task_id": "LLMA-PROCESS-RESTART",
@@ -83,8 +83,8 @@
       "validation_state": "seven workflows passed on 56789806e7d0a3d351fc0ee8d93f9ad03128a254",
       "integration_state": "not merged; local persistence explicitly not custody",
       "archival_dependency": true,
-      "evidence": "PR #60; run 30235531571 and companion workflows",
-      "next_action": "Rebase or transplant only if current main lacks equivalent real-process restart proof; otherwise close as superseded with exact main evidence."
+      "evidence": "PR #60 and its workflow runs",
+      "next_action": "Compare current main and either transplant missing proof or close PR #60 as superseded."
     },
     {
       "task_id": "LLMA-INTERNAL-REFERENCE",
@@ -98,55 +98,53 @@
       "validation_state": "workflow artifact 8637500964 retained",
       "integration_state": "not merged",
       "archival_dependency": true,
-      "evidence": "PR #58; run 30222091090",
-      "next_action": "Compare against current main governed-reference coverage and either transplant or close as superseded."
+      "evidence": "PR #58; run 30222091090; artifact 8637500964",
+      "next_action": "Compare current-main governed-reference coverage and transplant only missing assertions or close as superseded."
     },
     {
       "task_id": "LLMA-HIL-FULL-CYCLE",
       "originating_session_goal": "Prove exact-byte HIL persistence, restart, review, append-only publication, and stable lookup.",
       "destination": "StegVerse-org/LLM-adapter",
       "branch": "hil-automated-full-cycle-v2",
-      "location": "PR #56; supersedes closed PR #44",
+      "location": "PR #56; superseded PR #44",
       "owner": "PR #56",
       "claim_state": "CLAIMED_FOR_INTEGRATION",
       "completion_state": "ephemeral_full_cycle_green",
       "validation_state": "artifact 8637052090 retained",
-      "integration_state": "repository main later merged HIL gateway and deployment evidence work; compare before any transplant",
+      "integration_state": "current main contains later HIL gateway and deployment-evidence work; comparison remains required",
       "archival_dependency": true,
-      "evidence": "PR #56; run 30220483578; PR #37; PR #88; PR #44 closed as superseded",
-      "next_action": "Determine whether current main fully supersedes the ephemeral proof; preserve only missing assertions."
+      "evidence": "PR #56; run 30220483578; PR #37; PR #88; PR #44 closed",
+      "next_action": "Preserve only assertions not already proven on current main, then release or merge PR #56."
     },
     {
       "task_id": "LLMA-IMAGE-PUBLICATION",
       "originating_session_goal": "Retain exact v2 StegDeploy publication and fresh consumer-pull evidence.",
       "destination": "StegVerse-org/LLM-adapter",
-      "branch": "fix/activate-stegdeploy-publication-observer",
-      "location": "issue #18; .github/workflows/stegdeploy-image.yml; tasks/LLMA-PUBLICATION-ACTIVATION-013.json; StegVerse-Labs/StegVerse-Healer/.github/workflows/stegdeploy-publication-relay.yml",
-      "owner": "issue #18",
-      "scheduler_owner": "StegVerse-Labs/StegVerse-Healer",
-      "claim_state": "CLAIMED_FOR_IMPLEMENTATION",
-      "completion_state": "one_shot_activation_and_scheduler_delegation_in_progress",
-      "validation_state": "v2 publication contract exists; local schedule rejected by canonical validation; workflow is event-driven and recurring dispatch remains Healer-owned",
-      "integration_state": "pending merge and first retained v2 publication result",
-      "archival_dependency": true,
-      "evidence": "issue #18; task LLMA-PUBLICATION-ACTIVATION-013; status/stegdeploy-image-publication-readiness.json; StegVerse-Healer docs/HEALER_MIRROR_HANDOFF.md",
-      "scheduler_blocker": "HEALER_GH_TOKEN dispatch returns HTTP 403 until repository or organization token scope changes",
-      "next_action": "Merge the bounded event activation, inspect the resulting main-branch v2 PUBLISHED or exact BLOCKED receipt, and leave recurrence with StegVerse-Healer."
+      "branch": "main",
+      "location": "issue #18; .github/workflows/stegdeploy-image.yml; receipts/stegdeploy-image-publication.json; receipts/stegdeploy-image-verification-pull.log; status/stegdeploy-image-publication-readiness.json; tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
+      "owner": "completed task LLMA-PUBLICATION-ACTIVATION-013; recurrence delegated to StegVerse-Labs/StegVerse-Healer",
+      "claim_state": "COMPLETE",
+      "completion_state": "PUBLISHED_WITH_FRESH_PULL_AND_RETAINED_V2_EVIDENCE",
+      "validation_state": "run 30964767464 and job 92176237360 succeeded; receipt 2ebacb9f5efc426a38bbbb58492b70575b9408127f5f57a34f066b51a43ba7a9; readiness READY",
+      "integration_state": "activation PR #111 and repair PR #112 merged; evidence retained on main",
+      "archival_dependency": false,
+      "evidence": "image sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55; run 30964767464; artifact 8914297100; task LLMA-PUBLICATION-ACTIVATION-013",
+      "next_action": "Healer or the existing core-node consumer verifies and consumes the immutable digest; issue #18 continues persistent activation."
     },
     {
       "task_id": "LLMA-SITE-PROPAGATION",
       "originating_session_goal": "Propagate a zero-blocker VERIFIED activation receipt to Site and downstream consumers.",
       "destination": "StegVerse-Labs/Site; GCAT-BCAT-Engine/Publisher; master-records/orchestration",
       "branch": "repository-native owners",
-      "location": "Site issue #24; Publisher handoff; master-records issue #2",
+      "location": "Site issue #24; Publisher handoff; master-records issue #2; LLM-adapter issue #18",
       "owner": "cross-repository canonical owners",
       "claim_state": "BLOCKED",
       "completion_state": "not activated",
-      "validation_state": "no zero-blocker VERIFIED receipt observed",
-      "integration_state": "waiting on provider, custody, reconstruction, and persistent endpoint evidence",
+      "validation_state": "no zero-blocker VERIFIED activation receipt observed",
+      "integration_state": "waiting on real provider execution, persistent endpoint, custody, reconstruction, and activation evidence",
       "archival_dependency": true,
-      "evidence": "cross-repository handoffs and issues",
-      "next_action": "Consumers must remain fail-closed until canonical activation evidence exists."
+      "evidence": "cross-repository handoffs, issues, and LLM-adapter issue #18",
+      "next_action": "Consumers remain fail-closed until issue #18 produces canonical zero-blocker VERIFIED evidence."
     }
   ],
   "session_consolidation": {
@@ -154,7 +152,7 @@
     "transferred_or_complete": 8,
     "unique_chat_only_requirements_remaining": 0,
     "archive_state": "COMPLETE_ARCHIVE",
-    "canonical_continuation": "StegVerse-org/LLM-adapter issue #18, data/session-provider-layer-consolidation.json, docs/LLM_ADAPTER_MIRROR_HANDOFF.md, tasks/LLMA-PUBLICATION-ACTIVATION-013.json, and StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md",
+    "canonical_continuation": "StegVerse-org/LLM-adapter issue #18, docs/LLM_ADAPTER_MIRROR_HANDOFF.md, data/llm-adapter-orchestration-state.json, data/session-provider-layer-consolidation.json, completed task LLMA-PUBLICATION-ACTIVATION-013, and StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md",
     "reason_not_archive_ready": null
   }
 }
