@@ -104,11 +104,11 @@ def test_site_submission_contract(monkeypatch, tmp_path):
     assert receipt["schema_version"] == "HIL-RECEIVER-RECEIPT-v2"
     assert receipt["submitted_file_sha256"] == response_hash
     assert receipt["chain_validation_state"] == "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED"
-    unsigned = dict(receipt)
-    receipt_hash = unsigned.pop("receipt_sha256")
-    unsigned.pop("receiver_signature")
+    assert receipt["receiver_signature"].startswith("hmac-sha256:")
+    material = dict(receipt)
+    receipt_hash = material.pop("receipt_sha256")
     assert receipt_hash == hashlib.sha256(
-        json.dumps(unsigned, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        json.dumps(material, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
 
 

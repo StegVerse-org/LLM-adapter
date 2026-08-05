@@ -2,6 +2,14 @@ name: Service Gateway Activation Proof
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - "llm_adapter/service_gateway.py"
+      - "tests/test_service_gateway.py"
+      - "vendor/tvc/**"
+      - "Dockerfile.service-gateway"
+      - "pyproject.toml"
+      - ".github/workflows/service-gateway-deploy.yml"
   push:
     branches: [main]
     paths:
@@ -22,7 +30,7 @@ jobs:
     timeout-minutes: 15
     env:
       TVC_COMMIT: b1a817e629aff483ab80679297013b33e692b567
-      TVC_BLOB_SHA: 7c8d3965eafd6048ea38e525647b898500c30531
+      TVC_BLOB_SHA: e376f2c276bda75ff497709637aac693853bf9cc
       STORAGE_ROOT: ${{ github.workspace }}/activation-evidence/storage
       RECEIPT_FILE: ${{ github.workspace }}/activation-evidence/tvc-decision.json
       RESULT_DIR: ${{ github.workspace }}/activation-evidence/result
@@ -196,9 +204,9 @@ jobs:
               "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED",
               "PRIMARY_PROMPT_RESPONSE_SIGNATURE_CHAIN_VERIFIED",
           }
-          unsigned = dict(receipt)
-          declared = unsigned.pop("receipt_sha256")
-          canonical = json.dumps(unsigned, sort_keys=True, separators=(",", ":")).encode()
+          material = dict(receipt)
+          declared = material.pop("receipt_sha256")
+          canonical = json.dumps(material, sort_keys=True, separators=(",", ":")).encode()
           assert hashlib.sha256(canonical).hexdigest() == declared
           durable = Path("activation-evidence/storage/receipts") / f'{receipt["submission_id"]}.json'
           assert durable.exists()
@@ -218,7 +226,19 @@ jobs:
             -F "participant_consent_authority_acknowledged=true" \
             http://127.0.0.1:8080/api/hil/submissions \
             > "$RESULT_DIR/duplicate-receipt.json"
-          cmp "$RESULT_DIR/intake-receipt.json" "$RESULT_DIR/duplicate-receipt.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = Path("activation-evidence/result")
+          first = json.loads((result / "intake-receipt.json").read_text())
+          duplicate = json.loads((result / "duplicate-receipt.json").read_text())
+          assert first == duplicate
+          assert first["submission_id"] == duplicate["submission_id"]
+          assert first["receipt_sha256"] == duplicate["receipt_sha256"]
+          canonical = json.dumps(first, sort_keys=True, separators=(",", ":"))
+          (result / "idempotent-receipt.canonical.json").write_text(canonical + "\n", encoding="utf-8")
+          PY
 
       - name: Write activation summary
         if: always()
@@ -228,8 +248,10 @@ jobs:
           from pathlib import Path
 
           result = Path("activation-evidence/result")
+          result.mkdir(parents=True, exist_ok=True)
           readiness = json.loads((result / "readiness.json").read_text()) if (result / "readiness.json").exists() else None
           receipt = json.loads((result / "intake-receipt.json").read_text()) if (result / "intake-receipt.json").exists() else None
+          duplicate = json.loads((result / "duplicate-receipt.json").read_text()) if (result / "duplicate-receipt.json").exists() else None
           summary = {
               "schema": "STEGVERSE-SERVICE-GATEWAY-ACTIVATION-v1",
               "repository": "StegVerse-org/LLM-adapter",
@@ -240,12 +262,24 @@ jobs:
               "tvc_blob_sha": "${{ env.TVC_BLOB_SHA }}",
               "readiness": readiness,
               "intake_receipt": receipt,
-              "result": "PASS" if (result / "ACTIVATION_PASS").exists() else "BLOCKED",
+              "duplicate_receipt_equal": receipt == duplicate if receipt is not None and duplicate is not None else False,
+              "result": "PASS" if (result / "ACTIVATION_PASS").exists() and receipt == duplicate else "BLOCKED",
               "boundary": "ephemeral GitHub-hosted activation proof; not persistent public hosting",
           }
           result.joinpath("activation-summary.json").write_text(
               json.dumps(summary, sort_keys=True, indent=2) + "\n", encoding="utf-8"
           )
+          PY
+
+      - name: Enforce activation result
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          summary = json.loads(Path("activation-evidence/result/activation-summary.json").read_text())
+          assert summary["result"] == "PASS"
+          assert summary["duplicate_receipt_equal"] is True
+          assert summary["boundary"] == "ephemeral GitHub-hosted activation proof; not persistent public hosting"
           PY
 
       - name: Upload activation evidence

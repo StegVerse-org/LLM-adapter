@@ -4,42 +4,34 @@
   "repository": "StegVerse-org/LLM-adapter",
   "handoff": "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
   "status": "ACTIVE_WITH_DECLARED_BLOCKERS",
-  "task_sequence": 1,
-  "task_sequence_label": "current work task sequence 0001",
+  "task_sequence": 2,
+  "task_sequence_label": "current work task sequence 0002",
   "heartbeat_mode": "TRANSITION_DRIVEN_HEALTH_RELATIVE",
-  "ecosystem_heartbeat": 3,
-  "repository_heartbeat": 3,
+  "ecosystem_heartbeat": 5,
+  "repository_heartbeat": 5,
   "last_transition": {
-    "event_type": "CANONICAL_STEGDEPLOY_IMAGE_PUBLISHED_AND_PULL_VERIFIED",
+    "event_type": "LATEST_PUBLICATION_EVIDENCE_RECONCILED_DURING_SERVICE_GATEWAY_VALIDATION",
     "progress_effect": true,
     "authority_effect": false,
-    "observed_at": "2026-08-04T19:55:07-05:00",
+    "observed_at": "2026-08-04T20:38:00-05:00",
     "evidence": [
-      "tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
       "receipts/stegdeploy-image-publication.json",
-      "receipts/stegdeploy-image-verification-pull.log",
       "status/stegdeploy-image-publication-readiness.json",
-      "StegVerse-org/LLM-adapter/actions/runs/30964767464",
+      "StegVerse-org/LLM-adapter/actions/runs/30965343262",
+      "tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
+      "tasks/LLMA-SEQUENCE-0001-RELEASE-015.json",
       "StegVerse-org/LLM-adapter#18"
     ]
   },
   "active_tasks": [
     {
-      "task_id": "LLMA-0001-HIL-CYCLE",
-      "owner": "pull/56",
-      "superseded_owner": "pull/44",
-      "workload": "Reconcile automated persisted HIL full cycle onto current main",
+      "task_id": "LLMA-SEQUENCE-0001-RELEASE-015",
+      "owner": "branch/fix/service-gateway-proof-and-release-sequence",
+      "workload": "Repair and validate the canonical Service Gateway ephemeral activation proof, reconcile latest publication evidence, then release sequence 0002",
       "execution_class": "PARALLEL_SAFE",
-      "state": "CLAIMED_FOR_INTEGRATION",
-      "release_condition": "PR #56 merges, closes as superseded with exact current-main evidence, or transfers its missing assertions to a newer canonical owner."
-    },
-    {
-      "task_id": "LLMA-0001-GOAL8",
-      "owner": "main/provider-usage-event",
-      "workload": "Canonical provider-owned usage-event validation",
-      "execution_class": "PARALLEL_SAFE",
-      "state": "IMPLEMENTED_PENDING_CANONICAL_VALIDATION",
-      "release_condition": "Canonical fixture, adversarial tests, Python 3.9/3.11/3.12 validation, and main integration evidence are all retained."
+      "state": "CLAIMED_FOR_VALIDATION",
+      "claimed_at": "2026-08-04T20:18:00-05:00",
+      "release_condition": "The repair PR merges after hosted validation, the main Service Gateway activation proof retains PASS or an exact BLOCKED artifact, and task/handoff/issue evidence is finalized."
     }
   ],
   "completed_tasks": [
@@ -67,11 +59,41 @@
       "state": "COMPLETE",
       "activation_merge": "260e4b851a8b0e6ee72c361675670b2a4d92b515",
       "repair_merge": "4c6d8a47a4695adc793ad0ab4577c1e9aa0488dc",
-      "publication_run": 30964767464,
-      "publication_receipt_sha256": "2ebacb9f5efc426a38bbbb58492b70575b9408127f5f57a34f066b51a43ba7a9",
-      "image_digest": "sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55",
+      "claim_release_merge": "7f70c326db25e5a2cb6fce9a03858ec9de537ec4",
+      "publication_run": 30965343262,
+      "publication_job": 92177973489,
+      "publication_receipt_sha256": "745ae55bde7de8f883497f29485922ba73938995e298c977ffe9270e6e8abc65",
+      "image_digest": "sha256:980d76c7a1bc43cb7d828ebc9153db8dec8295d92c10bd56e56c9ce0d4ef2a92",
       "consumer_pull_verified": true,
-      "readiness_state": "READY"
+      "readiness_state": "READY",
+      "superseded_publication_run": 30964767464
+    },
+    {
+      "task_id": "LLMA-0001-HIL-CYCLE",
+      "owner": "merged-pull/56",
+      "superseded_owner": "closed-pull/44",
+      "workload": "Reconcile automated persisted HIL full cycle onto current main",
+      "execution_class": "PARALLEL_SAFE",
+      "state": "COMPLETE",
+      "merge_commit": "e320c33189c1b6cf9d51a666a4505592b6fb981b",
+      "workflow_run": 30966031698,
+      "workflow_job": 92180065119,
+      "receipt_sha256": "f4d0a8b90b05017b5abf77f3c96c3b8ad3efb99eb57d9c68b90a611b928888da",
+      "artifact_id": 8914746865,
+      "artifact_digest": "sha256:e9fe894eb2331c9d3792545cbb68d2f0d9762b2b05327732ec4482adf20d1350",
+      "persistent_deployment_proven": false
+    },
+    {
+      "task_id": "LLMA-0001-GOAL8",
+      "owner": "main/provider-usage-event",
+      "workload": "Canonical provider-owned usage-event validation",
+      "execution_class": "PARALLEL_SAFE",
+      "state": "COMPLETE",
+      "workflow_run": 30966031661,
+      "python_versions": ["3.9", "3.11", "3.12"],
+      "canonical_fixture_and_adversarial_tests": true,
+      "main_integration_commit": "e320c33189c1b6cf9d51a666a4505592b6fb981b",
+      "authority_effect": false
     }
   ],
   "queued_exclusive_tasks": [
@@ -80,16 +102,18 @@
       "owner": "issue/18",
       "workload": "Execute authorized real-provider persistent HIL vertical slice",
       "execution_class": "EXCLUSIVE",
-      "blocked_until": "end of current work task sequence 0001, no tasks running",
+      "blocked_until": "end of current work task sequence 0002, no tasks running, and all authority-bound blockers cleared",
       "external_blockers": [
-        "authorized provider configuration",
+        "authorized provider configuration and scoped execution grant",
         "persistent endpoint",
         "authenticated Master Records custody configuration"
       ],
       "completed_dependency_evidence": [
         "published-package consumer access: READY",
-        "image digest: sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55",
-        "publication run: 30964767464"
+        "latest image digest: sha256:980d76c7a1bc43cb7d828ebc9153db8dec8295d92c10bd56e56c9ce0d4ef2a92",
+        "latest publication run: 30965343262",
+        "HIL full-cycle run: 30966031698",
+        "provider usage validation run: 30966031661"
       ]
     }
   ],
@@ -102,11 +126,23 @@
       "observed_result": "HTTP 403",
       "release_condition": "HEALER_GH_TOKEN successfully creates the bounded LLM-adapter workflow-dispatch event without exposing the token.",
       "effect_on_publication_completion": "NONE"
+    },
+    {
+      "observer_id": "LLMA-LIVE-ACTIVATION-MONITOR",
+      "owner": "StegVerse-org/LLM-adapter",
+      "workflow": ".github/workflows/ecosystem-chat-live-activation-monitor.yml",
+      "state": "PENDING",
+      "observed_result": "live_activation_observation_not_yet_recorded",
+      "release_condition": "A zero-blocker VERIFIED live activation observation is retained after authorized persistent provider, custody, and reconstruction execution.",
+      "authority_effect": false
     }
   ],
   "existing_workload_owners": {
     "authorized_provider_runtime": "merged-pr/32 authority gate plus issue/18",
-    "hil_full_cycle_reconciliation": "pull/56",
+    "hil_full_cycle_reconciliation": "completed merged-pr/56",
+    "provider_usage_validation": "completed main/provider-usage-event",
+    "service_gateway_activation_proof": "tasks/LLMA-SEQUENCE-0001-RELEASE-015.json and issue/72",
+    "service_gateway_secret_governance": "StegVerse-Labs/TVC#6",
     "internal_reference_tests": "pull/58",
     "restart_persistence_proof": "pull/60",
     "image_publication_evidence": "completed task LLMA-0001-IMAGE-PUBLICATION",
@@ -124,11 +160,13 @@
     "watchdog_implies_progress": false,
     "system_health_reasons": [
       "repository handoff and orchestration state are installed",
-      "closed PR #44 is no longer treated as an active owner",
+      "closed PR #44 is superseded and PR #56 is merged with exact full-cycle evidence",
       "provider-layer consolidation PR #95 is merged and released",
-      "canonical image publication and fresh consumer pull are complete",
+      "canonical provider-usage validation passed on Python 3.9, 3.11, and 3.12 on main",
+      "latest canonical image publication, attestation, repository retention, and fresh consumer pull are complete",
+      "Service Gateway proof repair is the only active repository task in sequence 0002",
       "recurring publication observation remains assigned to StegVerse-Healer and is blocked on exact token scope",
-      "authorized live-provider execution remains queued behind explicit provider, endpoint, custody, and idle-barrier requirements"
+      "authorized live-provider execution remains queued behind provider, persistent endpoint, custody, and current-sequence idle requirements"
     ]
   },
   "policy": {
@@ -143,7 +181,7 @@
     "completed_or_superseded_owners_must_not_remain_running": true,
     "managed_schedules_are_healer_only": true
   },
-  "idle_terminal_statement": "end of current work task sequence 0001, no tasks running",
+  "idle_terminal_statement": "end of current work task sequence 0002, no tasks running",
   "authority": {
     "provider": false,
     "deployment": false,
