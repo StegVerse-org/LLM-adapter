@@ -196,9 +196,9 @@ jobs:
               "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED",
               "PRIMARY_PROMPT_RESPONSE_SIGNATURE_CHAIN_VERIFIED",
           }
-          unsigned = dict(receipt)
-          declared = unsigned.pop("receipt_sha256")
-          canonical = json.dumps(unsigned, sort_keys=True, separators=(",", ":")).encode()
+          material = dict(receipt)
+          declared = material.pop("receipt_sha256")
+          canonical = json.dumps(material, sort_keys=True, separators=(",", ":")).encode()
           assert hashlib.sha256(canonical).hexdigest() == declared
           durable = Path("activation-evidence/storage/receipts") / f'{receipt["submission_id"]}.json'
           assert durable.exists()
@@ -228,6 +228,7 @@ jobs:
           from pathlib import Path
 
           result = Path("activation-evidence/result")
+          result.mkdir(parents=True, exist_ok=True)
           readiness = json.loads((result / "readiness.json").read_text()) if (result / "readiness.json").exists() else None
           receipt = json.loads((result / "intake-receipt.json").read_text()) if (result / "intake-receipt.json").exists() else None
           summary = {
