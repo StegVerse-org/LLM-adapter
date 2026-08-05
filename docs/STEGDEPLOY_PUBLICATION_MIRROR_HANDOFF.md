@@ -2,176 +2,174 @@
 
 ## Source of truth
 
-This is the authoritative scoped continuation record for canonical StegDeploy image publication readiness in `StegVerse-org/LLM-adapter`.
+This is the authoritative scoped continuation record for canonical StegDeploy image publication in `StegVerse-org/LLM-adapter`.
 
-Live workflow contents, retained receipts, workflow runs, artifacts, issue #18, task records, default-branch history, and the canonical StegVerse-Healer scheduler handoff are authoritative over earlier chat or handoff claims.
+Authoritative evidence:
 
-## Active goal and claim
+```text
+.github/workflows/stegdeploy-image.yml
+receipts/stegdeploy-image-publication.json
+receipts/stegdeploy-image-verification-pull.log
+status/stegdeploy-image-publication-readiness.json
+tasks/LLMA-PUBLICATION-ACTIVATION-013.json
+data/llm-adapter-orchestration-state.json
+StegVerse-org/LLM-adapter#18
+StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md
+```
+
+## Goal and released claim
 
 ```text
 task_id: LLMA-PUBLICATION-ACTIVATION-013
 originating_goal: complete tasks while active and activate finished Ecosystem Chat tasks
 canonical_issue: StegVerse-org/LLM-adapter#18
-branch: fix/activate-stegdeploy-publication-observer
-claim_state: CLAIMED_FOR_IMPLEMENTATION_AND_INTEGRATION
+claim_state: COMPLETE
+claimant: none
 claimed_at: 2026-08-04T19:33:00-05:00
-release_condition: merge, inspect hosted validation and the main publication run, retain exact v2 evidence, assign recurring observation to Healer, and release the claim
+released_at: 2026-08-04T19:55:07-05:00
+activation_pr: #111
+activation_merge: 260e4b851a8b0e6ee72c361675670b2a4d92b515
+repair_pr: #112
+repair_merge: 4c6d8a47a4695adc793ad0ab4577c1e9aa0488dc
 ```
 
-Task record:
+The task is complete because the canonical image was built, published, attested, freshly pulled as a consumer, recorded in a zero-blocker v2 receipt, projected READY, retained on `main`, and preserved in workflow artifacts.
+
+## Published image evidence
 
 ```text
-tasks/LLMA-PUBLICATION-ACTIVATION-013.json
-```
-
-## Current retained truth
-
-```text
-canonical workflow: .github/workflows/stegdeploy-image.yml
-retained receipt: receipts/stegdeploy-image-publication.json
-retained pull log: receipts/stegdeploy-image-verification-pull.log
-retained readiness: status/stegdeploy-image-publication-readiness.json
-observed receipt schema: stegdeploy.image-publication.v1
-observed readiness: BLOCKED
-observed consumer_pull_verified: false
-observed blockers:
-  - current retained receipt predates v2 publication contract
-  - fresh consumer pull verification not retained
-provider execution authority: false
-persistent deployment authority: false
-custody authority: false
-Site activation authority: false
+image: ghcr.io/stegverse-org/llm-adapter:main
+digest: sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55
+source commit: 4c6d8a47a4695adc793ad0ab4577c1e9aa0488dc
+publication run: 30964767464
+publication job: 92176237360
+receipt schema: stegdeploy.image-publication.v2
+receipt state: PUBLISHED
+receipt blockers: []
+receipt sha256: 2ebacb9f5efc426a38bbbb58492b70575b9408127f5f57a34f066b51a43ba7a9
+consumer_pull_verified: true
+readiness state: READY
 manual user action required: false
 ```
 
-A structurally valid v2 workflow is not itself proof that an image is published or consumable. The repository remains `BLOCKED` until the same run retains a v2 receipt, fresh pull log, and readiness projection.
-
-## Scheduler-authority correction
-
-The earlier handoff stated that this repository retried publication hourly, but the live workflow contained no schedule. A first attempted correction added a local cron. Canonical validation rejected that change with:
+All four publication stages succeeded:
 
 ```text
-scheduled workflow is not permitted outside StegVerse-Healer
+registry_login: success
+build_publish: success
+attestation: success
+verification_pull: success
 ```
 
-The repository-wide policy is stronger than the earlier scoped claim:
+The retained pull log independently records:
 
 ```text
-StegVerse-Labs/StegVerse-Healer is the sole approved clock for managed repositories.
+Digest: sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55
+Status: Downloaded newer image for ghcr.io/stegverse-org/llm-adapter:main
 ```
 
-Therefore the correct architecture is:
+## Artifacts and attestation
 
 ```text
-StegVerse-Labs/StegVerse-Healer/.github/workflows/stegdeploy-publication-relay.yml
-  schedule: cron "37 * * * *"
-  -> app/relay_stegdeploy_publication.py
-  -> bounded workflow-dispatch request to this repository
-
-StegVerse-org/LLM-adapter/.github/workflows/stegdeploy-image.yml
-  push on owned paths
-  workflow_dispatch
-  no schedule trigger
+publication artifact: 8914297100
+publication artifact digest: sha256:f1feb11a55986ae4e32bd40967e67bf5df32060ecb0bb9d287b47cddb84a03f1
+build-record artifact: 8914297626
+build-record digest: sha256:81bd420c8de44189794bc8dfae6aba3a71b825a229821832e10c123122c02342
+attestation id: 38926411
+Rekor log index: 2341838465
 ```
 
-The merge of this activation package changes an owned workflow path, producing one immediate main-branch publication attempt without violating scheduler centralization. Recurrence remains machine-owned by StegVerse-Healer.
+## Validation history
 
-## Canonical Healer blocker
-
-The Healer handoff and retained relay state already record the exact recurring-dispatch blocker:
+Activation PR #111 final head:
 
 ```text
-owner: StegVerse-Labs/StegVerse-Healer
+667be063f471d9bc0ca1347a99f525538d2d517d
+Session Provider Layer Consolidation: 30964496237 — PASS
+Architecture Guard: 30964496272 — PASS
+Validate Provider-Owned Usage Event: 30964496316 — PASS
+Full repository validation: 30964496284 — PASS
+```
+
+Repair PR #112 final head:
+
+```text
+13bfdbddae0ca4bd0937ab8ea73b4234d12e1daf
+Session Provider Layer Consolidation: 30964720108 — PASS
+Architecture Guard: 30964720123 — PASS
+Validate Provider-Owned Usage Event: 30964720135 — PASS
+Full repository validation: 30964720127 — PASS
+```
+
+The first activation run `30964551579` proved image build, push, and attestation but exposed two repository-local defects: mixed-case Docker image reference and ignored pull-log retention. PR #112 corrected only those defects. Run `30964767464` then passed end to end.
+
+## Scheduler authority
+
+Managed schedules remain prohibited outside StegVerse-Healer.
+
+Canonical recurrence owner:
+
+```text
+repository: StegVerse-Labs/StegVerse-Healer
 workflow: .github/workflows/stegdeploy-publication-relay.yml
+schedule: cron "37 * * * *"
+```
+
+The recurring relay remains separately blocked:
+
+```text
 state: BLOCKED
 observed result: HTTP 403
-cause boundary: available HEALER_GH_TOKEN cannot create the LLM-adapter workflow-dispatch event
-release condition: a controlled relay run creates the bounded dispatch without exposing the token
+cause boundary: HEALER_GH_TOKEN cannot currently create the bounded LLM-adapter workflow-dispatch event
+release condition: a controlled Healer relay run creates the dispatch without exposing the token
 ```
 
-This is not converted into a user evidence-copying task. The one-shot activation in this PR proceeds through the owned-path main push while Healer retains the recurring observer and token-scope release condition.
-
-## Canonical workflow behavior
-
-```text
-owned-path push or bounded workflow dispatch
--> authenticate to GHCR using GITHUB_TOKEN
--> build and publish linux/amd64 image
--> attest image provenance
--> remove local main tag and perform a fresh consumer pull
--> write stegdeploy.image-publication.v2 receipt
--> write exact PUBLISHED or BLOCKED state and stage outcomes
--> refresh readiness projection
--> retain receipt, pull log, and readiness together on main
--> upload evidence artifact
--> fail closed when state is not PUBLISHED
-```
-
-The workflow grants only bounded image-publication evidence activity. It grants no provider execution, persistent deployment, custody, release, Site activation, or general publication authority.
+This blocker does not invalidate the completed one-shot publication, digest, pull verification, receipt, readiness, or retained evidence. It remains a machine-owned observer dependency in StegVerse-Healer.
 
 ## Orchestration reconciliation
 
-The durable orchestration state is corrected as follows:
-
 ```text
-closed PR #44: no longer an active owner
-current HIL full-cycle owner: PR #56
+closed PR #44: superseded; no longer active
+HIL full-cycle integration owner: PR #56
 provider-layer consolidation PR #95: merged and released
-publication evidence owner: issue #18
-publication activation task: LLMA-PUBLICATION-ACTIVATION-013
-recurring scheduler owner: StegVerse-Labs/StegVerse-Healer
-exclusive live-provider task: remains queued and blocked
+image publication task: COMPLETE
+image recurrence: StegVerse-Healer owned
+exclusive live-provider execution: still queued
 ```
 
-The publication evidence task is parallel-safe. Activating it does not satisfy the idle barrier for provider execution and does not bypass authorized provider, persistent endpoint, package-access, or Master Records configuration requirements.
-
-## PR #84 disposition
-
-PR #84 requested a one-shot handoff refresh against an older main state. Main subsequently received the v2 receipt writer, fresh pull check, readiness validator, evidence retention, and hardened workflow commits. This activation package now supplies the current-main event trigger, task ownership reconciliation, and canonical Healer delegation.
-
-After this activation merges and validates, PR #84 is superseded and should be closed without merging its stale handoff replacement.
-
-## Validation commands and evidence path
+Published-package consumer access is no longer a live-provider blocker. Remaining live-provider blockers are:
 
 ```text
-python scripts/check_stegdeploy_image_publication_readiness.py
-python scripts/check_session_provider_layer_consolidation.py
-python scripts/check_llm_adapter_orchestration_state.py
-python -m json.tool data/llm-adapter-orchestration-state.json
-python -m json.tool data/session-provider-layer-consolidation.json
+authorized provider configuration
+persistent endpoint
+authenticated Master Records custody configuration
+exclusive-task idle barrier
 ```
 
-Hosted evidence required before claim release:
+## Authority boundary
+
+Publication proves only the image and its consumer pull. It does not grant or prove:
 
 ```text
-pull-request workflow results
-main-branch StegDeploy image workflow result
-publish job and step outcomes
-retained v2 receipt
-same-run pull log
-refreshed readiness projection
-uploaded publication artifact
+provider execution
+persistent deployment
+custody
+reconstruction
+Site activation
+downstream ingestion
+release authority
+general publication authority
+sovereign platform retirement
 ```
+
+All corresponding authority projections remain false.
 
 ## Next executable action
 
-1. Merge the activation branch after hosted validation passes.
-2. Inspect the push-triggered `StegDeploy image` run.
-3. If `PUBLISHED`, verify the retained digest and fresh pull evidence, release this task, and transfer image consumption to the existing Healer/core-node intake.
-4. If `BLOCKED`, retain the exact first publication-stage blocker, repair only that blocker, and leave provider execution queued.
-5. Leave recurring observation with StegVerse-Healer; do not add a local schedule.
+Issue #18 remains the canonical owner for consuming the immutable image digest on an authorized persistent runtime, executing one receipt-gated real provider request, preserving usage and transition custody, reconstructing the transition, producing a zero-blocker VERIFIED activation receipt, activating Site, and propagating verified downstream evidence.
 
-## Collision boundaries
-
-```text
-do not add a schedule trigger outside StegVerse-Healer
-do not dispatch provider execution
-do not access or introduce provider or Master Records credentials
-do not modify PR #56 HIL implementation paths
-do not create a competing image, gateway, host, scheduler, or deployment runtime
-do not claim persistent deployment, custody, Site activation, release, or sovereign completion
-```
+StegVerse-Healer remains the owner of recurring publication observation and its exact HTTP 403 token-scope release condition.
 
 ## Session consolidation
 
-The stale task-owner correction, scheduler-authority correction, one-shot activation task, Healer delegation, token-scope blocker, release condition, and exact continuation path are durably preserved in this handoff, the orchestration state, the provider-layer inventory, task `LLMA-PUBLICATION-ACTIVATION-013`, issue #18, and `StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md`. This session remains active only until the activation is merged and the resulting publication evidence is inspected and assigned.
+The activation, repair, validation, evidence retention, task release, stale-owner reconciliation, scheduler delegation, remaining blocker set, and next executable path are durably preserved. No unique execution state remains only in this chat.

@@ -3,50 +3,72 @@
   "task_id": "LLMA-PUBLICATION-ACTIVATION-013",
   "title": "Activate StegDeploy publication evidence and reconcile stale orchestration state",
   "repository": "StegVerse-org/LLM-adapter",
-  "implementation_branch": "fix/activate-stegdeploy-publication-observer",
   "canonical_issue": "StegVerse-org/LLM-adapter#18",
   "canonical_handoff": "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
   "scheduler_owner": "StegVerse-Labs/StegVerse-Healer",
   "scheduler_workflow": ".github/workflows/stegdeploy-publication-relay.yml",
   "execution_class": "PARALLEL_SAFE",
-  "state": "CLAIMED_FOR_IMPLEMENTATION_AND_INTEGRATION",
-  "claimant": "publication-evidence-activation-lane",
+  "state": "COMPLETE",
+  "claimant": null,
   "claimed_at": "2026-08-04T19:33:00-05:00",
-  "goal": "Trigger the already-implemented v2 image publication evidence path through a bounded main-branch event, repair stale task ownership, bind recurrence to the canonical Healer clock, and retain the exact first PUBLISHED or BLOCKED result without opening provider or custody authority.",
-  "owned_paths": [
-    ".github/workflows/stegdeploy-image.yml",
-    "data/llm-adapter-orchestration-state.json",
-    "data/session-provider-layer-consolidation.json",
-    "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
-    "scripts/check_llm_adapter_orchestration_state.py",
-    "tasks/LLMA-PUBLICATION-ACTIVATION-013.json"
+  "released_at": "2026-08-04T19:55:07-05:00",
+  "goal": "Trigger the already-implemented v2 image publication evidence path through a bounded main-branch event, repair stale task ownership, bind recurrence to the canonical Healer clock, and retain the exact PUBLISHED result without opening provider or custody authority.",
+  "implementation": {
+    "activation_pr": 111,
+    "activation_merge": "260e4b851a8b0e6ee72c361675670b2a4d92b515",
+    "repair_pr": 112,
+    "repair_merge": "4c6d8a47a4695adc793ad0ab4577c1e9aa0488dc",
+    "evidence_retention_commit": "5290030",
+    "current_main_observed": "402b896975a6041f0d9da5b00b943aec9c71a8f3"
+  },
+  "validation": {
+    "activation_pr_head": "667be063f471d9bc0ca1347a99f525538d2d517d",
+    "activation_runs": {
+      "session_provider_layer": 30964496237,
+      "architecture_guard": 30964496272,
+      "provider_usage_event": 30964496316,
+      "full_validate": 30964496284
+    },
+    "repair_pr_head": "13bfdbddae0ca4bd0937ab8ea73b4234d12e1daf",
+    "repair_runs": {
+      "session_provider_layer": 30964720108,
+      "architecture_guard": 30964720123,
+      "provider_usage_event": 30964720135,
+      "full_validate": 30964720127
+    },
+    "publication_run": 30964767464,
+    "publication_job": 92176237360,
+    "publication_state": "PUBLISHED",
+    "publication_receipt_sha256": "2ebacb9f5efc426a38bbbb58492b70575b9408127f5f57a34f066b51a43ba7a9",
+    "image_digest": "sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55",
+    "consumer_pull_verified": true,
+    "readiness_state": "READY",
+    "publication_artifact": 8914297100,
+    "publication_artifact_digest": "sha256:f1feb11a55986ae4e32bd40967e67bf5df32060ecb0bb9d287b47cddb84a03f1",
+    "build_record_artifact": 8914297626,
+    "build_record_digest": "sha256:81bd420c8de44189794bc8dfae6aba3a71b825a229821832e10c123122c02342",
+    "attestation_id": 38926411,
+    "rekor_log_index": 2341838465
+  },
+  "completed_requirements": [
+    "LLM-adapter contains no managed schedule.",
+    "Recurring publication observation is assigned to StegVerse-Labs/StegVerse-Healer.",
+    "Closed PR #44 is no longer an active owner; PR #56 is canonical for the HIL full-cycle integration decision.",
+    "Merged PR #95 provider-layer consolidation claim is released.",
+    "The canonical image was built, published, attested, freshly pulled, and retained with a v2 PUBLISHED receipt and READY projection.",
+    "The publication evidence artifact and Docker build record are retained.",
+    "No provider, persistent deployment, custody, Site activation, release, or general publication authority was granted."
   ],
-  "release_condition": "Merge to main; verify hosted validation; inspect the push-triggered StegDeploy image run; retain a v2 PUBLISHED or exact BLOCKED receipt, pull log, and readiness projection; assign recurring observation to StegVerse-Healer; release this claim with evidence.",
-  "expected_evidence": [
-    "no managed schedule remains in LLM-adapter",
-    "canonical recurrence is assigned to StegVerse-Labs/StegVerse-Healer",
-    "closed PR #44 removed as an active owner and redirected to PR #56",
-    "merged PR #95 integration claim released",
-    "issue #18 publication task active and repository observed",
-    "workflow run jobs, logs, artifacts, and retained v2 receipt"
-  ],
-  "known_scheduler_blocker": {
+  "remaining_machine_owned_dependency": {
     "owner": "StegVerse-Labs/StegVerse-Healer",
     "location": "docs/HEALER_MIRROR_HANDOFF.md and data/summary/stegdeploy_publication_dispatch.json",
     "state": "BLOCKED",
     "release_condition": "HEALER_GH_TOKEN successfully creates the bounded LLM-adapter workflow-dispatch event without exposing the token.",
-    "observed_result": "HTTP 403"
+    "observed_result": "HTTP 403",
+    "effect_on_completed_task": "NONE; one-shot publication activation and evidence retention are complete."
   },
-  "collision_boundaries": [
-    "Do not add a schedule trigger outside StegVerse-Healer.",
-    "Do not dispatch provider execution.",
-    "Do not access or introduce provider or Master Records credentials.",
-    "Do not modify active HIL upload paths or PR #56 files.",
-    "Do not create a competing image, gateway, host, scheduler, or deployment runtime.",
-    "Do not claim persistent deployment, provider execution, custody, Site activation, publication authority, or release."
-  ],
-  "next_executable_action": "Merge the bounded event activation, inspect the push-triggered image publication run, and repair only its first retained blocker if state is BLOCKED.",
+  "next_executable_action": "Healer or the existing core-node consumer verifies and consumes the published digest; issue #18 remains the sole owner of persistent deployment, provider execution, custody, reconstruction, Site activation, and downstream ingestion.",
   "manual_user_action_required": false,
   "authority_effect": false,
-  "activation_effect": "ONE_SHOT_PUBLICATION_EVIDENCE_ATTEMPT_WITH_HEALER_OWNED_RECURRENCE"
+  "activation_effect": "CANONICAL_IMAGE_PUBLISHED_AND_CONSUMER_PULL_VERIFIED"
 }
