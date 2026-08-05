@@ -5,46 +5,35 @@
   "handoff": "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
   "status": "ACTIVE_WITH_DECLARED_BLOCKERS",
   "task_sequence": 2,
-  "task_sequence_label": "current work task sequence 0002",
+  "task_sequence_label": "current work task sequence 0002 complete",
   "heartbeat_mode": "TRANSITION_DRIVEN_HEALTH_RELATIVE",
-  "ecosystem_heartbeat": 6,
-  "repository_heartbeat": 6,
+  "ecosystem_heartbeat": 7,
+  "repository_heartbeat": 7,
   "last_transition": {
-    "event_type": "CURRENT_PUBLICATION_RECONCILED_AND_TRIGGER_STABILIZATION_CLAIMED",
+    "event_type": "SERVICE_GATEWAY_SEQUENCE_COMPLETE_AND_CLAIM_RELEASED",
     "progress_effect": true,
     "authority_effect": false,
-    "observed_at": "2026-08-04T20:52:00-05:00",
+    "observed_at": "2026-08-04T21:01:00-05:00",
     "evidence": [
-      "receipts/stegdeploy-image-publication.json",
-      "status/stegdeploy-image-publication-readiness.json",
-      "StegVerse-org/LLM-adapter/actions/runs/30967405336",
-      "StegVerse-org/LLM-adapter/pull/116",
+      "receipts/service-gateway-activation-proof.json",
+      "tasks/LLMA-SEQUENCE-0001-RELEASE-015.json",
       "tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
-      "StegVerse-org/LLM-adapter#18"
+      "StegVerse-org/LLM-adapter/actions/runs/30967405348",
+      "StegVerse-org/LLM-adapter/actions/runs/30967973138",
+      "StegVerse-org/LLM-adapter#18",
+      "StegVerse-org/LLM-adapter#72"
     ]
   },
-  "active_tasks": [
-    {
-      "task_id": "LLMA-SEQUENCE-0001-RELEASE-015",
-      "owner": "pull/116",
-      "workload": "Stabilize runtime image publication triggers, observe the final publication, and release sequence 0002 with Service Gateway proof evidence",
-      "execution_class": "PARALLEL_SAFE",
-      "state": "CLAIMED_FOR_VALIDATION",
-      "claimed_at": "2026-08-04T20:18:00-05:00",
-      "release_condition": "PR #116 merges after hosted validation, its final runtime publication is retained, and a final claim-release PR binds that stable digest and the main Service Gateway PASS evidence."
-    }
-  ],
+  "active_tasks": [],
   "completed_tasks": [
     {
       "task_id": "LLMA-0001-HANDOFF",
       "owner": "issue/54",
-      "workload": "Install repository handoff and orchestration state",
       "state": "COMPLETED"
     },
     {
       "task_id": "LLMA-SESSION-PROVIDER-LAYER-2026-08-02",
       "owner": "pull/95",
-      "workload": "Consolidate provider-layer session state into durable claims",
       "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
       "merge_commit": "1505aac0073bc6466769ca84c6ae28d887abdefd"
     },
@@ -54,23 +43,19 @@
       "scheduler_owner": "StegVerse-Labs/StegVerse-Healer",
       "scheduler_workflow": ".github/workflows/stegdeploy-publication-relay.yml",
       "task_record": "tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
-      "workload": "Publish, attest, freshly pull, and retain canonical StegDeploy image evidence",
-      "execution_class": "PARALLEL_SAFE",
       "state": "COMPLETE",
-      "publication_run": 30967405336,
-      "publication_job": 92184247965,
-      "publication_receipt_sha256": "80b0bc5063531a74194adedfcbf48677ca832ae29156b46ece14f188e58c7432",
-      "image_digest": "sha256:a5049d8d1a02f32475e4c9034eb6d9e626a1203507ae53da651237e39a04a961",
+      "publication_run": 30967973138,
+      "publication_job": 92185969448,
+      "publication_receipt_sha256": "d70f19a0a3afd9a34f313b3e0a4959e3343b00194c86fd85e3cdec5b3c0a7d87",
+      "image_digest": "sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901",
       "consumer_pull_verified": true,
       "readiness_state": "READY",
-      "superseded_publication_runs": [30964767464, 30965343262]
+      "evidence_only_changes_rebuild_image": false
     },
     {
       "task_id": "LLMA-0001-HIL-CYCLE",
       "owner": "merged-pull/56",
       "superseded_owner": "closed-pull/44",
-      "workload": "Reconcile automated persisted HIL full cycle onto current main",
-      "execution_class": "PARALLEL_SAFE",
       "state": "COMPLETE",
       "merge_commit": "e320c33189c1b6cf9d51a666a4505592b6fb981b",
       "workflow_run": 30966031698,
@@ -83,14 +68,22 @@
     {
       "task_id": "LLMA-0001-GOAL8",
       "owner": "main/provider-usage-event",
-      "workload": "Canonical provider-owned usage-event validation",
-      "execution_class": "PARALLEL_SAFE",
       "state": "COMPLETE",
       "workflow_run": 30966031661,
       "python_versions": ["3.9", "3.11", "3.12"],
       "canonical_fixture_and_adversarial_tests": true,
-      "main_integration_commit": "e320c33189c1b6cf9d51a666a4505592b6fb981b",
       "authority_effect": false
+    },
+    {
+      "task_id": "LLMA-SEQUENCE-0001-RELEASE-015",
+      "owner": "completed-task-record",
+      "state": "COMPLETE",
+      "service_gateway_run": 30967405348,
+      "service_gateway_artifact": 8915257517,
+      "service_gateway_artifact_digest": "sha256:3695622d5f8eb67c11cbfe4339fafb52569554142137af76a3a950274d1e7531",
+      "publication_trigger_merge": "f7ca640d44a5e7703e9d3f599717375bfae2e183",
+      "committed_receipt": "receipts/service-gateway-activation-proof.json",
+      "persistent_deployment_proven": false
     }
   ],
   "queued_exclusive_tasks": [
@@ -99,7 +92,8 @@
       "owner": "issue/18",
       "workload": "Execute authorized real-provider persistent HIL vertical slice",
       "execution_class": "EXCLUSIVE",
-      "blocked_until": "end of current work task sequence 0002, no tasks running, and all authority-bound blockers cleared",
+      "state": "BLOCKED",
+      "blocked_until": "all authority-bound blockers are cleared",
       "external_blockers": [
         "authorized provider configuration and scoped execution grant",
         "persistent endpoint",
@@ -107,8 +101,8 @@
       ],
       "completed_dependency_evidence": [
         "published-package consumer access: READY",
-        "current image digest: sha256:a5049d8d1a02f32475e4c9034eb6d9e626a1203507ae53da651237e39a04a961",
-        "current publication run: 30967405336",
+        "stable image digest: sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901",
+        "stable publication run: 30967973138",
         "HIL full-cycle run: 30966031698",
         "provider usage validation run: 30966031661",
         "Service Gateway main proof run: 30967405348"
@@ -136,24 +130,24 @@
     }
   ],
   "existing_workload_owners": {
-    "authorized_provider_runtime": "merged-pr/32 authority gate plus issue/18",
+    "authorized_provider_runtime": "issue/18",
     "hil_full_cycle_reconciliation": "completed merged-pr/56",
     "provider_usage_validation": "completed main/provider-usage-event",
-    "service_gateway_activation_proof": "completed main run 30967405348 pending claim release",
+    "service_gateway_activation_proof": "completed receipt/service-gateway-activation-proof.json and issue/72",
     "service_gateway_secret_governance": "StegVerse-Labs/TVC#6",
     "image_publication_evidence": "completed task LLMA-0001-IMAGE-PUBLICATION",
-    "image_publication_scheduler": "StegVerse-Labs/StegVerse-Healer/.github/workflows/stegdeploy-publication-relay.yml",
-    "publication_trigger_stabilization": "pull/116"
+    "image_publication_scheduler": "StegVerse-Labs/StegVerse-Healer/.github/workflows/stegdeploy-publication-relay.yml"
   },
   "health_model": {
     "missing_heartbeat_is_failure_only_when_progress_was_expected": true,
     "blocked_but_observed_is_not_failed": true,
     "watchdog_implies_progress": false,
     "system_health_reasons": [
-      "HIL full-cycle, provider usage validation, image publication, and Service Gateway ephemeral proof are complete",
-      "PR #116 is the only active bounded task and removes evidence-only image rebuild triggers",
-      "recurring publication observation remains assigned to StegVerse-Healer and is blocked on exact token scope",
-      "authorized live-provider execution remains queued behind provider, persistent endpoint, custody, and current-sequence idle requirements"
+      "No repository task claim remains active.",
+      "HIL full-cycle, provider usage validation, stable image publication, and Service Gateway ephemeral proof are complete.",
+      "Evidence-only changes no longer rebuild the runtime image.",
+      "Recurring publication observation remains assigned to StegVerse-Healer and blocked on exact token scope.",
+      "Authorized live-provider execution remains blocked and durably owned by issue #18."
     ]
   },
   "policy": {
@@ -169,6 +163,15 @@
     "managed_schedules_are_healer_only": true
   },
   "idle_terminal_statement": "end of current work task sequence 0002, no tasks running",
+  "session_consolidation": {
+    "state": "COMPLETE",
+    "canonical_continuation": [
+      "StegVerse-org/LLM-adapter#18",
+      "StegVerse-org/LLM-adapter#72",
+      "StegVerse-Labs/TVC#6"
+    ],
+    "archive_ready": true
+  },
   "authority": {
     "provider": false,
     "deployment": false,
