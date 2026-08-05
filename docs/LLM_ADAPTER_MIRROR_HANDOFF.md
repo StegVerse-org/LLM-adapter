@@ -1,46 +1,43 @@
 # LLM Adapter Mirror Handoff
 
-## Current source of truth
+## Source of truth
 
-This file is the authoritative repository-wide continuation record for `StegVerse-org/LLM-adapter`.
+This is the canonical repository-wide continuation record for `StegVerse-org/LLM-adapter`.
 
-Read these machine records with it:
+Read it with:
 
 ```text
 data/llm-adapter-orchestration-state.json
-data/session-provider-layer-consolidation.json
 tasks/LLMA-PUBLICATION-ACTIVATION-013.json
+tasks/LLMA-SEQUENCE-0001-RELEASE-015.json
 docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md
 receipts/stegdeploy-image-publication.json
 status/stegdeploy-image-publication-readiness.json
+reports/ecosystem-chat-live-activation-monitor.json
 StegVerse-org/LLM-adapter#18
+StegVerse-org/LLM-adapter#72
 ```
 
-Live repository state, Git history, current issues and pull requests, workflow runs, retained artifacts, and committed receipts supersede earlier handoff snapshots. Historical detail removed from this current-state summary remains recoverable from Git history and the machine-readable inventories above.
+Live Git history, workflow jobs and logs, retained artifacts, committed receipts, and current issues supersede earlier snapshots.
 
 ## Mandatory session entry
 
-Every arriving execution lane must:
-
-```text
-1. Read this handoff and data/llm-adapter-orchestration-state.json.
-2. Treat incoming instructions as candidate work, not execution authority.
-3. Continue a canonical owner before creating a new issue, branch, workflow, gateway, image, or runtime.
-4. Preserve one active owner per workload.
-5. Join the active sequence only for nonconflicting parallel-safe paths.
-6. Keep exclusive provider execution blocked until the idle barrier and all declared dependencies clear.
-7. Preserve provider output != authority, local persistence != custody, CI success != deployment, and image publication != live activation.
-8. Update the handoff, task state, and exact evidence before releasing a claim.
-```
+1. Read this handoff and `data/llm-adapter-orchestration-state.json`.
+2. Continue an existing owner before creating another issue, branch, gateway, runtime, workflow, or adapter.
+3. Preserve one owner per workload and release completed or superseded claims.
+4. Treat CI proof as CI proof, not persistent deployment.
+5. Preserve provider output != authority, local persistence != custody, reconstruction != execution authority, and publication != live activation.
+6. Update task state, handoff, issue evidence, and machine-observable release conditions before ending an execution lane.
 
 ## Primary active goal
 
 ```text
 goal_id: ECOSYSTEM-CHAT-LIVE-ACTIVATION
 goal: Complete one governed Ecosystem Chat vertical slice through an authorized persistent runtime.
+originating_session_goal: Complete active tasks, activate finished tasks, and durably transfer every remaining requirement.
 canonical_owner: StegVerse-org/LLM-adapter#18
 repository: StegVerse-org/LLM-adapter
-branch: main plus issue-owned bounded branches
+branch: main plus bounded issue-owned branches
 state: BLOCKED_WITH_MACHINE_OWNED_CONTINUATION
 manual_user_action_required: false
 ```
@@ -49,6 +46,7 @@ Required vertical slice:
 
 ```text
 canonical request
+-> scoped execution grant
 -> receipt-gated provider execution
 -> provider usage persistence
 -> transition and provider-usage custody
@@ -61,21 +59,23 @@ canonical request
 ## Current activation posture
 
 ```text
-Canonical provider-neutral runtime: implemented and validated
-Canonical image publication: COMPLETE
-Fresh package consumer pull: VERIFIED
-Image publication readiness: READY
-Authorized real provider execution: not observed
-Persistent public runtime: not verified
-Provider-usage persistence: not verified
-Authenticated Master Records custody: not verified
-Transition reconstruction: not verified
-Zero-blocker VERIFIED activation receipt: not observed
-Site activation: not observed
-Downstream verified ingestion: not observed
+provider-neutral runtime: IMPLEMENTED_AND_VALIDATED
+canonical image publication: COMPLETE
+fresh package consumer pull: VERIFIED
+publication readiness: READY
+HIL automated full-cycle proof: COMPLETE_EPHEMERAL_CI
+provider-owned usage validation: COMPLETE
+Service Gateway ephemeral activation proof: REPAIR_IMPLEMENTED_PENDING_HOSTED_VALIDATION
+authorized real-provider execution: NOT_OBSERVED
+persistent public runtime: NOT_VERIFIED
+Master Records custody: NOT_VERIFIED
+reconstruction: NOT_VERIFIED
+zero-blocker VERIFIED activation: NOT_OBSERVED
+Site activation: NOT_OBSERVED
+downstream verified ingestion: NOT_OBSERVED
 ```
 
-Canonical published image:
+Canonical image:
 
 ```text
 image: ghcr.io/stegverse-org/llm-adapter:main
@@ -86,175 +86,141 @@ consumer pull verified: true
 readiness: READY
 ```
 
-Publication completion does not grant provider, deployment, custody, execution, Site, release, or general publication authority.
-
-## Current work sequence and claims
+## Current work sequence and claim
 
 ```text
-current work task sequence: 0001
+current sequence: 0002
 state: RUNNING
 heartbeat model: transition-driven and health-relative
 time role: watchdog only
+active task: LLMA-SEQUENCE-0001-RELEASE-015
+owner: branch/fix/service-gateway-proof-and-release-sequence
+role: CLAIMED_FOR_VALIDATION
+claim created: 2026-08-04T20:18:00-05:00
+claim expiration/release condition: merge after hosted validation; retain the main Service Gateway PASS or exact BLOCKED artifact; finalize task, handoff, and issues #18/#72.
+collision boundary: tests/test_service_gateway.py, service-gateway-deploy.yml, orchestration state, validator, this handoff, and the task record only.
 ```
 
-Active parallel-safe tasks:
+The active task repairs two proven defects without changing authority:
+
+1. `HIL-RECEIVER-RECEIPT-v2` hashes the receiver signature and excludes only `receipt_sha256`; the stale test excluded both fields.
+2. The always-run workflow summary did not create `activation-evidence/result` after an early failure, preventing deterministic BLOCKED artifact retention.
+
+The pinned public-safe TVC evaluator mirror, no-value decision boundary, provider separation, custody separation, and ephemeral-CI boundary remain unchanged.
+
+## Completed and released sequence 0001 tasks
+
+### HIL full cycle
 
 ```text
-LLMA-0001-HIL-CYCLE
-  owner: PR #56
-  superseded owner: closed PR #44
-  role: CLAIMED_FOR_INTEGRATION
-  release condition: merge, exact-current-main supersession, or transfer of only missing assertions
-
-LLMA-0001-GOAL8
-  owner: main/provider-usage-event
-  role: IMPLEMENTED_PENDING_CANONICAL_VALIDATION
-  release condition: canonical fixture, adversarial tests, Python 3.9/3.11/3.12 CI, and main integration evidence retained
+task_id: LLMA-0001-HIL-CYCLE
+state: COMPLETE
+owner: merged PR #56
+superseded owner: closed PR #44
+merge: e320c33189c1b6cf9d51a666a4505592b6fb981b
+workflow run: 30966031698
+job: 92180065119
+result: PASS
+receipt sha256: f4d0a8b90b05017b5abf77f3c96c3b8ad3efb99eb57d9c68b90a611b928888da
+artifact: 8914746865
+artifact digest: sha256:e9fe894eb2331c9d3792545cbb68d2f0d9762b2b05327732ec4482adf20d1350
+boundary: ephemeral GitHub-hosted full-cycle proof; persistent deployment false
 ```
 
-Completed and released tasks:
+### Provider-owned usage validation
 
 ```text
-LLMA-0001-HANDOFF
-  state: COMPLETE
-  owner record: issue #54
-
-LLMA-SESSION-PROVIDER-LAYER-2026-08-02
-  state: MERGED_INTO_CANONICAL_WORKSTREAM
-  merge: 1505aac0073bc6466769ca84c6ae28d887abdefd
-
-LLMA-0001-IMAGE-PUBLICATION / LLMA-PUBLICATION-ACTIVATION-013
-  state: COMPLETE
-  activation PR: #111
-  activation merge: 260e4b851a8b0e6ee72c361675670b2a4d92b515
-  repair PR: #112
-  repair merge: 4c6d8a47a4695adc793ad0ab4577c1e9aa0488dc
-  publication run: 30964767464
-  image digest: sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55
+task_id: LLMA-0001-GOAL8
+state: COMPLETE
+owner: main/provider-usage-event
+workflow run: 30966031661
+Python matrix: 3.9, 3.11, 3.12
+canonical fixture: PASS
+adversarial validation: PASS
+main integration: e320c33189c1b6cf9d51a666a4505592b6fb981b
+authority effect: false
 ```
 
-No completed or superseded task may remain represented as RUNNING.
+Companion merged-main evidence:
+
+```text
+Architecture Guard: 30966031667 — PASS
+Full repository validation: 30966031655 — PASS
+```
+
+### Earlier completed tasks
+
+```text
+LLMA-0001-HANDOFF: COMPLETE
+LLMA-SESSION-PROVIDER-LAYER-2026-08-02: MERGED_INTO_CANONICAL_WORKSTREAM at 1505aac0073bc6466769ca84c6ae28d887abdefd
+LLMA-0001-IMAGE-PUBLICATION / LLMA-PUBLICATION-ACTIVATION-013: COMPLETE
+```
+
+No completed or superseded task may remain represented as active.
 
 ## Queued exclusive provider task
 
 ```text
 task_id: LLMA-0002-LIVE-PROVIDER
-owner: issue #18
+owner: StegVerse-org/LLM-adapter#18
 execution_class: EXCLUSIVE
 state: BLOCKED
-blocked_until: end of current work task sequence 0001, no tasks running
+blocked_until: end of sequence 0002, no tasks running, and all authority-bound blockers cleared
 ```
 
-Remaining external or authority-bound blockers:
+Machine-observable blockers:
 
 ```text
-authorized provider configuration
+authorized provider configuration and scoped execution grant
 persistent endpoint
 authenticated Master Records custody configuration
 ```
 
-Completed dependency:
+Completed dependencies already retained:
 
 ```text
-published-package consumer access: READY
-image digest: sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55
-publication run: 30964767464
+published package: READY
+canonical image digest: sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55
+HIL full-cycle run: 30966031698
+provider usage validation run: 30966031661
 ```
 
-## Managed scheduler owner
+The basic HIL intake proof uses TV/TVC no-value authorization and does not require provider or Master Records secrets. The full real-provider vertical slice still requires its own provider execution grant, persistent runtime, and authenticated custody configuration.
 
-Managed schedules are allowed only in StegVerse-Healer.
+## Canonical owners and convergence
+
+```text
+live-provider execution and final activation: StegVerse-org/LLM-adapter#18
+Service Gateway proof and intake contract: StegVerse-org/LLM-adapter#72
+Service Gateway secret governance and execution-grant authority: StegVerse-Labs/TVC#6
+persistent custody and reconstruction: master-records/orchestration issue #2
+Site activation after VERIFIED receipt: StegVerse-Labs/Site#24
+Publisher propagation: GCAT-BCAT-Engine/Publisher current handoff
+sovereign platform migration: StegVerse-002/micro-node-runtime#16
+certificate control: StegVerse-002/StegGuardian#4
+publication recurrence: StegVerse-Labs/StegVerse-Healer
+```
+
+MERGED INTO: `StegVerse-org/LLM-adapter#18`, `StegVerse-org/LLM-adapter#72`, and `StegVerse-Labs/TVC#6` for all work beyond this bounded sequence-release task.
+
+## Managed observers
+
+Publication scheduling remains Healer-only:
 
 ```text
 owner: StegVerse-Labs/StegVerse-Healer
 workflow: .github/workflows/stegdeploy-publication-relay.yml
-schedule: cron "37 * * * *"
 state: BLOCKED
 observed result: HTTP 403
-release condition: HEALER_GH_TOKEN creates the bounded LLM-adapter workflow-dispatch event without exposing the token
+release condition: HEALER_GH_TOKEN creates the bounded dispatch without exposing the token
 ```
 
-LLM-adapter remains event-driven and contains no managed schedule. The Healer relay blocker does not invalidate the completed publication evidence.
-
-## Canonical task owners and convergence
+Live activation monitoring remains repository-owned and fail-closed:
 
 ```text
-Provider execution authority: merged PR #32 and issue #18
-Authorized runtime candidate: draft PR #27; unsafe trigger form must not be activated
-Provider boundary proposal: PR #63; stale branch requiring current-main reconciliation
-HIL full-cycle integration: PR #56; PR #44 superseded
-Process restart proof: PR #60
-Internal governed reference suite: PR #58
-Image publication evidence: completed task LLMA-PUBLICATION-ACTIVATION-013
-Image publication recurrence: StegVerse-Labs/StegVerse-Healer
-Site activation: StegVerse-Labs/Site issue #24 after canonical VERIFIED receipt
-Publisher propagation: GCAT-BCAT-Engine/Publisher current handoff
-Custody and reconstruction: master-records/orchestration issue #2 and current contracts
-Sovereign platform migration: StegVerse-002/micro-node-runtime#16
-Certificate control: StegVerse-002/StegGuardian#4
-```
-
-Do not duplicate these owners.
-
-## Authority invariants
-
-```text
-adapter_is_execution_authority == false
-provider_response_is_admissibility == false
-model_output_is_publication_authority == false
-reasoning_provenance_is_full_chain_of_thought == false
-usage_measurement_is_value_claim == false
-provider_identity_is_actor_authority == false
-return_receipt_required == true
-hashes_are_independently_recomputed == true
-configured_secrets_are_authority == false
-scheduled_event_is_provider_authority == false
-image_publication_is_live_activation == false
-consumer_pull_is_persistent_deployment == false
-local_persistence_is_custody == false
-reconstruction_pass_is_execution_authority == false
-```
-
-All repository-wide authority flags remain false.
-
-## Publication validation evidence
-
-Activation PR #111 final validation:
-
-```text
-head: 667be063f471d9bc0ca1347a99f525538d2d517d
-Session Provider Layer Consolidation: 30964496237 — PASS
-Architecture Guard: 30964496272 — PASS
-Provider-Owned Usage Event: 30964496316 — PASS
-Full repository validation: 30964496284 — PASS
-```
-
-Repair PR #112 final validation:
-
-```text
-head: 13bfdbddae0ca4bd0937ab8ea73b4234d12e1daf
-Session Provider Layer Consolidation: 30964720108 — PASS
-Architecture Guard: 30964720123 — PASS
-Provider-Owned Usage Event: 30964720135 — PASS
-Full repository validation: 30964720127 — PASS
-```
-
-Successful activation:
-
-```text
-run: 30964767464
-job: 92176237360
-state: success
-receipt state: PUBLISHED
-receipt blockers: []
-consumer pull: success
-readiness: READY
-publication artifact: 8914297100
-publication artifact digest: sha256:f1feb11a55986ae4e32bd40967e67bf5df32060ecb0bb9d287b47cddb84a03f1
-build-record artifact: 8914297626
-build-record digest: sha256:81bd420c8de44189794bc8dfae6aba3a71b825a229821832e10c123122c02342
-attestation id: 38926411
-Rekor index: 2341838465
+workflow: .github/workflows/ecosystem-chat-live-activation-monitor.yml
+state: PENDING
+release condition: retain a zero-blocker VERIFIED observation after authorized persistent execution, custody, and reconstruction
 ```
 
 ## Validation commands
@@ -266,82 +232,73 @@ python scripts/check_session_provider_layer_archive_disposition.py
 python scripts/check_stegdeploy_image_publication_readiness.py
 python scripts/verify_provider_usage_event.py
 python -m unittest tests.test_provider_usage_event
+pytest tests/test_service_gateway.py -v
 ```
 
-Hosted validation is authoritative over local file presence.
-
-## Cross-repository integration obligations
-
-Current image evidence must be consumed without rebuilding a competing runtime:
-
-```text
-source: ghcr.io/stegverse-org/llm-adapter@sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55
-consumer: existing Healer/core-node intake
-activation owner: issue #18
-custody owner: master-records/orchestration
-Site owner: StegVerse-Labs/Site issue #24
-sovereignty owner: StegVerse-002/micro-node-runtime#16
-certificate owner: StegVerse-002/StegGuardian#4
-```
-
-Do not claim propagation, deployment, custody, Site activation, or platform retirement until their owners retain direct evidence.
+Hosted workflow jobs, logs, and artifacts are authoritative over file presence.
 
 ## Exact next executable actions
 
-```text
-1. PR #56 owner compares its ephemeral full-cycle assertions against current main and merges only missing proof or closes as superseded.
-2. Goal 8 owner retains canonical Python 3.9/3.11/3.12 validation and main integration evidence.
-3. Issue #18 waits for the idle barrier, authorized provider configuration, a persistent endpoint, and authenticated Master Records custody configuration.
-4. Issue #18 then executes exactly one receipt-gated governed provider request using the immutable published digest.
-5. Preserve persistence, custody, reconstruction, zero-blocker VERIFIED receipt, Site activation, and downstream ingestion evidence.
-6. StegVerse-Healer continues observing its relay token-scope release condition without creating a local LLM-adapter schedule.
-```
+1. Run all PR-head gates for `fix/service-gateway-proof-and-release-sequence`.
+2. Merge only when the architecture guard, provider-event matrix, full repository validation, and Service Gateway proof pass.
+3. Inspect the main Service Gateway activation job, receipt, idempotence test, summary, and artifact.
+4. Record the exact result in `tasks/LLMA-SEQUENCE-0001-RELEASE-015.json`, this handoff, and issues #18/#72.
+5. Release the sequence 0002 claim and mark the repository sequence idle.
+6. Leave full provider activation blocked and owned by issue #18 until its declared authority boundaries clear.
 
 There are no unspecified external tasks.
 
-## Session consolidation
-
-The current session requirements are durably transferred to:
+## Authority invariants
 
 ```text
-tasks/LLMA-PUBLICATION-ACTIVATION-013.json
-data/llm-adapter-orchestration-state.json
-data/session-provider-layer-consolidation.json
-docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md
-receipts/stegdeploy-image-publication.json
-receipts/stegdeploy-image-verification-pull.log
-status/stegdeploy-image-publication-readiness.json
-issue #18
-StegVerse-Healer handoff
+provider_output_is_authority == false
+configured_secret_is_authority == false
+TVC_decision_contains_secret_value == false
+CI_success_is_persistent_deployment == false
+local_persistence_is_custody == false
+image_publication_is_live_activation == false
+reconstruction_is_execution_authority == false
+all_repository_authority_flags == false
 ```
 
-This conversation owns no remaining implementation or observation after the finalization change is merged and validated.
+## Session consolidation and archive conditions
+
+This session's unique requirements are installed in:
+
+```text
+tasks/LLMA-SEQUENCE-0001-RELEASE-015.json
+data/llm-adapter-orchestration-state.json
+scripts/check_llm_adapter_orchestration_state.py
+docs/LLM_ADAPTER_MIRROR_HANDOFF.md
+StegVerse-org/LLM-adapter#18
+StegVerse-org/LLM-adapter#72
+StegVerse-Labs/TVC#6
+```
+
+The session is not archive-ready while `LLMA-SEQUENCE-0001-RELEASE-015` remains claimed or the corrected Service Gateway proof lacks a retained main-branch result.
 
 ## Completion measures
 
-For bounded task `LLMA-PUBLICATION-ACTIVATION-013`:
+For the current bounded goal:
 
 ```text
-task completion: 100%
-developed files: 9/9
-validation gates: 13/13
-integration: 3/3
-propagation to canonical task records: 5/5
-goal activation: 100% — canonical image PUBLISHED and consumer pull VERIFIED
-session consolidation: 8/8 goals transferred or complete
+task completion: 4/6 = 67%
+developed files: 6/6 = 100%
+validation: 4/6 = 67%
+integration: 2/4 = 50%
+goal activation: 67%
+session consolidation: 7/8 = 88%
 ```
 
-For full Ecosystem Chat activation:
+For the full Ecosystem Chat goal:
 
 ```text
-published image dependency: COMPLETE
+image publication: COMPLETE
+HIL ephemeral cycle: COMPLETE
+provider usage validation: COMPLETE
+Service Gateway ephemeral proof: PENDING_HOSTED_VALIDATION
 real provider execution: INCOMPLETE
 persistent runtime: INCOMPLETE
-custody: INCOMPLETE
-reconstruction: INCOMPLETE
-zero-blocker VERIFIED activation receipt: INCOMPLETE
-Site activation: INCOMPLETE
-downstream ingestion: INCOMPLETE
+custody and reconstruction: INCOMPLETE
+VERIFIED activation, Site, and downstream propagation: INCOMPLETE
 ```
-
-Archive readiness applies to this session only, not to the unfinished machine-owned Ecosystem Chat goal.
