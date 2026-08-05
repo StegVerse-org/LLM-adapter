@@ -226,7 +226,19 @@ jobs:
             -F "participant_consent_authority_acknowledged=true" \
             http://127.0.0.1:8080/api/hil/submissions \
             > "$RESULT_DIR/duplicate-receipt.json"
-          cmp "$RESULT_DIR/intake-receipt.json" "$RESULT_DIR/duplicate-receipt.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = Path("activation-evidence/result")
+          first = json.loads((result / "intake-receipt.json").read_text())
+          duplicate = json.loads((result / "duplicate-receipt.json").read_text())
+          assert first == duplicate
+          assert first["submission_id"] == duplicate["submission_id"]
+          assert first["receipt_sha256"] == duplicate["receipt_sha256"]
+          canonical = json.dumps(first, sort_keys=True, separators=(",", ":"))
+          (result / "idempotent-receipt.canonical.json").write_text(canonical + "\n", encoding="utf-8")
+          PY
 
       - name: Write activation summary
         if: always()
@@ -239,6 +251,7 @@ jobs:
           result.mkdir(parents=True, exist_ok=True)
           readiness = json.loads((result / "readiness.json").read_text()) if (result / "readiness.json").exists() else None
           receipt = json.loads((result / "intake-receipt.json").read_text()) if (result / "intake-receipt.json").exists() else None
+          duplicate = json.loads((result / "duplicate-receipt.json").read_text()) if (result / "duplicate-receipt.json").exists() else None
           summary = {
               "schema": "STEGVERSE-SERVICE-GATEWAY-ACTIVATION-v1",
               "repository": "StegVerse-org/LLM-adapter",
@@ -249,12 +262,24 @@ jobs:
               "tvc_blob_sha": "${{ env.TVC_BLOB_SHA }}",
               "readiness": readiness,
               "intake_receipt": receipt,
-              "result": "PASS" if (result / "ACTIVATION_PASS").exists() else "BLOCKED",
+              "duplicate_receipt_equal": receipt == duplicate if receipt is not None and duplicate is not None else False,
+              "result": "PASS" if (result / "ACTIVATION_PASS").exists() and receipt == duplicate else "BLOCKED",
               "boundary": "ephemeral GitHub-hosted activation proof; not persistent public hosting",
           }
           result.joinpath("activation-summary.json").write_text(
               json.dumps(summary, sort_keys=True, indent=2) + "\n", encoding="utf-8"
           )
+          PY
+
+      - name: Enforce activation result
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          summary = json.loads(Path("activation-evidence/result/activation-summary.json").read_text())
+          assert summary["result"] == "PASS"
+          assert summary["duplicate_receipt_equal"] is True
+          assert summary["boundary"] == "ephemeral GitHub-hosted activation proof; not persistent public hosting"
           PY
 
       - name: Upload activation evidence
