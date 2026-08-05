@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 15
     env:
       TVC_COMMIT: b1a817e629aff483ab80679297013b33e692b567
-      TVC_BLOB_SHA: 7c8d3965eafd6048ea38e525647b898500c30531
+      TVC_BLOB_SHA: e376f2c276bda75ff497709637aac693853bf9cc
       STORAGE_ROOT: ${{ github.workspace }}/activation-evidence/storage
       RECEIPT_FILE: ${{ github.workspace }}/activation-evidence/tvc-decision.json
       RESULT_DIR: ${{ github.workspace }}/activation-evidence/result
