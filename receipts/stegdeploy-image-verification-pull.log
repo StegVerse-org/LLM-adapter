@@ -1,0 +1,53 @@
+main: Pulling from stegverse-org/llm-adapter
+062e450697fa: Pulling fs layer
+98db2485a0d0: Pulling fs layer
+48347b15c85f: Pulling fs layer
+fd079632edc0: Pulling fs layer
+b9661391f380: Pulling fs layer
+7f48c43ce4ac: Pulling fs layer
+95b845224c95: Pulling fs layer
+501d542b3ed4: Pulling fs layer
+2190bb63ddff: Pulling fs layer
+7b062dddc01d: Pulling fs layer
+a5e795f9d8e0: Pulling fs layer
+95b845224c95: Waiting
+501d542b3ed4: Waiting
+2190bb63ddff: Waiting
+7b062dddc01d: Waiting
+a5e795f9d8e0: Waiting
+fd079632edc0: Waiting
+b9661391f380: Waiting
+7f48c43ce4ac: Waiting
+98db2485a0d0: Verifying Checksum
+98db2485a0d0: Download complete
+48347b15c85f: Download complete
+062e450697fa: Verifying Checksum
+062e450697fa: Download complete
+fd079632edc0: Verifying Checksum
+fd079632edc0: Download complete
+b9661391f380: Verifying Checksum
+b9661391f380: Download complete
+7f48c43ce4ac: Verifying Checksum
+7f48c43ce4ac: Download complete
+95b845224c95: Verifying Checksum
+95b845224c95: Download complete
+501d542b3ed4: Download complete
+7b062dddc01d: Download complete
+a5e795f9d8e0: Verifying Checksum
+a5e795f9d8e0: Download complete
+062e450697fa: Pull complete
+2190bb63ddff: Verifying Checksum
+2190bb63ddff: Download complete
+98db2485a0d0: Pull complete
+48347b15c85f: Pull complete
+fd079632edc0: Pull complete
+b9661391f380: Pull complete
+7f48c43ce4ac: Pull complete
+95b845224c95: Pull complete
+501d542b3ed4: Pull complete
+2190bb63ddff: Pull complete
+7b062dddc01d: Pull complete
+a5e795f9d8e0: Pull complete
+Digest: sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55
+Status: Downloaded newer image for ghcr.io/stegverse-org/llm-adapter:main
+ghcr.io/stegverse-org/llm-adapter:main
