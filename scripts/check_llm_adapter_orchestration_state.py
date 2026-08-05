@@ -62,6 +62,8 @@ def main() -> int:
     publication = task_by_id(active, "LLMA-0001-IMAGE-PUBLICATION")
     if publication.get("owner") != "issue/18":
         fail("publication evidence must remain owned by issue #18")
+    if publication.get("scheduler_owner") != "StegVerse-Labs/StegVerse-Healer":
+        fail("publication recurrence must be delegated to StegVerse-Healer")
     if publication.get("task_record") != "tasks/LLMA-PUBLICATION-ACTIVATION-013.json":
         fail("publication task record mismatch")
 
@@ -96,27 +98,34 @@ def main() -> int:
         fail("activation task is not actively claimed")
     if task.get("canonical_issue") != "StegVerse-org/LLM-adapter#18":
         fail("activation task canonical owner mismatch")
+    if task.get("scheduler_owner") != "StegVerse-Labs/StegVerse-Healer":
+        fail("activation task scheduler owner mismatch")
     if task.get("authority_effect") is not False:
         fail("activation task grants authority")
 
     workflow = WORKFLOW_PATH.read_text(encoding="utf-8")
-    if "schedule:" not in workflow or 'cron: "17 * * * *"' not in workflow:
-        fail("hourly publication observer is not activated")
+    if "schedule:" in workflow:
+        fail("managed schedule is present outside StegVerse-Healer")
     if "workflow_dispatch:" not in workflow:
         fail("explicit publication dispatch trigger missing")
+    if "StegVerse-Labs/StegVerse-Healer" not in workflow:
+        fail("workflow does not declare the canonical scheduler owner")
 
     handoff = HANDOFF_PATH.read_text(encoding="utf-8")
     for required in (
         "LLMA-PUBLICATION-ACTIVATION-013",
         "PR #56",
         "PR #95",
-        'cron: "17 * * * *"',
+        "StegVerse-Labs/StegVerse-Healer",
+        "stegdeploy-publication-relay.yml",
+        "HTTP 403",
     ):
         if required not in handoff:
             fail(f"publication handoff missing {required}")
 
     print("LLM_ADAPTER_ORCHESTRATION_STATE_PASS")
     print(f"active_tasks={len(active)} completed_tasks={len(completed)} queued_exclusive={len(queued)}")
+    print("scheduler_owner=StegVerse-Labs/StegVerse-Healer")
     return 0
 
 
