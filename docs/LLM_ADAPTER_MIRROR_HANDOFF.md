@@ -29,7 +29,7 @@ Live Git history, workflow jobs and logs, retained artifacts, committed receipts
 5. Preserve provider output != authority, local persistence != custody, reconstruction != execution authority, and publication != live activation.
 6. Update task state, handoff, issue evidence, and machine-observable release conditions before ending an execution lane.
 
-## Primary active goal
+## Primary goal and canonical owner
 
 ```text
 goal_id: ECOSYSTEM-CHAT-LIVE-ACTIVATION
@@ -37,7 +37,6 @@ goal: Complete one governed Ecosystem Chat vertical slice through an authorized 
 originating_session_goal: Complete active tasks, activate finished tasks, and durably transfer every remaining requirement.
 canonical_owner: StegVerse-org/LLM-adapter#18
 repository: StegVerse-org/LLM-adapter
-branch: main plus bounded issue-owned branches
 state: BLOCKED_WITH_MACHINE_OWNED_CONTINUATION
 manual_user_action_required: false
 ```
@@ -60,12 +59,12 @@ canonical request
 
 ```text
 provider-neutral runtime: IMPLEMENTED_AND_VALIDATED
-canonical image publication: COMPLETE
+latest canonical image publication: COMPLETE
 fresh package consumer pull: VERIFIED
 publication readiness: READY
 HIL automated full-cycle proof: COMPLETE_EPHEMERAL_CI
 provider-owned usage validation: COMPLETE
-Service Gateway ephemeral activation proof: REPAIR_IMPLEMENTED_PENDING_HOSTED_VALIDATION
+Service Gateway ephemeral activation proof: REPAIR_IMPLEMENTED_PENDING_HOSTED_REVALIDATION
 authorized real-provider execution: NOT_OBSERVED
 persistent public runtime: NOT_VERIFIED
 Master Records custody: NOT_VERIFIED
@@ -75,15 +74,19 @@ Site activation: NOT_OBSERVED
 downstream verified ingestion: NOT_OBSERVED
 ```
 
-Canonical image:
+Latest canonical image:
 
 ```text
 image: ghcr.io/stegverse-org/llm-adapter:main
-digest: sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55
-publication run: 30964767464
-publication receipt: 2ebacb9f5efc426a38bbbb58492b70575b9408127f5f57a34f066b51a43ba7a9
+digest: sha256:980d76c7a1bc43cb7d828ebc9153db8dec8295d92c10bd56e56c9ce0d4ef2a92
+publication run: 30965343262
+publication job: 92177973489
+publication receipt: 745ae55bde7de8f883497f29485922ba73938995e298c977ffe9270e6e8abc65
+publication artifact: 8914506620
+build record: 8914506923
 consumer pull verified: true
 readiness: READY
+superseded historical publication run: 30964767464
 ```
 
 ## Current work sequence and claim
@@ -97,18 +100,32 @@ active task: LLMA-SEQUENCE-0001-RELEASE-015
 owner: branch/fix/service-gateway-proof-and-release-sequence
 role: CLAIMED_FOR_VALIDATION
 claim created: 2026-08-04T20:18:00-05:00
-claim expiration/release condition: merge after hosted validation; retain the main Service Gateway PASS or exact BLOCKED artifact; finalize task, handoff, and issues #18/#72.
-collision boundary: tests/test_service_gateway.py, service-gateway-deploy.yml, orchestration state, validator, this handoff, and the task record only.
+release condition: merge after hosted validation; retain the main Service Gateway PASS or exact BLOCKED artifact; finalize task, handoff, and issues #18/#72.
 ```
 
-The active task repairs two proven defects without changing authority:
+The active task repairs four proven consistency defects without changing authority:
 
 1. `HIL-RECEIVER-RECEIPT-v2` hashes the receiver signature and excludes only `receipt_sha256`; the stale test excluded both fields.
-2. The always-run workflow summary did not create `activation-evidence/result` after an early failure, preventing deterministic BLOCKED artifact retention.
+2. The always-run workflow summary did not create `activation-evidence/result` after an early failure.
+3. The workflow expected stale TVC blob `7c8d3965eafd6048ea38e525647b898500c30531` instead of repository-retained blob `e376f2c276bda75ff497709637aac693853bf9cc` at TVC commit `b1a817e629aff483ab80679297013b33e692b567`.
+4. Task and handoff records retained historical publication run `30964767464` after later successful run `30965343262` became authoritative.
 
 The pinned public-safe TVC evaluator mirror, no-value decision boundary, provider separation, custody separation, and ephemeral-CI boundary remain unchanged.
 
-## Completed and released sequence 0001 tasks
+## Completed and released tasks
+
+### Latest image publication
+
+```text
+task: LLMA-0001-IMAGE-PUBLICATION / LLMA-PUBLICATION-ACTIVATION-013
+state: COMPLETE
+run: 30965343262
+job: 92177973489
+digest: sha256:980d76c7a1bc43cb7d828ebc9153db8dec8295d92c10bd56e56c9ce0d4ef2a92
+receipt: 745ae55bde7de8f883497f29485922ba73938995e298c977ffe9270e6e8abc65
+consumer pull: VERIFIED
+readiness: READY
+```
 
 ### HIL full cycle
 
@@ -146,14 +163,7 @@ Companion merged-main evidence:
 ```text
 Architecture Guard: 30966031667 — PASS
 Full repository validation: 30966031655 — PASS
-```
-
-### Earlier completed tasks
-
-```text
-LLMA-0001-HANDOFF: COMPLETE
-LLMA-SESSION-PROVIDER-LAYER-2026-08-02: MERGED_INTO_CANONICAL_WORKSTREAM at 1505aac0073bc6466769ca84c6ae28d887abdefd
-LLMA-0001-IMAGE-PUBLICATION / LLMA-PUBLICATION-ACTIVATION-013: COMPLETE
+LLMA-SESSION-PROVIDER-LAYER-2026-08-02: MERGED_AND_RELEASED at 1505aac0073bc6466769ca84c6ae28d887abdefd
 ```
 
 No completed or superseded task may remain represented as active.
@@ -176,11 +186,12 @@ persistent endpoint
 authenticated Master Records custody configuration
 ```
 
-Completed dependencies already retained:
+Completed dependencies:
 
 ```text
 published package: READY
-canonical image digest: sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55
+latest image digest: sha256:980d76c7a1bc43cb7d828ebc9153db8dec8295d92c10bd56e56c9ce0d4ef2a92
+latest publication run: 30965343262
 HIL full-cycle run: 30966031698
 provider usage validation run: 30966031661
 ```
@@ -239,8 +250,8 @@ Hosted workflow jobs, logs, and artifacts are authoritative over file presence.
 
 ## Exact next executable actions
 
-1. Run all PR-head gates for `fix/service-gateway-proof-and-release-sequence`.
-2. Merge only when the architecture guard, provider-event matrix, full repository validation, and Service Gateway proof pass.
+1. Re-run every PR-head gate for `fix/service-gateway-proof-and-release-sequence`.
+2. Merge only when architecture, provider-event, security, consolidation, full validation, and Service Gateway proof pass.
 3. Inspect the main Service Gateway activation job, receipt, idempotence test, summary, and artifact.
 4. Record the exact result in `tasks/LLMA-SEQUENCE-0001-RELEASE-015.json`, this handoff, and issues #18/#72.
 5. Release the sequence 0002 claim and mark the repository sequence idle.
@@ -263,19 +274,7 @@ all_repository_authority_flags == false
 
 ## Session consolidation and archive conditions
 
-This session's unique requirements are installed in:
-
-```text
-tasks/LLMA-SEQUENCE-0001-RELEASE-015.json
-data/llm-adapter-orchestration-state.json
-scripts/check_llm_adapter_orchestration_state.py
-docs/LLM_ADAPTER_MIRROR_HANDOFF.md
-StegVerse-org/LLM-adapter#18
-StegVerse-org/LLM-adapter#72
-StegVerse-Labs/TVC#6
-```
-
-The session is not archive-ready while `LLMA-SEQUENCE-0001-RELEASE-015` remains claimed or the corrected Service Gateway proof lacks a retained main-branch result.
+This session's unique requirements are installed in the task, registry, validator, handoffs, issue #18, issue #72, and TVC issue #6. The session is not archive-ready while `LLMA-SEQUENCE-0001-RELEASE-015` remains claimed or the corrected Service Gateway proof lacks a retained main-branch result.
 
 ## Completion measures
 
@@ -283,9 +282,9 @@ For the current bounded goal:
 
 ```text
 task completion: 4/6 = 67%
-developed files: 6/6 = 100%
+developed files: 8/8 = 100%
 validation: 4/6 = 67%
-integration: 2/4 = 50%
+integration: 3/5 = 60%
 goal activation: 67%
 session consolidation: 7/8 = 88%
 ```
@@ -296,7 +295,7 @@ For the full Ecosystem Chat goal:
 image publication: COMPLETE
 HIL ephemeral cycle: COMPLETE
 provider usage validation: COMPLETE
-Service Gateway ephemeral proof: PENDING_HOSTED_VALIDATION
+Service Gateway ephemeral proof: PENDING_HOSTED_REVALIDATION
 real provider execution: INCOMPLETE
 persistent runtime: INCOMPLETE
 custody and reconstruction: INCOMPLETE
