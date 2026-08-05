@@ -1,0 +1,88 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "LLMA-SEQUENCE-0001-RELEASE-015",
+  "title": "Release completed sequence 0001 tasks and repair Service Gateway activation proof",
+  "originating_goal": "Complete active tasks, activate finished tasks, and preserve all remaining Ecosystem Chat work in canonical repository controls.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "canonical_issue": "StegVerse-org/LLM-adapter#18",
+  "service_gateway_issue": "StegVerse-org/LLM-adapter#72",
+  "tvc_dependency_issue": "StegVerse-Labs/TVC#6",
+  "branch": "fix/service-gateway-proof-and-release-sequence",
+  "execution_class": "PARALLEL_SAFE",
+  "state": "CLAIMED_FOR_VALIDATION",
+  "claimant": "session-sequence-release-lane",
+  "claimed_at": "2026-08-04T20:18:00-05:00",
+  "claim_release_condition": "The repair PR merges after hosted gates pass, the main Service Gateway activation proof retains PASS or a precise BLOCKED artifact, and the exact result is recorded in this task, the orchestration registry, the handoff, and issues #18 and #72.",
+  "owned_surfaces": [
+    "tests/test_service_gateway.py",
+    ".github/workflows/service-gateway-deploy.yml",
+    "data/llm-adapter-orchestration-state.json",
+    "scripts/check_llm_adapter_orchestration_state.py",
+    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "tasks/LLMA-SEQUENCE-0001-RELEASE-015.json"
+  ],
+  "collision_boundaries": [
+    "Do not modify provider execution authority owned by merged PR #32 and issue #18.",
+    "Do not replace TVC secret-governance authority owned by StegVerse-Labs/TVC#6.",
+    "Do not claim ephemeral GitHub-hosted proof as persistent deployment or Master Records custody.",
+    "Do not create another gateway, runtime, scheduler, or provider adapter."
+  ],
+  "completed_dependencies": {
+    "hil_full_cycle": {
+      "state": "COMPLETE",
+      "pull_request": 56,
+      "merge_commit": "e320c33189c1b6cf9d51a666a4505592b6fb981b",
+      "workflow_run": 30966031698,
+      "workflow_job": 92180065119,
+      "receipt_sha256": "f4d0a8b90b05017b5abf77f3c96c3b8ad3efb99eb57d9c68b90a611b928888da",
+      "artifact_id": 8914746865,
+      "artifact_digest": "sha256:e9fe894eb2331c9d3792545cbb68d2f0d9762b2b05327732ec4482adf20d1350",
+      "boundary": "ephemeral GitHub-hosted persisted HIL full-cycle proof; not persistent public deployment"
+    },
+    "provider_usage_validation": {
+      "state": "COMPLETE",
+      "workflow_run": 30966031661,
+      "python_versions": [
+        "3.9",
+        "3.11",
+        "3.12"
+      ],
+      "canonical_fixture_and_adversarial_tests": true,
+      "main_integration_commit": "e320c33189c1b6cf9d51a666a4505592b6fb981b",
+      "authority_effect": false
+    },
+    "architecture_guard": {
+      "state": "COMPLETE",
+      "workflow_run": 30966031667
+    },
+    "full_repository_validation": {
+      "state": "COMPLETE",
+      "workflow_run": 30966031655
+    }
+  },
+  "repair": {
+    "observed_failure_run": 30307740784,
+    "root_causes": [
+      "The Site receipt test removed receiver_signature before recomputing receipt_sha256 even though HIL-RECEIVER-RECEIPT-v2 hashes the signature and excludes only receipt_sha256.",
+      "The always-run activation summary did not create activation-evidence/result after an early failure, preventing deterministic BLOCKED evidence retention."
+    ],
+    "implemented_changes": [
+      "Align the unit test with the production v2 receipt-hash contract.",
+      "Create the result directory before writing the always-run activation summary.",
+      "Keep the pinned public-safe TVC evaluator mirror and no-value decision boundary unchanged."
+    ],
+    "validation_state": "PENDING_HOSTED_VALIDATION"
+  },
+  "remaining_blockers_after_sequence_release": [
+    "authorized provider configuration and scoped execution grant",
+    "authorized persistent endpoint/runtime",
+    "authenticated Master Records custody configuration",
+    "transition reconstruction PASS",
+    "zero-blocker VERIFIED activation receipt",
+    "Site activation and verified downstream ingestion"
+  ],
+  "next_executable_action": "Run hosted PR validation, merge only after all required gates pass, inspect the main Service Gateway activation-proof job and artifact, then release this claim with exact evidence.",
+  "manual_user_action_required": false,
+  "authority_effect": false,
+  "archive_dependency": "This session remains active until the Service Gateway proof result and sequence-release state are durably finalized."
+}
