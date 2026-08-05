@@ -35,10 +35,10 @@ def load_json(path: Path) -> dict:
     return value
 
 
-def task_by_id(items: list[dict], task_id: str) -> dict:
-    matches = [item for item in items if item.get("task_id") == task_id]
+def record_by_id(items: list[dict], identifier: str, key: str = "task_id") -> dict:
+    matches = [item for item in items if item.get(key) == identifier]
     if len(matches) != 1:
-        fail(f"expected exactly one {task_id}; found {len(matches)}")
+        fail(f"expected exactly one {identifier} by {key}; found {len(matches)}")
     return matches[0]
 
 
@@ -66,18 +66,18 @@ def main() -> int:
     if any(item.get("task_id") == "LLMA-0001-IMAGE-PUBLICATION" for item in active):
         fail("completed publication task remains active")
 
-    hil = task_by_id(active, "LLMA-0001-HIL-CYCLE")
+    hil = record_by_id(active, "LLMA-0001-HIL-CYCLE")
     if hil.get("owner") != "pull/56" or hil.get("superseded_owner") != "pull/44":
         fail("HIL owner reconciliation is incomplete")
 
     completed = state.get("completed_tasks") or []
-    merged = task_by_id(completed, "LLMA-SESSION-PROVIDER-LAYER-2026-08-02")
+    merged = record_by_id(completed, "LLMA-SESSION-PROVIDER-LAYER-2026-08-02")
     if merged.get("state") != "MERGED_INTO_CANONICAL_WORKSTREAM":
         fail("merged PR #95 claim is not released")
     if merged.get("merge_commit") != "1505aac0073bc6466769ca84c6ae28d887abdefd":
         fail("PR #95 merge evidence mismatch")
 
-    publication = task_by_id(completed, "LLMA-0001-IMAGE-PUBLICATION")
+    publication = record_by_id(completed, "LLMA-0001-IMAGE-PUBLICATION")
     if publication.get("state") != "COMPLETE":
         fail("publication task is not complete")
     if publication.get("scheduler_owner") != "StegVerse-Labs/StegVerse-Healer":
@@ -90,7 +90,7 @@ def main() -> int:
         fail("publication task lacks consumer pull evidence")
 
     queued = state.get("queued_exclusive_tasks") or []
-    live = task_by_id(queued, "LLMA-0002-LIVE-PROVIDER")
+    live = record_by_id(queued, "LLMA-0002-LIVE-PROVIDER")
     if live.get("owner") != "issue/18" or live.get("execution_class") != "EXCLUSIVE":
         fail("live provider task ownership or class changed")
     blockers = set(live.get("external_blockers") or [])
@@ -106,7 +106,7 @@ def main() -> int:
         fail("published-package completion evidence missing from live-provider task")
 
     observers = state.get("machine_owned_observers") or []
-    observer = task_by_id(observers, "LLMA-HEALER-PUBLICATION-RELAY")
+    observer = record_by_id(observers, "LLMA-HEALER-PUBLICATION-RELAY", key="observer_id")
     if observer.get("owner") != "StegVerse-Labs/StegVerse-Healer":
         fail("publication observer owner mismatch")
     if observer.get("state") != "BLOCKED" or observer.get("observed_result") != "HTTP 403":
