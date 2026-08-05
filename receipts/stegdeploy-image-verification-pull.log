@@ -11,12 +11,12 @@ b9661391f380: Pulling fs layer
 7b062dddc01d: Pulling fs layer
 a5e795f9d8e0: Pulling fs layer
 95b845224c95: Waiting
-501d542b3ed4: Waiting
-2190bb63ddff: Waiting
 7b062dddc01d: Waiting
 a5e795f9d8e0: Waiting
-fd079632edc0: Waiting
+501d542b3ed4: Waiting
+2190bb63ddff: Waiting
 b9661391f380: Waiting
+fd079632edc0: Waiting
 7f48c43ce4ac: Waiting
 98db2485a0d0: Verifying Checksum
 98db2485a0d0: Download complete
@@ -24,17 +24,15 @@ b9661391f380: Waiting
 48347b15c85f: Download complete
 062e450697fa: Verifying Checksum
 062e450697fa: Download complete
-fd079632edc0: Verifying Checksum
 fd079632edc0: Download complete
-b9661391f380: Verifying Checksum
 b9661391f380: Download complete
 7f48c43ce4ac: Verifying Checksum
 7f48c43ce4ac: Download complete
 95b845224c95: Verifying Checksum
 95b845224c95: Download complete
+062e450697fa: Pull complete
 501d542b3ed4: Verifying Checksum
 501d542b3ed4: Download complete
-062e450697fa: Pull complete
 7b062dddc01d: Verifying Checksum
 7b062dddc01d: Download complete
 2190bb63ddff: Verifying Checksum
@@ -51,6 +49,6 @@ b9661391f380: Pull complete
 2190bb63ddff: Pull complete
 7b062dddc01d: Pull complete
 a5e795f9d8e0: Pull complete
-Digest: sha256:a5049d8d1a02f32475e4c9034eb6d9e626a1203507ae53da651237e39a04a961
+Digest: sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901
 Status: Downloaded newer image for ghcr.io/stegverse-org/llm-adapter:main
 ghcr.io/stegverse-org/llm-adapter:main
