@@ -1,50 +1,40 @@
 {
   "schema_version": "STEGVERSE-TASK-v1",
   "task_id": "LLMA-SEQUENCE-0001-RELEASE-015",
-  "title": "Release completed sequence 0001 tasks and repair Service Gateway activation proof",
+  "title": "Release completed sequence tasks and governed Service Gateway activation proof",
   "originating_goal": "Complete active tasks, activate finished tasks, and preserve all remaining Ecosystem Chat work in canonical repository controls.",
   "repository": "StegVerse-org/LLM-adapter",
   "canonical_issue": "StegVerse-org/LLM-adapter#18",
   "service_gateway_issue": "StegVerse-org/LLM-adapter#72",
   "tvc_dependency_issue": "StegVerse-Labs/TVC#6",
-  "branch": "fix/service-gateway-proof-and-release-sequence",
   "execution_class": "PARALLEL_SAFE",
-  "state": "CLAIMED_FOR_VALIDATION",
-  "claimant": "session-sequence-release-lane",
+  "state": "COMPLETE",
+  "claimant": null,
   "claimed_at": "2026-08-04T20:18:00-05:00",
-  "claim_release_condition": "The repair PR merges after hosted gates pass, the main Service Gateway activation proof retains PASS or a precise BLOCKED artifact, and the exact result is recorded in this task, the orchestration registry, the handoff, and issues #18 and #72.",
-  "owned_surfaces": [
-    "tests/test_service_gateway.py",
-    ".github/workflows/service-gateway-deploy.yml",
-    "data/llm-adapter-orchestration-state.json",
-    "scripts/check_llm_adapter_orchestration_state.py",
-    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
-    "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
-    "tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
-    "tasks/LLMA-SEQUENCE-0001-RELEASE-015.json"
-  ],
-  "collision_boundaries": [
-    "Do not modify provider execution authority owned by merged PR #32 and issue #18.",
-    "Do not replace TVC secret-governance authority owned by StegVerse-Labs/TVC#6.",
-    "Do not claim ephemeral GitHub-hosted proof as persistent deployment or Master Records custody.",
-    "Do not create another gateway, runtime, scheduler, or provider adapter."
-  ],
+  "released_at": "2026-08-04T21:01:00-05:00",
+  "release_evidence": {
+    "service_gateway_repair_pr": 115,
+    "service_gateway_repair_merge": "77fe06c5002fa14193a7972b2c653013a5bdb671",
+    "publication_trigger_pr": 116,
+    "publication_trigger_merge": "f7ca640d44a5e7703e9d3f599717375bfae2e183",
+    "committed_receipt": "receipts/service-gateway-activation-proof.json"
+  },
   "completed_dependencies": {
-    "latest_image_publication": {
+    "final_stable_image_publication": {
       "state": "COMPLETE",
-      "workflow_run": 30965343262,
-      "workflow_job": 92177973489,
-      "source_commit": "7f70c326db25e5a2cb6fce9a03858ec9de537ec4",
-      "evidence_retention_commit": "0afd1fab8e339b2b7f358eca05e2379ddcb9e8bd",
-      "image_digest": "sha256:980d76c7a1bc43cb7d828ebc9153db8dec8295d92c10bd56e56c9ce0d4ef2a92",
-      "receipt_sha256": "745ae55bde7de8f883497f29485922ba73938995e298c977ffe9270e6e8abc65",
-      "publication_artifact": 8914506620,
-      "publication_artifact_digest": "sha256:0861bc65d64f8b6532ef7ec85a9396679ca6a8a5e63dbc32db1a2f05541461e3",
-      "build_record_artifact": 8914506923,
-      "build_record_digest": "sha256:fad06982940329abae2eb569113a1603e641cc435eb2ef015a9a967e397e4340",
-      "attestation_id": 38927431,
-      "rekor_log_index": 2341858582,
-      "superseded_run": 30964767464
+      "workflow_run": 30967973138,
+      "workflow_job": 92185969448,
+      "source_commit": "f7ca640d44a5e7703e9d3f599717375bfae2e183",
+      "evidence_retention_commit": "f1fd7b6f7293af270e158c6daf65a9b17765d4c1",
+      "image_digest": "sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901",
+      "receipt_sha256": "d70f19a0a3afd9a34f313b3e0a4959e3343b00194c86fd85e3cdec5b3c0a7d87",
+      "publication_artifact": 8915473468,
+      "publication_artifact_digest": "sha256:1f90b7ed6adfc1120d440fef24cf6f595a0cbec529fadb4c004498e63e4ae404",
+      "build_record_artifact": 8915473881,
+      "build_record_digest": "sha256:9a8bf145b72f6ea8c8da80467085dcc4cf77b0d71c784ba1c2af8551b3f40524",
+      "consumer_pull_verified": true,
+      "readiness": "READY",
+      "evidence_only_changes_rebuild_image": false
     },
     "hil_full_cycle": {
       "state": "COMPLETE",
@@ -62,36 +52,38 @@
       "workflow_run": 30966031661,
       "python_versions": ["3.9", "3.11", "3.12"],
       "canonical_fixture_and_adversarial_tests": true,
-      "main_integration_commit": "e320c33189c1b6cf9d51a666a4505592b6fb981b",
       "authority_effect": false
     },
-    "architecture_guard": {
+    "service_gateway_activation": {
       "state": "COMPLETE",
-      "workflow_run": 30966031667
-    },
-    "full_repository_validation": {
-      "state": "COMPLETE",
-      "workflow_run": 30966031655
+      "pull_request_validation_run": 30967325108,
+      "pull_request_validation_job": 92184001538,
+      "pull_request_artifact": 8915225715,
+      "pull_request_artifact_digest": "sha256:54b5c02394e4273464b32804701dcdd9c78e1bf14dfe12194f26a7751849afec",
+      "main_activation_run": 30967405348,
+      "main_activation_job": 92184247979,
+      "main_artifact": 8915257517,
+      "main_artifact_digest": "sha256:3695622d5f8eb67c11cbfe4339fafb52569554142137af76a3a950274d1e7531",
+      "result": "PASS",
+      "receipt_schema": "HIL-RECEIVER-RECEIPT-v2",
+      "receipt_hash_validated": true,
+      "durable_receipt_file_observed": true,
+      "duplicate_receipt_semantically_equal": true,
+      "final_enforcement_passed": true,
+      "boundary": "ephemeral GitHub-hosted activation proof; not persistent public hosting"
     }
   },
-  "repair": {
-    "observed_failure_runs": [30307740784, 30966718025, 30966817503],
-    "root_causes": [
-      "The Site receipt test removed receiver_signature before recomputing receipt_sha256 even though HIL-RECEIVER-RECEIPT-v2 hashes the signature and excludes only receipt_sha256.",
-      "The always-run activation summary did not create activation-evidence/result after an early failure, preventing deterministic BLOCKED evidence retention.",
-      "The Service Gateway workflow expected stale TVC blob 7c8d3965eafd6048ea38e525647b898500c30531 instead of the repository-retained vendored blob e376f2c276bda75ff497709637aac693853bf9cc.",
-      "The orchestration validator and handoffs retained superseded publication run 30964767464 after later successful run 30965343262 became authoritative."
-    ],
-    "implemented_changes": [
-      "Align the unit test with the production v2 receipt-hash contract.",
-      "Create the result directory before writing the always-run activation summary.",
-      "Add a pull-request trigger so the complete Service Gateway proof is validated before merge.",
-      "Pin the vendored TVC evaluator to commit b1a817e629aff483ab80679297013b33e692b567 and exact blob e376f2c276bda75ff497709637aac693853bf9cc.",
-      "Rebind publication task, orchestration, validator, and handoffs to the latest retained PUBLISHED receipt and READY projection."
-    ],
-    "validation_state": "PENDING_HOSTED_REVALIDATION"
-  },
-  "remaining_blockers_after_sequence_release": [
+  "completed_repairs": [
+    "Aligned the Site receipt test with HIL-RECEIVER-RECEIPT-v2 signature-inclusive hashing.",
+    "Made early failure summaries and evidence artifacts deterministic.",
+    "Added pre-merge Service Gateway proof validation.",
+    "Pinned the vendored TVC evaluator to exact commit and blob identity.",
+    "Replaced bytewise duplicate-response comparison with canonical semantic equality and receipt-hash equality.",
+    "Added final PASS enforcement so artifact upload cannot mask a blocked proof.",
+    "Removed documentation, status, receipt, and validation-only changes from runtime image rebuild triggers.",
+    "Reconciled publication task, registry, validator, and handoffs to the final stable image receipt."
+  ],
+  "remaining_blockers": [
     "authorized provider configuration and scoped execution grant",
     "authorized persistent endpoint/runtime",
     "authenticated Master Records custody configuration",
@@ -99,8 +91,9 @@
     "zero-blocker VERIFIED activation receipt",
     "Site activation and verified downstream ingestion"
   ],
-  "next_executable_action": "Run hosted PR validation, merge only after all required gates pass, inspect the main Service Gateway activation-proof job and artifact, then release this claim with exact evidence.",
+  "remaining_owner": "StegVerse-org/LLM-adapter#18",
+  "next_executable_action": "Issue #18 executes the exclusive live-provider vertical slice only after every authority-bound blocker is cleared; issues #72 and StegVerse-Labs/TVC#6 retain Service Gateway and TVC ownership.",
   "manual_user_action_required": false,
   "authority_effect": false,
-  "archive_dependency": "This session remains active until the Service Gateway proof result and sequence-release state are durably finalized."
+  "archive_dependency": "SATISFIED; all unique session requirements and evidence are durably installed or transferred."
 }

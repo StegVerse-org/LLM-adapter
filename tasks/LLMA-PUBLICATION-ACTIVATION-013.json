@@ -1,7 +1,7 @@
 {
   "schema_version": "STEGVERSE-TASK-v1",
   "task_id": "LLMA-PUBLICATION-ACTIVATION-013",
-  "title": "Activate StegDeploy publication evidence and reconcile stale orchestration state",
+  "title": "Activate and stabilize StegDeploy publication evidence",
   "repository": "StegVerse-org/LLM-adapter",
   "canonical_issue": "StegVerse-org/LLM-adapter#18",
   "canonical_handoff": "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
@@ -11,40 +11,38 @@
   "state": "COMPLETE",
   "claimant": null,
   "claimed_at": "2026-08-04T19:33:00-05:00",
-  "released_at": "2026-08-04T19:55:07-05:00",
-  "goal": "Retain the latest successful canonical image publication while preventing evidence-only changes from rebuilding the runtime image.",
+  "released_at": "2026-08-04T21:01:00-05:00",
+  "goal": "Retain one final successful canonical image publication and prevent evidence-only changes from rebuilding or superseding it.",
   "implementation": {
     "activation_pr": 111,
-    "activation_merge": "260e4b851a8b0e6ee72c361675670b2a4d92b515",
     "repair_pr": 112,
-    "repair_merge": "4c6d8a47a4695adc793ad0ab4577c1e9aa0488dc",
     "claim_release_pr": 113,
-    "claim_release_merge": "7f70c326db25e5a2cb6fce9a03858ec9de537ec4",
-    "service_gateway_activation_merge": "77fe06c5002fa14193a7972b2c653013a5bdb671",
-    "evidence_retention_commit": "f81ff1bd9c2b57c06d33b6f82c7241525c63a97d",
-    "latest_source_commit": "77fe06c5002fa14193a7972b2c653013a5bdb671",
-    "superseded_publication_runs": [30964767464, 30965343262]
+    "service_gateway_activation_pr": 115,
+    "trigger_stabilization_pr": 116,
+    "trigger_stabilization_merge": "f7ca640d44a5e7703e9d3f599717375bfae2e183",
+    "evidence_retention_commit": "f1fd7b6f7293af270e158c6daf65a9b17765d4c1",
+    "superseded_publication_runs": [30964767464, 30965343262, 30967405336]
   },
   "validation": {
-    "publication_run": 30967405336,
-    "publication_job": 92184247965,
+    "publication_run": 30967973138,
+    "publication_job": 92185969448,
     "publication_state": "PUBLISHED",
-    "publication_receipt_sha256": "80b0bc5063531a74194adedfcbf48677ca832ae29156b46ece14f188e58c7432",
-    "image_digest": "sha256:a5049d8d1a02f32475e4c9034eb6d9e626a1203507ae53da651237e39a04a961",
+    "publication_receipt_sha256": "d70f19a0a3afd9a34f313b3e0a4959e3343b00194c86fd85e3cdec5b3c0a7d87",
+    "image_digest": "sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901",
     "consumer_pull_verified": true,
     "readiness_state": "READY",
-    "publication_artifact": 8915264878,
-    "publication_artifact_digest": "sha256:1adae9a0ea4b7cf9d712acdf1335d5a404f3c7647bac3ace2c9737e7c9389099",
-    "build_record_artifact": 8915265368,
-    "build_record_digest": "sha256:e329302f0b29cf98dde775aede639c057740bb1b5cc5f2598d9a525fcb4f2958"
+    "publication_artifact": 8915473468,
+    "publication_artifact_digest": "sha256:1f90b7ed6adfc1120d440fef24cf6f595a0cbec529fadb4c004498e63e4ae404",
+    "build_record_artifact": 8915473881,
+    "build_record_digest": "sha256:9a8bf145b72f6ea8c8da80467085dcc4cf77b0d71c784ba1c2af8551b3f40524"
   },
   "completed_requirements": [
     "LLM-adapter contains no managed schedule.",
     "Recurring publication observation is assigned to StegVerse-Labs/StegVerse-Healer.",
-    "The current canonical image was built, published, attested, freshly pulled, and retained with a zero-blocker v2 PUBLISHED receipt and READY projection.",
+    "The final canonical image was built, published, attested, freshly pulled, and retained with a zero-blocker v2 PUBLISHED receipt and READY projection.",
     "The publication evidence artifact and Docker build record are retained.",
-    "Historical publication runs remain inspectable but are superseded by run 30967405336.",
-    "Evidence-only and documentation-only changes are being removed from runtime image push triggers.",
+    "Documentation, receipts, status projections, and validation-only scripts do not rebuild the runtime image.",
+    "Historical publication runs remain inspectable but are superseded by run 30967973138.",
     "No provider, persistent deployment, custody, Site activation, release, or general publication authority was granted."
   ],
   "remaining_machine_owned_dependency": {
@@ -55,8 +53,8 @@
     "observed_result": "HTTP 403",
     "effect_on_completed_task": "NONE"
   },
-  "next_executable_action": "Merge the runtime-trigger stabilization after validation, observe its final publication, then bind the released task and handoffs to that stable digest.",
+  "next_executable_action": "Issue #18 may consume the stable digest only after authorized provider, persistent runtime, and authenticated custody boundaries clear.",
   "manual_user_action_required": false,
   "authority_effect": false,
-  "activation_effect": "CURRENT_CANONICAL_IMAGE_PUBLISHED_ATTESTED_AND_CONSUMER_PULL_VERIFIED"
+  "activation_effect": "FINAL_STABLE_CANONICAL_IMAGE_PUBLISHED_ATTESTED_AND_CONSUMER_PULL_VERIFIED"
 }

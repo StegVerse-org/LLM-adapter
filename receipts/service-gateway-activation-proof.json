@@ -1,0 +1,59 @@
+{
+  "schema": "stegverse.service_gateway.activation_proof.v1",
+  "repository": "StegVerse-org/LLM-adapter",
+  "canonical_issue": "StegVerse-org/LLM-adapter#72",
+  "canonical_live_activation_issue": "StegVerse-org/LLM-adapter#18",
+  "result": "PASS",
+  "boundary": "ephemeral GitHub-hosted activation proof; not persistent public hosting",
+  "implementation": {
+    "pull_request": 115,
+    "merge_commit": "77fe06c5002fa14193a7972b2c653013a5bdb671",
+    "service_tests": 4,
+    "tvc_source_commit": "b1a817e629aff483ab80679297013b33e692b567",
+    "tvc_blob_sha": "e376f2c276bda75ff497709637aac693853bf9cc",
+    "tvc_decision_contains_secret_values": false
+  },
+  "pull_request_validation": {
+    "workflow_run": 30967325108,
+    "workflow_job": 92184001538,
+    "artifact_id": 8915225715,
+    "artifact_digest": "sha256:54b5c02394e4273464b32804701dcdd9c78e1bf14dfe12194f26a7751849afec"
+  },
+  "main_activation": {
+    "workflow_run": 30967405348,
+    "workflow_job": 92184247979,
+    "artifact_id": 8915257517,
+    "artifact_digest": "sha256:3695622d5f8eb67c11cbfe4339fafb52569554142137af76a3a950274d1e7531",
+    "readiness_endpoint_passed": true,
+    "site_format_packet_submitted": true,
+    "receipt_schema": "HIL-RECEIVER-RECEIPT-v2",
+    "receipt_hash_validated": true,
+    "durable_receipt_file_observed": true,
+    "duplicate_receipt_semantically_equal": true,
+    "duplicate_submission_id_equal": true,
+    "duplicate_receipt_sha256_equal": true,
+    "final_enforcement_passed": true
+  },
+  "authority": {
+    "provider_execution": false,
+    "persistent_deployment": false,
+    "custody": false,
+    "reconstruction": false,
+    "site_activation": false,
+    "publication": false,
+    "release": false,
+    "payment": false,
+    "autonomous_action": false
+  },
+  "remaining_owner": "StegVerse-org/LLM-adapter#18",
+  "remaining_release_conditions": [
+    "authorized provider configuration and scoped execution grant",
+    "authorized persistent endpoint/runtime",
+    "authenticated Master Records custody configuration",
+    "transition reconstruction PASS",
+    "zero-blocker VERIFIED activation receipt",
+    "Site activation and verified downstream ingestion"
+  ],
+  "manual_user_action_required": false,
+  "created_at": "2026-08-04T21:00:00-05:00"
+}
