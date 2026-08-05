@@ -7,20 +7,18 @@
   "task_sequence": 2,
   "task_sequence_label": "current work task sequence 0002",
   "heartbeat_mode": "TRANSITION_DRIVEN_HEALTH_RELATIVE",
-  "ecosystem_heartbeat": 4,
-  "repository_heartbeat": 4,
+  "ecosystem_heartbeat": 5,
+  "repository_heartbeat": 5,
   "last_transition": {
-    "event_type": "HIL_FULL_CYCLE_AND_PROVIDER_USAGE_VALIDATION_COMPLETED",
+    "event_type": "LATEST_PUBLICATION_EVIDENCE_RECONCILED_DURING_SERVICE_GATEWAY_VALIDATION",
     "progress_effect": true,
     "authority_effect": false,
-    "observed_at": "2026-08-04T20:20:00-05:00",
+    "observed_at": "2026-08-04T20:38:00-05:00",
     "evidence": [
-      "StegVerse-org/LLM-adapter/pull/56",
-      "StegVerse-org/LLM-adapter/commit/e320c33189c1b6cf9d51a666a4505592b6fb981b",
-      "StegVerse-org/LLM-adapter/actions/runs/30966031698",
-      "StegVerse-org/LLM-adapter/actions/runs/30966031661",
-      "StegVerse-org/LLM-adapter/actions/runs/30966031667",
-      "StegVerse-org/LLM-adapter/actions/runs/30966031655",
+      "receipts/stegdeploy-image-publication.json",
+      "status/stegdeploy-image-publication-readiness.json",
+      "StegVerse-org/LLM-adapter/actions/runs/30965343262",
+      "tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
       "tasks/LLMA-SEQUENCE-0001-RELEASE-015.json",
       "StegVerse-org/LLM-adapter#18"
     ]
@@ -29,7 +27,7 @@
     {
       "task_id": "LLMA-SEQUENCE-0001-RELEASE-015",
       "owner": "branch/fix/service-gateway-proof-and-release-sequence",
-      "workload": "Repair and validate the canonical Service Gateway ephemeral activation proof, then release sequence 0002",
+      "workload": "Repair and validate the canonical Service Gateway ephemeral activation proof, reconcile latest publication evidence, then release sequence 0002",
       "execution_class": "PARALLEL_SAFE",
       "state": "CLAIMED_FOR_VALIDATION",
       "claimed_at": "2026-08-04T20:18:00-05:00",
@@ -61,11 +59,14 @@
       "state": "COMPLETE",
       "activation_merge": "260e4b851a8b0e6ee72c361675670b2a4d92b515",
       "repair_merge": "4c6d8a47a4695adc793ad0ab4577c1e9aa0488dc",
-      "publication_run": 30964767464,
-      "publication_receipt_sha256": "2ebacb9f5efc426a38bbbb58492b70575b9408127f5f57a34f066b51a43ba7a9",
-      "image_digest": "sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55",
+      "claim_release_merge": "7f70c326db25e5a2cb6fce9a03858ec9de537ec4",
+      "publication_run": 30965343262,
+      "publication_job": 92177973489,
+      "publication_receipt_sha256": "745ae55bde7de8f883497f29485922ba73938995e298c977ffe9270e6e8abc65",
+      "image_digest": "sha256:980d76c7a1bc43cb7d828ebc9153db8dec8295d92c10bd56e56c9ce0d4ef2a92",
       "consumer_pull_verified": true,
-      "readiness_state": "READY"
+      "readiness_state": "READY",
+      "superseded_publication_run": 30964767464
     },
     {
       "task_id": "LLMA-0001-HIL-CYCLE",
@@ -89,11 +90,7 @@
       "execution_class": "PARALLEL_SAFE",
       "state": "COMPLETE",
       "workflow_run": 30966031661,
-      "python_versions": [
-        "3.9",
-        "3.11",
-        "3.12"
-      ],
+      "python_versions": ["3.9", "3.11", "3.12"],
       "canonical_fixture_and_adversarial_tests": true,
       "main_integration_commit": "e320c33189c1b6cf9d51a666a4505592b6fb981b",
       "authority_effect": false
@@ -113,8 +110,8 @@
       ],
       "completed_dependency_evidence": [
         "published-package consumer access: READY",
-        "image digest: sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55",
-        "publication run: 30964767464",
+        "latest image digest: sha256:980d76c7a1bc43cb7d828ebc9153db8dec8295d92c10bd56e56c9ce0d4ef2a92",
+        "latest publication run: 30965343262",
         "HIL full-cycle run: 30966031698",
         "provider usage validation run: 30966031661"
       ]
@@ -166,7 +163,7 @@
       "closed PR #44 is superseded and PR #56 is merged with exact full-cycle evidence",
       "provider-layer consolidation PR #95 is merged and released",
       "canonical provider-usage validation passed on Python 3.9, 3.11, and 3.12 on main",
-      "canonical image publication and fresh consumer pull are complete",
+      "latest canonical image publication, attestation, repository retention, and fresh consumer pull are complete",
       "Service Gateway proof repair is the only active repository task in sequence 0002",
       "recurring publication observation remains assigned to StegVerse-Healer and is blocked on exact token scope",
       "authorized live-provider execution remains queued behind provider, persistent endpoint, custody, and current-sequence idle requirements"
