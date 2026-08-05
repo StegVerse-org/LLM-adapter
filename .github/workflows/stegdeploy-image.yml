@@ -30,7 +30,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: stegverse-org/llm-adapter
 
 jobs:
   publish:
@@ -184,8 +184,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add \
             receipts/stegdeploy-image-publication.json \
-            receipts/stegdeploy-image-verification-pull.log \
             status/stegdeploy-image-publication-readiness.json
+          git add -f receipts/stegdeploy-image-verification-pull.log
           if git diff --cached --quiet; then
             echo "Canonical image publication evidence unchanged."
           else
