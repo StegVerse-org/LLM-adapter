@@ -10,23 +10,29 @@ ROOT = Path(__file__).resolve().parents[1]
 STATE_PATH = ROOT / "data" / "llm-adapter-orchestration-state.json"
 PUBLICATION_TASK_PATH = ROOT / "tasks" / "LLMA-PUBLICATION-ACTIVATION-013.json"
 SEQUENCE_TASK_PATH = ROOT / "tasks" / "LLMA-SEQUENCE-0001-RELEASE-015.json"
+SERVICE_GATEWAY_RECEIPT_PATH = ROOT / "receipts" / "service-gateway-activation-proof.json"
 PUBLICATION_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "stegdeploy-image.yml"
 SERVICE_GATEWAY_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "service-gateway-deploy.yml"
 SERVICE_GATEWAY_TEST_PATH = ROOT / "tests" / "test_service_gateway.py"
 PUBLICATION_HANDOFF_PATH = ROOT / "docs" / "STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md"
-RECEIPT_PATH = ROOT / "receipts" / "stegdeploy-image-publication.json"
+REPOSITORY_HANDOFF_PATH = ROOT / "docs" / "LLM_ADAPTER_MIRROR_HANDOFF.md"
+PUBLICATION_RECEIPT_PATH = ROOT / "receipts" / "stegdeploy-image-publication.json"
 READINESS_PATH = ROOT / "status" / "stegdeploy-image-publication-readiness.json"
 PULL_LOG_PATH = ROOT / "receipts" / "stegdeploy-image-verification-pull.log"
 
-EXPECTED_DIGEST = "sha256:a5049d8d1a02f32475e4c9034eb6d9e626a1203507ae53da651237e39a04a961"
-EXPECTED_PUBLICATION_RECEIPT = "80b0bc5063531a74194adedfcbf48677ca832ae29156b46ece14f188e58c7432"
-EXPECTED_PUBLICATION_RUN = "30967405336"
-EXPECTED_PUBLICATION_JOB = 92184247965
+EXPECTED_DIGEST = "sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901"
+EXPECTED_PUBLICATION_RECEIPT = "d70f19a0a3afd9a34f313b3e0a4959e3343b00194c86fd85e3cdec5b3c0a7d87"
+EXPECTED_PUBLICATION_RUN = 30967973138
+EXPECTED_PUBLICATION_JOB = 92185969448
 EXPECTED_TVC_COMMIT = "b1a817e629aff483ab80679297013b33e692b567"
 EXPECTED_TVC_BLOB = "e376f2c276bda75ff497709637aac693853bf9cc"
 EXPECTED_HIL_RUN = 30966031698
+EXPECTED_HIL_RECEIPT = "f4d0a8b90b05017b5abf77f3c96c3b8ad3efb99eb57d9c68b90a611b928888da"
 EXPECTED_PROVIDER_RUN = 30966031661
 EXPECTED_SERVICE_GATEWAY_RUN = 30967405348
+EXPECTED_SERVICE_GATEWAY_JOB = 92184247979
+EXPECTED_SERVICE_GATEWAY_ARTIFACT = 8915257517
+EXPECTED_SERVICE_GATEWAY_ARTIFACT_DIGEST = "sha256:3695622d5f8eb67c11cbfe4339fafb52569554142137af76a3a950274d1e7531"
 
 
 def fail(message: str) -> None:
@@ -57,36 +63,61 @@ def assert_false_authority(value: dict, label: str) -> None:
         fail(f"{label} grants authority")
 
 
+def verify_hash_bound_receipt(receipt: dict, field: str = "receipt_sha256") -> None:
+    material = dict(receipt)
+    declared = material.pop(field, None)
+    if not declared:
+        fail(f"receipt missing {field}")
+    actual = hashlib.sha256(
+        json.dumps(material, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+    if declared != actual:
+        fail(f"invalid {field}: {declared} != {actual}")
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     publication_task = load_json(PUBLICATION_TASK_PATH)
     sequence_task = load_json(SEQUENCE_TASK_PATH)
-    receipt = load_json(RECEIPT_PATH)
+    service_gateway_receipt = load_json(SERVICE_GATEWAY_RECEIPT_PATH)
+    publication_receipt = load_json(PUBLICATION_RECEIPT_PATH)
     readiness = load_json(READINESS_PATH)
 
-    if state.get("schema_version") != "1.1.0" or state.get("repository") != "StegVerse-org/LLM-adapter":
-        fail("orchestration identity mismatch")
-    if state.get("status") != "ACTIVE_WITH_DECLARED_BLOCKERS" or state.get("task_sequence") != 2:
-        fail("unexpected orchestration posture")
+    if state.get("schema_version") != "1.1.0":
+        fail("unexpected orchestration schema")
+    if state.get("repository") != "StegVerse-org/LLM-adapter":
+        fail("repository identity mismatch")
+    if state.get("status") != "ACTIVE_WITH_DECLARED_BLOCKERS":
+        fail("repository status must preserve declared blockers")
+    if state.get("task_sequence") != 2:
+        fail("unexpected task sequence")
+    if state.get("active_tasks") != []:
+        fail("completed sequence still has active task claims")
+    if state.get("idle_terminal_statement") != "end of current work task sequence 0002, no tasks running":
+        fail("idle terminal statement mismatch")
 
-    active = state.get("active_tasks") or []
-    if len(active) != 1:
-        fail("sequence 0002 must have exactly one bounded active task before final release")
-    active_task = record(active, "LLMA-SEQUENCE-0001-RELEASE-015")
-    if active_task.get("owner") != "pull/116" or active_task.get("state") != "CLAIMED_FOR_VALIDATION":
-        fail("publication-trigger stabilization claim mismatch")
+    consolidation = state.get("session_consolidation") or {}
+    if consolidation.get("state") != "COMPLETE" or consolidation.get("archive_ready") is not True:
+        fail("session consolidation is not complete")
+    if set(consolidation.get("canonical_continuation") or []) != {
+        "StegVerse-org/LLM-adapter#18",
+        "StegVerse-org/LLM-adapter#72",
+        "StegVerse-Labs/TVC#6",
+    }:
+        fail("canonical continuation set mismatch")
+    assert_false_authority(state.get("authority") or {}, "orchestration")
 
     completed = state.get("completed_tasks") or []
     publication = record(completed, "LLMA-0001-IMAGE-PUBLICATION")
-    if publication.get("state") != "COMPLETE":
-        fail("publication task is not complete")
     for key, expected in (
-        ("publication_run", int(EXPECTED_PUBLICATION_RUN)),
+        ("state", "COMPLETE"),
+        ("publication_run", EXPECTED_PUBLICATION_RUN),
         ("publication_job", EXPECTED_PUBLICATION_JOB),
         ("publication_receipt_sha256", EXPECTED_PUBLICATION_RECEIPT),
         ("image_digest", EXPECTED_DIGEST),
         ("consumer_pull_verified", True),
         ("readiness_state", "READY"),
+        ("evidence_only_changes_rebuild_image", False),
     ):
         if publication.get(key) != expected:
             fail(f"publication completed-task {key} mismatch")
@@ -96,45 +127,71 @@ def main() -> int:
     hil = record(completed, "LLMA-0001-HIL-CYCLE")
     if hil.get("state") != "COMPLETE" or hil.get("workflow_run") != EXPECTED_HIL_RUN:
         fail("HIL full-cycle evidence mismatch")
+    if hil.get("receipt_sha256") != EXPECTED_HIL_RECEIPT:
+        fail("HIL receipt evidence mismatch")
     if hil.get("persistent_deployment_proven") is not False:
         fail("ephemeral HIL proof is represented as persistent deployment")
 
     goal8 = record(completed, "LLMA-0001-GOAL8")
     if goal8.get("state") != "COMPLETE" or goal8.get("workflow_run") != EXPECTED_PROVIDER_RUN:
         fail("provider usage validation evidence mismatch")
-    if goal8.get("python_versions") != ["3.9", "3.11", "3.12"] or goal8.get("authority_effect") is not False:
-        fail("provider usage validation matrix or authority mismatch")
+    if goal8.get("python_versions") != ["3.9", "3.11", "3.12"]:
+        fail("provider usage validation matrix mismatch")
+    if goal8.get("authority_effect") is not False:
+        fail("provider usage validation grants authority")
+
+    sequence = record(completed, "LLMA-SEQUENCE-0001-RELEASE-015")
+    if sequence.get("state") != "COMPLETE":
+        fail("sequence release is not complete")
+    if sequence.get("service_gateway_run") != EXPECTED_SERVICE_GATEWAY_RUN:
+        fail("Service Gateway run mismatch in completed state")
+    if sequence.get("service_gateway_artifact") != EXPECTED_SERVICE_GATEWAY_ARTIFACT:
+        fail("Service Gateway artifact mismatch in completed state")
+    if sequence.get("service_gateway_artifact_digest") != EXPECTED_SERVICE_GATEWAY_ARTIFACT_DIGEST:
+        fail("Service Gateway artifact digest mismatch in completed state")
+    if sequence.get("persistent_deployment_proven") is not False:
+        fail("Service Gateway CI proof is represented as persistent deployment")
 
     live = record(state.get("queued_exclusive_tasks") or [], "LLMA-0002-LIVE-PROVIDER")
-    if live.get("owner") != "issue/18" or live.get("execution_class") != "EXCLUSIVE":
-        fail("live provider ownership changed")
+    if live.get("owner") != "issue/18" or live.get("state") != "BLOCKED":
+        fail("live-provider task owner or state mismatch")
+    if live.get("execution_class") != "EXCLUSIVE":
+        fail("live-provider execution class mismatch")
+    if live.get("blocked_until") != "all authority-bound blockers are cleared":
+        fail("live-provider task retains a stale sequence barrier")
     blockers = set(live.get("external_blockers") or [])
     if blockers != {
         "authorized provider configuration and scoped execution grant",
         "persistent endpoint",
         "authenticated Master Records custody configuration",
     }:
-        fail("live-provider blocker set changed without evidence")
+        fail("live-provider blocker set mismatch")
     dependency_text = "\n".join(live.get("completed_dependency_evidence") or [])
-    for required in (EXPECTED_DIGEST, EXPECTED_PUBLICATION_RUN, str(EXPECTED_HIL_RUN), str(EXPECTED_PROVIDER_RUN), str(EXPECTED_SERVICE_GATEWAY_RUN)):
+    for required in (
+        EXPECTED_DIGEST,
+        str(EXPECTED_PUBLICATION_RUN),
+        str(EXPECTED_HIL_RUN),
+        str(EXPECTED_PROVIDER_RUN),
+        str(EXPECTED_SERVICE_GATEWAY_RUN),
+    ):
         if required not in dependency_text:
             fail(f"completed dependency evidence missing {required}")
 
-    healer = record(state.get("machine_owned_observers") or [], "LLMA-HEALER-PUBLICATION-RELAY", "observer_id")
-    if healer.get("owner") != "StegVerse-Labs/StegVerse-Healer" or healer.get("observed_result") != "HTTP 403":
-        fail("Healer relay state mismatch")
-    monitor = record(state.get("machine_owned_observers") or [], "LLMA-LIVE-ACTIVATION-MONITOR", "observer_id")
+    observers = state.get("machine_owned_observers") or []
+    healer = record(observers, "LLMA-HEALER-PUBLICATION-RELAY", "observer_id")
+    if healer.get("owner") != "StegVerse-Labs/StegVerse-Healer":
+        fail("Healer relay owner mismatch")
+    if healer.get("state") != "BLOCKED" or healer.get("observed_result") != "HTTP 403":
+        fail("Healer relay blocker mismatch")
+    monitor = record(observers, "LLMA-LIVE-ACTIVATION-MONITOR", "observer_id")
     if monitor.get("state") != "PENDING" or monitor.get("authority_effect") is not False:
-        fail("live activation monitor state mismatch")
-    assert_false_authority(state.get("authority") or {}, "orchestration")
+        fail("live activation monitor posture mismatch")
 
-    if publication_task.get("task_id") != "LLMA-PUBLICATION-ACTIVATION-013":
-        fail("publication task identity mismatch")
     if publication_task.get("state") != "COMPLETE" or publication_task.get("claimant") is not None:
-        fail("publication claim is not released")
+        fail("publication task claim is not released")
     publication_validation = publication_task.get("validation") or {}
     for key, expected in (
-        ("publication_run", int(EXPECTED_PUBLICATION_RUN)),
+        ("publication_run", EXPECTED_PUBLICATION_RUN),
         ("publication_job", EXPECTED_PUBLICATION_JOB),
         ("publication_state", "PUBLISHED"),
         ("publication_receipt_sha256", EXPECTED_PUBLICATION_RECEIPT),
@@ -145,34 +202,32 @@ def main() -> int:
         if publication_validation.get(key) != expected:
             fail(f"publication task validation {key} mismatch")
 
-    if sequence_task.get("task_id") != "LLMA-SEQUENCE-0001-RELEASE-015":
-        fail("sequence task identity mismatch")
-    if sequence_task.get("state") != "CLAIMED_FOR_VALIDATION" or sequence_task.get("claimant") != "session-sequence-release-lane":
-        fail("sequence task claim mismatch")
+    if sequence_task.get("state") != "COMPLETE" or sequence_task.get("claimant") is not None:
+        fail("sequence task claim is not released")
+    if sequence_task.get("archive_dependency") != "SATISFIED; all unique session requirements and evidence are durably installed or transferred.":
+        fail("sequence archive dependency is not satisfied")
     if sequence_task.get("manual_user_action_required") is not False or sequence_task.get("authority_effect") is not False:
         fail("sequence task assigns manual work or authority")
 
-    if receipt.get("schema") != "stegdeploy.image-publication.v2" or receipt.get("state") != "PUBLISHED":
-        fail("retained publication receipt is not PUBLISHED v2")
-    if receipt.get("blockers") != [] or receipt.get("consumer_pull_verified") is not True:
-        fail("retained publication receipt has blockers or lacks fresh pull")
+    if publication_receipt.get("schema") != "stegdeploy.image-publication.v2":
+        fail("publication receipt schema mismatch")
+    if publication_receipt.get("state") != "PUBLISHED" or publication_receipt.get("blockers") != []:
+        fail("publication receipt is not zero-blocker PUBLISHED")
     for key, expected in (
         ("digest", EXPECTED_DIGEST),
         ("receipt_sha256", EXPECTED_PUBLICATION_RECEIPT),
-        ("publication_run_id", EXPECTED_PUBLICATION_RUN),
+        ("publication_run_id", str(EXPECTED_PUBLICATION_RUN)),
+        ("consumer_pull_verified", True),
+        ("repository_retained", True),
     ):
-        if receipt.get(key) != expected:
-            fail(f"retained publication receipt {key} mismatch")
-    material = dict(receipt)
-    declared_hash = material.pop("receipt_sha256")
-    actual_hash = hashlib.sha256(json.dumps(material, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-    if declared_hash != actual_hash:
-        fail("retained publication receipt hash is invalid")
+        if publication_receipt.get(key) != expected:
+            fail(f"publication receipt {key} mismatch")
+    verify_hash_bound_receipt(publication_receipt)
 
     if readiness.get("state") != "READY" or readiness.get("blockers") != []:
         fail("publication readiness is not READY")
     if readiness.get("observed_digest") != EXPECTED_DIGEST or readiness.get("consumer_pull_verified") is not True:
-        fail("readiness does not match retained publication")
+        fail("publication readiness does not match retained receipt")
     assert_false_authority({
         "provider": readiness.get("provider_execution_authorized"),
         "deployment": readiness.get("persistent_deployment_authorized"),
@@ -181,21 +236,55 @@ def main() -> int:
     }, "publication readiness")
 
     if not PULL_LOG_PATH.is_file() or EXPECTED_DIGEST not in PULL_LOG_PATH.read_text(encoding="utf-8"):
-        fail("fresh consumer pull log is missing the expected digest")
+        fail("fresh consumer pull log is missing final digest")
+
+    if service_gateway_receipt.get("schema") != "stegverse.service_gateway.activation_proof.v1":
+        fail("Service Gateway proof schema mismatch")
+    if service_gateway_receipt.get("result") != "PASS":
+        fail("Service Gateway proof is not PASS")
+    if service_gateway_receipt.get("boundary") != "ephemeral GitHub-hosted activation proof; not persistent public hosting":
+        fail("Service Gateway boundary mismatch")
+    main_activation = service_gateway_receipt.get("main_activation") or {}
+    for key, expected in (
+        ("workflow_run", EXPECTED_SERVICE_GATEWAY_RUN),
+        ("workflow_job", EXPECTED_SERVICE_GATEWAY_JOB),
+        ("artifact_id", EXPECTED_SERVICE_GATEWAY_ARTIFACT),
+        ("artifact_digest", EXPECTED_SERVICE_GATEWAY_ARTIFACT_DIGEST),
+        ("receipt_schema", "HIL-RECEIVER-RECEIPT-v2"),
+        ("receipt_hash_validated", True),
+        ("durable_receipt_file_observed", True),
+        ("duplicate_receipt_semantically_equal", True),
+        ("duplicate_submission_id_equal", True),
+        ("duplicate_receipt_sha256_equal", True),
+        ("final_enforcement_passed", True),
+    ):
+        if main_activation.get(key) != expected:
+            fail(f"Service Gateway proof {key} mismatch")
+    assert_false_authority(service_gateway_receipt.get("authority") or {}, "Service Gateway proof")
 
     publication_workflow = PUBLICATION_WORKFLOW_PATH.read_text(encoding="utf-8")
-    for required in ("workflow_dispatch:", "StegVerse-Labs/StegVerse-Healer", "llm_adapter/**", ".github/workflows/stegdeploy-image.yml"):
-        if required not in publication_workflow:
-            fail(f"publication workflow missing {required}")
     trigger_section = publication_workflow.split("permissions:", 1)[0]
+    for required in (
+        "workflow_dispatch:",
+        "StegVerse-Labs/StegVerse-Healer",
+        "Dockerfile",
+        "pyproject.toml",
+        "llm_adapter/**",
+        "scripts/container-entrypoint.sh",
+        "compose.stegdeploy.yaml",
+        ".github/workflows/stegdeploy-image.yml",
+    ):
+        if required not in trigger_section:
+            fail(f"publication trigger missing {required}")
     for forbidden in (
-        "scripts/check_stegdeploy_image_publication_readiness.py",
-        "status/stegdeploy-image-publication-readiness.json",
         "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
+        "receipts/stegdeploy-image-publication.json",
+        "status/stegdeploy-image-publication-readiness.json",
+        "scripts/check_stegdeploy_image_publication_readiness.py",
         "schedule:",
     ):
         if forbidden in trigger_section:
-            fail(f"publication workflow still contains forbidden trigger or schedule: {forbidden}")
+            fail(f"publication trigger contains forbidden non-runtime path or schedule: {forbidden}")
 
     gateway_workflow = SERVICE_GATEWAY_WORKFLOW_PATH.read_text(encoding="utf-8")
     for required in (
@@ -209,18 +298,33 @@ def main() -> int:
         if required not in gateway_workflow:
             fail(f"Service Gateway workflow missing {required}")
     gateway_test = SERVICE_GATEWAY_TEST_PATH.read_text(encoding="utf-8")
-    if 'receipt_hash = material.pop("receipt_sha256")' not in gateway_test or 'material.pop("receiver_signature")' in gateway_test:
-        fail("Service Gateway receipt-hash test does not match v2 semantics")
+    if 'receipt_hash = material.pop("receipt_sha256")' not in gateway_test:
+        fail("Service Gateway test does not remove receipt_sha256")
+    if 'material.pop("receiver_signature")' in gateway_test:
+        fail("Service Gateway test excludes receiver_signature from v2 receipt hash")
 
     publication_handoff = PUBLICATION_HANDOFF_PATH.read_text(encoding="utf-8")
-    for required in (EXPECTED_DIGEST, EXPECTED_PUBLICATION_RECEIPT, EXPECTED_PUBLICATION_RUN, "claim_state: COMPLETE", "HTTP 403"):
-        if required not in publication_handoff:
-            fail(f"publication handoff missing {required}")
+    repository_handoff = REPOSITORY_HANDOFF_PATH.read_text(encoding="utf-8")
+    for path_name, text in (
+        ("publication handoff", publication_handoff),
+        ("repository handoff", repository_handoff),
+    ):
+        for required in (
+            EXPECTED_DIGEST,
+            EXPECTED_PUBLICATION_RECEIPT,
+            str(EXPECTED_PUBLICATION_RUN),
+            "StegVerse-org/LLM-adapter#18",
+        ):
+            if required not in text:
+                fail(f"{path_name} missing {required}")
+    if "ARCHIVE THIS SESSION" not in repository_handoff:
+        fail("repository handoff does not record archive disposition")
 
     print("LLM_ADAPTER_ORCHESTRATION_STATE_PASS")
-    print(f"active_tasks={len(active)} current_publication_run={EXPECTED_PUBLICATION_RUN}")
+    print("active_tasks=0 sequence_0002=COMPLETE session_consolidation=COMPLETE")
+    print(f"stable_publication_run={EXPECTED_PUBLICATION_RUN} digest={EXPECTED_DIGEST}")
     print(f"hil_run={EXPECTED_HIL_RUN} provider_validation_run={EXPECTED_PROVIDER_RUN}")
-    print(f"service_gateway_run={EXPECTED_SERVICE_GATEWAY_RUN} publication_trigger=STABILIZED_PENDING_MERGE")
+    print(f"service_gateway_run={EXPECTED_SERVICE_GATEWAY_RUN} boundary=EPHEMERAL_CI")
     return 0
 
 
