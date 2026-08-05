@@ -2,6 +2,14 @@ name: Service Gateway Activation Proof
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - "llm_adapter/service_gateway.py"
+      - "tests/test_service_gateway.py"
+      - "vendor/tvc/**"
+      - "Dockerfile.service-gateway"
+      - "pyproject.toml"
+      - ".github/workflows/service-gateway-deploy.yml"
   push:
     branches: [main]
     paths:
