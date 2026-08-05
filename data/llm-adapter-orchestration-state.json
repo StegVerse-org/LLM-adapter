@@ -7,17 +7,19 @@
   "task_sequence": 1,
   "task_sequence_label": "current work task sequence 0001",
   "heartbeat_mode": "TRANSITION_DRIVEN_HEALTH_RELATIVE",
-  "ecosystem_heartbeat": 2,
-  "repository_heartbeat": 2,
+  "ecosystem_heartbeat": 3,
+  "repository_heartbeat": 3,
   "last_transition": {
-    "event_type": "PUBLICATION_EVIDENCE_ACTIVATION_BOUND_TO_HEALER",
+    "event_type": "CANONICAL_STEGDEPLOY_IMAGE_PUBLISHED_AND_PULL_VERIFIED",
     "progress_effect": true,
     "authority_effect": false,
-    "observed_at": "2026-08-04T19:33:00-05:00",
+    "observed_at": "2026-08-04T19:55:07-05:00",
     "evidence": [
       "tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
-      ".github/workflows/stegdeploy-image.yml",
-      "StegVerse-Labs/StegVerse-Healer/.github/workflows/stegdeploy-publication-relay.yml",
+      "receipts/stegdeploy-image-publication.json",
+      "receipts/stegdeploy-image-verification-pull.log",
+      "status/stegdeploy-image-publication-readiness.json",
+      "StegVerse-org/LLM-adapter/actions/runs/30964767464",
       "StegVerse-org/LLM-adapter#18"
     ]
   },
@@ -38,18 +40,6 @@
       "execution_class": "PARALLEL_SAFE",
       "state": "IMPLEMENTED_PENDING_CANONICAL_VALIDATION",
       "release_condition": "Canonical fixture, adversarial tests, Python 3.9/3.11/3.12 validation, and main integration evidence are all retained."
-    },
-    {
-      "task_id": "LLMA-0001-IMAGE-PUBLICATION",
-      "owner": "issue/18",
-      "scheduler_owner": "StegVerse-Labs/StegVerse-Healer",
-      "scheduler_workflow": ".github/workflows/stegdeploy-publication-relay.yml",
-      "task_record": "tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
-      "workload": "One-shot v2 StegDeploy publication evidence activation with Healer-owned recurring observation",
-      "execution_class": "PARALLEL_SAFE",
-      "state": "CLAIMED_FOR_IMPLEMENTATION_AND_INTEGRATION",
-      "release_condition": "A main-branch run retains a v2 PUBLISHED or exact BLOCKED receipt, same-run pull log, and refreshed readiness projection; recurrence remains assigned to Healer and the first blocker is repaired or assigned.",
-      "scheduler_blocker": "StegVerse-Healer HEALER_GH_TOKEN dispatch currently returns HTTP 403"
     }
   ],
   "completed_tasks": [
@@ -65,6 +55,23 @@
       "workload": "Consolidate provider-layer session state into durable claims",
       "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
       "merge_commit": "1505aac0073bc6466769ca84c6ae28d887abdefd"
+    },
+    {
+      "task_id": "LLMA-0001-IMAGE-PUBLICATION",
+      "owner": "issue/18",
+      "scheduler_owner": "StegVerse-Labs/StegVerse-Healer",
+      "scheduler_workflow": ".github/workflows/stegdeploy-publication-relay.yml",
+      "task_record": "tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
+      "workload": "Publish, attest, freshly pull, and retain canonical StegDeploy image evidence",
+      "execution_class": "PARALLEL_SAFE",
+      "state": "COMPLETE",
+      "activation_merge": "260e4b851a8b0e6ee72c361675670b2a4d92b515",
+      "repair_merge": "4c6d8a47a4695adc793ad0ab4577c1e9aa0488dc",
+      "publication_run": 30964767464,
+      "publication_receipt_sha256": "2ebacb9f5efc426a38bbbb58492b70575b9408127f5f57a34f066b51a43ba7a9",
+      "image_digest": "sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55",
+      "consumer_pull_verified": true,
+      "readiness_state": "READY"
     }
   ],
   "queued_exclusive_tasks": [
@@ -77,9 +84,24 @@
       "external_blockers": [
         "authorized provider configuration",
         "persistent endpoint",
-        "published-package consumer access evidence",
         "authenticated Master Records custody configuration"
+      ],
+      "completed_dependency_evidence": [
+        "published-package consumer access: READY",
+        "image digest: sha256:e465d52b3f41db9563fecaef5c5952c09c87d1777b85aafe566e187ffefcba55",
+        "publication run: 30964767464"
       ]
+    }
+  ],
+  "machine_owned_observers": [
+    {
+      "observer_id": "LLMA-HEALER-PUBLICATION-RELAY",
+      "owner": "StegVerse-Labs/StegVerse-Healer",
+      "workflow": ".github/workflows/stegdeploy-publication-relay.yml",
+      "state": "BLOCKED",
+      "observed_result": "HTTP 403",
+      "release_condition": "HEALER_GH_TOKEN successfully creates the bounded LLM-adapter workflow-dispatch event without exposing the token.",
+      "effect_on_publication_completion": "NONE"
     }
   ],
   "existing_workload_owners": {
@@ -87,7 +109,7 @@
     "hil_full_cycle_reconciliation": "pull/56",
     "internal_reference_tests": "pull/58",
     "restart_persistence_proof": "pull/60",
-    "image_publication_evidence": "issue/18 and tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
+    "image_publication_evidence": "completed task LLMA-0001-IMAGE-PUBLICATION",
     "image_publication_scheduler": "StegVerse-Labs/StegVerse-Healer/.github/workflows/stegdeploy-publication-relay.yml",
     "stegwallet_siwe_gateway": "pull/36",
     "current_main_local_node_slice": "pull/28",
@@ -104,9 +126,9 @@
       "repository handoff and orchestration state are installed",
       "closed PR #44 is no longer treated as an active owner",
       "provider-layer consolidation PR #95 is merged and released",
-      "publication evidence activation is active as a parallel-safe task",
-      "recurring publication observation is assigned to StegVerse-Healer and remains blocked on exact token scope",
-      "authorized live-provider execution remains queued behind explicit barriers"
+      "canonical image publication and fresh consumer pull are complete",
+      "recurring publication observation remains assigned to StegVerse-Healer and is blocked on exact token scope",
+      "authorized live-provider execution remains queued behind explicit provider, endpoint, custody, and idle-barrier requirements"
     ]
   },
   "policy": {
