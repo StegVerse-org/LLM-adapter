@@ -1,0 +1,63 @@
+name: HIL Automated Full Cycle
+
+on:
+  pull_request:
+    paths:
+      - "scripts/run_hil_automated_full_cycle.py"
+      - "llm_adapter/hil_*.py"
+      - "llm_adapter/combined_gateway.py"
+      - "tests/test_hil_*.py"
+      - ".github/workflows/hil-automated-full-cycle.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/run_hil_automated_full_cycle.py"
+      - "llm_adapter/hil_*.py"
+      - "llm_adapter/combined_gateway.py"
+      - "tests/test_hil_*.py"
+      - ".github/workflows/hil-automated-full-cycle.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      STEGVERSE_HIL_INTAKE_ENABLED: "true"
+      STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: "true"
+      STEGVERSE_HIL_DATA_DIR: ${{ github.workspace }}/.hil-full-cycle
+      STEGVERSE_ALLOWED_ORIGINS: "http://127.0.0.1:8000"
+      HIL_REPORT_DIR: reports
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install gateway and test dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev,service]"
+      - name: Generate separated bounded credentials
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os, secrets
+          review = secrets.token_urlsafe(48)
+          publication = secrets.token_urlsafe(48)
+          assert review != publication
+          print(f"::add-mask::{review}")
+          print(f"::add-mask::{publication}")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as handle:
+              handle.write(f"STEGVERSE_HIL_REVIEW_TOKEN={review}\n")
+              handle.write(f"STEGVERSE_HIL_PUBLICATION_TOKEN={publication}\n")
+          PY
+      - name: Execute complete persisted cycle
+        run: python scripts/run_hil_automated_full_cycle.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hil-automated-full-cycle
+          path: reports/
+          if-no-files-found: error
