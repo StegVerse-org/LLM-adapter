@@ -102,6 +102,10 @@ def main() -> int:
     require("models:read" not in workflow.lower(), "provider_permission_requested_compact")
     require("retention-days: 30" in workflow, "preflight_artifact_retention_missing")
     require("retention-days: 1" in workflow, "admission_artifact_retention_missing")
+    require(
+        workflow.count("include-hidden-files: true") >= 2,
+        "hidden_artifact_retention_missing",
+    )
 
     task = json.loads(TASK.read_text(encoding="utf-8"))
     require(task["task_id"] == "VACP-PREFLIGHT-HOSTED-EXECUTION-008", "task_id")
