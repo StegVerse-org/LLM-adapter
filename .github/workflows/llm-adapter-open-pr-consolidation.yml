@@ -58,6 +58,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: llm-adapter-open-pr-consolidation-${{ github.run_id }}
-          path: evidence/
+          path: |
+            evidence/open-pr-snapshots/
+            evidence/llm-adapter-open-pr-consolidation-receipt.json
           if-no-files-found: error
           retention-days: 90
