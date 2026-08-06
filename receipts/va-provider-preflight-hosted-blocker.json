@@ -1,0 +1,64 @@
+{
+  "schema": "stegverse.va_provider_preflight.hosted_blocker.v1",
+  "task_id": "VACP-PREFLIGHT-HOSTED-EXECUTION-008",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "fix/va-provider-preflight-private-workflow",
+  "pull_request": 120,
+  "canonical_issue": 90,
+  "observed_at": "2026-08-06T15:12:00-05:00",
+  "state": "BLOCKED",
+  "implemented_head": "bf9e02011d6b815c01986f69a39d440ca5ffbc09",
+  "validated_components": {
+    "architecture_guard": {
+      "run_id": 31121629460,
+      "state": "SUCCESS"
+    },
+    "focused_hosted_path_validator": {
+      "run_id": 31121629195,
+      "state": "SUCCESS"
+    },
+    "provider_usage_python_3_9": "SUCCESS",
+    "provider_usage_python_3_11": "SUCCESS",
+    "pinned_tvc_source_blob": "e9bb981fbd4afea934c8b800a0f70f6b6ddaf61c",
+    "first_hosted_admission_run": 31118040998,
+    "first_hosted_admission_job": 92672512904,
+    "first_hosted_admission_receipt_hash": "b18c0754ccaa06f3b67410d4f97fce978df350b33d878ed466b4a2e3e1f1e0da"
+  },
+  "pending_or_setup_only_components": {
+    "canonical_preflight_run": {
+      "run_id": 31121629928,
+      "state": "QUEUED",
+      "jobs_visible": 0
+    },
+    "full_validation_run": {
+      "run_id": 31121630204,
+      "state": "QUEUED"
+    },
+    "service_gateway_run": {
+      "run_id": 31121628995,
+      "state": "QUEUED_AFTER_SETUP_ONLY_RETRY"
+    },
+    "provider_usage_python_3_12": "QUEUED_AFTER_SETUP_ONLY_RETRY",
+    "ubuntu_2204_fallback_proof": {
+      "workflow": ".github/workflows/va-provider-preflight-ubuntu2204-proof.yml",
+      "initial_commit": "239341381809d0715c9516fc10b97bb79dd6764a",
+      "explicit_push_trigger_commit": "bf9e02011d6b815c01986f69a39d440ca5ffbc09",
+      "workflow_runs_visible": 0
+    }
+  },
+  "blocker": {
+    "code": "GITHUB_ACTIONS_WORKFLOW_EVENT_OR_RUNNER_ADMISSION_UNAVAILABLE",
+    "repository_command_failure_observed": false,
+    "provider_request_observed": false,
+    "provider_execution_observed": false,
+    "secret_values_exposed": false,
+    "authority_effect": false,
+    "activation_effect": false
+  },
+  "machine_observable_release_condition": "The canonical preflight or Ubuntu 22.04 fallback proof receives a job, executes repository commands, produces hash-valid admission and preflight receipts, and retains an inspectable artifact; full validation, Service Gateway, and Python 3.12 must also complete successfully before merge.",
+  "next_executable_action": "Observe PR #120 workflow runs; retry only setup-failed jobs. Do not change provider or authority logic unless a repository command fails.",
+  "claim_expires_at": "2026-08-07T10:43:00-05:00",
+  "manual_user_action_required": false,
+  "authority_effect": false,
+  "activation_effect": false
+}
