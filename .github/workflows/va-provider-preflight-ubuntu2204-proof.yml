@@ -1,6 +1,17 @@
 name: VA Provider Preflight Ubuntu 22.04 Proof
 
 on:
+  push:
+    branches:
+      - 'fix/va-provider-preflight-private-workflow'
+    paths:
+      - '.github/workflows/va-provider-preflight-ubuntu2204-proof.yml'
+      - '.github/workflows/va-claim-assistant-provider-preflight.yml'
+      - 'scripts/observe_va_provider_execution_preflight.py'
+      - 'scripts/check_va_provider_preflight_hosted_path.py'
+      - 'vendor/tvc/e3865e79662529e07d27199235431056d127ea63/issue_va_ephemeral_route_admission.py'
+      - 'tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json'
+      - 'docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md'
   pull_request:
     paths:
       - '.github/workflows/va-provider-preflight-ubuntu2204-proof.yml'
