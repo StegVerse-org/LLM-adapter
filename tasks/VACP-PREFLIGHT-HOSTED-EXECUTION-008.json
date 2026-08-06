@@ -5,36 +5,56 @@
   "originating_goal": "Complete active tasks and activate finished provider-preflight automation in small, validated stages.",
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "fix/va-provider-preflight-private-workflow",
+  "pull_request": "StegVerse-org/LLM-adapter#120",
   "canonical_issue": "StegVerse-org/LLM-adapter#90",
   "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md",
-  "role": "CLAIMED_FOR_IMPLEMENTATION_AND_VALIDATION",
+  "blocker_receipt": "receipts/va-provider-preflight-hosted-blocker.json",
   "state": "BLOCKED",
-  "claimant": "connected-repository-va-preflight-repair-lane",
+  "claim_state": "RELEASED_BLOCKED",
+  "role": "MACHINE_OWNED_VALIDATION_PENDING",
+  "claimant": null,
   "claim_created_at": "2026-08-06T10:43:00-05:00",
-  "claim_expires_at": "2026-08-07T10:43:00-05:00",
-  "claim_release_condition": "Merge the repair, inspect a hosted run with created jobs, retain a hash-valid preflight artifact and receipt, update the handoff, and release the claim.",
-  "blocked_at": "2026-08-06T11:50:00-05:00",
-  "blocked_reason": "Repeated GitHub-hosted runner provisioning failures occurred in Set up job before checkout or any repository command. The first repository-local artifact-retention blocker was repaired; no code assertion currently fails.",
-  "machine_observable_release_condition": "A PR-head VA Claim Assistant Provider Preflight run and focused hosted-path validation run both progress beyond Set up job, execute repository commands, complete successfully, and retain the admission and preflight artifacts. Broad required checks must also pass or demonstrate only independently retried setup failures.",
+  "claim_released_at": "2026-08-06T15:28:00-05:00",
+  "claim_release_reason": "All unique implementation, validation findings, workflow identities, blocker evidence, collision boundaries, and next actions are durably transferred to PR #120, issue #90, this task, the scoped handoff, and the blocker receipt. Continued observation no longer requires this chat lane.",
+  "continuation_owner": {
+    "repository": "StegVerse-org/LLM-adapter",
+    "issue": 90,
+    "pull_request": 120,
+    "machine_workflows": [
+      ".github/workflows/va-claim-assistant-provider-preflight.yml",
+      ".github/workflows/validate-va-provider-preflight-hosted-path.yml",
+      ".github/workflows/va-provider-preflight-ubuntu2204-proof.yml",
+      ".github/workflows/validate.yml",
+      ".github/workflows/service-gateway-deploy.yml",
+      ".github/workflows/validate-provider-usage-event.yml",
+      ".github/workflows/architecture.yml"
+    ]
+  },
+  "blocked_reason": "GitHub Actions workflow-event or hosted-runner admission remains unavailable for the canonical preflight and fallback proof. No repository-command failure is currently observed.",
+  "machine_observable_release_condition": "The canonical preflight or Ubuntu 22.04 fallback proof receives a job, executes repository commands, produces hash-valid admission and preflight receipts, and retains an inspectable artifact; full validation, Service Gateway, and Python 3.12 provider validation must also complete successfully before merge.",
   "owned_paths": [
     ".github/workflows/va-claim-assistant-provider-preflight.yml",
     ".github/workflows/validate-va-provider-preflight-hosted-path.yml",
+    ".github/workflows/va-provider-preflight-ubuntu2204-proof.yml",
     "vendor/tvc/e3865e79662529e07d27199235431056d127ea63/issue_va_ephemeral_route_admission.py",
     "scripts/check_va_provider_preflight_hosted_path.py",
     "tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json",
-    "docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md"
+    "docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md",
+    "receipts/va-provider-preflight-hosted-blocker.json"
   ],
-  "superseded_failure": {
-    "workflow_run": 31113730396,
-    "event": "schedule",
-    "conclusion": "failure",
-    "jobs_created": 0,
-    "boundary": "PUBLIC_CALLER_CANNOT_USE_PRIVATE_CROSS_ORGANIZATION_REUSABLE_WORKFLOW",
-    "resolution": "REPAIRED_BY_EXACT_PINNED_PUBLIC_SAFE_TVC_SOURCE_MIRROR"
-  },
-  "validated_repository_progress": {
+  "completed_implementation": {
     "pinned_source_commit": "e3865e79662529e07d27199235431056d127ea63",
     "pinned_source_blob_sha": "e9bb981fbd4afea934c8b800a0f70f6b6ddaf61c",
+    "canonical_workflow_repair_commit": "d8c48379d286bde79db063822abf90ce0f443eb9",
+    "hosted_path_validator_commit": "3ef664de223c2a166ae4cb9dbe26ff8564562f49",
+    "focused_gate_commit": "9a1dbbbfbc76e5a4f1d8a76c9ec76922948fd8e1",
+    "artifact_retention_fix_commit": "e164331efa22a5ed4c45cae32142e82f9154fdcb",
+    "artifact_regression_gate_commit": "fb46cc8bac4393fd24a28daced6b2689264ffeaf",
+    "ubuntu_2204_fallback_commit": "239341381809d0715c9516fc10b97bb79dd6764a",
+    "explicit_fallback_trigger_commit": "bf9e02011d6b815c01986f69a39d440ca5ffbc09",
+    "blocker_receipt_commit": "3af89dc954923ae73b5899edc097de4e2c551770"
+  },
+  "validated_evidence": {
     "first_hosted_admission_run": 31118040998,
     "first_hosted_admission_job": 92672512904,
     "admission_source_verification": "PASS",
@@ -42,69 +62,46 @@
     "admission_receipt_id": "tvc-va-service_connection-31118040998-1",
     "admission_receipt_sha256": "b18c0754ccaa06f3b67410d4f97fce978df350b33d878ed466b4a2e3e1f1e0da",
     "execution_provenance_verification": "PASS",
-    "authority_effect": false,
-    "activation_effect": false,
-    "first_repository_local_failure": "HIDDEN_ARTIFACTS_EXCLUDED",
-    "first_repository_local_failure_resolution_commit": "e164331efa22a5ed4c45cae32142e82f9154fdcb",
-    "regression_validator_commit": "fb46cc8bac4393fd24a28daced6b2689264ffeaf",
-    "final_head_service_gateway_run": 31118390684,
-    "final_head_service_gateway_state": "SUCCESS",
-    "final_head_full_validation_run": 31118390678,
-    "final_head_full_validation_state": "SUCCESS"
+    "architecture_guard_run": 31121629460,
+    "architecture_guard_state": "SUCCESS",
+    "focused_hosted_path_run": 31121629195,
+    "focused_hosted_path_state": "SUCCESS",
+    "provider_usage_python_3_9": "SUCCESS",
+    "provider_usage_python_3_11": "SUCCESS",
+    "repository_command_failure_observed": false
   },
-  "hosted_runner_blocker_evidence": [
-    {
-      "workflow": "Validate VA Provider Preflight Hosted Path",
-      "run": 31118390667,
-      "attempts_observed": 2,
-      "result": "CANCELLED_DURING_SET_UP_JOB_BEFORE_CHECKOUT"
-    },
-    {
-      "workflow": "VA Claim Assistant Provider Preflight",
-      "run": 31118390674,
-      "attempts_observed": 2,
-      "result": "CANCELLED_OR_FAILED_DURING_SET_UP_JOB_BEFORE_CHECKOUT"
-    },
-    {
-      "workflow": "Architecture Guard",
-      "run": 31118390682,
-      "attempts_observed": 2,
-      "result": "CANCELLED_OR_FAILED_DURING_SET_UP_JOB_BEFORE_REPOSITORY_COMMANDS"
-    },
-    {
-      "workflow": "Validate Provider-Owned Usage Event",
-      "run": 31118390680,
-      "python_3_9": "PASS",
-      "python_3_12": "SET_UP_JOB_FAILURE_BEFORE_CHECKOUT",
-      "python_3_11": "RUNNER_ASSIGNED_WITH_NO_REPOSITORY_STEP_OBSERVED"
-    }
-  ],
-  "implementation": [
-    "Vendored the exact self-contained, secret-free TVC issuer from commit e3865e79662529e07d27199235431056d127ea63.",
-    "Verify its Git blob identity before use.",
-    "Issue the same 900-second, single-use admission inside the caller workflow without requesting provider permission.",
-    "Write a hash-bound provenance sidecar that distinguishes canonical source identity from actual caller execution.",
-    "Retain hidden admission and preflight files in one-day and 30-day artifacts.",
-    "Reject private cross-organization reusable-workflow calls, stale vendor pins, missing provenance, provider permission, and authority escalation."
-  ],
+  "pending_evidence": {
+    "canonical_preflight_run": 31121629928,
+    "full_validation_run": 31121630204,
+    "service_gateway_run": 31121628995,
+    "provider_usage_python_3_12": "PENDING_OR_SETUP_ONLY",
+    "fallback_workflow_runs_visible": 0,
+    "final_artifact_inspected": false,
+    "pull_request_merged": false,
+    "main_verification_complete": false
+  },
   "collision_boundaries": [
     "Do not modify or dispatch the Ecosystem Chat provider workflow owned by issue #18.",
     "Do not create or infer provider execution authority.",
-    "Do not request models:read or call a provider.",
+    "Do not request models:read or call a provider from preflight workflows.",
     "Do not read, expose, or commit Master Records token values.",
     "Do not claim custody, reconstruction, deployment, Site activation, filing, submission, representation, adjudication, rating, medical opinion, publication, or release authority.",
-    "Do not modify TVC canonical source; preserve its commit and blob identity in the caller repository mirror."
+    "Do not modify TVC canonical source; preserve its commit and blob identity in the caller repository mirror.",
+    "Do not merge PR #120 until the machine-observable release condition is satisfied."
   ],
-  "expected_evidence": [
-    "Hosted workflow creates and completes an admission job and a preflight job.",
-    "Pinned vendor source passes Git blob verification.",
-    "Admission receipt is single-use, expires after 900 seconds, and has no authority flags.",
-    "Preflight remains one of CONFIGURATION_REQUIRED, AUTHORITY_REQUIRED, READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION, or REVIEW_REQUIRED without executing a provider.",
-    "A retained artifact contains the admission, provenance, authority request, and preflight receipts.",
-    "The task and handoff record exact run, job, artifact, and receipt hashes."
-  ],
-  "next_executable_action": "Observe the clean PR-head validation cycle created by this blocked-state commit; repair only a repository command failure if one appears. If setup-only failures persist through claim expiry, release or renew the claim with current evidence rather than merging unvalidated work.",
+  "next_executable_action": "Repository-native automation and issue #90 observe PR #120. Retry only setup-failed jobs. If a repository command fails, repair that exact failure. After all required gates and artifacts pass, merge PR #120, verify main, mark this task COMPLETE, and retain the release evidence.",
   "next_task_after_release": "StegVerse-org/LLM-adapter#90 explicit-authority single-request execution lane after its separate configuration and authority release conditions clear.",
+  "session_consolidation": {
+    "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
+    "merged_into": [
+      "StegVerse-org/LLM-adapter#90",
+      "StegVerse-org/LLM-adapter#120",
+      "StegVerse-org/LLM-adapter/docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md",
+      "StegVerse-org/LLM-adapter/receipts/va-provider-preflight-hosted-blocker.json"
+    ],
+    "unique_chat_work_remaining": false,
+    "archive_dependency": "SATISFIED_BY_DURABLE_TRANSFER"
+  },
   "manual_user_action_required": false,
   "authority_effect": false,
   "activation_effect": false
