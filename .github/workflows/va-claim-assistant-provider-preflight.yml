@@ -173,6 +173,7 @@ jobs:
           name: va-route-ephemeral-admission
           path: .tvc-admission/
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 1
 
   derive-preflight:
@@ -339,4 +340,5 @@ jobs:
             requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json
             receipts/va-claim-assistant-provider-execution-preflight.json
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 30
