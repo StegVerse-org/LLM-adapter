@@ -1,0 +1,40 @@
+{
+  "authority_effect": false,
+  "closed_superseded_count": 4,
+  "draft_controlled_count": 1,
+  "inventory_sha256": "04834a4d3f0a7747c6ffdb7b9f8f0da6a0fb6917a763d481f1809e66a6b4cce5",
+  "manual_user_action_required": false,
+  "observations": [
+    {"classification":"SUPERSEDED","draft":true,"head_sha":"4f2b60c6fde80a97c9ce5ed57edcda3e8567060b","merged":false,"number":10,"state":"closed"},
+    {"classification":"SUPERSEDED","draft":false,"head_sha":"16594bc01ad0c54e1a28c3b7b4884ea53f87da7c","merged":false,"number":13,"state":"closed"},
+    {"classification":"SUPERSEDED_DRAFT_CONTROLLED","draft":true,"head_sha":"b6c7ab2aaf8abe2d4ea991b54e21be809d2d6776","merged":false,"number":23,"state":"open"},
+    {"classification":"SUPERSEDED","draft":true,"head_sha":"89986ee15529c742f3215452f3e0666f6b32c632","merged":false,"number":27,"state":"closed"},
+    {"classification":"SUPERSEDED","draft":false,"head_sha":"56789806e7d0a3d351fc0ee8d93f9ad03128a254","merged":false,"number":60,"state":"closed"},
+    {"classification":"REVIEW_REQUIRED","draft":false,"head_sha":"d974c43debe220198409f45938e47d5dabd486f2","merged":false,"number":63,"state":"open"},
+    {"classification":"PRESERVED_DISTINCT_UNCLAIMED","draft":false,"head_sha":"e310fea0d5ce61f0a9f1b717684b9bdff37b9224","merged":false,"number":36,"state":"open"},
+    {"classification":"PRESERVED_DISTINCT_UNCLAIMED","draft":false,"head_sha":"8c2049441ed5e923eadc0a95a0ec82248e5d8d89","merged":false,"number":58,"state":"open"},
+    {"classification":"PRESERVED_DISTINCT_UNCLAIMED","draft":false,"head_sha":"d4ac55b5be9ea55ed2aee9744db3a6bc217b64a1","merged":false,"number":85,"state":"open"}
+  ],
+  "observed_at": "2026-08-06T04:21:43.952240+00:00",
+  "preserved_distinct_count": 3,
+  "receipt_sha256": "a04c192cbc89933d02dcb51517fbb56de88c0ab4bb4384df296519516f1dddf2",
+  "remaining_full_goal_blockers": [
+    "authorized provider configuration and scoped execution grant",
+    "authorized persistent endpoint/runtime",
+    "authenticated Master Records custody configuration"
+  ],
+  "remaining_full_goal_owner": "StegVerse-org/LLM-adapter#18",
+  "repository": "StegVerse-org/LLM-adapter",
+  "review_required_count": 1,
+  "schema": "stegverse.llm_adapter.open_pr_consolidation_receipt.v1",
+  "source_receipt_sha256": "07f7f2495d7d9b60a1593edd48c89b31ca516b865e0d153823a7224216255a26",
+  "state": "COMPLETE",
+  "task_id": "LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016",
+  "workflow_evidence": {
+    "artifact_digest": "sha256:ee62f843e7845d7b73979dbae2e7e799610375100639c08f56b13c579f9fffa0",
+    "artifact_id": 8955632464,
+    "main_run": 31071026576,
+    "merge_commit": "a3f01b799173f65eff8b34d2e786372399ecc780",
+    "pull_request": 118
+  }
+}
