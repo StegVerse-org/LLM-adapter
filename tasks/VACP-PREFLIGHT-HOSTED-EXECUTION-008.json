@@ -8,34 +8,84 @@
   "canonical_issue": "StegVerse-org/LLM-adapter#90",
   "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md",
   "role": "CLAIMED_FOR_IMPLEMENTATION_AND_VALIDATION",
-  "state": "CLAIMED",
+  "state": "BLOCKED",
   "claimant": "connected-repository-va-preflight-repair-lane",
   "claim_created_at": "2026-08-06T10:43:00-05:00",
   "claim_expires_at": "2026-08-07T10:43:00-05:00",
-  "claim_release_condition": "Merge the repair, inspect a hosted run with created jobs, retain a hash-valid preflight artifact and receipt, update the handoff, and release the claim; otherwise mark BLOCKED with the first retained failure.",
+  "claim_release_condition": "Merge the repair, inspect a hosted run with created jobs, retain a hash-valid preflight artifact and receipt, update the handoff, and release the claim.",
+  "blocked_at": "2026-08-06T11:50:00-05:00",
+  "blocked_reason": "Repeated GitHub-hosted runner provisioning failures occurred in Set up job before checkout or any repository command. The first repository-local artifact-retention blocker was repaired; no code assertion currently fails.",
+  "machine_observable_release_condition": "A PR-head VA Claim Assistant Provider Preflight run and focused hosted-path validation run both progress beyond Set up job, execute repository commands, complete successfully, and retain the admission and preflight artifacts. Broad required checks must also pass or demonstrate only independently retried setup failures.",
   "owned_paths": [
     ".github/workflows/va-claim-assistant-provider-preflight.yml",
+    ".github/workflows/validate-va-provider-preflight-hosted-path.yml",
     "vendor/tvc/e3865e79662529e07d27199235431056d127ea63/issue_va_ephemeral_route_admission.py",
     "scripts/check_va_provider_preflight_hosted_path.py",
     "tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json",
     "docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md"
   ],
-  "observed_failure": {
+  "superseded_failure": {
     "workflow_run": 31113730396,
     "event": "schedule",
     "conclusion": "failure",
     "jobs_created": 0,
-    "first_boundary": "PUBLIC_CALLER_CANNOT_USE_PRIVATE_CROSS_ORGANIZATION_REUSABLE_WORKFLOW",
-    "called_repository": "StegVerse-Labs/TVC",
-    "called_repository_visibility": "private",
-    "caller_repository_visibility": "public"
+    "boundary": "PUBLIC_CALLER_CANNOT_USE_PRIVATE_CROSS_ORGANIZATION_REUSABLE_WORKFLOW",
+    "resolution": "REPAIRED_BY_EXACT_PINNED_PUBLIC_SAFE_TVC_SOURCE_MIRROR"
   },
-  "implementation_plan": [
-    "Vendor the exact self-contained, secret-free TVC issuer from commit e3865e79662529e07d27199235431056d127ea63.",
+  "validated_repository_progress": {
+    "pinned_source_commit": "e3865e79662529e07d27199235431056d127ea63",
+    "pinned_source_blob_sha": "e9bb981fbd4afea934c8b800a0f70f6b6ddaf61c",
+    "first_hosted_admission_run": 31118040998,
+    "first_hosted_admission_job": 92672512904,
+    "admission_source_verification": "PASS",
+    "admission_generation": "PASS",
+    "admission_receipt_id": "tvc-va-service_connection-31118040998-1",
+    "admission_receipt_sha256": "b18c0754ccaa06f3b67410d4f97fce978df350b33d878ed466b4a2e3e1f1e0da",
+    "execution_provenance_verification": "PASS",
+    "authority_effect": false,
+    "activation_effect": false,
+    "first_repository_local_failure": "HIDDEN_ARTIFACTS_EXCLUDED",
+    "first_repository_local_failure_resolution_commit": "e164331efa22a5ed4c45cae32142e82f9154fdcb",
+    "regression_validator_commit": "fb46cc8bac4393fd24a28daced6b2689264ffeaf",
+    "final_head_service_gateway_run": 31118390684,
+    "final_head_service_gateway_state": "SUCCESS",
+    "final_head_full_validation_run": 31118390678,
+    "final_head_full_validation_state": "SUCCESS"
+  },
+  "hosted_runner_blocker_evidence": [
+    {
+      "workflow": "Validate VA Provider Preflight Hosted Path",
+      "run": 31118390667,
+      "attempts_observed": 2,
+      "result": "CANCELLED_DURING_SET_UP_JOB_BEFORE_CHECKOUT"
+    },
+    {
+      "workflow": "VA Claim Assistant Provider Preflight",
+      "run": 31118390674,
+      "attempts_observed": 2,
+      "result": "CANCELLED_OR_FAILED_DURING_SET_UP_JOB_BEFORE_CHECKOUT"
+    },
+    {
+      "workflow": "Architecture Guard",
+      "run": 31118390682,
+      "attempts_observed": 2,
+      "result": "CANCELLED_OR_FAILED_DURING_SET_UP_JOB_BEFORE_REPOSITORY_COMMANDS"
+    },
+    {
+      "workflow": "Validate Provider-Owned Usage Event",
+      "run": 31118390680,
+      "python_3_9": "PASS",
+      "python_3_12": "SET_UP_JOB_FAILURE_BEFORE_CHECKOUT",
+      "python_3_11": "RUNNER_ASSIGNED_WITH_NO_REPOSITORY_STEP_OBSERVED"
+    }
+  ],
+  "implementation": [
+    "Vendored the exact self-contained, secret-free TVC issuer from commit e3865e79662529e07d27199235431056d127ea63.",
     "Verify its Git blob identity before use.",
     "Issue the same 900-second, single-use admission inside the caller workflow without requesting provider permission.",
-    "Retain the existing fail-closed preflight, receipt, artifact, and authority boundaries.",
-    "Add a repository validator that rejects private cross-organization reusable-workflow calls and stale vendor pins."
+    "Write a hash-bound provenance sidecar that distinguishes canonical source identity from actual caller execution.",
+    "Retain hidden admission and preflight files in one-day and 30-day artifacts.",
+    "Reject private cross-organization reusable-workflow calls, stale vendor pins, missing provenance, provider permission, and authority escalation."
   ],
   "collision_boundaries": [
     "Do not modify or dispatch the Ecosystem Chat provider workflow owned by issue #18.",
@@ -46,13 +96,14 @@
     "Do not modify TVC canonical source; preserve its commit and blob identity in the caller repository mirror."
   ],
   "expected_evidence": [
-    "Hosted workflow creates an admission job and a preflight job.",
+    "Hosted workflow creates and completes an admission job and a preflight job.",
     "Pinned vendor source passes Git blob verification.",
     "Admission receipt is single-use, expires after 900 seconds, and has no authority flags.",
     "Preflight remains one of CONFIGURATION_REQUIRED, AUTHORITY_REQUIRED, READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION, or REVIEW_REQUIRED without executing a provider.",
-    "A retained artifact contains the admission and preflight receipts.",
+    "A retained artifact contains the admission, provenance, authority request, and preflight receipts.",
     "The task and handoff record exact run, job, artifact, and receipt hashes."
   ],
+  "next_executable_action": "Observe the clean PR-head validation cycle created by this blocked-state commit; repair only a repository command failure if one appears. If setup-only failures persist through claim expiry, release or renew the claim with current evidence rather than merging unvalidated work.",
   "next_task_after_release": "StegVerse-org/LLM-adapter#90 explicit-authority single-request execution lane after its separate configuration and authority release conditions clear.",
   "manual_user_action_required": false,
   "authority_effect": false,
