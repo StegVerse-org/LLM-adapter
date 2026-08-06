@@ -1,0 +1,60 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016",
+  "title": "Reconcile stale Ecosystem Chat activation pull requests",
+  "originating_goal": "Complete active tasks, activate finished tasks, and eliminate duplicate execution lanes.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "canonical_issue": "StegVerse-org/LLM-adapter#18",
+  "branch": "chore/reconcile-stale-activation-prs",
+  "execution_class": "PARALLEL_SAFE",
+  "state": "CLAIMED_FOR_INTEGRATION",
+  "claimant": "session-stale-pr-reconciliation-lane",
+  "claimed_at": "2026-08-05T23:02:00-05:00",
+  "claim_expires_at": "2026-08-06T23:02:00-05:00",
+  "claim_release_condition": "The reconciliation PR merges after the live-state workflow and repository gates pass, the main workflow artifact is inspected, issue #18 records the exact dispositions, and this task is changed to COMPLETE with claimant null.",
+  "owned_surfaces": [
+    "data/llm-adapter-open-pr-consolidation.json",
+    "scripts/check_llm_adapter_open_pr_consolidation.py",
+    ".github/workflows/llm-adapter-open-pr-consolidation.yml",
+    "tasks/LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.json",
+    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "data/llm-adapter-orchestration-state.json"
+  ],
+  "pull_request_dispositions": {
+    "closed_as_superseded": [10, 13, 27, 60],
+    "superseded_draft_controlled": [23],
+    "review_required_not_claimed": [63],
+    "preserved_distinct_not_claimed": [36, 58, 85]
+  },
+  "completed_actions": [
+    "Closed obsolete Render probe PR #10.",
+    "Closed pre-canonical runtime PR #13 as superseded by merged PR #14.",
+    "Closed automatic provider-binding PR #27 as superseded by merged PR #32 and current activation receipts.",
+    "Closed duplicate restart proof PR #60 as superseded by current-main restart workflow and merged PR #56.",
+    "Converted architecturally obsolete PR #23 to draft after the close operation was blocked by the platform safety layer.",
+    "Preserved PR #63 for a separate safety review because its generic protected-environment contract is not proven identical to the provider-specific canonical gate.",
+    "Left PRs #36, #58, and #85 untouched because they are distinct and unclaimed."
+  ],
+  "collision_boundaries": [
+    "Do not merge or apply PR #23.",
+    "Do not merge or close PR #63 without a separate bounded safety review.",
+    "Do not modify PRs #36, #58, or #85 in this lane.",
+    "Do not authorize provider credentials, paid resources, persistent deployment, custody, Site activation, publication, release, payment, or autonomous action."
+  ],
+  "validation": {
+    "inventory": "data/llm-adapter-open-pr-consolidation.json",
+    "validator": "scripts/check_llm_adapter_open_pr_consolidation.py",
+    "workflow": ".github/workflows/llm-adapter-open-pr-consolidation.yml",
+    "state": "PENDING_HOSTED_VALIDATION"
+  },
+  "remaining_full_goal_owner": "StegVerse-org/LLM-adapter#18",
+  "remaining_full_goal_blockers": [
+    "authorized provider configuration and scoped execution grant",
+    "authorized persistent endpoint/runtime",
+    "authenticated Master Records custody configuration"
+  ],
+  "next_executable_action": "Open the reconciliation PR, inspect the live PR-state receipt and all repository gates, merge only on success, then release this claim and preserve the exact result in the canonical handoff and issue #18.",
+  "manual_user_action_required": false,
+  "authority_effect": false,
+  "archive_dependency": "This reopened session remains active only until this bounded reconciliation claim is durably merged or equivalently transferred."
+}
