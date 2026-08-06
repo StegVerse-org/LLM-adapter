@@ -1,0 +1,121 @@
+{
+  "schema": "stegverse.llm_adapter.open_pr_consolidation.v1",
+  "task_id": "LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016",
+  "originating_goal": "Complete active tasks, activate finished tasks, and eliminate duplicate execution lanes.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "canonical_issue": "StegVerse-org/LLM-adapter#18",
+  "branch": "chore/reconcile-stale-activation-prs",
+  "observed_at": "2026-08-05T23:10:41-05:00",
+  "policy": {
+    "one_active_owner_per_capability": true,
+    "completed_or_superseded_branches_must_not_remain_mergeable_execution_lanes": true,
+    "review_required_is_not_complete": true,
+    "draft_supersession_is_fail_closed_when_close_control_is_unavailable": true,
+    "authority_effect": false
+  },
+  "pull_requests": [
+    {
+      "number": 10,
+      "title": "Probe consumed Render Blueprint deployment",
+      "classification": "SUPERSEDED",
+      "expected_github_state": "closed",
+      "expected_merged": false,
+      "canonical_replacement": "Render live deploy evidence plus reports/ecosystem-chat-live-activation-monitor.json",
+      "evidence": ["StegVerse-org/LLM-adapter#18", "Render service srv-d9epkh3rjlhs73csc3qg"],
+      "next_action": "none"
+    },
+    {
+      "number": 13,
+      "title": "Build Render-independent Ecosystem Chat runtime",
+      "classification": "SUPERSEDED",
+      "expected_github_state": "closed",
+      "expected_merged": false,
+      "canonical_replacement": "merged pull/14 provider-neutral StegDeploy runtime",
+      "evidence": ["pull/14", "commit/c85d476d000b32250b899432ba166b2bda374fd4"],
+      "next_action": "none"
+    },
+    {
+      "number": 23,
+      "title": "Align consumed Render Blueprint with existing production contract",
+      "classification": "SUPERSEDED_DRAFT_CONTROLLED",
+      "expected_github_state": "open",
+      "expected_draft": true,
+      "expected_merged": false,
+      "close_control_state": "BLOCKED_BY_PLATFORM_SAFETY_LAYER",
+      "canonical_replacement": "TV/TVC no-value authorization plus sovereign migration owners",
+      "evidence": ["StegVerse-org/LLM-adapter#72", "StegVerse-Labs/TVC#6", "StegVerse-002/micro-node-runtime#16"],
+      "next_action": "close when repository control plane permits; never merge or apply the obsolete Blueprint"
+    },
+    {
+      "number": 27,
+      "title": "Bind authorized provider runtime into Ecosystem Chat activation",
+      "classification": "SUPERSEDED",
+      "expected_github_state": "closed",
+      "expected_merged": false,
+      "canonical_replacement": "merged pull/32 receipt-gated single-execution provider authority path",
+      "evidence": ["pull/32", "commit/1f3ba85cfc4fc822a193d3b3fe4225c5b5d1f790", "receipts/ecosystem-chat-authorized-provider-activation.latest.json"],
+      "next_action": "none"
+    },
+    {
+      "number": 60,
+      "title": "Reconcile real portable-node restart proof onto current main",
+      "classification": "SUPERSEDED",
+      "expected_github_state": "closed",
+      "expected_merged": false,
+      "canonical_replacement": "current-main HIL process restart cycle plus merged pull/56 full cycle",
+      "evidence": [".github/workflows/hil-process-restart-controlled-cycle.yml", "scripts/run_hil_process_restart_cycle.py", "pull/56"],
+      "next_action": "none"
+    },
+    {
+      "number": 63,
+      "title": "Define explicit authorization boundary for provider execution",
+      "classification": "REVIEW_REQUIRED",
+      "expected_github_state": "open",
+      "expected_merged": false,
+      "active_claim": false,
+      "collision_boundary": "Do not merge or close until its generic protected-environment contract is reconciled against pull/32, TV/TVC, and the current provider-specific authority receipt.",
+      "next_action": "take a separate bounded safety-review claim or transfer any unique generic constraints into the canonical authority contract"
+    },
+    {
+      "number": 36,
+      "title": "Add canonical StegWallet SIWE gateway and owner-artifact intake",
+      "classification": "PRESERVED_DISTINCT_UNCLAIMED",
+      "expected_github_state": "open",
+      "expected_merged": false,
+      "active_claim": false,
+      "next_action": "leave to StegWallet/SIWE owner review"
+    },
+    {
+      "number": 58,
+      "title": "Reconcile transparent governed reference suite onto current main",
+      "classification": "PRESERVED_DISTINCT_UNCLAIMED",
+      "expected_github_state": "open",
+      "expected_merged": false,
+      "active_claim": false,
+      "next_action": "leave to governed-reference-suite owner review"
+    },
+    {
+      "number": 85,
+      "title": "Add governed one-click HIL submission client",
+      "classification": "PRESERVED_DISTINCT_UNCLAIMED",
+      "expected_github_state": "open",
+      "expected_merged": false,
+      "active_claim": false,
+      "next_action": "leave to HIL submission-client owner review"
+    }
+  ],
+  "completed_mutations": {
+    "closed_superseded_prs": [10, 13, 27, 60],
+    "draft_controlled_prs": [23],
+    "review_required_prs": [63],
+    "preserved_distinct_prs": [36, 58, 85]
+  },
+  "remaining_full_goal_owner": "StegVerse-org/LLM-adapter#18",
+  "remaining_full_goal_blockers": [
+    "authorized provider configuration and scoped execution grant",
+    "authorized persistent endpoint/runtime",
+    "authenticated Master Records custody configuration"
+  ],
+  "manual_user_action_required": false,
+  "authority_effect": false
+}
