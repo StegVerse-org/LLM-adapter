@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail closed when LLM-adapter ownership, evidence, or claim state drifts."""
+"""Fail closed when LLM-adapter ownership, evidence, or released claim state drifts."""
 from __future__ import annotations
 
 import hashlib
@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 STATE_PATH = ROOT / "data" / "llm-adapter-orchestration-state.json"
 OPEN_PR_INVENTORY_PATH = ROOT / "data" / "llm-adapter-open-pr-consolidation.json"
 OPEN_PR_TASK_PATH = ROOT / "tasks" / "LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.json"
+OPEN_PR_RECEIPT_PATH = ROOT / "receipts" / "llm-adapter-open-pr-consolidation.json"
 PUBLICATION_TASK_PATH = ROOT / "tasks" / "LLMA-PUBLICATION-ACTIVATION-013.json"
 SEQUENCE_TASK_PATH = ROOT / "tasks" / "LLMA-SEQUENCE-0001-RELEASE-015.json"
 PUBLICATION_RECEIPT_PATH = ROOT / "receipts" / "stegdeploy-image-publication.json"
@@ -29,6 +30,11 @@ EXPECTED_HIL_RUN = 30966031698
 EXPECTED_PROVIDER_RUN = 30966031661
 EXPECTED_SERVICE_GATEWAY_RUN = 30967405348
 EXPECTED_OPEN_PR_TASK = "LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016"
+EXPECTED_OPEN_PR_RUN = 31071026576
+EXPECTED_OPEN_PR_ARTIFACT = 8955632464
+EXPECTED_OPEN_PR_ARTIFACT_DIGEST = "sha256:ee62f843e7845d7b73979dbae2e7e799610375100639c08f56b13c579f9fffa0"
+EXPECTED_OPEN_PR_RECEIPT = "07f7f2495d7d9b60a1593edd48c89b31ca516b865e0d153823a7224216255a26"
+EXPECTED_OPEN_PR_MERGE = "a3f01b799173f65eff8b34d2e786372399ecc780"
 
 
 def fail(message: str) -> None:
@@ -75,6 +81,7 @@ def main() -> int:
     state = load_json(STATE_PATH)
     inventory = load_json(OPEN_PR_INVENTORY_PATH)
     open_pr_task = load_json(OPEN_PR_TASK_PATH)
+    open_pr_receipt = load_json(OPEN_PR_RECEIPT_PATH)
     publication_task = load_json(PUBLICATION_TASK_PATH)
     sequence_task = load_json(SEQUENCE_TASK_PATH)
     publication_receipt = load_json(PUBLICATION_RECEIPT_PATH)
@@ -89,28 +96,17 @@ def main() -> int:
         fail("repository blocker posture changed")
     if state.get("task_sequence") != 3:
         fail("unexpected task sequence")
-    if state.get("task_sequence_label") != "current work task sequence 0003 stale activation PR reconciliation":
+    if state.get("task_sequence_label") != "current work task sequence 0003 complete":
         fail("task sequence label mismatch")
     if state.get("idle_terminal_statement") != "end of current work task sequence 0003, no tasks running":
         fail("sequence idle statement mismatch")
+    if state.get("active_tasks") != []:
+        fail("released sequence retains an active task claim")
     assert_false_authority(state.get("authority") or {}, "orchestration")
 
-    active = state.get("active_tasks") or []
-    if len(active) != 1:
-        fail("sequence 0003 must have exactly one active bounded task")
-    active_task = record(active, EXPECTED_OPEN_PR_TASK)
-    if active_task.get("owner") != "branch/chore/reconcile-stale-activation-prs":
-        fail("open-PR reconciliation owner mismatch")
-    if active_task.get("state") != "CLAIMED_FOR_INTEGRATION":
-        fail("open-PR reconciliation claim state mismatch")
-    if not active_task.get("claim_expires_at"):
-        fail("open-PR reconciliation claim lacks expiry")
-
     consolidation = state.get("session_consolidation") or {}
-    if consolidation.get("state") != "ACTIVE_BOUNDED_RECONCILIATION":
-        fail("session consolidation state mismatch")
-    if consolidation.get("archive_ready") is not False:
-        fail("active session is incorrectly archive-ready")
+    if consolidation.get("state") != "COMPLETE" or consolidation.get("archive_ready") is not True:
+        fail("released session consolidation is not complete and archive-ready")
     if set(consolidation.get("canonical_continuation") or []) != {
         "StegVerse-org/LLM-adapter#18",
         "StegVerse-org/LLM-adapter#72",
@@ -120,10 +116,8 @@ def main() -> int:
 
     completed = state.get("completed_tasks") or []
     publication = record(completed, "LLMA-0001-IMAGE-PUBLICATION")
-    if publication.get("state") != "COMPLETE":
-        fail("image publication no longer complete")
-    if publication.get("publication_run") != EXPECTED_PUBLICATION_RUN:
-        fail("publication run mismatch")
+    if publication.get("state") != "COMPLETE" or publication.get("publication_run") != EXPECTED_PUBLICATION_RUN:
+        fail("image publication evidence drifted")
     if publication.get("image_digest") != EXPECTED_DIGEST:
         fail("publication digest mismatch")
     if publication.get("publication_receipt_sha256") != EXPECTED_PUBLICATION_RECEIPT:
@@ -149,11 +143,35 @@ def main() -> int:
     if sequence.get("persistent_deployment_proven") is not False:
         fail("Service Gateway CI proof is misclassified as persistent deployment")
 
+    reconciliation = record(completed, EXPECTED_OPEN_PR_TASK)
+    expected_reconciliation = {
+        "state": "COMPLETE",
+        "owner": "completed-task-record",
+        "pull_request": 118,
+        "merge_commit": EXPECTED_OPEN_PR_MERGE,
+        "main_workflow_run": EXPECTED_OPEN_PR_RUN,
+        "artifact_id": EXPECTED_OPEN_PR_ARTIFACT,
+        "artifact_digest": EXPECTED_OPEN_PR_ARTIFACT_DIGEST,
+        "source_receipt_sha256": EXPECTED_OPEN_PR_RECEIPT,
+        "authority_effect": False,
+    }
+    for key, expected in expected_reconciliation.items():
+        if reconciliation.get(key) != expected:
+            fail(f"completed open-PR reconciliation {key} mismatch")
+    if reconciliation.get("closed_superseded_prs") != [10, 13, 27, 60]:
+        fail("closed superseded PR set mismatch")
+    if reconciliation.get("superseded_draft_controlled_prs") != [23]:
+        fail("draft-controlled PR set mismatch")
+    if reconciliation.get("review_required_unclaimed_prs") != [63]:
+        fail("review-required PR set mismatch")
+    if reconciliation.get("preserved_distinct_unclaimed_prs") != [36, 58, 85]:
+        fail("preserved distinct PR set mismatch")
+
     live = record(state.get("queued_exclusive_tasks") or [], "LLMA-0002-LIVE-PROVIDER")
     if live.get("owner") != "issue/18" or live.get("state") != "BLOCKED" or live.get("execution_class") != "EXCLUSIVE":
         fail("live-provider owner or state mismatch")
-    if live.get("blocked_until") != "all authority-bound blockers are cleared and sequence 0003 is idle":
-        fail("live-provider sequence barrier mismatch")
+    if live.get("blocked_until") != "all authority-bound blockers are cleared":
+        fail("live-provider release condition mismatch")
     required_blockers = {
         "authorized provider configuration and scoped execution grant",
         "persistent endpoint",
@@ -166,16 +184,38 @@ def main() -> int:
         fail("open-PR consolidation inventory identity or authority mismatch")
     if open_pr_task.get("task_id") != EXPECTED_OPEN_PR_TASK:
         fail("open-PR task identity mismatch")
-    if open_pr_task.get("state") != "CLAIMED_FOR_INTEGRATION":
-        fail("open-PR task state mismatch")
-    if open_pr_task.get("claimant") != "session-stale-pr-reconciliation-lane":
-        fail("open-PR task claimant mismatch")
-    if not open_pr_task.get("claim_expires_at"):
-        fail("open-PR task claim lacks expiry")
+    if open_pr_task.get("state") != "COMPLETE" or open_pr_task.get("claimant") is not None:
+        fail("open-PR task claim is not released")
+    if open_pr_task.get("claim_release_condition") != "SATISFIED" or not open_pr_task.get("released_at"):
+        fail("open-PR task release evidence missing")
+    if (open_pr_task.get("validation") or {}).get("state") != "PASS":
+        fail("open-PR task validation is not PASS")
+    if open_pr_task.get("archive_dependency") != "SATISFIED; all unique reconciliation state and evidence are durably installed or transferred.":
+        fail("open-PR task archive dependency is not satisfied")
     if open_pr_task.get("manual_user_action_required") is not False or open_pr_task.get("authority_effect") is not False:
         fail("open-PR task assigns manual work or authority")
     if not OPEN_PR_WORKFLOW_PATH.is_file() or not OPEN_PR_VALIDATOR_PATH.is_file():
         fail("open-PR automation path incomplete")
+
+    if open_pr_receipt.get("schema") != "stegverse.llm_adapter.open_pr_consolidation_receipt.v1":
+        fail("open-PR receipt schema mismatch")
+    if open_pr_receipt.get("state") != "COMPLETE" or open_pr_receipt.get("task_id") != EXPECTED_OPEN_PR_TASK:
+        fail("open-PR receipt state or identity mismatch")
+    if open_pr_receipt.get("receipt_sha256") != EXPECTED_OPEN_PR_RECEIPT:
+        fail("open-PR receipt hash value mismatch")
+    verify_hash_bound_receipt(open_pr_receipt)
+    workflow_evidence = open_pr_receipt.get("workflow_evidence") or {}
+    for key, expected in {
+        "pull_request": 118,
+        "merge_commit": EXPECTED_OPEN_PR_MERGE,
+        "main_run": EXPECTED_OPEN_PR_RUN,
+        "artifact_id": EXPECTED_OPEN_PR_ARTIFACT,
+        "artifact_digest": EXPECTED_OPEN_PR_ARTIFACT_DIGEST,
+    }.items():
+        if workflow_evidence.get(key) != expected:
+            fail(f"open-PR receipt workflow evidence {key} mismatch")
+    if open_pr_receipt.get("manual_user_action_required") is not False or open_pr_receipt.get("authority_effect") is not False:
+        fail("open-PR receipt assigns manual work or authority")
 
     if publication_task.get("state") != "COMPLETE" or publication_task.get("claimant") is not None:
         fail("publication task claim is not released")
@@ -233,9 +273,9 @@ def main() -> int:
 
     handoff = REPOSITORY_HANDOFF_PATH.read_text(encoding="utf-8")
     for required in (
-        "DO NOT ARCHIVE THIS SESSION — DISTINCT SUPPORT WORK REMAINS",
+        "ARCHIVE THIS SESSION.",
         EXPECTED_OPEN_PR_TASK,
-        "data/llm-adapter-open-pr-consolidation.json",
+        "receipts/llm-adapter-open-pr-consolidation.json",
         "PR #63 is not declared complete or obsolete",
         "StegVerse-org/LLM-adapter#18",
     ):
@@ -243,9 +283,9 @@ def main() -> int:
             fail(f"canonical handoff missing {required}")
 
     print("LLM_ADAPTER_ORCHESTRATION_STATE_PASS")
-    print(f"sequence=0003 active_tasks={len(active)}")
-    print(f"active_task={EXPECTED_OPEN_PR_TASK} live_provider_state={live['state']}")
-    print(f"publication_run={EXPECTED_PUBLICATION_RUN} service_gateway_run={EXPECTED_SERVICE_GATEWAY_RUN}")
+    print("sequence=0003 active_tasks=0 session_archive_ready=true")
+    print(f"completed_task={EXPECTED_OPEN_PR_TASK} live_provider_state={live['state']}")
+    print(f"open_pr_run={EXPECTED_OPEN_PR_RUN} publication_run={EXPECTED_PUBLICATION_RUN}")
     return 0
 
 
