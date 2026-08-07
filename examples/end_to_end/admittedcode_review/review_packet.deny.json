@@ -1,0 +1,19 @@
+{
+  "schema": "stegverse.admittedcode.review_packet.v1",
+  "packet_id": "stegverse-demo-deny-001",
+  "source_system": "StegVerse-org/LLM-adapter",
+  "source_refs": ["fixture:governed-provider-envelope", "fixture:transition-002"],
+  "request": {
+    "provider": "fixture-provider",
+    "model": "fixture-model-v1",
+    "purpose": "governed_demo_response",
+    "output_schema": "stegverse.demo.response.v1",
+    "estimated_cost_microdollars": 500,
+    "gcat_bcat": {"g": 5, "c": 5, "a": 2, "t": 5}
+  },
+  "consent": {"purpose": "governed_demo_response", "user_approved": false},
+  "budget": {"max_microdollars": 1000},
+  "evidence_refs": ["fixture:governed-provider-envelope"],
+  "continuity_refs": ["fixture:transition-002"],
+  "authority_effect": "NONE"
+}
