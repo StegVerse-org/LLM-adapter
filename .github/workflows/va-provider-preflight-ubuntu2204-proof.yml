@@ -1,0 +1,149 @@
+name: VA Provider Preflight Ubuntu 22.04 Proof
+
+on:
+  push:
+    branches:
+      - 'fix/va-provider-preflight-private-workflow'
+    paths:
+      - '.github/workflows/va-provider-preflight-ubuntu2204-proof.yml'
+      - '.github/workflows/va-claim-assistant-provider-preflight.yml'
+      - 'scripts/observe_va_provider_execution_preflight.py'
+      - 'scripts/check_va_provider_preflight_hosted_path.py'
+      - 'vendor/tvc/e3865e79662529e07d27199235431056d127ea63/issue_va_ephemeral_route_admission.py'
+      - 'tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json'
+      - 'docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md'
+  pull_request:
+    paths:
+      - '.github/workflows/va-provider-preflight-ubuntu2204-proof.yml'
+      - '.github/workflows/va-claim-assistant-provider-preflight.yml'
+      - 'scripts/observe_va_provider_execution_preflight.py'
+      - 'scripts/check_va_provider_preflight_hosted_path.py'
+      - 'vendor/tvc/e3865e79662529e07d27199235431056d127ea63/issue_va_ephemeral_route_admission.py'
+      - 'tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json'
+      - 'docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: va-provider-preflight-ubuntu2204-proof-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TVC_SOURCE: vendor/tvc/e3865e79662529e07d27199235431056d127ea63/issue_va_ephemeral_route_admission.py
+  TVC_SOURCE_BLOB: e9bb981fbd4afea934c8b800a0f70f6b6ddaf61c
+
+jobs:
+  proof:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify hosted-path contract
+        run: python scripts/check_va_provider_preflight_hosted_path.py
+
+      - name: Verify pinned TVC source
+        run: |
+          test "$(git hash-object "$TVC_SOURCE")" = "$TVC_SOURCE_BLOB"
+          python -m py_compile "$TVC_SOURCE"
+
+      - name: Issue bounded admission
+        run: |
+          mkdir -p proof
+          python "$TVC_SOURCE" \
+            --route service_connection \
+            --caller-repository StegVerse-org/LLM-adapter \
+            --caller-commit "$GITHUB_SHA" \
+            --source-registry-commit e69e8421084b1343a9dc809fdb2a579089d37813 \
+            --source-registry-blob-sha a83ff2dd8343f947265981609b154693cc5deecc \
+            --answer-schema-commit ae64a81df7ac91a9b2df00e9b8ff1a8358fcb9ab \
+            --answer-receipt-hash bd1f6c3e751b1adf2345383f724f133c321e0e42096b4556f682837caf73ee29 \
+            --dispatch-receipt-hash 55419dc015db717f10914c86286b3222493753545f03fb4bd675a7dd2db4bd4e \
+            --purpose SOURCE_GROUNDED_VA_CLAIM_GUIDANCE \
+            --scope PUBLIC_SOURCE_SERVICE_CONNECTION_PROCEDURAL_GUIDANCE \
+            --workflow-run-id "$GITHUB_RUN_ID" \
+            --workflow-run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --output proof/admission.json
+
+      - name: Derive fail-closed preflight
+        env:
+          STEGVERSE_MASTER_RECORDS_ENDPOINT: ${{ vars.STEGVERSE_MASTER_RECORDS_ENDPOINT }}
+          STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS: ${{ vars.STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS }}
+          STEGVERSE_MASTER_RECORDS_TOKEN: ${{ secrets.STEGVERSE_MASTER_RECORDS_TOKEN }}
+        run: |
+          rm -f proof/authority-validation.json
+          python scripts/observe_va_provider_execution_preflight.py \
+            --admission proof/admission.json \
+            --authority-validation proof/authority-validation.json \
+            --expected-caller-commit "$GITHUB_SHA" \
+            --output proof/preflight.json
+
+      - name: Verify proof boundaries
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          admission = json.loads(Path('proof/admission.json').read_text())
+          preflight = json.loads(Path('proof/preflight.json').read_text())
+          a = dict(admission); ah = a.pop('receipt_hash')
+          assert hashlib.sha256(json.dumps(a, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest() == ah
+          p = dict(preflight); ph = p.pop('result_sha256')
+          assert hashlib.sha256(json.dumps(p, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest() == ph
+          assert admission['validity']['single_use'] is True
+          assert admission['validity']['lifetime_seconds'] == 900
+          assert admission['provider_execution_requested'] is False
+          assert admission['provider_execution_observed'] is False
+          assert not any(admission['authority_flags'].values())
+          assert preflight['state'] in {'CONFIGURATION_REQUIRED','AUTHORITY_REQUIRED','READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION','REVIEW_REQUIRED'}
+          assert preflight['provider']['permission_requested_by_preflight'] is False
+          assert preflight['provider']['provider_execution_observed'] is False
+          assert preflight['secret_values_present'] is False
+          assert preflight['authority_effect'] is False
+          assert preflight['activation_effect'] is False
+          print('VA_PROVIDER_PREFLIGHT_UBUNTU2204_PROOF_PASS:' + preflight['state'])
+          PY
+
+      - name: Write proof manifest
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          admission = json.loads(Path('proof/admission.json').read_text())
+          preflight = json.loads(Path('proof/preflight.json').read_text())
+          value = {
+            'schema': 'stegverse.va_provider_preflight_ubuntu2204_proof.v1',
+            'repository': os.environ['GITHUB_REPOSITORY'],
+            'commit': os.environ['GITHUB_SHA'],
+            'run_id': os.environ['GITHUB_RUN_ID'],
+            'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+            'runner': 'ubuntu-22.04',
+            'tvc_source_blob_sha': os.environ['TVC_SOURCE_BLOB'],
+            'admission_receipt_id': admission['receipt_id'],
+            'admission_receipt_hash': admission['receipt_hash'],
+            'preflight_state': preflight['state'],
+            'preflight_result_sha256': preflight['result_sha256'],
+            'provider_permission_requested': False,
+            'provider_execution_observed': False,
+            'authority_effect': False,
+            'activation_effect': False,
+          }
+          material = json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
+          value['manifest_sha256'] = hashlib.sha256(material).hexdigest()
+          Path('proof/manifest.json').write_text(json.dumps(value, indent=2, sort_keys=True) + '\n')
+          PY
+
+      - name: Upload proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: va-provider-preflight-ubuntu2204-proof-${{ github.run_id }}-${{ github.run_attempt }}
+          path: proof/
+          if-no-files-found: error
+          retention-days: 30
