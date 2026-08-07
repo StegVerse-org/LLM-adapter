@@ -8,6 +8,10 @@ This file is the task source of truth for the AdmittedCode evidence-demo slice i
 
 Produce portable, secret-free `stegverse.admittedcode.review_packet.v1` inputs deterministically from existing canonical LLM-adapter fixtures so AdmittedCode can review real StegVerse repository evidence without importing the StegVerse runtime.
 
+## Status
+
+**COMPLETE AND MERGED.** This slice no longer owns implementation work.
+
 ## Installed paths
 
 - `examples/end_to_end/admittedcode_review/review_packet.allow.json`
@@ -47,6 +51,8 @@ The packet contains declared request, consent posture, budget, GCAT/BCAT values,
 
 ## Validation
 
+Canonical validation commands:
+
 ```bash
 python scripts/build_admittedcode_review_packets.py
 git diff --exit-code -- examples/end_to_end/admittedcode_review/
@@ -54,13 +60,21 @@ pytest tests/test_admittedcode_review_packet_binding.py -v
 python scripts/verify_admittedcode_review_fixture.py
 ```
 
-The build must reproduce the committed packets byte-for-byte. Any canonical source-fixture change therefore makes packet drift visible.
+Hosted PR validation for PR #122 passed before merge. PR #122 merged as commit `12eefc095479b325ccb5551c7279b7ecec1d0283`.
 
-## Downstream
+## Downstream completion evidence
 
-- `AdmittedCode/provider-harness`: portable standalone review demo and source-snapshot hash verification.
-- `StegVerse-org/StegVerse-SDK`: non-authorizing receipt consumer and independent receipt-hash verifier.
+- `AdmittedCode/provider-harness` source-verification integration merged in PR #2 as `c4eb15c63f4d0869080f59a57207449a8bf629e7`.
+- `StegVerse-org/StegVerse-SDK` source-verified receipt consumption merged in PR #12 as `6227454a78b9c210a8ec0d3eb5be3f15b977c6e7`.
+- compact external reviewer packet merged in `AdmittedCode/provider-harness` PR #3 as `b5b942d64cb7d7278b7a4137704fea75f325a77f`.
 
-## Remaining work
+## Canonical continuation
 
-Observe hosted CI for this binding, merge when green, then refresh the portable AdmittedCode source snapshot and SDK receipt fixture from the merged canonical packet contract. Do not convert fixture evidence into live-provider or execution claims.
+MERGED INTO: `AdmittedCode/.github/ADMITTEDCODE_MIRROR_HANDOFF.md`
+
+The next ecosystem integration is `StegVerse-Labs/Site`, but current Site orchestration denies external task/session claims. The machine-owned release-condition observer and blocked task live in:
+
+- `AdmittedCode/.github/data/tasks/ADMITTEDCODE-SITE-REVIEW-INTEGRATION.json`
+- `AdmittedCode/.github/.github/workflows/site-admission-watch.yml`
+
+No additional work from this LLM-adapter slice is required until a future canonical source-contract change requires packet regeneration and validation.
