@@ -8,7 +8,9 @@ Normative precursor standard for all StegVerse runtime, hosting, execution, rout
 
 **All StegVerse capabilities MUST be constructed from the least-stable viable micro-node instances capable of performing the bounded purpose.**
 
-"Least-stable" means the implementation MUST NOT retain process lifetime, connection lifetime, credential lifetime, mutable state, authority, ownership, placement, or identity coupling longer than the bounded capability actually requires.
+"Least-stable" is a deliberate StegVerse construction term. It does **not** mean unreliable, fragile, or low-integrity. It means the implementation MUST retain process lifetime, connection lifetime, credential lifetime, mutable state, authority, ownership, placement, and instance identity coupling no longer than the bounded capability actually requires.
+
+A least-stable micro-node may be highly reliable and strongly verified while still being short-lived, replaceable, and reconstructable.
 
 "Micro-node" means the smallest independently addressable, replaceable, reconstructable, attestable capability instance that can perform one declared responsibility without inheriting unrelated authority or state.
 
