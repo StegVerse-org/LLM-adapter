@@ -7,7 +7,7 @@
     "authorized_configuration_missing:MASTER_RECORDS_TOKEN",
     "provider_execution_authority_missing_or_invalid"
   ],
-  "caller_commit": "8fb86f92f70f23c1042d4f2eb782e1a3a6797b65",
+  "caller_commit": "acaed090dab900541d65289c8e0daa7e62b645b8",
   "caller_repository": "StegVerse-org/LLM-adapter",
   "configuration": {
     "master_records_allowed_hosts_configured": false,
@@ -24,7 +24,7 @@
   "manual_user_action_required": false,
   "next_executable_action": "Configure the authorized Master Records endpoint, allowed hosts, and token in the protected GitHub execution environment.",
   "observation_source": "GITHUB_ACTIONS_WORKFLOW",
-  "observed_at": "2026-08-07T01:04:26.061521Z",
+  "observed_at": "2026-08-07T01:05:40.983412Z",
   "provider": {
     "credential_source_if_later_authorized": "ephemeral GitHub Actions GITHUB_TOKEN",
     "name": "github-models",
@@ -32,20 +32,20 @@
     "provider_execution_observed": false
   },
   "reconstruction_state": "NOT_SUBMITTED",
-  "result_sha256": "eace7f137d16e5d7c0365c994c69f69645f617f8265ebf01a584e68f303e85c1",
+  "result_sha256": "2ad57f3a58718982f10c917ba2bca71c6d99fb10cca3607ecad65bb35befd0fd",
   "route": "service_connection",
   "schema": "stegverse.va_claim_assistant.provider_execution_preflight.v1",
   "secret_values_present": false,
   "state": "CONFIGURATION_REQUIRED",
   "tvc_admission": {
-    "expires_at": "2026-08-07T01:19:12.066670Z",
-    "issued_at": "2026-08-07T01:04:12.066670Z",
+    "expires_at": "2026-08-07T01:20:32.005622Z",
+    "issued_at": "2026-08-07T01:05:32.005622Z",
     "present": true,
-    "receipt_hash": "86b97efb811cd7a561e7792eb93ee210a6efd01b5c743e0b9e307a21bf5ed5a3",
-    "receipt_id": "tvc-va-service_connection-31136792639-1",
+    "receipt_hash": "aa71ee13f45f26cab9351d05de1950a6be08db1b180b8c0695ed1b9820219f2a",
+    "receipt_id": "tvc-va-service_connection-31136871750-1",
     "single_use": true,
     "valid": true
   },
   "workflow_run_attempt": "1",
-  "workflow_run_id": "31136792639"
+  "workflow_run_id": "31136871750"
 }
