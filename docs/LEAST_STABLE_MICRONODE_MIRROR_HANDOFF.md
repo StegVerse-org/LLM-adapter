@@ -6,7 +6,7 @@ Task-specific continuation record for the cross-cutting StegVerse runtime standa
 
 ## Active goal
 
-Establish the **Least-Stable Capability Micro-Node Standard** as the structural precursor to the **Ephemeral-by-Default Runtime Standard**, then validate and propagate the pair across StegVerse runtime/hosting contracts.
+Establish the **Least-Stable Capability Micro-Node Standard** as the structural precursor to the **Ephemeral-by-Default Runtime Standard**, validate the pair, then propagate them across StegVerse runtime/hosting contracts.
 
 ## Originating requirement
 
@@ -59,7 +59,8 @@ Hosted repository workflows are required before merge. Workflow success proves r
 - precursor tests: IMPLEMENTED
 - ephemeral standard dependency ordering: IMPLEMENTED
 - ephemeral machine policy dependency: IMPLEMENTED
-- hosted validation: PENDING
+- ephemeral tests enforce precursor: IMPLEMENTED
+- hosted validation: RUNNING/PENDING on PR #123
 - merge: PENDING
 - ecosystem propagation: PENDING
 
