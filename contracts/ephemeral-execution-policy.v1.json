@@ -1,6 +1,8 @@
 {
   "schema": "stegverse.ephemeral_execution_policy.v1",
   "status": "NORMATIVE",
+  "prerequisite_policy": "stegverse.least_stable_micronode_policy.v1",
+  "prerequisite_required": true,
   "default_resource_lifecycle": "EPHEMERAL",
   "default_connection_lifecycle": "BOUNDED_OPERATION",
   "persistent_resource_policy": {
@@ -31,6 +33,12 @@
     "locks_and_claims": true,
     "telemetry_transport": true
   },
+  "micro_node_lifecycle_constraints": {
+    "ephemerality_does_not_justify_capability_aggregation": true,
+    "individual_jobs_remain_micro_nodes_when_service_is_addressable": true,
+    "replacement_without_service_identity_loss": true,
+    "provider_specific_process_identity_is_canonical": false
+  },
   "durability_allowed_for": [
     "continuity",
     "custody",
@@ -50,6 +58,7 @@
     "support_health_bound_discovery_without_permanent_upstream_sessions": true,
     "support_restart_and_reconstruction": true,
     "support_scale_to_zero_when_semantics_permit": true,
+    "support_independent_micronode_replacement": true,
     "vendor_always_on_default_is_authority": false
   },
   "provider_model_requirements": {
@@ -57,12 +66,14 @@
     "credential_materialization_after_admission": true,
     "credential_scope_is_bounded": true,
     "connection_closes_after_bounded_request_or_stream": true,
-    "stream_lifetime_equals_active_stream_by_default": true
+    "stream_lifetime_equals_active_stream_by_default": true,
+    "execution_node_terminates_after_bounded_operation_by_default": true
   },
   "database_requirements": {
     "database_persistence_distinct_from_connection_persistence": true,
     "connections_acquired_on_demand": true,
-    "connection_pools_require_finite_idle_lifetime": true
+    "connection_pools_require_finite_idle_lifetime": true,
+    "database_capability_scoped_to_required_micronodes": true
   },
   "authority": {
     "connection_persistence_is_authority": false,
@@ -71,6 +82,8 @@
     "cached_session_state_is_current_consent": false,
     "live_health_is_admissibility": false,
     "persistent_storage_is_custody": false,
-    "reconstruction_pass_is_release_authority": false
+    "reconstruction_pass_is_release_authority": false,
+    "ephemeral_execution_is_authority": false,
+    "micro_node_lifetime_is_authority": false
   }
 }
