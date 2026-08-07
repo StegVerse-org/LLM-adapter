@@ -1,19 +1,44 @@
 {
-  "schema": "stegverse.admittedcode.review_packet.v1",
-  "packet_id": "stegverse-demo-allow-001",
-  "source_system": "StegVerse-org/LLM-adapter",
-  "source_refs": ["fixture:governed-provider-envelope", "fixture:transition-001"],
-  "request": {
-    "provider": "fixture-provider",
-    "model": "fixture-model-v1",
-    "purpose": "governed_demo_response",
-    "output_schema": "stegverse.demo.response.v1",
-    "estimated_cost_microdollars": 500,
-    "gcat_bcat": {"g": 5, "c": 5, "a": 2, "t": 5}
+  "authority_effect": "NONE",
+  "budget": {
+    "max_microdollars": 1000
   },
-  "consent": {"purpose": "governed_demo_response", "user_approved": true},
-  "budget": {"max_microdollars": 1000},
-  "evidence_refs": ["fixture:governed-provider-envelope", "fixture:continuity-pointer"],
-  "continuity_refs": ["fixture:transition-001"],
-  "authority_effect": "NONE"
+  "consent": {
+    "purpose": "informational_query",
+    "user_approved": true
+  },
+  "continuity_refs": [
+    "fixture:transition-simple-query"
+  ],
+  "evidence_refs": [
+    "fixture-source-sha256:f2829c88bb6f876fe78868736c41eb11ea56feb981fb6a4148aaf0ae1436eef9"
+  ],
+  "packet_id": "stegverse-demo-allow-001",
+  "request": {
+    "estimated_cost_microdollars": 500,
+    "gcat_bcat": {
+      "a": 2,
+      "c": 5,
+      "g": 5,
+      "t": 5
+    },
+    "model": "fixture-model-v1",
+    "output_schema": "stegverse.demo.response.v1",
+    "provider": "fixture-provider",
+    "purpose": "informational_query"
+  },
+  "schema": "stegverse.admittedcode.review_packet.v1",
+  "source_binding": {
+    "expected_outcome": "ALLOW",
+    "path": "examples/end_to_end/simple_query.json",
+    "sha256": "f2829c88bb6f876fe78868736c41eb11ea56feb981fb6a4148aaf0ae1436eef9"
+  },
+  "source_claim": {
+    "description": "Simple informational query",
+    "query": "What is the capital of France?"
+  },
+  "source_refs": [
+    "examples/end_to_end/simple_query.json"
+  ],
+  "source_system": "StegVerse-org/LLM-adapter"
 }
