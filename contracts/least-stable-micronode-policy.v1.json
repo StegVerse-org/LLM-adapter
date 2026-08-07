@@ -1,0 +1,94 @@
+{
+  "schema": "stegverse.least_stable_micronode_policy.v1",
+  "status": "NORMATIVE_PRECURSOR",
+  "governing_rule": "ALL_CAPABILITIES_USE_LEAST_STABLE_VIABLE_MICRONODES",
+  "definitions": {
+    "least_stable": "retain process, connection, credential, mutable state, authority, ownership, placement, and identity coupling no longer than required",
+    "micro_node": "smallest independently addressable, replaceable, reconstructable, attestable capability instance for one declared responsibility"
+  },
+  "required_properties": {
+    "single_primary_capability": true,
+    "minimum_capabilities": true,
+    "implicit_authority": false,
+    "externalize_reconstructable_mutable_state": true,
+    "prefer_content_addressed_inputs": true,
+    "machine_verifiable_instance_identity": true,
+    "replaceable_without_process_identity": true,
+    "reconstructable_from_declared_inputs": true,
+    "bounded_leases": true,
+    "fail_closed_on_missing_evidence_or_authority": true,
+    "teardown_or_replacement_evidence_when_material": true,
+    "unrelated_workload_coupling_by_convenience": false
+  },
+  "stability_preference_order": [
+    "ONE_SHOT_OPERATION",
+    "SHORT_LIVED_WORKER_MICRONODE",
+    "BOUNDED_SESSION_MICRONODE",
+    "LEASED_SERVICE_MICRONODE",
+    "ADDRESSABLE_RECONSTRUCTABLE_SERVICE_MICRONODE",
+    "PERSISTENT_STATEFUL_MICRONODE",
+    "PERMANENT_PROCESS_OR_COUPLED_SERVICE"
+  ],
+  "more_stable_construction_default": "DENY_UNLESS_EXCEPTION_JUSTIFIED",
+  "state": {
+    "local_mutable_state_default": "DISPOSABLE",
+    "durable_state_owner": "DECLARED_STORAGE_CUSTODY_OR_RECONSTRUCTION_SURFACE",
+    "process_lifetime_is_durable_state": false
+  },
+  "identity": {
+    "service_identity_distinct_from_instance_identity": true,
+    "process_identity_required_for_continuity": false,
+    "provider_specific_service_identity_canonical": false,
+    "placement_is_application_identity": false
+  },
+  "connections": {
+    "connection_belongs_to_bounded_invocation": true,
+    "connect_after_admission": true,
+    "release_after_declared_exchange": true,
+    "persistent_connection_requires_ephemeral_policy_exception": true
+  },
+  "credentials": {
+    "materialize_after_instance_verification": true,
+    "scope_to_capability": true,
+    "scope_to_target": true,
+    "scope_to_bounded_lifetime": true,
+    "replacement_instance_inherits_secret_material": false
+  },
+  "hosting": {
+    "independent_instance_construction": true,
+    "independent_instance_addressing": true,
+    "independent_instance_leasing": true,
+    "independent_instance_supervision": true,
+    "independent_instance_replacement": true,
+    "independent_instance_teardown": true,
+    "content_addressed_artifacts": true,
+    "capability_scoped_manifests": true,
+    "scale_to_zero": true,
+    "health_bound_service_discovery": true,
+    "externalized_durable_state": true,
+    "capability_scoped_secret_release": true,
+    "default_deny_ingress_egress": true,
+    "per_node_resource_bounds": true,
+    "hosting_substrate_expands_authority": false
+  },
+  "exception_required_fields": [
+    "exception_reason",
+    "required_target_semantics",
+    "capabilities_that_cannot_be_split",
+    "state_that_cannot_be_externalized",
+    "minimum_required_lifetime",
+    "revalidation_condition",
+    "teardown_or_split_condition",
+    "authority_effect"
+  ],
+  "authority": {
+    "micro_node_existence_is_authority": false,
+    "service_identity_is_instance_authority": false,
+    "placement_is_authority": false,
+    "health_is_admissibility": false,
+    "capability_availability_is_permission_to_invoke": false,
+    "shared_host_is_shared_authority": false,
+    "completion_is_downstream_authority": false,
+    "persistence_is_legitimacy": false
+  }
+}

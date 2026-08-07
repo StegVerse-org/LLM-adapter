@@ -1,0 +1,89 @@
+{
+  "schema": "stegverse.ephemeral_execution_policy.v1",
+  "status": "NORMATIVE",
+  "prerequisite_policy": "stegverse.least_stable_micronode_policy.v1",
+  "prerequisite_required": true,
+  "default_resource_lifecycle": "EPHEMERAL",
+  "default_connection_lifecycle": "BOUNDED_OPERATION",
+  "persistent_resource_policy": {
+    "default": "DENY",
+    "allowed_only_when_target_or_protocol_requires": true,
+    "required_fields": [
+      "persistence_reason",
+      "target_identity",
+      "lease_duration_seconds",
+      "renewal_condition",
+      "idle_timeout_seconds",
+      "credential_scope",
+      "reconnect_policy",
+      "state_externalization",
+      "teardown_receipt",
+      "authority_effect"
+    ],
+    "indefinite_unleased_connection": "NON_CONFORMING_UNLESS_PROTOCOL_REQUIRES_AND_EXCEPTION_DOCUMENTED"
+  },
+  "ephemeral_preference": {
+    "compute_jobs": true,
+    "outbound_network_connections": true,
+    "service_to_service_connections": true,
+    "credentials": true,
+    "temporary_storage": true,
+    "caches": true,
+    "logical_sessions_transport": true,
+    "locks_and_claims": true,
+    "telemetry_transport": true
+  },
+  "micro_node_lifecycle_constraints": {
+    "ephemerality_does_not_justify_capability_aggregation": true,
+    "individual_jobs_remain_micro_nodes_when_service_is_addressable": true,
+    "replacement_without_service_identity_loss": true,
+    "provider_specific_process_identity_is_canonical": false
+  },
+  "durability_allowed_for": [
+    "continuity",
+    "custody",
+    "reconstruction",
+    "audit",
+    "replay",
+    "user_intent",
+    "declared_product_behavior",
+    "required_target_protocol_state"
+  ],
+  "hosting_requirements": {
+    "support_on_demand_activation": true,
+    "support_short_lived_workers": true,
+    "support_bounded_network_leases": true,
+    "support_ephemeral_credential_materialization": true,
+    "support_externalized_durable_state": true,
+    "support_health_bound_discovery_without_permanent_upstream_sessions": true,
+    "support_restart_and_reconstruction": true,
+    "support_scale_to_zero_when_semantics_permit": true,
+    "support_independent_micronode_replacement": true,
+    "vendor_always_on_default_is_authority": false
+  },
+  "provider_model_requirements": {
+    "connectivity_downstream_of_admission": true,
+    "credential_materialization_after_admission": true,
+    "credential_scope_is_bounded": true,
+    "connection_closes_after_bounded_request_or_stream": true,
+    "stream_lifetime_equals_active_stream_by_default": true,
+    "execution_node_terminates_after_bounded_operation_by_default": true
+  },
+  "database_requirements": {
+    "database_persistence_distinct_from_connection_persistence": true,
+    "connections_acquired_on_demand": true,
+    "connection_pools_require_finite_idle_lifetime": true,
+    "database_capability_scoped_to_required_micronodes": true
+  },
+  "authority": {
+    "connection_persistence_is_authority": false,
+    "service_availability_is_execution_authority": false,
+    "credential_possession_is_execution_authority": false,
+    "cached_session_state_is_current_consent": false,
+    "live_health_is_admissibility": false,
+    "persistent_storage_is_custody": false,
+    "reconstruction_pass_is_release_authority": false,
+    "ephemeral_execution_is_authority": false,
+    "micro_node_lifetime_is_authority": false
+  }
+}
