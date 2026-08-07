@@ -1,5 +1,3 @@
-ARCHIVE THIS SESSION.
-
 # VA Claim Assistant Provider Preflight Mirror Handoff
 
 This scoped handoff is subordinate to `docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md` and `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`. It grants no provider, custody, filing, deployment, publication, release, or Site authority and does not modify Ecosystem Chat issue `#18`.
@@ -9,33 +7,25 @@ This scoped handoff is subordinate to `docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVA
 ```text
 parent_goal_id: VACP-ADAPTER-EXECUTION-PREFLIGHT-004
 task_id: VACP-PREFLIGHT-HOSTED-EXECUTION-008
-originating_goal: activate the finished non-executing VA provider preflight through hosted repository automation
+originating_goal: activate the non-executing VA provider preflight through hosted repository automation
 repository: StegVerse-org/LLM-adapter
 branch: fix/va-provider-preflight-private-workflow
 pull_request: StegVerse-org/LLM-adapter#120
 canonical_issue: StegVerse-org/LLM-adapter#90
-TVC_owner: StegVerse-Labs/TVC#9
-custody_owner: master-records/orchestration#15
 Site_projection_owner: StegVerse-Labs/Site#113
+next_product_goal: coordinated VA Resources LLM
+final_product_goal: secure document retrieval and upload modules under StegVerse-Labs/Site#116
 ```
 
-## Task and claim state
+## Current claim state
 
 ```text
-state: BLOCKED
-claim_state: RELEASED_BLOCKED
-claimant: null
-role: MACHINE_OWNED_VALIDATION_PENDING
-claim_created: 2026-08-06T10:43:00-05:00
-claim_released: 2026-08-06T15:28:00-05:00
-task_record: tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json
-blocker_receipt: receipts/va-provider-preflight-hosted-blocker.json
-session_state: MERGED_INTO_CANONICAL_WORKSTREAM
-unique_chat_work_remaining: false
-archive_dependency: SATISFIED_BY_DURABLE_TRANSFER
+state: CLAIMED_FOR_VALIDATION_REPAIR
+claimant: this repository execution lane
+claim_created: 2026-08-06T19:32:00-05:00
+claim_release_condition: all required PR #120 gates pass, artifacts are inspected, PR is merged, and main is verified
+collision_boundary: do not request provider permission, call a provider, expose protected configuration, or modify Ecosystem Chat issue #18
 ```
-
-No active chat/session claim remains. Repository-native automation and issue `#90` own continuation.
 
 ## Authoritative files
 
@@ -45,146 +35,71 @@ No active chat/session claim remains. Repository-native automation and issue `#9
 .github/workflows/va-provider-preflight-ubuntu2204-proof.yml
 vendor/tvc/e3865e79662529e07d27199235431056d127ea63/issue_va_ephemeral_route_admission.py
 scripts/check_va_provider_preflight_hosted_path.py
-scripts/observe_va_provider_execution_preflight.py
-scripts/validate_va_provider_execution_authority.py
-requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json
-receipts/va-claim-assistant-provider-execution-preflight.json
-receipts/va-provider-preflight-hosted-blocker.json
-tasks/VACP-ADAPTER-EXECUTION-PREFLIGHT-004.json
 tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json
-docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md
+receipts/va-provider-preflight-hosted-blocker.json
 ```
 
-## Completed implementation
+## Completed implementation and evidence
+
+- Exact TVC source commit and Git blob are pinned.
+- Same-run 900-second, single-use admission generation is installed.
+- Provider permission and provider execution remain prohibited in preflight.
+- Hash-bound execution provenance and artifact retention are installed.
+- The canonical hosted preflight run `31127993957` succeeded at prior PR head `9583627f1d6772d263ad5a0bec3f83d18a149fd3`.
+- A real repository-command failure was observed in focused run `31127993937`: `task_provider_collision_boundary`.
+- Root cause: the validator required one exact sentence while the task record carried the same prohibition with additional scope.
+- Repair commit `8864b77d867b5be13fbddb46172be1081b373325` now validates the safety clauses semantically while preserving the prohibition on `models:read` and provider calls.
+- Focused hosted-path run `31135075848`, job `92732510567`, passed after the repair.
+
+## Active machine validation
+
+The following runs were started for repair commit `8864b77d867b5be13fbddb46172be1081b373325`:
 
 ```text
-pinned TVC source commit: e3865e79662529e07d27199235431056d127ea63
-pinned TVC Git blob: e9bb981fbd4afea934c8b800a0f70f6b6ddaf61c
-canonical workflow repair: d8c48379d286bde79db063822abf90ce0f443eb9
-hosted-path validator: 3ef664de223c2a166ae4cb9dbe26ff8564562f49
-focused gate: 9a1dbbbfbc76e5a4f1d8a76c9ec76922948fd8e1
-hidden-artifact retention fix: e164331efa22a5ed4c45cae32142e82f9154fdcb
-retention regression gate: fb46cc8bac4393fd24a28daced6b2689264ffeaf
-Ubuntu 22.04 fallback proof: 239341381809d0715c9516fc10b97bb79dd6764a
-explicit fallback trigger: bf9e02011d6b815c01986f69a39d440ca5ffbc09
-blocker receipt: 3af89dc954923ae73b5899edc097de4e2c551770
-claim release: 8ded338c53f2e776d590d03090c937f61aa8b1c5
+focused hosted path: 31135075848 — SUCCESS
+Ubuntu 22.04 proof: 31135075843 — active/pending final observation
+canonical preflight: 31135075851 — active/pending final observation
+full validation: 31135075884 — active/pending final observation
+Service Gateway proof: 31135075852 — active/pending final observation
+Architecture Guard: 31135075883 — active/pending final observation
+provider-owned usage validation: 31135075849 — active/pending final observation
 ```
 
-Implemented behavior:
+## Exact next executable actions
 
-- exact TVC source Git-blob verification;
-- 900-second single-use admission generation;
-- no provider permission and no provider call;
-- hash-bound execution provenance;
-- fail-closed admission and preflight verification;
-- one-day admission and 30-day final evidence retention;
-- private reusable-workflow, source-drift, provenance, permission, and authority-escalation rejection;
-- fixed-image fallback proof;
-- durable blocked-state receipt and machine release condition.
+1. Inspect completion, jobs, logs, and artifacts for every run listed above.
+2. Repair only any observed repository-command failure.
+3. When all required gates pass and admission/preflight artifacts are retained, mark PR #120 ready and merge it.
+4. Verify the same controls on `main`.
+5. Change `tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json` to `COMPLETE`, release the claim, and retain exact release evidence.
+6. Continue `StegVerse-org/LLM-adapter#90` toward one explicitly authorized provider execution and Site end-to-end integration.
 
-## Validated evidence
+## Product activation boundary
 
-```text
-first hosted admission run: 31118040998
-first hosted admission job: 92672512904
-TVC blob verification: PASS
-admission generation: PASS
-admission receipt ID: tvc-va-service_connection-31118040998-1
-admission SHA-256: b18c0754ccaa06f3b67410d4f97fce978df350b33d878ed466b4a2e3e1f1e0da
-execution provenance: PASS
-Architecture Guard run 31121629460: SUCCESS
-focused hosted-path run 31121629195: SUCCESS
-provider usage Python 3.9: SUCCESS
-provider usage Python 3.11: SUCCESS
-repository-command failure after retention repair: not observed
-```
+Preflight success is not coordinated VA Resources LLM activation. Goal activation additionally requires a provider-backed governed response with VA route classification, admitted official VA sources, proposition-level citations, authority classes, dates, contradiction/uncertainty labels, false-authority flags, stable secret-free receipt, and deployed Site-to-adapter-to-Site observation.
 
-The original public-caller/private-reusable-workflow defect is superseded. The hidden-artifact exclusion defect is repaired and regression-gated.
+Secure document retrieval and upload remain queued under `StegVerse-Labs/Site#116` until the coordinated LLM goal activates.
 
-## Current blocker
+## Archive condition
 
-```text
-code: GITHUB_ACTIONS_WORKFLOW_EVENT_OR_RUNNER_ADMISSION_UNAVAILABLE
-canonical preflight run: 31121629928 — queued, zero visible jobs
-full validation run: 31121630204 — queued
-Service Gateway run: 31121628995 — queued after setup-only retry
-provider usage Python 3.12: pending/setup-only
-Ubuntu 22.04 fallback workflow runs visible: 0
-repository-command failure observed: false
-provider request observed: false
-provider execution observed: false
-secret exposure observed: false
-authority_effect: false
-activation_effect: false
-```
-
-## Machine-observable release condition
-
-The task may leave `BLOCKED` only when:
-
-1. the canonical preflight or Ubuntu 22.04 fallback receives a job;
-2. repository commands execute;
-3. hash-valid admission and preflight receipts are produced;
-4. an inspectable artifact is retained;
-5. full validation, Service Gateway, and Python 3.12 provider validation succeed;
-6. PR `#120` becomes mergeable and is merged;
-7. main-branch execution and artifact retention are verified;
-8. task `VACP-PREFLIGHT-HOSTED-EXECUTION-008` is changed to `COMPLETE` with completion evidence.
-
-Until then, PR `#120` must remain draft/non-mergeable in operational posture.
-
-## Next executable action
-
-```text
-owner: StegVerse-org/LLM-adapter#90 and repository-native workflows
-action: observe PR #120 workflow admission; retry only setup-failed jobs; repair only an actual repository-command failure
-post-unblock: inspect artifacts, merge PR #120, verify main, complete the task record, and retain release evidence
-```
-
-## Collision and authority boundaries
-
-- do not modify or dispatch Ecosystem Chat issue `#18` provider execution;
-- do not infer authority from credentials or configuration;
-- do not create an approval receipt on behalf of a human or governance lane;
-- do not expose tokens or protected configuration values;
-- do not modify TVC canonical source through the mirror;
-- preflight is not execution;
-- provider output is not authority;
-- custody is not execution authority;
-- filing, submission, representation, adjudication, rating, medical opinion, deployment, publication, release, and Site activation remain false.
-
-## Durable transfer
+This session is not archive-ready while it owns the active validation-repair claim and PR #120 has not completed merge and main verification. Canonical continuation remains:
 
 ```text
 MERGED INTO: StegVerse-org/LLM-adapter#90
 MERGED INTO: StegVerse-org/LLM-adapter#120
-MERGED INTO: StegVerse-org/LLM-adapter/tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json
-MERGED INTO: StegVerse-org/LLM-adapter/receipts/va-provider-preflight-hosted-blocker.json
-MERGED INTO: StegVerse-Labs/TVC#9
-MERGED INTO: master-records/orchestration#15
 MERGED INTO: StegVerse-Labs/Site#113
+MERGED INTO: StegVerse-Labs/Site#116
 ```
-
-No Publisher, admissibility-wiki, or StegGuardian propagation is admissible before provider execution, custody, reconstruction, and Site projection are verified.
 
 ## Completion measures
 
-Bounded denominator: eight implementation files/surfaces, eight validation groups, two integration stages, and six session-goal transfer groups.
-
 ```text
-task completion: 6/8 = 75%
-developed files/surfaces: 8/8 = 100%
+task completion: 6/8
+required developed files: 8/8
 scaffolding or stubs: 0
 missing required files: 0
-validation: 4/8 = 50%
-integration: 0/2 = 0%
-propagation/transfer: 6/6 = 100%
-goal activation: 6/8 = 75%
-session consolidation: 6/6 = 100%
-archival readiness for this chat session: 12/12 = 100%
+validation: 5/8
+integration: 0/2
+goal activation: 6/8
+session consolidation: 4/4 requirements transferred, but active support claim remains
 ```
-
-This chat session owns no unique implementation, validation, integration, propagation, reconciliation, or observation responsibility. Deleting or archiving it will not impair continuation.
-
-ARCHIVE THIS SESSION.
