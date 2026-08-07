@@ -14,7 +14,7 @@
   "claim_created_at": null,
   "claim_expires_at": null,
   "blocked_at": "2026-08-03T23:47:00Z",
-  "updated_at": "2026-08-04T03:23:00Z",
+  "updated_at": "2026-08-07T02:05:00Z",
   "machine_observable_release_condition": {
     "preflight_path": "receipts/va-claim-assistant-provider-execution-preflight.json",
     "required_preflight_state": "READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION",
@@ -34,14 +34,35 @@
     "required_privacy_runtime_commit": "e14e70be89f24d418d28a2a44c091d3349414ebc",
     "required_privacy_dispatch_commit": "e007689277cc2f3961bbcd9361b7b2373e1340ce"
   },
+  "current_preflight_evidence": {
+    "state": "CONFIGURATION_REQUIRED",
+    "observation_source": "GITHUB_ACTIONS_WORKFLOW",
+    "workflow_run_id": "31136871750",
+    "caller_commit": "acaed090dab900541d65289c8e0daa7e62b645b8",
+    "tvc_admission_present": true,
+    "tvc_admission_valid": true,
+    "tvc_single_use": true,
+    "provider_permission_requested": false,
+    "provider_execution_observed": false,
+    "authority_effect": false,
+    "activation_effect": false
+  },
   "current_blockers": [
-    "hosted_preflight_ready_state_not_observed",
     "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS",
     "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_ENDPOINT",
     "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_TOKEN",
     "provider_execution_authority_missing_or_invalid"
   ],
   "satisfied_dependencies": {
+    "hosted_preflight_observer": {
+      "state": "OBSERVED_FAIL_CLOSED",
+      "observation_source": "GITHUB_ACTIONS_WORKFLOW",
+      "workflow_run_id": 31136871750,
+      "provider_permission_requested": false,
+      "provider_execution_observed": false,
+      "authority_effect": false,
+      "activation_effect": false
+    },
     "pii_runtime_gate": {
       "state": "PASS",
       "receipt_path": "receipts/va-claim-assistant-privacy-runtime-validation.json",
@@ -54,6 +75,13 @@
       "authority_effect": false,
       "activation_effect": false
     }
+  },
+  "machine_owned_observer": {
+    "workflow": ".github/workflows/va-claim-assistant-provider-preflight.yml",
+    "schedule": "47 */6 * * *",
+    "manual_dispatch": true,
+    "persists_preflight_receipt": true,
+    "fails_closed_without_configuration_or_authority": true
   },
   "target_paths": [
     ".github/workflows/va-claim-assistant-authorized-execution.yml",
@@ -94,7 +122,7 @@
     "Do not exceed one provider request or USD 0.10.",
     "Do not activate Site, filing, submission, representation, adjudication, rating, medical opinion, publication, deployment, or release."
   ],
-  "next_executable_action": "When every remaining machine release condition becomes true, atomically claim the target paths, install the workflow-dispatch-only executor, require privacy_guarded_dispatch before permission or model input, and validate it without executing until the exact approval remains current.",
+  "next_executable_action": "An authorized configuration/authority owner must make the protected Master Records endpoint, allowed-hosts, token, and exact-caller VA provider authority valid. The six-hour preflight observer will then emit READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION; only then may the execution lane be claimed and installed/executed.",
   "authority_effect": false,
   "activation_effect": false
 }
