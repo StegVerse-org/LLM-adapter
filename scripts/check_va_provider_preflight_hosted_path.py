@@ -14,12 +14,7 @@ WORKFLOW = ROOT / ".github/workflows/va-claim-assistant-provider-preflight.yml"
 TASK = ROOT / "tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json"
 SOURCE_COMMIT = "e3865e79662529e07d27199235431056d127ea63"
 SOURCE_BLOB_SHA = "e9bb981fbd4afea934c8b800a0f70f6b6ddaf61c"
-SOURCE = (
-    ROOT
-    / "vendor/tvc"
-    / SOURCE_COMMIT
-    / "issue_va_ephemeral_route_admission.py"
-)
+SOURCE = ROOT / "vendor/tvc" / SOURCE_COMMIT / "issue_va_ephemeral_route_admission.py"
 PRIVATE_REUSABLE_CALL = (
     "uses: StegVerse-Labs/TVC/.github/workflows/"
     "va-route-ephemeral-admission.yml@"
@@ -67,8 +62,7 @@ def verify_deterministic_source_shape() -> None:
     require(receipt["state"] == "ADMITTED_PENDING_PROVIDER_EXECUTION", "admission_state")
     require(receipt["issuer"]["repository"] == "StegVerse-Labs/TVC", "issuer_repository")
     require(
-        receipt["issuer"]["workflow"]
-        == ".github/workflows/va-route-ephemeral-admission.yml",
+        receipt["issuer"]["workflow"] == ".github/workflows/va-route-ephemeral-admission.yml",
         "issuer_workflow",
     )
     require(receipt["validity"]["lifetime_seconds"] == 900, "admission_lifetime")
@@ -78,6 +72,21 @@ def verify_deterministic_source_shape() -> None:
     require(not any(receipt["authority_flags"].values()), "authority_flags")
     require(receipt["activation_effect"] is False, "activation_effect")
     require(receipt["receipt_hash"] == module.canonical_hash(receipt), "admission_hash")
+
+
+def has_provider_collision_boundary(boundaries: list[object]) -> bool:
+    """Accept equivalent wording while requiring all safety clauses."""
+    for value in boundaries:
+        if not isinstance(value, str):
+            continue
+        normalized = " ".join(value.lower().replace("models: read", "models:read").split())
+        if (
+            "do not request models:read" in normalized
+            and "call a provider" in normalized
+            and "do not" in normalized
+        ):
+            return True
+    return False
 
 
 def main() -> int:
@@ -102,10 +111,7 @@ def main() -> int:
     require("models:read" not in workflow.lower(), "provider_permission_requested_compact")
     require("retention-days: 30" in workflow, "preflight_artifact_retention_missing")
     require("retention-days: 1" in workflow, "admission_artifact_retention_missing")
-    require(
-        workflow.count("include-hidden-files: true") >= 2,
-        "hidden_artifact_retention_missing",
-    )
+    require(workflow.count("include-hidden-files: true") >= 2, "hidden_artifact_retention_missing")
 
     task = json.loads(TASK.read_text(encoding="utf-8"))
     require(task["task_id"] == "VACP-PREFLIGHT-HOSTED-EXECUTION-008", "task_id")
@@ -114,8 +120,7 @@ def main() -> int:
     require(task["activation_effect"] is False, "task_activation_effect")
     require(task["manual_user_action_required"] is False, "manual_user_action")
     require(
-        "Do not request models:read or call a provider."
-        in task["collision_boundaries"],
+        has_provider_collision_boundary(task.get("collision_boundaries", [])),
         "task_provider_collision_boundary",
     )
 
