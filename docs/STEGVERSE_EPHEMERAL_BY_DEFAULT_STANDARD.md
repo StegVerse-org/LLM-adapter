@@ -4,6 +4,12 @@
 
 Normative cross-cutting runtime standard for StegVerse-owned and StegVerse-integrated services.
 
+## Prerequisite standard
+
+This standard is subordinate to and depends on `docs/STEGVERSE_LEAST_STABLE_MICRONODE_STANDARD.md` and `contracts/least-stable-micronode-policy.v1.json`.
+
+StegVerse capabilities are first constructed as the least-stable viable micro-node instances. Ephemeral execution is then the default lifecycle of those micro-nodes. A workload MUST NOT use an ephemeral monolith to evade the precursor requirement for minimum capability, independent replacement, externalized durable state, and authority separation.
+
 ## Core rule
 
 **Anything that can be performed ephemerally SHOULD be performed ephemerally.**
@@ -17,7 +23,8 @@ A service may remain discoverable or able to accept work without maintaining a p
 The default StegVerse execution pattern is:
 
 ```text
-DISCOVER
+CONSTRUCT LEAST-STABLE CAPABILITY MICRO-NODE
+-> DISCOVER
 -> ADMIT
 -> CONNECT / START
 -> PERFORM BOUNDED WORK
@@ -64,7 +71,7 @@ Indefinite unleased connections are non-conforming unless a protocol cannot oper
 
 Workers, task runners, inference jobs, build jobs, validators, transformations, renderers, and one-shot automation SHOULD start on demand and terminate after bounded completion.
 
-Persistent daemons are reserved for capabilities that must continuously accept inbound work, coordinate leases, or maintain a protocol-required control plane. Even then, individual jobs SHOULD remain ephemeral.
+Persistent daemons are reserved for capabilities that must continuously accept inbound work, coordinate leases, or maintain a protocol-required control plane. Even then, individual jobs SHOULD remain ephemeral micro-nodes.
 
 ### Network
 
@@ -76,7 +83,7 @@ A public ingress listener may remain available while request and upstream data c
 
 ### Credentials
 
-Credentials SHOULD be materialized only after the governed path is admitted, scoped to the smallest target/purpose/time window, and revoked or discarded after use.
+Credentials SHOULD be materialized only after the governed micro-node path is admitted, scoped to the smallest capability/target/purpose/time window, and revoked or discarded after use.
 
 Long-lived static secrets are a compatibility fallback, not the StegVerse target state.
 
@@ -96,7 +103,7 @@ Governed replay caches MUST re-evaluate current governance where required and MU
 
 ### Sessions
 
-Logical user or workflow continuity SHOULD be externalized into reconstructable state rather than depending on one continuously live transport session.
+Logical user or workflow continuity SHOULD be externalized into reconstructable state rather than depending on one continuously live transport session or process instance.
 
 Session identifiers do not justify keeping a connection open.
 
@@ -112,40 +119,42 @@ Critical receipts and evidence are durable records; telemetry transport is not.
 
 ## Hosting implication
 
-StegVerse hosting MUST support cold or on-demand activation of workloads wherever the workload does not require continuous execution.
+StegVerse hosting MUST support cold or on-demand activation of least-stable micro-node workloads wherever the workload does not require continuous execution.
 
-A hosting substrate is non-conforming if an application must maintain a permanently live process or connection solely because the platform requires it.
+A hosting substrate is non-conforming if an application must maintain a permanently live process or connection solely because the platform requires it, or if unrelated capabilities must be coupled into one permanent process when they can safely be independent micro-nodes.
 
-Provider adapters such as Render, Cloudflare, Vercel, AWS, GitHub Actions, or other hosting/CI systems may be used, but their always-on defaults do not override this standard.
+Provider adapters such as Render, Cloudflare, Vercel, AWS, GitHub Actions, or other hosting/CI systems may be used, but their always-on defaults do not override this standard or the precursor micro-node construction standard.
 
 The StegVerse-owned hosting plane SHOULD support:
 
-- on-demand workload activation;
+- on-demand micro-node activation;
 - short-lived workers;
 - bounded network leases;
 - ephemeral credential materialization;
 - durable externalized state;
 - health-bound discovery without permanent upstream sessions;
+- replacement without service identity loss;
 - restart/reconstruction from retained evidence;
 - scale-to-zero where target semantics permit it.
 
 ## HIL application
 
-For HIL, the public receiver may remain addressable because the participant-facing target requires an HTTPS endpoint. That does **not** imply a permanently live connection from Site, the browser, the receiver, review services, publication services, provider adapters, or Master-Records.
+For HIL, the public receiver service identity may remain addressable because the participant-facing target requires an HTTPS endpoint. That does **not** imply a permanently live connection from Site, the browser, the receiver, review services, publication services, provider adapters, or Master-Records, nor does it require every HIL capability to inhabit one permanent receiver process.
 
 A normal HIL transaction SHOULD be:
 
 ```text
-browser discovers verified receiver
+browser discovers verified ingress micro-node/service identity
 -> opens HTTPS request
 -> submits bounded artifact
--> receiver verifies and processes
--> receiver returns receipt
--> required durable state/evidence is persisted
+-> bounded validation/processing micro-node executes
+-> receipt-generation micro-node returns receipt
+-> required durable state/evidence is externalized
 -> request connection closes
+-> bounded processing nodes terminate
 ```
 
-Downstream review, publication, custody, and reconstruction SHOULD likewise be invoked on demand unless their target protocol explicitly requires a persistent channel.
+Downstream review, publication, custody, and reconstruction SHOULD likewise be separate on-demand micro-node capabilities unless their target protocol explicitly requires a persistent channel or shared atomic execution boundary.
 
 ## Provider/model application
 
@@ -154,13 +163,14 @@ Provider or model connectivity MUST remain downstream of admission.
 The preferred pattern is:
 
 ```text
-admit request
+construct admitted execution micro-node
 -> materialize scoped credential
 -> connect to selected model/provider target
 -> perform bounded request/stream
 -> collect usage/result evidence
 -> close connection
 -> discard credential material
+-> terminate execution micro-node
 ```
 
 Streaming responses may keep the connection open only for the duration of the active stream. The stream ending terminates the connection unless another governed operation explicitly reuses a still-valid leased channel.
@@ -171,11 +181,13 @@ Database persistence and database connection persistence are different requireme
 
 Durable databases may be continuously available while application database connections are acquired on demand and returned/closed after bounded use. Connection pools MUST have finite idle lifetimes and must not create implicit authority or indefinite credentials.
 
+Database client capability SHOULD be granted only to the micro-nodes whose declared responsibility requires it.
+
 ## Standard decision test
 
 Before approving a persistent resource, ask:
 
-> If this resource were torn down immediately after the current bounded operation, could StegVerse reconstruct the next required state from durable evidence without violating the target protocol, safety requirement, user intent, or declared latency contract?
+> After first constructing the smallest least-stable viable capability micro-node, if this resource were torn down immediately after the current bounded operation, could StegVerse reconstruct the next required state from durable evidence without violating the target protocol, safety requirement, user intent, or declared latency contract?
 
 If **yes**, the resource SHOULD be ephemeral.
 
@@ -184,6 +196,8 @@ If **no**, the persistent exception MUST identify the exact requirement and fini
 ## Portability requirement
 
 No canonical StegVerse capability may depend on a vendor-specific requirement for an always-live connection when the workload itself does not require one.
+
+No canonical StegVerse capability may use lifecycle ephemerality as justification for unnecessary capability aggregation.
 
 This standard applies equally on StegVerse-owned infrastructure and third-party adapters.
 
@@ -197,4 +211,6 @@ cached session state != current consent
 live health != admissibility
 persistent storage != custody
 reconstruction PASS != release authority
+ephemeral execution != authority
+micro-node lifetime != authority
 ```
