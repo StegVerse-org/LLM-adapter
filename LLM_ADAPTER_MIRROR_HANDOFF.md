@@ -159,7 +159,7 @@ Absent CI, deployment, provider, custody, reconstruction, or downstream evidence
 9. Release readiness remains machine-gated until live and downstream evidence exists.
 ```
 
-No workflow artifact download, file movement, screenshot confirmation, receipt construction, blocker transcription, credential copying, or manual publication task is required.
+No workflow dispatch, artifact download, file movement, screenshot confirmation, receipt construction, blocker transcription, credential copying, or manual publication task is required.
 
 ## Canonical downstream destinations
 
