@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.1.0",
+  "record_type": "ecosystem_chat_destination_activation_state",
+  "generated_at": "2026-08-08T22:26:22.409057+00:00",
+  "repository": "StegVerse-org/LLM-adapter",
+  "commit_sha": "096ac382e33ebdc4abac35d49290dea8a0f341f6",
+  "event_name": "push",
+  "workflow_run_id": "31281677918",
+  "state": "DESTINATION_ACTIVATION_PENDING_EXTERNAL_EVIDENCE",
+  "manual_user_action_required": false,
+  "gates": {
+    "destination_current_main_validation": {
+      "complete": false,
+      "owner": "StegVerse-org/LLM-adapter",
+      "automation": ".github/workflows/validate.yml",
+      "evidence": {
+        "commit_sha_present": true,
+        "workflow_run_id_present": true,
+        "git_ref": "refs/heads/main",
+        "current_main_context": true,
+        "validation_job_status": "failure",
+        "validation_succeeded": false
+      }
+    },
+    "same_origin_authenticated_deployment": {
+      "complete": false,
+      "owner": "StegVerse-org/LLM-adapter",
+      "automation": "render-production.yaml and deployment platform",
+      "declared_topology_complete": true
+    },
+    "automatic_provider_usage_submission": {
+      "complete": true,
+      "owner": "StegVerse-org/LLM-adapter",
+      "automation": "private Render service binding and llm_adapter/master_records_usage_submission.py"
+    },
+    "retrieval_and_provider_usage_receipts": {
+      "complete": false,
+      "owner": "StegVerse-org/LLM-adapter",
+      "automation": ".github/workflows/ecosystem-chat-live-activation.yml"
+    }
+  },
+  "production_topology": {
+    "gateway_declared": true,
+    "custody_private_service_declared": true,
+    "custody_durable": true,
+    "custody_auth_generated": true,
+    "custody_receipt_key_generated": true,
+    "private_hostport_bound": true,
+    "shared_token_bound": true,
+    "provider_enabled": true,
+    "mutation_disabled": true
+  },
+  "live_receipt": {
+    "present": false,
+    "verified": false,
+    "path": "receipts/ecosystem-chat-live-activation.verified.json"
+  },
+  "authority_boundary": {
+    "deployment_authorized": false,
+    "mutation_authorized": false,
+    "custody_claimed": false,
+    "publication_authorized": false,
+    "execution_authorized": false
+  },
+  "state_sha256": "eb2f29ee7158f9237c53d57720fa5d397ea30ab0651343d87d3ea91606ba7e73"
+}
