@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ecosystem-chat-live-activation-monitor
@@ -30,7 +30,7 @@ jobs:
       - name: Check out adapter
         uses: actions/checkout@v4
         with:
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -63,20 +63,11 @@ jobs:
           print(f"validated monitor heartbeat: {value['semantic_state']}")
           PY
 
-      - name: Persist monitor heartbeat
-        if: github.ref == 'refs/heads/main'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f reports/ecosystem-chat-live-activation-monitor.json
-          if git diff --cached --quiet; then
-            echo "Monitor heartbeat unchanged."
-          else
-            git commit -m "chore: retain Ecosystem Chat monitor heartbeat [skip ci]"
-            git pull --rebase
-            git push
-          fi
-
+      # Heartbeats are intentionally volatile execution evidence. Persisting a new
+      # timestamp/run-id commit every 15 minutes caused the deployment platform to
+      # rebuild current main even when runtime code and semantic activation state
+      # were unchanged. Semantic state continues to be retained by the activation
+      # workflow; every heartbeat remains inspectable as a workflow artifact.
       - name: Upload monitor evidence
         uses: actions/upload-artifact@v4
         with:
@@ -96,5 +87,6 @@ jobs:
           print(f"Blockers: {', '.join(value['semantic_blockers']) or 'none'}")
           print(f"Next machine action: {value['next_machine_action']}")
           print(f"Monitor SHA-256: {value['monitor_sha256']}")
+          print('Persistence: workflow artifact only; semantic state is retained separately')
           print('Authority granted: false')
           PY
