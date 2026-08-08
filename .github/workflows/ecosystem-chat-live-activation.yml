@@ -73,7 +73,6 @@ jobs:
           import hashlib
           import json
           import os
-          from datetime import datetime, timezone
           from pathlib import Path
 
           required = {
@@ -85,10 +84,13 @@ jobs:
           }
           missing = sorted(name for name, value in required.items() if not value.strip())
           ready = not missing
+          # This repository-retained projection is intentionally semantic and stable:
+          # unchanged configuration must produce identical bytes and therefore no
+          # evidence-only commit. Execution time/run identity remains available in the
+          # Actions run and uploaded artifact metadata.
           payload = {
               "schema": "stegverse.ecosystem_chat.authorized_provider_activation.v1",
               "state": "READY_FOR_EXECUTION" if ready else "CONFIGURATION_REQUIRED",
-              "observed_at": datetime.now(timezone.utc).isoformat(),
               "runtime_path": [
                   "governed_provider_response",
                   "provider_usage_persistence",

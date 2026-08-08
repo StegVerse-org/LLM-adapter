@@ -48,6 +48,8 @@ Validation runs on repository events and schedule. Live activation verification 
 
 The monitor heartbeat is deliberately **artifact-only**. A fresh timestamp/run identity is generated and hash-validated on every monitor execution, but that volatile heartbeat is no longer committed to `main`. This prevents every 15-minute observation from becoming a deployment-platform source commit and consuming deployment/build capacity when runtime code and semantic activation state are unchanged.
 
+Provider-configuration readiness is also a stable semantic projection. `receipts/ecosystem-chat-authorized-provider-activation.latest.json` contains configuration booleans, blocker identifiers, runtime-path semantics, and authority boundaries but no wall-clock field. Same-run time and attempt identity remain available in Actions run/artifact metadata. The repository receipt therefore changes only when readiness semantics change instead of creating a deployment-triggering commit every 15 minutes.
+
 ## Durable pending, monitor, and verified evidence
 
 ```text
@@ -56,6 +58,9 @@ reports/ecosystem-chat-live-activation-status.json
 
 reports/ecosystem-chat-live-activation-monitor.json
   volatile, hash-bound proof generated on every monitor execution and retained as a workflow artifact
+
+receipts/ecosystem-chat-authorized-provider-activation.latest.json
+  stable, hash-bound provider/custody configuration readiness projection retained when semantics change
 
 receipts/ecosystem-chat-live-activation.latest.json
   volatile full observation retained as workflow evidence when produced
@@ -93,6 +98,8 @@ scripts/verify_live_ecosystem_chat_activation.py
 scripts/write_live_activation_status.py
 scripts/write_live_activation_monitor_status.py
 tests/test_live_activation_automation_contract.py
+tests/test_live_activation_monitor_no_deploy_churn.py
+tests/test_provider_readiness_stable_projection.py
 ```
 
 The live verifier requires:
@@ -110,7 +117,7 @@ transition reconstructability PASS
 all authority flags false
 ```
 
-The contract tests reject authority escalation, mutable verified-receipt retention, invalid verified state, missing-observation fatal behavior, manual-task reintroduction, custody-secret exposure, loss of the 15-minute cadence, removal of bounded retries, removal of monitor hashing, and removal of self-starting push triggers.
+The contract tests reject authority escalation, mutable verified-receipt retention, invalid verified state, missing-observation fatal behavior, manual-task reintroduction, custody-secret exposure, loss of the 15-minute cadence, removal of bounded retries, removal of monitor hashing, reintroduction of monitor repository writes, and time-driven provider-readiness repository churn.
 
 ## Current evidence posture
 
@@ -124,6 +131,7 @@ bounded cold-start and transient retry policy: INSTALLED
 generated observation canonical validation: INSTALLED
 monitor heartbeat generation and validation: INSTALLED
 monitor heartbeat retention: ARTIFACT_ONLY_BY_DESIGN
+provider readiness persistence: SEMANTIC_CHANGE_ONLY
 semantic status persistence: STATE_CHANGE_ONLY
 seeded semantic pending status: PRESENT
 crash-resilient semantic blocker publication: INSTALLED
@@ -152,7 +160,7 @@ Absent CI, deployment, provider, custody, reconstruction, or downstream evidence
 2. Scheduled validation evaluates current main.
 3. Fifteen-minute verification probes provider, custody, identity, and reconstruction with bounded retries.
 4. Each observation and monitor heartbeat is hash-validated before retention.
-5. Semantic blocker state is committed only when it changes; monitor heartbeat is retained as a workflow artifact on every execution.
+5. Provider readiness and semantic blocker projections are committed only when their semantic content changes; monitor heartbeat is retained as a workflow artifact on every execution.
 6. The first VERIFIED result is committed at the immutable receipt path.
 7. Site imports pending or verified state automatically.
 8. Publisher and both wiki consumers ingest the Site projection automatically.
@@ -185,6 +193,7 @@ custody receipt != execution authority
 reconstruction PASS != execution authority
 workflow artifact != live evidence
 monitor artifact != activation
+provider readiness != provider execution authority
 pending status != activation
 verified receipt != release authority
 terminal monitor != CI success
@@ -197,4 +206,4 @@ No release or tag is authorized until the existing machine gates receive visible
 
 ## Continuation posture
 
-Repository implementation is complete. Runtime activation remains machine-owned by issue #18. Current blockers are real-provider execution authority/configuration, authenticated Master-Records runtime binding for the same execution, provider-usage custody/reconstruction, immutable zero-blocker activation evidence, Site/downstream activation, and sovereign migration. Volatile heartbeat commits are not part of that authority path and are intentionally suppressed to avoid deployment churn.
+Repository implementation is complete. Runtime activation remains machine-owned by issue #18. Current blockers are real-provider execution authority/configuration, authenticated Master-Records runtime binding for the same execution, provider-usage custody/reconstruction, immutable zero-blocker activation evidence, Site/downstream activation, and sovereign migration. Volatile heartbeat commits and time-only provider-readiness commits are not part of that authority path and are intentionally suppressed to preserve deployment capacity for meaningful state transitions.
