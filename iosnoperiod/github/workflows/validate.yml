@@ -86,7 +86,7 @@ jobs:
       - name: Test Master-Records provider usage custody submission
         run: python -m pytest tests/test_master_records_usage_submission.py -v
       - name: Test live activation automation contract
-        run: python -m pytest tests/test_live_activation_automation_contract.py -v
+        run: python -m pytest tests/test_live_activation_automation_contract.py tests/test_live_activation_monitor_no_deploy_churn.py tests/test_provider_readiness_stable_projection.py tests/test_live_activation_status_persistence.py -v
       - name: Test StegVerse node advertisement contract
         run: python -m pytest tests/test_node_advertisement.py -v
       - name: Check immutable verified activation receipt publication
@@ -110,22 +110,23 @@ jobs:
           path: |
             receipts/ecosystem-chat-live-activation.latest.json
             reports/ecosystem-chat-live-activation-status.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
       - name: Retain and persist current activation evidence
         if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         continue-on-error: true
         run: |
-          state="$(python - <<'PY'
+          if [ -f receipts/ecosystem-chat-live-activation.latest.json ]; then
+            state="$(python - <<'PY'
           import json
           from pathlib import Path
           print(json.loads(Path('receipts/ecosystem-chat-live-activation.latest.json').read_text()).get('state', 'PENDING'))
           PY
           )"
-          if [ "$state" = "VERIFIED" ] && [ ! -f receipts/ecosystem-chat-live-activation.verified.json ]; then
-            cp receipts/ecosystem-chat-live-activation.latest.json receipts/ecosystem-chat-live-activation.verified.json
-          fi
-          python - <<'PY'
+            if [ "$state" = "VERIFIED" ] && [ ! -f receipts/ecosystem-chat-live-activation.verified.json ]; then
+              cp receipts/ecosystem-chat-live-activation.latest.json receipts/ecosystem-chat-live-activation.verified.json
+            fi
+            python - <<'PY'
           import json
           from pathlib import Path
           latest = json.loads(Path('receipts/ecosystem-chat-live-activation.latest.json').read_text())
@@ -134,18 +135,19 @@ jobs:
               if verified != latest or verified.get('blockers') != []:
                   raise SystemExit('verified activation receipt retention failed')
           PY
+          else
+            echo "No live observation receipt produced; retaining fail-closed semantic status only."
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            receipts/ecosystem-chat-live-activation.latest.json \
-            reports/ecosystem-chat-live-activation-status.json
+          git add -f reports/ecosystem-chat-live-activation-status.json
           if [ -f receipts/ecosystem-chat-live-activation.verified.json ]; then
             git add receipts/ecosystem-chat-live-activation.verified.json
           fi
           if git diff --cached --quiet; then
             echo "Current activation evidence unchanged."
           else
-            git commit -m "chore: retain validation-owned Ecosystem Chat activation evidence [skip ci]"
+            git commit -m "chore: retain validation-owned Ecosystem Chat activation status [skip ci]"
             git pull --rebase --autostash
             git push
           fi
@@ -202,7 +204,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/ecosystem-chat-destination-activation-state.json
+          git add -f reports/ecosystem-chat-destination-activation-state.json
           if git diff --cached --quiet; then
             echo "Destination activation state unchanged."
           else
