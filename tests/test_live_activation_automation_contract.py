@@ -53,13 +53,12 @@ def test_live_activation_workflow_is_self_starting_scheduled_and_durable() -> No
         "Validate generated live observation",
         "Write stable activation blocker status",
         "Upload current activation evidence",
-        "Persist current activation evidence",
+        "Persist stable activation status",
         "Retain first verified activation receipt",
         "reports/ecosystem-chat-live-activation-status.json",
         "receipts/ecosystem-chat-live-activation.latest.json",
         "receipts/ecosystem-chat-live-activation.verified.json",
         "receipts/ecosystem-chat-authorized-provider-activation.latest.json",
-        "git add receipts/ecosystem-chat-live-activation.latest.json",
         "git add -f reports/ecosystem-chat-live-activation-status.json",
         'if [ "$state" != "VERIFIED" ]',
         "actions/upload-artifact@v4",
@@ -72,6 +71,7 @@ def test_live_activation_workflow_is_self_starting_scheduled_and_durable() -> No
         assert required in source
 
     for prohibited in (
+        "git add receipts/ecosystem-chat-live-activation.latest.json",
         "write_live_activation_monitor_status.py",
         "Write live activation monitor heartbeat",
         "Validate live activation monitor heartbeat",
@@ -84,9 +84,6 @@ def test_live_activation_workflow_is_self_starting_scheduled_and_durable() -> No
     ):
         assert prohibited not in source
 
-    # The workflow may consume only the two server-side credentials required by the
-    # declared runtime path. Endpoint, model, host allowlists, and cost policies remain
-    # non-secret repository variables. Credential values are never written to receipts.
     secret_references = {
         token.split(" }}")[0] + " }}"
         for token in source.split("${{ secrets.")[1:]
@@ -118,6 +115,7 @@ def test_validate_workflow_retains_live_probe_without_secondary_workflow_depende
         "[skip ci]",
     ):
         assert required in source
+    assert "git add receipts/ecosystem-chat-live-activation.latest.json" not in source
     assert "secrets." not in source
 
 
