@@ -140,9 +140,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if [ -f receipts/ecosystem-chat-live-activation.latest.json ]; then
-            git add receipts/ecosystem-chat-live-activation.latest.json
-          fi
           git add -f reports/ecosystem-chat-live-activation-status.json
           if [ -f receipts/ecosystem-chat-live-activation.verified.json ]; then
             git add receipts/ecosystem-chat-live-activation.verified.json
@@ -150,7 +147,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Current activation evidence unchanged."
           else
-            git commit -m "chore: retain validation-owned Ecosystem Chat activation evidence [skip ci]"
+            git commit -m "chore: retain validation-owned Ecosystem Chat activation status [skip ci]"
             git pull --rebase --autostash
             git push
           fi
