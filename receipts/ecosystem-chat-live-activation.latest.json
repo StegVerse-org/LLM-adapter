@@ -1,0 +1,348 @@
+{
+  "authority_granted": false,
+  "blockers": [
+    "gateway_storage_not_durable",
+    "governed_provider_not_enabled",
+    "live_provider_not_used",
+    "local_usage_submission_invalid",
+    "master_records_transition_submission_not_enabled",
+    "provider_usage_authority_escalation",
+    "provider_usage_custody_not_recorded",
+    "provider_usage_reconstructability_not_pass",
+    "transition_custody_not_recorded",
+    "transition_reconstructability_not_pass"
+  ],
+  "evidence": {
+    "chat": {
+      "_http_response": {
+        "final_url": "https://stegverse-ecosystem-chat-gateway.onrender.com/api/ecosystem-chat",
+        "headers": {
+          "content-type": "application/json",
+          "date": "Sat, 08 Aug 2026 22:21:39 GMT",
+          "server": "cloudflare",
+          "x-render-origin-server": "uvicorn"
+        }
+      },
+      "admissibility_result": "ALLOW",
+      "authority": {
+        "bounded_response_generation_allowed": true,
+        "final_response_receipt_is_repository_execution_authority": false,
+        "gateway_receipt_is_final": false,
+        "local_persistence_is_master_records_custody": false,
+        "master_records_installed": false,
+        "native_executor_active": true,
+        "provider_output_is_authority": false,
+        "provider_usage_grants_authority": false,
+        "provider_usage_is_master_records_custody": false,
+        "publication_allowed": false,
+        "repository_mutation_allowed": false,
+        "site_grants_admissibility": false
+      },
+      "commit_time_validity": "VALID",
+      "custody_submission": {
+        "reason": "endpoint_not_enabled",
+        "state": "PENDING",
+        "submitted": false
+      },
+      "event_id": "ecosystem-live-event-e0c474a19c6b4e5fb93ea72aa254238d",
+      "final_receipt": true,
+      "final_receipt_id": "final-response-receipt:sha256:74fc4c8a144de8057a3c261d7cd0b7f685e6e5ae320f1dd19c6774014f4b5646",
+      "interaction_profile": {},
+      "lifecycle_state": "COMPLETED",
+      "master_record_ref": null,
+      "master_record_status": "PENDING",
+      "master_records_usage_submission": null,
+      "next_action": "Inspect lifecycle, provider posture, final response receipt, and custody status; no repository mutation occurred.",
+      "origin_manifest_id": "ecosystem-live-origin-e0c474a19c6b4e5fb93ea72aa254238d",
+      "provider": {
+        "estimated_cost_usd": 0.0,
+        "fallback_required": true,
+        "input_units": 0,
+        "model": "disabled",
+        "output_units": 0,
+        "provider_name": "disabled",
+        "provider_receipt_id": null,
+        "provider_request_id": null,
+        "reason": "provider boundary blocked: provider_not_enabled",
+        "status": "DISABLED",
+        "text": null,
+        "used": false
+      },
+      "provider_usage_submission": null,
+      "receipt_class": "GATEWAY_INTAKE_RECEIPT",
+      "receipt_id": "gateway-receipt:sha256:9273cb11d220745bcefb14450aee04776b43bc8de674ac53cb0ebbb634373008",
+      "reconstruction_status": "PARTIAL",
+      "response": "StegVerse received one AI Entry request and classified it as ecosystem_explanation. This interim backend returns a bounded preview response.",
+      "routed_module": "Site",
+      "run_id": "ecosystem-live-run-e0c474a19c6b4e5fb93ea72aa254238d",
+      "sqlite_persisted": true,
+      "storage_durable_across_restarts": false,
+      "task_status": "completed_bounded_response",
+      "transition_candidate": {
+        "continuity": {
+          "durable_local_persistence": true,
+          "final_receipt_id": "final-response-receipt:sha256:74fc4c8a144de8057a3c261d7cd0b7f685e6e5ae320f1dd19c6774014f4b5646",
+          "local_persistence_is_custody": false,
+          "master_record_ref": null,
+          "master_record_status": "PENDING",
+          "reconstruction_status": "PARTIAL"
+        },
+        "execution": {
+          "action_ref": "action:bounded-chat-response-generation",
+          "resulting_state_ref": "response:sha256:be67a3726cfd5ae0b68e65fe7ef4b2a60c48c08c16d960e42fd62d113de8573c",
+          "verification_ref": "final-response-receipt:sha256:74fc4c8a144de8057a3c261d7cd0b7f685e6e5ae320f1dd19c6774014f4b5646"
+        },
+        "governance": {
+          "admissibility_result": "ALLOW",
+          "commit_time_validity": "VALID",
+          "delegation_refs": [
+            "delegation-receipt:sha256:1c30f5e96478e8e8ddab0e63f9eb48d6625cdbff007c58fd1b6d9f6e2a17c8ee"
+          ],
+          "evidence_refs": [
+            "gateway-receipt:sha256:9273cb11d220745bcefb14450aee04776b43bc8de674ac53cb0ebbb634373008",
+            "provider-status:DISABLED",
+            "bridge-receipt:sha256:ae443b95904f01f3b6aaab376b8d0eb4fa70dc241aeb578d31d90b08f2beba83",
+            "bridge-decision:ALLOW_NEXT_BOUNDARY",
+            "delegation-receipt:sha256:1c30f5e96478e8e8ddab0e63f9eb48d6625cdbff007c58fd1b6d9f6e2a17c8ee",
+            "delegation-decision:ALLOW_DELEGATION",
+            "standing-receipt:sha256:ded14af1140a37b9c47eb96a68b9573a00f278a4dc2bebd7d3c36a044610d558",
+            "standing-decision:ALLOW_BOUNDED_RESPONSE",
+            "executor-activation-receipt:stegverse-ai:example-001"
+          ],
+          "micro_node_manifest_ref": "manifest:ecosystem-chat-bounded-response:v1",
+          "policy_refs": [
+            "policy:ecosystem-chat-bounded-response"
+          ]
+        },
+        "lifecycle_state": "COMPLETED",
+        "origin": {
+          "event_id": "ecosystem-live-event-e0c474a19c6b4e5fb93ea72aa254238d",
+          "observed_at": null,
+          "origin_class": "SITE_INPUT",
+          "origin_manifest_id": "ecosystem-live-origin-e0c474a19c6b4e5fb93ea72aa254238d",
+          "source_ref": "StegVerse-Labs/Site/ecosystem-chat.html"
+        },
+        "projection": {
+          "redaction_class": "PUBLIC_REDACTED",
+          "site_visibility": "SUMMARY",
+          "wiki_visibility": "SUMMARY"
+        },
+        "provider": {
+          "estimated_cost_usd": 0.0,
+          "fallback_required": true,
+          "input_units": 0,
+          "model": "disabled",
+          "output_units": 0,
+          "provider_name": "disabled",
+          "provider_receipt_id": null,
+          "provider_request_id": null,
+          "reason": "provider boundary blocked: provider_not_enabled",
+          "status": "DISABLED",
+          "text": null,
+          "used": false
+        },
+        "record_type": "governed_transition_relationship",
+        "relationships": {
+          "actor_ref": "site-session:ecosystem-live-session-e0c474a19c6b4e5fb93ea72aa254238d",
+          "handoff_ref": "docs/SITE_MIRROR_HANDOFF.md",
+          "next_task_ref": "task:master-records-custody-submission",
+          "parent_transition_id": null,
+          "previous_receipt_id": null,
+          "repository_ref": "StegVerse-Labs/Site",
+          "target_ref": "executor:STEGVERSE_AI_ENTITY",
+          "task_ref": "task:ecosystem-chat:verify_live_activation"
+        },
+        "request": {
+          "message_sha256": "eef371921fcbf7b0059c20987e348bb49f5d078823f302bf77771322dab2d43c",
+          "raw_message_retained": false
+        },
+        "run_id": "ecosystem-live-run-e0c474a19c6b4e5fb93ea72aa254238d",
+        "schema_version": "1.0.0",
+        "transition_id": "ecosystem-live-transition-e0c474a19c6b4e5fb93ea72aa254238d"
+      },
+      "transition_id": "ecosystem-live-transition-e0c474a19c6b4e5fb93ea72aa254238d"
+    },
+    "health": {
+      "_http_response": {
+        "final_url": "https://stegverse-ecosystem-chat-gateway.onrender.com/health",
+        "headers": {
+          "content-type": "application/json",
+          "date": "Sat, 08 Aug 2026 22:21:38 GMT",
+          "server": "cloudflare",
+          "x-render-origin-server": "uvicorn"
+        }
+      },
+      "bounded_response_pipeline": true,
+      "custody_queue": true,
+      "execution_authority": false,
+      "final_response_receipt_authority": true,
+      "governed_provider_enabled": false,
+      "local_persistence_is_master_records_custody": false,
+      "master_records_authority": false,
+      "master_records_submission_enabled": false,
+      "native_executor": "STEGVERSE_AI_ENTITY",
+      "native_executor_status": "ACTIVE",
+      "provider_failure_falls_back": true,
+      "provider_output_is_authority": false,
+      "repository_mutation_authority": false,
+      "schema_version": "1.3.0",
+      "service": "stegverse-ecosystem-chat-gateway",
+      "sqlite_transition_store": true,
+      "status": "ok",
+      "storage_durable_across_restarts": false,
+      "transition_status_lookup": true
+    },
+    "request_attempts": {
+      "chat": 1,
+      "health": 1,
+      "transition": 1
+    },
+    "requested_identity": {
+      "run_id": "ecosystem-live-run-e0c474a19c6b4e5fb93ea72aa254238d",
+      "session_id": "ecosystem-live-session-e0c474a19c6b4e5fb93ea72aa254238d",
+      "transition_id": "ecosystem-live-transition-e0c474a19c6b4e5fb93ea72aa254238d"
+    },
+    "transition": {
+      "_http_response": {
+        "final_url": "https://stegverse-ecosystem-chat-gateway.onrender.com/api/transitions/ecosystem-live-transition-e0c474a19c6b4e5fb93ea72aa254238d",
+        "headers": {
+          "content-type": "application/json",
+          "date": "Sat, 08 Aug 2026 22:21:39 GMT",
+          "server": "cloudflare",
+          "x-render-origin-server": "uvicorn"
+        }
+      },
+      "admissibility_result": "ALLOW",
+      "commit_time_validity": "VALID",
+      "custody_submission": {
+        "attempts": 1,
+        "custody_receipt_id": null,
+        "final_receipt_id": "final-response-receipt:sha256:74fc4c8a144de8057a3c261d7cd0b7f685e6e5ae320f1dd19c6774014f4b5646",
+        "last_error": "Master-Records endpoint is not enabled",
+        "master_record_ref": null,
+        "run_id": "ecosystem-live-run-e0c474a19c6b4e5fb93ea72aa254238d",
+        "state": "PENDING",
+        "transition_id": "ecosystem-live-transition-e0c474a19c6b4e5fb93ea72aa254238d",
+        "updated_at": "2026-08-08T22:21:39.102401+00:00"
+      },
+      "final_receipt_id": "final-response-receipt:sha256:74fc4c8a144de8057a3c261d7cd0b7f685e6e5ae320f1dd19c6774014f4b5646",
+      "lifecycle_state": "COMPLETED",
+      "local_persistence_is_custody": false,
+      "master_record_ref": null,
+      "master_record_status": "PENDING",
+      "provider": {
+        "estimated_cost_usd": 0.0,
+        "fallback_required": true,
+        "input_units": 0,
+        "model": "disabled",
+        "output_units": 0,
+        "provider_name": "disabled",
+        "provider_receipt_id": null,
+        "provider_request_id": null,
+        "reason": "provider boundary blocked: provider_not_enabled",
+        "status": "DISABLED",
+        "text": null,
+        "used": false
+      },
+      "reconstruction_status": "PARTIAL",
+      "relationship": {
+        "continuity": {
+          "durable_local_persistence": true,
+          "final_receipt_id": "final-response-receipt:sha256:74fc4c8a144de8057a3c261d7cd0b7f685e6e5ae320f1dd19c6774014f4b5646",
+          "local_persistence_is_custody": false,
+          "master_record_ref": null,
+          "master_record_status": "PENDING",
+          "reconstruction_status": "PARTIAL"
+        },
+        "execution": {
+          "action_ref": "action:bounded-chat-response-generation",
+          "resulting_state_ref": "response:sha256:be67a3726cfd5ae0b68e65fe7ef4b2a60c48c08c16d960e42fd62d113de8573c",
+          "verification_ref": "final-response-receipt:sha256:74fc4c8a144de8057a3c261d7cd0b7f685e6e5ae320f1dd19c6774014f4b5646"
+        },
+        "governance": {
+          "admissibility_result": "ALLOW",
+          "commit_time_validity": "VALID",
+          "delegation_refs": [
+            "delegation-receipt:sha256:1c30f5e96478e8e8ddab0e63f9eb48d6625cdbff007c58fd1b6d9f6e2a17c8ee"
+          ],
+          "evidence_refs": [
+            "gateway-receipt:sha256:9273cb11d220745bcefb14450aee04776b43bc8de674ac53cb0ebbb634373008",
+            "provider-status:DISABLED",
+            "bridge-receipt:sha256:ae443b95904f01f3b6aaab376b8d0eb4fa70dc241aeb578d31d90b08f2beba83",
+            "bridge-decision:ALLOW_NEXT_BOUNDARY",
+            "delegation-receipt:sha256:1c30f5e96478e8e8ddab0e63f9eb48d6625cdbff007c58fd1b6d9f6e2a17c8ee",
+            "delegation-decision:ALLOW_DELEGATION",
+            "standing-receipt:sha256:ded14af1140a37b9c47eb96a68b9573a00f278a4dc2bebd7d3c36a044610d558",
+            "standing-decision:ALLOW_BOUNDED_RESPONSE",
+            "executor-activation-receipt:stegverse-ai:example-001"
+          ],
+          "micro_node_manifest_ref": "manifest:ecosystem-chat-bounded-response:v1",
+          "policy_refs": [
+            "policy:ecosystem-chat-bounded-response"
+          ]
+        },
+        "lifecycle_state": "COMPLETED",
+        "origin": {
+          "event_id": "ecosystem-live-event-e0c474a19c6b4e5fb93ea72aa254238d",
+          "observed_at": null,
+          "origin_class": "SITE_INPUT",
+          "origin_manifest_id": "ecosystem-live-origin-e0c474a19c6b4e5fb93ea72aa254238d",
+          "source_ref": "StegVerse-Labs/Site/ecosystem-chat.html"
+        },
+        "projection": {
+          "redaction_class": "PUBLIC_REDACTED",
+          "site_visibility": "SUMMARY",
+          "wiki_visibility": "SUMMARY"
+        },
+        "provider": {
+          "estimated_cost_usd": 0.0,
+          "fallback_required": true,
+          "input_units": 0,
+          "model": "disabled",
+          "output_units": 0,
+          "provider_name": "disabled",
+          "provider_receipt_id": null,
+          "provider_request_id": null,
+          "reason": "provider boundary blocked: provider_not_enabled",
+          "status": "DISABLED",
+          "text": null,
+          "used": false
+        },
+        "record_type": "governed_transition_relationship",
+        "relationships": {
+          "actor_ref": "site-session:ecosystem-live-session-e0c474a19c6b4e5fb93ea72aa254238d",
+          "handoff_ref": "docs/SITE_MIRROR_HANDOFF.md",
+          "next_task_ref": "task:master-records-custody-submission",
+          "parent_transition_id": null,
+          "previous_receipt_id": null,
+          "repository_ref": "StegVerse-Labs/Site",
+          "target_ref": "executor:STEGVERSE_AI_ENTITY",
+          "task_ref": "task:ecosystem-chat:verify_live_activation"
+        },
+        "request": {
+          "message_sha256": "eef371921fcbf7b0059c20987e348bb49f5d078823f302bf77771322dab2d43c",
+          "raw_message_retained": false
+        },
+        "run_id": "ecosystem-live-run-e0c474a19c6b4e5fb93ea72aa254238d",
+        "schema_version": "1.0.0",
+        "transition_id": "ecosystem-live-transition-e0c474a19c6b4e5fb93ea72aa254238d"
+      },
+      "run_id": "ecosystem-live-run-e0c474a19c6b4e5fb93ea72aa254238d",
+      "sqlite_persisted": true,
+      "storage_durable_across_restarts": false,
+      "transition_id": "ecosystem-live-transition-e0c474a19c6b4e5fb93ea72aa254238d"
+    }
+  },
+  "gateway_base_url": "https://stegverse-ecosystem-chat-gateway.onrender.com",
+  "observed_at": "2026-08-08T22:21:39.303866+00:00",
+  "publication_authorized": false,
+  "repository_mutation_authorized": false,
+  "result_sha256": "864da2e5133148d4e37dbefc8e1f08334250a519110d786c5e73fe6626c6dea0",
+  "schema": "stegverse.ecosystem_chat.live_activation.v1",
+  "state": "PENDING",
+  "verification_policy": {
+    "attempts_per_request": 5,
+    "retry_delay_seconds": 8.0,
+    "timeout_seconds": 35.0
+  }
+}
