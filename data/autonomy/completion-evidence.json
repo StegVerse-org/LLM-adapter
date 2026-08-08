@@ -5,9 +5,9 @@
   "runtime_observed": false,
   "user_visible_outcome_verified": false,
   "verifier_source": "github-actions",
-  "critical_blockers": 11,
+  "critical_blockers": 10,
   "manual_completion_dependency": false,
-  "verified_at": "2026-08-08T22:22:10.166255Z",
+  "verified_at": "2026-08-08T22:23:41.088970Z",
   "evidence_urls": [
     "https://github.com/StegVerse-org/LLM-adapter/blob/main/reports/ecosystem-chat-live-activation-status.json",
     "https://github.com/StegVerse-org/LLM-adapter/blob/main/receipts/ecosystem-chat-live-activation.verified.json",
@@ -17,7 +17,6 @@
   "missing_gates": [
     "destination_activation_state_missing",
     "durable_storage",
-    "gateway_health_ok",
     "governed_provider_enabled",
     "immutable_verified_activation_receipt_missing",
     "live_activation_not_verified",
@@ -29,7 +28,16 @@
   ],
   "source_state": "PENDING",
   "source_blockers": [
-    "live_activation_observation_not_yet_recorded"
+    "gateway_storage_not_durable",
+    "governed_provider_not_enabled",
+    "live_provider_not_used",
+    "local_usage_submission_invalid",
+    "master_records_transition_submission_not_enabled",
+    "provider_usage_authority_escalation",
+    "provider_usage_custody_not_recorded",
+    "provider_usage_reconstructability_not_pass",
+    "transition_custody_not_recorded",
+    "transition_reconstructability_not_pass"
   ],
   "authority": {
     "projection_is_execution_authority": false,
