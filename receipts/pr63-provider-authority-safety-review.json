@@ -1,0 +1,62 @@
+{
+  "schema": "stegverse.provider_authority_safety_review.v1",
+  "task_id": "LLMA-PR63-SAFETY-REVIEW-017",
+  "source_pr": 63,
+  "canonical_comparison": {
+    "merged_provider_gate_pr": 32,
+    "tvc_issue": "StegVerse-Labs/TVC#6",
+    "live_goal_owner": "StegVerse-org/LLM-adapter#18"
+  },
+  "classification": "SUPERSEDED_BY_CANONICAL_RECEIPT_GATED_AUTHORITY",
+  "constraint_mapping": [
+    {
+      "constraint": "single provider request",
+      "state": "ALREADY_CANONICAL",
+      "evidence": "PR #32 execution workflow sets request quota to one"
+    },
+    {
+      "constraint": "maximum request/run cost USD 0.10",
+      "state": "ALREADY_CANONICAL",
+      "evidence": "PR #32 execution workflow binds daily and per-request cost limit to 0.10"
+    },
+    {
+      "constraint": "genuine provider use plus usage persistence, custody, transition custody, reconstruction PASS",
+      "state": "ALREADY_CANONICAL",
+      "evidence": "PR #32 invokes scripts/verify_authorized_provider_activation.py after authority validation"
+    },
+    {
+      "constraint": "provider output/custody/reconstruction/publication are non-authorizing",
+      "state": "ALREADY_CANONICAL",
+      "evidence": "PR #32 authority receipt and consumption records retain false authority projections"
+    },
+    {
+      "constraint": "secret-free configuration posture",
+      "state": "ALREADY_CANONICAL_AND_STRONGER_UPSTREAM",
+      "evidence": "TVC #6 no-value decision flow keeps secret values outside TVC and the PR #32 authority validator reads only committed public receipt fields"
+    },
+    {
+      "constraint": "workflow_dispatch plus explicit boolean execution switch",
+      "state": "SUPERSEDED_CONFLICT",
+      "evidence": "canonical PR #32 uses an expiring hash-bound APPROVED receipt committed to main as the execution trigger; adding a second independent boolean trigger would create competing authority semantics"
+    },
+    {
+      "constraint": "protected-environment approval required",
+      "state": "NOT_CANONICAL_NOT_REQUIRED_BY_CURRENT_AUTHORITY_MODEL",
+      "evidence": "canonical authority is receipt-gated and upstream TVC context/scope evaluated; protected-environment approval would be an additional human control surface, not the canonical authority source"
+    },
+    {
+      "constraint": "scheduled/pull_request/push/workflow_run execution prohibited",
+      "state": "ALREADY_CANONICAL_IN_EFFECT",
+      "evidence": "provider execution occurs only when the exact authority receipt path is committed on main; ordinary validation workflows do not receive provider permission"
+    }
+  ],
+  "unique_required_constraints_missing_from_canonical": [],
+  "provider_execution_performed": false,
+  "credentials_accessed": false,
+  "render_mutated": false,
+  "site_mutated": false,
+  "master_records_mutated": false,
+  "authority_effect": false,
+  "recommended_disposition": "CLOSE_PR_63_SUPERSEDED",
+  "claim_release_condition": "receipt committed; canonical handoff updated; PR #63 closed as superseded; review issues closed; repository validation observed green"
+}
