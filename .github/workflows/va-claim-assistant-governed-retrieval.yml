@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'va_claim_assistant/**'
+      - 'llm_adapter/steggate_portable_consumer.py'
       - 'contracts/va-service-connection-execution-evidence.schema.json'
       - 'tests/fixtures/va_claim_assistant_source_registry.projection.json'
       - 'tests/fixtures/tvc_va_service_connection_admission.projection.json'
@@ -20,6 +21,7 @@ on:
   pull_request:
     paths:
       - 'va_claim_assistant/**'
+      - 'llm_adapter/steggate_portable_consumer.py'
       - 'contracts/va-service-connection-execution-evidence.schema.json'
       - 'tests/fixtures/va_claim_assistant_source_registry.projection.json'
       - 'tests/fixtures/tvc_va_service_connection_admission.projection.json'
@@ -51,6 +53,11 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install canonical StegCore runtime identity contract
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "git+https://github.com/StegVerse-Labs/StegCore.git@8c484e584d60a3bd2763d6948d0eb3f4afd67e0c"
+
       - name: Execute deterministic route-classifier fixtures
         run: python tests/test_va_claim_assistant_route_classifier.py
 
@@ -66,12 +73,19 @@ jobs:
       - name: Observe TVC-backed service-connection execution
         run: python scripts/observe_va_service_connection_execution.py
 
-      - name: Verify secret-free hash-bound receipts
+      - name: Verify secret-free hash-bound receipts and canonical runtime identity
         run: |
           python - <<'PY'
           import hashlib
           import json
           from pathlib import Path
+
+          EXPECTED_IDENTITY = {
+              'contract_version': 'stegverse.steggate.runtime-identity.v1',
+              'runtime_identity': 'stegverse:steggate:canonical:three-layer:v1',
+              'canonical_owner': 'StegVerse-Labs/StegCore',
+              'canonical_admissibility_runtime': 'stegcore.three_layer.evaluate_three_layer',
+          }
 
           def load_and_verify(path):
               value = json.loads(Path(path).read_text())
@@ -130,8 +144,14 @@ jobs:
           assert dispatch['activation_granted'] is False
 
           execution = load_and_verify('receipts/va-claim-assistant-service-connection-execution-readiness.json')
+          assert execution['schema_version'] == '1.1.0'
           assert execution['state'] in {'BLOCKED', 'REVIEW_REQUIRED', 'COMPLETE'}
           assert execution['route'] == 'service_connection'
+          identity = execution['steggate_runtime_identity']
+          for key, value in EXPECTED_IDENTITY.items():
+              assert identity[key] == value
+          assert identity['transport_identity_authoritative'] is False
+          assert identity['application_specific_policy_authority'] is False
           assert execution['tvc_admission']['receipt_hash'] == 'aec5c2fa8c2c6b73e6dd9dddbafa39314a30bd0ccf19bb881349be2d3e9724f8'
           assert execution['tvc_admission']['answer_receipt_hash'] == 'bd1f6c3e751b1adf2345383f724f133c321e0e42096b4556f682837caf73ee29'
           assert execution['tvc_admission']['dispatch_receipt_hash'] == '55419dc015db717f10914c86286b3222493753545f03fb4bd675a7dd2db4bd4e'
@@ -143,7 +163,7 @@ jobs:
           elif execution['state'] == 'COMPLETE':
               assert execution['provider_execution_observed'] is True
               assert execution['custody_state'] == 'READY_FOR_MASTER_RECORDS'
-          print(f"VA governed route and execution observer validation: {execution['state']}")
+          print(f"VA governed route/runtime-identity/execution observer validation: {execution['state']}")
           PY
 
       - name: Persist receipts
