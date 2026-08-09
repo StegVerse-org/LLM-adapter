@@ -1,0 +1,15 @@
+{
+  "schema_version":"stegverse.work-claim.v1",
+  "task_id":"LLMA-CANONICAL-LOCAL-MODEL-BINDING-018",
+  "originating_goal":"Bind the already-canonical StegVerse-002/micro-node-runtime local model into StegVerseLocalHTTPProviderClient and prove real request/usage compatibility without creating a competing model authority.",
+  "repository":"StegVerse-org/LLM-adapter",
+  "branch":"main",
+  "state":"CLAIMED_FOR_INTEGRATION",
+  "claimant":"current-session-canonical-local-model-binding",
+  "claim_created_at":"2026-08-09T18:25:00-05:00",
+  "release_condition":"cross-repository hosted integration run succeeds with retained receipt/artifact or transfers an exact blocker",
+  "canonical_model_owner":"StegVerse-002/micro-node-runtime#22",
+  "transport_owner":"StegVerse-org/LLM-adapter#18",
+  "collision_boundaries":["do not duplicate the canonical local model","do not treat CI as sovereign-node activation","do not move StegGate or Master Records authority"],
+  "next_task_after_release":"execute the same proven binding on a declared StegVerse-owned/federated carrier and advance same-execution custody/reconstruction"
+}
