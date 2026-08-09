@@ -10,13 +10,17 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from llm_adapter.steggate_portable_consumer import canonical_runtime_identity
 
-ROOT = Path(__file__).resolve().parents[1]
 ADMISSION_PATH = ROOT / "tests/fixtures/tvc_va_service_connection_admission.projection.json"
 EVIDENCE_PATH = ROOT / "receipts/va-claim-assistant-service-connection-execution.json"
 READINESS_PATH = ROOT / "receipts/va-claim-assistant-service-connection-execution-readiness.json"
