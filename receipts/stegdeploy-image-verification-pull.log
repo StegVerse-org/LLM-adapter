@@ -1,54 +1,55 @@
 main: Pulling from stegverse-org/llm-adapter
-062e450697fa: Pulling fs layer
-98db2485a0d0: Pulling fs layer
-48347b15c85f: Pulling fs layer
-fd079632edc0: Pulling fs layer
-b9661391f380: Pulling fs layer
-7f48c43ce4ac: Pulling fs layer
-95b845224c95: Pulling fs layer
-501d542b3ed4: Pulling fs layer
-2190bb63ddff: Pulling fs layer
-7b062dddc01d: Pulling fs layer
-a5e795f9d8e0: Pulling fs layer
-95b845224c95: Waiting
-7b062dddc01d: Waiting
-a5e795f9d8e0: Waiting
-501d542b3ed4: Waiting
-2190bb63ddff: Waiting
-b9661391f380: Waiting
-fd079632edc0: Waiting
-7f48c43ce4ac: Waiting
-98db2485a0d0: Verifying Checksum
-98db2485a0d0: Download complete
-48347b15c85f: Verifying Checksum
-48347b15c85f: Download complete
-062e450697fa: Verifying Checksum
-062e450697fa: Download complete
-fd079632edc0: Download complete
-b9661391f380: Download complete
-7f48c43ce4ac: Verifying Checksum
-7f48c43ce4ac: Download complete
-95b845224c95: Verifying Checksum
-95b845224c95: Download complete
-062e450697fa: Pull complete
-501d542b3ed4: Verifying Checksum
-501d542b3ed4: Download complete
-7b062dddc01d: Verifying Checksum
-7b062dddc01d: Download complete
-2190bb63ddff: Verifying Checksum
-2190bb63ddff: Download complete
-a5e795f9d8e0: Verifying Checksum
-a5e795f9d8e0: Download complete
-98db2485a0d0: Pull complete
-48347b15c85f: Pull complete
-fd079632edc0: Pull complete
-b9661391f380: Pull complete
-7f48c43ce4ac: Pull complete
-95b845224c95: Pull complete
-501d542b3ed4: Pull complete
-2190bb63ddff: Pull complete
-7b062dddc01d: Pull complete
-a5e795f9d8e0: Pull complete
-Digest: sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901
+26c307b5e35a: Pulling fs layer
+5a31db4cd478: Pulling fs layer
+c85ad0bcaca8: Pulling fs layer
+b3c7a9bdb4f2: Pulling fs layer
+a809cea7b7f0: Pulling fs layer
+aaac2158b193: Pulling fs layer
+72fd451fa2ff: Pulling fs layer
+e5eab73f9435: Pulling fs layer
+ba48c7512ae4: Pulling fs layer
+ec8bad5f97de: Pulling fs layer
+a9383422ae72: Pulling fs layer
+b3c7a9bdb4f2: Waiting
+a809cea7b7f0: Waiting
+e5eab73f9435: Waiting
+ba48c7512ae4: Waiting
+ec8bad5f97de: Waiting
+aaac2158b193: Waiting
+a9383422ae72: Waiting
+72fd451fa2ff: Waiting
+5a31db4cd478: Verifying Checksum
+5a31db4cd478: Download complete
+c85ad0bcaca8: Verifying Checksum
+c85ad0bcaca8: Download complete
+26c307b5e35a: Verifying Checksum
+26c307b5e35a: Download complete
+b3c7a9bdb4f2: Verifying Checksum
+b3c7a9bdb4f2: Download complete
+a809cea7b7f0: Download complete
+aaac2158b193: Verifying Checksum
+aaac2158b193: Download complete
+72fd451fa2ff: Verifying Checksum
+72fd451fa2ff: Download complete
+e5eab73f9435: Verifying Checksum
+e5eab73f9435: Download complete
+ec8bad5f97de: Verifying Checksum
+ec8bad5f97de: Download complete
+a9383422ae72: Verifying Checksum
+a9383422ae72: Download complete
+ba48c7512ae4: Verifying Checksum
+ba48c7512ae4: Download complete
+26c307b5e35a: Pull complete
+5a31db4cd478: Pull complete
+c85ad0bcaca8: Pull complete
+b3c7a9bdb4f2: Pull complete
+a809cea7b7f0: Pull complete
+aaac2158b193: Pull complete
+72fd451fa2ff: Pull complete
+e5eab73f9435: Pull complete
+ba48c7512ae4: Pull complete
+ec8bad5f97de: Pull complete
+a9383422ae72: Pull complete
+Digest: sha256:50553caf06777a48005a28f591fa1f03bc42d886053f89fd8d1758b3f76c0ae0
 Status: Downloaded newer image for ghcr.io/stegverse-org/llm-adapter:main
 ghcr.io/stegverse-org/llm-adapter:main
