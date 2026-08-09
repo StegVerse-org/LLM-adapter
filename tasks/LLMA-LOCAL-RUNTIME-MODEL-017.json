@@ -1,25 +1,31 @@
 {
   "schema_version": "stegverse.work-claim.v1",
   "task_id": "LLMA-LOCAL-RUNTIME-MODEL-017",
-  "originating_goal": "Remove the descriptive select-a-local-model/runtime step by installing actual local runtime discovery, launch, inference, and proof; formally develop a StegVerse-owned local model.",
+  "originating_goal": "Remove the descriptive select-a-local-model/runtime step and formally develop a StegVerse local model/runtime path.",
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "main",
-  "state": "RELEASED_COMPLETE",
+  "state": "SUPERSEDED",
   "claimant": "current-session-local-runtime-model",
-  "role": "implementation-and-validation",
-  "claim_created_at": "2026-08-09T18:17:00-05:00",
   "released_at": "2026-08-09T18:24:03-05:00",
-  "release_reason": "Hosted proof run completed successfully with model reproducibility, automatic loopback launch/discovery, real repository-local inference, hash-bound receipt persistence, and retained artifact.",
-  "evidence": {
+  "superseded_at": "2026-08-09T18:27:00-05:00",
+  "superseded_by": "StegVerse-002/micro-node-runtime#22 + docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md",
+  "reason": "Broader canonical handoff inspection proved that SOVEREIGN-LOCAL-MODEL-001 had already completed and released the authoritative local model/runtime implementation before this adapter-local implementation began. This task must not create a competing model authority.",
+  "noncanonical_validation_evidence": {
     "workflow_run": 31341784892,
     "workflow_job": 93316662476,
     "artifact_id": 9046045319,
     "artifact_digest": "sha256:d6221913fb1560c6cc0729f61aa568cb59bda016cbdd2878f6e951c6231399bf",
     "receipt": "receipts/local-runtime-model-proof.latest.json",
-    "receipt_hash": "f078d8507cf3ef5d1d5a36474b3f93ad73f3435ca55f51bab0545f2e3c6935ca",
-    "model_id": "stegverse-local-reference-v1",
-    "weights_sha256": "b764e082c90e2c40998faf51e2bb3f616b5fad72dfd77735a2e86a7d2798fe4f"
+    "role": "adapter-local compatibility fixture only; not product canonical"
   },
-  "collision_boundaries_preserved": true,
-  "next_task_after_release": "StegVerse-org/LLM-adapter#18 binds stegverse.local-runtime.v1 into Ecosystem Chat governed provider execution while canonical StegGate remains the admissibility authority and Master Records remains custody owner."
+  "canonical_model_evidence": {
+    "repository": "StegVerse-002/micro-node-runtime",
+    "goal": "SOVEREIGN-LOCAL-MODEL-001",
+    "model": "stegverse-reference-lm-v1",
+    "validated_code_commit": "395d4013d1354c07bc3cf66c44f4f26f856c75fc",
+    "workflow_run": 31339534741,
+    "artifact_id": 9045384610
+  },
+  "merged_into": ["StegVerse-002/micro-node-runtime#22","StegVerse-002/micro-node-runtime#16","StegVerse-org/LLM-adapter#18"],
+  "next_task": "LLMA-CANONICAL-LOCAL-MODEL-BINDING-018"
 }
