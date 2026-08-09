@@ -1,0 +1,12 @@
+{
+  "schema_version": "MATH-SOLVER-RUNTIME-CLAIM-v1",
+  "task_id": "MATH-SOLVER-STEGGATE-RUNTIME-001",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "recorded_at": "2026-08-08T21:15:00-05:00",
+  "owner": "StegVerse-org/LLM-adapter",
+  "canonical_site_issue": "StegVerse-Labs/Site#240",
+  "canonical_parent_goal": "StegVerse-Labs/Site#239",
+  "collision_boundary": "No parallel StegGate evaluator; canonical StegCore only.",
+  "release_condition": "CI PASS, hosted route observation, Site binding, replay verification",
+  "authority_effect": false
+}
