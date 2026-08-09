@@ -5,11 +5,12 @@
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "feat/sovereign-local-model-binding",
   "canonical_issue": 18,
-  "state": "CLAIMED_FOR_VALIDATION",
+  "state": "VALIDATED_PENDING_MERGE",
   "claimant": "sovereign-local-model transport/evidence adapter lane",
   "role": "transport-and-evidence-adapter",
   "claim_created_at": "2026-08-09T23:17:00Z",
-  "claim_expiration_or_release_condition": "Release after PR #134 merges with hosted validation proving private-provider response metadata preservation, model/proof hash binding, exact MEASURED usage emission, and fail-closed Master Records behavior; then merge all remaining production-binding responsibility into LLMA-CANONICAL-LOCAL-MODEL-BINDING-018 and SHWP-ECOSYSTEM-CHAT-INFERENCE-001.",
+  "validated_at": "2026-08-09T23:37:46Z",
+  "claim_expiration_or_release_condition": "Release after PR #134 merges and merged-main validation confirms the same transport/evidence predicates; then merge all remaining production-binding responsibility into LLMA-CANONICAL-LOCAL-MODEL-BINDING-018 and SHWP-ECOSYSTEM-CHAT-INFERENCE-001.",
   "claimed_paths": [
     "llm_adapter/http_provider_clients.py",
     "llm_adapter/sovereign_local_model_binding.py",
@@ -18,6 +19,7 @@
     "scripts/prove_sovereign_local_model_binding.py",
     "scripts/check_ecosystem_chat_sovereign_orchestration_state.py",
     ".github/workflows/sovereign-local-model-binding.yml",
+    "LLM_ADAPTER_MIRROR_HANDOFF.md",
     "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
     "data/ecosystem-chat-sovereign-orchestration-state.json",
     "receipts/sovereign-local-model-binding.latest.json",
@@ -30,6 +32,15 @@
     "data/llm-adapter-orchestration-state.json",
     "receipts/local-runtime-model-proof.latest.json"
   ],
+  "validation_evidence": {
+    "workflow_run": 31342346776,
+    "workflow_job": 93318086281,
+    "conclusion": "SUCCESS",
+    "artifact_id": 9046204637,
+    "artifact_digest": "sha256:e368a564bfdd07d62d6297461de20f7e9771a41a990093232e550451ce413f2d",
+    "validated_head": "0be9c99e2e346ca701481e369c07ac3a5dcf7bba",
+    "receipt": "receipts/sovereign-local-model-binding.latest.json"
+  },
   "canonical_binding": {
     "task_id": "LLMA-CANONICAL-LOCAL-MODEL-BINDING-018",
     "state": "BLOCKED",
@@ -43,8 +54,7 @@
     "adapter_local_task": "LLMA-LOCAL-RUNTIME-MODEL-017",
     "adapter_local_state": "SUPERSEDED",
     "adapter_local_noncanonical_validation_run": 31341784892,
-    "adapter_local_noncanonical_artifact_id": 9046045319,
-    "adapter_local_receipt": "receipts/local-runtime-model-proof.latest.json"
+    "adapter_local_noncanonical_artifact_id": 9046045319
   },
   "collision_boundaries": [
     "019 does not satisfy or replace canonical production binding 018",
@@ -56,17 +66,6 @@
     "no production-scale LLM claim from either reference model",
     "no VERIFIED product activation without same-execution provider-usage and transition reconstruction PASS",
     "legacy data/llm-adapter-orchestration-state.json remains the immutable sequence-0003 historical record"
-  ],
-  "expected_evidence": [
-    "real adapter-local compatibility subprocess crosses the private provider seam",
-    "model hash bound across compatibility proof and response",
-    "MEASURED prompt/completion/total token metrics",
-    "MEASURED latency metric",
-    "Master Records NOT_CONFIGURED or PENDING remains incomplete rather than success",
-    "canonical micro-node owner and blocked binding 018 remain explicit",
-    "current sovereign orchestration state validation",
-    "hosted PR validation",
-    "merged main validation"
   ],
   "next_task_after_release": "MERGED INTO: tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json + StegVerse-Labs/.github#60; those owners execute the canonical micro-node endpoint on a sovereign carrier, then master-records/orchestration must record same-execution provider-usage and transition reconstruction PASS before Site/downstream activation."
 }
