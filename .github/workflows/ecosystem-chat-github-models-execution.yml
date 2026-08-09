@@ -60,6 +60,61 @@ jobs:
             exit 1
           fi
 
+      - name: Check out canonical Master-Records custody service
+        uses: actions/checkout@v4
+        with:
+          repository: master-records/orchestration
+          ref: main
+          path: master-records-source
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install canonical service dependencies
+        run: |
+          python -m pip install -e '.[service]'
+          python -m pip install -r master-records-source/requirements-service.txt
+
+      - name: Prepare run-scoped custody credentials
+        run: |
+          master_records_auth_token="$(openssl rand -hex 32)"
+          master_records_receipt_key="$(openssl rand -hex 32)"
+          echo "::add-mask::$master_records_auth_token"
+          echo "::add-mask::$master_records_receipt_key"
+          echo "MASTER_RECORDS_AUTH_TOKEN=$master_records_auth_token" >> "$GITHUB_ENV"
+          echo "MASTER_RECORDS_RECEIPT_KEY=$master_records_receipt_key" >> "$GITHUB_ENV"
+
+      - name: Start owned authenticated custody service
+        env:
+          MASTER_RECORDS_DB: ${{ runner.temp }}/github-models-master-records.db
+          MASTER_RECORDS_STORAGE_DURABLE_ACROSS_RESTARTS: 'true'
+        run: |
+          python -m uvicorn services.master_records_custody_api:app --app-dir master-records-source --host 127.0.0.1 --port 8021 > master-records-runtime.log 2>&1 &
+          echo $! > master-records-runtime.pid
+
+      - name: Verify owned custody service health
+        run: |
+          python - <<'PY'
+          import time
+          import urllib.error
+          import urllib.request
+
+          last_error = None
+          for _ in range(20):
+              try:
+                  with urllib.request.urlopen('http://127.0.0.1:8021/health', timeout=2) as response:
+                      if response.status == 200:
+                          print('Owned Master-Records custody service is healthy.')
+                          raise SystemExit(0)
+              except (OSError, urllib.error.URLError) as exc:
+                  last_error = exc
+              time.sleep(0.5)
+          raise SystemExit(f'owned_master_records_custody_unavailable:{last_error}')
+          PY
+
       - name: Consume authority before provider execution
         env:
           AUTHORITY_SHA256: ${{ needs.validate-authority.outputs.authority_sha256 }}
@@ -98,35 +153,7 @@ jobs:
           git pull --rebase
           git push
 
-      - name: Require existing Master-Records authorization
-        env:
-          MASTER_RECORDS_ENDPOINT: ${{ vars.STEGVERSE_MASTER_RECORDS_ENDPOINT }}
-          MASTER_RECORDS_TOKEN: ${{ secrets.STEGVERSE_MASTER_RECORDS_TOKEN }}
-          MASTER_RECORDS_ALLOWED_HOSTS: ${{ vars.STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS }}
-        run: |
-          python - <<'PY'
-          import os
-          missing = [
-              name for name in (
-                  'MASTER_RECORDS_ENDPOINT',
-                  'MASTER_RECORDS_TOKEN',
-                  'MASTER_RECORDS_ALLOWED_HOSTS',
-              ) if not os.getenv(name, '').strip()
-          ]
-          if missing:
-              raise SystemExit('authorized_configuration_missing:' + ','.join(missing))
-          print('Master-Records authorization bindings are present.')
-          PY
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install canonical service dependencies
-        run: python -m pip install -e '.[service]'
-
-      - name: Start bounded GitHub Models provider and custody runtime
+      - name: Start bounded GitHub Models provider with owned custody binding
         env:
           STEGVERSE_PROVIDER_ENABLED: 'true'
           STEGVERSE_PROVIDER_PROTOCOL: ${{ needs.validate-authority.outputs.protocol }}
@@ -138,26 +165,30 @@ jobs:
           STEGVERSE_PROVIDER_DAILY_REQUEST_LIMIT: '1'
           STEGVERSE_PROVIDER_DAILY_COST_LIMIT_USD: '0.10'
           STEGVERSE_PROVIDER_MAX_REQUEST_COST_USD: '0.10'
-          STEGVERSE_MASTER_RECORDS_ENDPOINT: ${{ vars.STEGVERSE_MASTER_RECORDS_ENDPOINT }}
-          STEGVERSE_MASTER_RECORDS_TOKEN: ${{ secrets.STEGVERSE_MASTER_RECORDS_TOKEN }}
-          STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS: ${{ vars.STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS }}
+          STEGVERSE_MASTER_RECORDS_HOSTPORT: 127.0.0.1:8021
+          STEGVERSE_ALLOW_PRIVATE_MASTER_RECORDS_HTTP: 'true'
+          STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS: 127.0.0.1
           STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: 'true'
           STEGVERSE_EXTERNAL_MUTATION_ENABLED: 'false'
           STEGVERSE_TRANSITION_DB: ${{ runner.temp }}/github-models-transition.db
           STEGVERSE_USAGE_SESSION_DB: ${{ runner.temp }}/github-models-usage.db
           STEGVERSE_EXTERNAL_REVIEW_DB: ${{ runner.temp }}/github-models-review.db
         run: |
+          export STEGVERSE_MASTER_RECORDS_TOKEN="$MASTER_RECORDS_AUTH_TOKEN"
           python -m uvicorn llm_adapter.combined_gateway:app --host 127.0.0.1 --port 8110 > github-models-runtime.log 2>&1 &
           echo $! > github-models-runtime.pid
 
       - name: Execute provider, usage, custody, and reconstruction path
         run: python scripts/verify_authorized_provider_activation.py
 
-      - name: Stop bounded provider runtime
+      - name: Stop bounded provider and custody runtimes
         if: always()
         run: |
           if [ -f github-models-runtime.pid ]; then
             kill "$(cat github-models-runtime.pid)" 2>/dev/null || true
+          fi
+          if [ -f master-records-runtime.pid ]; then
+            kill "$(cat master-records-runtime.pid)" 2>/dev/null || true
           fi
 
       - name: Upload bounded execution evidence
@@ -170,6 +201,7 @@ jobs:
             receipts/provider-execution-authority.github-models.consumed.json
             receipts/ecosystem-chat-authorized-provider-activation.latest.json
             github-models-runtime.log
+            master-records-runtime.log
           if-no-files-found: warn
           retention-days: 30
 
