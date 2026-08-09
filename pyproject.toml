@@ -40,7 +40,7 @@ service = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "python-multipart>=0.0.9",
-    "stegcore @ git+https://github.com/StegVerse-Labs/StegCore.git@819884022b32e283ac36eddbab97a2b9ecebc874",
+    "stegcore @ git+https://github.com/StegVerse-Labs/StegCore.git@8c484e584d60a3bd2763d6948d0eb3f4afd67e0c",
 ]
 
 [project.scripts]
