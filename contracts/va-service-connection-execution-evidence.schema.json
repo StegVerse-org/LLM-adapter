@@ -12,6 +12,7 @@
     "tvc_admission_receipt_hash",
     "answer_receipt_hash",
     "dispatch_receipt_hash",
+    "steggate_runtime_identity",
     "provider_execution",
     "source_domains_used",
     "execution_started_at",
@@ -23,7 +24,7 @@
     "receipt_hash"
   ],
   "properties": {
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"const": "1.1.0"},
     "execution_id": {"type": "string", "minLength": 1},
     "state": {"const": "EXECUTED"},
     "route": {"const": "service_connection"},
@@ -31,6 +32,26 @@
     "tvc_admission_receipt_hash": {"const": "aec5c2fa8c2c6b73e6dd9dddbafa39314a30bd0ccf19bb881349be2d3e9724f8"},
     "answer_receipt_hash": {"const": "bd1f6c3e751b1adf2345383f724f133c321e0e42096b4556f682837caf73ee29"},
     "dispatch_receipt_hash": {"const": "55419dc015db717f10914c86286b3222493753545f03fb4bd675a7dd2db4bd4e"},
+    "steggate_runtime_identity": {
+      "type": "object",
+      "required": [
+        "contract_version",
+        "runtime_identity",
+        "canonical_owner",
+        "canonical_admissibility_runtime",
+        "transport_identity_authoritative",
+        "application_specific_policy_authority"
+      ],
+      "properties": {
+        "contract_version": {"const": "stegverse.steggate.runtime-identity.v1"},
+        "runtime_identity": {"const": "stegverse:steggate:canonical:three-layer:v1"},
+        "canonical_owner": {"const": "StegVerse-Labs/StegCore"},
+        "canonical_admissibility_runtime": {"const": "stegcore.three_layer.evaluate_three_layer"},
+        "transport_identity_authoritative": {"const": false},
+        "application_specific_policy_authority": {"const": false}
+      },
+      "additionalProperties": true
+    },
     "provider_execution": {
       "type": "object",
       "required": ["provider_used", "provider_class", "model_class", "credential_source", "credential_value_present"],
