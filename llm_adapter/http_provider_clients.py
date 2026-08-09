@@ -46,6 +46,10 @@ class StegVerseLocalHTTPProviderClient:
     provider key, hosted model API, or public provider endpoint is accepted.
     This class does not install or authorize model weights; it only removes the
     external execution platform from the adapter/provider seam.
+
+    Exact usage/model evidence returned by a sovereign runtime is retained in
+    response metadata so the canonical provider-usage and Master Records paths
+    can consume measured evidence without re-estimating it.
     """
 
     base_url: str = "http://127.0.0.1:11434/v1/chat/completions"
@@ -72,6 +76,8 @@ class StegVerseLocalHTTPProviderClient:
         response.raise_for_status()
         body = response.json()
         output = body["choices"][0]["message"]["content"]
+        usage = body.get("usage") if isinstance(body.get("usage"), dict) else {}
+        stegverse = body.get("stegverse") if isinstance(body.get("stegverse"), dict) else {}
         return ProviderResponse(
             provider=request.provider,
             model=request.model,
@@ -84,6 +90,12 @@ class StegVerseLocalHTTPProviderClient:
                 "provider_credential_required": False,
                 "response_id": body.get("id", "unresolved"),
                 "finish_reason": body.get("choices", [{}])[0].get("finish_reason", "unresolved"),
+                "usage": usage,
+                "runtime_model": body.get("model", request.model),
+                "model_hash": stegverse.get("model_hash"),
+                "training": stegverse.get("training"),
+                "third_party_inference_required": stegverse.get("third_party_inference_required", False),
+                "authority_effect": stegverse.get("authority_effect", "NONE"),
             },
         )
 

@@ -137,28 +137,88 @@ def ensure_local_runtime() -> tuple[dict[str, Any], LaunchedRuntime | None]:
 def _serve(port: int) -> None:
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     manifest, _ = load_model()
+
     class Handler(BaseHTTPRequestHandler):
         def _send(self, code: int, value: dict[str, Any]) -> None:
             raw = json.dumps(value, sort_keys=True).encode()
-            self.send_response(code); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(raw))); self.end_headers(); self.wfile.write(raw)
-        def log_message(self, *_: Any) -> None: return
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            self.wfile.write(raw)
+
+        def log_message(self, *_: Any) -> None:
+            return
+
         def do_GET(self) -> None:
-            if self.path == "/healthz": self._send(200, {"status":"OK","local":True,"authority_attached":False}); return
-            if self.path == "/v1/runtime-identity": self._send(200, {"protocol":"stegverse.local-runtime.v1","runtime":"repository-owned-python-loopback","model_id":manifest["model_id"],"weights_sha256":manifest["weights_sha256"],"network_required":False,"authority_attached":False}); return
-            if self.path == "/v1/models": self._send(200, {"models":[manifest]}); return
-            self._send(404, {"error":"not_found"})
+            if self.path in {"/health", "/healthz"}:
+                self._send(200, {"status": "OK", "state": "READY", "local": True, "authority_attached": False, "model": manifest["model_id"], "model_hash": manifest["weights_sha256"], "private_endpoint_only": True, "third_party_inference_required": False})
+                return
+            if self.path == "/v1/runtime-identity":
+                self._send(200, {"protocol": "stegverse.local-runtime.v1", "runtime": "repository-owned-python-loopback", "model_id": manifest["model_id"], "weights_sha256": manifest["weights_sha256"], "network_required": False, "authority_attached": False})
+                return
+            if self.path == "/v1/models":
+                self._send(200, {"object": "list", "data": [{"id": manifest["model_id"], "object": "model", "owned_by": "StegVerse"}], "models": [manifest]})
+                return
+            self._send(404, {"error": "not_found"})
+
         def do_POST(self) -> None:
-            if self.path != "/v1/completions": self._send(404, {"error":"not_found"}); return
-            length = int(self.headers.get("Content-Length", "0")); payload = json.loads(self.rfile.read(length) or b"{}")
-            prompt = payload.get("prompt")
-            if not isinstance(prompt, str) or not prompt.strip(): self._send(400, {"error":"prompt_required"}); return
-            self._send(200, complete(prompt, max_tokens=min(int(payload.get("max_tokens",24)),64)))
+            length = int(self.headers.get("Content-Length", "0"))
+            payload = json.loads(self.rfile.read(length) or b"{}")
+            if self.path == "/v1/completions":
+                prompt = payload.get("prompt")
+                if not isinstance(prompt, str) or not prompt.strip():
+                    self._send(400, {"error": "prompt_required"})
+                    return
+                self._send(200, complete(prompt, max_tokens=min(int(payload.get("max_tokens", 24)), 64)))
+                return
+            if self.path != "/v1/chat/completions":
+                self._send(404, {"error": "not_found"})
+                return
+            messages = payload.get("messages") or []
+            prompt = "\n".join(str(item.get("content", "")) for item in messages if isinstance(item, dict))
+            if not prompt.strip():
+                self._send(400, {"error": "messages_must_contain_content"})
+                return
+            started = time.perf_counter()
+            result = complete(prompt, max_tokens=min(int(payload.get("max_tokens", 24)), 64))
+            latency_ms = round((time.perf_counter() - started) * 1000, 4)
+            prompt_tokens = len(TOKEN_RE.findall(prompt))
+            completion_tokens = len(TOKEN_RE.findall(result["output"]))
+            usage = {
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "total_tokens": prompt_tokens + completion_tokens,
+                "latency_ms": latency_ms,
+            }
+            self._send(200, {
+                "id": "chatcmpl-" + result["receipt_hash"][:20],
+                "object": "chat.completion",
+                "created": int(time.time()),
+                "model": manifest["model_id"],
+                "choices": [{"index": 0, "message": {"role": "assistant", "content": result["output"]}, "finish_reason": "stop"}],
+                "usage": usage,
+                "stegverse": {
+                    "protocol": "stegverse.local-runtime.v1",
+                    "model_hash": manifest["weights_sha256"],
+                    "runtime_receipt_hash": result["receipt_hash"],
+                    "training": {"external_training_service_required": False, "repository_local_weights": True},
+                    "third_party_inference_required": False,
+                    "authority_effect": "NONE",
+                },
+            })
+
     ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
 
 
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
-    if len(args) == 2 and args[0] == "serve": _serve(int(args[1])); return 0
-    print(json.dumps(complete("governed inference"), sort_keys=True)); return 0
+    if len(args) == 2 and args[0] == "serve":
+        _serve(int(args[1]))
+        return 0
+    print(json.dumps(complete("governed inference"), sort_keys=True))
+    return 0
 
-if __name__ == "__main__": raise SystemExit(main())
+
+if __name__ == "__main__":
+    raise SystemExit(main())
