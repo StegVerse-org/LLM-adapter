@@ -1,0 +1,16 @@
+{
+  "schema_version": "stegverse.work-claim.v1",
+  "task_id": "LLMA-LOCAL-RUNTIME-MODEL-017",
+  "originating_goal": "Remove the descriptive select-a-local-model/runtime step by installing actual local runtime discovery, launch, inference, and proof; formally develop a StegVerse-owned local model.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "main",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claimant": "current-session-local-runtime-model",
+  "role": "implementation-and-validation",
+  "claimed_paths": ["llm_adapter/local_model_runtime.py","models/stegverse-local-reference-v1/**","scripts/build_local_reference_model.py","scripts/prove_local_runtime_model.py","tests/test_local_runtime_model.py",".github/workflows/local-runtime-model-proof.yml","receipts/local-runtime-model-proof.latest.json","docs/LOCAL_RUNTIME_MODEL_MIRROR_HANDOFF.md"],
+  "claim_created_at": "2026-08-09T18:17:00-05:00",
+  "release_condition": "implementation committed and hosted proof run succeeds with retained artifact and receipt, or claim is transferred with an exact blocker",
+  "collision_boundaries": ["do not replace canonical StegGate","do not modify HIL upload-owned Site paths","do not make an external provider or hosting vendor authoritative","do not describe a deterministic reference language model as a foundation LLM"],
+  "expected_evidence": ["model artifact reproducibility","loopback discovery","automatic launch when no conforming runtime is already reachable","real local inference response","hash-bound proof receipt","hosted workflow success and retained artifact"],
+  "next_task_after_release": "bind the proven local inference runtime into Ecosystem Chat provider execution while preserving canonical StegGate and custody gates"
+}
