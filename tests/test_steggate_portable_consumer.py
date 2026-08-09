@@ -1,9 +1,13 @@
 from llm_adapter.steggate_portable_consumer import (
     GovernanceFacts,
     UserLLMIntent,
+    canonical_runtime_identity,
     create_user_llm_governed_package,
     execute_user_llm_governed_package,
 )
+
+EXPECTED_IDENTITY = "stegverse:steggate:canonical:three-layer:v1"
+EXPECTED_CONTRACT = "stegverse.steggate.runtime-identity.v1"
 
 
 def facts(**overrides):
@@ -52,6 +56,15 @@ def intent():
     )
 
 
+def test_runtime_identity_is_canonical_and_transport_independent():
+    identity = canonical_runtime_identity()
+    assert identity["contract_version"] == EXPECTED_CONTRACT
+    assert identity["runtime_identity"] == EXPECTED_IDENTITY
+    assert identity["canonical_owner"] == "StegVerse-Labs/StegCore"
+    assert identity["canonical_admissibility_runtime"] == "stegcore.three_layer.evaluate_three_layer"
+    assert identity["transport_identity_authoritative"] is False
+
+
 def test_ecosystem_chat_package_executes_provider_call_only_after_portable_steggate_allow():
     package = create_user_llm_governed_package(
         package_id="ecosystem-chat-portable-001",
@@ -71,7 +84,12 @@ def test_ecosystem_chat_package_executes_provider_call_only_after_portable_stegg
     assert receipt.execution_observation["coherence_receipt"]["decision"] == "ALLOW"
     assert receipt.execution_observation["result"] == {"response": "fixture-response"}
     assert package.admissibility_request.candidate.scope == "ecosystem_chat"
-    assert package.admissibility_request.candidate.parameters["prompt_hash"] == "prompt:sha256:abc"
+    params = package.admissibility_request.candidate.parameters
+    assert params["prompt_hash"] == "prompt:sha256:abc"
+    assert params["steggate_runtime_identity"] == EXPECTED_IDENTITY
+    assert params["steggate_contract_version"] == EXPECTED_CONTRACT
+    assert package.admissibility_request.declared_context["steggate_runtime_identity"] == EXPECTED_IDENTITY
+    assert package.declared_execution_context["steggate_runtime_identity"] == EXPECTED_IDENTITY
 
 
 def test_policy_drift_prevents_provider_call():
@@ -101,5 +119,7 @@ def test_package_can_be_serialized_for_transport_without_exposing_provider_crede
     assert payload["artifact_type"] == "stegcore.governed_transition_package"
     assert payload["micronode"]["profile"] == "steggate.portable-micronode.v1"
     assert payload["package_hash"]
+    assert payload["declared_execution_context"]["steggate_runtime_identity"] == EXPECTED_IDENTITY
+    assert payload["declared_execution_context"]["steggate_contract_version"] == EXPECTED_CONTRACT
     assert "api_key" not in str(payload).lower()
     assert "credential" not in str(payload).lower()
