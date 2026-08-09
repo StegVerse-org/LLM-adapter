@@ -1,0 +1,6 @@
+stegverse preserves authority evidence before action
+stegverse local inference remains bounded and observable
+admissibility is distinct from permission and execution
+continuity evidence supports reconstruction without granting authority
+local models may propose text but never grant execution authority
+governed inference records model identity input hash output hash and runtime proof
