@@ -4,13 +4,22 @@
   "originating_goal": "Remove the descriptive select-a-local-model/runtime step by installing actual local runtime discovery, launch, inference, and proof; formally develop a StegVerse-owned local model.",
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "main",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "RELEASED_COMPLETE",
   "claimant": "current-session-local-runtime-model",
   "role": "implementation-and-validation",
-  "claimed_paths": ["llm_adapter/local_model_runtime.py","models/stegverse-local-reference-v1/**","scripts/build_local_reference_model.py","scripts/prove_local_runtime_model.py","tests/test_local_runtime_model.py",".github/workflows/local-runtime-model-proof.yml","receipts/local-runtime-model-proof.latest.json","docs/LOCAL_RUNTIME_MODEL_MIRROR_HANDOFF.md"],
   "claim_created_at": "2026-08-09T18:17:00-05:00",
-  "release_condition": "implementation committed and hosted proof run succeeds with retained artifact and receipt, or claim is transferred with an exact blocker",
-  "collision_boundaries": ["do not replace canonical StegGate","do not modify HIL upload-owned Site paths","do not make an external provider or hosting vendor authoritative","do not describe a deterministic reference language model as a foundation LLM"],
-  "expected_evidence": ["model artifact reproducibility","loopback discovery","automatic launch when no conforming runtime is already reachable","real local inference response","hash-bound proof receipt","hosted workflow success and retained artifact"],
-  "next_task_after_release": "bind the proven local inference runtime into Ecosystem Chat provider execution while preserving canonical StegGate and custody gates"
+  "released_at": "2026-08-09T18:24:03-05:00",
+  "release_reason": "Hosted proof run completed successfully with model reproducibility, automatic loopback launch/discovery, real repository-local inference, hash-bound receipt persistence, and retained artifact.",
+  "evidence": {
+    "workflow_run": 31341784892,
+    "workflow_job": 93316662476,
+    "artifact_id": 9046045319,
+    "artifact_digest": "sha256:d6221913fb1560c6cc0729f61aa568cb59bda016cbdd2878f6e951c6231399bf",
+    "receipt": "receipts/local-runtime-model-proof.latest.json",
+    "receipt_hash": "f078d8507cf3ef5d1d5a36474b3f93ad73f3435ca55f51bab0545f2e3c6935ca",
+    "model_id": "stegverse-local-reference-v1",
+    "weights_sha256": "b764e082c90e2c40998faf51e2bb3f616b5fad72dfd77735a2e86a7d2798fe4f"
+  },
+  "collision_boundaries_preserved": true,
+  "next_task_after_release": "StegVerse-org/LLM-adapter#18 binds stegverse.local-runtime.v1 into Ecosystem Chat governed provider execution while canonical StegGate remains the admissibility authority and Master Records remains custody owner."
 }
