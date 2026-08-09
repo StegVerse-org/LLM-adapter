@@ -235,3 +235,35 @@ def test_production_blueprint_automates_durable_private_custody_and_provider_pat
     ):
         assert required in source
     assert "MASTER_RECORDS_RECEIPT_KEY\n        sync: false" not in source
+
+
+def test_github_models_execution_reuses_owned_run_scoped_custody() -> None:
+    source = (ROOT / ".github/workflows/ecosystem-chat-github-models-execution.yml").read_text()
+    for required in (
+        "repository: master-records/orchestration",
+        "path: master-records-source",
+        "requirements-service.txt",
+        "MASTER_RECORDS_AUTH_TOKEN",
+        "MASTER_RECORDS_RECEIPT_KEY",
+        "openssl rand -hex 32",
+        "services.master_records_custody_api:app",
+        "127.0.0.1:8021",
+        "STEGVERSE_MASTER_RECORDS_HOSTPORT",
+        "STEGVERSE_ALLOW_PRIVATE_MASTER_RECORDS_HTTP",
+        "STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS",
+        "master-records-runtime.log",
+        "Consume authority before provider execution",
+        "${{ github.token }}",
+    ):
+        assert required in source
+
+    for prohibited in (
+        "${{ secrets.STEGVERSE_MASTER_RECORDS_TOKEN }}",
+        "${{ vars.STEGVERSE_MASTER_RECORDS_ENDPOINT }}",
+        "${{ vars.STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS }}",
+    ):
+        assert prohibited not in source
+
+    custody_health = source.index("Verify owned custody service health")
+    consume_authority = source.index("Consume authority before provider execution")
+    assert custody_health < consume_authority
