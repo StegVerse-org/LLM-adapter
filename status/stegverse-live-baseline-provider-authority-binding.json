@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "binding_id": "stegverse-live-baseline-provider-authority-binding-v1",
   "intake_id": "llm-adapter-intake-stegverse-live-baseline-v1",
   "requested_transition": "RUN_STEGVERSE_LIVE_BASELINE",
@@ -21,12 +21,24 @@
     "credential_source": "ephemeral GitHub Actions GITHUB_TOKEN",
     "single_execution": true
   },
+  "custody_binding": {
+    "mode": "run_scoped_owned",
+    "owner_repository": "master-records/orchestration",
+    "service": "services.master_records_custody_api:app",
+    "workflow_preflight_required": true,
+    "preprovisioned_master_records_endpoint_required": false,
+    "preprovisioned_master_records_token_required": false,
+    "preprovisioned_master_records_allowlist_required": false,
+    "authority_consumption_requires_healthy_custody": true
+  },
   "current_state": {
     "authority_request_present": true,
     "approval_receipt_observed": false,
     "authority_consumed": false,
     "dispatch_authorized": false,
-    "provider_execution_authorized": false
+    "provider_execution_authorized": false,
+    "run_scoped_custody_implemented": true,
+    "run_scoped_custody_validated": true
   },
   "required_decisions": [
     "approved_by",
@@ -37,12 +49,18 @@
   "required_before_dispatch": [
     "valid unexpired approval receipt",
     "exact provider contract match",
-    "single-use authority not previously consumed",
-    "Master-Records authorization bindings present"
+    "single-use authority not previously consumed"
+  ],
+  "runtime_preconditions_before_authority_consumption": [
+    "canonical Master-Records custody source checked out",
+    "run-scoped custody credentials generated and masked",
+    "owned custody service started on loopback",
+    "owned custody service health verified"
   ],
   "prohibited_inferences": [
     "authority request is not provider authorization",
     "workflow existence is not dispatch authorization",
+    "run-scoped custody readiness is not provider authorization",
     "provider permission is not publication authority",
     "provider output is not execution authority",
     "provider execution is not independent framework validation"
@@ -55,5 +73,5 @@
     "custody": false,
     "parentage": false
   },
-  "updated_at": "2026-07-22T15:05:00Z"
+  "updated_at": "2026-08-09T05:35:00Z"
 }
