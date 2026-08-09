@@ -1,28 +1,26 @@
 {
   "authority_effect": "IMAGE_PUBLICATION_ONLY",
-  "blockers": [
-    "image_build_or_publish_failed"
-  ],
-  "consumer_pull_verified": false,
-  "digest": null,
+  "blockers": [],
+  "consumer_pull_verified": true,
+  "digest": "sha256:c5281db3a6dcbebda0b20038c45b822ecbe928661d035b08f7511c25b81aa707",
   "image": "ghcr.io/stegverse-org/llm-adapter",
   "manual_credentials_required": false,
   "package_visibility_asserted": false,
   "publication_run_attempt": "1",
-  "publication_run_id": "31290093567",
+  "publication_run_id": "31290173179",
   "published_by_workflow": "StegDeploy image",
-  "receipt_sha256": "644c35077a553108c789f2a3feb9826a479e6f5cd236c89b1016013e4e69e7c7",
+  "receipt_sha256": "5811ff686c6ad4ed251f9164d2ae5e7cd693bb2f316bf92b87f107db8b2402a4",
   "repository": "StegVerse-org/LLM-adapter",
   "repository_retained": true,
   "schema": "stegdeploy.image-publication.v2",
-  "source_commit": "e9fda1911915964e002dcb2d2c4c3aaf02a420cd",
+  "source_commit": "c439e67da829f6cb028019c0b0b007fb53ef8806",
   "stage_outcomes": {
-    "attestation": "skipped",
-    "build_publish": "failure",
+    "attestation": "success",
+    "build_publish": "success",
     "registry_login": "success",
-    "verification_pull": "skipped"
+    "verification_pull": "success"
   },
-  "state": "BLOCKED",
+  "state": "PUBLISHED",
   "tag": "main",
-  "verification_pull_output": "main: Pulling from stegverse-org/llm-adapter\n26c307b5e35a: Pulling fs layer\n5a31db4cd478: Pulling fs layer\nc85ad0bcaca8: Pulling fs layer\nb3c7a9bdb4f2: Pulling fs layer\na809cea7b7f0: Pulling fs layer\n2a12b1f8eca2: Pulling fs layer\n0cd9ea8d5c89: Pulling fs layer\n41df19f0c5fc: Pulling fs layer\n51603190d9a4: Pulling fs layer\ndb800afbd16b: Pulling fs layer\nf44176acfa2f: Pulling fs layer\nb3c7a9bdb4f2: Waiting\na809cea7b7f0: Waiting\n2a12b1f8eca2: Waiting\n0cd9ea8d5c89: Waiting\n41df19f0c5fc: Waiting\n51603190d9a4: Waiting\ndb800afbd16b: Waiting\nf44176acfa2f: Waiting\n5a31db4cd478: Verifying Checksum\n5a31db4cd478: Download complete\nc85ad0bcaca8: Verifying Checksum\nc85ad0bcaca8: Download complete\nb3c7a9bdb4f2: Verifying Checksum\nb3c7a9bdb4f2: Download complete\na809cea7b7f0: Verifying Checksum\na809cea7b7f0: Download complete\n2a12b1f8eca2: Verifying Checksum\n2a12b1f8eca2: Download complete\n26c307b5e35a: Verifying Checksum\n26c307b5e35a: Download complete\n0cd9ea8d5c89: Download complete\n41df19f0c5fc: Download complete\ndb800afbd16b: Verifying Checksum\ndb800afbd16b: Download complete\nf44176acfa2f: Verifying Checksum\nf44176acfa2f: Download complete\n51603190d9a4: Verifying Checksum\n51603190d9a4: Download complete\n26c307b5e35a: Pull complete\n5a31db4cd478: Pull complete\nc85ad0bcaca8: Pull complete\nb3c7a9bdb4f2: Pull complete\na809cea7b7f0: Pull complete\n2a12b1f8eca2: Pull complete\n0cd9ea8d5c89: Pull complete\n41df19f0c5fc: Pull complete\n51603190d9a4: Pull complete\ndb800afbd16b: Pull complete\nf44176acfa2f: Pull complete\nDigest: sha256:ec404d3d7f496e23f9eb83cbfa3a9b232f8e418744f651e109b9122c8a79effa\nStatus: Downloaded newer image for ghcr.io/stegverse-org/llm-adapter:main\nghcr.io/stegverse-org/llm-adapter:main\n"
+  "verification_pull_output": "main: Pulling from stegverse-org/llm-adapter\n26c307b5e35a: Pulling fs layer\n5a31db4cd478: Pulling fs layer\nc85ad0bcaca8: Pulling fs layer\nb3c7a9bdb4f2: Pulling fs layer\na809cea7b7f0: Pulling fs layer\n18fa6f59716e: Pulling fs layer\n2c568229d7e5: Pulling fs layer\n8a0e2b670eb0: Pulling fs layer\neb8b43dbb282: Pulling fs layer\n24a99e191f82: Pulling fs layer\ndd3730a6da2c: Pulling fs layer\n8c82a258e2d7: Pulling fs layer\n18fa6f59716e: Waiting\n2c568229d7e5: Waiting\n8a0e2b670eb0: Waiting\neb8b43dbb282: Waiting\n24a99e191f82: Waiting\ndd3730a6da2c: Waiting\n8c82a258e2d7: Waiting\nb3c7a9bdb4f2: Waiting\na809cea7b7f0: Waiting\nc85ad0bcaca8: Verifying Checksum\nc85ad0bcaca8: Download complete\n26c307b5e35a: Verifying Checksum\n26c307b5e35a: Download complete\n5a31db4cd478: Verifying Checksum\n5a31db4cd478: Download complete\nb3c7a9bdb4f2: Download complete\na809cea7b7f0: Verifying Checksum\na809cea7b7f0: Download complete\n2c568229d7e5: Verifying Checksum\n2c568229d7e5: Download complete\n8a0e2b670eb0: Verifying Checksum\n8a0e2b670eb0: Download complete\n26c307b5e35a: Pull complete\n18fa6f59716e: Download complete\neb8b43dbb282: Verifying Checksum\neb8b43dbb282: Download complete\n24a99e191f82: Verifying Checksum\n24a99e191f82: Download complete\n8c82a258e2d7: Download complete\ndd3730a6da2c: Verifying Checksum\ndd3730a6da2c: Download complete\n5a31db4cd478: Pull complete\nc85ad0bcaca8: Pull complete\nb3c7a9bdb4f2: Pull complete\na809cea7b7f0: Pull complete\n18fa6f59716e: Pull complete\n2c568229d7e5: Pull complete\n8a0e2b670eb0: Pull complete\neb8b43dbb282: Pull complete\n24a99e191f82: Pull complete\ndd3730a6da2c: Pull complete\n8c82a258e2d7: Pull complete\nDigest: sha256:c5281db3a6dcbebda0b20038c45b822ecbe928661d035b08f7511c25b81aa707\nStatus: Downloaded newer image for ghcr.io/stegverse-org/llm-adapter:main\nghcr.io/stegverse-org/llm-adapter:main\n"
 }
