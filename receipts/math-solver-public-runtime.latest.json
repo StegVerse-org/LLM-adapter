@@ -2,7 +2,7 @@
   "schema_version": "MATH-SOLVER-PUBLIC-RUNTIME-OBSERVATION-v1",
   "task_id": "MATH-SOLVER-STEGGATE-RUNTIME-001",
   "origin": "https://stegverse-ecosystem-chat-gateway.onrender.com",
-  "observed_at": "2026-08-09T02:23:36.304159+00:00",
+  "observed_at": "2026-08-09T02:24:22.548104+00:00",
   "state": "BLOCKED",
   "readiness": null,
   "first": null,
@@ -13,11 +13,5 @@
     "reason": "HTTPError: HTTP Error 404: Not Found"
   },
   "next_executable_action": "Retry after the hosted deployment changes or build capacity returns.",
-  "authority_effect": false,
-  "workflow_evidence": {
-    "run_id": 31290234186,
-    "job_id": 93186026342,
-    "artifact_id": 9031127945,
-    "artifact_digest": "sha256:9672ad10fab8a534d77e8d38cee2ba5f9fa5e7e092b31008dcfe03506141449a"
-  }
+  "authority_effect": false
 }
