@@ -5,22 +5,26 @@
   "goal_id": "ECOSYSTEM-CHAT-SOVEREIGN-ACTIVATION",
   "canonical_handoff": "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
   "local_runtime_handoff": "docs/LOCAL_RUNTIME_MODEL_MIRROR_HANDOFF.md",
-  "status": "TRANSPORT_EVIDENCE_ADAPTER_VALIDATED_PENDING_MERGE_CANONICAL_BINDING_BLOCKED",
-  "active_nonconflicting_task": {
+  "status": "CANONICAL_BINDING_BLOCKED_MACHINE_OWNED",
+  "completed_transport_evidence_adapter": {
     "task_id": "LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019",
-    "owner": "StegVerse-org/LLM-adapter#18 / pull/134",
-    "state": "VALIDATED_PENDING_MERGE",
+    "state": "COMPLETE_RELEASED",
     "role": "transport-and-evidence-adapter",
-    "validation_run": 31342346776,
-    "validation_artifact_id": 9046204637,
-    "release_condition": "PR #134 merges and merged-main validation confirms the validated transport/evidence predicates"
+    "pull_request": 134,
+    "merge_commit": "8be63bfd2eddae4092b945032de956e4e9a63576",
+    "validation_run": 31342485740,
+    "validation_job": 93318434329,
+    "validation_artifact_id": 9046241885,
+    "validation_artifact_digest": "sha256:99216c44a21cafd619d900c8fcb79d73f8fff7dcb9707045e4c0da77fccfc6bc",
+    "claim_released": true
   },
   "canonical_binding_task": {
     "task_id": "LLMA-CANONICAL-LOCAL-MODEL-BINDING-018",
-    "owner": "StegVerse-org/LLM-adapter#18 + StegVerse-Labs/.github#60 + StegVerse-002/micro-node-runtime#16",
+    "owner": "StegVerse-org/LLM-adapter#18 + StegVerse-Labs/.github#60 + StegVerse-002/micro-node-runtime#16/#22",
     "state": "BLOCKED",
     "blocker": "LLM-adapter Actions credential cannot read private StegVerse-002/micro-node-runtime",
-    "release_condition": "repository-native lane with access to both private repositories executes the canonical contract, or the sovereign carrier presents the canonical private endpoint directly"
+    "release_condition": "repository-native lane with access to both private repositories executes the canonical contract, or the sovereign carrier presents the canonical private endpoint directly",
+    "next_action": "consume the already released canonical micro-node private endpoint through StegVerseLocalHTTPProviderClient and execute E1 -> model worker -> E2 with same-execution custody/reconstruction evidence"
   },
   "adapter_local_runtime": {
     "task_id": "LLMA-LOCAL-RUNTIME-MODEL-017",
@@ -39,7 +43,13 @@
     "validation_run": 31339534741,
     "artifact_id": 9045384610
   },
-  "superseded_production_blockers": ["authorized external provider configuration","persistent public endpoint","GitHub Models approval","Render availability","Cloudflare availability"],
+  "superseded_production_blockers": [
+    "authorized external provider configuration",
+    "persistent public endpoint",
+    "GitHub Models approval",
+    "Render availability",
+    "Cloudflare availability"
+  ],
   "current_product_blocker": {
     "class": "CANONICAL_SOVEREIGN_BINDING_AND_SAME_EXECUTION_RECONSTRUCTION_NOT_YET_OBSERVED",
     "release_conditions": [
@@ -65,7 +75,11 @@
     "heartbeat_authority": "StegVerse-Labs/.github#12",
     "custody_and_reconstruction": "master-records/orchestration",
     "site_activation": "StegVerse-Labs/Site",
-    "downstream_propagation": ["GCAT-BCAT-Engine/Publisher","StegVerse-Labs/admissibility-wiki","StegVerse-002/stegguardian-wiki"]
+    "downstream_propagation": [
+      "GCAT-BCAT-Engine/Publisher",
+      "StegVerse-Labs/admissibility-wiki",
+      "StegVerse-002/stegguardian-wiki"
+    ]
   },
   "invariants": {
     "one_active_owner_per_workload": true,
@@ -79,8 +93,16 @@
     "session_archive_grants_activation": false
   },
   "session_consolidation": {
-    "state": "IN_PROGRESS_UNTIL_019_RELEASE_AND_TRANSFER_TO_018",
-    "canonical_continuation": ["StegVerse-org/LLM-adapter/tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json","StegVerse-Labs/.github#60","StegVerse-002/micro-node-runtime#16/#22","master-records/orchestration"],
-    "archive_ready": false
+    "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
+    "transferred_session_task": "LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019",
+    "canonical_continuation": [
+      "StegVerse-org/LLM-adapter/tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json",
+      "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "StegVerse-002/micro-node-runtime#16/#22",
+      "master-records/orchestration"
+    ],
+    "unique_chat_owned_work_remaining": false,
+    "archive_ready": true,
+    "archive_note": "Archiving this originating session does not imply product activation. Product activation remains blocked until the canonical binding and same-execution reconstruction predicates are observed."
   }
 }
