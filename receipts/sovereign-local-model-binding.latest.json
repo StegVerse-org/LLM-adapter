@@ -2,16 +2,27 @@
   "schema": "stegverse.llm_adapter.sovereign_local_model_binding_validation/v1",
   "task_id": "LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019",
   "canonical_issue": 18,
-  "state": "VALIDATED_PENDING_MERGE",
+  "state": "COMPLETE_RELEASED",
   "role": "transport-and-evidence-adapter",
-  "workflow": "Sovereign Local Model Binding Proof",
-  "workflow_run": 31342346776,
-  "workflow_job": 93318086281,
-  "conclusion": "SUCCESS",
-  "artifact_id": 9046204637,
-  "artifact_name": "sovereign-local-model-binding-proof-31342346776",
-  "artifact_digest": "sha256:e368a564bfdd07d62d6297461de20f7e9771a41a990093232e550451ce413f2d",
-  "validated_head": "0be9c99e2e346ca701481e369c07ac3a5dcf7bba",
+  "released_at": "2026-08-09T23:42:00Z",
+  "merge": {
+    "pull_request": 134,
+    "commit": "8be63bfd2eddae4092b945032de956e4e9a63576"
+  },
+  "merged_main_validation": {
+    "workflow": "Sovereign Local Model Binding Proof",
+    "workflow_run": 31342485740,
+    "workflow_job": 93318434329,
+    "conclusion": "SUCCESS",
+    "artifact_id": 9046241885,
+    "artifact_name": "sovereign-local-model-binding-proof-31342485740",
+    "artifact_digest": "sha256:99216c44a21cafd619d900c8fcb79d73f8fff7dcb9707045e4c0da77fccfc6bc",
+    "validate_run": 31342485736,
+    "architecture_guard_run": 31342485765,
+    "provider_usage_validation_run": 31342485757,
+    "local_runtime_compatibility_run": 31342485741,
+    "platform_agnostic_runtime_run": 31342485734
+  },
   "validated_predicates": {
     "sovereign_orchestration_owner_validation": true,
     "focused_provider_and_binding_tests": true,
@@ -32,6 +43,7 @@
     "state": "BLOCKED",
     "satisfied_by_this_receipt": false,
     "canonical_model_owner": "StegVerse-002/micro-node-runtime#22",
+    "canonical_model_state": "COMPLETE_RELEASED",
     "canonical_model_validation_run": 31339534741,
     "canonical_model_artifact_id": 9045384610,
     "release_condition": "A repository-native lane possessing read access to both private repositories executes the canonical HTTP contract, or the sovereign carrier presents the canonical private endpoint directly."
@@ -52,6 +64,13 @@
     "immutable zero-blocker ecosystem-chat-live-activation.verified.json",
     "Site ACTIVATION_COMPLETE",
     "Publisher/admissibility-wiki/stegguardian-wiki verified ingestion"
+  ],
+  "continuation_state": "MERGED_INTO_CANONICAL_WORKSTREAM",
+  "merged_into": [
+    "tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json",
+    "StegVerse-Labs/.github#60",
+    "StegVerse-002/micro-node-runtime#16/#22",
+    "master-records/orchestration"
   ],
   "authority": {
     "provider_output": false,
