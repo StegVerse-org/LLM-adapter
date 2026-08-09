@@ -1,0 +1,13 @@
+{
+  "authority_attached": false,
+  "foundation_model": false,
+  "model_class": "repository_trained_count_language_model",
+  "model_id": "stegverse-local-reference-v1",
+  "network_required_for_inference": false,
+  "network_required_for_training": false,
+  "runtime_protocol": "stegverse.local-runtime.v1",
+  "schema_version": "stegverse.local-language-model.manifest.v1",
+  "training_corpus_sha256": "af6f125753a893f60c345f3214f5e7d8282c9f1fd7635ef2ef6778740596a558",
+  "training_method": "deterministic bigram counts over repository-owned corpus",
+  "weights_sha256": "b764e082c90e2c40998faf51e2bb3f616b5fad72dfd77735a2e86a7d2798fe4f"
+}
