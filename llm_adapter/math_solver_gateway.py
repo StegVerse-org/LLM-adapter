@@ -107,9 +107,9 @@ def _governance(request_hash: str) -> GovernanceFacts:
     return GovernanceFacts(
         refusal_available=True,
         operator_recoverability="available",
-        workload_state="bounded_deterministic",
+        workload_state="supported",
         time_pressure="normal",
-        isolation_state="local_deterministic_executor",
+        isolation_state="supported",
         judgment_evidence_refs=(f"math-request:sha256:{request_hash}",),
         admitted_signal_refs=(f"math-expression:sha256:{request_hash}",),
         missing_inputs=(),
