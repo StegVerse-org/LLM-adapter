@@ -2,7 +2,9 @@
 """Observe real TVC-backed service-connection execution evidence.
 
 The observer is intentionally fail-closed. Deterministic route generation and
-TVC capability admission are prerequisites, not provider/model execution.
+TVC capability admission are prerequisites, not provider/model execution. The
+observer also binds every readiness or execution transition to the canonical,
+transport-independent StegGate runtime identity used by the four-app proof.
 """
 from __future__ import annotations
 
@@ -11,6 +13,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from llm_adapter.steggate_portable_consumer import canonical_runtime_identity
 
 ROOT = Path(__file__).resolve().parents[1]
 ADMISSION_PATH = ROOT / "tests/fixtures/tvc_va_service_connection_admission.projection.json"
@@ -46,6 +50,12 @@ EXPECTED_PRIVACY_KEYS = {
     "logs_contain_prohibited_data",
     "medical_narrative_present",
 }
+EXPECTED_RUNTIME_IDENTITY = {
+    "contract_version": "stegverse.steggate.runtime-identity.v1",
+    "runtime_identity": "stegverse:steggate:canonical:three-layer:v1",
+    "canonical_owner": "StegVerse-Labs/StegCore",
+    "canonical_admissibility_runtime": "stegcore.three_layer.evaluate_three_layer",
+}
 
 
 def canonical_hash(value: Any) -> str:
@@ -64,6 +74,15 @@ def parse_time(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
+def _validate_runtime_identity(identity: Any) -> bool:
+    return (
+        isinstance(identity, dict)
+        and all(identity.get(key) == value for key, value in EXPECTED_RUNTIME_IDENTITY.items())
+        and identity.get("transport_identity_authoritative") is False
+        and identity.get("application_specific_policy_authority") is False
+    )
+
+
 def inspect_evidence(evidence: dict[str, Any], admission: dict[str, Any]) -> list[str]:
     errors: list[str] = []
 
@@ -71,13 +90,14 @@ def inspect_evidence(evidence: dict[str, Any], admission: dict[str, Any]) -> lis
         if not condition:
             errors.append(code)
 
-    check(evidence.get("schema_version") == "1.0.0", "schema_version_invalid")
+    check(evidence.get("schema_version") == "1.1.0", "schema_version_invalid")
     check(evidence.get("state") == "EXECUTED", "provider_execution_state_not_executed")
     check(evidence.get("route") == "service_connection", "route_mismatch")
     check(evidence.get("invocation_id") == admission.get("invocation_id"), "invocation_id_mismatch")
     check(evidence.get("tvc_admission_receipt_hash") == admission.get("tvc_receipt_hash"), "tvc_admission_hash_mismatch")
     check(evidence.get("answer_receipt_hash") == admission.get("answer_receipt_hash"), "answer_receipt_hash_mismatch")
     check(evidence.get("dispatch_receipt_hash") == admission.get("dispatch_receipt_hash"), "dispatch_receipt_hash_mismatch")
+    check(_validate_runtime_identity(evidence.get("steggate_runtime_identity")), "steggate_runtime_identity_invalid")
 
     provider = evidence.get("provider_execution", {})
     check(isinstance(provider, dict), "provider_execution_missing")
@@ -123,10 +143,14 @@ def inspect_evidence(evidence: dict[str, Any], admission: dict[str, Any]) -> lis
 
 def main() -> None:
     admission = load(ADMISSION_PATH)
+    runtime_identity = canonical_runtime_identity()
+    if not _validate_runtime_identity(runtime_identity):
+        raise RuntimeError("canonical StegGate runtime identity contract mismatch")
     base = {
-        "schema_version": "1.0.0",
-        "observer": "va_claim_assistant.service_connection_execution_observer.v1",
+        "schema_version": "1.1.0",
+        "observer": "va_claim_assistant.service_connection_execution_observer.v2",
         "route": "service_connection",
+        "steggate_runtime_identity": runtime_identity,
         "tvc_admission": {
             "source_repository": admission["source_repository"],
             "source_handoff_commit": admission["source_handoff_commit"],
@@ -151,7 +175,7 @@ def main() -> None:
             "provider_execution_observed": False,
             "custody_state": "PENDING_REAL_ADAPTER_EXECUTION",
             "reconstruction_state": "PENDING_REAL_ADAPTER_EXECUTION",
-            "next_executable_action": "A repository-native adapter runtime must execute service_connection through the admitted TVC capability and write the schema-valid execution receipt.",
+            "next_executable_action": "A repository-native adapter runtime must execute service_connection through the admitted TVC capability, canonical StegGate identity, and write the schema-valid execution receipt.",
             "next_owner": "StegVerse-org/LLM-adapter#90",
         }
     else:
@@ -188,7 +212,7 @@ def main() -> None:
     receipt["receipt_hash"] = canonical_hash(receipt)
     READINESS_PATH.parent.mkdir(parents=True, exist_ok=True)
     READINESS_PATH.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"state": receipt["state"], "blockers": receipt["blockers"], "receipt_hash": receipt["receipt_hash"]}))
+    print(json.dumps({"state": receipt["state"], "blockers": receipt["blockers"], "receipt_hash": receipt["receipt_hash"], "runtime_identity": runtime_identity["runtime_identity"]}))
 
 
 if __name__ == "__main__":
