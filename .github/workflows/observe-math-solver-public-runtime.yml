@@ -31,7 +31,7 @@ jobs:
         run: python scripts/observe_math_solver_public_runtime.py
       - name: Commit durable observation state
         run: |
-          if git diff --quiet -- receipts/math-solver-public-runtime.latest.json; then
+          if [ -z "$(git status --porcelain -- receipts/math-solver-public-runtime.latest.json)" ]; then
             echo 'No Math Solver runtime observation change.'
             exit 0
           fi
