@@ -6,7 +6,10 @@ import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from llm_adapter.entry_point_role import get_llm_adapter_role
+from llm_adapter.http_provider_clients import ProviderConfigurationError, StegVerseLocalHTTPProviderClient
 from llm_adapter.provider_usage import ProviderMetric, ProviderUsageError, build_provider_usage_event
 
 
@@ -16,6 +19,13 @@ def test_machine_readable_adapter_role_is_bounded() -> None:
     assert role["authority_boundaries"]["translation_is_admissibility"] is False
     assert role["usage_reporting"]["metric_owner"] == "llm_adapter"
     assert len(role["role_sha256"]) == 64
+
+
+def test_sovereign_provider_boundary_is_in_canonical_validation() -> None:
+    client = StegVerseLocalHTTPProviderClient(base_url="http://127.0.0.1:11434/v1/chat/completions")
+    assert client.base_url.startswith("http://127.0.0.1:")
+    with pytest.raises(ProviderConfigurationError):
+        StegVerseLocalHTTPProviderClient(base_url="https://example.com/v1/chat/completions")
 
 
 def test_provider_usage_event_preserves_cross_entry_session() -> None:
