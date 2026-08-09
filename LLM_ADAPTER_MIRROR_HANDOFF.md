@@ -142,6 +142,7 @@ Publisher projection: INSTALLED
 admissibility-wiki projection: INSTALLED
 StegGuardian projection: INSTALLED
 canonical StegDeploy image publication: PUBLISHED
+portable StegGate governed-package consumer: VERIFIED
 live gateway health: OBSERVED
 real provider execution: NOT CONFIRMED
 provider-usage custody/reconstruction: NOT CONFIRMED
@@ -152,6 +153,44 @@ release or tag authority: NOT GRANTED
 ```
 
 Absent CI, deployment, provider, custody, reconstruction, or downstream evidence does not reopen completed design work. Missing evidence remains fail-closed and is never treated as success.
+
+## Portable StegGate consumer integration — VERIFIED
+
+This repository now consumes the canonical StegCore portable/ephemeral StegGate topology without duplicating decision authority.
+
+Installed surfaces:
+
+```text
+llm_adapter/steggate_portable_consumer.py
+tests/test_steggate_portable_consumer.py
+.github/workflows/steggate-portable-consumer.yml
+receipts/steggate-portable-consumer-integration.latest.json
+```
+
+Canonical StegCore dependency for the verified integration is pinned to commit:
+
+```text
+2f0076a25fdf7ee020dca85f3934c6bca385b310
+```
+
+The consumer maps explicit Ecosystem Chat/user-LLM governance facts into StegCore's canonical `AdmissibilityRequest`, creates a `stegcore.governed_transition_package`, and delegates the consequence boundary to `execute_governed_package`. It does **not** implement a second policy engine.
+
+Provider callbacks are unreachable unless portable StegGate returns ALLOW and independent commit coherence returns ALLOW. Policy drift produces DENY and leaves the provider callback untouched. Package transport is JSON-serializable, carries no provider credential, and does not require a public StegGate ingress endpoint.
+
+Hosted verification:
+
+```text
+workflow: StegGate Portable Consumer Integration
+run: 31286444819
+job: 93176065654
+result: SUCCESS
+artifact: 9029971776
+artifact digest: sha256:c555e9035d480120d36184308d165e8e0987a0765c3020a60abf0c45f425c4f4
+```
+
+Durable receipt: `receipts/steggate-portable-consumer-integration.latest.json`.
+
+This proves a real StegVerse consumer can carry/instantiate the portable governance boundary locally. It does **not** claim that external model-provider execution, provider-usage custody/reconstruction, immutable zero-blocker activation, or Site/downstream activation are complete.
 
 ## Machine-owned continuation
 
@@ -198,6 +237,9 @@ pending status != activation
 verified receipt != release authority
 terminal monitor != CI success
 retry success != admissibility
+portable package transport != policy authority
+portable micro-node identity != execution authority
+portable consumer integration != real provider execution
 ```
 
 ## Release posture
@@ -206,4 +248,4 @@ No release or tag is authorized until the existing machine gates receive visible
 
 ## Continuation posture
 
-Repository implementation is complete. Runtime activation remains machine-owned by issue #18. Current blockers are real-provider execution authority/configuration, authenticated Master-Records runtime binding for the same execution, provider-usage custody/reconstruction, immutable zero-blocker activation evidence, Site/downstream activation, and sovereign migration. Volatile heartbeat commits and time-only provider-readiness commits are not part of that authority path and are intentionally suppressed to preserve deployment capacity for meaningful state transitions.
+Repository implementation is complete. Portable StegGate consumer integration is verified and no longer depends on resident StegGate HTTP hosting. Runtime activation remains machine-owned by issue #18. Current blockers are real-provider execution authority/configuration, authenticated Master-Records runtime binding for the same execution, provider-usage custody/reconstruction, immutable zero-blocker activation evidence, Site/downstream activation, and sovereign migration. Volatile heartbeat commits and time-only provider-readiness commits are intentionally suppressed to preserve deployment capacity for meaningful state transitions.
