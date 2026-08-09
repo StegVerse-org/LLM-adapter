@@ -6,6 +6,7 @@ on:
     paths:
       - "llm_adapter/steggate_portable_consumer.py"
       - "tests/test_steggate_portable_consumer.py"
+      - "pyproject.toml"
       - ".github/workflows/steggate-portable-consumer.yml"
   workflow_dispatch:
 
@@ -25,11 +26,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install consumer and pinned canonical StegCore
+      - name: Install consumer and canonical StegCore identity contract
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e .
-          python -m pip install "git+https://github.com/StegVerse-Labs/StegCore.git@2f0076a25fdf7ee020dca85f3934c6bca385b310"
+          python -m pip install "git+https://github.com/StegVerse-Labs/StegCore.git@8c484e584d60a3bd2763d6948d0eb3f4afd67e0c"
           python -m pip install pytest
 
       - name: Verify portable governed-package consumer
@@ -42,20 +43,32 @@ jobs:
           import hashlib, json
           from datetime import datetime, timezone
           from pathlib import Path
+          from llm_adapter.steggate_portable_consumer import canonical_runtime_identity
           from stegcore.portable_steggate import runtime_fingerprint
+
+          identity = canonical_runtime_identity()
           record = {
-              "schema_version": "ECOSYSTEM-CHAT-STEGGATE-PORTABLE-CONSUMER-v1",
+              "schema_version": "ECOSYSTEM-CHAT-STEGGATE-PORTABLE-CONSUMER-v2",
               "recorded_at": datetime.now(timezone.utc).isoformat(),
               "consumer": "StegVerse-org/LLM-adapter",
-              "stegcore_commit": "2f0076a25fdf7ee020dca85f3934c6bca385b310",
+              "application": "Ecosystem Chat",
+              "stegcore_commit": "8c484e584d60a3bd2763d6948d0eb3f4afd67e0c",
               "runtime_fingerprint": runtime_fingerprint(),
+              "runtime_identity": identity,
               "portable_profile": "steggate.portable-micronode.v1",
               "provider_credentials_transported": False,
               "public_steggate_ingress_required": False,
               "decision_authority_duplicated": False,
+              "transport_identity_authoritative": False,
               "provider_callback_reachable_only_after_steggate_and_coherence_allow": True,
+              "public_provider_execution_proven": False,
               "status": "PASS"
           }
+          assert identity["contract_version"] == "stegverse.steggate.runtime-identity.v1"
+          assert identity["runtime_identity"] == "stegverse:steggate:canonical:three-layer:v1"
+          assert identity["canonical_owner"] == "StegVerse-Labs/StegCore"
+          assert identity["canonical_admissibility_runtime"] == "stegcore.three_layer.evaluate_three_layer"
+          assert identity["transport_identity_authoritative"] is False
           canonical = json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
           record["receipt_hash"] = hashlib.sha256(canonical).hexdigest()
           Path("artifacts/steggate-portable-consumer-receipt.json").write_text(
