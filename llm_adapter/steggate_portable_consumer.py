@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Thin Ecosystem Chat / user-LLM consumer for portable StegGate packages.
 
-This module does not evaluate policy.  It maps explicit governance facts into the
+This module does not evaluate policy. It maps explicit governance facts into the
 canonical StegCore `AdmissibilityRequest`, creates a transportable
 `GovernedTransitionPackage`, and delegates evaluation/execution to the ephemeral
 StegGate micro-node implementation shipped by StegCore.
@@ -12,11 +12,18 @@ from dataclasses import dataclass
 from typing import Any, Callable, Mapping, Optional, TypeVar
 
 T = TypeVar("T")
+EXPECTED_RUNTIME_IDENTITY = {
+    "contract_version": "stegverse.steggate.runtime-identity.v1",
+    "runtime_identity": "stegverse:steggate:canonical:three-layer:v1",
+    "canonical_owner": "StegVerse-Labs/StegCore",
+    "canonical_admissibility_runtime": "stegcore.three_layer.evaluate_three_layer",
+}
 
 
 def _stegcore():
     try:
         from stegcore.portable_steggate import create_governed_package, execute_governed_package
+        from stegcore.service import runtime_identity
         from stegcore.steggate import (
             AdmissibilityRequest,
             ApprovalState,
@@ -34,6 +41,7 @@ def _stegcore():
     return {
         "create_governed_package": create_governed_package,
         "execute_governed_package": execute_governed_package,
+        "runtime_identity": runtime_identity,
         "AdmissibilityRequest": AdmissibilityRequest,
         "ApprovalState": ApprovalState,
         "Candidate": Candidate,
@@ -43,6 +51,16 @@ def _stegcore():
         "JudgmentState": JudgmentState,
         "SignalState": SignalState,
     }
+
+
+def canonical_runtime_identity() -> dict[str, Any]:
+    """Return and validate the transport-independent canonical StegGate identity."""
+    identity = dict(_stegcore()["runtime_identity"]())
+    if any(identity.get(key) != value for key, value in EXPECTED_RUNTIME_IDENTITY.items()):
+        raise RuntimeError("canonical StegGate runtime identity mismatch")
+    if identity.get("transport_identity_authoritative") is not False:
+        raise RuntimeError("transport identity cannot become StegGate authority")
+    return identity
 
 
 @dataclass(frozen=True)
@@ -102,6 +120,13 @@ def create_user_llm_governed_package(
     """Map explicit consumer facts into the canonical portable StegGate package."""
 
     s = _stegcore()
+    identity = canonical_runtime_identity()
+    identity_binding = {
+        "steggate_contract_version": identity["contract_version"],
+        "steggate_runtime_identity": identity["runtime_identity"],
+        "steggate_canonical_owner": identity["canonical_owner"],
+        "steggate_canonical_admissibility_runtime": identity["canonical_admissibility_runtime"],
+    }
     request = s["AdmissibilityRequest"](
         candidate=s["Candidate"](
             actor_class="user_llm",
@@ -114,6 +139,7 @@ def create_user_llm_governed_package(
                 "provider": intent.provider,
                 "model": intent.model,
                 "prompt_hash": intent.prompt_hash,
+                **identity_binding,
             },
         ),
         judgment=s["JudgmentState"](
@@ -126,7 +152,7 @@ def create_user_llm_governed_package(
         ),
         signal=s["SignalState"](
             admitted_signal_refs=list(governance.admitted_signal_refs),
-            transformations=["llm_adapter.portable_steggate_consumer.v1"],
+            transformations=["llm_adapter.portable_steggate_consumer.v2"],
             missing_inputs=list(governance.missing_inputs),
             uncertainty_state=governance.uncertainty_state,
             reference_state_hash=governance.reference_state_hash,
@@ -158,7 +184,11 @@ def create_user_llm_governed_package(
             candidate_hash=governance.approval_candidate_hash,
         ),
         permission_present=governance.permission_present,
-        declared_context={"consumer": "StegVerse-org/LLM-adapter", "route": intent.route},
+        declared_context={
+            "consumer": "StegVerse-org/LLM-adapter",
+            "route": intent.route,
+            **identity_binding,
+        },
     )
 
     return s["create_governed_package"](
@@ -171,6 +201,7 @@ def create_user_llm_governed_package(
             "user_id": intent.user_id,
             "llm_id": intent.llm_id,
             "route": intent.route,
+            **identity_binding,
         },
         capability_surface={
             "actions_exposed": [intent.action],
