@@ -10,44 +10,131 @@
     "stegverse": 2
   },
   "transitions": {
-    "action": {"<eos>": 1},
-    "admissibility": {"is": 1},
-    "and": {"execution": 1, "observable": 1, "runtime": 1},
-    "authority": {"<eos>": 2, "evidence": 1},
-    "before": {"action": 1},
-    "bounded": {"and": 1},
-    "but": {"never": 1},
-    "continuity": {"evidence": 1},
-    "distinct": {"from": 1},
-    "evidence": {"before": 1, "supports": 1},
-    "execution": {"<eos>": 1, "authority": 1},
-    "from": {"permission": 1},
-    "governed": {"inference": 1},
-    "grant": {"execution": 1},
-    "granting": {"authority": 1},
-    "hash": {"and": 1, "output": 1},
-    "identity": {"input": 1},
-    "inference": {"records": 1, "remains": 1},
-    "input": {"hash": 1},
-    "is": {"distinct": 1},
-    "local": {"inference": 1, "models": 1},
-    "may": {"propose": 1},
-    "model": {"identity": 1},
-    "models": {"may": 1},
-    "never": {"grant": 1},
-    "observable": {"<eos>": 1},
-    "output": {"hash": 1},
-    "permission": {"and": 1},
-    "preserves": {"authority": 1},
-    "proof": {"<eos>": 1},
-    "propose": {"text": 1},
-    "reconstruction": {"without": 1},
-    "records": {"model": 1},
-    "remains": {"bounded": 1},
-    "runtime": {"proof": 1},
-    "stegverse": {"local": 1, "preserves": 1},
-    "supports": {"reconstruction": 1},
-    "text": {"but": 1},
-    "without": {"granting": 1}
+    "action": {
+      "<eos>": 1
+    },
+    "admissibility": {
+      "is": 1
+    },
+    "and": {
+      "execution": 1,
+      "observable": 1,
+      "runtime": 1
+    },
+    "authority": {
+      "<eos>": 2,
+      "evidence": 1
+    },
+    "before": {
+      "action": 1
+    },
+    "bounded": {
+      "and": 1
+    },
+    "but": {
+      "never": 1
+    },
+    "continuity": {
+      "evidence": 1
+    },
+    "distinct": {
+      "from": 1
+    },
+    "evidence": {
+      "before": 1,
+      "supports": 1
+    },
+    "execution": {
+      "<eos>": 1,
+      "authority": 1
+    },
+    "from": {
+      "permission": 1
+    },
+    "governed": {
+      "inference": 1
+    },
+    "grant": {
+      "execution": 1
+    },
+    "granting": {
+      "authority": 1
+    },
+    "hash": {
+      "and": 1,
+      "output": 1
+    },
+    "identity": {
+      "input": 1
+    },
+    "inference": {
+      "records": 1,
+      "remains": 1
+    },
+    "input": {
+      "hash": 1
+    },
+    "is": {
+      "distinct": 1
+    },
+    "local": {
+      "inference": 1,
+      "models": 1
+    },
+    "may": {
+      "propose": 1
+    },
+    "model": {
+      "identity": 1
+    },
+    "models": {
+      "may": 1
+    },
+    "never": {
+      "grant": 1
+    },
+    "observable": {
+      "<eos>": 1
+    },
+    "output": {
+      "hash": 1
+    },
+    "permission": {
+      "and": 1
+    },
+    "preserves": {
+      "authority": 1
+    },
+    "proof": {
+      "<eos>": 1
+    },
+    "propose": {
+      "text": 1
+    },
+    "reconstruction": {
+      "without": 1
+    },
+    "records": {
+      "model": 1
+    },
+    "remains": {
+      "bounded": 1
+    },
+    "runtime": {
+      "proof": 1
+    },
+    "stegverse": {
+      "local": 1,
+      "preserves": 1
+    },
+    "supports": {
+      "reconstruction": 1
+    },
+    "text": {
+      "but": 1
+    },
+    "without": {
+      "granting": 1
+    }
   }
 }
