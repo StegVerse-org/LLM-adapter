@@ -5,46 +5,43 @@
   "goal_id": "ECOSYSTEM-CHAT-SOVEREIGN-ACTIVATION",
   "canonical_handoff": "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
   "local_runtime_handoff": "docs/LOCAL_RUNTIME_MODEL_MIRROR_HANDOFF.md",
-  "status": "ACTIVE_SOVEREIGN_BINDING",
-  "active_task": {
+  "status": "ACTIVE_TRANSPORT_EVIDENCE_ADAPTER_WITH_CANONICAL_BINDING_BLOCKED",
+  "active_nonconflicting_task": {
     "task_id": "LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019",
     "owner": "StegVerse-org/LLM-adapter#18 / pull/134",
     "state": "CLAIMED_FOR_VALIDATION",
-    "role": "integration-and-validation",
-    "release_condition": "PR #134 merges after hosted real-process provider binding validation and durable receipt/handoff update"
+    "role": "transport-and-evidence-adapter",
+    "release_condition": "PR #134 merges after hosted validation of private provider transport, measured usage preservation, proof/model-hash binding, and fail-closed custody behavior"
   },
-  "completed_local_runtime": {
+  "canonical_binding_task": {
+    "task_id": "LLMA-CANONICAL-LOCAL-MODEL-BINDING-018",
+    "owner": "StegVerse-org/LLM-adapter#18 + StegVerse-Labs/.github#60 + StegVerse-002/micro-node-runtime#16",
+    "state": "BLOCKED",
+    "blocker": "LLM-adapter Actions credential cannot read private StegVerse-002/micro-node-runtime",
+    "release_condition": "repository-native lane with access to both private repositories executes the canonical contract, or the sovereign carrier presents the canonical private endpoint directly"
+  },
+  "adapter_local_runtime": {
     "task_id": "LLMA-LOCAL-RUNTIME-MODEL-017",
-    "state": "RELEASED_COMPLETE",
-    "workflow_run": 31341784892,
-    "artifact_id": 9046045319,
+    "state": "SUPERSEDED",
+    "superseded_by": "StegVerse-002/micro-node-runtime#22 + docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md",
+    "noncanonical_validation_run": 31341784892,
+    "noncanonical_artifact_id": 9046045319,
     "receipt": "receipts/local-runtime-model-proof.latest.json",
-    "reconciled_role": "consumer-side fallback/conformance runtime; production model/runtime owner remains StegVerse-002/micro-node-runtime#16/#22"
+    "retained_role": "adapter-local compatibility fixture only; not product canonical"
   },
-  "upstream_micro_node_runtime": {
+  "canonical_micro_node_runtime": {
     "goal_id": "SOVEREIGN-LOCAL-MODEL-001",
     "owner": "StegVerse-002/micro-node-runtime#16/#22",
     "state": "COMPLETE_RELEASED",
+    "validated_code_commit": "395d4013d1354c07bc3cf66c44f4f26f856c75fc",
     "validation_run": 31339534741,
     "artifact_id": 9045384610
   },
-  "superseded_production_blockers": [
-    "authorized external provider configuration",
-    "persistent public endpoint",
-    "GitHub Models approval",
-    "Render availability",
-    "Cloudflare availability"
-  ],
+  "superseded_production_blockers": ["authorized external provider configuration","persistent public endpoint","GitHub Models approval","Render availability","Cloudflare availability"],
   "current_product_blocker": {
-    "class": "SOVEREIGN_PRODUCTION_LLM_AND_SAME_EXECUTION_RECONSTRUCTION_NOT_YET_OBSERVED",
-    "owners": [
-      "StegVerse-002/micro-node-runtime#16/#22",
-      "StegVerse-org/LLM-adapter#18",
-      "StegVerse-Labs/.github#60",
-      "master-records/orchestration"
-    ],
+    "class": "CANONICAL_SOVEREIGN_BINDING_AND_SAME_EXECUTION_RECONSTRUCTION_NOT_YET_OBSERVED",
     "release_conditions": [
-      "production-scale sovereign local model process observed on StegVerse-owned/federated carrier",
+      "canonical micro-node model endpoint is consumed by StegVerseLocalHTTPProviderClient on a sovereign carrier",
       "private provider execution traverses E1 -> model worker -> E2",
       "provider/model usage is MEASURED in that execution",
       "provider-usage Master Records reconstruction PASS",
@@ -56,24 +53,22 @@
     "task_id": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
     "owner": "StegVerse-Labs/.github#60",
     "state": "ACTIVE_BLOCKED_RECHECKING",
-    "release_condition": "machine-observable production-scale sovereign execution and same-execution reconstruction evidence appears"
+    "release_condition": "machine-observable canonical sovereign execution and same-execution reconstruction evidence appears"
   },
   "authority_owners": {
     "production_model_runtime": "StegVerse-002/micro-node-runtime#16/#22",
     "local_provider_transport_and_usage": "StegVerse-org/LLM-adapter#18",
+    "canonical_binding": "LLMA-CANONICAL-LOCAL-MODEL-BINDING-018",
     "inference_observation_recheck": "StegVerse-Labs/.github#60",
     "heartbeat_authority": "StegVerse-Labs/.github#12",
     "custody_and_reconstruction": "master-records/orchestration",
     "site_activation": "StegVerse-Labs/Site",
-    "downstream_propagation": [
-      "GCAT-BCAT-Engine/Publisher",
-      "StegVerse-Labs/admissibility-wiki",
-      "StegVerse-002/stegguardian-wiki"
-    ]
+    "downstream_propagation": ["GCAT-BCAT-Engine/Publisher","StegVerse-Labs/admissibility-wiki","StegVerse-002/stegguardian-wiki"]
   },
   "invariants": {
     "one_active_owner_per_workload": true,
     "duplicate_workloads_fail_closed": true,
+    "adapter_local_model_is_noncanonical_fixture": true,
     "reference_model_is_not_production_scale": true,
     "missing_custody_or_reconstruction_is_not_success": true,
     "third_party_hosted_inference_is_not_production_authority": true,
@@ -82,13 +77,8 @@
     "session_archive_grants_activation": false
   },
   "session_consolidation": {
-    "state": "IN_PROGRESS_UNTIL_019_RELEASE",
-    "canonical_continuation": [
-      "StegVerse-org/LLM-adapter#18",
-      "StegVerse-002/micro-node-runtime#16/#22",
-      "StegVerse-Labs/.github#60",
-      "master-records/orchestration"
-    ],
+    "state": "IN_PROGRESS_UNTIL_019_RELEASE_AND_TRANSFER_TO_018",
+    "canonical_continuation": ["StegVerse-org/LLM-adapter/tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json","StegVerse-Labs/.github#60","StegVerse-002/micro-node-runtime#16/#22","master-records/orchestration"],
     "archive_ready": false
   }
 }
