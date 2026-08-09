@@ -62,6 +62,26 @@ def _sha256(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
+def _canonical_runtime_identity() -> dict[str, Any]:
+    """Consume the canonical transport-independent StegGate identity contract."""
+    try:
+        from stegcore.service import runtime_identity
+    except ImportError as exc:  # pragma: no cover - deployment packaging boundary
+        raise RuntimeError("canonical StegGate runtime identity unavailable") from exc
+    identity = dict(runtime_identity())
+    required = {
+        "contract_version": "stegverse.steggate.runtime-identity.v1",
+        "runtime_identity": "stegverse:steggate:canonical:three-layer:v1",
+        "canonical_owner": "StegVerse-Labs/StegCore",
+        "canonical_admissibility_runtime": "stegcore.three_layer.evaluate_three_layer",
+    }
+    if any(identity.get(key) != value for key, value in required.items()):
+        raise RuntimeError("canonical StegGate runtime identity mismatch")
+    if identity.get("transport_identity_authoritative") is not False:
+        raise RuntimeError("transport identity cannot become StegGate authority")
+    return identity
+
+
 def _evaluate_node(node: ast.AST) -> float | int:
     if isinstance(node, ast.Expression):
         return _evaluate_node(node.body)
@@ -138,11 +158,14 @@ def _governance(request_hash: str) -> GovernanceFacts:
 
 
 def governed_solve(expression: str, *, request_id: str | None = None) -> dict[str, Any]:
+    runtime_identity = _canonical_runtime_identity()
     normalized = expression.strip()
     request_record = {
         "schema_version": ROUTE_VERSION,
         "expression": normalized,
         "solver_id": SOLVER_ID,
+        "steggate_runtime_identity": runtime_identity["runtime_identity"],
+        "steggate_contract_version": runtime_identity["contract_version"],
     }
     request_hash = _sha256(_canonical_json(request_record))
     effective_request_id = request_id or f"MATH-{uuid.uuid4().hex[:20].upper()}"
@@ -159,7 +182,12 @@ def governed_solve(expression: str, *, request_id: str | None = None) -> dict[st
         package_id=effective_request_id,
         intent=intent,
         governance=_governance(request_hash),
-        declared_execution_context={"solver_id": SOLVER_ID, "request_hash": request_hash},
+        declared_execution_context={
+            "solver_id": SOLVER_ID,
+            "request_hash": request_hash,
+            "steggate_runtime_identity": runtime_identity["runtime_identity"],
+            "steggate_contract_version": runtime_identity["contract_version"],
+        },
     )
 
     def execute() -> dict[str, Any]:
@@ -175,6 +203,7 @@ def governed_solve(expression: str, *, request_id: str | None = None) -> dict[st
         "request_id": effective_request_id,
         "request_hash": request_hash,
         "solver_id": SOLVER_ID,
+        "steggate_runtime_identity": runtime_identity,
         "steggate_package_hash": package.package_hash,
         "steggate_profile": package.micronode.profile,
         "execution_state": receipt.state,
@@ -189,6 +218,7 @@ def governed_solve(expression: str, *, request_id: str | None = None) -> dict[st
             "request_hash_algorithm": "sha256",
             "solver_id": SOLVER_ID,
             "same_expression_same_solver_result": True,
+            "runtime_identity_bound": True,
         },
     }
     if receipt.state == "EXECUTED" and observation.get("executor_invoked") is True:
@@ -208,11 +238,16 @@ def readiness() -> dict[str, Any]:
         from stegcore.portable_steggate import runtime_fingerprint
     except ImportError as exc:
         raise HTTPException(status_code=503, detail="canonical_stegcore_runtime_unavailable") from exc
+    try:
+        runtime_identity = _canonical_runtime_identity()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     return {
         "state": "READY",
         "schema_version": ROUTE_VERSION,
         "solver_id": SOLVER_ID,
         "canonical_steggate_bound": True,
+        "steggate_runtime_identity": runtime_identity,
         "runtime_fingerprint": runtime_fingerprint(),
         "arbitrary_code_execution": False,
     }
@@ -232,6 +267,7 @@ def solve(request: SolveRequest) -> dict[str, Any]:
             "disposition": response["disposition"],
             "decision_state_hash": response["decision_state_hash"],
             "executor_invoked": response["executor_invoked"],
+            "steggate_runtime_identity": response["steggate_runtime_identity"],
         })
     return response
 
