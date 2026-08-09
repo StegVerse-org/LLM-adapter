@@ -1,0 +1,63 @@
+{
+  "schema": "stegverse.llm_adapter.sovereign_local_model_binding_validation/v1",
+  "task_id": "LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019",
+  "canonical_issue": 18,
+  "state": "VALIDATED_PENDING_MERGE",
+  "role": "transport-and-evidence-adapter",
+  "workflow": "Sovereign Local Model Binding Proof",
+  "workflow_run": 31342346776,
+  "workflow_job": 93318086281,
+  "conclusion": "SUCCESS",
+  "artifact_id": 9046204637,
+  "artifact_name": "sovereign-local-model-binding-proof-31342346776",
+  "artifact_digest": "sha256:e368a564bfdd07d62d6297461de20f7e9771a41a990093232e550451ce413f2d",
+  "validated_head": "0be9c99e2e346ca701481e369c07ac3a5dcf7bba",
+  "validated_predicates": {
+    "sovereign_orchestration_owner_validation": true,
+    "focused_provider_and_binding_tests": true,
+    "real_adapter_local_compatibility_process_executed": true,
+    "private_stegverse_provider_seam_executed": true,
+    "third_party_execution_platform_required": false,
+    "model_hash_bound_to_response": true,
+    "measured_prompt_tokens": true,
+    "measured_completion_tokens": true,
+    "measured_total_tokens": true,
+    "measured_latency": true,
+    "missing_master_records_custody_remains_incomplete": true,
+    "product_activation_granted": false,
+    "authority_effect": "NONE"
+  },
+  "canonical_production_binding": {
+    "task_id": "LLMA-CANONICAL-LOCAL-MODEL-BINDING-018",
+    "state": "BLOCKED",
+    "satisfied_by_this_receipt": false,
+    "canonical_model_owner": "StegVerse-002/micro-node-runtime#22",
+    "canonical_model_validation_run": 31339534741,
+    "canonical_model_artifact_id": 9045384610,
+    "release_condition": "A repository-native lane possessing read access to both private repositories executes the canonical HTTP contract, or the sovereign carrier presents the canonical private endpoint directly."
+  },
+  "noncanonical_fixture": {
+    "task_id": "LLMA-LOCAL-RUNTIME-MODEL-017",
+    "state": "SUPERSEDED",
+    "retained_role": "adapter-local compatibility fixture only",
+    "validation_run": 31341784892,
+    "artifact_id": 9046045319
+  },
+  "activation_complete": false,
+  "remaining_activation_predicates": [
+    "canonical micro-node endpoint consumed by LLM-adapter on sovereign carrier",
+    "E1 -> model worker -> E2 real governed execution",
+    "same-execution provider-usage Master Records reconstruction PASS",
+    "same-execution transition Master Records reconstruction PASS",
+    "immutable zero-blocker ecosystem-chat-live-activation.verified.json",
+    "Site ACTIVATION_COMPLETE",
+    "Publisher/admissibility-wiki/stegguardian-wiki verified ingestion"
+  ],
+  "authority": {
+    "provider_output": false,
+    "usage_evidence": false,
+    "workflow": false,
+    "receipt": false,
+    "release": false
+  }
+}
