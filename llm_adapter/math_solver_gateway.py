@@ -2,8 +2,8 @@ from __future__ import annotations
 
 """Governed deterministic Math Solver service surface.
 
-The arithmetic evaluator is intentionally narrow.  It never executes arbitrary Python;
-only numeric literals and an allowlist of arithmetic AST nodes are accepted.  The
+The arithmetic evaluator is intentionally narrow. It never executes arbitrary Python;
+only numeric literals and an allowlist of arithmetic AST nodes are accepted. The
 solver callback is reachable only through the canonical portable StegGate consumer.
 """
 
@@ -123,7 +123,7 @@ def _governance(request_hash: str) -> GovernanceFacts:
         delegation_current=True,
         evidence_current=True,
         affected_entity_conditions_represented=True,
-        recoverability_profile="replayable",
+        recoverability_profile="recoverable",
         validity_window_open=True,
         policy_ref=f"policy:math-solver:{ROUTE_VERSION}",
         delegation_ref="delegation:public-math-solver:v1",
