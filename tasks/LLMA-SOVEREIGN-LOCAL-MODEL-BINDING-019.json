@@ -1,15 +1,15 @@
 {
   "schema_version": "stegverse.work-claim.v1",
   "task_id": "LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019",
-  "originating_goal": "Bind the formally developed sovereign local model/runtime into the canonical Ecosystem Chat provider, measured-usage, and custody path without duplicating model-runtime, heartbeat, governance, or Master Records authority.",
+  "originating_goal": "Install the missing transport/evidence adapter needed for canonical sovereign local-model binding without competing with LLMA-CANONICAL-LOCAL-MODEL-BINDING-018 or duplicating model-runtime, heartbeat, governance, or Master Records authority.",
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "feat/sovereign-local-model-binding",
   "canonical_issue": 18,
   "state": "CLAIMED_FOR_VALIDATION",
-  "claimant": "sovereign-local-model provider-binding integration lane",
-  "role": "integration-and-validation",
+  "claimant": "sovereign-local-model transport/evidence adapter lane",
+  "role": "transport-and-evidence-adapter",
   "claim_created_at": "2026-08-09T23:17:00Z",
-  "claim_expiration_or_release_condition": "Release after PR #134 merges to main with hosted validation proving a real repository-local process crosses StegVerseLocalHTTPProviderClient, exact measured usage enters canonical provider-usage evidence, source model/proof hashes remain bound, reference model remains non-production-scale, missing custody remains fail-closed, and current sovereign state/handoff/receipt are updated.",
+  "claim_expiration_or_release_condition": "Release after PR #134 merges with hosted validation proving private-provider response metadata preservation, model/proof hash binding, exact MEASURED usage emission, and fail-closed Master Records behavior; then merge all remaining production-binding responsibility into LLMA-CANONICAL-LOCAL-MODEL-BINDING-018 and SHWP-ECOSYSTEM-CHAT-INFERENCE-001.",
   "claimed_paths": [
     "llm_adapter/http_provider_clients.py",
     "llm_adapter/sovereign_local_model_binding.py",
@@ -24,40 +24,49 @@
     "tasks/LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019.json"
   ],
   "authoritative_read_only": [
+    "tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json",
+    "tasks/LLMA-LOCAL-RUNTIME-MODEL-017.json",
     "docs/LOCAL_RUNTIME_MODEL_MIRROR_HANDOFF.md",
     "data/llm-adapter-orchestration-state.json",
     "receipts/local-runtime-model-proof.latest.json"
   ],
+  "canonical_binding": {
+    "task_id": "LLMA-CANONICAL-LOCAL-MODEL-BINDING-018",
+    "state": "BLOCKED",
+    "canonical_model_owner": "StegVerse-002/micro-node-runtime#22",
+    "machine_observable_release_condition": "A repository-native lane with access to both private repositories executes the canonical HTTP contract, or the canonical sovereign node carrier presents that endpoint directly to LLM-adapter."
+  },
   "upstream_evidence": {
-    "micro_node_task": "StegVerse-002/micro-node-runtime/SOVEREIGN-LOCAL-MODEL-001",
-    "micro_node_validation_run": 31339534741,
-    "micro_node_artifact_id": 9045384610,
-    "llm_adapter_local_runtime_task": "LLMA-LOCAL-RUNTIME-MODEL-017",
-    "llm_adapter_local_runtime_state": "RELEASED_COMPLETE",
-    "llm_adapter_local_runtime_run": 31341784892,
-    "llm_adapter_local_runtime_artifact_id": 9046045319,
-    "llm_adapter_local_runtime_receipt": "receipts/local-runtime-model-proof.latest.json"
+    "canonical_micro_node_goal": "SOVEREIGN-LOCAL-MODEL-001",
+    "canonical_micro_node_validation_run": 31339534741,
+    "canonical_micro_node_artifact_id": 9045384610,
+    "adapter_local_task": "LLMA-LOCAL-RUNTIME-MODEL-017",
+    "adapter_local_state": "SUPERSEDED",
+    "adapter_local_noncanonical_validation_run": 31341784892,
+    "adapter_local_noncanonical_artifact_id": 9046045319,
+    "adapter_local_receipt": "receipts/local-runtime-model-proof.latest.json"
   },
   "collision_boundaries": [
+    "019 does not satisfy or replace canonical production binding 018",
+    "adapter-local runtime/model is a noncanonical compatibility fixture only",
     "no second heartbeat or worker registry",
     "no duplicate governance or admissibility engine",
     "no duplicate Master Records custody authority",
-    "no external hosted inference dependency",
+    "no external hosted inference dependency becomes production authority",
     "no production-scale LLM claim from either reference model",
     "no VERIFIED product activation without same-execution provider-usage and transition reconstruction PASS",
-    "LLMA-LOCAL-RUNTIME-MODEL-017 is released and retained as consumer-side fallback/conformance evidence; production model/runtime ownership remains micro-node #16/#22",
     "legacy data/llm-adapter-orchestration-state.json remains the immutable sequence-0003 historical record"
   ],
   "expected_evidence": [
-    "real subprocess local model launch",
-    "private loopback provider request through StegVerseLocalHTTPProviderClient",
-    "model hash bound across proof and response",
+    "real adapter-local compatibility subprocess crosses the private provider seam",
+    "model hash bound across compatibility proof and response",
     "MEASURED prompt/completion/total token metrics",
     "MEASURED latency metric",
     "Master Records NOT_CONFIGURED or PENDING remains incomplete rather than success",
+    "canonical micro-node owner and blocked binding 018 remain explicit",
     "current sovereign orchestration state validation",
     "hosted PR validation",
     "merged main validation"
   ],
-  "next_task_after_release": "StegVerse-Labs/.github#60 continues machine-owned observation for a production-scale sovereign local model and E1->worker->E2 execution, then master-records/orchestration must record same-execution provider-usage and transition reconstruction PASS before Site/downstream activation."
+  "next_task_after_release": "MERGED INTO: tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json + StegVerse-Labs/.github#60; those owners execute the canonical micro-node endpoint on a sovereign carrier, then master-records/orchestration must record same-execution provider-usage and transition reconstruction PASS before Site/downstream activation."
 }
