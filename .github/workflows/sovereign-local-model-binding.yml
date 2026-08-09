@@ -40,8 +40,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install package and test dependencies
-        run: python -m pip install -e . pytest
+      - name: Install repository validation dependencies
+        run: python -m pip install -e '.[dev]'
       - name: Validate current sovereign ownership and blocker state
         run: python scripts/check_ecosystem_chat_sovereign_orchestration_state.py
       - name: Focused provider and binding tests
@@ -51,7 +51,7 @@ jobs:
           tests/test_provider_usage.py
           tests/test_master_records_usage_submission.py
           tests/test_sovereign_local_model_binding.py
-      - name: Execute real repository-local runtime through sovereign provider seam
+      - name: Execute real adapter-local compatibility runtime through sovereign provider seam
         run: python scripts/prove_sovereign_local_model_binding.py --output artifacts/sovereign-local-model-binding.json
       - name: Fail closed on false activation or missing measured evidence
         run: |
