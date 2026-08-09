@@ -3,15 +3,27 @@
   "task_id": "LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019",
   "originating_goal": "Install the missing transport/evidence adapter needed for canonical sovereign local-model binding without competing with LLMA-CANONICAL-LOCAL-MODEL-BINDING-018 or duplicating model-runtime, heartbeat, governance, or Master Records authority.",
   "repository": "StegVerse-org/LLM-adapter",
-  "branch": "feat/sovereign-local-model-binding",
+  "branch": "main",
   "canonical_issue": 18,
-  "state": "VALIDATED_PENDING_MERGE",
+  "state": "COMPLETE_RELEASED",
   "claimant": "sovereign-local-model transport/evidence adapter lane",
   "role": "transport-and-evidence-adapter",
   "claim_created_at": "2026-08-09T23:17:00Z",
-  "validated_at": "2026-08-09T23:37:46Z",
-  "claim_expiration_or_release_condition": "Release after PR #134 merges and merged-main validation confirms the same transport/evidence predicates; then merge all remaining production-binding responsibility into LLMA-CANONICAL-LOCAL-MODEL-BINDING-018 and SHWP-ECOSYSTEM-CHAT-INFERENCE-001.",
-  "claimed_paths": [
+  "released_at": "2026-08-09T23:42:00Z",
+  "release_reason": "PR #134 merged and merged-main validation independently passed; no implementation claim remains on these surfaces.",
+  "merge_evidence": {
+    "pull_request": 134,
+    "merge_commit": "8be63bfd2eddae4092b945032de956e4e9a63576",
+    "merged_main_binding_run": 31342485740,
+    "merged_main_binding_job": 93318434329,
+    "merged_main_binding_artifact_id": 9046241885,
+    "merged_main_binding_artifact_digest": "sha256:99216c44a21cafd619d900c8fcb79d73f8fff7dcb9707045e4c0da77fccfc6bc",
+    "merged_main_validate_run": 31342485736,
+    "merged_main_architecture_guard_run": 31342485765,
+    "merged_main_provider_usage_run": 31342485757,
+    "conclusion": "SUCCESS"
+  },
+  "completed_surfaces": [
     "llm_adapter/http_provider_clients.py",
     "llm_adapter/sovereign_local_model_binding.py",
     "llm_adapter/local_model_runtime.py",
@@ -20,35 +32,28 @@
     "scripts/check_ecosystem_chat_sovereign_orchestration_state.py",
     ".github/workflows/sovereign-local-model-binding.yml",
     "LLM_ADAPTER_MIRROR_HANDOFF.md",
-    "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
     "data/ecosystem-chat-sovereign-orchestration-state.json",
-    "receipts/sovereign-local-model-binding.latest.json",
-    "tasks/LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019.json"
+    "receipts/sovereign-local-model-binding.latest.json"
   ],
-  "authoritative_read_only": [
-    "tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json",
-    "tasks/LLMA-LOCAL-RUNTIME-MODEL-017.json",
-    "docs/LOCAL_RUNTIME_MODEL_MIRROR_HANDOFF.md",
-    "data/llm-adapter-orchestration-state.json",
-    "receipts/local-runtime-model-proof.latest.json"
+  "validated_predicates": [
+    "private StegVerse provider response preserves model hash and local-training metadata",
+    "prompt/completion/total token metrics are MEASURED from the provider response",
+    "latency is MEASURED from the provider response",
+    "model/proof identity is fail-closed across the binding",
+    "missing Master Records custody remains incomplete rather than success",
+    "reference/compatibility model cannot satisfy production-scale activation",
+    "provider output, usage evidence, workflow success, and receipt state grant no authority"
   ],
-  "validation_evidence": {
-    "workflow_run": 31342346776,
-    "workflow_job": 93318086281,
-    "conclusion": "SUCCESS",
-    "artifact_id": 9046204637,
-    "artifact_digest": "sha256:e368a564bfdd07d62d6297461de20f7e9771a41a990093232e550451ce413f2d",
-    "validated_head": "0be9c99e2e346ca701481e369c07ac3a5dcf7bba",
-    "receipt": "receipts/sovereign-local-model-binding.latest.json"
-  },
   "canonical_binding": {
     "task_id": "LLMA-CANONICAL-LOCAL-MODEL-BINDING-018",
     "state": "BLOCKED",
+    "satisfied_by_019": false,
     "canonical_model_owner": "StegVerse-002/micro-node-runtime#22",
     "machine_observable_release_condition": "A repository-native lane with access to both private repositories executes the canonical HTTP contract, or the canonical sovereign node carrier presents that endpoint directly to LLM-adapter."
   },
   "upstream_evidence": {
     "canonical_micro_node_goal": "SOVEREIGN-LOCAL-MODEL-001",
+    "canonical_micro_node_state": "COMPLETE_RELEASED",
     "canonical_micro_node_validation_run": 31339534741,
     "canonical_micro_node_artifact_id": 9045384610,
     "adapter_local_task": "LLMA-LOCAL-RUNTIME-MODEL-017",
@@ -62,10 +67,15 @@
     "no second heartbeat or worker registry",
     "no duplicate governance or admissibility engine",
     "no duplicate Master Records custody authority",
-    "no external hosted inference dependency becomes production authority",
-    "no production-scale LLM claim from either reference model",
-    "no VERIFIED product activation without same-execution provider-usage and transition reconstruction PASS",
-    "legacy data/llm-adapter-orchestration-state.json remains the immutable sequence-0003 historical record"
+    "no production activation without same-execution provider-usage and transition reconstruction PASS"
   ],
-  "next_task_after_release": "MERGED INTO: tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json + StegVerse-Labs/.github#60; those owners execute the canonical micro-node endpoint on a sovereign carrier, then master-records/orchestration must record same-execution provider-usage and transition reconstruction PASS before Site/downstream activation."
+  "claim_released": true,
+  "continuation_state": "MERGED_INTO_CANONICAL_WORKSTREAM",
+  "merged_into": [
+    "StegVerse-org/LLM-adapter/tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json",
+    "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+    "StegVerse-002/micro-node-runtime#16/#22",
+    "master-records/orchestration"
+  ],
+  "next_task_after_release": "Canonical task 018 and .github#60 execute the canonical micro-node endpoint on a sovereign carrier; master-records/orchestration must then record same-execution provider-usage and transition reconstruction PASS before Site/downstream activation."
 }
