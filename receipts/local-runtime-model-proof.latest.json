@@ -1,0 +1,36 @@
+{
+  "authority_attached": false,
+  "base_url_scope": "loopback",
+  "discovery_state": "LAUNCHED_AND_DISCOVERED",
+  "execution_authority": false,
+  "external_provider_used": false,
+  "inference": {
+    "authority_attached": false,
+    "execution_authority": false,
+    "input_hash": "eb80e2077fb8e541a11ed6dbcd9532de7b26a28c7c534a2c103ff73faa3a5d60",
+    "model_class": "repository_trained_count_language_model",
+    "model_id": "stegverse-local-reference-v1",
+    "output": "records model identity input hash and execution",
+    "output_hash": "34d1d39c4bc6145cdfe1898ebf1a6a0a409ff6ca9cf8d187295c7dd43285c9f8",
+    "protocol": "stegverse.local-runtime.v1",
+    "receipt_hash": "6af40adb256350ec6ad5f6b4acf924e129ad7e4ba345d0a6c7e42b78318e5f50",
+    "weights_sha256": "b764e082c90e2c40998faf51e2bb3f616b5fad72dfd77735a2e86a7d2798fe4f"
+  },
+  "launched_by_proof": true,
+  "network_required_for_model": false,
+  "next_executable_action": "bind this local runtime protocol into Ecosystem Chat governed provider execution before custody/activation gates",
+  "next_owner": "StegVerse-org/LLM-adapter#18",
+  "real_local_inference_observed": true,
+  "receipt_hash": "f078d8507cf3ef5d1d5a36474b3f93ad73f3435ca55f51bab0545f2e3c6935ca",
+  "runtime": "stegverse-local",
+  "runtime_identity": {
+    "authority_attached": false,
+    "model_id": "stegverse-local-reference-v1",
+    "network_required": false,
+    "protocol": "stegverse.local-runtime.v1",
+    "runtime": "repository-owned-python-loopback",
+    "weights_sha256": "b764e082c90e2c40998faf51e2bb3f616b5fad72dfd77735a2e86a7d2798fe4f"
+  },
+  "schema_version": "stegverse.local-runtime-model-proof.v1",
+  "state": "COMPLETE"
+}
