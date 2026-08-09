@@ -1,18 +1,20 @@
 {
-  "blockers": [],
-  "consumer_pull_verified": true,
+  "blockers": [
+    "fresh consumer pull verification not retained"
+  ],
+  "consumer_pull_verified": false,
   "custody_authorized": false,
   "manual_user_action_required": false,
-  "observed_digest": "sha256:ec404d3d7f496e23f9eb83cbfa3a9b232f8e418744f651e109b9122c8a79effa",
+  "observed_digest": null,
   "observed_receipt_schema": "stegdeploy.image-publication.v2",
-  "observed_receipt_state": "PUBLISHED",
+  "observed_receipt_state": "BLOCKED",
   "persistent_deployment_authorized": false,
   "provider_execution_authorized": false,
   "receipt": "receipts/stegdeploy-image-publication.json",
   "repository": "StegVerse-org/LLM-adapter",
   "schema": "stegdeploy.image-publication-readiness.v1",
   "site_activation_authorized": false,
-  "state": "READY",
+  "state": "BLOCKED",
   "workflow": ".github/workflows/stegdeploy-image.yml",
   "workflow_contract_valid": true
 }
