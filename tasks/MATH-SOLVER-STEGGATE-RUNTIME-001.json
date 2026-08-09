@@ -1,0 +1,30 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "MATH-SOLVER-STEGGATE-RUNTIME-001",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "main",
+  "originating_goal": "Convert the public Math Solver from RESEARCH_NOTE into a real canonical-Steggate-gated deterministic execution surface for the four-public-application proof.",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "owner": "llm-adapter-math-solver-runtime",
+  "claim_created_at": "2026-08-08T21:15:00-05:00",
+  "claim_release_condition": "CI integration PASS plus hosted route observation plus Site consumer binding and replay evidence",
+  "implementation_locations": [
+    "llm_adapter/math_solver_gateway.py",
+    "pyproject.toml",
+    "tests/test_math_solver_gateway.py",
+    ".github/workflows/math-solver-governed-runtime.yml"
+  ],
+  "validation_locations": [
+    "tests/test_math_solver_gateway.py",
+    ".github/workflows/math-solver-governed-runtime.yml"
+  ],
+  "canonical_dependencies": [
+    "StegVerse-Labs/StegCore#68",
+    "StegVerse-Labs/StegCore#70",
+    "StegVerse-Labs/Site#240"
+  ],
+  "collision_boundary": "No parallel StegGate evaluator; use llm_adapter/steggate_portable_consumer.py and canonical StegCore only.",
+  "next_executable_action": "Observe math-solver-governed-runtime workflow, repair until PASS, then deploy through the existing service-gateway lane and bind the public Site surface.",
+  "authority_effect": false,
+  "activation_effect": false
+}
