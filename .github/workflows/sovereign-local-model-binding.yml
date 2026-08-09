@@ -7,8 +7,11 @@ on:
       - "llm_adapter/local_model_runtime.py"
       - "llm_adapter/sovereign_local_model_binding.py"
       - "scripts/prove_sovereign_local_model_binding.py"
+      - "scripts/check_ecosystem_chat_sovereign_orchestration_state.py"
       - "tests/test_sovereign_local_model_binding.py"
       - "receipts/local-runtime-model-proof.latest.json"
+      - "tasks/LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019.json"
+      - "data/ecosystem-chat-sovereign-orchestration-state.json"
       - ".github/workflows/sovereign-local-model-binding.yml"
   push:
     branches: [main]
@@ -17,8 +20,11 @@ on:
       - "llm_adapter/local_model_runtime.py"
       - "llm_adapter/sovereign_local_model_binding.py"
       - "scripts/prove_sovereign_local_model_binding.py"
+      - "scripts/check_ecosystem_chat_sovereign_orchestration_state.py"
       - "tests/test_sovereign_local_model_binding.py"
       - "receipts/local-runtime-model-proof.latest.json"
+      - "tasks/LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019.json"
+      - "data/ecosystem-chat-sovereign-orchestration-state.json"
       - ".github/workflows/sovereign-local-model-binding.yml"
   workflow_dispatch:
 
@@ -36,6 +42,8 @@ jobs:
           python-version: "3.11"
       - name: Install package and test dependencies
         run: python -m pip install -e . pytest
+      - name: Validate current sovereign ownership and blocker state
+        run: python scripts/check_ecosystem_chat_sovereign_orchestration_state.py
       - name: Focused provider and binding tests
         run: >-
           python -m pytest -q
