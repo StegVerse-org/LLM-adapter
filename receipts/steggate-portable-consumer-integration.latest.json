@@ -1,0 +1,24 @@
+{
+  "schema_version": "ECOSYSTEM-CHAT-STEGGATE-PORTABLE-CONSUMER-v1",
+  "state": "VERIFIED",
+  "consumer": "StegVerse-org/LLM-adapter",
+  "consumer_commit": "935b3d165eda6201778f9c83c7002419b2414b37",
+  "stegcore_commit": "2f0076a25fdf7ee020dca85f3934c6bca385b310",
+  "portable_profile": "steggate.portable-micronode.v1",
+  "workflow_run": 31286444819,
+  "workflow_job": 93176065654,
+  "artifact_id": 9029971776,
+  "artifact_digest": "sha256:c555e9035d480120d36184308d165e8e0987a0765c3020a60abf0c45f425c4f4",
+  "assertions": {
+    "governed_package_constructed_by_consumer": true,
+    "canonical_stegcore_runtime_pinned": true,
+    "provider_callback_reachable_only_after_steggate_and_coherence_allow": true,
+    "policy_drift_prevents_provider_callback": true,
+    "package_transport_serializable": true,
+    "provider_credentials_transported": false,
+    "public_steggate_ingress_required": false,
+    "decision_authority_duplicated": false
+  },
+  "authority_effect": false,
+  "notes": "This receipt proves portable StegGate consumer integration using a deterministic provider callback. It does not by itself prove live external model-provider execution, custody, publication, release, or Continuity authority."
+}
