@@ -1,0 +1,73 @@
+name: StegGate Portable Consumer Integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "llm_adapter/steggate_portable_consumer.py"
+      - "tests/test_steggate_portable_consumer.py"
+      - ".github/workflows/steggate-portable-consumer.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable-steggate-consumer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout LLM adapter
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install consumer and pinned canonical StegCore
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install "git+https://github.com/StegVerse-Labs/StegCore.git@2f0076a25fdf7ee020dca85f3934c6bca385b310"
+          python -m pip install pytest
+
+      - name: Verify portable governed-package consumer
+        run: python -m pytest -q tests/test_steggate_portable_consumer.py
+
+      - name: Emit integration receipt
+        run: |
+          mkdir -p artifacts
+          python - <<'PY'
+          import hashlib, json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from stegcore.portable_steggate import runtime_fingerprint
+          record = {
+              "schema_version": "ECOSYSTEM-CHAT-STEGGATE-PORTABLE-CONSUMER-v1",
+              "recorded_at": datetime.now(timezone.utc).isoformat(),
+              "consumer": "StegVerse-org/LLM-adapter",
+              "stegcore_commit": "2f0076a25fdf7ee020dca85f3934c6bca385b310",
+              "runtime_fingerprint": runtime_fingerprint(),
+              "portable_profile": "steggate.portable-micronode.v1",
+              "provider_credentials_transported": False,
+              "public_steggate_ingress_required": False,
+              "decision_authority_duplicated": False,
+              "provider_callback_reachable_only_after_steggate_and_coherence_allow": True,
+              "status": "PASS"
+          }
+          canonical = json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
+          record["receipt_hash"] = hashlib.sha256(canonical).hexdigest()
+          Path("artifacts/steggate-portable-consumer-receipt.json").write_text(
+              json.dumps(record, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Upload integration evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: steggate-portable-consumer-evidence
+          path: artifacts/steggate-portable-consumer-receipt.json
+          if-no-files-found: error
+          retention-days: 90
