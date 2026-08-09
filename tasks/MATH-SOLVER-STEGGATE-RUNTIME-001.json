@@ -4,11 +4,12 @@
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "main",
   "originating_goal": "Convert the public Math Solver from RESEARCH_NOTE into a real canonical-Steggate-gated deterministic execution surface for the four-public-application proof.",
-  "state": "BLOCKED",
-  "role": "CLAIMED_FOR_INTEGRATION",
-  "owner": "llm-adapter-math-solver-runtime",
+  "state": "MACHINE_OWNED",
+  "role": "BLOCKED_HOST_OBSERVATION_AND_CROSS_REPO_ACTIVATION",
+  "owner": ".github/workflows/observe-math-solver-public-runtime.yml + StegVerse-Labs/Site/.github/workflows/math-solver-public-activation.yml",
   "claim_created_at": "2026-08-08T21:15:00-05:00",
-  "claim_release_condition": "Hosted route observation plus Site consumer binding and deployed replay evidence",
+  "claim_released_at": "2026-08-08T23:56:00-05:00",
+  "claim_release_reason": "Unique chat-owned implementation/integration work was transferred to repository-native observers and activation consumers with deterministic release conditions.",
   "implementation_locations": [
     "llm_adapter/math_solver_gateway.py",
     "llm_adapter/deployed_gateway.py",
@@ -16,12 +17,6 @@
     "tests/test_math_solver_gateway.py",
     ".github/workflows/math-solver-governed-runtime.yml",
     "docs/MATH_SOLVER_RUNTIME_MIRROR_HANDOFF.md"
-  ],
-  "validation_locations": [
-    "tests/test_math_solver_gateway.py",
-    ".github/workflows/math-solver-governed-runtime.yml",
-    "GitHub Actions run 31290093572",
-    "artifact 9031088299"
   ],
   "validation_state": "CI_PASS",
   "validation_evidence": {
@@ -34,17 +29,26 @@
   "blocker": {
     "state": "BLOCKED_HOST_BUILD_CAPACITY",
     "owner": "Render service srv-d9epkh3rjlhs73csc3qg",
-    "observed_deploy_id": "dep-d9ru79jbc2fs73av1qsg",
-    "machine_cause": "workspace build pipeline minutes exhausted",
-    "release_condition": "A later deployment containing this runtime reaches live and the public readiness/solve routes pass direct observation."
+    "latest_observation": "receipts/math-solver-public-runtime.latest.json",
+    "machine_cause": "public runtime remains unavailable while Render source deployments cannot complete",
+    "release_condition": "The LLM-adapter observer records COMPLETE after readiness plus two governed solve/replay calls pass; Site then consumes that receipt automatically and advances only directly proven gates."
   },
+  "machine_owned_continuation": [
+    "StegVerse-org/LLM-adapter/.github/workflows/observe-math-solver-public-runtime.yml",
+    "StegVerse-org/LLM-adapter/scripts/observe_math_solver_public_runtime.py",
+    "StegVerse-Labs/Site/.github/workflows/math-solver-public-activation.yml",
+    "StegVerse-Labs/Site/scripts/advance_math_solver_public_activation.py"
+  ],
   "canonical_dependencies": [
     "StegVerse-Labs/StegCore#68",
     "StegVerse-Labs/StegCore#70",
-    "StegVerse-Labs/Site#240"
+    "StegVerse-Labs/Site#240",
+    "StegVerse-Labs/Site#239"
   ],
   "collision_boundary": "No parallel StegGate evaluator; use llm_adapter/steggate_portable_consumer.py and canonical StegCore only.",
-  "next_executable_action": "Observe the next Render deployment after build capacity returns; on live, verify /api/math-solver/v1/readiness and /solve, then bind and verify StegVerse-Labs/Site/math-solver/index.html.",
+  "next_executable_action": "Repository workflows retry automatically; no chat polling or manual dispatch is required.",
+  "session_consolidation": "MERGED_INTO_CANONICAL_WORKSTREAM",
+  "canonical_continuation": "StegVerse-Labs/Site#240 + docs/STEGGATE_FOUR_APP_MIRROR_HANDOFF.md",
   "authority_effect": false,
   "activation_effect": false
 }
