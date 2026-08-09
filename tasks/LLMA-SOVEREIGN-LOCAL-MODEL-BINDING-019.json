@@ -9,17 +9,24 @@
   "claimant": "sovereign-local-model provider-binding integration lane",
   "role": "integration-and-validation",
   "claim_created_at": "2026-08-09T23:17:00Z",
-  "claim_expiration_or_release_condition": "Release after PR #134 merges to main with hosted validation proving a real repository-local process crosses StegVerseLocalHTTPProviderClient, exact measured usage enters canonical provider-usage evidence, source model/proof hashes remain bound, reference model remains non-production-scale, missing custody remains fail-closed, and handoff/orchestration/receipt state is updated.",
+  "claim_expiration_or_release_condition": "Release after PR #134 merges to main with hosted validation proving a real repository-local process crosses StegVerseLocalHTTPProviderClient, exact measured usage enters canonical provider-usage evidence, source model/proof hashes remain bound, reference model remains non-production-scale, missing custody remains fail-closed, and current sovereign state/handoff/receipt are updated.",
   "claimed_paths": [
     "llm_adapter/http_provider_clients.py",
     "llm_adapter/sovereign_local_model_binding.py",
     "llm_adapter/local_model_runtime.py",
     "tests/test_sovereign_local_model_binding.py",
-    "docs/LOCAL_RUNTIME_MODEL_MIRROR_HANDOFF.md",
+    "scripts/prove_sovereign_local_model_binding.py",
+    "scripts/check_ecosystem_chat_sovereign_orchestration_state.py",
+    ".github/workflows/sovereign-local-model-binding.yml",
     "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
-    "data/llm-adapter-orchestration-state.json",
+    "data/ecosystem-chat-sovereign-orchestration-state.json",
     "receipts/sovereign-local-model-binding.latest.json",
     "tasks/LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019.json"
+  ],
+  "authoritative_read_only": [
+    "docs/LOCAL_RUNTIME_MODEL_MIRROR_HANDOFF.md",
+    "data/llm-adapter-orchestration-state.json",
+    "receipts/local-runtime-model-proof.latest.json"
   ],
   "upstream_evidence": {
     "micro_node_task": "StegVerse-002/micro-node-runtime/SOVEREIGN-LOCAL-MODEL-001",
@@ -38,7 +45,8 @@
     "no external hosted inference dependency",
     "no production-scale LLM claim from either reference model",
     "no VERIFIED product activation without same-execution provider-usage and transition reconstruction PASS",
-    "LLMA-LOCAL-RUNTIME-MODEL-017 is released and retained as consumer-side fallback/conformance evidence; production model/runtime ownership remains micro-node #16/#22"
+    "LLMA-LOCAL-RUNTIME-MODEL-017 is released and retained as consumer-side fallback/conformance evidence; production model/runtime ownership remains micro-node #16/#22",
+    "legacy data/llm-adapter-orchestration-state.json remains the immutable sequence-0003 historical record"
   ],
   "expected_evidence": [
     "real subprocess local model launch",
@@ -47,6 +55,7 @@
     "MEASURED prompt/completion/total token metrics",
     "MEASURED latency metric",
     "Master Records NOT_CONFIGURED or PENDING remains incomplete rather than success",
+    "current sovereign orchestration state validation",
     "hosted PR validation",
     "merged main validation"
   ],
