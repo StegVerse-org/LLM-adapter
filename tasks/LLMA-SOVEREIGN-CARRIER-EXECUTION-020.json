@@ -1,0 +1,43 @@
+{
+  "schema_version": "stegverse.work-claim.v1",
+  "task_id": "LLMA-SOVEREIGN-CARRIER-EXECUTION-020",
+  "originating_goal": "Consume the exact TVC-admitted canonical micro-node endpoint through StegVerseLocalHTTPProviderClient on the sovereign carrier without GitHub-token or hosted-control-plane authority.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "feat/canonical-sovereign-route-execution-20260810",
+  "canonical_issue": 18,
+  "state": "CLAIMED_FOR_INTEGRATION",
+  "claimant": "canonical-sovereign-route-execution lane",
+  "role": "same-carrier transport execution and provider-usage evidence",
+  "claim_created_at": "2026-08-10T11:46:00Z",
+  "claim_expires_at": "2026-08-11T11:46:00Z",
+  "canonical_model_owner": "StegVerse-002/micro-node-runtime#22",
+  "heartbeat_owner": "StegVerse-Labs/.github#60",
+  "route_authority_owner": "StegVerse-Labs/TVC:TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002",
+  "credential_policy_owner": "StegVerse-Labs/TV",
+  "custody_owner": "master-records/orchestration",
+  "surfaces": [
+    "scripts/execute_canonical_sovereign_route.py",
+    "tests/test_execute_canonical_sovereign_route.py",
+    "tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json",
+    "LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "authority_contract": {
+    "credential_requirement_for_local_model": "NONE",
+    "github_token_required": false,
+    "github_actions_production_role": false,
+    "route_receipt_required": true,
+    "execution_authority": false,
+    "model_output_authority": false
+  },
+  "collision_boundaries": [
+    "do not duplicate canonical model/runtime",
+    "do not duplicate TVC route authority",
+    "do not use GitHub tokens for model/runtime discovery, retrieval, route, or execution",
+    "do not create a second heartbeat or worker registry",
+    "do not duplicate Master Records custody",
+    "do not treat reference-model execution as production-scale LLM activation"
+  ],
+  "claim_release_condition": "The committed carrier executor validates the exact TVC proof/endpoint binding, executes StegVerseLocalHTTPProviderClient against that endpoint, persists measured provider usage and binding evidence, fails closed on route/authority/token mismatch, and merged validation passes.",
+  "machine_observable_activation_condition": "On a sovereign carrier the executor reports real provider execution for the exact TVC-admitted endpoint and same-execution provider-usage plus transition reconstruction both PASS in Master Records.",
+  "next_task_after_release": "Bind this executor into StegVerse-Labs/.github#60 after TVC_LOCAL_MODEL_ROUTE_ADMITTED and carry its exact same-execution evidence into master-records/orchestration."
+}
