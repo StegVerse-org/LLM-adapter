@@ -5,7 +5,7 @@
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "feat/canonical-sovereign-route-execution-20260810",
   "canonical_issue": 18,
-  "state": "CLAIMED_FOR_INTEGRATION",
+  "state": "CLAIMED_FOR_VALIDATION",
   "claimant": "canonical-sovereign-route-execution lane",
   "role": "same-carrier transport execution and provider-usage evidence",
   "claim_created_at": "2026-08-10T11:46:00Z",
@@ -21,6 +21,16 @@
     "tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json",
     "LLM_ADAPTER_MIRROR_HANDOFF.md"
   ],
+  "implementation_progress": {
+    "tvc_route_receipt_validation": "IMPLEMENTED",
+    "exact_runtime_proof_hash_binding": "IMPLEMENTED",
+    "credential_none_enforcement": "IMPLEMENTED",
+    "github_token_rejection": "IMPLEMENTED",
+    "canonical_private_transport_execution": "IMPLEMENTED",
+    "measured_provider_usage_capture": "IMPLEMENTED",
+    "master_records_usage_submission": "REUSES_CANONICAL_EXISTING_MODULE",
+    "same_execution_transition_reconstruction": "PENDING_INTEGRATION"
+  },
   "authority_contract": {
     "credential_requirement_for_local_model": "NONE",
     "github_token_required": false,
