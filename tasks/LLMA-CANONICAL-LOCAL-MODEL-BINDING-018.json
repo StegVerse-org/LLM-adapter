@@ -15,11 +15,17 @@
   "machine_observer_owner": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
   "custody_reconstruction_owner": "master-records/orchestration",
   "attempted_evidence": {
-    "workflow_run": 31341885820,
-    "workflow_job": 93316914923,
+    "initial_workflow_run": 31341885820,
+    "initial_workflow_job": 93316914923,
+    "latest_workflow_run": 31348276640,
+    "latest_workflow_job": 93334220559,
+    "latest_trigger_commit": "6737a7ff6fa5f5e9239e909555d6e37836a8a271",
     "conclusion": "FAILURE",
     "failed_step": "Checkout canonical micro-node model owner",
-    "exact_error": "remote: Repository not found; LLM-adapter GITHUB_TOKEN cannot read private StegVerse-002/micro-node-runtime"
+    "checkout_attempts_observed": 3,
+    "exact_error": "remote: Repository not found; fatal: repository 'https://github.com/StegVerse-002/micro-node-runtime/' not found",
+    "blocker_revalidated": true,
+    "blocker_revalidated_at": "2026-08-09T20:53:50-05:00"
   },
   "completed_dependency": {
     "task_id": "LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019",
@@ -57,5 +63,5 @@
     "master-records/orchestration"
   ],
   "archive_dependency": "NONE_ON_ORIGINATING_SESSION",
-  "archive_note": "The originating session may be archived because all unique implementation and continuation state is durable here and in the referenced canonical owners. Archival does not imply product activation."
+  "archive_note": "The originating session may be archived because all unique implementation, latest blocker evidence, and continuation state are durable here and in the referenced canonical owners. Archival does not imply product activation."
 }
