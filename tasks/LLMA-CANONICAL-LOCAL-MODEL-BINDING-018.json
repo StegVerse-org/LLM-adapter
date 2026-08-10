@@ -1,31 +1,26 @@
 {
   "schema_version": "stegverse.work-claim.v1",
   "task_id": "LLMA-CANONICAL-LOCAL-MODEL-BINDING-018",
-  "originating_goal": "Bind the canonical StegVerse-002/micro-node-runtime local model into StegVerseLocalHTTPProviderClient and prove real request/usage compatibility without creating a competing model authority.",
+  "originating_goal": "Bind the canonical StegVerse-002/micro-node-runtime local model into StegVerseLocalHTTPProviderClient without GitHub-token or hosted-control-plane authority.",
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "main",
-  "state": "BLOCKED",
-  "claimant": "canonical-sovereign-carrier-integration-workstream",
-  "role": "cross-repository integration",
-  "claim_created_at": "2026-08-09T18:25:00-05:00",
-  "blocked_at": "2026-08-09T18:27:01-05:00",
-  "ownership_transferred_at": "2026-08-09T20:51:00-05:00",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
+  "claimant": "StegVerse-Labs/TVC:TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002",
+  "role": "transport consumer under TVC route authority",
+  "released_at": "2026-08-09T20:54:00-05:00",
   "canonical_model_owner": "StegVerse-002/micro-node-runtime#22",
   "transport_owner": "StegVerse-org/LLM-adapter#18",
-  "machine_observer_owner": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
-  "custody_reconstruction_owner": "master-records/orchestration",
-  "attempted_evidence": {
-    "initial_workflow_run": 31341885820,
-    "initial_workflow_job": 93316914923,
-    "latest_workflow_run": 31348276640,
-    "latest_workflow_job": 93334220559,
-    "latest_trigger_commit": "6737a7ff6fa5f5e9239e909555d6e37836a8a271",
-    "conclusion": "FAILURE",
-    "failed_step": "Checkout canonical micro-node model owner",
-    "checkout_attempts_observed": 3,
-    "exact_error": "remote: Repository not found; fatal: repository 'https://github.com/StegVerse-002/micro-node-runtime/' not found",
-    "blocker_revalidated": true,
-    "blocker_revalidated_at": "2026-08-09T20:53:50-05:00"
+  "route_authority_owner": "StegVerse-Labs/TVC",
+  "credential_policy_owner": "StegVerse-Labs/TV",
+  "github_token_required": false,
+  "github_actions_production_role": false,
+  "credential_requirement_for_repository_local_model": "NONE",
+  "superseded_evidence": {
+    "workflow_run": 31341885820,
+    "workflow_job": 93316914923,
+    "failure": "cross-private-repository checkout attempted to rely on repository access credentials",
+    "superseded_workflow": ".github/workflows/canonical-sovereign-local-model-binding.yml",
+    "workflow_deleted_commit": "e0c3c1e5d683d3066f869f205bc9034e630c2efb"
   },
   "completed_dependency": {
     "task_id": "LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019",
@@ -36,10 +31,13 @@
     "artifact_id": 9046241885,
     "claim_released": true
   },
-  "blocker_owner": "repository access policy / cross-repository Actions credential boundary or sovereign-carrier presentation boundary",
-  "machine_observable_release_condition": "A repository-native execution lane possessing read access to both private repositories can resolve commit 395d4013d1354c07bc3cf66c44f4f26f856c75fc and execute the canonical binding contract, or the canonical sovereign node carrier executes the same HTTP contract directly and presents its private endpoint to LLM-adapter.",
-  "next_executable_action": "StegVerse-Labs/.github#60 and StegVerse-002/micro-node-runtime#16/#22 execute the already-installed canonical local model on a declared sovereign carrier and present its private endpoint to StegVerse-org/LLM-adapter#18; then master-records/orchestration must record same-execution provider-usage and transition reconstruction PASS. Do not reimplement the model in LLM-adapter.",
+  "canonical_route_task": "StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json",
+  "canonical_route_handoff": "StegVerse-Labs/TVC/docs/PROVIDER_CAPABILITY_RESOLUTION_MIRROR_HANDOFF.md",
+  "machine_observable_release_condition": "On a declared sovereign carrier, TVC evaluates the canonical micro-node runtime proof and emits ROUTE_ADMITTED with credential_requirement=NONE, github_token_required=false, third_party_execution_platform_required=false and execution_authority=false; LLM-adapter then consumes exactly that private endpoint and same-execution provider-usage plus transition reconstruction PASS in Master Records.",
+  "next_executable_action": "TVC evaluates the canonical local-runtime proof on the sovereign carrier, emits the no-secret/no-credential route receipt, LLM-adapter consumes the admitted endpoint, and master-records/orchestration records same-execution reconstruction. No source-repository checkout belongs in the runtime path.",
   "required_completion_evidence": [
+    "TVC sovereign-local route receipt state ROUTE_ADMITTED",
+    "credential_requirement NONE and github_token_required false",
     "canonical micro-node endpoint consumed by StegVerseLocalHTTPProviderClient on a sovereign carrier",
     "private provider execution traverses E1 -> model worker -> E2",
     "provider/model usage is MEASURED for that execution",
@@ -49,19 +47,19 @@
   ],
   "collision_boundaries": [
     "do not duplicate the canonical local model",
+    "do not use GitHub tokens for model/runtime authorization, discovery, retrieval, or execution",
     "do not treat CI as sovereign-node activation",
     "do not create a second heartbeat, scheduler, or worker registry",
     "do not move StegGate or Master Records authority",
     "do not treat session archival as activation"
   ],
-  "continuation_state": "MACHINE_OWNED_BLOCKED",
+  "continuation_state": "MACHINE_OWNED_TVC_ROUTE_INTEGRATION",
   "merged_from_originating_session": true,
   "canonical_continuation": [
-    "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+    "StegVerse-Labs/TVC:TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002",
     "StegVerse-002/micro-node-runtime#16/#22",
     "StegVerse-org/LLM-adapter#18",
     "master-records/orchestration"
   ],
-  "archive_dependency": "NONE_ON_ORIGINATING_SESSION",
-  "archive_note": "The originating session may be archived because all unique implementation, latest blocker evidence, and continuation state are durable here and in the referenced canonical owners. Archival does not imply product activation."
+  "archive_dependency": "SOVEREIGN_CARRIER_ROUTE_CONSUMPTION_NOT_YET_OBSERVED"
 }
