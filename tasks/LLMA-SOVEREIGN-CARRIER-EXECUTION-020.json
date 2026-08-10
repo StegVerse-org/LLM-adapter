@@ -3,36 +3,47 @@
   "task_id": "LLMA-SOVEREIGN-CARRIER-EXECUTION-020",
   "originating_goal": "Consume the exact TVC-admitted canonical micro-node endpoint through StegVerseLocalHTTPProviderClient on the sovereign carrier without GitHub-token or hosted-control-plane authority.",
   "repository": "StegVerse-org/LLM-adapter",
-  "branch": "feat/canonical-sovereign-route-execution-20260810",
+  "branch": "main",
   "canonical_issue": 18,
-  "state": "CLAIMED_FOR_VALIDATION",
+  "state": "COMPLETE_RELEASED",
   "claimant": "canonical-sovereign-route-execution lane",
-  "role": "same-carrier transport execution and provider-usage evidence",
+  "role": "same-carrier transport execution implementation and provider-usage evidence adapter",
   "claim_created_at": "2026-08-10T11:46:00Z",
-  "claim_expires_at": "2026-08-11T11:46:00Z",
+  "claim_released_at": "2026-08-10T20:55:00Z",
+  "release_reason": "PR #135 merged the exact TVC-admitted endpoint executor and the complete validation matrix passed. Remaining work is sovereign-carrier observation plus same-execution Master Records reconstruction, not missing LLM-adapter implementation.",
   "canonical_model_owner": "StegVerse-002/micro-node-runtime#22",
   "heartbeat_owner": "StegVerse-Labs/.github#60",
   "route_authority_owner": "StegVerse-Labs/TVC:TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002",
-  "credential_policy_owner": "StegVerse-Labs/TV",
+  "credential_authority_model": "TC/TVC",
+  "legacy_repository_note": "Older evidence may name StegVerse-Labs/TV as credential-policy owner. Those references are historical evidence only and do not redefine the current TC/TVC credential-authority model.",
   "custody_owner": "master-records/orchestration",
   "surfaces": [
     "scripts/execute_canonical_sovereign_route.py",
     "tests/test_execute_canonical_sovereign_route.py",
     "tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json",
+    "docs/SOVEREIGN_CARRIER_EXECUTION_MIRROR_HANDOFF.md",
     "LLM_ADAPTER_MIRROR_HANDOFF.md"
   ],
   "implementation_progress": {
-    "tvc_route_receipt_validation": "IMPLEMENTED",
-    "exact_runtime_proof_hash_binding": "IMPLEMENTED",
-    "credential_none_enforcement": "IMPLEMENTED",
-    "github_token_rejection": "IMPLEMENTED",
-    "canonical_private_transport_execution": "IMPLEMENTED",
-    "measured_provider_usage_capture": "IMPLEMENTED",
+    "tvc_route_receipt_validation": "COMPLETE_VALIDATED",
+    "exact_runtime_proof_hash_binding": "COMPLETE_VALIDATED",
+    "credential_none_enforcement": "COMPLETE_VALIDATED",
+    "github_token_rejection": "COMPLETE_VALIDATED",
+    "canonical_private_transport_execution": "COMPLETE_VALIDATED",
+    "measured_provider_usage_capture": "COMPLETE_VALIDATED",
     "master_records_usage_submission": "REUSES_CANONICAL_EXISTING_MODULE",
-    "same_execution_transition_reconstruction": "PENDING_INTEGRATION"
+    "same_execution_transition_reconstruction": "PENDING_DOWNSTREAM_INTEGRATION"
+  },
+  "validation_evidence": {
+    "pull_request": 135,
+    "head_sha": "dbb9558648c9c717d713b941487c48761dd104c6",
+    "merge_sha": "72934c7cf135ce2953591a81fe01e16c9719ec2f",
+    "validation_matrix": "PASS",
+    "github_token_required_for_production": false
   },
   "authority_contract": {
     "credential_requirement_for_local_model": "NONE",
+    "credential_authority_model": "TC/TVC",
     "github_token_required": false,
     "github_actions_production_role": false,
     "route_receipt_required": true,
@@ -47,7 +58,7 @@
     "do not duplicate Master Records custody",
     "do not treat reference-model execution as production-scale LLM activation"
   ],
-  "claim_release_condition": "The committed carrier executor validates the exact TVC proof/endpoint binding, executes StegVerseLocalHTTPProviderClient against that endpoint, persists measured provider usage and binding evidence, fails closed on route/authority/token mismatch, and merged validation passes.",
-  "machine_observable_activation_condition": "On a sovereign carrier the executor reports real provider execution for the exact TVC-admitted endpoint and same-execution provider-usage plus transition reconstruction both PASS in Master Records.",
-  "next_task_after_release": "Bind this executor into StegVerse-Labs/.github#60 after TVC_LOCAL_MODEL_ROUTE_ADMITTED and carry its exact same-execution evidence into master-records/orchestration."
+  "implementation_claim_release_condition": "SATISFIED by PR #135 merge plus passing validation matrix.",
+  "machine_observable_activation_condition": "On a sovereign carrier the released executor reports real provider execution for the exact TVC-admitted endpoint and same-execution provider-usage plus transition reconstruction both PASS in Master Records.",
+  "next_task_after_release": "StegVerse-Labs/.github#60 owns exact same-carrier execution observation after TVC_LOCAL_MODEL_ROUTE_ADMITTED; master-records/orchestration owns provider-usage and transition reconstruction."
 }
