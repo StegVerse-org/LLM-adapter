@@ -2,19 +2,21 @@
 
 ## Source of truth
 
-Organization: `StegVerse-org`
-Repository: `LLM-adapter`
-Branch: `main`
-Canonical Ecosystem Chat activation owner: `StegVerse-org/LLM-adapter#18`
-Parent four-app goal: `StegVerse-Labs/Site#239`
-Common StegGate runtime binding owner: `StegVerse-Labs/StegCore#70`
-Canonical StegGate owner: `StegVerse-Labs/StegCore`
-Canonical local-model/runtime owner: `StegVerse-002/micro-node-runtime#16/#22`
-Canonical local-model binding task: `tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json`
-Completed transport/evidence adapter: `tasks/LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019.json`
-Canonical machine observer: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001`
+Organization: `StegVerse-org`  
+Repository: `LLM-adapter`  
+Canonical branch: `main`  
+Active integration branch: `feat/canonical-sovereign-route-execution-20260810`  
+Canonical Ecosystem Chat activation owner: `StegVerse-org/LLM-adapter#18`  
+Parent four-app goal: `StegVerse-Labs/Site#239`  
+Common StegGate runtime binding owner: `StegVerse-Labs/StegCore#70`  
+Canonical local-model/runtime owner: `StegVerse-002/micro-node-runtime#16/#22`  
+Canonical local-model binding task: `tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json`  
+Completed transport/evidence adapter: `tasks/LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019.json`  
+Active same-carrier execution task: `tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json`  
+Scoped handoff: `docs/SOVEREIGN_CARRIER_EXECUTION_MIRROR_HANDOFF.md`  
+Canonical machine carrier: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001`
 
-This file is the authoritative continuation record for LLM-adapter. Live repository state, workflow artifacts, immutable receipts, current scoped handoffs, task records, and the parent Site four-app handoff supersede earlier chat summaries.
+This file is the authoritative repository continuation record. Live repository state, scoped handoffs, task records, workflow evidence, heartbeat/TVC receipts, immutable receipts, and Master Records reconstruction supersede earlier chat summaries.
 
 ## Active goal state
 
@@ -22,20 +24,23 @@ This file is the authoritative continuation record for LLM-adapter. Live reposit
 Repository-local governed path implementation: COMPLETE
 Portable StegGate consumer: COMPLETE + VALIDATED
 Canonical StegGate runtime identity binding: COMPLETE + VALIDATED IN CI
-Canonical local model development/runtime proof: COMPLETE + RELEASED in StegVerse-002/micro-node-runtime
+Canonical local model development/runtime: COMPLETE + RELEASED
+Persistent canonical local endpoint proof: COMPLETE + MERGED + VALIDATED
+Heartbeat-owned persistent model lifecycle: COMPLETE + MERGED + VALIDATED
+Heartbeat -> local TVC route invocation: COMPLETE + MERGED + VALIDATED
+TVC credential-free route evaluator: COMPLETE + MERGED / sovereign-carrier observation pending
 Transport/evidence adapter task 019: COMPLETE_RELEASED / CLAIM RELEASED
-Canonical model -> LLM-adapter live binding task 018: BLOCKED on private cross-repository execution carrier
+Canonical carrier execution task 020: CLAIMED_FOR_VALIDATION
 Real sovereign provider execution on canonical carrier: NOT YET OBSERVED
 Provider-usage custody/reconstruction: NOT YET OBSERVED
+Same-execution transition reconstruction: NOT YET OBSERVED
 Immutable zero-blocker Ecosystem Chat activation receipt: NOT YET OBSERVED
 Site ACTIVATION_COMPLETE: NOT YET OBSERVED
-Issue #18 state: BLOCKED / MACHINE_OWNED CONTINUATION
 Manual user tasks: NONE
-Originating chat-owned implementation work: NONE
-Session consolidation: MERGED_INTO_CANONICAL_WORKSTREAM
+Session consolidation: ACTIVE / UNIQUE INTEGRATION WORK REMAINS
 ```
 
-Repository/session completion does not imply public Ecosystem Chat activation.
+Repository or session implementation completion does not imply public Ecosystem Chat activation.
 
 ## Installed governed path
 
@@ -48,8 +53,11 @@ Site request
 -> canonical governed transition package
 -> canonical StegGate + independent coherence gate
 -> provider callback only after ALLOW + coherence ALLOW
+-> heartbeat-owned canonical micro-node model process
+-> exact persistent local runtime proof
+-> canonical TVC route evaluation
+-> ROUTE_ADMITTED / credential_requirement NONE
 -> StegVerseLocalHTTPProviderClient private/loopback transport
--> canonical sovereign model worker on admitted carrier
 -> provider response + measured usage
 -> provider usage persistence
 -> authenticated provider-usage custody
@@ -60,15 +68,11 @@ Site request
 -> Publisher/wiki projections
 ```
 
-`StegVerse-002/micro-node-runtime` is the canonical model/runtime owner. `SOVEREIGN-LOCAL-MODEL-001` formally developed the local reference language model and installed actual discovery/launch/inference/proof behavior. The adapter-local model created by `LLMA-LOCAL-RUNTIME-MODEL-017` is superseded as product authority and retained only as a compatibility fixture.
-
-`LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019` is complete and released. It validated transport/evidence semantics but does not satisfy or replace canonical production binding task `LLMA-CANONICAL-LOCAL-MODEL-BINDING-018`.
-
-No application-specific parallel StegGate evaluator, model authority, heartbeat, scheduler, worker registry, or Master Records custody authority is authorized.
+`StegVerse-002/micro-node-runtime` owns the model and server. `StegVerse-Labs/.github` owns heartbeat process lifecycle, claims, fences and cycle leases. `StegVerse-Labs/TV` owns credential policy; this local route requires credential class `NONE`. `StegVerse-Labs/TVC` owns route authority. LLM-adapter owns private provider transport and provider-usage evidence. Master Records owns custody/reconstruction. No application-specific parallel model authority, route authority, heartbeat, scheduler, worker registry, StegGate evaluator, or custody authority is authorized.
 
 ## Canonical runtime identity binding — COMPLETE + CI VALIDATED
 
-The portable consumer validates and binds the transport-independent identity defined by `StegVerse-Labs/StegCore#70`:
+The portable consumer validates the transport-independent canonical StegGate identity defined by `StegVerse-Labs/StegCore#70`:
 
 ```text
 contract_version: stegverse.steggate.runtime-identity.v1
@@ -89,76 +93,75 @@ artifact: 9045322524
 artifact digest: sha256:611eee0419dbf82fc8ab026ae192c4cbcbe5e2953f5f068dd27c98c1caa95373
 ```
 
-This is application integration evidence, not public product activation evidence.
-
 ## Local model development/runtime — COMPLETE + RELEASED
 
-Canonical model development is no longer missing. `SOVEREIGN-LOCAL-MODEL-001` in `StegVerse-002/micro-node-runtime` is `COMPLETE_RELEASED`.
+`SOVEREIGN-LOCAL-MODEL-001` is complete in `StegVerse-002/micro-node-runtime`. The formally developed `stegverse-reference-lm-v1` trains from repository-local corpus data, can execute locally without hosted inference or remote weights, and is explicitly bounded as a reference model rather than a production-scale foundation LLM.
 
-Retained evidence:
+Retained original implementation evidence:
 
 ```text
-canonical owner: StegVerse-002/micro-node-runtime#16/#22
 validated code commit: 395d4013d1354c07bc3cf66c44f4f26f856c75fc
-hosted validation run: 31339534741
+validation run: 31339534741
 artifact: 9045384610
 ```
 
-The model/runtime path removes the prior descriptive “select a local model/runtime” boundary by providing a formally developed local reference language model plus real runtime discovery, launch, inference, proof, private serving, and measured usage behavior. It is explicitly a reference model and is not represented as a production-scale foundation LLM.
+The later persistent endpoint proof correction is merged as micro-node-runtime PR #28 at `e64e1f36a85c0eb23937219118b649b9b18ae390`. Its canonical verifier can prove an already-running private model endpoint without terminating that process. Validation run `31384116055`, job `93440650414`, passed; handoff, provenance and orchestrator gates also passed.
+
+The descriptive “select a local model/runtime” boundary is therefore superseded by real discovery, launch, private serving, inference, proof, measured usage and persistent endpoint behavior.
 
 ## Transport/evidence adapter — COMPLETE + RELEASED
 
-`LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019` merged through PR #134 and released its implementation claim.
-
-Merged-main evidence:
+`LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019` merged through PR #134 and released its claim.
 
 ```text
-PR: 134
 merge commit: 8be63bfd2eddae4092b945032de956e4e9a63576
-Sovereign Local Model Binding Proof run: 31342485740
-binding job: 93318434329
-binding artifact: 9046241885
-binding artifact digest: sha256:99216c44a21cafd619d900c8fcb79d73f8fff7dcb9707045e4c0da77fccfc6bc
-full validate run: 31342485736 SUCCESS
-Architecture Guard run: 31342485765 SUCCESS
-provider-usage validation run: 31342485757 SUCCESS
+binding validation: 31342485740 / SUCCESS
+full validate: 31342485736 / SUCCESS
+Architecture Guard: 31342485765 / SUCCESS
+provider-usage validation: 31342485757 / SUCCESS
 claim state: COMPLETE_RELEASED
-claim released: true
 ```
 
-Validated predicates include exact model/proof identity preservation, measured prompt/completion/total-token and latency evidence, private StegVerse provider-seam behavior, and fail-closed treatment of absent Master Records custody. The adapter does not grant authority and does not convert compatibility execution into product activation.
+The existing `execute_verified_local_model` path validates canonical proof identity, uses `StegVerseLocalHTTPProviderClient`, captures MEASURED prompt/completion/total-token and latency evidence, and reuses canonical Master Records provider-usage submission. It does not make absent custody or reconstruction appear successful.
 
 ## Production topology and sovereign runtime boundary
 
-Third-party Render hosting is not canonical StegGate, inference, heartbeat, custody, or availability authority. The current production objective is sovereign/federated inference.
+The prior cross-private-repository checkout blocker is superseded. GitHub repository access is not part of the production model/runtime path and no GitHub token is a release condition.
 
-The exact remaining production binding task is `LLMA-CANONICAL-LOCAL-MODEL-BINDING-018`. It is BLOCKED because the LLM-adapter Actions credential cannot read the private `StegVerse-002/micro-node-runtime` repository.
-
-Machine-observable release condition:
+Current merged upstream sequence:
 
 ```text
-A repository-native lane possessing access to both private repositories executes the canonical HTTP contract,
-OR
-the canonical sovereign carrier presents the private model endpoint directly to LLM-adapter.
+micro-node persistent endpoint: PR #28 / e64e1f36a85c0eb23937219118b649b9b18ae390
+heartbeat persistent lifecycle: .github PR #69 / 4479fbb5399ccd1509ec1fdcc95dacfcc173b9b8
+heartbeat automatic TVC invocation: .github PR #70 / f25204874189a90bc2bc07f1ac65d060be41e397
+TVC canonical proof compatibility: TVC PR #17 / 5fc63c5daa90b02ed2cd0f7eefd833873304ecb8
 ```
 
-After that release condition, the canonical continuation must execute:
+The current task `LLMA-SOVEREIGN-CARRIER-EXECUTION-020` installs the missing exact-route consumer:
 
 ```text
-canonical micro-node endpoint
--> StegVerseLocalHTTPProviderClient
--> E1 -> model worker -> E2
--> MEASURED provider/model usage
--> provider-usage Master Records reconstruction PASS
--> transition Master Records reconstruction PASS for the same execution
--> immutable zero-blocker ecosystem-chat-live-activation.verified.json
--> Site ACTIVATION_COMPLETE
--> Publisher/admissibility-wiki/stegguardian-wiki verified ingestion
+TVC ROUTE_ADMITTED receipt
+-> verify exact canonical runtime_proof_hash
+-> verify exact private endpoint
+-> require credential_requirement NONE
+-> require github_token_required false
+-> reject route/execution authority escalation
+-> execute exact endpoint through StegVerseLocalHTTPProviderClient
+-> persist request/response hashes + MEASURED usage
+-> reuse Master Records provider-usage custody
+-> advance to same-execution transition reconstruction
 ```
 
-`.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001` owns the active blocked/rechecking observation lane. No human recheck is required.
+The implementation surfaces are:
 
-Optional OpenAI/Anthropic/GitHub Models credentials are not the canonical production release condition.
+```text
+scripts/execute_canonical_sovereign_route.py
+tests/test_execute_canonical_sovereign_route.py
+tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json
+docs/SOVEREIGN_CARRIER_EXECUTION_MIRROR_HANDOFF.md
+```
+
+GitHub Actions, Render, Cloudflare, Vercel, GitHub Models, OpenAI and Anthropic are not canonical production heartbeat, inference, credential, route, custody, or availability authorities. Optional hosted-provider interoperability lanes remain separate.
 
 ## Autonomous activation/observation surfaces
 
@@ -183,53 +186,47 @@ receipts/ecosystem-chat-live-activation.verified.json
 
 No workflow dispatch, artifact download, file movement, screenshot confirmation, receipt construction, blocker transcription, credential copying, or manual publication task is required.
 
-Missing evidence remains BLOCKED and cannot become success through elapsed time, workflow success alone, worker activation alone, or session archival.
+Missing evidence remains fail-closed and cannot become success through elapsed time, workflow success alone, worker activation alone, or session archival.
 
 ## Current evidence posture
 
 ```text
-repository-local implementation: COMPLETE
-self-contained custody topology: COMPLETE
-scheduled validation: INSTALLED
-live verification/monitor: INSTALLED
-canonical runtime identity consumer: VALIDATED
+repository-local governed implementation: COMPLETE
+canonical StegGate consumer: VALIDATED
 canonical local model/runtime: COMPLETE_RELEASED
-adapter-local compatibility model: SUPERSEDED_AS_PRODUCT_AUTHORITY
+persistent model endpoint proof: MERGED_VALIDATED
+heartbeat persistent model lifecycle: MERGED_VALIDATED
+heartbeat -> TVC route bridge: MERGED_VALIDATED
+TVC credential-free route evaluator: MERGED_VALIDATED_SOURCE / live route observation pending
 transport/evidence adapter task 019: COMPLETE_RELEASED
-transport/evidence adapter claim: RELEASED
-canonical local model -> LLM-adapter binding task 018: BLOCKED
-canonical runtime identity public execution: NOT YET OBSERVED
-real sovereign provider execution on canonical carrier: NOT CONFIRMED
+carrier executor task 020: IMPLEMENTED / VALIDATION IN PROGRESS
+real sovereign provider execution: NOT CONFIRMED
 provider-usage custody/reconstruction: NOT CONFIRMED
+same-execution transition reconstruction: NOT CONFIRMED
 immutable VERIFIED receipt: NOT CONFIRMED
 Site ACTIVATION_COMPLETE: NOT CONFIRMED
 downstream verified public evidence: NOT CONFIRMED
 product release/tag authority: NOT GRANTED
-session-specific implementation/validation claim: NONE
 ```
 
 ## Machine-owned continuation
 
-Canonical continuation is durably assigned as follows:
-
 ```text
-production model/runtime: StegVerse-002/micro-node-runtime#16/#22
-provider transport/usage owner: StegVerse-org/LLM-adapter#18
-canonical production binding: StegVerse-org/LLM-adapter/tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json
-inference observation/recheck: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
-heartbeat authority: StegVerse-Labs/.github#12
+model/runtime: StegVerse-002/micro-node-runtime#16/#22
+heartbeat process lifecycle and carrier: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
+credential policy: StegVerse-Labs/TV / credential class NONE
+route authority: StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json
+provider transport/usage: StegVerse-org/LLM-adapter#18 + task 020
 custody/reconstruction: master-records/orchestration
-site activation: StegVerse-Labs/Site
+site activation: StegVerse-Labs/Site#239/#242
 required downstream ingestion: GCAT-BCAT-Engine/Publisher, StegVerse-Labs/admissibility-wiki, StegVerse-002/stegguardian-wiki
 ```
 
-Cross-repository continuation also retains `StegVerse-Labs/StegCore#70`, `StegVerse-Labs/Site#239/#242`, and `StegVerse-Labs/Site/docs/STEGGATE_FOUR_APP_MIRROR_HANDOFF.md`.
-
-Math Solver remains separately owned by `StegVerse-org/LLM-adapter#132`; no Ecosystem Chat task may overwrite that lane.
+Cross-repository continuation also retains `StegVerse-Labs/StegCore#70` and `StegVerse-Labs/Site/docs/STEGGATE_FOUR_APP_MIRROR_HANDOFF.md`. Math Solver remains separately owned by `StegVerse-org/LLM-adapter#132`; Ecosystem Chat work may not overwrite that lane.
 
 ## Downstream destinations
 
-After verified activation only:
+Only after immutable verified activation:
 
 ```text
 master-records/orchestration
@@ -239,7 +236,7 @@ StegVerse-Labs/admissibility-wiki
 StegVerse-002/stegguardian-wiki
 ```
 
-No downstream activation is claimed from repository completion, CI success, local-model proof, transport/evidence validation, or session archival.
+No downstream activation is claimed from repository completion, CI success, local-model proof, route validation, transport validation, or session archival.
 
 ## Authority boundary
 
@@ -253,51 +250,46 @@ workflow artifact != live evidence
 runtime identity != transport identity
 runtime identity validation != public provider execution
 local model proof != production-scale activation
-transport/evidence adapter success != canonical carrier execution
-portable consumer integration != public product activation
+TVC route admission != execution authority
+transport/evidence adapter success != canonical carrier activation
 verified receipt != release authority
 session archival != activation
 ```
 
 ## Release posture
 
-No product release or tag is authorized while canonical sovereign model binding, same-execution custody/reconstruction, immutable zero-blocker activation, Site activation, and required downstream ingestion remain incomplete.
+No release or tag is authorized while canonical same-carrier provider execution, provider-usage custody/reconstruction, same-execution transition reconstruction, immutable zero-blocker activation, Site activation, and required downstream ingestion remain incomplete.
 
-Task 019 itself is released because its bounded merge and validation criteria are satisfied. That task release cannot release the product or close issue #18.
+Task 019 remains released because its bounded criteria are complete. Task 020 may release its implementation claim only after its merged deterministic validation passes; that still does not authorize product release or a tag.
 
 ## Session consolidation and archive posture
 
-The originating session's unique implementation work has been completed or durably transferred.
+The original local-model development and no-GitHub-token requirements are durable. This session still owns unique task-020 implementation/validation and subsequent heartbeat integration until those surfaces are merged or durably transferred to a measurably progressing canonical worker.
 
 ```text
-original descriptive local-runtime selection gap: COMPLETE / superseded by real local model/runtime discovery-launch-proof path
-formal local model development requirement: COMPLETE_RELEASED in StegVerse-002/micro-node-runtime
-adapter transport/evidence requirement: COMPLETE_RELEASED / task 019 / PR #134
-stale task-019 claim: RELEASED
-canonical production binding requirement: MERGED INTO task 018
-machine observation requirement: MERGED INTO .github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
-custody/reconstruction requirement: MERGED INTO master-records/orchestration
-Site/downstream activation requirements: DURABLY ASSIGNED to existing owners
-unique chat-owned work remaining: false
-session consolidation: COMPLETE
-archive readiness: true
+local-runtime selection gap: COMPLETE
+formal local model development: COMPLETE_RELEASED
+persistent endpoint proof: COMPLETE_MERGED_VALIDATED
+heartbeat persistent lifecycle: COMPLETE_MERGED_VALIDATED
+heartbeat automatic TVC route invocation: COMPLETE_MERGED_VALIDATED
+canonical LLM-adapter route executor: CLAIMED_FOR_VALIDATION
+same-carrier direct execution: NOT YET OBSERVED
+same-execution Master Records reconstruction: NOT YET OBSERVED
+archive readiness: false
 ```
 
-MERGED INTO: `StegVerse-org/LLM-adapter/tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json` + `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001` + `StegVerse-002/micro-node-runtime#16/#22` + `master-records/orchestration`.
-
-Transferred state includes the original local-runtime/model-development requirement, the completed transport/evidence adapter, exact merged-main validation evidence, collision boundaries, remaining canonical production predicates, custody/reconstruction requirements, Site activation dependency, downstream propagation destinations, and the explicit rule that archival does not imply activation.
-
-No additional part of the originating conversation is required to continue execution.
+MERGED INTO canonical continuation after task-020 release: `.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001` + `StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json` + `StegVerse-org/LLM-adapter/tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json` + `master-records/orchestration`.
 
 ## Completion accounting
 
 ```text
-session-specific implementation tasks: 3/3 complete or transferred
-session-specific developed surfaces: 10/10
-scaffolding/stubs in the completed session-specific slice: 0
-session-specific validation gates: 5/5
-session-specific integration/transfer obligations: 8/8
-session consolidation: 8/8
-product activation predicates remaining under canonical owners: 6
-product activation state: BLOCKED / MACHINE_OWNED
+developed local-model/runtime surfaces: complete
+carrier executor developed surfaces: 4/4
+scaffolding/stubs in canonical local execution path: 0
+carrier executor deterministic validation: pending repair/re-run
+carrier direct runtime observation: pending
+provider-usage reconstruction: pending
+transition reconstruction: pending
+Site/downstream propagation: pending activation
+session consolidation: active
 ```
