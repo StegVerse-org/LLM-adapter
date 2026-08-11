@@ -138,6 +138,42 @@ hosted GitHub activation/persistence retirement: StegVerse-Labs/.github#79 COMPL
 
 GitHub Actions, Render, Cloudflare, Vercel, GitHub Models, OpenAI and Anthropic are not canonical production heartbeat, inference, credential, route, custody, or availability authorities. Optional hosted-provider interoperability lanes remain separate.
 
+## Public documentation reconciliation
+
+```text
+goal_id: LLMA-PUBLIC-RUNTIME-DOCS-001
+originating_session_goal: publicly distributed adapter documentation must match the canonical sovereign runtime and TV/TVC authority model
+branch: fix/public-runtime-docs-main-20260811
+claim_state: CLAIMED_FOR_IMPLEMENTATION
+claimant: this branch only
+claim_release_condition: README + adapter.capabilities.json + this handoff validated on current-main-derived branch, merged, and successor-main validation observed
+collision_boundary: documentation/capability projection only; do not reopen local-model/runtime, task 019, task 020, heartbeat, TVC, or Master Records implementation
+```
+
+Required public truth installed on this branch:
+
+```text
+canonical production route = sovereign local runtime
+credential semantics and route authority = TC/TVC
+canonical local route credential class = NONE
+github_token_required_for_production = false
+GitHub Actions are validation infrastructure, not production inference authority
+local runtime discovery/launch/proof = COMPLETE_RELEASED under micro-node-runtime#22
+stegverse-reference-lm-v1 = formally developed local reference model, not production-scale foundation LLM
+LLM-adapter same-carrier executor task 020 = COMPLETE_RELEASED
+remaining gap = machine-owned live runtime observation, custody/reconstruction, activation, and downstream propagation
+```
+
+Authoritative files for this documentation goal:
+
+```text
+README.md
+adapter.capabilities.json
+LLM_ADAPTER_MIRROR_HANDOFF.md
+```
+
+This is a reconciliation claim only. It does not create a competing implementation lane for any already-released runtime capability.
+
 ## Machine-owned continuation
 
 ```text
@@ -191,7 +227,23 @@ No product release or tag is authorized while canonical same-carrier provider ex
 
 Task 019 and task 020 implementation claims are released. No session should reopen their implementation unless a directly observed defect creates a new bounded task.
 
-MERGED INTO canonical continuation: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001` + `StegVerse-Labs/.github/handoffs/generated/RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28.json` + `StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json` + `master-records/orchestration`.
+MERGED INTO canonical runtime continuation: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001` + `StegVerse-Labs/.github/handoffs/generated/RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28.json` + `StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json` + `master-records/orchestration`.
+
+## Session consolidation
+
+The following requirements from the current session are now durable in repository state rather than remaining only in chat:
+
+1. no GitHub token in the canonical production SDK/LLM runtime path;
+2. TV/TVC owns credential semantics and route authority;
+3. generic SDK users must not receive person-specific evaluator routes;
+4. local-model selection must be executable, not descriptive;
+5. a local model must be formally developed;
+6. the local reference model must not be misrepresented as production-scale;
+7. completed local-model/runtime and carrier-executor implementation must not be duplicated by another session;
+8. public README and capability manifest must reflect the canonical sovereign route;
+9. product activation must remain distinct from repository implementation and CI success.
+
+Requirements 4–7 are already complete/released in the canonical owners above. Requirement 8 is the active documentation claim in this branch. Product activation remains machine-owned and is not a chat-local implementation task.
 
 ## Completion accounting
 
@@ -200,6 +252,10 @@ LLM-adapter developed carrier surfaces: 4/4
 scaffolding/stubs in canonical local execution path: 0
 carrier executor deterministic validation: PASS
 implementation claim: RELEASED
+public runtime docs required files: 3
+public runtime docs developed on branch: 3/3
+public runtime docs hosted validation: PENDING
+public runtime docs main integration: PENDING
 carrier direct runtime observation: PENDING_MACHINE_OWNED
 provider-usage reconstruction: PENDING_MACHINE_OWNED
 transition reconstruction: PENDING_MACHINE_OWNED
