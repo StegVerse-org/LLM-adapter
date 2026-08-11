@@ -17,7 +17,7 @@ Canonical machine carrier: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFE
 
 Live repository state, task records, scoped handoffs, heartbeat/TVC receipts, immutable receipts, and Master Records reconstruction supersede older chat summaries.
 
-## Current goal state
+## Active goal state
 
 ```text
 Repository-local governed path implementation: COMPLETE
