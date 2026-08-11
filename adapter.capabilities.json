@@ -1,117 +1,100 @@
 {
-  "schema_version": "stegverse.llm_adapter.capabilities.v0.3",
+  "schema_version": "stegverse.llm_adapter.capabilities.v0.4",
   "repo": "StegVerse-org/LLM-adapter",
-  "status": "adapter-boundary-complete-with-system-boundary-declaration",
+  "status": "repository_implementation_complete_runtime_observation_pending",
+  "canonical_production_route": {
+    "model_runtime_owner": "StegVerse-002/micro-node-runtime#16/#22",
+    "heartbeat_owner": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+    "credential_authority": "TC/TVC",
+    "route_authority": "StegVerse-Labs/TVC",
+    "credential_requirement": "NONE",
+    "github_token_required": false,
+    "github_actions_production_role": false,
+    "hosted_provider_required": false,
+    "provider_transport_owner": "StegVerse-org/LLM-adapter",
+    "custody_owner": "master-records/orchestration"
+  },
+  "sovereign_local_model": {
+    "implementation_state": "COMPLETE_RELEASED",
+    "model_id": "stegverse-reference-lm-v1",
+    "reference_model_type": "repository_local_order_2_token_transition_language_model",
+    "production_scale_foundation_llm": false,
+    "runtime_discovery": "prefers qualifying local llama.cpp/GGUF or Ollama; falls back to repository-local reference model",
+    "hosted_inference_required": false,
+    "remote_weights_required": false,
+    "formal_local_development": true,
+    "canonical_owner": "StegVerse-002/micro-node-runtime#22",
+    "validated_commit": "395d4013d1354c07bc3cf66c44f4f26f856c75fc",
+    "canonical_validation_run": "31339534741 SUCCESS"
+  },
+  "carrier_execution": {
+    "task": "tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json",
+    "state": "COMPLETE_RELEASED",
+    "script": "scripts/execute_canonical_sovereign_route.py",
+    "test": "tests/test_execute_canonical_sovereign_route.py",
+    "requires_tvc_route_admission": true,
+    "requires_exact_runtime_proof_hash": true,
+    "requires_exact_private_endpoint_binding": true,
+    "credential_requirement": "NONE",
+    "github_token_required": false,
+    "captures_measured_usage": true,
+    "persists_request_response_hashes": true,
+    "advances_to_master_records_reconstruction": true
+  },
   "runtime_surfaces": {
     "provider_request_envelope": "built",
-    "fixture_provider": "built",
-    "http_provider_clients": "built_optional_fail_closed",
-    "fixture_continuity_search": "built",
-    "service_continuity_search": "built_optional_fail_closed",
+    "fixture_provider": "built_optional_test_surface",
+    "http_provider_clients": "built_optional_interop",
+    "stegverse_local_http_provider_client": "built_canonical_private_transport",
     "governed_response_receipts": "built",
     "action_router": "built_non_executing",
     "commitment_request": "built_non_authorizing",
     "authority_client": "built_non_executing_fail_closed_default",
-    "execution_gateway": "built_disabled_default",
-    "cli_fixture_runner": "built",
-    "ai_entry_backend_response": "built_preview_only",
-    "ai_entry_free_tier_trust_metadata": "built_preview_only",
-    "free_tier_quota_evaluator": "built_side_effect_free",
-    "free_tier_receipt_replay_limits": "built_side_effect_free",
+    "execution_gateway": "built_governed",
     "system_boundary_runtime_inventory": "built_non_authorizing",
     "system_boundary_declaration_builder": "built_deterministic",
     "system_boundary_feedback_path_recorder": "built_explicit",
-    "system_boundary_claim_guard": "built_fail_closed"
+    "system_boundary_claim_guard": "built_fail_closed",
+    "free_tier_quota_evaluator": "built_side_effect_free",
+    "free_tier_receipt_replay_limits": "built_side_effect_free"
   },
-  "ai_entry_response_fields": {
-    "free_tier_trust": {
-      "schema_version": "stegverse.ai_entry.free_tier_trust.v0.1",
-      "status": "built_preview_only",
-      "bounded_live_use": true,
-      "static_demo_only": false,
-      "quota": "ALLOW_QUOTA or DENY_QUOTA product-boundary metadata",
-      "receipt_replay_limits": "ALLOW_LIMIT or DENY_LIMIT product-boundary metadata",
-      "trust_window": {
-        "curiosity_level_meaningful_inquiries": "3-10",
-        "reliance_level_evaluation_inquiries": "20-50"
-      },
-      "upgrade_for": [
-        "higher_quota",
-        "private_connectors",
-        "premium_models",
-        "longer_retention",
-        "deeper_replay",
-        "deeper_reconstruction",
-        "team_workspace",
-        "api_access",
-        "custom_policy",
-        "exportable_audit_packet"
-      ]
-    }
+  "optional_interoperability": {
+    "hosted_provider_clients": "separate_from_canonical_sovereign_route",
+    "openai": "optional_not_production_authority",
+    "anthropic": "optional_not_production_authority",
+    "github_models": "not_canonical_production_inference",
+    "render": "not_canonical_production_runtime",
+    "github_actions": "validation_only_not_production_runtime"
   },
-  "system_boundary_declaration": {
-    "schema_version": "0.1",
-    "source_doctrine_repo": "StegVerse-Labs/admissibility-wiki",
-    "sdk_destination_repo": "StegVerse-org/StegVerse-SDK",
-    "builder_module": "llm_adapter/system_boundary.py",
-    "documentation": "docs/SYSTEM_BOUNDARY_DECLARATION.md",
-    "tests": "tests/test_system_boundary.py",
-    "manifest_field": "system_boundary_declaration",
-    "receipt_reference_field": "system_boundary_declaration_ref",
-    "surfaces": ["model", "orchestration", "session", "memory", "environment"],
-    "required_non_claims": {
-      "model_has_execution_authority": false,
-      "consciousness_claim": "not_evaluated",
-      "personhood_claim": "not_evaluated",
-      "welfare_claim": "not_evaluated"
-    }
+  "remaining_activation_evidence": {
+    "real_sovereign_provider_execution_same_carrier": "NOT_YET_OBSERVED",
+    "provider_usage_custody_reconstruction": "NOT_YET_OBSERVED",
+    "same_execution_transition_reconstruction": "NOT_YET_OBSERVED",
+    "immutable_zero_blocker_activation_receipt": "NOT_YET_OBSERVED",
+    "site_activation_complete": "NOT_YET_OBSERVED",
+    "downstream_publisher_wiki_propagation": "PENDING_ACTIVATION"
   },
-  "free_tier_policy": {
-    "policy_doc": "docs/FREE_TIER_TRUST_POLICY.md",
-    "policy_manifest": "examples/free_tier_trust_policy.json",
-    "quota_module": "llm_adapter/free_tier_quota.py",
-    "receipt_replay_limit_module": "llm_adapter/free_tier_limits.py",
-    "site_metadata_verifier": "scripts/verify_ai_entry_free_tier_metadata.py",
-    "aggregate_verifier": "scripts/verify_goal4.py"
+  "machine_owned_continuation": {
+    "runtime_carrier": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+    "tvc_route": "StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json",
+    "custody_reconstruction": "master-records/orchestration",
+    "site_activation": "StegVerse-Labs/Site#239/#242"
   },
   "explicit_non_claims": [
-    "No provider output is treated as authority.",
-    "No commitment request grants execution authority.",
-    "No authority decision performs side effects.",
-    "No execution gateway performs side effects by default.",
-    "Service-backed continuity search is an evidence source, not output authority.",
-    "Quota availability is not admissibility.",
-    "Quota availability is not execution authority.",
-    "Receipt export is not permanent retention.",
-    "Replay does not grant commit-time standing.",
-    "Reconstruction does not grant commit-time standing.",
-    "Upgrading does not change admissibility requirements.",
-    "System recurrence is not a consciousness determination.",
-    "State continuity is not execution authority.",
-    "A system-boundary declaration is not custody or admissibility."
+    "Provider output is not authority.",
+    "TVC route admission is not execution authority.",
+    "Local model proof is not product activation.",
+    "Usage measurement is not admissibility.",
+    "Local persistence is not Master Records custody.",
+    "Reconstruction PASS is not execution authority.",
+    "Workflow success is not live same-carrier runtime observation.",
+    "The repository-local reference model is not a production-scale foundation LLM."
   ],
-  "required_external_integrations": {
-    "live_provider_credentials": [
-      "OPENAI_API_KEY",
-      "ANTHROPIC_API_KEY"
-    ],
-    "continuity_search_service": [
-      "STEGVERSE_CONTINUITY_SEARCH_URL",
-      "STEGVERSE_CONTINUITY_SEARCH_KEY optional"
-    ],
-    "external_executor": "not included; must be separately governed",
-    "site_display": "StegVerse-Labs/Site can consume free_tier_trust and bounded system-boundary metadata after mirror validation",
-    "sdk_ingestion": "StegVerse-org/StegVerse-SDK validates the system-boundary declaration and non-authorizing metadata"
-  },
   "local_verification": {
     "unit_tests": "pytest",
-    "cli_fixture": "stegverse-llm-adapter fixtures/governed_response_fixture.json --pretty",
     "smoke_script": "python scripts/smoke_governed_session.py",
     "aggregate_verifier": "python scripts/verify_goal4.py",
-    "free_tier_quota_verifier": "python scripts/verify_free_tier_quota.py",
-    "free_tier_limits_verifier": "python scripts/verify_free_tier_limits.py",
-    "ai_entry_free_tier_metadata_verifier": "python scripts/verify_ai_entry_free_tier_metadata.py",
-    "system_boundary_tests": "pytest tests/test_system_boundary.py"
+    "carrier_executor_test": "pytest tests/test_execute_canonical_sovereign_route.py -v"
   },
-  "activation_definition": "A fixture or provider response can move through provider request, continuity evidence, adapter receipt, action route, commitment request, authority decision, disabled execution handoff, Site-facing free-tier trust metadata, and a non-authorizing system-boundary declaration without side effects or consciousness claims."
+  "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation."
 }
