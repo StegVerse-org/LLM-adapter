@@ -58,13 +58,15 @@ Site request
 -> StegVerseLocalHTTPProviderClient private/loopback transport
 -> provider response + measured usage
 -> provider usage persistence
--> Master Records provider-usage custody
+-> authenticated provider-usage custody
 -> transition custody
 -> reconstruction PASS for both chains
 -> immutable zero-blocker activation receipt
 -> Site automatic import
 -> Publisher/wiki projections
 ```
+
+## Production topology
 
 `StegVerse-002/micro-node-runtime` owns the model and server. `StegVerse-Labs/.github` owns heartbeat process lifecycle, claims, fences and cycle leases. `TC/TVC` owns credential semantics; this local route requires credential class `NONE`. `StegVerse-Labs/TVC` owns route authority. LLM-adapter owns private provider transport and provider-usage evidence. Master Records owns custody/reconstruction. No application-specific parallel model authority, route authority, heartbeat, scheduler, worker registry, StegGate evaluator, or custody authority is authorized.
 
@@ -174,6 +176,19 @@ LLM_ADAPTER_MIRROR_HANDOFF.md
 
 This is a reconciliation claim only. It does not create a competing implementation lane for any already-released runtime capability.
 
+## Current evidence posture
+
+```text
+repository implementation: COMPLETE
+local model/runtime implementation: COMPLETE_RELEASED
+same-carrier executor: COMPLETE_RELEASED
+real same-carrier provider execution: NOT CONFIRMED
+provider-usage custody/reconstruction: NOT CONFIRMED
+same-execution transition reconstruction: NOT CONFIRMED
+immutable VERIFIED receipt: NOT CONFIRMED
+Site activation: NOT CONFIRMED
+```
+
 ## Machine-owned continuation
 
 ```text
@@ -189,6 +204,8 @@ required downstream ingestion after immutable verified activation: GCAT-BCAT-Eng
 ```
 
 The resident carrier has not yet been directly observed completing the recovery -> parent higher-fence -> local model -> TVC -> task-020 -> Master Records chain. That is a runtime observation gap, not an LLM-adapter implementation gap.
+
+No workflow dispatch, artifact download, file movement, screenshot confirmation, receipt construction, blocker transcription, credential copying, or manual publication task is required.
 
 ## Downstream destinations
 
@@ -221,9 +238,9 @@ verified receipt != release authority
 session archival != activation
 ```
 
-## Release and archive posture
+## Release posture
 
-No product release or tag is authorized while canonical same-carrier provider execution, provider-usage custody/reconstruction, same-execution transition reconstruction, immutable zero-blocker activation, Site activation, and required downstream ingestion remain incomplete.
+No release or tag is authorized while canonical same-carrier provider execution, provider-usage custody/reconstruction, same-execution transition reconstruction, immutable zero-blocker activation, Site activation, and required downstream ingestion remain incomplete.
 
 Task 019 and task 020 implementation claims are released. No session should reopen their implementation unless a directly observed defect creates a new bounded task.
 
