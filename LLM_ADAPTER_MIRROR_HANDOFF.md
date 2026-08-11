@@ -30,6 +30,7 @@ Heartbeat -> local TVC route invocation: COMPLETE_MERGED_VALIDATED
 TVC credential-free route evaluator: COMPLETE_MERGED_SOURCE / live observation pending
 Transport/evidence adapter task 019: COMPLETE_RELEASED
 Canonical carrier execution task 020: COMPLETE_RELEASED
+Public runtime documentation reconciliation: COMPLETE_MERGED_VALIDATED
 Real sovereign provider execution on canonical carrier: NOT YET OBSERVED
 Provider-usage custody/reconstruction: NOT YET OBSERVED
 Same-execution transition reconstruction: NOT YET OBSERVED
@@ -140,33 +141,24 @@ hosted GitHub activation/persistence retirement: StegVerse-Labs/.github#79 COMPL
 
 GitHub Actions, Render, Cloudflare, Vercel, GitHub Models, OpenAI and Anthropic are not canonical production heartbeat, inference, credential, route, custody, or availability authorities. Optional hosted-provider interoperability lanes remain separate.
 
-## Public documentation reconciliation
+## Public documentation reconciliation — COMPLETE_MERGED_VALIDATED
 
 ```text
 goal_id: LLMA-PUBLIC-RUNTIME-DOCS-001
 originating_session_goal: publicly distributed adapter documentation must match the canonical sovereign runtime and TV/TVC authority model
-branch: fix/public-runtime-docs-main-20260811
-claim_state: CLAIMED_FOR_IMPLEMENTATION
-claimant: this branch only
-claim_release_condition: README + adapter.capabilities.json + this handoff validated on current-main-derived branch, merged, and successor-main validation observed
-collision_boundary: documentation/capability projection only; do not reopen local-model/runtime, task 019, task 020, heartbeat, TVC, or Master Records implementation
+superseded_pr: #137 CLOSED
+authoritative_pr: #138 MERGED
+merge_commit: 982114d3c5965a62ffff74195969bcf9db7cc55d
+pr_head: f34955699c2a4e1ea1835f834b508d0e76869f6e
+pr_validate_run: 31524832518 SUCCESS
+pr_architecture_guard_run: 31524832495 SUCCESS
+pr_provider_usage_run: 31524832524 SUCCESS
+successor_main_validate_run: 31524940882 SUCCESS
+claim_state: COMPLETE_RELEASED
+collision_boundary: documentation/capability projection only; local-model/runtime, task 019, task 020, heartbeat, TVC, and Master Records implementation remain canonical elsewhere
 ```
 
-Required public truth installed on this branch:
-
-```text
-canonical production route = sovereign local runtime
-credential semantics and route authority = TC/TVC
-canonical local route credential class = NONE
-github_token_required_for_production = false
-GitHub Actions are validation infrastructure, not production inference authority
-local runtime discovery/launch/proof = COMPLETE_RELEASED under micro-node-runtime#22
-stegverse-reference-lm-v1 = formally developed local reference model, not production-scale foundation LLM
-LLM-adapter same-carrier executor task 020 = COMPLETE_RELEASED
-remaining gap = machine-owned live runtime observation, custody/reconstruction, activation, and downstream propagation
-```
-
-Authoritative files for this documentation goal:
+Public truth now installed on canonical `main` in:
 
 ```text
 README.md
@@ -174,7 +166,7 @@ adapter.capabilities.json
 LLM_ADAPTER_MIRROR_HANDOFF.md
 ```
 
-This is a reconciliation claim only. It does not create a competing implementation lane for any already-released runtime capability.
+The public documentation now states that the canonical production route is sovereign local runtime; TC/TVC owns credential semantics and route authority; the local route credential class is `NONE`; GitHub tokens and GitHub Actions are not production inference prerequisites; local runtime discovery/launch/proof and the formally developed local reference model are already complete/released; task 020 is complete/released; and the remaining activation gap is machine-owned runtime observation, custody/reconstruction, Site activation, and downstream propagation.
 
 ## Current evidence posture
 
@@ -182,6 +174,7 @@ This is a reconciliation claim only. It does not create a competing implementati
 repository implementation: COMPLETE
 local model/runtime implementation: COMPLETE_RELEASED
 same-carrier executor: COMPLETE_RELEASED
+public runtime documentation: COMPLETE_MERGED_VALIDATED
 real same-carrier provider execution: NOT CONFIRMED
 provider-usage custody/reconstruction: NOT CONFIRMED
 same-execution transition reconstruction: NOT CONFIRMED
@@ -242,25 +235,25 @@ session archival != activation
 
 No release or tag is authorized while canonical same-carrier provider execution, provider-usage custody/reconstruction, same-execution transition reconstruction, immutable zero-blocker activation, Site activation, and required downstream ingestion remain incomplete.
 
-Task 019 and task 020 implementation claims are released. No session should reopen their implementation unless a directly observed defect creates a new bounded task.
+Task 019, task 020, local-model/runtime implementation, and public-runtime-doc reconciliation claims are released. No session should reopen their implementation unless directly observed evidence creates a new bounded task.
 
 MERGED INTO canonical runtime continuation: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001` + `StegVerse-Labs/.github/handoffs/generated/RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28.json` + `StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json` + `master-records/orchestration`.
 
 ## Session consolidation
 
-The following requirements from the current session are now durable in repository state rather than remaining only in chat:
+The following requirements from the current session are durable in repository state rather than remaining only in chat:
 
 1. no GitHub token in the canonical production SDK/LLM runtime path;
 2. TV/TVC owns credential semantics and route authority;
-3. generic SDK users must not receive person-specific evaluator routes;
-4. local-model selection must be executable, not descriptive;
-5. a local model must be formally developed;
-6. the local reference model must not be misrepresented as production-scale;
-7. completed local-model/runtime and carrier-executor implementation must not be duplicated by another session;
-8. public README and capability manifest must reflect the canonical sovereign route;
-9. product activation must remain distinct from repository implementation and CI success.
+3. generic SDK users do not receive person-specific evaluator routes;
+4. local-model selection is executable, not descriptive;
+5. a local model is formally developed;
+6. the local reference model is not misrepresented as production-scale;
+7. completed local-model/runtime and carrier-executor implementation is not duplicated by another session;
+8. public README and capability manifest reflect the canonical sovereign route;
+9. product activation remains distinct from repository implementation, CI success, and session archival.
 
-Requirements 4–7 are already complete/released in the canonical owners above. Requirement 8 is the active documentation claim in this branch. Product activation remains machine-owned and is not a chat-local implementation task.
+Requirements 1–9 are transferred or complete. Product activation remains machine-owned and no unique implementation, validation, integration, or propagation role from this session remains in LLM-adapter.
 
 ## Completion accounting
 
@@ -270,13 +263,15 @@ scaffolding/stubs in canonical local execution path: 0
 carrier executor deterministic validation: PASS
 implementation claim: RELEASED
 public runtime docs required files: 3
-public runtime docs developed on branch: 3/3
-public runtime docs hosted validation: PENDING
-public runtime docs main integration: PENDING
+public runtime docs developed: 3/3
+public runtime docs hosted validation: COMPLETE
+public runtime docs main integration: COMPLETE
+public runtime docs claim: RELEASED
 carrier direct runtime observation: PENDING_MACHINE_OWNED
 provider-usage reconstruction: PENDING_MACHINE_OWNED
 transition reconstruction: PENDING_MACHINE_OWNED
 Site/downstream propagation: PENDING_ACTIVATION
 repository implementation completeness: 100%
 product activation completeness: not 100%
+session-specific requirements transferred-or-complete: 9/9
 ```
