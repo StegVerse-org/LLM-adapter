@@ -13,7 +13,7 @@ Custody/reconstruction owner: `master-records/orchestration`
 
 Live repository state, task records, runtime receipts, immutable evidence, and this handoff supersede older chat claims.
 
-## Current state
+## Active goal state
 
 ```text
 repository-local governed path: COMPLETE
@@ -31,14 +31,14 @@ provider-usage custody/reconstruction: NOT_YET_OBSERVED
 same-execution transition reconstruction: NOT_YET_OBSERVED
 immutable zero-blocker activation receipt: NOT_YET_OBSERVED
 Site ACTIVATION_COMPLETE: NOT_YET_OBSERVED
-manual user tasks: NONE
+Manual user tasks: NONE
 implementation claim for local runtime/model/carrier executor: RELEASED
 continuation role: MACHINE_OWNED_RUNTIME_OBSERVATION
 ```
 
 Repository implementation completion does not imply product activation.
 
-## Canonical production path
+## Installed governed path
 
 ```text
 request
@@ -53,12 +53,28 @@ request
 -> StegVerseLocalHTTPProviderClient private/loopback transport
 -> provider response + MEASURED usage
 -> provider usage persistence
--> Master Records provider-usage custody/reconstruction
--> same-execution transition custody/reconstruction
+-> authenticated provider-usage custody
+-> reconstruction PASS for both chains
 -> immutable zero-blocker activation receipt
 -> Site activation
 -> Publisher/wiki propagation
 ```
+
+The last four states above are required path stages, not current completion claims; current evidence posture below remains authoritative.
+
+## Production topology
+
+```text
+model/runtime owner: StegVerse-002/micro-node-runtime#16/#22
+heartbeat/carrier owner: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
+credential semantics: TC/TVC
+route authority: StegVerse-Labs/TVC
+canonical route credential class: NONE
+provider transport/evidence: StegVerse-org/LLM-adapter
+custody/reconstruction: master-records/orchestration
+```
+
+No parallel application-specific model authority, route authority, scheduler, heartbeat, or custody authority is authorized.
 
 ## No-GitHub-token production boundary
 
@@ -126,7 +142,20 @@ remaining gap is machine-owned runtime observation/custody/reconstruction/activa
 
 This docs reconciliation is separate from the released runtime implementation and must not create a competing model/runtime implementation claim.
 
-## Remaining activation work — MACHINE OWNED
+## Current evidence posture
+
+```text
+repository implementation: COMPLETE
+local model/runtime implementation: COMPLETE_RELEASED
+same-carrier executor: COMPLETE_RELEASED
+real same-carrier provider execution: NOT CONFIRMED
+provider-usage custody/reconstruction: NOT CONFIRMED
+same-execution transition reconstruction: NOT CONFIRMED
+immutable VERIFIED receipt: NOT CONFIRMED
+Site activation: NOT CONFIRMED
+```
+
+## Machine-owned continuation
 
 ```text
 StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
@@ -152,6 +181,8 @@ resident carrier recovery/current fence
 
 No downstream activation is claimed until that exact sequence is evidenced.
 
+No workflow dispatch, artifact download, file movement, screenshot confirmation, receipt construction, blocker transcription, credential copying, or manual publication task is required.
+
 ## Authority boundary
 
 ```text
@@ -165,6 +196,10 @@ TVC route admission != execution authority
 workflow artifact != live execution evidence
 session archival != activation
 ```
+
+## Release posture
+
+No release or tag is authorized while canonical same-carrier provider execution, provider-usage custody/reconstruction, same-execution transition reconstruction, immutable zero-blocker activation, Site activation, and required downstream ingestion remain incomplete.
 
 ## Session consolidation
 
