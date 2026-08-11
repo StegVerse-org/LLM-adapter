@@ -6,167 +6,151 @@ Organization: `StegVerse-org`
 Repository: `LLM-adapter`  
 Canonical branch: `main`  
 Canonical Ecosystem Chat activation owner: `StegVerse-org/LLM-adapter#18`  
-Parent four-app goal: `StegVerse-Labs/Site#239`  
-Common StegGate runtime binding owner: `StegVerse-Labs/StegCore#70`  
 Canonical local-model/runtime owner: `StegVerse-002/micro-node-runtime#16/#22`  
-Canonical local-model binding task: `tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json`  
-Completed transport/evidence adapter: `tasks/LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019.json`  
-Completed same-carrier executor implementation: `tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json`  
-Scoped handoff: `docs/SOVEREIGN_CARRIER_EXECUTION_MIRROR_HANDOFF.md`  
-Canonical machine carrier: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001`
+Canonical carrier: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001`  
+Canonical TVC route: `StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json`  
+Custody/reconstruction owner: `master-records/orchestration`
 
-Live repository state, task records, scoped handoffs, heartbeat/TVC receipts, immutable receipts, and Master Records reconstruction supersede older chat summaries.
+Live repository state, task records, runtime receipts, immutable evidence, and this handoff supersede older chat claims.
 
-## Current goal state
+## Current state
 
 ```text
-Repository-local governed path implementation: COMPLETE
-Portable StegGate consumer: COMPLETE + VALIDATED
-Canonical StegGate runtime identity binding: COMPLETE + VALIDATED
-Canonical local model development/runtime: COMPLETE_RELEASED
-Persistent canonical local endpoint proof: COMPLETE_MERGED_VALIDATED
-Heartbeat-owned persistent model lifecycle: COMPLETE_MERGED_VALIDATED
-Heartbeat -> local TVC route invocation: COMPLETE_MERGED_VALIDATED
-TVC credential-free route evaluator: COMPLETE_MERGED_SOURCE / live observation pending
-Transport/evidence adapter task 019: COMPLETE_RELEASED
-Canonical carrier execution task 020: COMPLETE_RELEASED
-Real sovereign provider execution on canonical carrier: NOT YET OBSERVED
-Provider-usage custody/reconstruction: NOT YET OBSERVED
-Same-execution transition reconstruction: NOT YET OBSERVED
-Immutable zero-blocker Ecosystem Chat activation receipt: NOT YET OBSERVED
-Site ACTIVATION_COMPLETE: NOT YET OBSERVED
-Manual user tasks: NONE
-Repository implementation claim: RELEASED
-Session continuation role: MACHINE_OWNED_RUNTIME_OBSERVATION
+repository-local governed path: COMPLETE
+portable StegGate consumer: COMPLETE_VALIDATED
+canonical local model development: COMPLETE_RELEASED
+local runtime discovery/launch/proof: COMPLETE_RELEASED
+persistent local endpoint proof: COMPLETE_MERGED_VALIDATED
+heartbeat-owned lifecycle: COMPLETE_MERGED_VALIDATED
+heartbeat -> TVC invocation: COMPLETE_MERGED_VALIDATED
+TVC route credential requirement: NONE
+LLM-adapter transport/evidence task 019: COMPLETE_RELEASED
+LLM-adapter same-carrier executor task 020: COMPLETE_RELEASED
+real same-carrier sovereign provider execution: NOT_YET_OBSERVED
+provider-usage custody/reconstruction: NOT_YET_OBSERVED
+same-execution transition reconstruction: NOT_YET_OBSERVED
+immutable zero-blocker activation receipt: NOT_YET_OBSERVED
+Site ACTIVATION_COMPLETE: NOT_YET_OBSERVED
+manual user tasks: NONE
+implementation claim for local runtime/model/carrier executor: RELEASED
+continuation role: MACHINE_OWNED_RUNTIME_OBSERVATION
 ```
 
-Repository implementation completion does not imply public Ecosystem Chat activation.
+Repository implementation completion does not imply product activation.
 
-## Installed governed path
+## Canonical production path
 
 ```text
-Site request
+request
 -> LLM-adapter governed consumer
 -> canonical StegGate runtime identity validation
 -> governed transition package
--> canonical StegGate + coherence gate
--> provider callback only after ALLOW + coherence ALLOW
--> heartbeat-owned canonical micro-node model process
--> exact persistent local runtime proof
--> canonical TVC route evaluation
+-> StegGate + coherence gate
+-> heartbeat-owned canonical local model process
+-> persistent runtime proof
+-> TVC route evaluation
 -> ROUTE_ADMITTED / credential_requirement NONE
 -> StegVerseLocalHTTPProviderClient private/loopback transport
--> provider response + measured usage
+-> provider response + MEASURED usage
 -> provider usage persistence
--> Master Records provider-usage custody
--> transition custody
--> reconstruction PASS for both chains
+-> Master Records provider-usage custody/reconstruction
+-> same-execution transition custody/reconstruction
 -> immutable zero-blocker activation receipt
--> Site automatic import
--> Publisher/wiki projections
+-> Site activation
+-> Publisher/wiki propagation
 ```
-
-`StegVerse-002/micro-node-runtime` owns the model and server. `StegVerse-Labs/.github` owns heartbeat process lifecycle, claims, fences and cycle leases. `TC/TVC` owns credential semantics; this local route requires credential class `NONE`. `StegVerse-Labs/TVC` owns route authority. LLM-adapter owns private provider transport and provider-usage evidence. Master Records owns custody/reconstruction. No application-specific parallel model authority, route authority, heartbeat, scheduler, worker registry, StegGate evaluator, or custody authority is authorized.
-
-## Local model development/runtime — COMPLETE_RELEASED
-
-`SOVEREIGN-LOCAL-MODEL-001` is complete in `StegVerse-002/micro-node-runtime`. The formally developed `stegverse-reference-lm-v1` trains from repository-local corpus data, executes locally without hosted inference or remote weights, and is explicitly bounded as a reference model rather than a production-scale foundation LLM.
-
-The descriptive `select a local model/runtime` boundary is superseded by real discovery, launch, private serving, inference, proof, measured usage, and persistent endpoint behavior.
-
-## Task 019 — COMPLETE_RELEASED
-
-`LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019` merged through PR #134 and released its claim. The existing `execute_verified_local_model` path validates canonical proof identity, uses `StegVerseLocalHTTPProviderClient`, captures MEASURED prompt/completion/total-token and latency evidence, and reuses canonical Master Records provider-usage submission.
-
-## Task 020 — COMPLETE_RELEASED
-
-Canonical source of truth: `tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json`.
-
-```text
-PR: #135
-head: dbb9558648c9c717d713b941487c48761dd104c6
-merge: 72934c7cf135ce2953591a81fe01e16c9719ec2f
-validation_matrix: PASS
-claim_state: COMPLETE_RELEASED
-github_token_required_for_production: false
-github_actions_production_role: false
-credential_authority_model: TC/TVC
-credential_requirement: NONE
-```
-
-Installed executor behavior:
-
-```text
-TVC ROUTE_ADMITTED receipt
--> exact canonical runtime_proof_hash binding
--> exact private endpoint binding
--> credential_requirement NONE
--> github_token_required false
--> reject route/execution authority escalation
--> execute exact endpoint through StegVerseLocalHTTPProviderClient
--> persist request/response hashes + MEASURED usage
--> reuse Master Records provider-usage custody
--> advance to same-execution transition reconstruction
-```
-
-Implementation surfaces:
-
-```text
-scripts/execute_canonical_sovereign_route.py
-tests/test_execute_canonical_sovereign_route.py
-tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json
-docs/SOVEREIGN_CARRIER_EXECUTION_MIRROR_HANDOFF.md
-```
-
-No LLM-adapter implementation claim remains active for this lane.
 
 ## No-GitHub-token production boundary
 
-GitHub repository access is not part of the production model/runtime path and no GitHub token is a release or activation condition.
-
-Current upstream sequence includes:
-
 ```text
-micro-node persistent endpoint: COMPLETE_MERGED_VALIDATED
-heartbeat persistent lifecycle: COMPLETE_MERGED_VALIDATED
-heartbeat automatic TVC invocation: COMPLETE_MERGED_VALIDATED
-TVC canonical proof compatibility: COMPLETE_MERGED_SOURCE
-orphan recovery: StegVerse-Labs/.github#78 COMPLETE_RELEASED
-G20 lifecycle custody: master-records/orchestration#27 COMPLETE_RELEASED
-hosted GitHub activation/persistence retirement: StegVerse-Labs/.github#79 COMPLETE_RELEASED
+github_token_required_for_production: false
+github_actions_production_role: false
+credential_authority_model: TC/TVC
+canonical_local_route_credential_requirement: NONE
 ```
 
-GitHub Actions, Render, Cloudflare, Vercel, GitHub Models, OpenAI and Anthropic are not canonical production heartbeat, inference, credential, route, custody, or availability authorities. Optional hosted-provider interoperability lanes remain separate.
+GitHub repository access is not part of canonical production inference. GitHub Actions, Render, Cloudflare, Vercel, GitHub Models, OpenAI, and Anthropic are not canonical production heartbeat, inference, route, custody, or availability authorities. Optional hosted-provider interoperability remains separate.
 
-## Machine-owned continuation
+## Local model/runtime — COMPLETE_RELEASED
+
+Canonical owner: `StegVerse-002/micro-node-runtime#22`.
+
+The descriptive "select a local model/runtime" step is superseded by executable discovery, launch, private serving, health proof, generation, measured usage, and hash-bound runtime proof.
+
+The guaranteed fallback is `stegverse-reference-lm-v1`, a formally developed repository-local order-2 token-transition language model trained from repository-local corpus data. It guarantees a zero-external-dependency model-development/inference path and is explicitly not a production-scale foundation LLM.
+
+Runtime discovery prefers a qualifying local `llama.cpp`/GGUF or Ollama model when present and otherwise uses the reference model.
+
+Canonical evidence:
 
 ```text
-model/runtime: StegVerse-002/micro-node-runtime#16/#22
-heartbeat process lifecycle and carrier: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
-orphan recovery: StegVerse-Labs/.github / RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28
-credential authority: TC/TVC / credential class NONE
-route authority: StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json
-provider transport/usage: StegVerse-org/LLM-adapter#18 + task 020 COMPLETE_RELEASED
-custody/reconstruction: master-records/orchestration
-site activation: StegVerse-Labs/Site#239/#242
-required downstream ingestion after immutable verified activation: GCAT-BCAT-Engine/Publisher, StegVerse-Labs/admissibility-wiki, StegVerse-002/stegguardian-wiki
+StegVerse-002/micro-node-runtime/MICRO_NODE_RUNTIME_MIRROR_HANDOFF.md
+StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md
+validated_code_commit: 395d4013d1354c07bc3cf66c44f4f26f856c75fc
+canonical_validation_run: 31339534741 SUCCESS
 ```
 
-The resident carrier has not yet been directly observed completing the recovery -> parent higher-fence -> local model -> TVC -> task-020 -> Master Records chain. That is a runtime observation gap, not an LLM-adapter implementation gap.
+## LLM-adapter carrier execution — COMPLETE_RELEASED
 
-## Downstream destinations
-
-Only after immutable verified activation:
+Canonical task: `tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json`.
 
 ```text
+script: scripts/execute_canonical_sovereign_route.py
+test: tests/test_execute_canonical_sovereign_route.py
+merge: 72934c7cf135ce2953591a81fe01e16c9719ec2f
+credential_requirement: NONE
+github_token_required: false
+claim_state: COMPLETE_RELEASED
+```
+
+No session should reopen task 019 or 020 implementation unless directly observed evidence establishes a bounded defect.
+
+## Public documentation reconciliation
+
+Active docs branch: `fix/public-runtime-docs-20260811`.
+
+Goal: make `README.md` and `adapter.capabilities.json` accurately describe the already-canonical sovereign runtime rather than the older hosted-provider/Demo-first story.
+
+Required docs state:
+
+```text
+canonical route is sovereign local runtime
+credential authority is TC/TVC
+canonical local route credential class is NONE
+GitHub token is not a production prerequisite
+local model/runtime development is complete/released
+reference model is real but intentionally not production-scale
+same-carrier executor is complete/released
+remaining gap is machine-owned runtime observation/custody/reconstruction/activation
+```
+
+This docs reconciliation is separate from the released runtime implementation and must not create a competing model/runtime implementation claim.
+
+## Remaining activation work — MACHINE OWNED
+
+```text
+StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
+StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json
 master-records/orchestration
-StegVerse-Labs/Site
-GCAT-BCAT-Engine/Publisher
-StegVerse-Labs/admissibility-wiki
-StegVerse-002/stegguardian-wiki
+StegVerse-Labs/Site#239/#242
 ```
 
-No downstream activation is claimed from repository completion, CI success, local-model proof, route validation, transport validation, or session archival.
+Required observation sequence:
+
+```text
+resident carrier recovery/current fence
+-> local model process
+-> TVC route admission
+-> task-020 carrier execution
+-> measured usage persistence
+-> provider-usage reconstruction PASS
+-> transition reconstruction PASS
+-> immutable zero-blocker activation receipt
+-> Site ACTIVATION_COMPLETE
+-> Publisher/admissibility-wiki/stegguardian-wiki propagation
+```
+
+No downstream activation is claimed until that exact sequence is evidenced.
 
 ## Authority boundary
 
@@ -176,34 +160,47 @@ usage measurement != admissibility
 local persistence != custody
 custody receipt != execution authority
 reconstruction PASS != execution authority
-workflow artifact != live evidence
-runtime identity validation != public provider execution
-local model proof != product activation
+runtime proof != product activation
 TVC route admission != execution authority
-transport/evidence adapter success != canonical carrier activation
-verified receipt != release authority
+workflow artifact != live execution evidence
 session archival != activation
 ```
 
-## Release and archive posture
+## Session consolidation
 
-No product release or tag is authorized while canonical same-carrier provider execution, provider-usage custody/reconstruction, same-execution transition reconstruction, immutable zero-blocker activation, Site activation, and required downstream ingestion remain incomplete.
+Transferred and durable requirements:
 
-Task 019 and task 020 implementation claims are released. No session should reopen their implementation unless a directly observed defect creates a new bounded task.
+1. no GitHub token in canonical production inference;
+2. TV/TVC owns credential and route semantics;
+3. local model selection must be executable, not descriptive;
+4. a model must be formally developed locally;
+5. the local reference model must not be misrepresented as a production-scale LLM;
+6. stronger local models may be selected without changing governance/custody authority;
+7. LLM-adapter same-carrier execution must use exact runtime proof + TVC admission + credential class NONE;
+8. public README/capability manifest must match canonical runtime truth;
+9. runtime observation/custody/reconstruction remains machine-owned and must not be falsely reported complete.
 
-MERGED INTO canonical continuation: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001` + `StegVerse-Labs/.github/handoffs/generated/RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28.json` + `StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json` + `master-records/orchestration`.
+MERGED INTO canonical runtime continuation:
+
+```text
+StegVerse-002/micro-node-runtime#16/#22
+StegVerse-org/LLM-adapter#18
+StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
+StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json
+master-records/orchestration
+```
 
 ## Completion accounting
 
 ```text
-LLM-adapter developed carrier surfaces: 4/4
-scaffolding/stubs in canonical local execution path: 0
-carrier executor deterministic validation: PASS
-implementation claim: RELEASED
-carrier direct runtime observation: PENDING_MACHINE_OWNED
-provider-usage reconstruction: PENDING_MACHINE_OWNED
-transition reconstruction: PENDING_MACHINE_OWNED
-Site/downstream propagation: PENDING_ACTIVATION
-repository implementation completeness: 100%
-product activation completeness: not 100%
+local-model developed surfaces: complete/released
+local-model scaffolding/stubs: 0
+carrier executor developed surfaces: 4/4 complete/released
+public docs reconciliation required files: 3
+public docs reconciliation implemented on branch: 3
+runtime/product activation: incomplete, machine-owned observation
 ```
+
+## Archive posture
+
+The implementation slices for local model/runtime and carrier execution are already transferred and do not require this session. The docs-reconciliation branch remains active until its validation/merge state is resolved. Product activation remains machine-owned and is not a session-local implementation task.
