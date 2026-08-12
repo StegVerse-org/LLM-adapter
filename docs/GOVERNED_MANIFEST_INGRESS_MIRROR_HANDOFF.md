@@ -59,13 +59,37 @@ provider_output_grants_consequence_authority: false
 
 Malformed manifests, invalid governance states, missing manifest receipt identity, unavailable governance dependencies, stream-order violations, and unsafe non-ALLOW consequence claims fail closed.
 
-## Cross-repository dependencies
+## Cross-repository implementation now available
 
 ```text
-StegVerse-org/StegVerse-SDK issue #16
-StegVerse-Labs/StegCore issue #85
-master-records/orchestration exact-run retained backing
+StegVerse-org/StegVerse-SDK/stegverse/governance_navigation.py
+  canonical stegverse.ingress-manifest.v1 user/developer contract
+
+StegVerse-Labs/StegCore/src/stegcore/manifest_receipts.py
+  canonical manifest_receipt_id + evidence/replay/reconstruct semantics
+
+master-records/orchestration/services/manifest_receipt_custody.py
+master-records/orchestration/services/manifest_receipt_custody_api.py
+  exact-run immutable custody and authenticated lookup/reconstruction
 ```
+
+## Worker continuation boundary
+
+Do not create a parallel StegGate evaluator, provider registry, custody store, or receipt authority in the adapter.
+
+Next executable tasks:
+
+```text
+1. bind the injected governance_handler to the canonical StegCore manifested-transaction path;
+2. after governance, register/retain the exact evidence package through the canonical manifest-receipt custody provider;
+3. return the same canonical manifest_receipt_id to the external caller's LLM/application;
+4. keep TEST and LIVE_STREAM on the same governance semantics;
+5. add end-to-end tests for ALLOW, DENY, REVIEW, FAIL_CLOSED, malformed manifests, dependency failure, stream ordering, idempotent retry, and non-ALLOW consequence rejection;
+6. prove per-unit live-stream identity remains independent from stream/session identity;
+7. run sovereign/local validation and record inspectable PASS evidence here.
+```
+
+The external LLM must never receive an ungoverned or fail-open answer presented as a governed ALLOW.
 
 ## Validation status
 
