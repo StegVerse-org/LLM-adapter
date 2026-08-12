@@ -66,31 +66,52 @@ StegVerse-org/StegVerse-SDK/stegverse/governance_navigation.py
   canonical stegverse.ingress-manifest.v1 user/developer contract
 
 StegVerse-Labs/StegCore/src/stegcore/manifest_receipts.py
-  canonical manifest_receipt_id + evidence/replay/reconstruct semantics
+StegVerse-Labs/StegCore/src/stegcore/manifest_receipt_provider.py
+  canonical manifest_receipt_id + evidence/replay/reconstruct semantics + shared-backing provider contract
 
 master-records/orchestration/services/manifest_receipt_custody.py
 master-records/orchestration/services/manifest_receipt_custody_api.py
-  exact-run immutable custody and authenticated lookup/reconstruction
+master-records/orchestration/services/canonical_custody_app.py
+master-records/orchestration/render-custody.yaml
+  exact-run immutable custody and authenticated lookup/reconstruction composed into the canonical custody deployment target
+```
+
+## Completed handoff tasks
+
+```text
+[done] TEST and LIVE_STREAM ingress modes installed
+[done] per-unit stream identity/sequence/idempotency enforcement installed
+[done] governed model-facing result envelope installed
+[done] ALLOW/DENY/REVIEW/FAIL_CLOSED preservation installed
+[done] malformed/dependency/non-ALLOW-consequence fail-closed behavior installed
+[done] StegCore exact-run receipt semantics available
+[done] StegCore shared-backing provider contract available
+[done] Master Records exact-run custody routes available on canonical deployment target
 ```
 
 ## Worker continuation boundary
 
-Do not create a parallel StegGate evaluator, provider registry, custody store, or receipt authority in the adapter.
+Do not create a parallel StegGate evaluator, provider registry, custody store, receipt authority, or separate Master Records service in the adapter.
 
 Next executable tasks:
 
 ```text
 1. bind the injected governance_handler to the canonical StegCore manifested-transaction path;
-2. after governance, register/retain the exact evidence package through the canonical manifest-receipt custody provider;
+2. after governance, register the canonical manifest receipt and retain the exact evidence package through the StegCore shared-backing provider;
 3. return the same canonical manifest_receipt_id to the external caller's LLM/application;
 4. keep TEST and LIVE_STREAM on the same governance semantics;
-5. add end-to-end tests for ALLOW, DENY, REVIEW, FAIL_CLOSED, malformed manifests, dependency failure, stream ordering, idempotent retry, and non-ALLOW consequence rejection;
+5. add end-to-end tests for ALLOW, DENY, REVIEW, FAIL_CLOSED, malformed manifests, dependency failure, stream ordering, idempotent retry, shared-backing conflict, and non-ALLOW consequence rejection;
 6. prove per-unit live-stream identity remains independent from stream/session identity;
-7. run sovereign/local validation and record inspectable PASS evidence here.
+7. prove retained shared backing resolves the returned manifest_receipt_id to the same immutable run;
+8. run sovereign/local validation and record inspectable PASS evidence here.
 ```
 
 The external LLM must never receive an ungoverned or fail-open answer presented as a governed ALLOW.
 
+## Activation boundary
+
+Master Records route composition is installed, but production custody activation remains gated by the Master Records repository-wide persistent-storage, backup/restore, and live-authenticated round-trip readiness requirements. The adapter must not represent installed custody code as live production custody until those conditions are evidenced.
+
 ## Validation status
 
-Implementation and tests are installed but no sovereign/local test execution receipt was produced during this change session. Do not claim COMPLETE_RELEASED until local validation, integration with the canonical governance handler, durable master-record backing, and owning release authority are evidenced.
+Implementation and tests are installed but no sovereign/local test execution receipt was produced during this change session. Do not claim COMPLETE_RELEASED until local validation, canonical governance-handler integration, durable shared-backing proof, and owning release authority are evidenced.
