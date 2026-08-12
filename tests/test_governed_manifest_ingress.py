@@ -3,10 +3,10 @@ import unittest
 from llm_adapter.governed_manifest_ingress import GovernedStreamSession, _hash, process_manifest
 
 
-def manifest(output_id="evt-1"):
+def manifest(output_id="evt-1", return_projection=None):
     payload = {"value": 7}
     candidate = {"action": "evaluate"}
-    return {
+    value = {
         "manifest_profile": "stegverse.ingress-manifest.v1",
         "manifest_profile_version": "1",
         "source_framework": "external.ai",
@@ -18,6 +18,9 @@ def manifest(output_id="evt-1"):
         "requested_consequence": "none",
         "hashes": {"payload_sha256": _hash(payload), "candidate_sha256": _hash(candidate)},
     }
+    if return_projection is not None:
+        value["return_projection"] = return_projection
+    return value
 
 
 def allow_handler(_manifest):
@@ -27,6 +30,10 @@ def allow_handler(_manifest):
         "manifest_receipt_id": "MR-0123456789ABCDEF",
         "verification_refs": ["verify:1"],
         "receipt_refs": ["receipt:1"],
+        "transition_evidence": [
+            {"transition_class": "ingestion", "state": "MANIFEST_ADMITTED"},
+            {"transition_class": "governance", "state": "ALLOW"},
+        ],
         "consequence_executed": False,
     }
 
@@ -37,6 +44,31 @@ class GovernedManifestIngressTests(unittest.TestCase):
         self.assertEqual(result["governance_state"], "ALLOW")
         self.assertEqual(result["manifest_receipt_id"], "MR-0123456789ABCDEF")
         self.assertFalse(result["adapter_is_governance_authority"])
+        self.assertEqual(result["return_projection"]["mode"], "ALL")
+
+    def test_none_projection_suppresses_only_caller_transition_detail(self):
+        result = process_manifest(
+            manifest(return_projection={"mode": "NONE"}),
+            mode="TEST",
+            governance_handler=allow_handler,
+        )
+        self.assertEqual(result["governance_state"], "ALLOW")
+        self.assertEqual(result["manifest_receipt_id"], "MR-0123456789ABCDEF")
+        self.assertEqual(result["transition_evidence"], [])
+        self.assertEqual(result["verification_refs"], [])
+        self.assertEqual(result["receipt_refs"], [])
+        self.assertTrue(result["master_records_transition_custody_independent_of_return_projection"])
+        self.assertFalse(result["return_projection"]["suppresses_master_records_custody"])
+
+    def test_selected_projection_filters_transition_detail(self):
+        result = process_manifest(
+            manifest(return_projection={"mode": "SELECTED", "transition_classes": ["governance"]}),
+            mode="TEST",
+            governance_handler=allow_handler,
+        )
+        self.assertEqual(result["transition_evidence"], [
+            {"transition_class": "governance", "state": "ALLOW"}
+        ])
 
     def test_invalid_manifest_fails_closed_without_calling_governance(self):
         called = []
