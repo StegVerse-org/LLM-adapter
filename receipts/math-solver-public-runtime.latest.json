@@ -2,7 +2,7 @@
   "schema_version": "MATH-SOLVER-PUBLIC-RUNTIME-OBSERVATION-v1",
   "task_id": "MATH-SOLVER-STEGGATE-RUNTIME-001",
   "origin": "https://stegverse-ecosystem-chat-gateway.onrender.com",
-  "observed_at": "2026-08-12T18:32:50.910826+00:00",
+  "observed_at": "2026-08-12T19:45:23.388282+00:00",
   "state": "BLOCKED",
   "readiness": null,
   "first": null,
@@ -10,7 +10,7 @@
   "checks": {},
   "blocker": {
     "type": "PUBLIC_RUNTIME_UNAVAILABLE",
-    "reason": "TimeoutError: The read operation timed out"
+    "reason": "HTTPError: HTTP Error 404: Not Found"
   },
   "next_executable_action": "Retry after the hosted deployment changes or build capacity returns.",
   "authority_effect": false
