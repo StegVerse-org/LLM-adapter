@@ -3,7 +3,7 @@
   "consumer_pull_verified": true,
   "custody_authorized": false,
   "manual_user_action_required": false,
-  "observed_digest": "sha256:64ef3c282ba5a0acd2f032109afbbbfddec4ac7ad5b6aa20e96150e6195711e5",
+  "observed_digest": "sha256:7525bd2515c19dacca1508c2e68e9dbbaa5548221eb85ba6e54341a958ee3565",
   "observed_receipt_schema": "stegdeploy.image-publication.v2",
   "observed_receipt_state": "PUBLISHED",
   "persistent_deployment_authorized": false,
