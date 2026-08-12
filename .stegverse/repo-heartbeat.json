@@ -1,0 +1,29 @@
+{
+  "schema": "stegverse.repo-heartbeat-adapter/v0.1",
+  "repo_id": "llm-adapter",
+  "org": "StegVerse-org",
+  "repository": "StegVerse-org/LLM-adapter",
+  "participant_class": "RUNTIME",
+  "runtime_id": "llm-adapter-sovereign-transport",
+  "handoff_path": "LLM_ADAPTER_MIRROR_HANDOFF.md",
+  "capabilities": [
+    "governed_provider_transport",
+    "provider_usage_evidence",
+    "sovereign_route_execution",
+    "immutable_activation_receipt"
+  ],
+  "dependencies": [
+    {"repo_id": "micro-node-runtime", "required": true},
+    {"repo_id": "tvc", "required": true},
+    {"repo_id": "master-records-orchestration", "required": true}
+  ],
+  "status_source": "repository_transport_and_usage_evidence_state",
+  "freshness_seconds": 300,
+  "authority": {
+    "credential_authority": "TV/TVC",
+    "heartbeat_grants_execution_authority": false,
+    "github_token_required": false
+  },
+  "central_contract": "StegVerse-Labs/.github/schemas/repo-heartbeat-manifest.schema.json",
+  "central_owner": "StegVerse-Labs/.github#81"
+}
