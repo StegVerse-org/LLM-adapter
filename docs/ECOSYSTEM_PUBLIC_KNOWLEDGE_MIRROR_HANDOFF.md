@@ -18,13 +18,15 @@ llm_adapter/public_knowledge.py
 llm_adapter/ai_entry_backend_service.py
 tests/test_public_knowledge.py
 tasks/LLMA-ECOSYSTEM-PUBLIC-KNOWLEDGE-021.json
+docs/ECOSYSTEM_PUBLIC_KNOWLEDGE_MIRROR_HANDOFF.md
+.github/workflows/public-knowledge-vacc-source-validation.yml
 ```
 
 The public knowledge manifest is local, credential-free, and non-authorizing. Initial coverage includes StegVerse overview, governance modes 000/00/0A/0B/1/2, SDK Connect my LLM, MCP, Ecosystem Chat, and VACC.
 
 The resolver requires every entry to reference a declared public repository/path source. `model_memory_is_source` is false. Unknown/unindexed questions return no grounded answer; the bounded fallback states that it will not invent a StegVerse fact.
 
-`ai_entry_backend_service.py` now consults this resolver before returning its deterministic fallback. Recognized public help questions therefore produce a source-grounded response even when the separately governed provider/model lane is unavailable. Provider execution remains independent and authoritative runtime ownership is unchanged.
+`ai_entry_backend_service.py` consults this resolver before returning its deterministic fallback. Recognized public help questions therefore produce a source-grounded response even when the separately governed provider/model lane is unavailable. Provider execution remains independent and authoritative runtime ownership is unchanged.
 
 ## Authority and credential boundary
 
@@ -40,17 +42,32 @@ Site activation authority changed: false
 
 Public knowledge output is explanation only and grants no execution or publication authority.
 
-## Validation state
+## Validation evidence
+
+Credential-free source workflow:
+
+```text
+workflow: .github/workflows/public-knowledge-vacc-source-validation.yml
+workflow_run: 31875248198
+job: 94989892925
+result: SUCCESS
+focused tests in combined Ecosystem/VACC run: 11/11 PASS
+credential-empty assertions: GITHUB_TOKEN, GH_TOKEN, OPENAI_API_KEY, ANTHROPIC_API_KEY
+source materialization: anonymous exact-SHA archive
+compile: PASS
+marker: PUBLIC_KNOWLEDGE_VACC_SOURCE_VALIDATION_PASS
+manual workflow dispatch: NO
+```
+
+Current state:
 
 ```text
 source installed on main: YES
-automatic repository workflows observed after source commits: YES
-focused tests installed: YES
-focused test execution result: PENDING INSPECTION
-runtime provider activation: OUT OF SCOPE / MACHINE OWNED
+focused source validation: COMPLETE
+task state: COMPLETE_VALIDATED_SOURCE
+claim state: RELEASED
+live sovereign provider/model activation: SEPARATE MACHINE-OWNED LANE
 ```
-
-Do not treat a generic workflow completion as focused validation until the run/jobs/logs show the relevant source/test path or an equivalent full suite.
 
 ## Expansion rule
 
@@ -58,11 +75,11 @@ Issue #140 owns future public corpus expansion. Add entries only when a canonica
 
 ## Collision boundaries
 
-- closed issue #18 / sovereign runtime lanes retain provider/model activation ownership;
+- sovereign Ecosystem runtime lanes retain provider/model activation ownership;
 - heartbeat and local model lanes are not reopened;
 - Site is not mutated without its mandatory orchestrator;
 - Master Records remains custody/reconstruction authority.
 
-## Archive / continuation
+## Continuation
 
-Source implementation can release after focused validation passes. Live Ecosystem Chat model activation remains separately machine-owned. Issue #140 remains the canonical continuation for public knowledge coverage.
+The initial public-knowledge source slice is source-complete, validated, and released. Issue #140 remains the canonical continuation for corpus coverage expansion. Live Ecosystem Chat provider/custody activation remains separately machine-owned and is not implied by this source completion.
