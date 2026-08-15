@@ -22,6 +22,8 @@ profiles/vacc-public-information-llm.v1.json
 llm_adapter/vacc_public_information.py
 tests/test_vacc_public_information.py
 tasks/LLMA-VACC-PUBLIC-INFORMATION-PROFILE-022.json
+docs/VACC_PUBLIC_INFORMATION_PROFILE_MIRROR_HANDOFF.md
+.github/workflows/public-knowledge-vacc-source-validation.yml
 ```
 
 The companion profile points to the canonical Site registry:
@@ -38,7 +40,7 @@ VAwatchdog can contribute only through a separately admitted sanitized/public pr
 
 ## Informational expansion target
 
-The new profile explicitly preserves future VACC coverage for:
+The profile explicitly preserves VACC coverage for:
 
 ```text
 disability claims
@@ -71,21 +73,40 @@ filing/signature/submission authority: false
 publication authority: false
 ```
 
-## Validation state
+## Validation evidence
+
+Credential-free source workflow:
+
+```text
+workflow: .github/workflows/public-knowledge-vacc-source-validation.yml
+workflow_run: 31875248198
+job: 94989892925
+result: SUCCESS
+focused tests in combined Ecosystem/VACC run: 11/11 PASS
+credential-empty assertions: GITHUB_TOKEN, GH_TOKEN, OPENAI_API_KEY, ANTHROPIC_API_KEY
+source materialization: anonymous exact-SHA archive
+compile: PASS
+marker: PUBLIC_KNOWLEDGE_VACC_SOURCE_VALIDATION_PASS
+manual workflow dispatch: NO
+```
+
+Current source state:
 
 ```text
 profile installed: YES
 source-policy evaluator installed: YES
-focused tests installed: YES
-automatic repository workflows observed after source commits: YES
-focused test execution result: PENDING INSPECTION
-real VA provider execution / custody / Site projection: issue #90 machine/runtime continuation
+focused source validation: COMPLETE
+task state: COMPLETE_VALIDATED_SOURCE_PROFILE
+claim state: RELEASED
+real VA provider execution / Master Records custody / Site projection: issue #90 machine/runtime continuation
 ```
 
 ## Continuation
 
-- issue #141 owns this public-information profile/source-policy slice;
-- issue #90 owns VA governed retrieval/runtime execution;
+- issue #141 owns source-profile history and any bounded profile-policy correction;
+- issue #90 owns VA governed retrieval/runtime execution and broad route execution;
 - Site#113 and Site orchestration own Site projection;
 - Site source registry remains the canonical source list;
 - VAwatchdog owns its own evidence/source-tier repository and does not automatically become public VACC grounding.
+
+The source-profile slice is complete, validated, and released. This does not prove VACC's broad informational route execution or live provider/custody activation.
