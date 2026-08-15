@@ -1,120 +1,153 @@
 # VA Claim Assistant Provider Preflight Mirror Handoff
 
-This scoped handoff is subordinate to `docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md` and `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`. It grants no provider, custody, filing, deployment, publication, release, or Site authority and does not modify Ecosystem Chat issue `#18`.
+This scoped handoff is subordinate to `docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md`, `docs/VACC_PUBLIC_INFORMATION_PROFILE_MIRROR_HANDOFF.md`, and `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`. It grants no provider, custody, filing, deployment, publication, release, or Site authority.
 
 ## Goal and canonical continuation
 
 ```text
-parent_goal_id: VACP-ADAPTER-EXECUTION-PREFLIGHT-004
-task_id: VACP-PREFLIGHT-HOSTED-EXECUTION-008
-originating_goal: activate the non-executing VA provider preflight through hosted repository automation
+historical_goal_id: VACP-ADAPTER-EXECUTION-PREFLIGHT-004
+historical_task_id: VACP-PREFLIGHT-HOSTED-EXECUTION-008
+originating_goal: prove a fail-closed VA provider preflight before real governed execution
 repository: StegVerse-org/LLM-adapter
 branch: main
-pull_request: StegVerse-org/LLM-adapter#120
-canonical_issue: StegVerse-org/LLM-adapter#90
+historical_pull_request: StegVerse-org/LLM-adapter#120
+parent_runtime_issue: StegVerse-org/LLM-adapter#90
+current_correction_issue: StegVerse-org/LLM-adapter#142
+canonical_current_task: tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
+historical_execution_task: tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json SUPERSEDED
 Site_projection_owner: StegVerse-Labs/Site#113
-next_execution_task: tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json
-final_product_goal: secure document retrieval and upload modules under StegVerse-Labs/Site#116
+credential_authority: TV/TVC
+credential_requirement: NONE for sovereign local-model route
+github_token_runtime_authority: NONE
+non_tv_tvc_secret_or_token_required: false
 ```
 
-## Current claim state
+## Historical preflight result
+
+The hosted GitHub-Models-specific preflight was previously implemented and validated as a non-executing/fail-closed experiment. Its historical evidence remains valid as evidence that provider permission was not requested and provider execution did not occur.
+
+Historical retained evidence includes:
 
 ```text
-state: RELEASED_COMPLETE
-claimant: null
-claim_created: 2026-08-06T19:32:00-05:00
-claim_released: after PR #120 merge, hosted/main verification, and task release on main
-release_evidence_commit: acaed090dab900541d65289c8e0daa7e62b645b8
-collision_boundary: do not request provider permission, call a provider, expose protected configuration, or modify Ecosystem Chat issue #18 from this completed preflight lane
+PR #120 merge: 8fb86f92f70f23c1042d4f2eb782e1a3a6797b65
+focused hosted-path run: 31135075848 SUCCESS
+main preflight run: 31136792639 SUCCESS
+historical release commit: acaed090dab900541d65289c8e0daa7e62b645b8
 ```
 
-## Authoritative files
+Those runs do not grant runtime authority and are not current VACC activation predicates.
+
+## Supersession — current authority
+
+The GitHub-Models activation path is no longer admissible for the integrated VACC goal because it depended on GitHub Actions runtime permission/credential semantics (`models: read` / ephemeral `GITHUB_TOKEN`). Current governing requirements are:
 
 ```text
-.github/workflows/va-claim-assistant-provider-preflight.yml
-.github/workflows/validate-va-provider-preflight-hosted-path.yml
-.github/workflows/va-provider-preflight-ubuntu2204-proof.yml
-vendor/tvc/e3865e79662529e07d27199235431056d127ea63/issue_va_ephemeral_route_admission.py
-scripts/check_va_provider_preflight_hosted_path.py
-tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json
-receipts/va-provider-preflight-hosted-blocker.json
-receipts/va-claim-assistant-provider-execution-preflight.json
+credential_authority: TV/TVC
+non-TV/TVC secrets or tokens: PROHIBITED
+github_token_runtime_authority: NONE
+github_token_required: false
+hosted_provider_fallback: DISALLOWED for the sovereign VACC activation path
+model_output_authority: NONE
 ```
 
-## Completed implementation and validation
-
-- Exact TVC source commit and Git blob are pinned.
-- Same-run 900-second, single-use admission generation is installed.
-- Provider permission and provider execution remain prohibited in preflight.
-- Hash-bound execution provenance and artifact retention are installed.
-- Repair commit `8864b77d867b5be13fbddb46172be1081b373325` validates the safety clauses semantically without weakening the prohibition on provider permission/calls.
-- Focused hosted-path run `31135075848` succeeded.
-- PR `#120` merged at `8fb86f92f70f23c1042d4f2eb782e1a3a6797b65`.
-- Main canonical preflight run `31136792639` succeeded.
-- The released preflight task state is retained at commit `acaed090dab900541d65289c8e0daa7e62b645b8`.
-
-## Current operational boundary
-
-Preflight is complete. It is not coordinated VA Resources LLM activation.
-
-The active next task is:
-
-`tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json`
-
-Current machine-observable blockers from `receipts/va-claim-assistant-provider-execution-preflight.json` are:
+Canonical replacement:
 
 ```text
-authorized_configuration_missing:MASTER_RECORDS_ALLOWED_HOSTS
-authorized_configuration_missing:MASTER_RECORDS_ENDPOINT
-authorized_configuration_missing:MASTER_RECORDS_TOKEN
-provider_execution_authority_missing_or_invalid
+StegVerse-002/micro-node-runtime
+-> StegVerse-Labs/.github resident sovereign heartbeat
+-> StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json
+-> StegVerse-org/LLM-adapter
+-> master-records/orchestration
+-> StegVerse-Labs/Site#113 projection after immutable activation evidence
 ```
 
-Fresh TVC admission generation is proven, but admission is short-lived and must be generated again in the same authorized execution run. Credential/configuration presence alone is not authority.
-
-When every release condition is true, the separate workflow-dispatch-only authorized execution lane may request `models: read`, perform exactly one bounded `service_connection` provider request with maximum cost USD 0.10, retain privacy-minimized execution/privacy receipts, and transfer them to `master-records/orchestration#15` and `StegVerse-Labs/Site#113`.
-
-## Product activation boundary
-
-Goal activation additionally requires a provider-backed governed response with VA route classification, admitted official VA sources, proposition-level citations, authority classes, retrieval/effective dates, contradiction/uncertainty labels, false-authority flags, stable secret-free receipt, Master Records custody `RECORDED`, reconstruction `PASS`, receipt-verified HTTPS VA runtime projection, and deployed Site-to-adapter-to-Site observation.
-
-Secure document retrieval and upload remain queued under `StegVerse-Labs/Site#116` until the coordinated LLM goal activates.
-
-## Machine-owned continuation
+Durable correction records:
 
 ```text
-provider preflight: .github/workflows/va-claim-assistant-provider-preflight.yml
-real execution owner: StegVerse-org/LLM-adapter#90
-real execution task: tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json
-custody/reconstruction owner: master-records/orchestration#15
-Site projection owner: StegVerse-Labs/Site#113
+issue: StegVerse-org/LLM-adapter#142
+task: tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
+old execution task: tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json state=SUPERSEDED
+old scheduled workflow: .github/workflows/va-claim-assistant-provider-preflight.yml REMOVED
+workflow removal commit: ffdb7874d6b62c494d38461cca55137547d5ad02
+task supersession commit: 044968419f00b7d19ae25f4fd2686b5e96e4e4dc
+realignment task install commit: 38478376d814e44f4de91846423d16c3800a509e
 ```
 
-No chat session is required to preserve or monitor the completed preflight lane. The next execution remains fail-closed until its machine-observable release conditions are satisfied.
+Historical request/receipt files whose names contain `github-models` are provenance only. They must not be interpreted as an available provider activation route.
+
+## Preserved VACC safety gates
+
+The route correction does not remove the existing safety/quality requirements. Real VACC inference still requires:
+
+```text
+privacy_guarded_dispatch PASS before model input
+admitted VA/federal grounding and provenance
+fresh TVC route admission
+bounded response generation
+Master Records custody RECORDED
+same-execution reconstruction PASS
+Site projection only after immutable execution evidence
+```
+
+The broader VACC public-information source profile is separately source-complete and validated under `docs/VACC_PUBLIC_INFORMATION_PROFILE_MIRROR_HANDOFF.md`.
+
+## Current machine-owned continuation
+
+```text
+current task: VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023
+execution owner: resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records
+claim state: MACHINE_OWNED
+manual runtime execution allowed: false
+```
+
+Machine-observable release condition:
+
+```text
+resident heartbeat advances beyond HB29 under a fresh authorized fence
+canonical private local-model runtime proof exists
+TVC emits ROUTE_ADMITTED with credential_requirement NONE
+TVC records github_token_required=false
+VACC executes against that exact admitted private endpoint
+privacy guard PASS precedes model input
+Master Records custody RECORDED
+same-execution reconstruction PASS
+Site projection consumes immutable activation evidence
+```
+
+No chat session may substitute a GitHub credential, provider token, second heartbeat, second local model, or second custody path.
 
 ## Session consolidation
 
 ```text
-MERGED INTO: StegVerse-org/LLM-adapter#90
-MERGED INTO: tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json
-MERGED INTO: master-records/orchestration#15
+MERGED INTO: StegVerse-org/LLM-adapter#142
+MERGED INTO: StegVerse-org/LLM-adapter/tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
+MERGED INTO: StegVerse-Labs/.github#60 resident sovereign heartbeat
+MERGED INTO: StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json
+MERGED INTO: master-records/orchestration
 MERGED INTO: StegVerse-Labs/Site#113
-MERGED INTO: StegVerse-Labs/Site#116
 ```
 
-## Archive condition
-
-The provider-preflight session/claim is archive-ready because implementation, hosted validation, merge, main verification, and release are complete. The broader VA Claims Chat program remains active in the canonical authorized-execution and Site/Master Records workstreams above.
+The historical hosted-preflight implementation is COMPLETE/SUPERSEDED as an activation route. Product activation remains machine-owned and incomplete.
 
 ## Completion measures
 
+For the historical preflight itself:
+
 ```text
-task completion: 8/8
-required developed files: 8/8
+task completion: 8/8 historical preflight
+validation: 8/8 historical preflight
+activation authority: 0; intentionally non-authorizing
+```
+
+For the corrected sovereign VACC inference activation path:
+
+```text
+developed source/control records: 4/4
 scaffolding or stubs: 0
-missing required files: 0
-validation: 8/8
-integration: 2/2
-goal activation for preflight lane: 8/8
-session consolidation: 5/5
+missing required control files: 0
+source-policy validation: COMPLETE
+live route validation: PENDING MACHINE OWNED
+integration predicates complete: 4/8
+goal activation: 4/8
+session consolidation: complete for this scoped correction once this handoff points exclusively to task 023
 ```
