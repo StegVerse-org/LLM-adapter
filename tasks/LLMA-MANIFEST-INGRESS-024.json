@@ -1,0 +1,65 @@
+{
+  "schema_version": "STEGVERSE-TASK-v1",
+  "task_id": "LLMA-MANIFEST-INGRESS-024",
+  "title": "Governed manifest ingress for TEST and LIVE_STREAM data",
+  "originating_goal": "Provide Demo-Testing and general external LLM/application support through the canonical LLM-adapter without creating a demo-specific evaluator or non-TV/TVC credential path.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "feat/manifest-ingress-test-mode-20260815",
+  "canonical_issue": "StegVerse-org/LLM-adapter#139",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_created_at": "2026-08-15T18:49:00-05:00",
+  "claim_release_condition": "Merge the bounded implementation with passing focused/final-head validation, or explicitly supersede it with evidence.",
+  "implementation_locations": [
+    "profiles/manifest-ingress.v1.json",
+    "llm_adapter/manifest_ingress.py",
+    "tests/test_manifest_ingress.py",
+    "docs/MANIFEST_INGRESS_MIRROR_HANDOFF.md"
+  ],
+  "completed_in_tranche": [
+    "versioned ingress profile",
+    "TEST and LIVE_STREAM envelope validation",
+    "canonical manifest hashing",
+    "authority-escalation refusal",
+    "no-GitHub-token ingress invariant",
+    "live-stream predecessor requirement",
+    "bounded governed result envelope",
+    "non-ALLOW consequence refusal",
+    "exception-detail suppression",
+    "focused unit tests"
+  ],
+  "remaining": [
+    "bind governed_ingest to canonical manifested-ingestion transaction path",
+    "persist exact manifest_receipt_id through Master Records",
+    "persist idempotency and ordering state",
+    "prove replay/reconstruction without external consequence re-execution",
+    "integrate SDK #16 relationship surface",
+    "expose successor capability to Demo suite only after upstream admission"
+  ],
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_required": false,
+    "github_token_runtime_authority": "NONE",
+    "external_provider_credentials_allowed": false
+  },
+  "collision_boundaries": [
+    "Do not create a parallel StegGate evaluator.",
+    "Do not create a demo-specific or recipient-specific evaluator route.",
+    "Do not select providers or expose credentials.",
+    "Do not duplicate sovereign heartbeat, TV/TVC, model runtime, or Master Records authority.",
+    "Do not treat this contract tranche as production activation."
+  ],
+  "validation_required": [
+    "python -m unittest tests.test_manifest_ingress",
+    "final PR head repository checks"
+  ],
+  "canonical_dependencies": [
+    "StegVerse-org/StegVerse-SDK#16",
+    "StegVerse-Labs/StegCore#85",
+    "master-records/orchestration",
+    "StegVerse-org/stegverse-demo-suite/docs/DEMO_EVALUATOR_MIRROR_HANDOFF.md"
+  ],
+  "next_executable_action": "Validate this tranche, merge if green, then bind governed_ingest to the canonical manifested-ingestion path without creating new authority.",
+  "authority_effect": false,
+  "activation_effect": false
+}
