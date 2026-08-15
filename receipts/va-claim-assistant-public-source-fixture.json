@@ -16,7 +16,7 @@
           "source_id": "VA-EVIDENCE-NEEDED",
           "authority_class": "OFFICIAL_OPERATIONAL",
           "locator": "https://www.va.gov/disability/how-to-file-claim/evidence-needed/",
-          "retrieved_at": "2026-08-14T19:16:55+00:00"
+          "retrieved_at": "2026-08-15T01:52:41+00:00"
         }
       ]
     },
@@ -29,7 +29,7 @@
           "source_id": "VA-COMPENSATION-EVIDENCE",
           "authority_class": "OFFICIAL_OPERATIONAL",
           "locator": "https://www.benefits.va.gov/compensation/evidence.asp",
-          "retrieved_at": "2026-08-14T19:16:55+00:00"
+          "retrieved_at": "2026-08-15T01:52:41+00:00"
         }
       ]
     }
@@ -51,5 +51,5 @@
     "execution": false,
     "publication": false
   },
-  "receipt_hash": "7144240d837fe625d88a2884637795ba365fc46e464910849ba84dae04560abd"
+  "receipt_hash": "9a72e796ac5bcefa0e84eab4e057b1076f331b48022a1db555323641cfc64853"
 }
