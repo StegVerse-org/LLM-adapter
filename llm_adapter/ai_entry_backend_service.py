@@ -1,8 +1,10 @@
-"""Interim governed backend scaffold for StegVerse AI Entry.
+"""Governed bounded fallback backend for StegVerse AI Entry.
 
-This module combines the local provider comparison boundary with a response
-shape suitable for the Site AI Entry Point. It is disabled-by-default and does
-not call live providers, issue authority, expose credentials, or persist records.
+Provider execution remains owned by the canonical governed provider path. This
+module supplies credential-free bounded fallback responses and grounds known
+public StegVerse/help questions in the committed public-knowledge manifest.
+It does not call live providers, issue authority, expose credentials, or persist
+records.
 """
 from __future__ import annotations
 
@@ -13,6 +15,7 @@ from typing import Any
 from llm_adapter.ai_entry_provider_boundary import build_disabled_provider_boundary
 from llm_adapter.free_tier_limits import ReceiptReplayUsage, evaluate_receipt_replay_limits
 from llm_adapter.free_tier_quota import FreeTierUsage, evaluate_free_tier_quota
+from llm_adapter.public_knowledge import PublicKnowledgeError, resolve_public_question
 
 ROUTE_KEYWORDS = (
     ("restricted_admin", ("secret", "token", "credential", "shell", "delete", "release", "permission", "workflow", "repo write")),
@@ -101,9 +104,25 @@ def build_free_tier_trust_metadata() -> dict[str, Any]:
     }
 
 
+def _public_grounding(message: str) -> tuple[str | None, str]:
+    try:
+        grounded = resolve_public_question(message)
+    except PublicKnowledgeError as exc:
+        return None, f"Public knowledge corpus unavailable: {exc}. No public fact was invented."
+    if grounded is None:
+        return None, "No canonical public-knowledge entry matched this question; bounded fallback will not invent a StegVerse fact."
+    source_text = ", ".join(
+        f"{source['repository']}/{source['path']}" for source in grounded.source_refs
+    )
+    return grounded.answer, f"Grounded public StegVerse sources: {source_text}. Model memory is not the factual source."
+
+
 def build_ai_entry_backend_response(message: str) -> AIEntryBackendResponse:
     clean = message.strip()
     route_id = classify_route(clean)
+    grounded_answer, grounding_guidance = _public_grounding(clean) if clean else (None, "")
+    if grounded_answer is not None:
+        route_id = "public_knowledge"
     digest = sha256(f"{route_id}\n{clean}".encode("utf-8")).hexdigest()[:16]
     response_id = "welcome" if not clean else f"preview-{route_id}-{digest}"
     provider_boundary = build_disabled_provider_boundary()
@@ -121,19 +140,29 @@ def build_ai_entry_backend_response(message: str) -> AIEntryBackendResponse:
         route_id=route_id,
         response_id=response_id,
     )
+    if not clean:
+        response_text = "Welcome to StegVerse AI. Ask a question or request SDK, governance, runtime, documentation, or comparison guidance."
+        route_guidance = "Public help is grounded in the committed StegVerse public-knowledge corpus; provider execution remains separately governed."
+    elif grounded_answer is not None:
+        response_text = grounded_answer
+        route_guidance = grounding_guidance
+    else:
+        response_text = (
+            f"StegVerse received one AI Entry request and classified it as {route_id}. "
+            "No canonical public-knowledge entry matched, so this bounded fallback does not invent an answer. "
+            "A separately governed provider/retrieval path may answer when admitted evidence is available."
+        )
+        route_guidance = grounding_guidance
+
     return AIEntryBackendResponse(
         response_id=response_id,
         primary_route=route_id,
-        stegverse_response=(
-            "Welcome to StegVerse AI. Ask a question or request SDK, governance, runtime, documentation, or comparison guidance."
-            if not clean
-            else f"StegVerse received one AI Entry request and classified it as {route_id}. This interim backend returns a bounded preview response."
-        ),
-        route_guidance="Interim backend route classification only; no live calls or authority are issued.",
+        stegverse_response=response_text,
+        route_guidance=route_guidance,
         sdk_guidance=(
-            "SDK guidance path selected; receipt capture remains preview-only until SDK activation."
-            if route_id.startswith("sdk")
-            else "No SDK-specific route selected."
+            "SDK guidance is grounded in the public knowledge corpus when a matching SDK/help entry exists."
+            if route_id in {"sdk_access_guidance", "sdk_intake_candidate", "public_knowledge"}
+            else "No SDK-specific public knowledge entry selected."
         ),
         comparison_outputs=comparisons,
         governance={
