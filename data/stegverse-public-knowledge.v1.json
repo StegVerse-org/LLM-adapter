@@ -1,0 +1,115 @@
+{
+  "schema": "stegverse.public-knowledge.v1",
+  "corpus_id": "stegverse-public-knowledge",
+  "purpose": "Credential-free local grounding for public StegVerse explanations and usage help.",
+  "authority_effect": false,
+  "publication_authority": false,
+  "model_memory_is_source": false,
+  "unknown_topics_fail_transparently": true,
+  "sources": [
+    {
+      "source_id": "SDK-CONSOLE",
+      "repository": "StegVerse-org/StegVerse-SDK",
+      "path": "docs/SDK_CONSOLE.md",
+      "public": true
+    },
+    {
+      "source_id": "SDK-CONNECT-LLM",
+      "repository": "StegVerse-org/StegVerse-SDK",
+      "path": "docs/CONNECT_MY_LLM.md",
+      "public": true
+    },
+    {
+      "source_id": "SDK-GOVERNANCE-NAV",
+      "repository": "StegVerse-org/StegVerse-SDK",
+      "path": "stegverse/governance_navigation.py",
+      "public": true
+    },
+    {
+      "source_id": "SDK-MCP",
+      "repository": "StegVerse-org/StegVerse-SDK",
+      "path": "docs/MCP_PRODUCTION_ARTIFACT_TESTS.md",
+      "public": true
+    },
+    {
+      "source_id": "LLMA-PUBLIC-RUNTIME",
+      "repository": "StegVerse-org/LLM-adapter",
+      "path": "README.md",
+      "public": true
+    },
+    {
+      "source_id": "SITE-PUBLIC-PATHS",
+      "repository": "StegVerse-Labs/Site",
+      "path": "docs/SITE_PUBLIC_PATHS.md",
+      "public": true
+    }
+  ],
+  "entries": [
+    {
+      "id": "what-is-stegverse",
+      "triggers": ["what is stegverse", "stegverse overview", "explain stegverse", "stegverse architecture"],
+      "answer": "StegVerse is a governed AI and continuity ecosystem. Public interaction surfaces produce bounded candidates and receipts; StegGate/admissibility, TV/TVC credential and route authority, and Master Records custody remain separate authority layers. A public chat or model response is not execution authority.",
+      "source_ids": ["LLMA-PUBLIC-RUNTIME", "SITE-PUBLIC-PATHS"]
+    },
+    {
+      "id": "governance-000",
+      "triggers": ["mode 000", "option 000", "governance 000", "what is 000"],
+      "answer": "Mode 000 is the optional worked governance transparency/demo surface. It is explanatory and non-authorizing. Use `stegverse governance --select 000`; a real governed run remains separate.",
+      "source_ids": ["SDK-CONSOLE", "SDK-GOVERNANCE-NAV"]
+    },
+    {
+      "id": "governance-00",
+      "triggers": ["mode 00", "option 00", "governance 00", "what is 00"],
+      "answer": "Mode 00 is the optional return/explanation configuration surface. It configures permitted user-return projection without changing canonical Master Records custody.",
+      "source_ids": ["SDK-CONSOLE", "SDK-GOVERNANCE-NAV"]
+    },
+    {
+      "id": "governance-0a",
+      "triggers": ["mode 0a", "option 0a", "governance 0a", "raw user data", "public inspection request"],
+      "answer": "Mode 0A submits a canonical public-inspection request through the sovereign governed runtime. Run `stegverse governance --select 0 --input <public-inspection-request.json>`. The returned governance disposition and receipt evidence must be interpreted separately; a valid DENY receipt is still a valid governance result.",
+      "source_ids": ["SDK-CONSOLE", "SDK-GOVERNANCE-NAV"]
+    },
+    {
+      "id": "governance-0b",
+      "triggers": ["mode 0b", "option 0b", "governance 0b", "ingress manifest"],
+      "answer": "Mode 0B is the preformatted ingress-manifest path. The manifest must carry the complete canonical governance request required by StegGate; missing authority/evidence fields fail closed and are not invented. Use the SDK's current 0B ingress binding described by its governance help/runtime.",
+      "source_ids": ["SDK-GOVERNANCE-NAV"]
+    },
+    {
+      "id": "governance-replay",
+      "triggers": ["mode 1", "option 1", "replay receipt", "replay manifest receipt"],
+      "answer": "Mode 1 replays a prior governed operation by `manifest_receipt_id` without re-executing the original consequence. Run `stegverse governance --select 1 --manifest-receipt-id <MR-...>`.",
+      "source_ids": ["SDK-CONSOLE", "SDK-GOVERNANCE-NAV"]
+    },
+    {
+      "id": "governance-reconstruct",
+      "triggers": ["mode 2", "option 2", "reconstruct receipt", "reconstruction"],
+      "answer": "Mode 2 reconstructs a governed operation by `manifest_receipt_id`. Reconstruction is evidence/replay analysis and does not re-execute the original consequence. Run `stegverse governance --select 2 --manifest-receipt-id <MR-...>`.",
+      "source_ids": ["SDK-CONSOLE", "SDK-GOVERNANCE-NAV"]
+    },
+    {
+      "id": "connect-my-llm",
+      "triggers": ["connect my llm", "connect llm", "use my llm", "llm adapter connection"],
+      "answer": "From a cloned SDK install, run `stegverse surfaces`, `stegverse help-surface \"connect my llm\"`, then `stegverse-connect-llm`. The connector probes the canonical LLM-adapter `/user-llm` surface, saves only non-secret identity/endpoint metadata, and binds every StegVerse submission from that LLM to `/v1/user-llm/requests`. Provider/API/GitHub secrets are not accepted by the SDK; protected credential authority remains TV/TVC.",
+      "source_ids": ["SDK-CONNECT-LLM", "LLMA-PUBLIC-RUNTIME"]
+    },
+    {
+      "id": "mcp",
+      "triggers": ["connect mcp", "mcp surface", "mcp tools", "stegverse mcp"],
+      "answer": "MCP is the tool/capability transport. Discover it with `stegverse surfaces` and `stegverse help-surface mcp`; the production-artifact test uses `stegverse-mcp-test --select 000|00|0|1|2`. MCP discovery does not grant tool execution authority. A connected LLM still enters StegVerse through LLM-adapter; MCP does not replace the model boundary.",
+      "source_ids": ["SDK-MCP", "SDK-CONNECT-LLM"]
+    },
+    {
+      "id": "ecosystem-chat",
+      "triggers": ["ecosystem chat", "what is ecosystem chat", "ecosystem node chat"],
+      "answer": "Ecosystem Chat is the public StegVerse knowledge and governed interaction companion. Its inference boundary is LLM-adapter. Public knowledge answers should be grounded in this canonical public corpus; requests requiring authority remain separate governed operations.",
+      "source_ids": ["SITE-PUBLIC-PATHS", "LLMA-PUBLIC-RUNTIME"]
+    },
+    {
+      "id": "vacc",
+      "triggers": ["vacc", "va claims chat", "va claim assistant", "veterans affairs companion"],
+      "answer": "VACC is the veteran-facing VA information and claims companion. Its inference boundary is LLM-adapter. Public informational grounding must come from admitted VA/federal sources with provenance; private veteran records remain separately privacy-governed, and VACC does not become VA adjudication, representation, filing, medical-opinion, or rating authority.",
+      "source_ids": ["LLMA-PUBLIC-RUNTIME"]
+    }
+  ]
+}
