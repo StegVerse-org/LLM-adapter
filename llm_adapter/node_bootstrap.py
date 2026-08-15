@@ -41,14 +41,23 @@ def bootstrap(root: Path | None = None) -> dict[str, Any]:
     capability = {
         "schema": "stegverse.capability.v1",
         "capability_id": "ecosystem-chat-gateway",
-        "version": "1.3.0",
+        "version": "1.4.0",
         "lifecycle": "reconstruct-on-demand",
         "authority_effect": "RUNTIME_ONLY",
         "entrypoint": [
-            "python", "-m", "uvicorn", "llm_adapter.combined_gateway:app",
+            "python", "-m", "uvicorn", "llm_adapter.deployed_gateway:app",
             "--host", "${HOST}", "--port", "${PORT}"
         ],
         "health": {"path": "/health", "timeout_seconds": 3, "attempts": 30},
+        "routes": {
+            "ecosystem_chat": "/api/ecosystem-chat",
+            "math_solver_readiness": "/api/math-solver/v1/readiness",
+            "math_solver_solve": "/api/math-solver/v1/solve",
+            "node_advertisement": "/api/stegverse-node",
+            "hil_readiness": "/api/hil/readiness",
+            "hil_submission": "/api/hil/submissions",
+            "user_llm": "/user-llm"
+        },
         "state": {
             "durable_root": str(state_dir),
             "required_paths": ["stegverse-ecosystem-chat.db", "stegverse-external-review.db"]
@@ -74,6 +83,11 @@ def bootstrap(root: Path | None = None) -> dict[str, Any]:
             "manual_backend_selection_required": False,
             "durable_state_external_to_executor": True,
             "authorized_host_binding_supported": True
+        },
+        "credential_boundary": {
+            "credential_authority": "TV/TVC",
+            "github_token_runtime_authority": "NONE",
+            "provider_credentials_in_manifest": False
         },
         "node": {"auto_start": True}
     }
