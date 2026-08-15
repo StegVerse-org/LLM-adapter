@@ -1,128 +1,49 @@
 {
   "schema_version": "STEGVERSE-TASK-v1",
   "task_id": "VACP-ADAPTER-AUTHORIZED-EXECUTION-005",
-  "title": "Execute one authorized VA service-connection provider request",
-  "originating_goal": "Perform one real source-grounded service_connection request only after fresh TVC admission, protected Master Records configuration, explicit bounded provider authority, and the hosted PII runtime gate all pass in the same execution run.",
+  "title": "Historical VA service-connection GitHub Models execution path",
+  "originating_goal": "Perform one real source-grounded service_connection request after privacy, TVC, provider, custody, and reconstruction gates pass.",
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "main",
   "canonical_issue": "StegVerse-org/LLM-adapter#90",
-  "canonical_handoff": "docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md",
-  "privacy_handoff": "docs/VA_CLAIM_ASSISTANT_PRIVACY_RUNTIME_MIRROR_HANDOFF.md",
-  "role": "SINGLE_REQUEST_PROVIDER_EXECUTION_AND_RECEIPT_RETURN",
-  "state": "BLOCKED",
+  "state": "SUPERSEDED",
+  "claim_state": "SUPERSEDED",
   "claimant": null,
-  "claim_created_at": null,
-  "claim_expires_at": null,
-  "blocked_at": "2026-08-03T23:47:00Z",
-  "updated_at": "2026-08-07T02:05:00Z",
-  "machine_observable_release_condition": {
-    "preflight_path": "receipts/va-claim-assistant-provider-execution-preflight.json",
-    "required_preflight_state": "READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION",
-    "required_observation_source": "GITHUB_ACTIONS_WORKFLOW",
-    "required_configuration": [
-      "STEGVERSE_MASTER_RECORDS_ENDPOINT",
-      "STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS",
-      "STEGVERSE_MASTER_RECORDS_TOKEN"
-    ],
-    "required_authority_path": "receipts/va-claim-assistant-provider-execution-authority.github-models.v1.json",
-    "required_authority_state": "APPROVED_AND_VALID_FOR_EXACT_CALLER_COMMIT",
-    "required_tvc_mechanism": "StegVerse-Labs/TVC/.github/workflows/va-route-ephemeral-admission.yml@d68318fc67ddb5ebf305a7fd1c6809d44dd6041e",
-    "required_privacy_receipt_path": "receipts/va-claim-assistant-privacy-runtime-validation.json",
-    "required_privacy_receipt_state": "PASS",
-    "required_privacy_observation_source": "GITHUB_ACTIONS_WORKFLOW",
-    "required_privacy_receipt_hash": "bcd39b3689ba0fbe7f18b99e114984543d784c80d3fd8ad5842cc551926df34c",
-    "required_privacy_runtime_commit": "e14e70be89f24d418d28a2a44c091d3349414ebc",
-    "required_privacy_dispatch_commit": "e007689277cc2f3961bbcd9361b7b2373e1340ce"
-  },
-  "current_preflight_evidence": {
+  "superseded_at": "2026-08-15T08:57:00Z",
+  "superseded_by": "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+  "supersession_reason": "The historical path required GitHub Models provider authority, models:read, and an ephemeral GitHub Actions GITHUB_TOKEN. The governing integrated-surface credential contract requires TV/TVC-only protected authority, no non-TV/TVC secret/token, and GitHub token runtime authority NONE. The released sovereign local-model route already satisfies credential_requirement NONE and github_token_required false.",
+  "historical_preflight_evidence": {
+    "receipt": "receipts/va-claim-assistant-provider-execution-preflight.json",
     "state": "CONFIGURATION_REQUIRED",
-    "observation_source": "GITHUB_ACTIONS_WORKFLOW",
-    "workflow_run_id": "31136871750",
-    "caller_commit": "acaed090dab900541d65289c8e0daa7e62b645b8",
-    "tvc_admission_present": true,
-    "tvc_admission_valid": true,
-    "tvc_single_use": true,
-    "provider_permission_requested": false,
+    "provider": "github-models",
     "provider_execution_observed": false,
     "authority_effect": false,
     "activation_effect": false
   },
-  "current_blockers": [
-    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS",
-    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_ENDPOINT",
-    "authorized_configuration_missing:STEGVERSE_MASTER_RECORDS_TOKEN",
-    "provider_execution_authority_missing_or_invalid"
+  "retired_surfaces": [
+    ".github/workflows/va-claim-assistant-provider-preflight.yml",
+    "receipts/va-claim-assistant-provider-execution-authority.github-models.v1.json",
+    "requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json",
+    "GitHub Models models:read provider activation",
+    "ephemeral GITHUB_TOKEN provider credential"
   ],
-  "satisfied_dependencies": {
-    "hosted_preflight_observer": {
-      "state": "OBSERVED_FAIL_CLOSED",
-      "observation_source": "GITHUB_ACTIONS_WORKFLOW",
-      "workflow_run_id": 31136871750,
-      "provider_permission_requested": false,
-      "provider_execution_observed": false,
-      "authority_effect": false,
-      "activation_effect": false
-    },
-    "pii_runtime_gate": {
-      "state": "PASS",
-      "receipt_path": "receipts/va-claim-assistant-privacy-runtime-validation.json",
-      "receipt_commit": "97767eb8dbca4a2fd75e1a6052195ca680bd1148",
-      "receipt_hash": "bcd39b3689ba0fbe7f18b99e114984543d784c80d3fd8ad5842cc551926df34c",
-      "workflow_run_id": 30874416525,
-      "job_id": 91882865431,
-      "artifact_id": 8879004626,
-      "artifact_digest": "sha256:c6078147307ef853887a3618394c4758b6ed422b7ec815b1f22e92a554960961",
-      "authority_effect": false,
-      "activation_effect": false
-    }
+  "preserved_requirements_transferred": [
+    "privacy_guarded_dispatch PASS before model input",
+    "admitted source-grounded VA response",
+    "fresh TVC route admission",
+    "single bounded execution semantics",
+    "Master Records custody RECORDED",
+    "same-execution reconstruction PASS",
+    "Site projection only from verified activation evidence",
+    "no adjudication, representation, medical-opinion, rating, filing, publication, deployment, or release authority"
+  ],
+  "canonical_continuation": {
+    "task": "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+    "issue": "StegVerse-org/LLM-adapter#142",
+    "model_source_handoff": "StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md",
+    "live_activation_owner": "StegVerse-Labs/.github#60 -> StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json -> StegVerse-org/LLM-adapter -> master-records/orchestration"
   },
-  "machine_owned_observer": {
-    "workflow": ".github/workflows/va-claim-assistant-provider-preflight.yml",
-    "schedule": "47 */6 * * *",
-    "manual_dispatch": true,
-    "persists_preflight_receipt": true,
-    "fails_closed_without_configuration_or_authority": true
-  },
-  "target_paths": [
-    ".github/workflows/va-claim-assistant-authorized-execution.yml",
-    "scripts/execute_va_service_connection_authorized.py",
-    "receipts/va-claim-assistant-provider-execution-authority.github-models.consumed.json",
-    "receipts/va-claim-assistant-service-connection-execution.json",
-    "receipts/va-claim-assistant-service-connection-execution-readiness.json",
-    "tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json"
-  ],
-  "required_sequence": [
-    "Validate the hosted PII runtime PASS receipt and exact runtime/dispatcher commits.",
-    "Route every submitted question and derived context through va_claim_assistant/privacy_guarded_dispatch.py before classifier invocation, authority consumption, provider permission, or model input.",
-    "Reject any REVIEW_REQUIRED privacy result without requesting provider permission and without retaining rejected values or hashes.",
-    "Validate an unexpired exact-commit VA provider authority receipt.",
-    "Obtain a fresh single-use 900-second TVC admission in the same workflow run.",
-    "Verify protected Master Records endpoint, allowed-host, and token bindings without logging values.",
-    "Consume both authority records before provider permission is requested.",
-    "Request models: read only in the single execution job.",
-    "Perform at most one retrieval-grounded provider request with maximum cost USD 0.10.",
-    "Persist a privacy-minimized execution receipt bound to the privacy event, TVC, answer, dispatch, provider, usage, custody, and reconstruction evidence.",
-    "Require the existing execution observer to emit COMPLETE.",
-    "Transfer the execution and privacy receipts to master-records/orchestration#15 and Site#113."
-  ],
-  "expected_evidence": [
-    "The privacy event is PASS and hash-bound before any provider permission or model input.",
-    "Provider used exactly once with approved model and endpoint.",
-    "No credential value, prompt, raw model text, PII, raw document, identity artifact, trace, prohibited log, or medical narrative enters the retained receipt.",
-    "Answer and dispatch hashes match the admitted service_connection route.",
-    "Provider usage is persisted and authenticated custody returns RECORDED.",
-    "Transition custody returns RECORDED and reconstruction returns PASS.",
-    "Every authority and activation effect remains false."
-  ],
-  "collision_boundaries": [
-    "Do not modify or dispatch the Ecosystem Chat execution workflow owned by issue #18.",
-    "Do not execute from push, schedule, pull_request, credential presence, or privacy PASS alone.",
-    "Do not create or approve the authority receipt from the execution lane.",
-    "Do not bypass privacy_guarded_dispatch or send rejected input to a provider.",
-    "Do not exceed one provider request or USD 0.10.",
-    "Do not activate Site, filing, submission, representation, adjudication, rating, medical opinion, publication, deployment, or release."
-  ],
-  "next_executable_action": "An authorized configuration/authority owner must make the protected Master Records endpoint, allowed-hosts, token, and exact-caller VA provider authority valid. The six-hour preflight observer will then emit READY_FOR_EXPLICIT_AUTHORIZED_EXECUTION; only then may the execution lane be claimed and installed/executed.",
+  "next_executable_action": "Follow VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023. Do not reactivate this GitHub Models path.",
   "authority_effect": false,
   "activation_effect": false
 }
