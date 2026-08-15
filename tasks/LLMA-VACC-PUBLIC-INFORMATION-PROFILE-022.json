@@ -7,24 +7,35 @@
   "branch": "main",
   "canonical_issue": "StegVerse-org/LLM-adapter#141",
   "parent_runtime_issue": "StegVerse-org/LLM-adapter#90",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
-  "claimant": "current-chat-vacc-source-profile-lane",
-  "claim_created_at": "2026-08-15T08:42:34Z",
-  "claim_release_condition": "Release after separate VACC informational profile, source-policy evaluator, tests, validation evidence, and handoff are installed without changing the existing VA Claims Chat official-VA-only profile.",
+  "state": "COMPLETE_VALIDATED_SOURCE_PROFILE",
+  "claim_state": "RELEASED",
+  "claimant": null,
+  "released_at": "2026-08-15T08:45:02Z",
   "owned_paths": [
     "profiles/vacc-public-information-llm.v1.json",
     "llm_adapter/vacc_public_information.py",
     "tests/test_vacc_public_information.py",
     "docs/VACC_PUBLIC_INFORMATION_PROFILE_MIRROR_HANDOFF.md",
-    "tasks/LLMA-VACC-PUBLIC-INFORMATION-PROFILE-022.json"
+    ".github/workflows/public-knowledge-vacc-source-validation.yml"
   ],
+  "validation": {
+    "workflow_run": 31875248198,
+    "job": 94989892925,
+    "result": "SUCCESS",
+    "focused_test_count_in_combined_run": 11,
+    "credentials_asserted_empty": ["GITHUB_TOKEN", "GH_TOKEN", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"],
+    "source_materialization": "ANONYMOUS_ARCHIVE",
+    "marker": "PUBLIC_KNOWLEDGE_VACC_SOURCE_VALIDATION_PASS"
+  },
+  "completion_boundary": "Broad VA/federal informational source profile and fail-closed source evaluator are complete and validated. Broad-topic route execution, real provider execution, Master Records custody/reconstruction, HTTPS endpoint projection, and Site end-to-end activation remain owned by issue #90/Site#113 and are not claimed complete here.",
   "collision_boundaries": [
-    "Do not modify or weaken profiles/va-claims-chat-llm.v1.json.",
-    "Do not create a second VA provider runtime/gateway; issue #90 remains runtime owner.",
-    "Do not treat private VAwatchdog repository material as public; only an explicitly public/sanitized admitted projection may be used.",
-    "Do not grant adjudication, representation, medical-opinion, rating, filing, publication, or provider authority."
+    "Existing profiles/va-claims-chat-llm.v1.json remains unchanged and official-VA-only for claim-specific external factual grounding.",
+    "Issue #90 remains sole VA provider runtime/gateway owner.",
+    "Private VAwatchdog repository content is not public grounding; only admitted sanitized/public projection may be used.",
+    "No adjudication, representation, medical-opinion, rating, filing, publication, or provider authority is granted."
   ],
   "credential_authority": "TV/TVC",
   "non_tv_tvc_secret_or_token_required": false,
-  "github_token_runtime_authority": "NONE"
+  "github_token_runtime_authority": "NONE",
+  "next_task_after_release": "Issue #90 consumes this source profile while extending route execution; Site#113 consumes only verified runtime/custody evidence."
 }
