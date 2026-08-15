@@ -4,12 +4,18 @@
   "title": "Governed manifest ingress for TEST and LIVE_STREAM data",
   "originating_goal": "Provide Demo-Testing and general external LLM/application support through the canonical LLM-adapter without creating a demo-specific evaluator or non-TV/TVC credential path.",
   "repository": "StegVerse-org/LLM-adapter",
-  "branch": "feat/manifest-ingress-test-mode-20260815",
+  "branch": "main",
   "canonical_issue": "StegVerse-org/LLM-adapter#139",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
-  "claim_state": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "TRANCHE_1_COMPLETE_RELEASED_PARENT_ACTIVE",
+  "claim_state": "COMPLETE_RELEASED",
   "claim_created_at": "2026-08-15T18:49:00-05:00",
-  "claim_release_condition": "Merge the bounded implementation with passing focused/final-head validation, or explicitly supersede it with evidence.",
+  "claim_released_at": "2026-08-15T18:56:00-05:00",
+  "claim_release_reason": "PR #143 merged after focused deterministic validation and all final-head repository workflow runs completed successfully. Parent issue #139 remains active for canonical ingestion/Master Records/SDK binding.",
+  "merge_evidence": {
+    "pull_request": 143,
+    "head_sha": "3aed03262e1946e794121e93133ca88b5dc61165",
+    "merge_sha": "b64004da746f565fecfdbaabe9adcc1f627b0670"
+  },
   "implementation_locations": [
     "profiles/manifest-ingress.v1.json",
     "llm_adapter/manifest_ingress.py",
@@ -21,13 +27,25 @@
     "TEST and LIVE_STREAM envelope validation",
     "canonical manifest hashing",
     "authority-escalation refusal",
-    "no-GitHub-token ingress invariant",
+    "no-GitHub-token ingress contract invariant",
     "live-stream predecessor requirement",
     "bounded governed result envelope",
     "non-ALLOW consequence refusal",
     "exception-detail suppression",
-    "focused unit tests"
+    "focused deterministic tests"
   ],
+  "validation_evidence": {
+    "focused_deterministic_tests": "5/5 PASS in credential-free local execution",
+    "final_head_repository_runs": [
+      "31915920427 Portable User-LLM Execution Receipt SUCCESS",
+      "31915920445 HIL managed receiver validation SUCCESS",
+      "31915920428 validate SUCCESS",
+      "31915920436 Platform-Agnostic Runtime SUCCESS",
+      "31915920433 Architecture Guard SUCCESS",
+      "31915920432 Validate Provider-Owned Usage Event SUCCESS"
+    ],
+    "qualification": "Existing GitHub-hosted validation workflows use GitHub Actions repository credentials for checkout/setup mechanics. Those hosted credentials are not part of the manifest-ingress runtime or production authority path and remain separate workflow-minimization/token-cleanup debt."
+  },
   "remaining": [
     "bind governed_ingest to canonical manifested-ingestion transaction path",
     "persist exact manifest_receipt_id through Master Records",
@@ -49,17 +67,13 @@
     "Do not duplicate sovereign heartbeat, TV/TVC, model runtime, or Master Records authority.",
     "Do not treat this contract tranche as production activation."
   ],
-  "validation_required": [
-    "python -m unittest tests.test_manifest_ingress",
-    "final PR head repository checks"
-  ],
   "canonical_dependencies": [
     "StegVerse-org/StegVerse-SDK#16",
     "StegVerse-Labs/StegCore#85",
     "master-records/orchestration",
     "StegVerse-org/stegverse-demo-suite/docs/DEMO_EVALUATOR_MIRROR_HANDOFF.md"
   ],
-  "next_executable_action": "Validate this tranche, merge if green, then bind governed_ingest to the canonical manifested-ingestion path without creating new authority.",
+  "next_executable_action": "Acquire a new nonoverlapping claim for parent #139 and bind governed_ingest to the canonical manifested-ingestion/Master Records transaction path without creating new authority.",
   "authority_effect": false,
   "activation_effect": false
 }
