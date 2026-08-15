@@ -1,0 +1,38 @@
+{
+  "schema": "stegverse.llm-adapter.ingress-profile.v1",
+  "profile_id": "stegverse.manifest-ingress.v1",
+  "title": "Governed manifest ingress for bounded tests and live streams",
+  "modes": ["TEST", "LIVE_STREAM"],
+  "canonical_governance_required": true,
+  "parallel_evaluator_allowed": false,
+  "per_unit_identity_required": true,
+  "idempotency_key_required": true,
+  "live_stream_predecessor_required_after_first_unit": true,
+  "decisions": ["ALLOW", "DENY", "REVIEW", "FAIL_CLOSED"],
+  "return_contract": {
+    "manifest_receipt_id_required": true,
+    "verification_refs_required": true,
+    "consequence_execution_state_required": true,
+    "result_hash_required": true
+  },
+  "authority_boundary": {
+    "authority_effect": "NONE",
+    "provider_selection_authority": false,
+    "credential_authority_granted": false,
+    "route_authority_granted": false,
+    "governance_authority_granted": false,
+    "wallet_authority_granted": false,
+    "publication_authority_granted": false,
+    "release_authority_granted": false,
+    "github_token_required": false,
+    "credential_authority": "TV/TVC",
+    "external_provider_credentials_in_ingress": false
+  },
+  "demo_testing_relationship": {
+    "existing_evaluator_capability": "llm_adapter.evaluator_interaction",
+    "existing_evaluator_route": "sdk://StegVerse-org/LLM-adapter/evaluator-entry",
+    "relationship_owner": "StegVerse-org/StegVerse-SDK",
+    "test_mode_extension_issue": "StegVerse-org/LLM-adapter#139",
+    "demo_specific_evaluator_path_allowed": false
+  }
+}
