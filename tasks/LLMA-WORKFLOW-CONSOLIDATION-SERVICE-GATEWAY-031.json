@@ -6,9 +6,9 @@
   "branch": "chore/transfer-service-gateway-proof-20260816",
   "claimant": "chatgpt-session-backend-support-20260816",
   "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
-  "state": "CLAIMED_FOR_VALIDATION",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claim_timestamp": "2026-08-16T01:52:00-05:00",
-  "claim_release_condition": "Merge the exact bounded service-gateway proof transfer after final-head validation, verify post-merge workflow-file count, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "claim_release_condition": "SATISFIED",
   "surfaces": [
     ".github/workflows/service-gateway-deploy.yml",
     ".github/workflows/hil-deployment-profile.yml",
@@ -24,8 +24,15 @@
   "implementation_evidence": [
     "4a967ba10cca8d64b34382da3f77ad97fde2520b folded tests/test_service_gateway.py into the token-refusing HIL compatibility dispatcher and added its path trigger",
     "e62d4bb31a90aee7a444de2e0f52bd54ecf21bf5 removed the GitHub-hosted service gateway activation/OIDC proof workflow",
-    "c8c47ee3e1d9763598b33d854f9801e01ebdef98 recorded the active transfer and projected accounting in the canonical handoff"
+    "PR #154 exact changed-file set: .github/workflows/hil-deployment-profile.yml, .github/workflows/service-gateway-deploy.yml, docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md, tasks/LLMA-WORKFLOW-CONSOLIDATION-SERVICE-GATEWAY-031.json",
+    "PR #154 merged at 85fe10fe40da948596662daba16f13c7f3eb531c"
   ],
+  "validation_evidence": {
+    "HIL_Compatibility_Validation": "31932538673 SUCCESS",
+    "Architecture_Guard": "31932538652 SUCCESS",
+    "Validate_Provider_Owned_Usage_Event": "31932538647 SUCCESS",
+    "validate": "31932538648 SUCCESS"
+  },
   "canonical_owners": {
     "service_gateway_runtime_and_activation": "resident sovereign carrier + StegVerse-Labs/.github#59/#65",
     "credential_authority": "TV/TVC",
@@ -39,6 +46,16 @@
     "non_tv_tvc_secret_or_token_allowed": false,
     "github_hosted_runtime_secret_generation_allowed": false
   },
+  "post_merge_accounting": {
+    "workflow_files_baseline": 49,
+    "workflow_files_before_tranche": 28,
+    "workflow_files_after_tranche": 27,
+    "workflow_files_removed_or_consolidated": 22,
+    "classified_and_remediated": 23,
+    "audit_start_denominator": 49,
+    "classified_and_remediated_percent": 46.94,
+    "remaining_unclassified_or_unconsolidated": 26
+  },
   "collision_boundaries": [
     "Do not duplicate resident carrier activation work or TVC credential resolution.",
     "Do not delete service_gateway.py or its deterministic tests.",
@@ -46,16 +63,7 @@
     "Do not create a replacement hosted runtime, OIDC authority, or provider credential.",
     "Do not touch StegFin signing, broadcast, settlement, or provider execution."
   ],
-  "expected_evidence": [
-    "HIL Compatibility Validation PASS on final head",
-    "Architecture Guard PASS on final head",
-    "Validate Provider-Owned Usage Event PASS on final head",
-    "validate PASS on final head",
-    "exact PR merged",
-    "post-merge workflow-file count",
-    "released claim and finalized canonical handoff"
-  ],
-  "next_executable_action": "Open the exact PR and validate its final head; merge only if all required validation groups pass.",
+  "next_executable_action": "NONE_FOR_THIS_CLAIM",
   "next_task_after_release": "Inspect the next unclaimed workflow family against its canonical handoff before creating a new claim.",
   "authority_effect": false,
   "activation_effect": false
