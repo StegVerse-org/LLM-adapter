@@ -25,6 +25,8 @@ Production continuity remains:
 StegVerse task -> StegVerse worker -> TV/TVC authority -> StegVerse runtime -> StegVerse evidence/continuity
 ```
 
+Hosted activation/monitor ownership transfer is exact: **resident carrier owns continuity**; TV/TVC owns protected credential/route authority.
+
 GitHub Actions may validate or mirror but may not substitute for the resident sovereign carrier, TV/TVC authority, or StegVerse runtime.
 
 ## Completed tranche 1 — PR #145
@@ -42,7 +44,7 @@ The workflow directory contained **49 workflow files** before reconciliation. PR
 
 .github/workflows/ecosystem-chat-live-activation-monitor.yml
   TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
-  owner: resident StegVerse carrier
+  owner: resident carrier owns continuity
 
 .github/workflows/hil-process-restart-controlled-cycle.yml
   TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
@@ -166,7 +168,7 @@ workflow_files_after_current_tranche_if_merged: 40
 restoration_target: <=2
 classified_and_remediated_so_far_if_merged: 9/49
 remaining_unclassified_or_unconsolidated_if_merged: 40/49
-current_tranche_validation: PENDING
+current_tranche_validation: RETRY_AFTER_CONTRACT_WORDING_ALIGNMENT
 session_consolidation_state: ACTIVE_DISTINCT_SUPPORT
 ```
 
