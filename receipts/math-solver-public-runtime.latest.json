@@ -1,17 +1,20 @@
 {
-  "schema_version": "MATH-SOLVER-PUBLIC-RUNTIME-OBSERVATION-v1",
+  "schema_version": "MATH-SOLVER-PUBLIC-RUNTIME-OBSERVATION-v2",
   "task_id": "MATH-SOLVER-STEGGATE-RUNTIME-001",
-  "origin": "https://stegverse-ecosystem-chat-gateway.onrender.com",
-  "observed_at": "2026-08-16T02:09:24.594363+00:00",
+  "origin": "http://127.0.0.1:8000",
+  "origin_authority": "STEGVERSE_RUNTIME_ONLY",
+  "credential_authority": "TV/TVC",
+  "github_token_runtime_authority": "NONE",
+  "observed_at": "2026-08-16T02:36:19.220931+00:00",
   "state": "BLOCKED",
   "readiness": null,
   "first": null,
   "replay": null,
   "checks": {},
   "blocker": {
-    "type": "PUBLIC_RUNTIME_UNAVAILABLE",
-    "reason": "HTTPError: HTTP Error 404: Not Found"
+    "type": "STEGVERSE_RUNTIME_UNAVAILABLE",
+    "reason": "URLError: <urlopen error [Errno 111] Connection refused>"
   },
-  "next_executable_action": "Retry after the hosted deployment changes or build capacity returns.",
+  "next_executable_action": "Start or bind an eligible StegVerse portable-node/service-gateway carrier, then retry this observation against that StegVerse origin.",
   "authority_effect": false
 }
