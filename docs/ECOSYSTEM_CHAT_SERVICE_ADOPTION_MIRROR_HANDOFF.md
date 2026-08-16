@@ -90,11 +90,11 @@ Issue #18 owns the exact sequence:
 ```text
 1. Build StegVerse-owned compute and deployment control plane using micro-node-runtime and core-lite.
 2. Build StegVerse-owned naming, routing, certificate, and edge-protection control plane.
-3. Migrate Render-hosted gateway, HIL receiver, TVC, Site, and SCW workloads with state-preserving receipts.
+3. Migrate transition-hosted gateway, HIL receiver, TVC, Site, and SCW workloads with state-preserving receipts.
 4. Bind authenticated StegVerse Master Records custody.
 5. Provide StegVerse-owned or StegVerse-federated model execution.
 6. Execute the governed provider/persistence/custody/reconstruction vertical slice on the sovereign path.
-7. Verify service continuity without Render, Cloudflare, or hosted inference.
+7. Verify service continuity without transitional hosting, edge, or hosted inference dependencies.
 8. Retire external operational dependencies only after independently verified cutover and rollback evidence.
 ```
 
@@ -103,11 +103,15 @@ Issue #18 owns the exact sequence:
 ```text
 contract: data/ecosystem-chat-service-adoption.json
 validator: scripts/check_ecosystem_chat_service_adoption.py
-workflow: .github/workflows/ecosystem-chat-service-adoption.yml
+workflow: .github/workflows/validate.yml
+workflow_role: token-clean deterministic repository validation only
+workflow_credential_authority: NONE
+runtime_credential_authority: TV/TVC
 task: tasks/LLMA-ECOSYSTEM-CHAT-SERVICE-ADOPTION-012.json
+workflow_consolidation_claim: tasks/LLMA-WORKFLOW-CONSOLIDATE-SERVICE-ADOPTION-037.json
 ```
 
-The validator now fails if external platform dependence is accepted as a completion state, if an external transition surface lacks an absorption condition, or if the StegVerse replacement-component inventory is incomplete.
+The validator fails if external platform dependence is accepted as a completion state, if an external transition surface lacks an absorption condition, or if the StegVerse replacement-component inventory is incomplete. Its GitHub execution carrier is the shared credential-clean global validation dispatcher; the removed standalone workflow is not an authority or runtime surface.
 
 ## Completion boundary
 
@@ -121,8 +125,8 @@ StegVerse-owned or federated model execution: COMPLETE
 all temporary platform workloads and state migrated: VERIFIED
 external platform removal test: PASS
 rollback and continuity reconstruction: PASS
-Render operational dependency: NONE
-Cloudflare operational dependency: NONE
+external hosting operational dependency: NONE
+external edge operational dependency: NONE
 hosted model operational dependency: NONE
 ```
 
@@ -130,9 +134,10 @@ hosted model operational dependency: NONE
 
 ```text
 session-specific sovereignty correction transferred: 1/1
-active chat-owned claims: 0
+active chat-owned sovereignty claims: 0
+workflow-consolidation claim: LLMA-WORKFLOW-CONSOLIDATE-SERVICE-ADOPTION-037
 unassigned session tasks: 0
 manual user tasks: 0
-deleting or archiving this conversation impairs execution: false
-archive posture: READY
+deleting or archiving the sovereignty-originating conversation impairs execution: false
+archive posture for sovereignty-originating conversation: READY
 ```
