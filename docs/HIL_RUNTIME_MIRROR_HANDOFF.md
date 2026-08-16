@@ -2,9 +2,7 @@
 
 ## Source of truth
 
-This document owns continuation for the provider-neutral HIL v1.1 receiver runtime in `StegVerse-org/LLM-adapter`. It does not grant activation, review, publication, execution, custody-transfer, or Master Record authority.
-
-## Current state
+This document describes the LLM-adapter compatibility/intake surface for HIL v1.1. Production HIL continuation is owned by the StegVerse TVC controlled-cycle backend and its active lifecycle claims.
 
 ```text
 Primary: v1.1
@@ -13,74 +11,69 @@ Protocol: HIL-PROTOCOL-v1.1
 Prompt: HIL-PROMPT-v1.1
 Prompt SHA-256: cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c
 Intake router: llm_adapter/hil_intake_v1_1_api.py
-Gateway: llm_adapter/combined_gateway.py
-Container contract: Dockerfile
-Portable composition: compose.yaml
-Entrypoint: scripts/container-entrypoint.sh
-Bootstrap: scripts/start-hil-runtime.sh
-Quickstart: docs/HIL_RUNTIME_QUICKSTART.md
-Runtime contract: docs/PLATFORM_AGNOSTIC_RUNTIME.md
-Result: IMPLEMENTED_PORTABLE_RUNTIME_NOT_PUBLICLY_ACTIVATED
-Authority: NONE
+Compatibility gateway: llm_adapter/combined_gateway.py
+credential_authority: TV/TVC
+github_token_runtime_authority: NONE
+third_party_runtime_dependency: NONE_ALLOWED
+production_owner: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
+private_review_owner: StegVerse-Labs/TVC#8
+result: COMPATIBILITY_RUNTIME_IMPLEMENTED / PRODUCTION_LIFECYCLE_MERGED_INTO_TVC
 ```
 
-## Corrected provider posture
+## Superseded assumptions
 
-`render.yaml` is an optional, fail-closed provider example. It declares storage as non-durable and therefore cannot make HIL readiness report `READY`. Render, its hostname, and its billing tiers are not dependencies or activation requirements.
+The former host-neutral deployment instructions, locally generated review/publication secrets, and hosted GitHub restart-cycle proof are no longer production continuation mechanisms. No third-party hosting surface is a production HIL dependency. LLM-adapter does not mint, own, copy, or persist production HIL credentials.
 
-The canonical path is the OCI image plus environment, port, volume, HTTPS, and secret-injection contracts. Any conforming host may run the same revision without application-code changes.
+The legacy `.github/workflows/hil-process-restart-controlled-cycle.yml` and `scripts/run_hil_process_restart_cycle.py` were retired because the workflow executed on GitHub-hosted infrastructure, received GitHub repository credentials for workflow mechanics, and duplicated restart/private-review behavior that is already governed by TVC.
 
-## Completed
+Historical workflow artifacts remain provenance only and do not establish activation.
 
-- HIL v1.1 intake router with optional participant metadata.
-- Exact Primary, prompt, response, and provenance hash validation.
-- Exact uploaded PDF and manifest persistence beneath `STEGVERSE_HIL_DATA_DIR`.
+## Completed LLM-adapter compatibility work
+
+- HIL v1.1 intake router with exact Primary/prompt/response/provenance validation.
+- Exact uploaded PDF and manifest persistence beneath the configured data directory.
 - Receiver receipt generation.
-- Separate private-review and publication token boundaries.
-- Provider-neutral Dockerfile, entrypoint, named-volume Compose runtime, and readiness checks.
-- Local bootstrap that creates distinct uncommitted secrets and verifies exact v1.1 readiness.
-- Provider-neutral public HTTPS deployment instructions.
+- Private-review/publication protocol compatibility surfaces remain fail-closed when no governed credential is present.
+- No compatibility surface grants execution, acceptance, publication, custody, Master Record, or release authority.
 
-## Remaining vertical slice
-
-1. Run `sh scripts/start-hil-runtime.sh` on a Docker-capable machine.
-2. Confirm local `READY` output with exact v1.1 hashes.
-3. Attach the same OCI runtime to any durable public host or standards-compatible HTTPS reverse proxy.
-4. Verify the public HTTPS readiness endpoint.
-5. Configure `StegVerse-Labs/Site/data/hil-receiver-config.json` with that proven endpoint.
-6. Submit one controlled PDF and preserve the returned receipt.
-7. Restart or replace the service while retaining the volume and prove exact bytes and manifest persist.
-8. Record one authenticated write-once private review.
-9. Record one separately authenticated append-only publication.
-10. Import the publication into the Site projection and build the first Master Record release.
-
-## Known remaining files and destinations
+## Canonical production continuation
 
 ```text
-StegVerse-org/LLM-adapter
-- public runtime deployment evidence: pending
-- controlled upload evidence: pending
-- actual restart persistence evidence: pending
-- authenticated private-review evidence: pending
-- append-only publication evidence: pending
-
-StegVerse-Labs/Site
-- data/hil-receiver-config.json: intentionally unconfigured pending proven HTTPS receiver
-- docs/HIL_SITE_MIRROR_HANDOFF.md: must track v1.1 runtime and first controlled cycle
-- data/hil-responses.json: first published response pending
-- data/hil-master-records.json: first release pending
-- issue #81: remains active
-
-GCAT-BCAT-Engine/Publisher
-- release verification task: create only after first authorized release/tag
-
-admissibility-wiki
-- release verification task: create only after first authorized release/tag
-
-stegguardian-wiki
-- release verification task: create only after first authorized release/tag
+StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
+StegVerse-Labs/TVC/docs/EXPERIMENT_BACKEND_MIRROR_HANDOFF.md
+StegVerse-Labs/TVC#8
+StegVerse-Labs/StegCore/docs/HIL_SESSION_CONSOLIDATION_MIRROR_HANDOFF.md
+StegVerse-Labs/Site#67
+master-records/orchestration#13
 ```
 
-## Completion boundary
+The TVC backend already proves generalized controlled-cycle state, deterministic artifact reconstruction, custody receipt, successor-runtime continuity, stable lookup, and non-authorizing projection. Genuine participant custody for `HIL-20260731-GPT56-001` is retained there. The authenticated private-review decision is still pending under TVC #8.
 
-The upload path is not complete merely because the browser client and API exist. Completion requires a reachable HTTPS receiver, durable-state proof across an actual restart or replacement, a valid controlled receipt, authenticated private review, append-only publication, Site projection, and Master Record release evidence.
+## Activation denominator
+
+```text
+1 generalized TVC backend merged/validated: COMPLETE
+2 authentic participant custody/reconstruction: COMPLETE
+3 authenticated private review: PENDING / TVC #8
+4 separately authenticated publication: PENDING
+5 Site projection after authenticated decision: PENDING
+6 Master Record assembly/release: PENDING
+7 downstream verification/publication: PENDING
+```
+
+HIL product activation remains 2/7. LLM-adapter compatibility tests do not change that denominator.
+
+## Collision / credential rule
+
+- No non-TV/TVC production secret or token may be introduced or consumed.
+- GitHub/GitHub Actions credentials have no HIL runtime authority.
+- Do not create a second private-review or production lifecycle lane here.
+- Do not make host availability, hosted CI, or compatibility workflow success a production release condition.
+
+## Session consolidation
+
+```text
+MERGED INTO: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
+ACTIVE CLAIM: StegVerse-Labs/TVC#8
+LLM-adapter production HIL claim: NONE
+```
