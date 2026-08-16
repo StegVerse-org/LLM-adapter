@@ -1,67 +1,63 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "binding_id": "stegverse-live-baseline-provider-authority-binding-v1",
   "intake_id": "llm-adapter-intake-stegverse-live-baseline-v1",
   "requested_transition": "RUN_STEGVERSE_LIVE_BASELINE",
   "reuse_first": true,
   "provider_authority_path": {
-    "request_template": "authority/provider-execution-authority.github-models.request.json",
-    "approval_receipt": "receipts/provider-execution-authority.github-models.v1.json",
-    "consumption_receipt": "receipts/provider-execution-authority.github-models.consumed.json",
-    "validator": "scripts/validate_provider_execution_authority.py",
-    "workflow": ".github/workflows/ecosystem-chat-github-models-execution.yml"
+    "authority_owner": "StegVerse-Labs/TVC",
+    "runtime_owner": "StegVerse-002/micro-node-runtime",
+    "transport_executor": "StegVerse-org/LLM-adapter",
+    "custody_owner": "master-records/orchestration",
+    "organization_handoff": "StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md",
+    "local_model_handoff": "StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md",
+    "github_hosted_provider_workflow": null
   },
   "provider_contract": {
-    "provider": "github-models",
-    "protocol": "openai-chat-completions-v1",
-    "endpoint": "https://models.github.ai/inference/chat/completions",
-    "allowed_host": "models.github.ai",
-    "scope": "ecosystem-chat-single-governed-execution",
-    "permission_required": "models: read",
-    "credential_source": "ephemeral GitHub Actions GITHUB_TOKEN",
+    "provider": "stegverse-sovereign-local-model",
+    "protocol": "stegverse-governed-local-inference",
+    "credential_authority": "TV/TVC",
+    "credential_requirement": "NONE_FOR_LOCAL_MODEL",
+    "github_token_runtime_authority": "NONE",
+    "third_party_provider_required": false,
     "single_execution": true
   },
   "custody_binding": {
-    "mode": "run_scoped_owned",
+    "mode": "same_execution_master_records",
     "owner_repository": "master-records/orchestration",
-    "service": "services.master_records_custody_api:app",
-    "workflow_preflight_required": true,
-    "preprovisioned_master_records_endpoint_required": false,
-    "preprovisioned_master_records_token_required": false,
-    "preprovisioned_master_records_allowlist_required": false,
-    "authority_consumption_requires_healthy_custody": true
+    "authority_owner": "TV/TVC",
+    "preprovisioned_non_tvc_token_required": false,
+    "github_token_required": false,
+    "reconstruction_required": true
   },
   "current_state": {
-    "authority_request_present": true,
+    "authority_request_present": false,
     "approval_receipt_observed": false,
     "authority_consumed": false,
     "dispatch_authorized": false,
     "provider_execution_authorized": false,
-    "run_scoped_custody_implemented": true,
-    "run_scoped_custody_validated": true
+    "sovereign_local_model_source_complete": true,
+    "local_runtime_discovery_launch_inference_proof_complete": true,
+    "live_same_carrier_activation_complete": false
   },
-  "required_decisions": [
-    "approved_by",
-    "model",
-    "issued_at",
-    "expires_at"
-  ],
   "required_before_dispatch": [
-    "valid unexpired approval receipt",
-    "exact provider contract match",
-    "single-use authority not previously consumed"
+    "eligible resident StegVerse carrier",
+    "TVC admitted route or credential_requirement NONE",
+    "private local model process observed",
+    "same-execution Master Records reconstruction path available"
   ],
   "runtime_preconditions_before_authority_consumption": [
-    "canonical Master-Records custody source checked out",
-    "run-scoped custody credentials generated and masked",
-    "owned custody service started on loopback",
-    "owned custody service health verified"
+    "resident sovereign carrier active",
+    "fresh authorized claim/fence",
+    "TVC route admission resolved",
+    "exact LLM-adapter route available",
+    "Master Records same-execution reconstruction available"
   ],
   "prohibited_inferences": [
-    "authority request is not provider authorization",
-    "workflow existence is not dispatch authorization",
-    "run-scoped custody readiness is not provider authorization",
-    "provider permission is not publication authority",
+    "repository workflow existence is not provider authorization",
+    "GitHub token possession is not runtime authority",
+    "third-party provider availability is not a release condition",
+    "source completion is not live same-carrier activation",
     "provider output is not execution authority",
     "provider execution is not independent framework validation"
   ],
@@ -73,5 +69,5 @@
     "custody": false,
     "parentage": false
   },
-  "updated_at": "2026-08-09T05:35:00Z"
+  "updated_at": "2026-08-16T02:28:00Z"
 }
