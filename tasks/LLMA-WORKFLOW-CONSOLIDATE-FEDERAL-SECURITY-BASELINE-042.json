@@ -1,0 +1,57 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-FEDERAL-SECURITY-BASELINE-042",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target while preserving exceed-federal security baseline validation under StegVerse + TV/TVC authority boundaries.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-federal-security-baseline-validation-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T16:46:00-05:00",
+  "claim_release_condition": "Merge after exact final-head validation proves the credential-clean global dispatcher reaches scripts/check_exceed_federal_security_baseline.py through scripts/verify_goal4_full.py, standalone workflow is absent, canonical/iOS parity passes, then release claim.",
+  "surfaces": [
+    ".github/workflows/exceed-federal-security-baseline.yml",
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "scripts/verify_goal4_full.py",
+    "data/security/exceed-federal-baseline.json",
+    "scripts/check_exceed_federal_security_baseline.py",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-FEDERAL-SECURITY-BASELINE-042.json"
+  ],
+  "classifications": {
+    ".github/workflows/exceed-federal-security-baseline.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    ".github/workflows/validate.yml": "RETAIN_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER",
+    "iosnoperiod/github/workflows/validate.yml": "MIRROR_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER",
+    "scripts/verify_goal4_full.py": "CANONICAL_AGGREGATE_VALIDATION_PATH"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "actions_checkout_allowed": false,
+    "actions_setup_python_allowed": false,
+    "artifact_transport_allowed": false,
+    "repository_writeback_allowed": false,
+    "activation_effect": false
+  },
+  "collision_boundaries": [
+    "Preserve data/security/exceed-federal-baseline.json and scripts/check_exceed_federal_security_baseline.py semantics unchanged.",
+    "Do not reopen archived stale-activation reconciliation or issue #18 live-provider authority.",
+    "Keep canonical/iOS global workflow parity exact.",
+    "Do not add GitHub/OIDC/provider/Master-Records credentials, artifacts, writeback, provider execution, deployment, or activation."
+  ],
+  "expected_evidence": [
+    "global validate runs scripts/verify_goal4_full.py",
+    "verify_goal4_full.py executes scripts/check_exceed_federal_security_baseline.py fail-closed",
+    "standalone exceed-federal-security-baseline.yml absent",
+    "canonical/iOS parity PASS",
+    "Architecture Guard exact final head PASS",
+    "validate exact final head PASS with federal baseline invocation visible in Goal 4 log",
+    "PR merged and claim released"
+  ],
+  "next_executable_action": "Validate the integrated Goal 4 federal-security-baseline path on exact final head, merge, release claim, and finalize the canonical handoff.",
+  "next_task_after_release": "Classify the next remaining default-branch workflow file against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
