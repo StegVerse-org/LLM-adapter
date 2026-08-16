@@ -28,8 +28,10 @@ ARTIFACT = 8955632464
 ARTIFACT_DIGEST = "sha256:ee62f843e7845d7b73979dbae2e7e799610375100639c08f56b13c579f9fffa0"
 SOURCE_RECEIPT = "07f7f2495d7d9b60a1593edd48c89b31ca516b865e0d153823a7224216255a26"
 COMMITTED_RECEIPT = "a04c192cbc89933d02dcb51517fbb56de88c0ab4bb4384df296519516f1dddf2"
-IMAGE_DIGEST = "sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901"
-IMAGE_RECEIPT = "d70f19a0a3afd9a34f313b3e0a4959e3343b00194c86fd85e3cdec5b3c0a7d87"
+# Publication is a mutable evidence projection: the latest committed, self-hashed
+# v2 receipt and READY projection supersede the older Aug-4 digest snapshot.
+IMAGE_DIGEST = "sha256:a599fc154f4bde14ab9adc140feb1285b43af3da4ea9214804b007fb9ff38f19"
+IMAGE_RECEIPT = "67feb640e7be9489ca52438c9c7c609eeeae90c8e1e5409ea5c8fac6a38ef122"
 BLOCKERS = {"authorized provider configuration and scoped execution grant", "persistent endpoint", "authenticated Master Records custody configuration"}
 
 
@@ -159,6 +161,8 @@ def main() -> int:
     verify_hash(publication)
     if readiness.get("state") != "READY" or readiness.get("blockers") != []:
         fail("publication readiness regressed")
+    if readiness.get("observed_digest") != publication.get("digest") or readiness.get("observed_receipt_state") != publication.get("state"):
+        fail("publication readiness does not match current receipt")
     false_authority({"provider":readiness.get("provider_execution_authorized"),"deployment":readiness.get("persistent_deployment_authorized"),"custody":readiness.get("custody_authorized"),"site":readiness.get("site_activation_authorized")}, "publication readiness")
 
     if service_gateway.get("result") != "PASS" or (service_gateway.get("main_activation") or {}).get("workflow_run") != 30967405348:
