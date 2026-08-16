@@ -92,7 +92,8 @@ def main() -> None:
         "STEGVERSE_NOTIFICATION_MAX_ATTEMPTS",
         "DELIVERY_EXPIRED",
         "PARTIAL_EXPIRED",
-        "REDACTED_AFTER_EXPIRY",
+        "REDACTED_AFTER_DELIVERY",
+        "REDACTED_AFTER_RETRY_EXPIRY",
         "notification_retry_authority_state",
         "recipient_address_retention_state",
     ):
@@ -187,7 +188,9 @@ def main() -> None:
         "application/schema+json",
         "_schema_response",
         "_schema_sha256",
-        "_tvc_authority_projection",
+        "_authority_evidence",
+        "authority_evidence_schema",
+        "authority_evidence_path",
         "canonical_json",
         "ETag",
         "nosniff",
@@ -195,10 +198,13 @@ def main() -> None:
         require(discovery_token in site_gateway, f"readiness discovery omits {discovery_token}")
     require("min(20, max(1" in site_gateway, "readiness retry advertisement is not bounded")
 
-    receipt_block = gateway.split("receipt: Dict[str, Any] =", 1)[-1].split("_sign_receipt", 1)[0]
+    require("async def site_hil_submission" in gateway, "HIL submission handler missing")
+    site_submission = gateway.split("async def site_hil_submission", 1)[1]
+    require("receipt: Dict[str, Any] = {" in site_submission, "HIL submission receipt construction missing")
+    receipt_block = site_submission.split("receipt: Dict[str, Any] = {", 1)[1].split("_sign_receipt", 1)[0]
     require(
         "participant_notification_email" not in receipt_block,
-        "participant email appears in receipt construction",
+        "participant email appears in HIL submission receipt construction",
     )
 
     print(
