@@ -1,0 +1,65 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATION-PLATFORM-RUNTIME-033",
+  "originating_goal": "Remove the GitHub-hosted platform-agnostic runtime proof that injects non-TV/TVC HIL credential values and transfer runtime proof to the canonical sovereign StegVerse runtime path.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/transfer-platform-runtime-proof-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
+  "state": "CLAIMED_FOR_VALIDATION",
+  "claim_timestamp": "2026-08-16T02:02:00-05:00",
+  "claim_release_condition": "Merge the exact bounded platform-runtime workflow transfer after final-head validation, verify post-merge workflow-file count, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "surfaces": [
+    ".github/workflows/platform-agnostic-runtime.yml",
+    "Dockerfile",
+    "compose.yaml",
+    "scripts/container-entrypoint.sh",
+    "scripts/start-hil-runtime.sh",
+    "docs/PLATFORM_AGNOSTIC_RUNTIME.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATION-PLATFORM-RUNTIME-033.json"
+  ],
+  "classifications": {
+    ".github/workflows/platform-agnostic-runtime.yml": "TRANSFER_TO_STEGVERSE_TASK_OR_WORKER"
+  },
+  "implementation_evidence": [
+    "42ed5655886796c4408db48025bbcaaf4309735e removed only the GitHub-hosted platform-agnostic runtime proof workflow",
+    "d809cbe0acc0615947974548bb7b026b3e7d01c9 recorded the active transfer and projected accounting in the canonical handoff",
+    "provider-neutral Dockerfile, compose configuration, runtime scripts, documentation and adapter source remain installed"
+  ],
+  "canonical_owners": {
+    "sovereign_local_model_runtime": "StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md",
+    "live_activation": "StegVerse-Labs/.github#60 + resident sovereign heartbeat",
+    "credential_authority": "TV/TVC",
+    "hil_runtime_and_lifecycle": "StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md"
+  },
+  "direct_conflict_evidence": {
+    "platform_agnostic_runtime": "GitHub-hosted ubuntu workflow starts the HIL runtime with STEGVERSE_HIL_REVIEW_TOKEN=review-test-only and STEGVERSE_HIL_PUBLICATION_TOKEN=publication-test-only, uses actions/checkout and GitHub artifact transport, and therefore exercises credential-shaped values outside TV/TVC even though production credential authority is TV/TVC-only."
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "github_actions_activation_role": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "test_token_substitution_allowed": false
+  },
+  "collision_boundaries": [
+    "Do not delete provider-neutral Docker/compose/runtime source surfaces.",
+    "Do not recreate sovereign local-model/runtime implementation.",
+    "Do not infer live activation from workflow retirement.",
+    "Do not compete with resident heartbeat, TVC route authority, or TVC HIL lifecycle owner.",
+    "Do not touch StegFin signing, broadcast, settlement, or provider execution."
+  ],
+  "expected_evidence": [
+    "Architecture Guard PASS on final head",
+    "Validate Provider-Owned Usage Event PASS on final head",
+    "validate PASS on final head",
+    "exact PR merged",
+    "post-merge workflow-file count",
+    "released claim and finalized canonical handoff"
+  ],
+  "next_executable_action": "Open the exact PR and validate its final head; merge only if all required validation groups pass.",
+  "next_task_after_release": "Inspect the next unclaimed workflow family against its canonical handoff before creating a new claim.",
+  "authority_effect": false,
+  "activation_effect": false
+}

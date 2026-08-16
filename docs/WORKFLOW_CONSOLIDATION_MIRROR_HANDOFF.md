@@ -5,10 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/transfer-platform-runtime-proof-20260816
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove Render/third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
-role: ACTIVE_DISTINCT_SUPPORT
+active_claim: tasks/LLMA-WORKFLOW-CONSOLIDATION-PLATFORM-RUNTIME-033.json
+role: CLAIMED_FOR_IMPLEMENTATION
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
 github_actions_activation_role: NONE
@@ -31,6 +31,7 @@ GitHub OIDC as runtime/control-plane authority: prohibited
 repository secrets for provider/Master Records production path: prohibited
 TV/TVC protected values exported into GitHub Actions: prohibited
 GitHub-hosted runtime secret generation: prohibited
+non-TV/TVC test-token substitution: prohibited
 Render production/runtime dependency: prohibited
 StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
 ```
@@ -73,55 +74,40 @@ portable-user-llm-execution.yml
 
 All completed tranche claims 025-032 are released into the canonical workstream.
 
-## Completed tranche 9 — portable user-LLM hosted proof transfer
+## Current tranche 10 — platform-agnostic GitHub runtime proof transfer
 
-PR #155 merged at `ec4d668038da9ad6a439007c71c9b2b2df091fbb`.
+Exact claim: `tasks/LLMA-WORKFLOW-CONSOLIDATION-PLATFORM-RUNTIME-033.json`.
 
-The authoritative sovereign runtime handoff `StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md` establishes that the generic sovereign language-model path is `COMPLETE_RELEASED`: the descriptive runtime-selection step is superseded by executable discovery, private launch, real inference, usage measurement and proof; `github_token_required: false`, `third_party_inference_required: false`, and `github_actions_activation_role: NONE`. Live continuation remains `.github#60` + resident sovereign heartbeat + TVC route authority.
-
-Direct inspection established that `.github/workflows/portable-user-llm-execution.yml` was a GitHub-hosted Docker-compose execution receipt using `actions/checkout` and GitHub artifact transport while explicitly recording no authority and no real downstream execution. It therefore duplicated the released local-runtime proof rather than owning canonical runtime activation.
-
-Disposition:
+Direct inspection of `.github/workflows/platform-agnostic-runtime.yml` showed a GitHub-hosted OCI/runtime proof that built and started the HIL runtime on `ubuntu-latest` while explicitly injecting:
 
 ```text
-.github/workflows/portable-user-llm-execution.yml
+STEGVERSE_HIL_REVIEW_TOKEN=review-test-only
+STEGVERSE_HIL_PUBLICATION_TOKEN=publication-test-only
+```
+
+It also used `actions/checkout` and GitHub artifact transport. Even though those values were labeled test-only, they are credential-shaped runtime values created outside TV/TVC and violate the current absolute no-NON-TV/TVC token rule. The canonical sovereign runtime handoff already marks local runtime discovery/launch/inference/proof `COMPLETE_RELEASED`, with GitHub Actions activation role `NONE`; HIL runtime/lifecycle is separately TVC-owned.
+
+Disposition on this branch:
+
+```text
+.github/workflows/platform-agnostic-runtime.yml
   -> TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
-  removed by dd6ae54a47174a54b0d91a0b206b56122def01d6
+  removed by 42ed5655886796c4408db48025bbcaaf4309735e
 ```
 
-Portable scripts, Docker/compose surfaces, adapter source, smoke tests and Site-compatible route-receipt capture remain installed. No model/runtime source was deleted and no live activation was inferred.
+Provider-neutral Dockerfile, compose configuration, runtime scripts, documentation, adapter source and HIL implementation remain installed. This removes only the duplicate GitHub-hosted proof and its non-TV/TVC test-token substitution; no runtime source is deleted and no live activation is inferred.
 
-Final-head validation on `70f71b2c375cf7d9ac7d91440880ce713440c96a` passed:
-
-```text
-Architecture Guard 31932697085 SUCCESS
-Validate Provider-Owned Usage Event 31932697062 SUCCESS
-validate 31932697059 SUCCESS
-```
-
-Exact PR changed-file set:
-
-```text
-.github/workflows/portable-user-llm-execution.yml
-docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md
-tasks/LLMA-WORKFLOW-CONSOLIDATION-PORTABLE-USER-LLM-032.json
-```
-
-Claim `tasks/LLMA-WORKFLOW-CONSOLIDATION-PORTABLE-USER-LLM-032.json` is released as `MERGED_INTO_CANONICAL_WORKSTREAM` by commit `96c571c05b95abbe1c5129b02aaf6c985360773b`.
-
-## Current accounting
+If this exact tranche passes final-head validation and merges:
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current: 26
-workflow_files_removed_or_consolidated: 23
-classified_and_remediated: 24/49 = 48.98%
-remaining_unclassified_or_unconsolidated: 25/49 audit-start surfaces
+workflow_files_current_before_tranche: 26
+workflow_files_after_tranche: 25
+workflow_files_removed_or_consolidated_after_tranche: 24
+classified_and_remediated_after_tranche: 25/49 = 51.02%
+remaining_unclassified_or_unconsolidated: 24/49 audit-start surfaces
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
 ```
-
-The 26-file count is reconciled from the verified 27-file post-tranche-8 state minus the exact one workflow-file deletion in PR #155; PR #155 added no workflow file.
 
 ## Canonical ownership / convergence
 
@@ -129,25 +115,25 @@ The 26-file count is reconciled from the verified 27-file post-tranche-8 state m
 organization authority handoff: StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
 sovereign local model/runtime source: StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md
 live local-model activation: StegVerse-Labs/.github#60 + resident sovereign heartbeat
-route authority: StegVerse-Labs/TVC
-LLM transport: StegVerse-org/LLM-adapter#18
 credential authority: TV/TVC
+route authority: StegVerse-Labs/TVC
 HIL runtime/lifecycle: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
+LLM transport: StegVerse-org/LLM-adapter#18
 StegFin continuation: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
 ```
 
-Formal local-model development and local discovery/launch/inference/proof remain `COMPLETE_RELEASED`; do not duplicate them. This workflow lane grants no activation, publication, release, Master Record, provider, wallet or trade authority.
+Formal local-model development and actual discovery/launch/inference/proof are `COMPLETE_RELEASED`; do not duplicate them. This workflow lane grants no activation, publication, release, Master Record, provider, wallet or trade authority.
 
 ## Collision boundaries
 
-- Do not recreate or duplicate the released micro-node runtime source implementation.
-- Do not compete with `.github#60` resident heartbeat or TVC route authority.
-- Do not delete portable scripts/source merely because their GitHub-hosted proof is retired.
-- Do not infer live model activation from workflow removal.
-- Do not create GitHub/OIDC/third-party runtime authority.
+- Do not delete provider-neutral Docker/compose/runtime source surfaces.
+- Do not recreate or duplicate released sovereign runtime source implementation.
+- Do not compete with resident heartbeat, TVC route authority, or TVC HIL lifecycle owner.
+- Do not infer live activation from workflow retirement.
+- Do not create non-TV/TVC runtime/test tokens as substitutes.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
 
-## Next safe families
+## Next safe families after claim 033 releases
 
 ```text
 remaining runtime/service validation workflows
@@ -163,6 +149,18 @@ global validate.yml
   redistribute unique validation, eliminate repository-token writeback and hosted token mechanics, then retire or reduce to a token-clean validation surface
 ```
 
+## Validation / release requirements for tranche 10
+
+```text
+Architecture Guard: required PASS
+Validate Provider-Owned Usage Event: required PASS
+validate: required PASS
+PR changed-file set: exact bounded surfaces only
+post-merge workflow-file count: direct verification required
+claim 033: release to MERGED_INTO_CANONICAL_WORKSTREAM only after merge
+handoff: finalize on main after merge
+```
+
 ## Archive condition
 
-This session remains a distinct support lane while workflow/token remediation remains incomplete. Twenty-six workflow files remain versus the adopted <=2 target, 25/49 audit-start surfaces remain unclassified/unconsolidated, and `validate.yml` still carries repository-token checkout/artifact/writeback mechanics that must be redistributed or redesigned. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct validation/integration/reconciliation role remains.
+This session remains a distinct support lane while workflow/token remediation remains incomplete. If tranche 10 merges, 25 workflow files will remain versus the adopted <=2 target, 24/49 audit-start surfaces will remain unclassified/unconsolidated, and `validate.yml` will still carry repository-token checkout/artifact/writeback mechanics that must be redistributed or redesigned. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct validation/integration/reconciliation role remains.
