@@ -11,7 +11,7 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
 RECEIPT = ROOT / "receipts" / "math-solver-public-runtime.latest.json"
-DEFAULT_ORIGIN = "https://stegverse-ecosystem-chat-gateway.onrender.com"
+DEFAULT_ORIGIN = "http://127.0.0.1:8000"
 SITE_ORIGINS = (
     "https://stegverse.org",
     "https://www.stegverse.org",
@@ -42,9 +42,12 @@ def request_json(url: str, *, body: dict | None = None, origin: str | None = Non
 def observe(origin: str) -> dict:
     base = origin.rstrip("/")
     receipt = {
-        "schema_version": "MATH-SOLVER-PUBLIC-RUNTIME-OBSERVATION-v1",
+        "schema_version": "MATH-SOLVER-PUBLIC-RUNTIME-OBSERVATION-v2",
         "task_id": "MATH-SOLVER-STEGGATE-RUNTIME-001",
         "origin": base,
+        "origin_authority": "STEGVERSE_RUNTIME_ONLY",
+        "credential_authority": "TV/TVC",
+        "github_token_runtime_authority": "NONE",
         "observed_at": now(),
         "state": "BLOCKED",
         "readiness": None,
@@ -52,7 +55,7 @@ def observe(origin: str) -> dict:
         "replay": None,
         "checks": {},
         "blocker": None,
-        "next_executable_action": "Retry after the hosted deployment changes or build capacity returns.",
+        "next_executable_action": "Start or bind an eligible StegVerse portable-node/service-gateway carrier, then retry this observation against that StegVerse origin.",
         "authority_effect": False,
     }
     try:
@@ -91,13 +94,13 @@ def observe(origin: str) -> dict:
         if all(receipt["checks"].values()):
             receipt["state"] = "COMPLETE"
             receipt["blocker"] = None
-            receipt["next_executable_action"] = "Consume this verified runtime evidence in StegVerse-Labs/Site#240 and directly verify the public Site client."
+            receipt["next_executable_action"] = "Consume this verified StegVerse runtime evidence in StegVerse-Labs/Site#240 and directly verify the public Site client."
         else:
             failed = [key for key, passed in receipt["checks"].items() if not passed]
-            receipt["blocker"] = {"type": "RUNTIME_CHECK_FAILED", "failed_checks": failed}
+            receipt["blocker"] = {"type": "STEGVERSE_RUNTIME_CHECK_FAILED", "failed_checks": failed}
     except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, json.JSONDecodeError, ValueError) as exc:
         receipt["blocker"] = {
-            "type": "PUBLIC_RUNTIME_UNAVAILABLE",
+            "type": "STEGVERSE_RUNTIME_UNAVAILABLE",
             "reason": f"{type(exc).__name__}: {exc}",
         }
     return receipt
@@ -105,7 +108,11 @@ def observe(origin: str) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--origin", default=os.getenv("MATH_SOLVER_RUNTIME_ORIGIN", DEFAULT_ORIGIN))
+    parser.add_argument(
+        "--origin",
+        default=os.getenv("MATH_SOLVER_RUNTIME_ORIGIN", DEFAULT_ORIGIN),
+        help="StegVerse-owned node/service-gateway origin. Default is the local portable node.",
+    )
     parser.add_argument("--fail-on-blocked", action="store_true")
     args = parser.parse_args()
     receipt = observe(args.origin)

@@ -25,6 +25,11 @@ def test_bootstrap_materializes_profile_manifest_and_receipt(tmp_path: Path) -> 
     assert profile["reconstruct_missing_capabilities"] is True
     assert capability["portability"]["manual_backend_selection_required"] is False
     assert capability["state"]["durable_root"] == str((tmp_path / "state").resolve())
+    assert capability["entrypoint"][3] == "llm_adapter.deployed_gateway:app"
+    assert capability["routes"]["math_solver_readiness"] == "/api/math-solver/v1/readiness"
+    assert capability["routes"]["math_solver_solve"] == "/api/math-solver/v1/solve"
+    assert capability["credential_boundary"]["credential_authority"] == "TV/TVC"
+    assert capability["credential_boundary"]["github_token_runtime_authority"] == "NONE"
     assert receipt["manual_action_required"] is False
     assert stored_receipt["receipt_sha256"] == receipt["receipt_sha256"]
 
