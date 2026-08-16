@@ -1,0 +1,60 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-ECOSYSTEM-VA-SESSION-044",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target while preserving released Ecosystem/VA Chat session-consolidation validation and archive evidence under StegVerse + TV/TVC authority boundaries.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-ecosystem-va-session-validation-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T17:53:00-05:00",
+  "claim_release_condition": "Merge after exact final-head validation proves scripts/validate_ecosystem_va_chat_session_consolidation.py remains fail-closed under the credential-clean canonical validation path, standalone scheduled/matrix/artifact workflow is absent, archive handoff preserves historical 3.9/3.11/3.12 evidence while naming current Python 3.11 validation carrier, workflow parity passes, then release claim.",
+  "surfaces": [
+    ".github/workflows/ecosystem-va-chat-session-consolidation.yml",
+    "scripts/validate_ecosystem_va_chat_session_consolidation.py",
+    "scripts/verify_goal4_full.py",
+    "data/ecosystem-va-chat-session-consolidation.json",
+    "data/ecosystem-va-chat-session-consolidation-release.json",
+    "receipts/ecosystem-va-chat-session-consolidation-validation.json",
+    "docs/ECOSYSTEM_VA_CHAT_SESSION_ARCHIVE_MIRROR_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-ECOSYSTEM-VA-SESSION-044.json"
+  ],
+  "classifications": {
+    ".github/workflows/ecosystem-va-chat-session-consolidation.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    "scripts/verify_goal4_full.py": "CANDIDATE_CANONICAL_AGGREGATE_VALIDATION_PATH"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "actions_checkout_allowed": false,
+    "actions_setup_python_allowed": false,
+    "artifact_transport_allowed": false,
+    "repository_writeback_allowed": false,
+    "activation_effect": false
+  },
+  "collision_boundaries": [
+    "Preserve historical Python 3.9/3.11/3.12 release evidence and artifact evidence without representing it as current recurring matrix execution.",
+    "Preserve issue #18, issue #90, master-records/orchestration#15, Site#113/#116, and TVC#9 as canonical continuation owners.",
+    "Do not alter immutable inventory, release projection, provider/custody authority, or archive disposition merely to make validation pass.",
+    "Current receipt generation may be workspace-local only; do not upload or write back generated validation receipt from GitHub Actions.",
+    "Keep canonical/iOS global workflow parity exact.",
+    "Do not add GitHub/OIDC/provider/Master-Records credentials, artifact transport, writeback, provider execution, filing, publication, deployment, custody, or activation."
+  ],
+  "expected_evidence": [
+    "canonical validation executes scripts/validate_ecosystem_va_chat_session_consolidation.py",
+    "validator reports PASS/ARCHIVE_READY against current released state",
+    "standalone ecosystem-va-chat-session-consolidation.yml absent",
+    "daily schedule and standalone Python matrix/artifact transport retired",
+    "archive handoff preserves historical matrix/artifact evidence and names current global dispatcher Python 3.11 validation",
+    "canonical/iOS workflow parity PASS",
+    "Architecture Guard exact final head PASS",
+    "validate exact final head PASS",
+    "PR merged and claim released"
+  ],
+  "next_executable_action": "Create the implementation branch from this claimed main state, integrate the released session-consolidation validator into the canonical aggregate validation path, update the archive handoff, remove the standalone scheduled/matrix workflow, validate, merge, and release.",
+  "next_task_after_release": "Classify the next remaining default-branch workflow file against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
