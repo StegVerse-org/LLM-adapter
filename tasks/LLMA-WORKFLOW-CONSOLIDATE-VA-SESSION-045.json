@@ -1,0 +1,54 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-VA-SESSION-045",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target while preserving released VA Claim Assistant archive validation under StegVerse + TV/TVC authority boundaries.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-va-session-validation-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T18:26:00-05:00",
+  "claim_release_condition": "Merge after exact final-head validation proves VA session archive validation remains fail-closed under the credential-clean canonical path, stale GitHub-token provider assumptions are reconciled to the sovereign TV/TVC successor without weakening archive evidence, standalone scheduled/writeback/artifact workflow is absent, and workflow parity passes.",
+  "surfaces": [
+    ".github/workflows/va-claim-assistant-session-consolidation.yml",
+    "scripts/validate_va_claim_assistant_session_consolidation.py",
+    "scripts/verify_goal4_full.py",
+    "data/va-claim-assistant-session-consolidation.json",
+    "docs/VA_CLAIM_ASSISTANT_SESSION_ARCHIVE_MIRROR_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json",
+    "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-VA-SESSION-045.json"
+  ],
+  "classifications": {
+    ".github/workflows/va-claim-assistant-session-consolidation.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    "scripts/verify_goal4_full.py": "CANONICAL_AGGREGATE_VALIDATION_PATH"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "repository_writeback_allowed": false,
+    "artifact_transport_allowed": false,
+    "activation_effect": false
+  },
+  "collision_boundaries": [
+    "Do not reactivate VACP-ADAPTER-AUTHORIZED-EXECUTION-005 or GitHub Models/GITHUB_TOKEN provider authority.",
+    "Preserve historical archive evidence while reconciling current continuation to VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.",
+    "Do not alter privacy, custody, filing, publication, Site, wallet, or activation authority.",
+    "Do not add non-TV/TVC credentials, GitHub/OIDC runtime authority, hosted provider fallback, repository writeback, or artifact transport."
+  ],
+  "expected_evidence": [
+    "canonical validation executes scripts/validate_va_claim_assistant_session_consolidation.py",
+    "legacy provider task remains SUPERSEDED",
+    "sovereign successor remains MACHINE_OWNED with TV/TVC-only credential contract",
+    "standalone va-claim-assistant-session-consolidation.yml absent",
+    "schedule, contents:write, checkout/setup, git push, and artifact upload retired",
+    "Architecture Guard and validate exact final head PASS",
+    "PR merged and claim released"
+  ],
+  "next_executable_action": "Create the implementation branch, reconcile the validator and archive handoff to current sovereign continuation, integrate validation into the canonical aggregate path, remove the standalone workflow, validate, merge, release, and update the canonical handoff.",
+  "next_task_after_release": "Classify the next remaining workflow surface against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
