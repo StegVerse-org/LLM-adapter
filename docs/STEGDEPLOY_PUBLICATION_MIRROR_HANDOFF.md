@@ -13,7 +13,7 @@ StegVerse-org/LLM-adapter#18
 StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md
 ```
 
-Live Git history, workflow jobs and logs, retained artifacts, and the committed v2 receipt supersede earlier snapshots.
+Live Git history, workflow jobs and logs, the current committed v2 receipt, and its matching readiness projection supersede earlier snapshots. The older August 4 digest remains historical evidence but is not the current publication receipt.
 
 ## Released publication task
 
@@ -26,34 +26,49 @@ canonical_issue: StegVerse-org/LLM-adapter#18
 scheduler_owner: StegVerse-Labs/StegVerse-Healer
 ```
 
-## Final stable canonical image
+## Current retained canonical image evidence
+
+The most recent committed publication evidence was produced by successful `StegDeploy image` run `31922279115` for source commit `c9f561254ec5671c2329c3deb7ce0bfb511331ab` and retained on main by commit `1920f54dbc77d507cd5344c4aeff0f6a8917cce9`.
 
 ```text
 image: ghcr.io/stegverse-org/llm-adapter:main
-source commit: f7ca640d44a5e7703e9d3f599717375bfae2e183
-evidence-retention commit: f1fd7b6f7293af270e158c6daf65a9b17765d4c1
-publication run: 30967973138
-publication job: 92185969448
-digest: sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901
+source commit: c9f561254ec5671c2329c3deb7ce0bfb511331ab
+publication run: 31922279115
+publication attempt: 1
+digest: sha256:a599fc154f4bde14ab9adc140feb1285b43af3da4ea9214804b007fb9ff38f19
 receipt schema: stegdeploy.image-publication.v2
 receipt state: PUBLISHED
 receipt blockers: []
-receipt sha256: d70f19a0a3afd9a34f313b3e0a4959e3343b00194c86fd85e3cdec5b3c0a7d87
+receipt sha256: 67feb640e7be9489ca52438c9c7c609eeeae90c8e1e5409ea5c8fac6a38ef122
 consumer pull verified: true
+repository retained: true
 readiness state: READY
-publication artifact: 8915473468
-publication artifact digest: sha256:1f90b7ed6adfc1120d440fef24cf6f595a0cbec529fadb4c004498e63e4ae404
-build-record artifact: 8915473881
-build-record digest: sha256:9a8bf145b72f6ea8c8da80467085dcc4cf77b0d71c784ba1c2af8551b3f40524
+readiness observed digest: sha256:a599fc154f4bde14ab9adc140feb1285b43af3da4ea9214804b007fb9ff38f19
+provider execution authorized: false
+persistent deployment authorized: false
+custody authorized: false
+site activation authorized: false
 ```
 
-Every publication stage passed: registry login, build and push, attestation, fresh consumer pull, receipt construction, readiness projection, repository retention, artifact upload, and final enforcement.
+The receipt records successful registry login, build/publish, attestation, and fresh verification pull. The matching readiness projection remains non-authorizing and fail-closed for provider execution, persistent deployment, custody, and Site activation.
 
-Historical successful runs `30964767464`, `30965343262`, and `30967405336` remain inspectable but are superseded by run `30967973138` and the committed receipt above.
+## Superseded publication snapshot
+
+The August 4 publication remains historical evidence:
+
+```text
+source commit: f7ca640d44a5e7703e9d3f599717375bfae2e183
+publication run: 30967973138
+digest: sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901
+receipt sha256: d70f19a0a3afd9a34f313b3e0a4959e3343b00194c86fd85e3cdec5b3c0a7d87
+state: SUPERSEDED_BY_LATER_SUCCESSFUL_COMMITTED_RECEIPT
+```
+
+It must not be used as the current digest after later successful publication evidence was committed. This correction reconciles the handoff with live repository state; it does not authorize a new publication or alter runtime authority.
 
 ## Stable runtime-only trigger
 
-PR #116 merged at `f7ca640d44a5e7703e9d3f599717375bfae2e183` and restricts push publication to runtime-affecting surfaces:
+PR #116 established the runtime-affecting publication trigger surfaces:
 
 ```text
 Dockerfile
@@ -64,7 +79,7 @@ compose.stegdeploy.yaml
 .github/workflows/stegdeploy-image.yml
 ```
 
-Documentation, receipts, status projections, and validation-only scripts do not rebuild or supersede the runtime image. Explicit `workflow_dispatch` remains available. Managed recurrence remains exclusively owned by StegVerse-Healer.
+Documentation, receipts, status projections, and validation-only scripts do not themselves establish runtime/provider authority. Explicit workflow dispatch remains a repository publication mechanism; managed recurrence remains owned by StegVerse-Healer until that surface is separately classified under the workflow-minimization program.
 
 ## Healer observer
 
@@ -77,11 +92,13 @@ release condition: HEALER_GH_TOKEN creates the bounded workflow-dispatch event w
 effect on completed publication: none
 ```
 
+This historical observer description does not make a non-TV/TVC token production/runtime authority. Credential/route authority for StegVerse runtime remains TV/TVC, and workflow/token remediation must classify this publication recurrence separately rather than silently expanding it.
+
 ## Remaining activation boundary
 
-Publication is not provider execution, persistent deployment, custody, reconstruction, Site activation, downstream ingestion, release authority, or sovereign platform retirement. All corresponding authority projections remain false.
+Publication is not provider execution, persistent deployment, custody, reconstruction, Site activation, downstream ingestion, release authority, or sovereign platform retirement. All corresponding authority projections in the current readiness record remain false.
 
-Issue `StegVerse-org/LLM-adapter#18` owns consumption of the stable digest only after these machine-observable boundaries clear:
+Issue `StegVerse-org/LLM-adapter#18` owns consumption only after its machine-observable authority boundaries clear:
 
 ```text
 authorized provider configuration and scoped execution grant
@@ -91,6 +108,6 @@ authenticated Master Records custody configuration
 
 ## Consolidation state
 
-The publication implementation, final digest, receipt, readiness, consumer pull, artifacts, trigger stabilization, scheduler delegation, remaining blockers, and canonical owner are durably preserved. No unique publication state remains only in chat.
+The publication task remains released. The current retained receipt/readiness pair is the authoritative publication evidence; the earlier fixed-digest snapshot is superseded. No provider/runtime authority is inferred from this correction.
 
-MERGED INTO: `StegVerse-org/LLM-adapter#18` and `StegVerse-Labs/StegVerse-Healer/.github/workflows/stegdeploy-publication-relay.yml`.
+MERGED INTO: `StegVerse-org/LLM-adapter#18` and the currently documented StegVerse-Healer publication-continuation surface, subject to the active StegVerse-only workflow/token-remediation program.
