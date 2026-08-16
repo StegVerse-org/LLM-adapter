@@ -6,9 +6,9 @@
   "branch": "chore/remove-render-managed-hil-20260816",
   "claimant": "chatgpt-session-backend-support-20260816",
   "role": "CLAIMED_FOR_IMPLEMENTATION",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claim_timestamp": "2026-08-16T01:35:00-05:00",
-  "claim_release_condition": "Merge the exact bounded Render/HIL retirement after final-head validation, verify post-merge workflow count, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "claim_release_condition": "SATISFIED",
   "surfaces": [
     ".github/workflows/hil-managed-receiver-validation.yml",
     "render.yaml",
@@ -22,11 +22,19 @@
   "canonical_owners": {
     "hil_runtime_and_lifecycle": "StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md",
     "hil_private_review": "StegVerse-Labs/TVC#8",
-    "sovereign_runtime": "StegVerse resident carrier / TV-TVC control plane"
+    "sovereign_runtime": "StegVerse resident sovereign carrier / TV-TVC control plane"
   },
-  "direct_conflict_evidence": {
-    "hil_managed_receiver_validation": "Workflow validates render.yaml, runs GitHub-hosted managed-runtime simulation, injects review/publication token values outside TV/TVC, and describes repository-owned GitHub Actions as the execution venue.",
-    "render_yaml": "Manifest declares a Render-managed HIL receiver service and asks the host to generate STEGVERSE_HIL_REVIEW_TOKEN and STEGVERSE_HIL_PUBLICATION_TOKEN. User and canonical architecture prohibit Render as a production dependency and reserve protected capability issuance to TV/TVC."
+  "implementation_evidence": [
+    "efe5ec30e4c86b440f0f5531bf2b0e9aab5e8d99 removed .github/workflows/hil-managed-receiver-validation.yml",
+    "a1e74f1a684e29da87855a09e6ca9dd01c64c0b0 removed render.yaml",
+    "PR #152 exact changed-file set: .github/workflows/hil-managed-receiver-validation.yml, render.yaml, docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md, tasks/LLMA-WORKFLOW-CONSOLIDATION-RENDER-HIL-029.json",
+    "PR #152 merged at 91bb8578662fe2ef0e6276516efb98fce78827b0"
+  ],
+  "validation_evidence": {
+    "Architecture_Guard": "31931918154 SUCCESS",
+    "Validate_Provider_Owned_Usage_Event": "31931918138 SUCCESS",
+    "validate": "31931918137 SUCCESS",
+    "first_validate_attempt": "31931873262 FAILED only because canonical handoff rewrite omitted pre-existing required resident sovereign carrier / ORG handoff assertions; repaired on final head without restoring Render surfaces"
   },
   "credential_boundary": {
     "credential_authority": "TV/TVC",
@@ -35,6 +43,16 @@
     "third_party_host_generated_review_or_publication_token_allowed": false,
     "render_runtime_dependency_allowed": false
   },
+  "post_merge_accounting": {
+    "workflow_files_baseline": 49,
+    "workflow_files_before_tranche": 30,
+    "workflow_files_after_tranche": 29,
+    "workflow_files_removed_or_consolidated": 20,
+    "classified_and_remediated": 21,
+    "audit_start_denominator": 49,
+    "classified_and_remediated_percent": 42.86,
+    "remaining_unclassified_or_unconsolidated": 28
+  },
   "collision_boundaries": [
     "Do not duplicate TVC#8 private-review implementation.",
     "Do not remove provider-neutral Dockerfile or HIL source implementation solely because Render is retired.",
@@ -42,15 +60,7 @@
     "Do not create replacement provider credentials or third-party hosting.",
     "Do not touch StegFin signing, broadcast, settlement, or provider execution."
   ],
-  "expected_evidence": [
-    "Architecture Guard PASS on final head",
-    "Validate Provider-Owned Usage Event PASS on final head",
-    "validate PASS on final head",
-    "exact PR merged",
-    "post-merge workflow tree count",
-    "released claim and finalized canonical handoff"
-  ],
-  "next_executable_action": "Delete the obsolete Render-dependent HIL workflow and render.yaml, update the canonical workflow-consolidation handoff, then open and validate the exact PR.",
+  "next_executable_action": "NONE_FOR_THIS_CLAIM",
   "next_task_after_release": "Inspect the next unclaimed HIL/VACC/publication workflow family against its canonical handoff before creating a new claim.",
   "authority_effect": false,
   "activation_effect": false
