@@ -22,7 +22,7 @@
   ],
   "classifications": {
     ".github/workflows/ecosystem-va-chat-session-consolidation.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
-    "scripts/verify_goal4_full.py": "CANDIDATE_CANONICAL_AGGREGATE_VALIDATION_PATH"
+    "scripts/verify_goal4_full.py": "CANONICAL_AGGREGATE_VALIDATION_PATH"
   },
   "credential_boundary": {
     "credential_authority": "TV/TVC",
@@ -43,7 +43,7 @@
     "Do not add GitHub/OIDC/provider/Master-Records credentials, artifact transport, writeback, provider execution, filing, publication, deployment, custody, or activation."
   ],
   "expected_evidence": [
-    "canonical validation executes scripts/validate_ecosystem_va_chat_session_consolidation.py",
+    "scripts/verify_goal4_full.py executes scripts/validate_ecosystem_va_chat_session_consolidation.py",
     "validator reports PASS/ARCHIVE_READY against current released state",
     "standalone ecosystem-va-chat-session-consolidation.yml absent",
     "daily schedule and standalone Python matrix/artifact transport retired",
@@ -53,7 +53,7 @@
     "validate exact final head PASS",
     "PR merged and claim released"
   ],
-  "next_executable_action": "Create the implementation branch from this claimed main state, integrate the released session-consolidation validator into the canonical aggregate validation path, update the archive handoff, remove the standalone scheduled/matrix workflow, validate, merge, and release.",
+  "next_executable_action": "Run exact final-head validation, inspect the validator and parity evidence, merge, release claim, and finalize the canonical handoff.",
   "next_task_after_release": "Classify the next remaining default-branch workflow file against canonical owners and the <=2 target.",
   "authority_effect": false,
   "activation_effect": false
