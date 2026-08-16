@@ -15,6 +15,22 @@ github_token_runtime_authority: NONE
 
 Production continuity remains `StegVerse task -> StegVerse worker -> TV/TVC authority -> StegVerse runtime -> StegVerse evidence/continuity`. GitHub Actions may validate or mirror only.
 
+### Sovereign activation ownership invariants
+
+These exact invariants remain stable across workflow-consolidation tranches because downstream tests and handoffs depend on them:
+
+```text
+resident carrier owns continuity
+resident StegVerse carrier + TV/TVC
+resident sovereign carrier
+GitHub token as provider credential: prohibited
+GitHub token as runtime/control-plane authority: prohibited
+repository secrets for provider/Master Records production path: prohibited
+StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
+```
+
+They describe production ownership, not GitHub-hosted execution authority.
+
 ## Completed tranche 1 — StegVerse-only runtime reconciliation
 
 PR #145 merged at `c9f561254ec5671c2329c3deb7ce0bfb511331ab` after 10/10 final-head workflow groups passed. It retired:
@@ -82,6 +98,8 @@ hil-https-receiver-probe.yml
   public/runtime probing belongs to canonical TVC/Site HIL owners; probe script retained
 ```
 
+The old HIL deployment profile was also reconciled from stale host-neutral activation prose to the canonical HIL v1.1 compatibility identity and TVC ownership. Current Primary and Prompt hashes are now the canonical v1.1 values; old hashes and host/provider assumptions are explicitly rejected by `scripts/verify_hil_deployment_profile.py`.
+
 Exact claim: `tasks/LLMA-WORKFLOW-CONSOLIDATION-HIL-COMPAT-026.json`.
 
 If validated and applied, workflow count becomes **37**. Explicitly classified/remediated audit-start surfaces become **13/49 = 26.53%**.
@@ -100,6 +118,7 @@ If validated and applied, workflow count becomes **37**. Explicitly classified/r
 non_tv_tvc_production_secret_or_token_allowed: false
 GitHub token as provider credential: prohibited
 GitHub token as runtime/control-plane authority: prohibited
+repository secrets for provider/Master Records production path: prohibited
 TV/TVC protected values exported into GitHub Actions: prohibited
 ```
 
@@ -113,7 +132,7 @@ workflow_files_current_main: 40
 workflow_files_if_current_tranche_applied: 37
 classified_and_remediated_if_applied: 13/49
 restoration_target: <=2 unless evidence-backed standalone necessity exists
-current_tranche_validation: PENDING
+current_tranche_validation: RETRY_AFTER_INVARIANT_PRESERVATION
 ```
 
 ## Next safe families after claim 026 releases
