@@ -1,0 +1,3 @@
+required_validation_groups=Architecture Guard,Validate Provider-Owned Usage Event,validate
+merge_condition=all required final-head groups PASS
+post_merge_actions=verify workflow tree count 35; update canonical handoff on main; release claim 027 as MERGED_INTO_CANONICAL_WORKSTREAM
