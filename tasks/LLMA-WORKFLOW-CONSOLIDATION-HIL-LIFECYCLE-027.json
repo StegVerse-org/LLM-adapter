@@ -6,9 +6,10 @@
   "branch": "chore/workflow-consolidation-hil-lifecycle-20260815",
   "claimant": "chatgpt-session-backend-support-20260815",
   "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
-  "state": "CLAIMED_FOR_VALIDATION",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claim_timestamp": "2026-08-15T23:15:00-05:00",
-  "claim_release_condition": "Merge the exact bounded HIL lifecycle workflow transfer after final-head validation, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "released_at": "2026-08-15T23:53:39-05:00",
+  "claim_release_condition": "SATISFIED: PR #150 merged after final-head validation and post-merge workflow-count reconciliation.",
   "surfaces": [
     ".github/workflows/hil-live-activation.yml",
     ".github/workflows/observe-hil-layer.yml",
@@ -30,9 +31,14 @@
     "hil_live_activation": "Hourly GitHub-hosted polling hardcoded https://stegverse-ecosystem-chat-gateway.onrender.com and referenced render.yaml; Render/third-party hosting is not an admissible production HIL dependency.",
     "observe_hil_layer": "Scheduled GitHub-hosted coordination exported secrets.GITHUB_TOKEN and used it to mutate issue #92; GitHub token is not TV/TVC credential authority and must not be required for HIL continuation."
   },
-  "implementation_evidence": [
+  "completion_evidence": [
     "b0136dceb9dc72435816f027697c3bc1b98e8141 removed .github/workflows/hil-live-activation.yml",
     "293cd04cd6efeaad86333c0a45242d261ea996be removed .github/workflows/observe-hil-layer.yml",
+    "PR #150 merged at ec16f9f681ebbac4b34e1e3af1607145153ff14c",
+    "Architecture Guard 31927674982 SUCCESS",
+    "Validate Provider-Owned Usage Event 31927675001 SUCCESS",
+    "validate 31927674976 SUCCESS",
+    "post-merge workflow count reconciled as 35 from prior verified 37 minus the exact two removed workflow files and zero workflow additions",
     "scripts/observe_hil_layer.py retained for canonical StegVerse-side reuse",
     "no provider, review, publication, Master Records, wallet, or runtime credential was created or exported"
   ],
@@ -57,15 +63,7 @@
     "Do not recreate third-party hosted runtime as a production dependency.",
     "Do not touch wallet signing, broadcast, settlement, or StegFin trade execution."
   ],
-  "expected_evidence": [
-    "Architecture Guard PASS",
-    "Validate Provider-Owned Usage Event PASS",
-    "validate PASS",
-    "merged bounded change",
-    "post-application workflow tree count",
-    "released claim and updated canonical handoff"
-  ],
-  "next_executable_action": "Open the exact PR, inspect its changed-file set, run final-head validation, merge only if all required groups pass, then release this claim on main.",
+  "next_executable_action": "NONE_FOR_THIS_CLAIM",
   "next_task_after_release": "Create a fresh nonoverlapping claim for the next HIL lifecycle/evidence or VACC workflow family only after reading its current canonical handoff and active claims.",
   "authority_effect": false,
   "activation_effect": false
