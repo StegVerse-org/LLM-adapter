@@ -1,11 +1,11 @@
 {
   "schema_version": "1.1.0",
   "record_type": "ecosystem_chat_destination_activation_state",
-  "generated_at": "2026-08-16T07:00:38.896626+00:00",
+  "generated_at": "2026-08-16T07:05:26.600245+00:00",
   "repository": "StegVerse-org/LLM-adapter",
-  "commit_sha": "4f48fee5a3903143765a324a27543361054b0351",
+  "commit_sha": "837799aa5c4e6ee64ffc86902216eb36e53ebd36",
   "event_name": "push",
-  "workflow_run_id": "31932774396",
+  "workflow_run_id": "31932984995",
   "state": "DESTINATION_ACTIVATION_PENDING_EXTERNAL_EVIDENCE",
   "manual_user_action_required": false,
   "gates": {
@@ -62,5 +62,5 @@
     "publication_authorized": false,
     "execution_authorized": false
   },
-  "state_sha256": "47e2aef64cf7f578c60fc12c7d4502cb94d3b3de9bb863c2556c78207d3cfd2a"
+  "state_sha256": "3f0e3b7bd9ce2acc69702ab7f073143727426175f1d16c74c84bcae03c7b37b0"
 }
