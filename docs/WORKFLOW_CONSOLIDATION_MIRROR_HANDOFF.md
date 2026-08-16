@@ -24,6 +24,8 @@ Production continuity remains:
 StegVerse task -> StegVerse worker -> TV/TVC authority -> StegVerse runtime -> StegVerse evidence/continuity
 ```
 
+Hosted activation workflow ownership transfer: **resident StegVerse carrier + TV/TVC**.
+
 GitHub Actions may validate or mirror but may not substitute for the resident sovereign carrier, TV/TVC authority, or StegVerse runtime.
 
 ## Verified baseline and completed tranche 1
@@ -147,7 +149,7 @@ workflow_files_after_current_branch_if_merged: 43
 restoration_target: <=2
 classified_and_remediated_so_far: 6/49
 remaining_unclassified_or_unconsolidated: 43/49
-current_tranche_validation: PENDING
+current_tranche_validation: RETRY_AFTER_CONTRACT_WORDING_ALIGNMENT
 session_consolidation_state: ACTIVE_DISTINCT_SUPPORT
 ```
 
