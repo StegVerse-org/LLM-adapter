@@ -2,217 +2,134 @@
 
 ## Source of truth
 
-Goal ID: `MATH-SOLVER-STEGGATE-RUNTIME-001`
+```text
+goal_id: MATH-SOLVER-STEGGATE-RUNTIME-001
+repository: StegVerse-org/LLM-adapter
+integration_branch: fix/math-solver-stegverse-portable-node-20260815
+runtime_issue: StegVerse-org/LLM-adapter#132
+service_gateway_owner: StegVerse-org/LLM-adapter#72
+Site activation owner: StegVerse-Labs/Site#240
+parent four-app goal: StegVerse-Labs/Site#239
+canonical StegGate owner: StegVerse-Labs/StegCore
+credential_authority: TV/TVC
+github_token_runtime_authority: NONE
+```
 
-Originating session goal: convert the public StegVerse Math Solver from `RESEARCH_NOTE` into a real deterministic public application whose execution is gated by the canonical StegGate runtime, with inspectable decision and replay evidence.
+Live repository/runtime evidence supersedes historical hosted-carrier prose.
 
-Repository: `StegVerse-org/LLM-adapter`
-Branch: `main`
-Canonical application tracker: `StegVerse-Labs/Site#240`
-Parent four-app goal: `StegVerse-Labs/Site#239`
-Canonical StegGate owner: `StegVerse-Labs/StegCore#68` — COMPLETE/CLOSED
-Common integration owner: `StegVerse-Labs/StegCore#70` — ACTIVE
-Runtime implementation issue: `StegVerse-org/LLM-adapter#132`
+## Current claim
 
-## Claim and ownership
+```text
+role: CLAIMED_FOR_INTEGRATION
+claim: STEGVERSE_PORTABLE_NODE_RUNTIME_REALIGNMENT
+created: 2026-08-15T18:58:00-05:00
+release: merge with validation, then return execution to canonical StegVerse carrier + Site#240
+```
 
-Task ID: `MATH-SOLVER-STEGGATE-RUNTIME-001`
-Original role: implementation + validation + hosted integration of the non-LLM deterministic runtime adapter.
-Original claim created: 2026-08-08T21:15:00-05:00.
-Original chat claim released: 2026-08-08T23:56:00-05:00.
-Current host-observation state: `MACHINE_OWNED / BLOCKED_HOST_OBSERVATION`.
-Current common-runtime binding role: consumed from `StegVerse-Labs/StegCore#70` without creating a parallel evaluator.
-Collision boundary: use canonical StegCore; do not make a transport URL into StegGate identity or authority.
-
-Machine owners:
-
-- `StegVerse-org/LLM-adapter/.github/workflows/observe-math-solver-public-runtime.yml` — hourly backend public-runtime observation and durable receipt;
-- `StegVerse-Labs/Site/.github/workflows/math-solver-public-activation.yml` — hourly cross-repository receipt consumption, public Site binding verification, status validation, handoff synchronization, and proven-gate persistence.
-
-No chat polling, manual workflow dispatch, blocker transcription, artifact copying, or status advancement is required for the hosted observation lane.
-
-## Authoritative files
-
-- `llm_adapter/steggate_portable_consumer.py`
-- `llm_adapter/math_solver_gateway.py`
-- `llm_adapter/deployed_gateway.py`
-- `tests/test_math_solver_gateway.py`
-- `.github/workflows/math-solver-governed-runtime.yml`
-- `scripts/observe_math_solver_public_runtime.py`
-- `.github/workflows/observe-math-solver-public-runtime.yml`
-- `tasks/MATH-SOLVER-STEGGATE-RUNTIME-001.json`
-- `receipts/math-solver-public-runtime.latest.json`
-- `pyproject.toml`
-- this handoff
-
-Cross-repository identity authority:
-
-- `StegVerse-Labs/StegCore/docs/STEGGATE_RUNTIME_IDENTITY_CONTRACT.md`
-- `StegVerse-Labs/StegCore/management/steggate-four-app-runtime-binding.json`
-- `GET /v1/runtime-identity`
-
-Cross-repository public activation owner:
-
-- `StegVerse-Labs/Site/math-solver/index.html`
-- `StegVerse-Labs/Site/scripts/advance_math_solver_public_activation.py`
-- `StegVerse-Labs/Site/.github/workflows/math-solver-public-activation.yml`
-- `StegVerse-Labs/Site/data/math-solver-public-activation.latest.json`
-- `StegVerse-Labs/Site/data/steggate-four-app-status.json`
-- `StegVerse-Labs/Site#240`
+The original deterministic Math Solver and canonical StegGate integration are already implemented and CI-validated. This claim only removes the obsolete third-party required-host assumption and binds the existing Math Solver route into the existing StegVerse portable-node/service-gateway execution surface.
 
 ## Required execution chain
 
 ```text
-public math expression
--> canonical StegGate runtime identity validation
--> normalized request hash bound to runtime identity/version
--> canonical portable StegGate package
+math expression
+-> StegVerse-owned portable node/service gateway
+-> canonical runtime identity
 -> canonical StegGate + coherence evaluation
 -> deterministic arithmetic executor only after ALLOW
--> execution observation + decision/hash evidence + runtime identity
--> response receipt
--> public Site display
--> deterministic replay/verification
+-> decision/request/result evidence
+-> replay verification
+-> Site#240 consumption/public binding
 ```
 
-## Canonical runtime identity binding — IMPLEMENTED + CI VALIDATED
+No transport URL, host, provider, or workflow grants StegGate authority.
 
-Math Solver now consumes the StegCore #70 identity contract and fails closed if the installed canonical runtime does not match:
+## Canonical runtime implementation — COMPLETE
+
+Implemented surfaces remain:
 
 ```text
-contract_version: stegverse.steggate.runtime-identity.v1
-runtime_identity: stegverse:steggate:canonical:three-layer:v1
-canonical_owner: StegVerse-Labs/StegCore
-canonical_admissibility_runtime: stegcore.three_layer.evaluate_three_layer
-transport_identity_authoritative: false
+llm_adapter/steggate_portable_consumer.py
+llm_adapter/math_solver_gateway.py
+llm_adapter/deployed_gateway.py
+tests/test_math_solver_gateway.py
+.github/workflows/math-solver-governed-runtime.yml
 ```
 
-The identity is returned by Math Solver readiness and solve responses, bound into request hashing and declared execution context, and included in deterministic replay evidence. This is CI-level application binding evidence; it is not substituted for public-host observation.
+The strongest retained identity-bound CI evidence remains run `31338939595` / artifact `9045196248`, proving canonical runtime identity, ALLOW-before-execution, executor invocation, request/result replay equality, and decision evidence. CI is validation only, not activation.
 
-Implementation commits:
+## StegVerse runtime realignment — IMPLEMENTED / VALIDATION PENDING
+
+This integration tranche changes the required carrier from a third-party hosted service to the already-existing StegVerse portable-node/service-gateway path:
 
 ```text
-math_solver_gateway.py identity consumption/evidence: 77932e74295db4e6e408b71267cd353fbb16b0fe
-tests: cd9d484b92797c3f2d375108c630375ca0e9da30
-StegCore service dependency pin: b1446855e94fd2041dfecc8dce4a10511c033166
-workflow identity validation/evidence: e212309d43f26956c68df5d41f15dc5bed0e1d3e
+llm_adapter.node_bootstrap
+-> llm_adapter.node_service
+-> uvicorn llm_adapter.deployed_gateway:app
+-> /api/stegverse-node
+-> /api/math-solver/v1/readiness
+-> /api/math-solver/v1/solve
 ```
 
-The first identity-bound CI attempts exposed the workflow's stale explicit StegCore install pin. That failure was inspected rather than ignored. Both the service dependency and workflow install/evidence pin now use StegCore contract commit `8c484e584d60a3bd2763d6948d0eb3f4afd67e0c`.
+`node_bootstrap` now materializes `llm_adapter.deployed_gateway:app`, which contains the combined gateway plus the Math Solver router and bounded user-LLM surface. The capability manifest declares Math Solver readiness/solve routes, TV/TVC credential authority, and GitHub-token runtime authority `NONE`.
 
-Strongest current identity-bound validation:
+The StegVerse node advertisement now exposes Math Solver readiness/solve endpoints as health-bound, non-authorizing endpoint metadata.
+
+`observe_math_solver_public_runtime.py` no longer defaults to a third-party origin. Its default is the node-local StegVerse portable runtime at `http://127.0.0.1:8000`; an authorized StegVerse carrier may provide `MATH_SOLVER_RUNTIME_ORIGIN` when it binds a reachable StegVerse-owned/federated endpoint.
+
+## Superseded dependency
 
 ```text
-workflow: .github/workflows/math-solver-governed-runtime.yml
-run_id: 31338939595
-job_id: 93309372914
-conclusion: SUCCESS
-artifact_id: 9045196248
-artifact: math-solver-steggate-integration
-artifact_digest: sha256:5389162e3bef48594802aead69d309d5726bf0e046121129696179c60bce293d
+required Render service: SUPERSEDED
+Render build capacity as blocker: SUPERSEDED
+third_party_host_required: false
+third_party_host_release_condition: false
 ```
 
-The retained artifact includes the canonical runtime identity, replay identity equality, request/result replay equality, and canonical StegGate pre-execution ALLOW with actual executor invocation. `public_deployment_proven` remains false by design.
+Historical hosted observations remain provenance only. They are not a production/runtime dependency and must not be revived as one.
+
+## Credential boundary
+
+```text
+credential_authority: TV/TVC
+provider_credentials_required_for_math_solver: false
+github_token_runtime_authority: NONE
+hosted_provider_fallback_required: false
+```
+
+Existing GitHub-hosted CI may still use repository credentials for GitHub mechanics; that does not make those credentials runtime authority and remains separate workflow/token-cleanup debt.
+
+## Validation required for this tranche
+
+```text
+python -m pytest tests/test_node_bootstrap.py tests/test_node_advertisement.py tests/test_math_solver_gateway.py -q
+portable-node start/health proof when an eligible StegVerse carrier is available
+GET /api/stegverse-node includes Math Solver endpoints
+GET /api/math-solver/v1/readiness -> READY + canonical_steggate_bound=true
+POST /api/math-solver/v1/solve twice -> ALLOW + EXECUTED + replay equality
+```
 
 ## Completion gates
 
-1. safe bounded deterministic arithmetic evaluator exists — COMPLETE + VALIDATED;
-2. canonical StegGate is in the pre-execution path — COMPLETE + VALIDATED IN CI;
-3. canonical #70 runtime identity is consumed and retained — COMPLETE + VALIDATED IN CI;
-4. non-ALLOW cannot invoke the evaluator — COMPLETE at the canonical consumer boundary;
-5. request/result hashes and StegGate execution evidence are returned — COMPLETE + VALIDATED IN CI;
-6. tests prove ALLOW, bounded rejection, HTTP readiness, deterministic replay, and runtime identity binding — COMPLETE;
-7. hosted service route is directly observed — BLOCKED; latest durable backend receipt remains authoritative;
-8. Site public client calls the hosted route fail-closed — IMPLEMENTED; deployed success awaits gate 7;
-9. deployed public request and replay/verification are directly observed — MACHINE WAITING on gate 7.
+1. bounded deterministic evaluator — COMPLETE;
+2. canonical StegGate pre-execution — COMPLETE;
+3. canonical runtime identity binding — COMPLETE / CI VALIDATED;
+4. non-ALLOW cannot invoke executor — COMPLETE;
+5. request/result/decision evidence — COMPLETE;
+6. deterministic replay tests — COMPLETE;
+7. StegVerse portable-node route contains Math Solver — IMPLEMENTED / VALIDATION PENDING;
+8. eligible StegVerse carrier directly observed — PENDING MACHINE EXECUTION;
+9. Site public client consumes directly proven StegVerse runtime receipt — PENDING gate 8.
 
-## Validation evidence
-
-Earlier successful governed runtime evidence remains retained:
+## Machine-owned continuation after merge
 
 ```text
-workflow: .github/workflows/math-solver-governed-runtime.yml
-run_id: 31290093572
-job_id: 93185673393
-head_sha: e9fda1911915964e002dcb2d2c4c3aaf02a420cd
-conclusion: SUCCESS
-artifact_id: 9031088299
-artifact_digest: sha256:e863d4aaa6bf6fbc34746e1f0eb10028a320bf861bf2d2246cd673fdf0de67c1
+StegVerse-Labs/.github resident sovereign carrier
+StegVerse-org/LLM-adapter#72 service-gateway/portable-node runtime
+StegVerse-org/LLM-adapter#132 Math Solver runtime task
+StegVerse-Labs/Site#240 activation consumer
+StegVerse-Labs/StegCore#70 common runtime binding
 ```
 
-The current stronger run is `31338939595` because it additionally proves the common runtime identity contract.
+## Archive / collision rule
 
-## Hosted deployment state
-
-Authorized deployment surface:
-
-```text
-Render service: stegverse-ecosystem-chat-gateway
-service_id: srv-d9epkh3rjlhs73csc3qg
-origin: https://stegverse-ecosystem-chat-gateway.onrender.com
-repo: StegVerse-org/LLM-adapter
-branch: main
-auto_deploy: yes
-entrypoint: llm_adapter.deployed_gateway:app
-```
-
-The Math Solver router is mounted on that entrypoint. The backend observer's latest durable receipt is the authoritative public-host release-state signal; CI success does not prove hosted deployment.
-
-## Repository-native backend observer — ACTIVE
-
-```text
-script: scripts/observe_math_solver_public_runtime.py
-workflow: .github/workflows/observe-math-solver-public-runtime.yml
-schedule: hourly at minute 43 plus relevant pushes/manual dispatch
-receipt: receipts/math-solver-public-runtime.latest.json
-```
-
-The observer verifies readiness, two governed solve calls, ALLOW + EXECUTED + executor invocation, decision identity, request/result replay equality, and Site-compatible CORS. Missing or unhealthy public runtime is retained as BLOCKED, never success.
-
-Machine release condition: this receipt becomes `COMPLETE` only after the public runtime satisfies all checks.
-
-## Repository-native Site activation consumer — ACTIVE
-
-Installed in `StegVerse-Labs/Site`:
-
-```text
-script: scripts/advance_math_solver_public_activation.py
-workflow: .github/workflows/math-solver-public-activation.yml
-schedule: hourly at minute 47 plus workflow dispatch/relevant push
-durable receipt: data/math-solver-public-activation.latest.json
-canonical status: data/steggate-four-app-status.json
-canonical handoff: docs/STEGGATE_FOUR_APP_MIRROR_HANDOFF.md
-```
-
-The Site consumer fails closed: while the LLM-adapter receipt is not COMPLETE it only records the blocker. After COMPLETE it verifies the public Site page binding, advances only the Math Solver gates represented by complete evidence, runs the canonical four-app validator, synchronizes the handoff, commits the state transition, and retains an artifact.
-
-## Current state
-
-`IMPLEMENTED_AND_CI_VALIDATED / CANONICAL_RUNTIME_IDENTITY_CI_BOUND / FAIL_CLOSED_SITE_CLIENT_IMPLEMENTED / HOST_RUNTIME_OBSERVATION_PENDING / BACKEND_OBSERVER_ACTIVE / SITE_ACTIVATION_CONSUMER_ACTIVE`.
-
-This is not public product activation.
-
-## Cross-repository continuation
-
-Public completion remains owned by `StegVerse-Labs/Site#240` and `StegVerse-Labs/Site/docs/STEGGATE_FOUR_APP_MIRROR_HANDOFF.md`.
-
-Common identity integration is owned by `StegVerse-Labs/StegCore#70` and `management/steggate-four-app-runtime-binding.json`.
-
-Parent continuation: `StegVerse-Labs/Site#239`.
-
-## Progress
-
-```text
-runtime/application implementation deliverables: 9/9 implemented
-CI validation gates: 7/7 complete
-canonical runtime identity binding: CI_COMPLETE / PUBLIC_PENDING
-hosted deployment gate: 0/1
-backend public observer: ACTIVE
-Site activation consumer: ACTIVE
-runtime-lane goal activation: 7/9 execution/identity gates complete = 78%
-parent four-app public gate effect from CI-only identity evidence: NONE
-```
-
-## Archive condition for the originating Math Solver implementation lane
-
-The original Math Solver implementation lane remains durably transferred to its machine owners. The broader current conversation, however, owns active StegCore #70 four-app binding work and must not be treated as archiveable until that active claim is released or the parent four-app goal is complete under its canonical archive rule.
+Do not create another Math Solver evaluator, provider route, or runtime carrier. Once this integration claim is merged/released, live execution belongs to the canonical StegVerse carrier and Site consumer. This session may then move to another distinct backend-support dependency rather than polling the runtime.
