@@ -31,17 +31,33 @@ def test_live_activation_verifier_preserves_required_boundaries() -> None:
     assert "STEGVERSE_MASTER_RECORDS_TOKEN" not in source
 
 
-def test_validate_workflow_is_validation_only_and_secret_free() -> None:
+def test_validate_workflow_is_validation_only_and_credential_clean() -> None:
     source = (ROOT / ".github/workflows/validate.yml").read_text()
     for required in (
-        "Probe deployed Ecosystem Chat vertical slice",
-        "Write stable activation status from validation probe",
-        "scripts/write_live_activation_status.py",
-        "reports/ecosystem-chat-live-activation-status.json",
-        "github.event_name != 'pull_request'",
+        "Deterministic repository validation only",
+        "Live activation belongs to StegVerse resident workers + TV/TVC",
+        "permissions: {}",
+        "Refuse credential-bearing environment",
+        "Fetch exact source anonymously",
+        "git -c http.extraheader= fetch",
+        "Test live activation automation contract without executing activation",
+        "cancel-in-progress: true",
+        "GLOBAL_VALIDATE_GITHUB_TOKEN_AUTHORITY=NONE",
+        "GLOBAL_VALIDATE_ACTIVATION_EFFECT=NONE",
     ):
         assert required in source
-    assert "secrets." not in source
+    forbidden = (
+        "secrets.",
+        "actions/" + "checkout@",
+        "actions/" + "setup-python@",
+        "actions/" + "upload-artifact@",
+        "persist-" + "credentials",
+        "verify_" + "live_ecosystem_chat_activation.py",
+        "git " + "push",
+        "schedule" + ":",
+    )
+    for marker in forbidden:
+        assert marker not in source
 
 
 def test_portable_node_manifest_supports_stegverse_binding_and_fails_closed(tmp_path: Path) -> None:

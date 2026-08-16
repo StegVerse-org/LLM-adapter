@@ -7,7 +7,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = ROOT / ".github" / "workflows" / "validate.yml"
 MIRROR = ROOT / "iosnoperiod" / "github" / "workflows" / "validate.yml"
-REQUIRED_COMMAND = "python scripts/verify_goal4_full.py"
+SUPPORTED_GOAL4_COMMANDS = (
+    "python scripts/verify_goal4_full.py",
+    "$PYTHON_BIN scripts/verify_goal4_full.py",
+)
 
 
 def fail(message: str) -> None:
@@ -29,9 +32,11 @@ def main() -> int:
     mirror = normalized_text(MIRROR)
     if canonical != mirror:
         fail("canonical workflow and iOS mirror differ")
-    for marker in ("push:", "pull_request:", "workflow_dispatch:", REQUIRED_COMMAND):
+    for marker in ("push:", "pull_request:", "workflow_dispatch:"):
         if marker not in canonical:
             fail(f"workflow missing marker: {marker}")
+    if not any(command in canonical for command in SUPPORTED_GOAL4_COMMANDS):
+        fail("workflow missing supported Goal 4 full verification command")
     print("ADAPTER_WORKFLOW_PARITY_PASS")
     return 0
 

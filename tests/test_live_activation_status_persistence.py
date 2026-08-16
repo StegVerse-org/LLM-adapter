@@ -12,6 +12,7 @@ def test_hosted_activation_persistence_workflow_is_retired() -> None:
     assert not HOSTED_WORKFLOW.exists()
     source = HANDOFF.read_text(encoding="utf-8")
     assert "ecosystem-chat-live-activation.yml" in source
+    assert "RETIRED" in source
     assert "resident StegVerse carrier + TV/TVC" in source
 
 
@@ -34,11 +35,24 @@ def test_status_writer_remains_semantic_fail_closed_and_non_authorizing() -> Non
     assert "generated_at" not in source
 
 
-def test_validation_workflow_persists_only_stable_status_and_verified_receipt() -> None:
+def test_validation_workflow_has_no_hosted_activation_persistence_or_writeback() -> None:
     source = VALIDATE_WORKFLOW.read_text(encoding="utf-8")
-    start = source.index("      - name: Retain and persist current activation evidence")
-    end = source.index("      - name: Test authenticated usage session endpoint", start)
-    block = source[start:end]
-    assert "git add -f reports/ecosystem-chat-live-activation-status.json" in block
-    assert "git add receipts/ecosystem-chat-live-activation.latest.json" not in block
-    assert "git add receipts/ecosystem-chat-live-activation.verified.json" in block
+    required = (
+        "Deterministic repository validation only",
+        "permissions: {}",
+        "GLOBAL_VALIDATE_ACTIVATION_EFFECT=NONE",
+        "Test live activation automation contract without executing activation",
+    )
+    for marker in required:
+        assert marker in source
+    forbidden = (
+        "Retain and persist current activation evidence",
+        "Write stable activation status from validation probe",
+        "Probe deployed Ecosystem Chat vertical slice",
+        "reports/ecosystem-chat-live-activation-status.json",
+        "receipts/ecosystem-chat-live-activation.verified.json",
+        "git " + "push",
+        "actions/" + "upload-artifact@",
+    )
+    for marker in forbidden:
+        assert marker not in source
