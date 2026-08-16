@@ -19,6 +19,36 @@ third_party_runtime_authority: NONE
 
 Production continuity remains `StegVerse task -> StegVerse worker -> TV/TVC authority -> StegVerse runtime -> StegVerse evidence/continuity`. GitHub Actions may validate source only.
 
+## Sovereign authority invariants
+
+```text
+resident carrier owns continuity
+resident StegVerse carrier + TV/TVC
+resident sovereign carrier
+GitHub token as provider credential: prohibited
+GitHub token as runtime/control-plane authority: prohibited
+GitHub Actions activation role: NONE
+GitHub OIDC as runtime/control-plane authority: prohibited
+repository secrets for provider/Master Records production path: prohibited
+TV/TVC protected values exported into GitHub Actions: prohibited
+GitHub-hosted runtime secret generation: prohibited
+non-TV/TVC test-token substitution: prohibited
+third-party production/runtime dependency: prohibited
+StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
+```
+
+## Retired hosted continuity provenance
+
+These names are retained only for deterministic reconstruction and boundary tests. They are not active production or activation owners and must not be recreated as such.
+
+```text
+ecosystem-chat-live-activation.yml: RETIRED — resident StegVerse carrier + TV/TVC owns live activation
+ecosystem-chat-live-activation-monitor.yml: RETIRED — resident carrier owns continuity
+platform-agnostic-runtime.yml: RETIRED/TRANSFERRED — sovereign runtime proof belongs to StegVerse runtime owners
+hil-process-restart-controlled-cycle.yml: RETIRED/TRANSFERRED_TO_TVC
+legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
+```
+
 ## Released tranches 1-21
 
 Latest release:
@@ -87,9 +117,11 @@ scripts/validate_va_claim_assistant_session_consolidation.py
 
 The specialized VA archive handoff now distinguishes immutable historical blocked-task inventory from current sovereign continuation and identifies the credential-clean global dispatcher as the current validation carrier. Historical release workflow/artifact evidence remains preserved as evidence, not recurring authority.
 
+Initial exact-head validate run `31979357076` failed only because this active handoff revision had compressed away historical retirement/invariant strings consumed by existing live-activation boundary tests. The runtime implementation, credential-clean dispatcher, Chat profile/session checks, public-knowledge/VACC checks, and all preceding validation steps were green. This revision restores those authoritative strings rather than weakening the tests.
+
 No provider execution, custody, filing, publication, Site mutation, wallet effect, GitHub/OIDC authority, Render authority, or non-TV/TVC secret/token was introduced.
 
-Tranche 22 remains incomplete until a PR is opened, exact final-head Architecture Guard and global validate pass, PR merge completes, post-merge workflow count is directly observed, claim 045 is released, and this handoff is finalized on main.
+Tranche 22 remains incomplete until fresh exact final-head Architecture Guard and global validate pass, PR #168 merges, post-merge workflow count is directly observed, claim 045 is released, and this handoff is finalized on main.
 
 ## Current accounting
 
