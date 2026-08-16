@@ -92,7 +92,8 @@ def main() -> None:
         "STEGVERSE_NOTIFICATION_MAX_ATTEMPTS",
         "DELIVERY_EXPIRED",
         "PARTIAL_EXPIRED",
-        "REDACTED_AFTER_EXPIRY",
+        "REDACTED_AFTER_DELIVERY",
+        "REDACTED_AFTER_RETRY_EXPIRY",
         "notification_retry_authority_state",
         "recipient_address_retention_state",
     ):
