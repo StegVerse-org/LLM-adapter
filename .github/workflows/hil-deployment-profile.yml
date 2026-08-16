@@ -1,4 +1,4 @@
-name: HIL Deployment Profile
+name: HIL Compatibility Validation
 
 on:
   pull_request:
@@ -6,6 +6,10 @@ on:
       - "docs/HIL_DEPLOYMENT_PROFILE.md"
       - "deploy/hil.env.example"
       - "scripts/verify_hil_deployment_profile.py"
+      - "scripts/check_hil_storage_consistency.py"
+      - "scripts/probe_hil_https_receiver.py"
+      - "tests/test_hil_storage_consistency.py"
+      - "tests/test_hil_https_receiver_probe.py"
       - ".github/workflows/hil-deployment-profile.yml"
   push:
     branches: [main]
@@ -13,20 +17,59 @@ on:
       - "docs/HIL_DEPLOYMENT_PROFILE.md"
       - "deploy/hil.env.example"
       - "scripts/verify_hil_deployment_profile.py"
+      - "scripts/check_hil_storage_consistency.py"
+      - "scripts/probe_hil_https_receiver.py"
+      - "tests/test_hil_storage_consistency.py"
+      - "tests/test_hil_https_receiver_probe.py"
       - ".github/workflows/hil-deployment-profile.yml"
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
-  verify:
+  validate-compatibility:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Refuse credential-bearing environment
+        shell: bash
+        run: |
+          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT TVC_EPHEMERAL_GITHUB_TOKEN STEGVERSE_PROVIDER_TOKEN STEGVERSE_MASTER_RECORDS_TOKEN; do
+            if [ -n "${!key:-}" ]; then
+              echo "credential_exposed:$key"
+              exit 1
+            fi
+          done
+
+      - name: Fetch exact source anonymously
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git init .
+          git remote add origin https://github.com/StegVerse-org/LLM-adapter.git
+          git -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+
+      - name: Install validation dependencies
+        run: python3 -m pip install -e ".[dev]"
+
       - name: Verify fail-closed HIL deployment profile
-        run: python scripts/verify_hil_deployment_profile.py
+        run: python3 scripts/verify_hil_deployment_profile.py
+
+      - name: Test fail-closed HIL storage consistency
+        run: python3 -m pytest tests/test_hil_storage_consistency.py -v
+
+      - name: Verify HTTPS receiver probe contract
+        run: python3 -m pytest tests/test_hil_https_receiver_probe.py -v
+
+      - name: Confirm non-authorizing compatibility scope
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          handoff = Path('docs/HIL_LLM_ADAPTER_MIRROR_HANDOFF.md').read_text(encoding='utf-8')
+          assert 'credential_authority: TV/TVC' in handoff
+          assert 'github_token_runtime_authority: NONE' in handoff
+          assert 'MERGED INTO: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md' in handoff
+          print('HIL_COMPATIBILITY_AUTHORITY=NONE')
+          PY
