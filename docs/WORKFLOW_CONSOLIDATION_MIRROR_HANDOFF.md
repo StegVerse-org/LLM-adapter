@@ -31,7 +31,17 @@ These describe production ownership, not GitHub-hosted execution authority.
 
 ## Completed tranche 1 — StegVerse-only runtime reconciliation
 
-PR #145 merged at `c9f561254ec5671c2329c3deb7ce0bfb511331ab` after 10/10 final-head workflow groups passed. It retired `ecosystem-chat-github-models-execution.yml`, both hosted Ecosystem Chat activation workflows, `hil-process-restart-controlled-cycle.yml`, and required hosted Render production configuration. Production continuity transferred to resident StegVerse carriers and TV/TVC.
+PR #145 merged at `c9f561254ec5671c2329c3deb7ce0bfb511331ab` after 10/10 final-head workflow groups passed. Exact retired/redirected workflow names remain part of the continuity contract:
+
+```text
+ecosystem-chat-github-models-execution.yml -> OBSOLETE_OR_SUPERSEDED
+ecosystem-chat-live-activation.yml -> TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+ecosystem-chat-live-activation-monitor.yml -> TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+hil-process-restart-controlled-cycle.yml -> TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+render-production.yaml -> RETIRED REQUIRED HOSTED DEPENDENCY
+```
+
+The resident carrier owns continuity for the retired activation monitor and persistence path; the resident StegVerse carrier + TV/TVC owns production continuation.
 
 ## Completed tranche 2 — resident-carrier transfer
 
