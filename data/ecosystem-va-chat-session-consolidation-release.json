@@ -3,6 +3,7 @@
   "base_inventory": "data/ecosystem-va-chat-session-consolidation.json",
   "base_inventory_blob_sha": "89bf43fceb62967ff9fc30fd4436d0f903fdf7f4",
   "recorded_at": "2026-08-04T18:20:00Z",
+  "reconciled_at": "2026-08-16T17:58:00-05:00",
   "posture": "ARCHIVE_READY",
   "active_chat_owned_claims": 0,
   "unowned_tasks": 0,
@@ -17,11 +18,21 @@
     "VACP-ADAPTER-PII-RUNTIME-006",
     "VACP-SESSION-CONSOLIDATION-007"
   ],
-  "blocked_unclaimed": [
-    "VACP-ADAPTER-AUTHORIZED-EXECUTION-005"
+  "blocked_unclaimed": [],
+  "superseded_continuation": [
+    {
+      "task_id": "VACP-ADAPTER-AUTHORIZED-EXECUTION-005",
+      "state": "SUPERSEDED",
+      "superseded_by": "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+      "reason": "Historical GitHub Models/GITHUB_TOKEN provider authority conflicts with TV/TVC-only sovereign credential requirements."
+    }
   ],
   "machine_owned_blocked": [
     "StegVerse-org/LLM-adapter#18",
+    "StegVerse-org/LLM-adapter#90",
+    "StegVerse-org/LLM-adapter#142",
+    "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+    "StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json",
     "master-records/orchestration#15",
     "master-records/orchestration/tasks/MR-VA-PRIVACY-ADAPTER-IMPORT-002.json"
   ],
