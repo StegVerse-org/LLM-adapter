@@ -82,31 +82,43 @@ Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-FEDERAL-SECURITY-BASELINE-042.json`.
 
 Before mutation, the repository-level canonical handoff `docs/LLM_ADAPTER_MIRROR_HANDOFF.md` was read. Its archived stale-activation-reconciliation workload is not reopened; issue #18 and the named StegVerse/TV-TVC owners retain live-provider/runtime authority.
 
-Direct inspection of `.github/workflows/exceed-federal-security-baseline.yml` showed a standalone deterministic validation surface using `actions/checkout@v4`, `actions/setup-python@v5`, `contents: read`, and Python 3.12. Its unique capability is:
+Direct inspection of `.github/workflows/exceed-federal-security-baseline.yml` showed a standalone deterministic validation surface using `actions/checkout@v4`, `actions/setup-python@v5`, `contents: read`, and Python 3.12. Its only continuing capability was:
 
 ```text
 python scripts/check_exceed_federal_security_baseline.py
 ```
 
-The authoritative contract and validator remain:
+That capability is now installed in the already-executed canonical Goal 4 aggregation path:
+
+```text
+.github/workflows/validate.yml
+  -> Run canonical Goal 4 verification
+  -> scripts/verify_goal4_full.py
+  -> scripts/check_exceed_federal_security_baseline.py
+```
+
+The iOS validation mirror remains byte-equivalent to `.github/workflows/validate.yml`; no new GitHub workflow logic or credential-bearing action was introduced. `scripts/verify_goal4_full.py` now executes the federal baseline validator fail-closed alongside the existing Goal 4 boundary checks. The standalone `.github/workflows/exceed-federal-security-baseline.yml` has been removed from the active branch. The authoritative contract and validator remain unchanged:
 
 ```text
 data/security/exceed-federal-baseline.json
 scripts/check_exceed_federal_security_baseline.py
 ```
 
-Classification:
+Disposition installed:
 
 ```text
 .github/workflows/exceed-federal-security-baseline.yml
   -> CONSOLIDATE_INTO_STABLE_DISPATCHER
+  -> removed
+scripts/verify_goal4_full.py
+  -> CANONICAL_AGGREGATE_VALIDATION_PATH
 .github/workflows/validate.yml
   -> RETAIN_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER
 iosnoperiod/github/workflows/validate.yml
   -> MIRROR_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER
 ```
 
-No contract semantics, provider/runtime authority, custody, publication, deployment, activation, wallet effect, or credential boundary is authorized to change. Tranche 19 is currently `CLAIMED_FOR_IMPLEMENTATION`; the next executable mutation is to add the security-baseline validator to both stable dispatchers, remove the standalone checkout/setup workflow, validate exact final head, merge, release claim 042, and finalize this handoff on main.
+No contract semantics, provider/runtime authority, custody, publication, deployment, activation, wallet effect, or credential boundary changed. Tranche 19 is incomplete until exact final-head Architecture Guard and global validate pass with the federal baseline invocation visible in Goal 4 validation, the PR merges, claim 042 is released, and this handoff is finalized on main.
 
 ## Current accounting — released work only
 
@@ -120,7 +132,7 @@ restoration_target: <=2 unless evidence-backed standalone technical necessity ex
 current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-FEDERAL-SECURITY-BASELINE-042
 ```
 
-If tranche 19 releases as classified, the expected released accounting becomes 18 workflow files, 31 removed/consolidated, 34/49 = 69.39% classified/remediated, and 15/49 remaining, subject to direct post-merge observation.
+If tranche 19 releases as installed and no concurrent workflow-file change occurs, main becomes 18 workflow files, 31 removed/consolidated, 34/49 = 69.39% classified/remediated, and 15/49 remaining, subject to direct post-merge observation.
 
 ## Canonical ownership / convergence
 
@@ -144,6 +156,10 @@ StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/T
 - Do not modify the security contract while only consolidating its validation carrier.
 - Do not restore hosted activation, artifact transport, or repository writeback.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
+
+## Next task after release
+
+Under a fresh noncolliding claim, read the applicable specialized handoff and classify the next remaining default-branch workflow file against canonical StegVerse owners and the `<=2` target.
 
 ## Archive condition
 
