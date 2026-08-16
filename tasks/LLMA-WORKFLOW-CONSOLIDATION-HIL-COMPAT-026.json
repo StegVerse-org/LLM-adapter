@@ -1,0 +1,69 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATION-HIL-COMPAT-026",
+  "originating_goal": "Reduce duplicate GitHub-hosted HIL validation/probe surfaces while preserving HIL v1.1 compatibility checks and leaving production lifecycle authority with TV/TVC.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/workflow-consolidation-hil-static-20260815",
+  "claimant": "chatgpt-session-backend-support-20260815",
+  "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-15T23:05:00-05:00",
+  "claim_release_condition": "Merge this exact HIL compatibility consolidation after final-head validation and then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "surfaces": [
+    ".github/workflows/hil-deployment-profile.yml",
+    ".github/workflows/hil-storage-consistency.yml",
+    ".github/workflows/hil-https-receiver-probe-contract.yml",
+    ".github/workflows/hil-https-receiver-probe.yml",
+    "scripts/verify_hil_deployment_profile.py",
+    "scripts/check_hil_storage_consistency.py",
+    "scripts/probe_hil_https_receiver.py",
+    "tests/test_hil_storage_consistency.py",
+    "tests/test_hil_https_receiver_probe.py",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATION-HIL-COMPAT-026.json"
+  ],
+  "classifications": {
+    ".github/workflows/hil-deployment-profile.yml": "FOLD_INTO_STABLE_VALIDATION_DISPATCHER",
+    ".github/workflows/hil-storage-consistency.yml": "FOLD_INTO_STABLE_VALIDATION_DISPATCHER",
+    ".github/workflows/hil-https-receiver-probe-contract.yml": "FOLD_INTO_STABLE_VALIDATION_DISPATCHER",
+    ".github/workflows/hil-https-receiver-probe.yml": "TRANSFER_TO_STEGVERSE_TASK_OR_WORKER"
+  },
+  "canonical_owners": {
+    "hil_production_backend": "StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md",
+    "hil_private_review": "StegVerse-Labs/TVC#8",
+    "site_projection": "StegVerse-Labs/Site#67",
+    "master_records": "master-records/orchestration#13"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_production_secret_or_token_allowed": false,
+    "provider_secret_export_allowed": false
+  },
+  "collision_boundaries": [
+    "Do not modify or duplicate TVC#8 authenticated private-review lifecycle work.",
+    "Do not treat compatibility workflow success as HIL product activation.",
+    "Do not create or export review/publication/provider credentials.",
+    "Do not grant Site publication, Master Record, or release authority.",
+    "Do not reintroduce third-party hosted runtime as a production dependency."
+  ],
+  "retained_assets": [
+    "scripts/verify_hil_deployment_profile.py",
+    "scripts/check_hil_storage_consistency.py",
+    "scripts/probe_hil_https_receiver.py",
+    "tests/test_hil_storage_consistency.py",
+    "tests/test_hil_https_receiver_probe.py"
+  ],
+  "expected_evidence": [
+    "token-clean HIL compatibility dispatcher final-head PASS",
+    "Architecture Guard PASS",
+    "validate PASS",
+    "provider-usage validation PASS",
+    "merged or directly-applied bounded change",
+    "post-application workflow tree count",
+    "released claim and updated canonical handoff"
+  ],
+  "next_task_after_release": "Create a fresh nonoverlapping claim for the next HIL lifecycle/static workflow family after inspecting current canonical HIL ownership.",
+  "authority_effect": false,
+  "activation_effect": false
+}
