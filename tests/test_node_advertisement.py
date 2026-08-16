@@ -28,9 +28,13 @@ def test_node_advertisement_is_health_bound_and_non_authorizing(monkeypatch) -> 
     assert payload["capability_id"] == "ecosystem-chat-gateway"
     assert payload["endpoint"].endswith("/api/ecosystem-chat")
     assert payload["health_endpoint"].endswith("/health")
+    assert payload["math_solver_readiness_endpoint"].endswith("/api/math-solver/v1/readiness")
+    assert payload["math_solver_solve_endpoint"].endswith("/api/math-solver/v1/solve")
     assert payload["health_bound"] is True
     assert payload["provider_enabled"] is True
     assert payload["durable_storage"] is True
+    assert payload["credential_authority"] == "TV/TVC"
+    assert payload["github_token_runtime_authority"] == "NONE"
     assert payload["authority_granted"] is False
     assert payload["publication_authority"] is False
     assert payload["execution_authority"] is False
