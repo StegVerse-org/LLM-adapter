@@ -4,11 +4,12 @@
   "originating_goal": "Eliminate non-TV/TVC GitHub credential mechanics from retained validation surfaces while preserving necessary StegVerse portable-node/capability validation.",
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "chore/token-clean-capability-runtime-20260816",
-  "claimant": "chatgpt-session-backend-support-20260816",
-  "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
-  "state": "CLAIMED_FOR_VALIDATION",
+  "claimant": null,
+  "role": "MERGED_INTO_CANONICAL_WORKSTREAM",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claim_timestamp": "2026-08-16T02:12:00-05:00",
-  "claim_release_condition": "Merge the bounded capability-runtime credential-remediation PR after final-head validation; verify retained cross-platform validation and token refusal; then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "claim_released_at": "2026-08-16T03:28:00-05:00",
+  "claim_release_condition": "SATISFIED",
   "surfaces": [
     ".github/workflows/capability-runtime.yml",
     "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
@@ -18,8 +19,24 @@
     ".github/workflows/capability-runtime.yml": "KEEP_STANDALONE_EXCEPTION_TEMPORARY_CROSS_PLATFORM_VALIDATION_DISPATCHER"
   },
   "implementation_evidence": [
-    "7df41ebec5568a1512cf3b00e9abbdcd00a7268e replaced actions/checkout and actions/setup-python with credential-refusing anonymous exact-source acquisition and preinstalled-Python resolution while retaining the 3-OS x 2-Python matrix and portable-node/capability tests"
+    "PR #157 merged at 310f0225d3700fda735d3f2d70943a12e9bda0cc",
+    "final implementation head 70877f43f07b4589a926df6cfdf5721c1beada44",
+    "permissions: {} with explicit credential-bearing environment refusal",
+    "anonymous exact-SHA source acquisition replaces token-backed checkout",
+    "token-backed setup-python action removed while 3-OS x Python 3.11/3.12 matrix retained",
+    "superseded run cancellation installed with concurrency cancel-in-progress"
   ],
+  "validation_evidence": {
+    "capability_runtime_run": 31936410223,
+    "capability_runtime_conclusion": "SUCCESS",
+    "capability_runtime_matrix": "6/6 SUCCESS",
+    "architecture_guard_run": 31936410214,
+    "architecture_guard_conclusion": "SUCCESS",
+    "provider_owned_usage_run": 31936410218,
+    "provider_owned_usage_conclusion": "SUCCESS",
+    "validate_run": 31936410228,
+    "validate_conclusion": "SUCCESS"
+  },
   "canonical_owners": {
     "portable_node_runtime": "StegVerse-org/LLM-adapter main + docs/SOVEREIGN_CARRIER_EXECUTION_MIRROR_HANDOFF.md",
     "sovereign_model_runtime": "StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md",
@@ -41,18 +58,8 @@
     "Do not remove portable-node source or tests.",
     "Do not touch StegFin signing, broadcast, settlement, or provider execution."
   ],
-  "expected_evidence": [
-    "capability-runtime matrix passes on final head",
-    "Architecture Guard PASS on final head",
-    "Validate Provider-Owned Usage Event PASS on final head",
-    "validate PASS on final head",
-    "workflow has permissions: {} and refuses credential-bearing environment",
-    "workflow source acquisition is anonymous and does not use actions/checkout or actions/setup-python",
-    "exact PR merged",
-    "released claim and finalized canonical handoff"
-  ],
-  "next_executable_action": "Open the exact PR and validate its final head; merge only if all required validation groups pass.",
-  "next_task_after_release": "Continue classifying/consolidating remaining hosted validation surfaces, prioritizing validate.yml repository-token writeback.",
+  "next_executable_action": "Begin a fresh nonconflicting tranche against global validate.yml token/writeback mechanics after installing a new exact pre-work claim.",
+  "next_task_after_release": "Classify and redistribute validate.yml unique validation, eliminate repository-token writeback and hosted token mechanics, and preserve only the minimum technically necessary token-clean validation surface.",
   "authority_effect": false,
   "activation_effect": false
 }
