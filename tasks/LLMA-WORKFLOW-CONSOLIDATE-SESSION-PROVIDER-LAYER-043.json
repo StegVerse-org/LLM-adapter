@@ -22,7 +22,7 @@
   ],
   "classifications": {
     ".github/workflows/session-provider-layer-consolidation.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
-    "scripts/verify_goal4_full.py": "CANDIDATE_CANONICAL_AGGREGATE_VALIDATION_PATH"
+    "scripts/verify_goal4_full.py": "CANONICAL_AGGREGATE_VALIDATION_PATH"
   },
   "credential_boundary": {
     "credential_authority": "TV/TVC",
@@ -42,14 +42,14 @@
     "Do not add GitHub/OIDC/provider/Master-Records credentials, artifacts, writeback, provider execution, publication, deployment, or activation."
   ],
   "expected_evidence": [
-    "all three existing deterministic check scripts execute successfully from canonical validation path",
+    "scripts/verify_goal4_full.py executes all three existing deterministic session-provider checks",
     "standalone session-provider-layer-consolidation.yml absent",
     "canonical/iOS workflow parity PASS",
     "Architecture Guard exact final head PASS",
-    "validate exact final head PASS",
+    "validate exact final head PASS with all three markers visible in Goal 4 log",
     "PR merged and claim released"
   ],
-  "next_executable_action": "Create the implementation branch from this claimed main state, inspect the three validators, integrate them into the existing aggregate validation path if compatible, remove the standalone workflow, validate, merge, and release.",
+  "next_executable_action": "Validate the installed aggregate path on exact final head, merge, release claim, and finalize the canonical handoff.",
   "next_task_after_release": "Classify the next remaining default-branch workflow file against canonical owners and the <=2 target.",
   "authority_effect": false,
   "activation_effect": false
