@@ -1,0 +1,73 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATION-RESIDENT-CARRIER-025",
+  "originating_goal": "Reduce GitHub-hosted workflow/token surfaces while preserving all production capability inside StegVerse workers and TV/TVC authority.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/workflow-consolidation-resident-carriers-20260815",
+  "claimant": "chatgpt-session-backend-support-20260815",
+  "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-15T22:49:00-05:00",
+  "claim_release_condition": "Merge this exact bounded workflow-transfer tranche after final-head repository validation, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "surfaces": [
+    ".github/workflows/local-runtime-model-proof.yml",
+    ".github/workflows/sovereign-local-model-binding.yml",
+    ".github/workflows/observe-math-solver-public-runtime.yml",
+    ".github/workflows/heartbeat-response-node.yml",
+    ".github/workflows/autonomy-completion-projection.yml",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATION-RESIDENT-CARRIER-025.json"
+  ],
+  "classifications": {
+    ".github/workflows/local-runtime-model-proof.yml": "TRANSFER_TO_STEGVERSE_TASK_OR_WORKER",
+    ".github/workflows/sovereign-local-model-binding.yml": "TRANSFER_TO_STEGVERSE_TASK_OR_WORKER",
+    ".github/workflows/observe-math-solver-public-runtime.yml": "TRANSFER_TO_STEGVERSE_TASK_OR_WORKER",
+    ".github/workflows/heartbeat-response-node.yml": "TRANSFER_TO_STEGVERSE_TASK_OR_WORKER",
+    ".github/workflows/autonomy-completion-projection.yml": "TRANSFER_TO_STEGVERSE_TASK_OR_WORKER"
+  },
+  "canonical_owners": {
+    "local_model_runtime": "StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md",
+    "ecosystem_chat_live_carrier": "StegVerse-Labs/.github resident sovereign carrier + .github#60",
+    "math_solver_live_observation": "StegVerse-Labs/.github resident sovereign carrier + StegVerse-org/LLM-adapter#132 + StegVerse-Labs/Site#240",
+    "heartbeat_response": "StegVerse-Labs/.github resident sovereign heartbeat",
+    "autonomy_completion_projection": "StegVerse-Labs/.github resident sovereign heartbeat + canonical destination handoff projection"
+  },
+  "retained_non_workflow_assets": [
+    "llm_adapter/local_model_runtime.py",
+    "llm_adapter/sovereign_local_model_binding.py",
+    "scripts/build_local_reference_model.py",
+    "scripts/prove_local_runtime_model.py",
+    "scripts/prove_sovereign_local_model_binding.py",
+    "scripts/observe_math_solver_public_runtime.py",
+    "scripts/process_heartbeat_response.py",
+    "scripts/project_autonomy_completion_evidence.py",
+    "tests/test_local_runtime_model.py",
+    "tests/test_sovereign_local_model_binding.py",
+    "receipts/math-solver-public-runtime.latest.json"
+  ],
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_production_secret_or_token_allowed": false,
+    "provider_secret_export_allowed": false
+  },
+  "collision_boundaries": [
+    "Do not recreate the released formal local model/runtime implementation.",
+    "Do not take live Ecosystem Chat carrier ownership from the resident sovereign heartbeat or .github#60.",
+    "Do not create a second Math Solver evaluator or public runtime carrier.",
+    "Do not create a second heartbeat authority or make GitHub Actions the heartbeat.",
+    "Do not infer activation from workflow/test success.",
+    "Do not touch wallet signing, broadcast, settlement, or StegFin trade execution."
+  ],
+  "expected_evidence": [
+    "final-head Architecture Guard PASS",
+    "final-head validate PASS",
+    "final-head provider-usage validation PASS",
+    "merged pull request",
+    "post-merge workflow count",
+    "updated canonical workflow consolidation handoff"
+  ],
+  "next_task_after_release": "Create a fresh nonoverlapping workflow-consolidation claim for the next classified workflow family; prioritize remaining scheduled/write-capable hosted surfaces and HIL/VACC duplicates after reading their canonical handoffs.",
+  "authority_effect": false,
+  "activation_effect": false
+}
