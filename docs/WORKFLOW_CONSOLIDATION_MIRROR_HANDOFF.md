@@ -5,10 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/retire-tv-tvc-service-return-workflow-20260816
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
-active_claim_state: NONE
+active_claim: LLMA-WORKFLOW-RETIRE-TV-TVC-SERVICE-RETURN-046
+active_claim_state: CLAIMED_FOR_IMPLEMENTATION
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -68,9 +68,33 @@ post-merge workflow files: 15
 classified/remediated: 37/49 = 75.51%
 ```
 
-Tranche 22 removed `.github/workflows/va-claim-assistant-session-consolidation.yml`, retiring its 12-hour schedule, `contents: write`, checkout/setup actions, repository git commit/pull/push writeback, and artifact upload. Its deterministic archive validation now executes through `scripts/verify_goal4_full.py` -> `scripts/validate_va_claim_assistant_session_consolidation.py` in the credential-clean global validation lane. The validator requires the historical GitHub-token provider task to remain `SUPERSEDED` and the sovereign successor `VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023` to remain machine-owned under TV/TVC authority with credential requirement `NONE`, GitHub token requirement `false`, GitHub-token runtime authority `NONE`, third-party inference `false`, and hosted fallback `DISALLOWED`.
+## Active tranche 23 — TV/TVC service-return wrapper retirement
 
-The first tranche-22 validate run correctly failed because this handoff had compressed away historical sovereign/retired-path strings consumed by existing boundary tests. Commit `9c64c385e80b2bf9f44dd44996f5feb3b41b2f4d` restored those invariants rather than weakening tests; the fresh exact-head Architecture Guard and all global validation steps then passed.
+Claim: `tasks/LLMA-WORKFLOW-RETIRE-TV-TVC-SERVICE-RETURN-046.json`.
+
+The canonical handoff was read before mutation. No specialized `*_MIRROR_HANDOFF.md` for this wrapper was found. Direct inspection showed `.github/workflows/validate-tv-tvc-service-return.yml` was only a GitHub wrapper around the repository-native deterministic CLI:
+
+```text
+workflow_call/workflow_dispatch
+permissions: contents: read
+actions/checkout@v4
+actions/setup-python@v5
+python scripts/validate_tv_tvc_service_return.py <bundle> <ledger_receipt>
+```
+
+Repository search found no caller/reference to `validate-tv-tvc-service-return.yml`. The retained `scripts/validate_tv_tvc_service_return.py` independently validates bundle hash, canonical request hash, service receipt hash, invoice/receipt binding, ledger/bundle binding, requester-return binding, and explicitly fails if the service return implies Master Record authority.
+
+Installed on the active branch:
+
+```text
+.github/workflows/validate-tv-tvc-service-return.yml
+  -> ELIMINATE_GITHUB_WRAPPER_RETAIN_REPOSITORY_NATIVE_VALIDATOR
+  -> removed
+scripts/validate_tv_tvc_service_return.py
+  -> RETAIN_CANONICAL_FAIL_CLOSED_VALIDATOR
+```
+
+No TV/TVC bundle semantics, ledger semantics, custody authority, provider execution, wallet effect, activation effect, repository writeback, artifact transport, or non-TV/TVC credentials are changed. Tranche 23 remains incomplete until exact-head Architecture Guard/global validate pass, PR merge completes, the post-merge workflow census is observed, claim 046 is released, and this handoff is finalized on main.
 
 ## Global validation carrier
 
@@ -80,12 +104,13 @@ The first tranche-22 validate run correctly failed because this handoff had comp
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_on_main: 15
+workflow_files_current_on_released_main: 15
 workflow_files_removed_or_consolidated_released: 34
 classified_and_remediated_released: 37/49 = 75.51%
 remaining_unclassified_or_unconsolidated_released: 12/49
+expected_if_tranche_23_releases_without_concurrent_change: 14 workflow files, 35 removed/consolidated, 38/49 = 77.55%, 11/49 remaining
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
+current_active_tranche_claim: LLMA-WORKFLOW-RETIRE-TV-TVC-SERVICE-RETURN-046
 ```
 
 ## Canonical ownership / convergence
@@ -108,14 +133,10 @@ StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/T
 
 - Do not recreate sovereign local-model/runtime source work.
 - Do not reactivate GitHub Models/GITHUB_TOKEN VACC inference.
-- Do not alter immutable historical archive inventory merely to erase provenance.
+- Do not alter TV/TVC service-return bundle or ledger semantics.
 - Do not restore hosted schedules, repository writeback, artifact transport, or activation.
-- Do not touch wallet signing, broadcast, or settlement.
-
-## Next safe task
-
-Under a fresh noncolliding claim, read the applicable specialized handoff and classify the next remaining default-branch workflow surface against canonical StegVerse owners and the `<=2` target. Prefer pure deterministic validation surfaces before workflows that perform publication, image creation, package publication, HIL lifecycle effects, or other stateful outputs.
+- Do not touch wallet signing, broadcast, settlement, or Master Record authorization.
 
 ## Archive condition
 
-This support session remains active while workflow/token remediation is incomplete. Released main has 15 workflow files against the <=2 target and 12/49 audit-start surfaces remain unclassified/unconsolidated. The original local-model/runtime implementation is already complete/released and is not reopened by this maintenance lane.
+This support session remains active while claim 046 and remaining workflow/token remediation are incomplete. Released main has 15 workflow files against the <=2 target and 12/49 audit-start surfaces remain unclassified/unconsolidated.
