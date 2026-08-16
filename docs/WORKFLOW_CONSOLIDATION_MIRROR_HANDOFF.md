@@ -5,10 +5,9 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: chore/consolidate-provider-usage-validation-20260816
+branch: main
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove Render/third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: LLMA-WORKFLOW-CONSOLIDATE-PROVIDER-USAGE-036
-active_claim_state: CLAIMED_FOR_IMPLEMENTATION
+active_claim: NONE
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -47,7 +46,7 @@ render-production.yaml: RETIRED_AS_PRODUCTION_DEPENDENCY
 render.yaml: RETIRED_AS_PRODUCTION_DEPENDENCY
 ```
 
-## Completed tranches 1-12
+## Completed tranches 1-13
 
 ```text
 1 #145 c9f561254ec5671c2329c3deb7ce0bfb511331ab
@@ -62,9 +61,10 @@ render.yaml: RETIRED_AS_PRODUCTION_DEPENDENCY
 10 #156 837799aa5c4e6ee64ffc86902216eb36e53ebd36
 11 #157 310f0225d3700fda735d3f2d70943a12e9bda0cc
 12 #158 695ad0723d303b140c19c6c15abbb8f0653b05ee
+13 #159 ee193f96c1d3b6fca2f0d1d009536fec83c6a884
 ```
 
-All completed tranche claims 025-035 are released.
+All completed tranche claims 025-036 are released.
 
 ### Tranche 10
 
@@ -76,49 +76,44 @@ Hosted `platform-agnostic-runtime.yml` was retired because it created non-TV/TVC
 
 ### Tranche 12
 
-PR #158 made global `validate.yml` and its iOS mirror deterministic-validation-only and credential-clean. Schedule, checkout/setup actions, artifact upload, hosted live activation probe, and GitHub writeback were removed. Final validation: Architecture Guard `31937093509` SUCCESS; Provider-Owned Usage `31937093522` SUCCESS; validate `31937093538` SUCCESS with all 57 validation steps successful.
+PR #158 made global `validate.yml` and its iOS mirror deterministic-validation-only and credential-clean. Schedule, checkout/setup actions, artifact upload, hosted live activation probe, and GitHub writeback were removed. Final validation: Architecture Guard `31937093509` SUCCESS; Provider-Owned Usage `31937093522` SUCCESS; validate `31937093538` SUCCESS with 57/57 validation steps successful.
 
-## Active tranche 13 — provider-owned usage workflow consolidation
+### Tranche 13 — provider-owned usage validation consolidated
 
-Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-PROVIDER-USAGE-036.json`.
+PR #159 merged at `ee193f96c1d3b6fca2f0d1d009536fec83c6a884`; final implementation head `24b1205eddd5a7768fb1804fe142afda9a2782fa`.
 
-Direct inspection showed `.github/workflows/validate-provider-usage-event.yml` duplicated deterministic validation already suitable for the stable global dispatcher while using `actions/checkout@v4` and `actions/setup-python@v5`. Its unique capability is only:
-
-```text
-python scripts/verify_provider_usage_event.py
-python -m pytest -q tests/test_provider_usage_event.py
-```
-
-Disposition:
+`.github/workflows/validate-provider-usage-event.yml` was classified `CONSOLIDATE_INTO_STABLE_DISPATCHER` and removed. Its unique deterministic checks are now in the token-clean global `validate.yml` and exact iOS mirror:
 
 ```text
-.github/workflows/validate-provider-usage-event.yml
-  -> CONSOLIDATE_INTO_STABLE_DISPATCHER
-  standalone file removed on active branch
-
-.github/workflows/validate.yml
-  -> provider-owned usage-event validator + adversarial tests added
-  credential-clean dispatcher invariants retained
-
-iosnoperiod/github/workflows/validate.yml
-  -> exact mirror updated with same provider-owned usage-event validation
+$PYTHON_BIN scripts/verify_provider_usage_event.py
+$PYTHON_BIN -m pytest -q tests/test_provider_usage_event.py
 ```
 
-No runtime, activation, provider-call, custody, publication, or credential authority is added. This tranche reduces workflow count only after exact final-head validation and merge.
+This removed an `actions/checkout` + `actions/setup-python` workflow without dropping the provider-owned usage-event validator or adversarial test capability. No live provider request, custody operation, activation, publication, repository writeback, or credential authority was added.
 
-## Current accounting — released work only
+Final validation:
+
+```text
+Architecture Guard 31937348046 SUCCESS
+validate 31937348003 SUCCESS — 59/59 validation steps SUCCESS
+provider-owned usage-event validator SUCCESS
+provider-owned usage-event adversarial tests SUCCESS
+workflow parity SUCCESS
+```
+
+Claim `tasks/LLMA-WORKFLOW-CONSOLIDATE-PROVIDER-USAGE-036.json` is released as `MERGED_INTO_CANONICAL_WORKSTREAM`.
+
+## Current accounting
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current: 25
-workflow_files_removed_or_consolidated: 24
-classified_and_remediated: 27/49 = 55.10%
-remaining_unclassified_or_unconsolidated: 22/49
+workflow_files_current: 24
+workflow_files_removed_or_consolidated: 25
+classified_and_remediated: 28/49 = 57.14%
+remaining_unclassified_or_unconsolidated: 21/49
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-PROVIDER-USAGE-036
+current_active_tranche_claim: NONE
 ```
-
-If tranche 13 releases as implemented, active workflow files become 24, removed/consolidated becomes 25, classified/remediated becomes 28/49 = 57.14%, and remaining unclassified becomes 21/49.
 
 ## Canonical ownership / convergence
 
@@ -142,9 +137,13 @@ Formal local-model development and actual discovery/launch/inference/proof are `
 - Do not infer live activation from workflow cleanup.
 - Do not create non-TV/TVC runtime/test tokens.
 - Do not restore GitHub-hosted activation, artifact transport, or repository writeback.
-- Do not remove provider-usage-event validation when consolidating its standalone workflow.
+- Do not recreate provider-owned usage-event standalone validation.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
+
+## Next safe task
+
+Classify the next remaining GitHub workflow surface against canonical StegVerse owners and the `<=2` target. Any necessary deterministic validation should be consolidated into an existing token-clean dispatcher where technically compatible; any recurring operational capability belongs to a named StegVerse worker before standalone workflow removal.
 
 ## Archive condition
 
-This session remains a distinct support lane while workflow/token remediation remains incomplete. Released main has 25 workflow files versus the adopted <=2 target and 22/49 audit-start surfaces remain unclassified/unconsolidated. Claim 036 is active. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
+This session remains a distinct support lane while workflow/token remediation remains incomplete. Twenty-four workflow files remain versus the adopted <=2 target and 21/49 audit-start surfaces remain unclassified/unconsolidated. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
