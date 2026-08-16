@@ -159,9 +159,12 @@ jobs:
           from pathlib import Path
           workflow = Path('.github/workflows/capability-runtime.yml').read_text(encoding='utf-8')
           assert 'permissions: {}' in workflow
-          assert 'actions/checkout@' not in workflow
-          assert 'actions/setup-python@' not in workflow
-          assert 'persist-credentials' not in workflow
+          forbidden = [
+              'actions/' + 'checkout@',
+              'actions/' + 'setup-python@',
+              'persist-' + 'credentials',
+          ]
+          assert all(marker not in workflow for marker in forbidden), forbidden
           assert 'cancel-in-progress: true' in workflow
           assert 'github_token_runtime_authority' in Path('llm_adapter/node_bootstrap.py').read_text(encoding='utf-8')
           print('CAPABILITY_RUNTIME_CREDENTIAL_AUTHORITY=TV_TVC')
