@@ -8,9 +8,10 @@
   "role": "CLAIMED_FOR_IMPLEMENTATION",
   "state": "CLAIMED_FOR_IMPLEMENTATION",
   "claim_timestamp": "2026-08-16T03:30:00-05:00",
-  "claim_release_condition": "Merge the bounded global validate credential-remediation PR after final-head validation; verify deterministic validation remains intact, hosted activation/artifact/writeback mechanics are absent, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "claim_release_condition": "Merge the bounded global validate credential-remediation PR after final-head validation; verify deterministic validation remains intact, canonical/mirror parity holds, hosted activation/artifact/writeback mechanics are absent, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
   "surfaces": [
     ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
     "scripts/check_ai_entry_no_manual_tasks.py",
     "scripts/check_ecosystem_chat_verified_receipt_contract.py",
     "tests/test_live_activation_automation_contract.py",
@@ -21,6 +22,7 @@
   ],
   "classifications": {
     ".github/workflows/validate.yml": "KEEP_STANDALONE_EXCEPTION_TEMPORARY_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER",
+    "iosnoperiod/github/workflows/validate.yml": "MIRROR_CANONICAL_TOKEN_CLEAN_GLOBAL_VALIDATION_DISPATCHER",
     "scripts/check_ai_entry_no_manual_tasks.py": "UPDATE_VALIDATOR_FOR_TOKEN_CLEAN_INTERPRETER_SELECTION",
     "scripts/check_ecosystem_chat_verified_receipt_contract.py": "UPDATE_STALE_GITHUB_PERSISTENCE_CONTRACT_TO_RESIDENT_STEGVERSE_RECEIPT_BOUNDARY",
     "tests/test_live_activation_automation_contract.py": "UPDATE_STALE_HOSTED_ACTIVATION_EXPECTATIONS_TO_STEGVERSE_RESIDENT_OWNER",
@@ -38,6 +40,7 @@
     "hosted_live_activation_probe_allowed": false
   },
   "collision_boundaries": [
+    "Preserve exact canonical/iOS workflow parity.",
     "Preserve deterministic source, unit, integration, schema, authority-boundary and replay validation already unique to validate.yml.",
     "Preserve immutable receipt compatibility as a source contract without requiring GitHub-hosted live probing or repository persistence.",
     "Preserve the no-manual-task validator semantics while allowing the selected token-clean Python interpreter form.",
@@ -53,6 +56,7 @@
     "validate workflow passes on final head",
     "Architecture Guard PASS on final head",
     "Validate Provider-Owned Usage Event PASS on final head",
+    "canonical/iOS workflow parity PASS",
     "workflow has permissions: {} and refuses credential-bearing environment",
     "anonymous exact-SHA source acquisition without actions/checkout or actions/setup-python",
     "no-manual-task validator accepts token-clean selected-Python Goal 4 command without weakening workflow_dispatch requirement",
@@ -65,7 +69,7 @@
     "exact PR merged",
     "released claim and finalized canonical handoff"
   ],
-  "next_executable_action": "Update the stale immutable-receipt checker to validate source-level receipt semantics and absence of GitHub-hosted activation/writeback, then validate the exact PR head.",
+  "next_executable_action": "Synchronize the iOS workflow mirror exactly to the token-clean canonical validate workflow, then validate the exact PR head.",
   "next_task_after_release": "Continue classifying remaining hosted validation/publication surfaces toward the <=2 workflow target.",
   "authority_effect": false,
   "activation_effect": false
