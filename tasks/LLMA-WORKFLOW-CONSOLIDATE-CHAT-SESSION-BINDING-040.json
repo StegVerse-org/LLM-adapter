@@ -1,0 +1,57 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-CHAT-SESSION-BINDING-040",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target and remove token/artifact mechanics while preserving released provider-neutral Chat session-binding validation and deterministic receipt generation.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-chat-session-binding-validation-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T13:54:00-05:00",
+  "claim_release_condition": "Merge after exact final-head validation proves Chat session-binding tests and deterministic receipt verification run from the token-clean global dispatcher, standalone workflow is absent, specialized handoff points to the stable dispatcher, workflow parity passes, then release claim.",
+  "surfaces": [
+    ".github/workflows/validate-chat-session-binding.yml",
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "docs/CHAT_LLM_SESSION_BINDING_MIRROR_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-CHAT-SESSION-BINDING-040.json"
+  ],
+  "classifications": {
+    ".github/workflows/validate-chat-session-binding.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    ".github/workflows/validate.yml": "RETAIN_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER",
+    "iosnoperiod/github/workflows/validate.yml": "MIRROR_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "actions_checkout_allowed": false,
+    "actions_setup_python_allowed": false,
+    "actions_artifact_transport_allowed": false,
+    "repository_writeback_allowed": false,
+    "activation_effect": false
+  },
+  "collision_boundaries": [
+    "Preserve tests/test_chat_session_binding.py and scripts/verify_chat_session_binding.py fail-closed provider-neutral semantics.",
+    "Preserve retained canonical receipt and historical Python 3.9/3.11/3.12 release evidence without claiming ongoing 3-runtime validation.",
+    "Do not bypass privacy_guarded_dispatch or alter issue #18/#90 live-provider authority.",
+    "Keep canonical/iOS global workflow parity exact.",
+    "Do not add GitHub/OIDC/provider/Master-Records credentials or artifact transport.",
+    "Do not create provider execution, activation, custody, publication, filing, deployment, or wallet effects."
+  ],
+  "expected_evidence": [
+    "global validate runs tests/test_chat_session_binding.py",
+    "global validate runs scripts/verify_chat_session_binding.py --write-receipt",
+    "standalone validate-chat-session-binding.yml absent",
+    "specialized handoff preserves historical matrix evidence and points current validation to global validate",
+    "canonical/iOS parity PASS",
+    "validate exact final head PASS",
+    "Architecture Guard exact final head PASS",
+    "PR merged and claim released"
+  ],
+  "next_executable_action": "Move Chat session-binding tests and deterministic receipt generation into the token-clean global dispatcher and mirror, update the specialized handoff, then remove the standalone workflow.",
+  "next_task_after_release": "Classify the next remaining default-branch workflow file against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
