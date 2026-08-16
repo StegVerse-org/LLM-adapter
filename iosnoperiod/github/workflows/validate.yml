@@ -104,6 +104,10 @@ jobs:
         run: "$PYTHON_BIN scripts/verify_recursive_comparison.py"
       - name: Verify adapter role and provider usage
         run: "$PYTHON_BIN scripts/verify_provider_usage.py"
+      - name: Validate provider-owned usage event
+        run: "$PYTHON_BIN scripts/verify_provider_usage_event.py"
+      - name: Test provider-owned usage event adversarial cases
+        run: "$PYTHON_BIN -m pytest -q tests/test_provider_usage_event.py"
       - name: Verify authenticated usage session endpoint
         run: "$PYTHON_BIN scripts/verify_usage_session_api.py"
       - name: Verify External Chat staging posture
@@ -205,6 +209,8 @@ jobs:
           ]
           assert 'permissions: {}' in workflow
           assert 'cancel-in-progress: true' in workflow
+          assert 'verify_provider_usage_event.py' in workflow
+          assert 'tests/test_provider_usage_event.py' in workflow
           assert all(marker not in workflow for marker in forbidden), forbidden
           print('GLOBAL_VALIDATE_CREDENTIAL_AUTHORITY=TV_TVC')
           print('GLOBAL_VALIDATE_GITHUB_TOKEN_AUTHORITY=NONE')
