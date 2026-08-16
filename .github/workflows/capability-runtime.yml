@@ -140,7 +140,7 @@ jobs:
 
       - name: Verify autonomous service status command
         shell: bash
-        run: "$PYTHON_BIN scripts/stegnode.py status --root .stegdeploy/ci-portable-node"
+        run: "$PYTHON_BIN -m llm_adapter.node_service status --root .stegdeploy/ci-portable-node"
 
       - name: Verify autostart materialization without activation
         shell: bash
