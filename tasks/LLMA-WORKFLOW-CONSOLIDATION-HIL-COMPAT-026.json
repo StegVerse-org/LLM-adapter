@@ -3,12 +3,27 @@
   "task_id": "LLMA-WORKFLOW-CONSOLIDATION-HIL-COMPAT-026",
   "originating_goal": "Reduce duplicate GitHub-hosted HIL validation/probe surfaces while preserving HIL v1.1 compatibility checks and leaving production lifecycle authority with TV/TVC.",
   "repository": "StegVerse-org/LLM-adapter",
-  "branch": "chore/workflow-consolidation-hil-static-20260815",
+  "branch": "main",
   "claimant": "chatgpt-session-backend-support-20260815",
-  "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "role": "INTEGRATION_AND_RECONCILIATION",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claim_timestamp": "2026-08-15T23:05:00-05:00",
-  "claim_release_condition": "Merge this exact HIL compatibility consolidation after final-head validation and then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "released_at": "2026-08-15T23:13:00-05:00",
+  "release_evidence": {
+    "pull_request": 149,
+    "merge_commit": "0bd06fcdda1ba7fe736fde1d131b702e57080e3a",
+    "final_head": "f8ef3bb4778444d7559ff3663c2ebfe88067851f",
+    "hil_compatibility_run": 31926015337,
+    "hil_compatibility_conclusion": "SUCCESS",
+    "architecture_guard_run": 31926015326,
+    "architecture_guard_conclusion": "SUCCESS",
+    "provider_usage_run": 31926015343,
+    "provider_usage_conclusion": "SUCCESS",
+    "validate_run": 31926015314,
+    "validate_conclusion": "SUCCESS",
+    "workflow_tree_sha": "e79b18ed9a726940a6b4d7ae5a6259a45ed3e2a1",
+    "workflow_files_after_release": 37
+  },
   "surfaces": [
     ".github/workflows/hil-deployment-profile.yml",
     ".github/workflows/hil-storage-consistency.yml",
@@ -19,6 +34,7 @@
     "scripts/probe_hil_https_receiver.py",
     "tests/test_hil_storage_consistency.py",
     "tests/test_hil_https_receiver_probe.py",
+    "docs/HIL_DEPLOYMENT_PROFILE.md",
     "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
     "tasks/LLMA-WORKFLOW-CONSOLIDATION-HIL-COMPAT-026.json"
   ],
@@ -52,18 +68,10 @@
     "scripts/check_hil_storage_consistency.py",
     "scripts/probe_hil_https_receiver.py",
     "tests/test_hil_storage_consistency.py",
-    "tests/test_hil_https_receiver_probe.py"
+    "tests/test_hil_https_receiver_probe.py",
+    "docs/HIL_DEPLOYMENT_PROFILE.md"
   ],
-  "expected_evidence": [
-    "token-clean HIL compatibility dispatcher final-head PASS",
-    "Architecture Guard PASS",
-    "validate PASS",
-    "provider-usage validation PASS",
-    "merged or directly-applied bounded change",
-    "post-application workflow tree count",
-    "released claim and updated canonical handoff"
-  ],
-  "next_task_after_release": "Create a fresh nonoverlapping claim for the next HIL lifecycle/static workflow family after inspecting current canonical HIL ownership.",
+  "next_task_after_release": "Create a fresh nonoverlapping claim for the next HIL lifecycle/evidence or VACC workflow family only after reading its current canonical handoff and active claims.",
   "authority_effect": false,
   "activation_effect": false
 }
