@@ -15,6 +15,8 @@ HANDOFF = ROOT / "LLM_ADAPTER_MIRROR_HANDOFF.md"
 SUPPORTED_WORKFLOW_COMMANDS = (
     "python scripts/verify_goal4.py",
     "python scripts/verify_goal4_full.py",
+    "$PYTHON_BIN scripts/verify_goal4.py",
+    "$PYTHON_BIN scripts/verify_goal4_full.py",
 )
 
 
