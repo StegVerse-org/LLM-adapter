@@ -4,11 +4,12 @@
   "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target while eliminating token-backed checkout/setup mechanics and preserving deterministic provider-owned usage-event validation under StegVerse + TV/TVC authority boundaries.",
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "chore/consolidate-provider-usage-validation-20260816",
-  "claimant": "chatgpt-session-backend-support-20260816",
-  "role": "CLAIMED_FOR_IMPLEMENTATION",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claimant": null,
+  "role": "MERGED_INTO_CANONICAL_WORKSTREAM",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claim_timestamp": "2026-08-16T03:45:00-05:00",
-  "claim_release_condition": "Merge the bounded provider-usage validation consolidation after exact final-head validation; verify provider event validator/adversarial tests run from the token-clean global dispatcher, standalone workflow is absent, canonical/iOS parity passes, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "claim_released_at": "2026-08-16T03:52:00-05:00",
+  "claim_release_condition": "SATISFIED",
   "surfaces": [
     ".github/workflows/validate-provider-usage-event.yml",
     ".github/workflows/validate.yml",
@@ -17,9 +18,28 @@
     "tasks/LLMA-WORKFLOW-CONSOLIDATE-PROVIDER-USAGE-036.json"
   ],
   "classifications": {
-    ".github/workflows/validate-provider-usage-event.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    ".github/workflows/validate-provider-usage-event.yml": "CONSOLIDATED_INTO_STABLE_DISPATCHER_AND_REMOVED",
     ".github/workflows/validate.yml": "RETAIN_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER",
     "iosnoperiod/github/workflows/validate.yml": "MIRROR_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER"
+  },
+  "implementation_evidence": {
+    "pull_request": 159,
+    "final_head": "24b1205eddd5a7768fb1804fe142afda9a2782fa",
+    "merge_commit": "ee193f96c1d3b6fca2f0d1d009536fec83c6a884",
+    "standalone_workflow_removed": true,
+    "provider_event_validator_in_global_dispatcher": true,
+    "provider_event_adversarial_tests_in_global_dispatcher": true,
+    "canonical_ios_workflow_parity": true
+  },
+  "validation_evidence": {
+    "validate_run": 31937348003,
+    "validate_conclusion": "SUCCESS",
+    "validate_steps": "59/59 SUCCESS",
+    "provider_event_validator_step": "SUCCESS",
+    "provider_event_adversarial_test_step": "SUCCESS",
+    "workflow_parity_step": "SUCCESS",
+    "architecture_guard_run": 31937348046,
+    "architecture_guard_conclusion": "SUCCESS"
   },
   "credential_boundary": {
     "credential_authority": "TV/TVC",
@@ -30,26 +50,8 @@
     "repository_writeback_allowed": false,
     "activation_effect": false
   },
-  "collision_boundaries": [
-    "Preserve verify_provider_usage_event.py and tests/test_provider_usage_event.py semantics.",
-    "Do not remove deterministic provider-owned usage-event validation when deleting the standalone workflow.",
-    "Keep canonical/iOS validate workflow parity exact.",
-    "Do not add GitHub/OIDC/provider/Master-Records credentials.",
-    "Do not create any live provider request or activation path.",
-    "Do not use Render or any third-party runtime.",
-    "Do not touch StegFin signing, broadcast, settlement, or provider execution."
-  ],
-  "expected_evidence": [
-    "global validate runs verify_provider_usage_event.py",
-    "global validate runs tests/test_provider_usage_event.py",
-    "standalone validate-provider-usage-event.yml absent",
-    "canonical/iOS workflow parity PASS",
-    "validate exact final head PASS",
-    "Architecture Guard exact final head PASS",
-    "PR merged and claim released"
-  ],
-  "next_executable_action": "Add provider-owned usage-event validator and adversarial tests to the token-clean global validate dispatcher and iOS mirror, then remove the redundant standalone workflow.",
-  "next_task_after_release": "Classify the next remaining workflow surface against canonical owners and the <=2 target.",
+  "next_executable_action": "Classify the next remaining GitHub workflow surface against canonical StegVerse owners and the <=2 target under a fresh exact pre-work claim.",
+  "next_task_after_release": "Continue workflow-surface minimization without recreating provider-owned usage-event standalone validation.",
   "authority_effect": false,
   "activation_effect": false
 }
