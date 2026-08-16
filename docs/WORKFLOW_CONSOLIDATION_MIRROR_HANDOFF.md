@@ -5,10 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: chore/workflow-consolidation-hil-lifecycle-20260815
+branch: main
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: tasks/LLMA-WORKFLOW-CONSOLIDATION-HIL-LIFECYCLE-027.json
-role: CLAIMED_FOR_VALIDATION
+active_claim: NONE
+role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
 ```
@@ -31,7 +31,7 @@ These describe production ownership, not GitHub-hosted execution authority.
 
 ## Completed tranche 1 — StegVerse-only runtime reconciliation
 
-PR #145 merged at `c9f561254ec5671c2329c3deb7ce0bfb511331ab` after 10/10 final-head workflow groups passed. Exact retired/redirected workflow names remain part of the continuity contract:
+PR #145 merged at `c9f561254ec5671c2329c3deb7ce0bfb511331ab` after 10/10 final-head workflow groups passed. Exact retired/redirected names remain part of the continuity contract:
 
 ```text
 ecosystem-chat-github-models-execution.yml -> OBSOLETE_OR_SUPERSEDED
@@ -70,48 +70,45 @@ hil-https-receiver-probe-contract.yml -> FOLD_INTO_STABLE_VALIDATION_DISPATCHER 
 hil-https-receiver-probe.yml -> TRANSFER_TO_STEGVERSE_TASK_OR_WORKER (standalone removed; probe script retained)
 ```
 
-HIL compatibility identity is now v1.1 and canonical TVC ownership is explicit. Claim 026 is released.
+HIL compatibility identity is v1.1 and canonical TVC ownership is explicit. Claim 026 is released.
 
-## Current tranche 4 — HIL lifecycle/observer transfer
+## Completed tranche 4 — HIL lifecycle/observer transfer
 
-Canonical HIL production ownership remains:
+PR #150 merged at `ec16f9f681ebbac4b34e1e3af1607145153ff14c` after an initial handoff-regression validation failure was repaired without restoring either hosted workflow. Final-head validation passed:
 
 ```text
-runtime/lifecycle: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
-private review: StegVerse-Labs/TVC#8
-Site projection: StegVerse-Labs/Site#67
-Master Records: master-records/orchestration#13
+Architecture Guard 31927674982 SUCCESS
+Validate Provider-Owned Usage Event 31927675001 SUCCESS
+validate 31927674976 SUCCESS
 ```
 
-Exact claim: `tasks/LLMA-WORKFLOW-CONSOLIDATION-HIL-LIFECYCLE-027.json`.
-
-Two additional hosted workflow surfaces have been removed on this branch:
+Disposition:
 
 ```text
 .github/workflows/hil-live-activation.yml
   TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
-  removed by b0136dceb9dc72435816f027697c3bc1b98e8141
-  reason: hourly GitHub-hosted polling hardcoded a third-party Render runtime and referenced render.yaml
+  removed; it scheduled GitHub-hosted polling against a hardcoded third-party Render runtime
 
 .github/workflows/observe-hil-layer.yml
   TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
-  removed by 293cd04cd6efeaad86333c0a45242d261ea996be
-  reason: scheduled GitHub-hosted observer exported secrets.GITHUB_TOKEN and used it to mutate issue #92
+  removed; it scheduled GitHub-hosted coordination, exported secrets.GITHUB_TOKEN, and mutated issue #92
 ```
 
-`scripts/observe_hil_layer.py` and the HIL protocol/runtime implementation remain intact for canonical StegVerse-side reuse. No provider/review/publication/Master Records credential was created or exported. This tranche has no product-activation authority.
+Canonical continuation is `StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md`, TVC #8, Site #67, and `master-records/orchestration#13`. `scripts/observe_hil_layer.py` remains available for StegVerse-side reuse. Claim 027 is released in `tasks/LLMA-WORKFLOW-CONSOLIDATION-HIL-LIFECYCLE-027.json`.
 
-If final-head validation passes and this exact branch merges:
+## Current accounting
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_main_before_tranche: 37
-workflow_files_after_tranche: 35
-workflow_files_removed_or_consolidated_after_tranche: 14
-classified_and_remediated_after_tranche: 15/49 = 30.61%
+workflow_files_current: 35
+workflow_files_removed_or_consolidated: 14
+classified_and_remediated: 15/49 = 30.61%
 remaining_unclassified_or_unconsolidated: 34/49 audit-start surfaces
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
+current_active_tranche_claim: NONE
 ```
+
+The current 35 count is reconciled from the directly verified 37-file post-PR-149 tree minus the exact two workflow deletions in PR #150, with no workflow addition in that PR.
 
 ## Collision boundaries
 
@@ -134,7 +131,7 @@ TV/TVC protected values exported into GitHub Actions: prohibited
 
 The retained HIL compatibility dispatcher refuses credential-bearing environment variables and uses anonymous source acquisition. Broader repository GitHub-hosted validation mechanics remain consolidation debt; `validate.yml` is a later dispatcher-hardening target because its hosted checkout/setup and writeback mechanics still consume repository-token capability even though that token has no production authority.
 
-## Next safe families after claim 027 releases
+## Next safe families
 
 ```text
 remaining HIL lifecycle/evidence workflows
@@ -168,4 +165,4 @@ StegFin wallet/trade execution is not owned by this workflow-reconciliation lane
 
 ## Archive condition
 
-This session remains a distinct support lane while this exact claim is under validation and while workflow/backend-support surfaces remain to classify, transfer, or consolidate. The released local-model/runtime implementation and machine-owned StegFin continuation require no chat-local reimplementation.
+This session remains a distinct support lane while 35 workflow files remain versus the adopted <=2 target and backend-support surfaces remain to classify, transfer, or consolidate. Released local-model/runtime work and machine-owned StegFin continuation require no chat-local reimplementation.
