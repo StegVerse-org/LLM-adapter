@@ -49,7 +49,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python: ['3.11', '3.12']
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Refuse credential-bearing environment
         shell: bash
@@ -71,24 +71,37 @@ jobs:
           git -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
           git checkout --detach FETCH_HEAD
 
-      - name: Resolve preinstalled Python without token-backed setup actions
+      - name: Resolve requested Python without token-backed setup actions
         shell: bash
         env:
           PYTHON_VERSION: ${{ matrix.python }}
         run: |
           set -euo pipefail
           wrapper="$PWD/.stegverse-python"
+          selected=""
           if command -v "python${PYTHON_VERSION}" >/dev/null 2>&1; then
             selected="$(command -v "python${PYTHON_VERSION}")"
-            printf '#!/usr/bin/env bash\nexec %q "$@"\n' "$selected" > "$wrapper"
           elif command -v py >/dev/null 2>&1; then
             printf '#!/usr/bin/env bash\nexec py -%q "$@"\n' "$PYTHON_VERSION" > "$wrapper"
           else
-            selected="$(find "${RUNNER_TOOL_CACHE:-}" -type f \( -name python -o -name python.exe \) 2>/dev/null | grep -E "[/\\]Python[/\\]${PYTHON_VERSION}([./\\]|$)" | head -n 1 || true)"
+            selected="$(find "${RUNNER_TOOL_CACHE:-/nonexistent}" -type f \( -name python -o -name python.exe \) 2>/dev/null | grep -E "[/\\]Python[/\\]${PYTHON_VERSION}([./\\]|$)" | head -n 1 || true)"
             if [ -z "$selected" ]; then
-              echo "requested_preinstalled_python_not_found:$PYTHON_VERSION"
-              exit 1
+              bootstrap="$(command -v python3 || command -v python || true)"
+              if [ -z "$bootstrap" ]; then
+                echo "bootstrap_python_not_found"
+                exit 1
+              fi
+              "$bootstrap" -m pip install --user uv
+              uv_bin="$(command -v uv || true)"
+              if [ -z "$uv_bin" ]; then
+                user_base="$($bootstrap -m site --user-base)"
+                uv_bin="$user_base/bin/uv"
+              fi
+              "$uv_bin" python install "$PYTHON_VERSION"
+              selected="$($uv_bin python find "$PYTHON_VERSION")"
             fi
+          fi
+          if [ ! -s "$wrapper" ]; then
             printf '#!/usr/bin/env bash\nexec %q "$@"\n' "$selected" > "$wrapper"
           fi
           chmod +x "$wrapper"
