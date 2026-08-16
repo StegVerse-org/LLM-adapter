@@ -2,9 +2,7 @@
 
 ## Source of truth
 
-This document is the authoritative continuation record for the released Chat LLM profile layer established by issue `StegVerse-org/LLM-adapter#102`, pull request `#103`, and task `LLMA-CHAT-LLM-PROFILES-009`.
-
-The repository-wide source of truth remains `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`. This workload was parallel-safe because it used new profile, contract, test, verifier, workflow, task, receipt, and documentation paths and did not modify the exclusive live-provider lane owned by issue #18.
+This is the authoritative continuation record for the released Chat LLM profile layer established by issue `StegVerse-org/LLM-adapter#102`, PR #103, and task `LLMA-CHAT-LLM-PROFILES-009`. Repository-wide authority remains `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`.
 
 ## Governing product decision
 
@@ -17,77 +15,25 @@ The two products differ by purpose and factual-source policy, not by LLM capabil
 
 Governance constrains consequence, authority, custody, publication, deployment, filing, and other side effects. It does not silently reduce conversational, analytical, retrieval, creative, structured-output, multimodal, planning, or tool-candidate capability.
 
-## Released parallel lanes
-
-### Lane A — Ecosystem Chat / StegVerse Chat
+## Released profiles
 
 ```text
-profile: profiles/ecosystem-chat-llm.v1.json
-profile_id: ecosystem-chat-llm
-LLM surface: FULL_PROVIDER_SUPPORTED
-source mode: GENERAL_ADMITTED
-state: RELEASED_COMPLETE
+profiles/ecosystem-chat-llm.v1.json
+  profile_id: ecosystem-chat-llm
+  LLM surface: FULL_PROVIDER_SUPPORTED
+  source mode: GENERAL_ADMITTED
+  state: RELEASED_COMPLETE
+
+profiles/va-claims-chat-llm.v1.json
+  profile_id: va-claims-chat-llm
+  LLM surface: FULL_PROVIDER_SUPPORTED
+  source mode: OFFICIAL_VA_ONLY
+  state: RELEASED_COMPLETE
 ```
 
-The profile declares the complete canonical LLM feature set:
+Both declare the same 19/19 canonical LLM feature set. Ecosystem Chat requires admitted sources. VA Claims Chat allows factual grounding from genuine `va.gov`/`*.va.gov` sources and privacy-approved, consent-bound, hash-bound user records; general web, model memory, lookalike hosts, and unapproved user records are denied as factual sources. Provider output and user records do not become authority.
 
-```text
-multi-turn conversation
-system / developer / user instruction layers
-long context
-streaming
-structured output
-function and tool calling
-retrieval-augmented generation
-web retrieval
-file understanding
-image understanding
-audio understanding
-code generation
-artifact generation
-multilingual generation
-planning and multi-step reasoning
-memory candidate generation
-model routing
-citation and provenance output
-candidate action generation
-```
-
-External sources still require admission. Model output and tool candidates remain non-authorizing until downstream transition governance independently admits consequence.
-
-### Lane B — VA Claims Chat LLM
-
-```text
-profile: profiles/va-claims-chat-llm.v1.json
-profile_id: va-claims-chat-llm
-LLM surface: FULL_PROVIDER_SUPPORTED
-source mode: OFFICIAL_VA_ONLY
-state: RELEASED_COMPLETE
-```
-
-VA Claims Chat exposes the same complete LLM feature set. Its purpose boundary applies to factual grounding:
-
-```text
-admitted official source at va.gov or a genuine *.va.gov subdomain
-  -> allowed as va_source_fact
-
-privacy-approved, consent-bound, hash-bound user record
-  -> allowed as user_record_fact
-  -> never converted into VA authority
-
-general web source
-  -> denied as a Claims Chat factual source
-
-model memory
-  -> denied as a Claims Chat factual source
-
-VA lookalike or redirect-trick hostname
-  -> denied
-```
-
-The restriction does not disable conversation, analysis, document organization, multilingual output, structured output, tool-candidate generation, planning, or artifact generation. It controls what may support a factual VA claims answer.
-
-## Installed files
+## Authoritative implementation
 
 ```text
 llm_adapter/chat_profiles.py
@@ -96,57 +42,35 @@ profiles/va-claims-chat-llm.v1.json
 contracts/chat-llm-profile.schema.json
 tests/test_chat_llm_profiles.py
 scripts/verify_chat_llm_profiles.py
-.github/workflows/validate-chat-llm-profiles.yml
 tasks/LLMA-CHAT-LLM-PROFILES-009.json
-docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md
 receipts/chat-llm-profiles-validation.json
+docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md
 ```
 
-## Runtime-neutral profile engine
+The runtime-neutral profile engine performs no network request, provider execution, custody submission, Site mutation, publication, or external action.
 
-`llm_adapter/chat_profiles.py` provides:
+## Historical release evidence
 
-```text
-canonical FULL_LLM_FEATURES
-strict manifest validation
-paired-profile capability parity validation
-URL/hostname normalization
-official va.gov boundary validation
-source admission decisions
-privacy-approved user-record decisions
-deterministic manifest hashing
-deterministic capability matrix generation
-```
-
-The engine performs no network request, provider execution, custody submission, Site mutation, or external action.
-
-## Hosted validation evidence
+The original release remains valid historical compatibility evidence and is not rewritten by workflow consolidation:
 
 ```text
 implementation PR: #103
 validated head: aec79bca47951116564bba34401fb4bbd7363025
 merge commit: 18a49b8856a34d03d94955637adb4a53c9ccfe81
-workflow: Validate Chat LLM Profiles
-workflow run: 30928497409
+historical workflow run: 30928497409
 Python 3.9: PASS
 Python 3.11: PASS
 Python 3.12: PASS
 policy tests per runtime: 16 PASS
 receipt generation per runtime: PASS
-Architecture Guard: PASS
-repository validate: PASS
-Platform-Agnostic Runtime: PASS
-Validate Provider-Owned Usage Event: PASS
-Portable User-LLM Execution Receipt: PASS
-HIL managed receiver validation: PASS
-artifact: 8900112614
+historical artifact: 8900112614
 artifact digest: sha256:5c289bdd81df013d1e33dff0563a78641f689328a1fee8a9db25348eeb217d90
 retained receipt: receipts/chat-llm-profiles-validation.json
 retained receipt commit: 008f56f0de5941c30747c7d0893b57440f60b9bc
 receipt hash: 85a98e57b3a8e50fa13de3d24e2fcd39aaff99ea7071f3318719519f78275287
 ```
 
-Validated receipt result:
+Validated retained result remains:
 
 ```text
 state: PASS
@@ -163,74 +87,40 @@ provider execution observed: false
 Site activation observed: false
 ```
 
-## Verification contract
+## Current verification automation
+
+The historical standalone `.github/workflows/validate-chat-llm-profiles.yml` is being consolidated under workflow-cleanup claim `LLMA-WORKFLOW-CONSOLIDATE-CHAT-PROFILES-039`. The current validation carrier is the shared credential-clean dispatcher:
+
+```text
+workflow: .github/workflows/validate.yml
+credential authority: NONE
+runtime credential authority: TV/TVC
+checkout/setup/artifact transport: NONE
+repository writeback: NONE
+activation effect: NONE
+```
+
+The shared dispatcher runs:
 
 ```bash
-python -m pytest tests/test_chat_llm_profiles.py -q
-python scripts/verify_chat_llm_profiles.py --write-receipt
+$PYTHON_BIN -m pytest tests/test_chat_llm_profiles.py -q
+$PYTHON_BIN scripts/verify_chat_llm_profiles.py --write-receipt
 ```
 
-Required negative checks include:
+This preserves deterministic policy and receipt validation on the dispatcher Python 3.11 lane. It does **not** claim that ongoing validation still executes the historical Python 3.9/3.11/3.12 matrix; that matrix remains release evidence above. The retained canonical receipt remains repository evidence; current dispatcher receipt generation is workspace-local validation and is not uploaded or written back by GitHub Actions.
+
+Required negative checks remain: missing canonical feature fails; unadmitted source denies; Claims Chat non-VA source denies; VA lookalike denies; general web cannot masquerade as VA evidence; model memory cannot be a Claims factual source; user record without privacy PASS/consent/hash denies; authority-policy escalation fails.
+
+## Integration continuation
 
 ```text
-missing canonical LLM feature -> fail
-unadmitted external source -> deny
-non-VA external source in Claims Chat -> deny
-VA lookalike hostname -> deny
-general-web source typed as VA evidence -> deny
-model memory used as VA factual source -> deny
-user record without privacy PASS, consent, or hash -> deny
-any authority policy set true -> fail
+Ecosystem Chat runtime binding owner: StegVerse-org/LLM-adapter#18 or canonical successor
+VA Claims Chat runtime binding owner: StegVerse-org/LLM-adapter#90 or canonical successor
+Site projection owner: StegVerse-Labs/Site after machine admission
+Master Records: operational receipt custody only after real runtime execution under its existing owner
 ```
 
-## Next integration goals
-
-### Ecosystem Chat runtime binding
-
-Owner: `StegVerse-org/LLM-adapter#18` or its canonical successor.
-
-```text
-bind ecosystem-chat-llm profile to the existing provider runtime
-preserve full LLM feature projection
-retain source-decision labels and profile hash
-complete authorized persistent endpoint and real-provider gates
-persist provider usage
-obtain provider-usage and transition custody RECORDED
-obtain both reconstruction results PASS
-emit immutable zero-blocker VERIFIED activation receipt
-```
-
-### VA Claims Chat runtime binding
-
-Owner: `StegVerse-org/LLM-adapter#90` or its canonical successor.
-
-```text
-bind va-claims-chat-llm after privacy_guarded_dispatch
-require official-VA-only source decisions before factual generation
-retain user-record facts as separately labeled non-authority records
-consume fresh TVC admission and explicit provider authority
-perform one bounded real provider request
-obtain Master Records custody RECORDED and reconstruction PASS
-project only receipt-verified capability to Site
-```
-
-### Site projection
-
-`StegVerse-Labs/Site` rejected external session ownership when this task was executed, so no Site paths were claimed. After Site machine admission, its canonical owner should project:
-
-```text
-product profile identity
-full LLM feature matrix
-source-policy mode
-source-decision labels
-false authority and activation flags
-profile and receipt hashes
-validation and runtime states
-```
-
-### Master Records
-
-Profile validation is not custody. Future operational receipts may be submitted only through the existing Master Records owner after real runtime execution.
+Profile validation is not provider execution, custody, Site activation, publication, filing, or release authority.
 
 ## Authority boundary
 
@@ -253,16 +143,14 @@ profile validation != live activation
 
 ```text
 issue: StegVerse-org/LLM-adapter#102
-pull request: #103
-merge: COMPLETE
-merge commit: 18a49b8856a34d03d94955637adb4a53c9ccfe81
-task: LLMA-CHAT-LLM-PROFILES-009
-state: RELEASED_COMPLETE
+original implementation PR: #103
+profile-layer state: RELEASED_COMPLETE
 implementation: INSTALLED ON MAIN
-hosted validation: PASS
-receipt retained: PASS
+retained receipt: PASS
+historical 3-runtime compatibility evidence: PASS
+current deterministic validation carrier: .github/workflows/validate.yml
+workflow consolidation claim: LLMA-WORKFLOW-CONSOLIDATE-CHAT-PROFILES-039
 live provider binding: PENDING UNDER ISSUES #18 AND #90
-Site projection: PENDING FUTURE SITE MACHINE ADMISSION
 authority effect: false
 activation effect: false
 manual user action required: false
@@ -271,20 +159,16 @@ manual user action required: false
 ## Completion metrics
 
 ```text
-developed files: 10/10
+profile developed files: COMPLETE
 scaffolding or stubs: 0
 canonical LLM feature declaration: 19/19 for both profiles
 source-policy implementation: 100 percent
-negative tests: 16/16 per Python runtime
-hosted runtime matrix: 3/3
-repository-wide checks: 6/6
-mainline integration: 100 percent
-profile-layer release: 100 percent
+historical negative tests: 16/16 per Python runtime
+historical hosted runtime matrix: 3/3
+mainline profile-layer release: 100 percent
 live product activation: pending under existing owners
 ```
 
 ## Archive condition
 
-The profile-layer workload is complete, released, validated, merged, and durably receipted. No unique implementation or continuation state remains in the originating chat for this slice. Broader Ecosystem Chat and VA Claims Chat live activation remains owned by issues #18 and #90.
-
-ARCHIVE THIS PROFILE-LAYER WORKLOAD.
+The originating profile-layer workload remains complete, released, validated, merged, and durably receipted; its originating chat can remain archived. Workflow consolidation is a separate repository-maintenance claim and does not reopen the profile-layer implementation. Broader Ecosystem Chat and VA Claims Chat live activation remains owned by issues #18 and #90.

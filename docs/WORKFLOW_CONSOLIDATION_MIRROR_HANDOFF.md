@@ -5,9 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/consolidate-chat-profile-validation-20260816
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
+active_claim: LLMA-WORKFLOW-CONSOLIDATE-CHAT-PROFILES-039
+active_claim_state: CLAIMED_FOR_IMPLEMENTATION
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -16,7 +17,7 @@ github_oidc_runtime_authority: NONE
 third_party_runtime_authority: NONE
 ```
 
-Production continuity remains `StegVerse task -> StegVerse worker -> TV/TVC authority -> StegVerse runtime -> StegVerse evidence/continuity`. GitHub Actions may validate source only. Third-party runtimes are not production continuity dependencies.
+Production continuity remains `StegVerse task -> StegVerse worker -> TV/TVC authority -> StegVerse runtime -> StegVerse evidence/continuity`. GitHub Actions may validate source only.
 
 ## Sovereign authority invariants
 
@@ -37,8 +38,6 @@ StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
 ```
 
 ## Retired hosted continuity provenance
-
-These names are retained only for deterministic reconstruction and boundary tests. They are not active execution owners.
 
 ```text
 ecosystem-chat-live-activation.yml: RETIRED — resident StegVerse carrier + TV/TVC owns live activation
@@ -68,60 +67,51 @@ legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 15 #161 c0ea3bd5c3c300cce3be7e8442f30def1c41b07b
 ```
 
-Claims 025-038 are released.
+Claims 025-038 are released. Tranche 15 consolidated the outcome-level objective contract; final Architecture Guard `31965418939` and validate `31965418919` both succeeded with all 61 substantive validation steps successful.
 
-### Tranche 12 — global validate credential and activation cleanup
+## Active tranche 16 — Chat LLM profile validation consolidation
 
-Global `.github/workflows/validate.yml` and its iOS mirror are deterministic-validation-only: `permissions: {}`, anonymous exact-SHA fetch, explicit credential refusal, no schedule, no checkout/setup/upload actions, no hosted activation probe, no repository writeback, no GitHub token runtime/control-plane authority. Final validation run `31937093538` succeeded.
+Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-CHAT-PROFILES-039.json`.
 
-### Tranche 13 — provider-owned usage validation consolidated
+The specialized source of truth `docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md` was read before mutation. It establishes the profile layer as `RELEASED_COMPLETE`, retains historical Python 3.9/3.11/3.12 release evidence and a committed deterministic receipt, and delegates live runtime binding to issues #18 and #90.
 
-PR #159 consolidated `verify_provider_usage_event.py` and its adversarial tests into global validate and removed the standalone provider-usage workflow. Final validate run `31937348003` succeeded.
+Direct inspection of `.github/workflows/validate-chat-llm-profiles.yml` showed a GitHub-hosted 3-runtime matrix using `actions/checkout`, `actions/setup-python`, and `actions/upload-artifact`. Its continuing deterministic capability is the profile policy test suite plus receipt generation. The historical 3-runtime release proof remains preserved; ongoing repository validation does not need a dedicated token/artifact-bearing workflow file.
 
-### Tranche 14 — Ecosystem Chat sovereignty validation consolidated
-
-PR #160 removed `.github/workflows/ecosystem-chat-service-adoption.yml` after preserving `scripts/check_ecosystem_chat_service_adoption.py` in global validate and the iOS mirror. Architecture Guard `31964932357` and validate `31964932396` succeeded. `StegVerse-org/LLM-adapter#18` remains the sovereignty/runtime continuation owner; TV/TVC remains runtime credential authority.
-
-### Tranche 15 — outcome-level objective-contract validation consolidated
-
-PR #161 merged at `c0ea3bd5c3c300cce3be7e8442f30def1c41b07b`; final implementation head `29d9df7b8710a8f11318208b80914caf4af6a5d4`.
-
-The scheduled standalone `.github/workflows/validate-objective-contract.yml` was removed after its unique fail-closed capability was moved into the existing credential-clean global dispatcher and exact iOS mirror:
+Disposition installed on the active branch:
 
 ```text
-$PYTHON_BIN scripts/validate_objective_contract.py
+.github/workflows/validate-chat-llm-profiles.yml
+  -> CONSOLIDATE_INTO_STABLE_DISPATCHER
+  -> removed from active branch
+.github/workflows/validate.yml
+  -> runs $PYTHON_BIN -m pytest tests/test_chat_llm_profiles.py -q
+  -> runs $PYTHON_BIN scripts/verify_chat_llm_profiles.py --write-receipt
+  -> permissions: {}; anonymous exact-SHA fetch; credential refusal
+  -> no artifact upload/writeback/activation/provider execution
+iosnoperiod/github/workflows/validate.yml
+  -> exact mirror contains the same profile validation
+docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md
+  -> preserves historical 3-runtime release evidence
+  -> current validation carrier changed to .github/workflows/validate.yml
 ```
 
-The validator continues to enforce the required outcome-level contract, downstream destinations, false-completion substitutes, false authority flags, evidence paths, and `manual_user_action_required=false` without granting provider, activation, custody, publication, deployment, wallet, or credential authority.
+The current dispatcher only claims its Python 3.11 deterministic validation lane; it does not misrepresent ongoing validation as the historical 3-runtime matrix. Receipt generation is workspace-local validation and is not uploaded or committed by GitHub Actions.
 
-Initial run `31965351547` directly proved the objective-contract step but exposed that an active handoff rewrite had compressed away historical retired-workflow/invariant strings consumed by activation-boundary tests. Those provenance strings were restored instead of weakening tests. Fresh exact-head evidence then passed completely:
+No provider execution, activation, custody, publication, filing, wallet action, or credential authority is added. Tranche 16 is not complete until exact final-head validation passes, its PR merges, claim 039 is released, and this handoff is finalized on main.
 
-```text
-Architecture Guard 31965418939 SUCCESS
-validate 31965418919 SUCCESS
-Validate outcome-level objective contract SUCCESS
-Test live activation automation contract without executing activation SUCCESS
-workflow parity SUCCESS
-Confirm validation-only authority boundary SUCCESS
-all 61 substantive validate steps SUCCESS
-PR #161 merge c0ea3bd5c3c300cce3be7e8442f30def1c41b07b
-```
-
-Claim `tasks/LLMA-WORKFLOW-CONSOLIDATE-OBJECTIVE-CONTRACT-038.json` is released as `MERGED_INTO_CANONICAL_WORKSTREAM`.
-
-## Current accounting
-
-Post-tranche-14 direct default-branch enumeration showed 23 workflow files. Tranche 15 removed exactly one additional default-branch workflow file and added no workflow file, yielding 22 current files on main. Four GitHub Actions registry-only historical paths remain absent from main: `internal-governed-reference.yml`, `stack-conformance.yml`, `portable-node-process-restart-proof.yml`, and `authorized-provider-execution-boundary.yml`.
+## Current accounting — released work only
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_on_main: 22
+workflow_files_current_on_released_main: 22
 workflow_files_removed_or_consolidated: 27
 classified_and_remediated: 30/49 = 61.22%
 remaining_unclassified_or_unconsolidated: 19/49
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
+current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-CHAT-PROFILES-039
 ```
+
+If tranche 16 releases as implemented and no concurrent workflow-file change occurs, main will contain 21 workflow files; removed/consolidated will become 28; classified/remediated will become 31/49 = 63.27%; remaining will become 18/49.
 
 ## Canonical ownership / convergence
 
@@ -133,26 +123,25 @@ local runtime discovery/launch/inference/proof: COMPLETE_RELEASED
 live local-model activation: StegVerse-Labs/.github#60 + resident sovereign heartbeat
 credential/route authority: TV/TVC / StegVerse-Labs/TVC
 HIL runtime/lifecycle: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
-LLM transport and Ecosystem Chat sovereignty: StegVerse-org/LLM-adapter#18
+Ecosystem Chat runtime binding: StegVerse-org/LLM-adapter#18
+VA Claims Chat runtime binding: StegVerse-org/LLM-adapter#90
 StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
 ```
-
-The released local-model/runtime implementation is not duplicated in this workflow lane.
 
 ## Collision boundaries
 
 - Do not recreate sovereign runtime source work.
-- Do not compete with resident heartbeat, TVC route authority, or TVC HIL lifecycle.
-- Do not infer live activation from workflow cleanup.
+- Do not compete with resident heartbeat, TVC route authority, or live-provider owners.
+- Do not infer activation from workflow cleanup.
 - Do not create non-TV/TVC runtime/test tokens.
-- Do not restore GitHub-hosted activation, artifact transport, or repository writeback.
-- Do not recreate retired standalone validation surfaces.
+- Preserve Chat profile policy semantics, retained release receipt, and historical compatibility evidence.
+- Do not restore artifact transport or repository writeback.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
 
-## Next safe task
+## Next task after release
 
-Under a fresh noncolliding claim, read the applicable specialized handoff and classify the next remaining default-branch workflow file against canonical StegVerse owners and the `<=2` target. Necessary deterministic checks should be consolidated into an existing credential-clean dispatcher where technically compatible; recurring operational capability must transfer to a named StegVerse worker before standalone workflow removal.
+Under a fresh claim, read the applicable specialized handoff and classify the next remaining workflow file against canonical StegVerse owners and the `<=2` target.
 
 ## Archive condition
 
-This session remains a distinct support lane while workflow/token remediation remains incomplete. Twenty-two actual workflow files remain on main versus the adopted <=2 target, and 19/49 canonical audit-start surfaces remain unclassified/unconsolidated. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
+This session remains a distinct support lane while workflow/token remediation remains incomplete. Released main has 22 actual workflow files versus the adopted <=2 target, 19/49 audit-start surfaces remain unclassified/unconsolidated, and claim 039 is active.
