@@ -5,12 +5,13 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/transfer-service-gateway-proof-20260816
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove Render/third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
-role: ACTIVE_DISTINCT_SUPPORT
+active_claim: tasks/LLMA-WORKFLOW-CONSOLIDATION-SERVICE-GATEWAY-031.json
+role: CLAIMED_FOR_IMPLEMENTATION
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
+github_oidc_runtime_authority: NONE
 render_runtime_authority: NONE
 ```
 
@@ -24,8 +25,10 @@ resident StegVerse carrier + TV/TVC
 resident sovereign carrier
 GitHub token as provider credential: prohibited
 GitHub token as runtime/control-plane authority: prohibited
+GitHub OIDC as runtime/control-plane authority: prohibited
 repository secrets for provider/Master Records production path: prohibited
 TV/TVC protected values exported into GitHub Actions: prohibited
+GitHub-hosted runtime secret generation: prohibited
 GitHub-hosted review/publication credential minting: prohibited
 third-party host generated review/publication credential: prohibited
 Render production/runtime dependency: prohibited
@@ -64,117 +67,108 @@ render.yaml
 hil-rtg-notification-contract.yml
 ```
 
-All completed tranche claims 025-030 are released into the canonical workstream.
+All completed tranche claims 025-030 are released into the canonical workstream. Tranche 7 final-head validation passed HIL Compatibility `31932303066`, Architecture Guard `31932303061`, Validate Provider-Owned Usage Event `31932303068`, and validate `31932303074`.
 
-## Completed tranche 7 — HIL RTG deterministic validation consolidation
+## Current tranche 8 — service-gateway activation proof transfer
 
-PR #153 merged at `a314dbc3e82a0155b59067d59381995bb74b300f`.
+Exact claim: `tasks/LLMA-WORKFLOW-CONSOLIDATION-SERVICE-GATEWAY-031.json`.
 
-Disposition:
+Direct inspection of `.github/workflows/service-gateway-deploy.yml` found a GitHub-hosted activation proof with:
 
 ```text
-.github/workflows/hil-rtg-notification-contract.yml
-  -> CONSOLIDATE_INTO_STABLE_DISPATCHER
-  removed by ddf0d7fc1c587eff9814a8338e0fb6ea2a9878be
+permissions: contents:read + id-token:write
+GitHub OIDC issuer policy bound to service-gateway-deploy.yml
+TVC receipt source labelled github_actions_runtime
+runner-local STEGVERSE_HIL_RECEIPT_KEY generated with Python secrets.token_hex(48)
+runner-local gateway launch using that generated value
+ephemeral GitHub-hosted activation proof as execution venue
+```
+
+This conflicts with the canonical production path and TV/TVC-only credential authority. The workflow does not provide an admissible persistent runtime and cannot remain a production activation mechanism.
+
+Disposition on this branch:
+
+```text
+.github/workflows/service-gateway-deploy.yml
+  -> TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+  removed by e62d4bb31a90aee7a444de2e0f52bd54ecf21bf5
 
 .github/workflows/hil-deployment-profile.yml
   -> KEEP_STANDALONE_EXCEPTION_TEMPORARY_STABLE_DISPATCHER
-  updated by ce3127e39939dcd919b03031af37b54d7f8571b8
+  updated by 4a967ba10cca8d64b34382da3f77ad97fde2520b
 ```
 
-The retained HIL compatibility dispatcher uses `permissions: {}`, refuses credential-bearing environment variables, and fetches the exact source anonymously. It now executes the RTG notification/readiness/authority/privacy verifier and its former standalone test set while preserving the RTG runtime modules, schemas and tests.
+The deterministic capability is preserved by adding `tests/test_service_gateway.py` to the token-refusing HIL compatibility dispatcher. That test set already validates TVC-bound readiness, durable PDF intake, idempotent duplicate recovery, Site-format submission receipt integrity, and rejection of provider keys in the intake role. No service-gateway source or test is deleted.
 
-The first two compatibility attempts exposed three stale assertions in `scripts/verify_hil_rtg_notification_contract.py`; those were reconciled to the installed runtime rather than bypassed:
+Production runtime/activation remains assigned to the resident sovereign carrier + StegVerse-Labs/.github #59/#65 under TV/TVC credential authority. HIL runtime/lifecycle remains owned by `StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md`; TVC #8 private-review work remains untouched.
 
-```text
-388de741c1dac821023820b9f0aeccc70f71a499
-  old generic REDACTED_AFTER_EXPIRY expectation -> exact runtime REDACTED_AFTER_DELIVERY + REDACTED_AFTER_RETRY_EXPIRY states
-
-2f32f6f73355a9523c2b3d00f364ba74f1f1c3bf
-  obsolete _tvc_authority_projection expectation -> current _authority_evidence / authority-evidence discovery contract
-
-1c1a6986fd4185a69464cfd1313e3e1825a817df
-  brittle receipt-string split -> privacy check scoped to actual site_hil_submission receipt construction
-```
-
-Final-head validation on `1c1a6986fd4185a69464cfd1313e3e1825a817df` passed:
-
-```text
-HIL Compatibility Validation 31932303066 SUCCESS
-Architecture Guard 31932303061 SUCCESS
-Validate Provider-Owned Usage Event 31932303068 SUCCESS
-validate 31932303074 SUCCESS
-```
-
-Exact PR changed-file set:
-
-```text
-.github/workflows/hil-deployment-profile.yml
-.github/workflows/hil-rtg-notification-contract.yml
-docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md
-scripts/verify_hil_rtg_notification_contract.py
-tasks/LLMA-WORKFLOW-CONSOLIDATION-HIL-RTG-030.json
-```
-
-Claim `tasks/LLMA-WORKFLOW-CONSOLIDATION-HIL-RTG-030.json` is released as `MERGED_INTO_CANONICAL_WORKSTREAM` by commit `1ab28297a00994e0694014847ff94a6eaa6c1e5a`.
-
-No HIL source module, schema or test was deleted. No credential was introduced. No production activation, review, publication, Master Record, wallet or trade authority was granted.
-
-## Current accounting
+If this exact tranche passes final-head validation and merges:
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current: 28
-workflow_files_removed_or_consolidated: 21
-classified_and_remediated: 22/49 = 44.90%
-remaining_unclassified_or_unconsolidated: 27/49 audit-start surfaces
+workflow_files_current_before_tranche: 28
+workflow_files_after_tranche: 27
+workflow_files_removed_or_consolidated_after_tranche: 22
+classified_and_remediated_after_tranche: 23/49 = 46.94%
+remaining_unclassified_or_unconsolidated: 26/49 audit-start surfaces
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
 ```
-
-The 28-file count is reconciled from the verified 29-file post-tranche-6 state minus the exact one workflow-file deletion in PR #153; the PR added no workflow file.
 
 ## Canonical ownership / convergence
 
 ```text
 organization authority handoff: StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
+service-gateway runtime/activation: resident sovereign carrier + StegVerse-Labs/.github#59/#65
+credential authority: TV/TVC
 HIL runtime/lifecycle: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
 HIL authenticated private review: StegVerse-Labs/TVC#8
 Site projection: StegVerse-Labs/Site#67
 Master Records: master-records/orchestration#13
 sovereign local model/runtime: StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md
-resident activation/control plane: resident sovereign carrier + StegVerse-Labs/.github#59/#60/#65
 StegFin continuation: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
 ```
 
-Formal local-model development and local discovery/launch/inference/proof remain `COMPLETE_RELEASED` and must not be duplicated here. HIL private-review work remains claimed by TVC #8. This workflow lane grants no HIL activation, publication, release, Master Record, provider, wallet or trade authority.
+Formal local-model development and local discovery/launch/inference/proof remain `COMPLETE_RELEASED` and must not be duplicated here. This workflow lane grants no HIL activation, publication, release, Master Record, provider, wallet or trade authority.
 
 ## Collision boundaries
 
+- Do not duplicate resident carrier activation work or TVC credential resolution.
 - Do not duplicate TVC #8 authenticated private-review implementation.
 - Do not create/export review, publication, provider or Master Records credentials.
-- Do not infer HIL product activation from deterministic validation or workflow consolidation.
-- Do not make Render or another third-party host a production dependency.
+- Do not infer persistent service-gateway or HIL activation from repository validation.
+- Do not make GitHub OIDC, Render, or another third-party host a production dependency.
 - Do not recreate released local-model/runtime work.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
 
-## Next safe families
+## Next safe families after claim 031 releases
 
 ```text
-remaining HIL lifecycle/evidence workflows
-  inspect against canonical TVC ownership; preserve only deterministic non-authorizing validation
+remaining HIL / service-gateway validation workflows
+  inspect individually; preserve deterministic validation while transferring production execution to StegVerse/TV-TVC
 
 VACC workflow family
   read current VACC handoffs and active claims before mutation
-  preserve unique VA validation while transferring runtime/provider execution to canonical VACC/TV-TVC owners
 
-publication/image/service-gateway workflows
-  classify separately; optional publication/mirror permission does not grant runtime authority
+publication/image workflows
+  classify separately; publication permission does not grant runtime authority
 
 global validate.yml
   redistribute unique validation, eliminate repository-token writeback and hosted token mechanics, then retire or reduce to a token-clean validation surface
 ```
 
+## Validation / release requirements for tranche 8
+
+```text
+HIL Compatibility Validation: required PASS
+Architecture Guard: required PASS
+Validate Provider-Owned Usage Event: required PASS
+validate: required PASS
+PR changed-file set: exact bounded surfaces only
+post-merge workflow-file count: direct verification required
+claim 031: release to MERGED_INTO_CANONICAL_WORKSTREAM only after merge
+handoff: finalize on main after merge
+```
+
 ## Archive condition
 
-This session remains a distinct support lane while workflow/token remediation remains incomplete. Twenty-eight workflow files remain versus the adopted <=2 target, 27/49 audit-start surfaces remain unclassified/unconsolidated, and `validate.yml` still carries repository-token checkout/artifact/writeback mechanics that must be redistributed or redesigned. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct validation/integration/reconciliation role remains.
+This session remains a distinct support lane while workflow/token remediation remains incomplete. If tranche 8 merges, 27 workflow files will remain versus the adopted <=2 target, 26/49 audit-start surfaces will remain unclassified/unconsolidated, and `validate.yml` will still carry repository-token checkout/artifact/writeback mechanics that must be redistributed or redesigned. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct validation/integration/reconciliation role remains.

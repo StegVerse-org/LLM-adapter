@@ -1,0 +1,62 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATION-SERVICE-GATEWAY-031",
+  "originating_goal": "Remove GitHub-hosted service-gateway activation/credential proof and transfer production activation to the resident StegVerse/TV-TVC control plane while retaining deterministic service-gateway validation in the token-refusing dispatcher.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/transfer-service-gateway-proof-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
+  "state": "CLAIMED_FOR_VALIDATION",
+  "claim_timestamp": "2026-08-16T01:52:00-05:00",
+  "claim_release_condition": "Merge the exact bounded service-gateway proof transfer after final-head validation, verify post-merge workflow-file count, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "surfaces": [
+    ".github/workflows/service-gateway-deploy.yml",
+    ".github/workflows/hil-deployment-profile.yml",
+    "tests/test_service_gateway.py",
+    "llm_adapter/service_gateway.py",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATION-SERVICE-GATEWAY-031.json"
+  ],
+  "classifications": {
+    ".github/workflows/service-gateway-deploy.yml": "TRANSFER_TO_STEGVERSE_TASK_OR_WORKER",
+    ".github/workflows/hil-deployment-profile.yml": "KEEP_STANDALONE_EXCEPTION_TEMPORARY_STABLE_DISPATCHER"
+  },
+  "implementation_evidence": [
+    "4a967ba10cca8d64b34382da3f77ad97fde2520b folded tests/test_service_gateway.py into the token-refusing HIL compatibility dispatcher and added its path trigger",
+    "e62d4bb31a90aee7a444de2e0f52bd54ecf21bf5 removed the GitHub-hosted service gateway activation/OIDC proof workflow",
+    "c8c47ee3e1d9763598b33d854f9801e01ebdef98 recorded the active transfer and projected accounting in the canonical handoff"
+  ],
+  "canonical_owners": {
+    "service_gateway_runtime_and_activation": "resident sovereign carrier + StegVerse-Labs/.github#59/#65",
+    "credential_authority": "TV/TVC",
+    "hil_runtime_and_lifecycle": "StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md",
+    "hil_private_review": "StegVerse-Labs/TVC#8"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "github_oidc_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "github_hosted_runtime_secret_generation_allowed": false
+  },
+  "collision_boundaries": [
+    "Do not duplicate resident carrier activation work or TVC credential resolution.",
+    "Do not delete service_gateway.py or its deterministic tests.",
+    "Do not infer persistent gateway activation from repository validation.",
+    "Do not create a replacement hosted runtime, OIDC authority, or provider credential.",
+    "Do not touch StegFin signing, broadcast, settlement, or provider execution."
+  ],
+  "expected_evidence": [
+    "HIL Compatibility Validation PASS on final head",
+    "Architecture Guard PASS on final head",
+    "Validate Provider-Owned Usage Event PASS on final head",
+    "validate PASS on final head",
+    "exact PR merged",
+    "post-merge workflow-file count",
+    "released claim and finalized canonical handoff"
+  ],
+  "next_executable_action": "Open the exact PR and validate its final head; merge only if all required validation groups pass.",
+  "next_task_after_release": "Inspect the next unclaimed workflow family against its canonical handoff before creating a new claim.",
+  "authority_effect": false,
+  "activation_effect": false
+}
