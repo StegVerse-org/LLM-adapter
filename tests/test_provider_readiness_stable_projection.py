@@ -2,43 +2,25 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOW = ROOT / ".github/workflows/ecosystem-chat-live-activation.yml"
+LIVE_WORKFLOW = ROOT / ".github/workflows/ecosystem-chat-live-activation.yml"
+GITHUB_MODELS_WORKFLOW = ROOT / ".github/workflows/ecosystem-chat-github-models-execution.yml"
+HANDOFF = ROOT / "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md"
+ORG_HANDOFF_POINTER = "StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md"
 
 
-def _provider_projection_block(source: str) -> str:
-    start = source.index("      - name: Evaluate authorized provider configuration")
-    end = source.index("      - name: Install canonical service dependencies", start)
-    return source[start:end]
+def test_hosted_provider_activation_paths_are_retired() -> None:
+    assert not LIVE_WORKFLOW.exists()
+    assert not GITHUB_MODELS_WORKFLOW.exists()
 
 
-def test_repository_retained_provider_readiness_is_semantic_not_clock_driven() -> None:
-    source = WORKFLOW.read_text(encoding="utf-8")
-    block = _provider_projection_block(source)
-
+def test_provider_readiness_is_owned_by_tvc_and_sovereign_carrier() -> None:
+    source = HANDOFF.read_text(encoding="utf-8")
     for required in (
-        '"state": "READY_FOR_EXECUTION" if ready else "CONFIGURATION_REQUIRED"',
-        '"blockers": [f"authorized_configuration_missing:{name}" for name in missing]',
-        '"configuration": {',
-        '"runtime_path": [',
-        '"result_sha256"',
-        "receipts/ecosystem-chat-authorized-provider-activation.latest.json",
+        "credential_authority: TV/TVC",
+        "github_token_runtime_authority: NONE",
+        "GitHub token as provider credential: prohibited",
+        "repository secrets for provider/Master Records production path: prohibited",
+        "resident sovereign carrier",
+        ORG_HANDOFF_POINTER,
     ):
-        assert required in block
-
-    for prohibited in (
-        '"observed_at"',
-        "datetime.now",
-        "timezone.utc",
-        "from datetime import",
-    ):
-        assert prohibited not in block
-
-
-def test_provider_readiness_transition_is_still_durably_retained() -> None:
-    source = WORKFLOW.read_text(encoding="utf-8")
-    assert "Persist authorized provider activation evidence" in source
-    assert "git add receipts/ecosystem-chat-authorized-provider-activation.latest.json" in source
-    assert 'echo "Authorized provider activation evidence unchanged."' in source
-    assert 'git commit -m "chore: retain authorized provider activation evidence [skip ci]"' in source
-    assert "actions/upload-artifact@v4" in source
-    assert "ecosystem-chat-authorized-provider-activation-${{ github.run_id }}-${{ github.run_attempt }}" in source
+        assert required in source
