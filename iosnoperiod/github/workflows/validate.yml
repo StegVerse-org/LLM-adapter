@@ -1,214 +1,212 @@
-# Bounded branch-only probe for the existing validate -> live-activation workflow_run path.
+# Deterministic repository validation only. Live activation belongs to StegVerse resident workers + TV/TVC.
 name: validate
 
 on:
   push:
   pull_request:
   workflow_dispatch:
-  schedule:
-    - cron: '23 */6 * * *'
 
-permissions:
-  contents: write
+permissions: {}
+
+concurrency:
+  group: validate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install validation dependencies
-        run: python -m pip install -e '.[dev]'
-      - name: Verify StegDeploy runtime contract
-        run: python scripts/verify_stegdeploy_runtime.py
-      - name: Verify StegDeploy image receipt retention
-        run: python scripts/check_stegdeploy_image_receipt_retention.py
-      - name: Check lightweight package init
-        run: python scripts/check_lightweight_package_init.py
-      - name: Verify micro-node return path
-        run: python scripts/verify_micro_node_return_path.py
-      - name: Verify provider boundary
-        run: python scripts/verify_ai_entry_provider_boundary.py
-      - name: Verify backend service
-        run: python scripts/verify_ai_entry_backend_service.py
-      - name: Verify endpoint
-        run: python scripts/verify_ai_entry_endpoint.py
-      - name: Verify service wrapper
-        run: python scripts/verify_ai_entry_service_wrapper.py
-      - name: Check no-manual-task wiring
-        run: python scripts/check_ai_entry_no_manual_tasks.py
-      - name: Verify free-tier quota
-        run: python scripts/verify_free_tier_quota.py
-      - name: Verify free-tier limits
-        run: python scripts/verify_free_tier_limits.py
-      - name: Verify free-tier metadata
-        run: python scripts/verify_ai_entry_free_tier_metadata.py
-      - name: Verify capability manifest
-        run: python scripts/verify_free_tier_capability_manifest.py
-      - name: Verify transition candidate
-        run: python scripts/verify_llm_transition_candidate.py examples/llm_transition_candidate.json
-      - name: Verify recursive comparison telemetry
-        run: python scripts/verify_recursive_comparison.py
-      - name: Verify adapter role and provider usage
-        run: python scripts/verify_provider_usage.py
-      - name: Verify authenticated usage session endpoint
-        run: python scripts/verify_usage_session_api.py
-      - name: Verify External Chat staging posture
-        run: python scripts/verify_external_publication_staging.py
-      - name: Test micro-node return path
-        run: python -m pytest tests/test_micro_node_return_path.py -v
-      - name: Test provider boundary
-        run: python -m pytest tests/test_ai_entry_provider_boundary.py -v
-      - name: Test backend service
-        run: python -m pytest tests/test_ai_entry_backend_service.py -v
-      - name: Test backend preview marker
-        run: python -m pytest tests/test_ai_entry_backend_preview_marker.py -v
-      - name: Test endpoint
-        run: python -m pytest tests/test_ai_entry_endpoint.py -v
-      - name: Test service wrapper
-        run: python -m pytest tests/test_ai_entry_service_wrapper.py -v
-      - name: Test free-tier quota
-        run: python -m pytest tests/test_free_tier_quota.py -v
-      - name: Test free-tier limits
-        run: python -m pytest tests/test_free_tier_limits.py -v
-      - name: Test free-tier trust metadata
-        run: python -m pytest tests/test_ai_entry_free_tier_trust_metadata.py -v
-      - name: Test transition candidate
-        run: python -m pytest tests/test_transition_candidate.py -v
-      - name: Test recursive comparison telemetry
-        run: python -m pytest tests/test_recursive_comparison.py -v
-      - name: Test adapter role and provider usage
-        run: python -m pytest tests/test_provider_usage.py -v
-      - name: Test Master-Records provider usage custody submission
-        run: python -m pytest tests/test_master_records_usage_submission.py -v
-      - name: Test live activation automation contract
-        run: python -m pytest tests/test_live_activation_automation_contract.py tests/test_live_activation_monitor_no_deploy_churn.py tests/test_provider_readiness_stable_projection.py tests/test_live_activation_status_persistence.py -v
-      - name: Test StegVerse node advertisement contract
-        run: python -m pytest tests/test_node_advertisement.py -v
-      - name: Check immutable verified activation receipt publication
-        run: python scripts/check_ecosystem_chat_verified_receipt_contract.py
-      - name: Probe deployed Ecosystem Chat vertical slice
-        id: live_probe
-        continue-on-error: true
-        env:
-          STEGVERSE_LIVE_ACTIVATION_ATTEMPTS: "5"
-          STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS: "8"
-          STEGVERSE_LIVE_ACTIVATION_TIMEOUT_SECONDS: "35"
-        run: python scripts/verify_live_ecosystem_chat_activation.py
-      - name: Write stable activation status from validation probe
-        if: always()
-        run: python scripts/write_live_activation_status.py
-      - name: Upload deployed Ecosystem Chat probe evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ecosystem-chat-live-probe-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            receipts/ecosystem-chat-live-activation.latest.json
-            reports/ecosystem-chat-live-activation-status.json
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Retain and persist current activation evidence
-        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        continue-on-error: true
+      - name: Refuse credential-bearing environment
+        shell: bash
         run: |
-          if [ -f receipts/ecosystem-chat-live-activation.latest.json ]; then
-            state="$(python - <<'PY'
-          import json
-          from pathlib import Path
-          print(json.loads(Path('receipts/ecosystem-chat-live-activation.latest.json').read_text()).get('state', 'PENDING'))
-          PY
-          )"
-            if [ "$state" = "VERIFIED" ] && [ ! -f receipts/ecosystem-chat-live-activation.verified.json ]; then
-              cp receipts/ecosystem-chat-live-activation.latest.json receipts/ecosystem-chat-live-activation.verified.json
+          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT TVC_EPHEMERAL_GITHUB_TOKEN STEGVERSE_PROVIDER_TOKEN STEGVERSE_MASTER_RECORDS_TOKEN STEGVERSE_HIL_REVIEW_TOKEN STEGVERSE_HIL_PUBLICATION_TOKEN ACTIONS_RUNTIME_TOKEN ACTIONS_ID_TOKEN_REQUEST_TOKEN; do
+            if [ -n "${!key:-}" ]; then
+              echo "credential_exposed:$key"
+              exit 1
             fi
-            python - <<'PY'
-          import json
-          from pathlib import Path
-          latest = json.loads(Path('receipts/ecosystem-chat-live-activation.latest.json').read_text())
-          if latest.get('state') == 'VERIFIED':
-              verified = json.loads(Path('receipts/ecosystem-chat-live-activation.verified.json').read_text())
-              if verified != latest or verified.get('blockers') != []:
-                  raise SystemExit('verified activation receipt retention failed')
-          PY
-          else
-            echo "No live observation receipt produced; retaining fail-closed semantic status only."
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f reports/ecosystem-chat-live-activation-status.json
-          if [ -f receipts/ecosystem-chat-live-activation.verified.json ]; then
-            git add receipts/ecosystem-chat-live-activation.verified.json
-          fi
-          if git diff --cached --quiet; then
-            echo "Current activation evidence unchanged."
-          else
-            git commit -m "chore: retain validation-owned Ecosystem Chat activation status [skip ci]"
-            git pull --rebase --autostash
-            git push
-          fi
-      - name: Test authenticated usage session endpoint
-        run: python -m pytest tests/test_usage_session_api.py -v
-      - name: Test system-boundary declaration lifecycle, fixture provenance, and workflow evidence
-        run: python -m pytest tests/test_system_boundary.py tests/test_system_boundary_binding.py tests/test_system_boundary_receipt.py tests/test_system_boundary_lifecycle.py tests/test_system_boundary_sdk_fixture.py tests/test_system_boundary_fixture_provenance.py tests/test_system_boundary_workflow_evidence.py -v
-      - name: Test External Chat compatibility
-        run: python -m pytest tests/test_external_framework_compatibility.py -v
-      - name: Test External Review package intake
-        run: python -m pytest tests/test_external_review_api.py::test_package_only_intake_is_authenticated_append_only_and_idempotent -v
-      - name: Test External Review package conflict
-        run: python -m pytest tests/test_external_review_api.py::test_package_rejects_raw_submission_and_conflicting_content -v
-      - name: Test External Review delegated receipt
-        run: python -m pytest tests/test_external_review_api.py::test_delegated_reviewer_can_issue_one_identity_bound_receipt -v
-      - name: Test External Review identity drift
-        run: python -m pytest tests/test_external_review_api.py::test_scope_and_identity_drift_fail_closed -v
-      - name: Test External Review expired delegation
-        run: python -m pytest tests/test_external_review_api.py::test_expired_reviewer_delegation_is_rejected -v
-      - name: Test External Chat publication and mutation
-        run: python -m pytest tests/test_external_review_publication.py tests/test_external_publication_mutation.py -v
-      - name: Check workflow parity
-        run: python scripts/check_workflow_parity.py
-      - name: Check authority boundary
-        run: python scripts/check_ai_entry_authority_boundary.py
-      - name: Check receipt boundary
-        run: python scripts/check_ai_entry_receipt_boundary.py
-      - name: Check provider capture boundary
-        run: python scripts/check_ai_entry_provider_capture_boundary.py
-      - name: Check provider capture fixtures
-        run: python scripts/check_ai_entry_provider_capture_fixtures.py
-      - name: Check provider capture completion
-        run: python scripts/check_ai_entry_provider_capture_completion.py
-      - name: Check recovery boundary
-        run: python scripts/check_ai_entry_recovery_boundary.py
-      - name: Run canonical Goal 4 verification
-        run: python scripts/verify_goal4_full.py
-      - name: Write Ecosystem Chat destination activation state
-        if: always()
+          done
+
+      - name: Fetch exact source anonymously
+        shell: bash
         env:
-          VALIDATION_JOB_STATUS: ${{ job.status }}
-        run: python scripts/write_ecosystem_chat_destination_activation_state.py
-      - name: Upload destination activation state
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ecosystem-chat-destination-activation-state-${{ github.run_id }}-${{ github.run_attempt }}
-          path: reports/ecosystem-chat-destination-activation-state.json
-          if-no-files-found: error
-          retention-days: 30
-      - name: Persist destination activation state
-        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        continue-on-error: true
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f reports/ecosystem-chat-destination-activation-state.json
-          if git diff --cached --quiet; then
-            echo "Destination activation state unchanged."
+          git init .
+          git remote add origin https://github.com/StegVerse-org/LLM-adapter.git
+          git -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+
+      - name: Resolve Python 3.11 without token-backed setup actions
+        shell: bash
+        run: |
+          set -euo pipefail
+          selected=""
+          if command -v python3.11 >/dev/null 2>&1; then
+            selected="$(command -v python3.11)"
           else
-            git commit -m "Update Ecosystem Chat destination activation state [skip ci]"
-            git pull --rebase --autostash
-            git push
+            selected="$(find "${RUNNER_TOOL_CACHE:-/nonexistent}" -type f -name python 2>/dev/null | grep -E '[/\\]Python[/\\]3\.11([./\\]|$)' | head -n 1 || true)"
           fi
+          if [ -z "$selected" ]; then
+            bootstrap="$(command -v python3 || command -v python || true)"
+            if [ -z "$bootstrap" ]; then
+              echo "bootstrap_python_not_found"
+              exit 1
+            fi
+            "$bootstrap" -m pip install --user uv
+            uv_bin="$(command -v uv || true)"
+            if [ -z "$uv_bin" ]; then
+              user_base="$($bootstrap -m site --user-base)"
+              uv_bin="$user_base/bin/uv"
+            fi
+            "$uv_bin" python install 3.11
+            selected="$($uv_bin python find 3.11)"
+          fi
+          echo "PYTHON_BIN=$selected" >> "$GITHUB_ENV"
+          "$selected" --version
+          "$selected" - <<'PY'
+          import sys
+          assert sys.version_info[:2] == (3, 11), sys.version
+          print('GLOBAL_VALIDATE_PYTHON=PASS')
+          PY
+
+      - name: Install validation dependencies
+        run: "$PYTHON_BIN -m pip install -e '.[dev]'"
+      - name: Verify StegDeploy runtime contract
+        run: "$PYTHON_BIN scripts/verify_stegdeploy_runtime.py"
+      - name: Verify StegDeploy image receipt retention
+        run: "$PYTHON_BIN scripts/check_stegdeploy_image_receipt_retention.py"
+      - name: Check lightweight package init
+        run: "$PYTHON_BIN scripts/check_lightweight_package_init.py"
+      - name: Verify micro-node return path
+        run: "$PYTHON_BIN scripts/verify_micro_node_return_path.py"
+      - name: Verify provider boundary
+        run: "$PYTHON_BIN scripts/verify_ai_entry_provider_boundary.py"
+      - name: Verify backend service
+        run: "$PYTHON_BIN scripts/verify_ai_entry_backend_service.py"
+      - name: Verify endpoint
+        run: "$PYTHON_BIN scripts/verify_ai_entry_endpoint.py"
+      - name: Verify service wrapper
+        run: "$PYTHON_BIN scripts/verify_ai_entry_service_wrapper.py"
+      - name: Check no-manual-task wiring
+        run: "$PYTHON_BIN scripts/check_ai_entry_no_manual_tasks.py"
+      - name: Verify free-tier quota
+        run: "$PYTHON_BIN scripts/verify_free_tier_quota.py"
+      - name: Verify free-tier limits
+        run: "$PYTHON_BIN scripts/verify_free_tier_limits.py"
+      - name: Verify free-tier metadata
+        run: "$PYTHON_BIN scripts/verify_ai_entry_free_tier_metadata.py"
+      - name: Verify capability manifest
+        run: "$PYTHON_BIN scripts/verify_free_tier_capability_manifest.py"
+      - name: Verify transition candidate
+        run: "$PYTHON_BIN scripts/verify_llm_transition_candidate.py examples/llm_transition_candidate.json"
+      - name: Verify recursive comparison telemetry
+        run: "$PYTHON_BIN scripts/verify_recursive_comparison.py"
+      - name: Verify adapter role and provider usage
+        run: "$PYTHON_BIN scripts/verify_provider_usage.py"
+      - name: Verify authenticated usage session endpoint
+        run: "$PYTHON_BIN scripts/verify_usage_session_api.py"
+      - name: Verify External Chat staging posture
+        run: "$PYTHON_BIN scripts/verify_external_publication_staging.py"
+      - name: Test micro-node return path
+        run: "$PYTHON_BIN -m pytest tests/test_micro_node_return_path.py -v"
+      - name: Test provider boundary
+        run: "$PYTHON_BIN -m pytest tests/test_ai_entry_provider_boundary.py -v"
+      - name: Test backend service
+        run: "$PYTHON_BIN -m pytest tests/test_ai_entry_backend_service.py -v"
+      - name: Test backend preview marker
+        run: "$PYTHON_BIN -m pytest tests/test_ai_entry_backend_preview_marker.py -v"
+      - name: Test endpoint
+        run: "$PYTHON_BIN -m pytest tests/test_ai_entry_endpoint.py -v"
+      - name: Test service wrapper
+        run: "$PYTHON_BIN -m pytest tests/test_ai_entry_service_wrapper.py -v"
+      - name: Test free-tier quota
+        run: "$PYTHON_BIN -m pytest tests/test_free_tier_quota.py -v"
+      - name: Test free-tier limits
+        run: "$PYTHON_BIN -m pytest tests/test_free_tier_limits.py -v"
+      - name: Test free-tier trust metadata
+        run: "$PYTHON_BIN -m pytest tests/test_ai_entry_free_tier_trust_metadata.py -v"
+      - name: Test transition candidate
+        run: "$PYTHON_BIN -m pytest tests/test_transition_candidate.py -v"
+      - name: Test recursive comparison telemetry
+        run: "$PYTHON_BIN -m pytest tests/test_recursive_comparison.py -v"
+      - name: Test adapter role and provider usage
+        run: "$PYTHON_BIN -m pytest tests/test_provider_usage.py -v"
+      - name: Test Master-Records provider usage custody submission
+        run: "$PYTHON_BIN -m pytest tests/test_master_records_usage_submission.py -v"
+      - name: Test live activation automation contract without executing activation
+        run: >-
+          "$PYTHON_BIN" -m pytest
+          tests/test_live_activation_automation_contract.py
+          tests/test_live_activation_monitor_no_deploy_churn.py
+          tests/test_provider_readiness_stable_projection.py
+          tests/test_live_activation_status_persistence.py -v
+      - name: Test StegVerse node advertisement contract
+        run: "$PYTHON_BIN -m pytest tests/test_node_advertisement.py -v"
+      - name: Check immutable verified activation receipt contract
+        run: "$PYTHON_BIN scripts/check_ecosystem_chat_verified_receipt_contract.py"
+      - name: Test authenticated usage session endpoint
+        run: "$PYTHON_BIN -m pytest tests/test_usage_session_api.py -v"
+      - name: Test system-boundary declaration lifecycle, fixture provenance, and workflow evidence
+        run: >-
+          "$PYTHON_BIN" -m pytest
+          tests/test_system_boundary.py
+          tests/test_system_boundary_binding.py
+          tests/test_system_boundary_receipt.py
+          tests/test_system_boundary_lifecycle.py
+          tests/test_system_boundary_sdk_fixture.py
+          tests/test_system_boundary_fixture_provenance.py
+          tests/test_system_boundary_workflow_evidence.py -v
+      - name: Test External Chat compatibility
+        run: "$PYTHON_BIN -m pytest tests/test_external_framework_compatibility.py -v"
+      - name: Test External Review package intake
+        run: "$PYTHON_BIN -m pytest tests/test_external_review_api.py::test_package_only_intake_is_authenticated_append_only_and_idempotent -v"
+      - name: Test External Review package conflict
+        run: "$PYTHON_BIN -m pytest tests/test_external_review_api.py::test_package_rejects_raw_submission_and_conflicting_content -v"
+      - name: Test External Review delegated receipt
+        run: "$PYTHON_BIN -m pytest tests/test_external_review_api.py::test_delegated_reviewer_can_issue_one_identity_bound_receipt -v"
+      - name: Test External Review identity drift
+        run: "$PYTHON_BIN -m pytest tests/test_external_review_api.py::test_scope_and_identity_drift_fail_closed -v"
+      - name: Test External Review expired delegation
+        run: "$PYTHON_BIN -m pytest tests/test_external_review_api.py::test_expired_reviewer_delegation_is_rejected -v"
+      - name: Test External Chat publication and mutation
+        run: "$PYTHON_BIN -m pytest tests/test_external_review_publication.py tests/test_external_publication_mutation.py -v"
+      - name: Check workflow parity
+        run: "$PYTHON_BIN scripts/check_workflow_parity.py"
+      - name: Check authority boundary
+        run: "$PYTHON_BIN scripts/check_ai_entry_authority_boundary.py"
+      - name: Check receipt boundary
+        run: "$PYTHON_BIN scripts/check_ai_entry_receipt_boundary.py"
+      - name: Check provider capture boundary
+        run: "$PYTHON_BIN scripts/check_ai_entry_provider_capture_boundary.py"
+      - name: Check provider capture fixtures
+        run: "$PYTHON_BIN scripts/check_ai_entry_provider_capture_fixtures.py"
+      - name: Check provider capture completion
+        run: "$PYTHON_BIN scripts/check_ai_entry_provider_capture_completion.py"
+      - name: Check recovery boundary
+        run: "$PYTHON_BIN scripts/check_ai_entry_recovery_boundary.py"
+      - name: Run canonical Goal 4 verification
+        run: "$PYTHON_BIN scripts/verify_goal4_full.py"
+
+      - name: Confirm validation-only authority boundary
+        shell: bash
+        run: |
+          "$PYTHON_BIN" - <<'PY'
+          from pathlib import Path
+          workflow = Path('.github/workflows/validate.yml').read_text(encoding='utf-8')
+          forbidden = [
+              'actions/' + 'checkout@',
+              'actions/' + 'setup-python@',
+              'actions/' + 'upload-artifact@',
+              'persist-' + 'credentials',
+              'git ' + 'push',
+              'verify_' + 'live_ecosystem_chat_activation.py',
+              'schedule' + ':',
+          ]
+          assert 'permissions: {}' in workflow
+          assert 'cancel-in-progress: true' in workflow
+          assert all(marker not in workflow for marker in forbidden), forbidden
+          print('GLOBAL_VALIDATE_CREDENTIAL_AUTHORITY=TV_TVC')
+          print('GLOBAL_VALIDATE_GITHUB_TOKEN_AUTHORITY=NONE')
+          print('GLOBAL_VALIDATE_ACTIVATION_EFFECT=NONE')
+          PY
