@@ -20,7 +20,7 @@ jobs:
       - name: Refuse credential-bearing environment
         shell: bash
         run: |
-          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT TVC_EPHEMERAL_GITHUB_TOKEN STEGVERSE_PROVIDER_TOKEN STEGVERSE_MASTER_RECORDS_TOKEN STEGVERSE_HIL_REVIEW_TOKEN STEGVERSE_HIL_PUBLICATION_TOKEN ACTIONS_RUNTIME_TOKEN ACTIONS_ID_TOKEN_REQUEST_TOKEN; do
+          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT TVC_EPHEMERAL_GITHUB_TOKEN STEGVERSE_PROVIDER_TOKEN STEGVERSE_MASTER_RECORDS_TOKEN STEGVERSE_HIL_REVIEW_TOKEN STEGVERSE_HIL_PUBLICATION_TOKEN OPENAI_API_KEY ANTHROPIC_API_KEY ACTIONS_RUNTIME_TOKEN ACTIONS_ID_TOKEN_REQUEST_TOKEN; do
             if [ -n "${!key:-}" ]; then
               echo "credential_exposed:$key"
               exit 1
@@ -120,6 +120,19 @@ jobs:
         run: "$PYTHON_BIN -m pytest tests/test_chat_session_binding.py -q"
       - name: Build deterministic Chat session-binding validation receipt
         run: "$PYTHON_BIN scripts/verify_chat_session_binding.py --write-receipt"
+      - name: Compile public-knowledge and VACC source surfaces
+        run: >-
+          "$PYTHON_BIN" -m py_compile
+          llm_adapter/public_knowledge.py
+          llm_adapter/ai_entry_backend_service.py
+          llm_adapter/vacc_public_information.py
+          tests/test_public_knowledge.py
+          tests/test_vacc_public_information.py
+      - name: Validate public-knowledge and VACC source policy
+        run: >-
+          "$PYTHON_BIN" -m unittest -q
+          tests.test_public_knowledge
+          tests.test_vacc_public_information
       - name: Verify authenticated usage session endpoint
         run: "$PYTHON_BIN scripts/verify_usage_session_api.py"
       - name: Verify External Chat staging posture
@@ -229,6 +242,9 @@ jobs:
           assert 'verify_chat_llm_profiles.py --write-receipt' in workflow
           assert 'tests/test_chat_session_binding.py' in workflow
           assert 'verify_chat_session_binding.py --write-receipt' in workflow
+          assert 'tests.test_public_knowledge' in workflow
+          assert 'tests.test_vacc_public_information' in workflow
+          assert 'OPENAI_API_KEY' in workflow and 'ANTHROPIC_API_KEY' in workflow
           assert all(marker not in workflow for marker in forbidden), forbidden
           print('GLOBAL_VALIDATE_CREDENTIAL_AUTHORITY=TV_TVC')
           print('GLOBAL_VALIDATE_GITHUB_TOKEN_AUTHORITY=NONE')
