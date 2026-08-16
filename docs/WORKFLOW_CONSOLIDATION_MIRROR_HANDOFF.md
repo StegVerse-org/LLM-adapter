@@ -6,10 +6,11 @@
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, and ensure no non-TV/TVC token becomes runtime/control-plane authority
 repository: StegVerse-org/LLM-adapter
-branch: fix/stegverse-runtime-reconcile-20260815
+branch: chore/workflow-consolidation-resident-carriers-20260815
+active_claim: tasks/LLMA-WORKFLOW-CONSOLIDATION-RESIDENT-CARRIER-025.json
 role: CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION
-claim_created_at: 2026-08-15T19:55:00-05:00
-claim_release_condition: classify and transfer unique behavior, then reduce GitHub workflow entry surfaces to the adopted <=2 target without deleting unique capability evidence
+claim_created_at: 2026-08-15T22:49:00-05:00
+claim_release_condition: merge the bounded resident-carrier transfer tranche after final-head repository validation; then release the claim and start a fresh nonoverlapping census tranche
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
 ```
@@ -18,31 +19,39 @@ github_token_runtime_authority: NONE
 
 The restoration target follows the Core-Lite stable dispatcher pattern: a bounded bootstrap/setup doorway plus a stable intake/validation dispatcher; ordinary feature expansion belongs in task registries, tools, scripts, schemas, and StegVerse workers rather than new workflow files. Historical organization-wide enforcement of `<=2` is not asserted here; this handoff records the current restoration target.
 
-The organization runtime handoff remains authoritative for production continuity: GitHub Actions may validate or mirror but may not substitute for the resident sovereign carrier, TV/TVC authority, or StegVerse runtime.
+Production continuity remains:
 
-## Verified baseline
+```text
+StegVerse task -> StegVerse worker -> TV/TVC authority -> StegVerse runtime -> StegVerse evidence/continuity
+```
 
-The `main` workflow directory was directly enumerated before this reconciliation and contained **49 workflow files**.
+GitHub Actions may validate or mirror but may not substitute for the resident sovereign carrier, TV/TVC authority, or StegVerse runtime.
 
-The current reconciliation removes four workflow files whose behavior is either prohibited or superseded:
+## Completed tranche 1 — PR #145
+
+The workflow directory contained **49 workflow files** before reconciliation. PR #145 merged at `c9f561254ec5671c2329c3deb7ce0bfb511331ab` after all ten final-head workflow groups passed and removed four workflow files:
 
 ```text
 .github/workflows/ecosystem-chat-github-models-execution.yml
+  OBSOLETE_OR_SUPERSEDED
   reason: used GitHub token as provider credential; superseded by TV/TVC + sovereign local-model route
 
 .github/workflows/ecosystem-chat-live-activation.yml
-  reason: scheduled hosted activation, repository secrets, third-party gateway fallback; superseded by resident StegVerse carrier + TV/TVC
+  TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+  owner: resident StegVerse carrier + TV/TVC
 
 .github/workflows/ecosystem-chat-live-activation-monitor.yml
-  reason: scheduled hosted observer of the superseded live-activation workflow; resident carrier owns continuity
+  TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+  owner: resident StegVerse carrier
 
 .github/workflows/hil-process-restart-controlled-cycle.yml
-  reason: GitHub-hosted duplicate of HIL lifecycle/restart/private-review work already owned by TVC/TVC#8
+  TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+  owner: StegVerse-Labs/TVC + TVC#8
 ```
 
-Therefore the branch moves from 49 to **45 workflow files**. This is containment, not completion. The restoration denominator is `45 -> <=2`, after unique behaviors are transferred.
+That reduced the repository from 49 to **45 workflow files**.
 
-## Non-workflow artifacts retired in the same reconciliation
+Non-workflow artifacts retired in tranche 1:
 
 ```text
 render-production.yaml
@@ -51,6 +60,52 @@ scripts/run_hil_process_restart_cycle.py
 ```
 
 No third-party hosted service is a required production/runtime release condition.
+
+## Current tranche 2 — resident-carrier transfer
+
+This branch removes five additional GitHub-hosted workflow entry surfaces while retaining their scripts/tests/receipts and assigning their execution semantics to existing StegVerse owners:
+
+```text
+.github/workflows/local-runtime-model-proof.yml
+  TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+  canonical owner: StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md
+  retained assets: local_model_runtime.py, build/proof scripts, local reference model, tests, receipts
+  reason: formal local model and discovery/launch/inference/proof are already COMPLETE_RELEASED; hosted write-capable proof is duplicate cost/authority surface
+
+.github/workflows/sovereign-local-model-binding.yml
+  TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+  canonical owners: StegVerse-002/micro-node-runtime + StegVerse-Labs/.github resident sovereign carrier + .github#60
+  retained assets: sovereign binding code/tests/proof script
+  reason: live same-carrier activation is machine-owned and hosted CI cannot substitute
+
+.github/workflows/observe-math-solver-public-runtime.yml
+  TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+  canonical owners: resident sovereign carrier + LLM-adapter#132 + Site#240
+  retained assets: scripts/observe_math_solver_public_runtime.py + receipts/math-solver-public-runtime.latest.json
+  reason: hourly GitHub polling/writeback was observed directly committing only BLOCKED timestamps while the eligible StegVerse carrier was absent; it is not the runtime owner
+
+.github/workflows/heartbeat-response-node.yml
+  TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+  canonical owner: StegVerse-Labs/.github resident sovereign heartbeat
+  retained assets: scripts/process_heartbeat_response.py + heartbeat receipt schema/data
+  reason: an hourly GitHub-hosted heartbeat is not the sovereign resident heartbeat and cannot own persistence/authority
+
+.github/workflows/autonomy-completion-projection.yml
+  TRANSFER_TO_STEGVERSE_TASK_OR_WORKER
+  canonical owner: resident sovereign heartbeat + destination handoff/task projection
+  retained assets: scripts/project_autonomy_completion_evidence.py + data/autonomy/completion-evidence.json
+  reason: scheduled/workflow-run GitHub writeback caused autonomous main-branch churn and is not completion authority
+```
+
+The exact claim is `tasks/LLMA-WORKFLOW-CONSOLIDATION-RESIDENT-CARRIER-025.json`.
+
+If this tranche merges, the workflow-file count becomes **40**. No application/runtime capability is deleted; only duplicate hosted workflow entry surfaces are removed.
+
+## Direct observed cost/churn evidence
+
+`Observe Math Solver Public Runtime` schedule run `31924396268` executed on GitHub-hosted Actions and produced main commit `49e64482de2006469f6cb270bb6748ac1ce9ebff`, changing only `observed_at` in `receipts/math-solver-public-runtime.latest.json` while the receipt remained `BLOCKED`.
+
+The main branch subsequently advanced again via a GitHub Actions bot commit for autonomy-completion projection. These are concrete examples of hosted polling/writeback creating cost and branch drift without establishing sovereign activation.
 
 ## Required classification before further deletion
 
@@ -64,28 +119,18 @@ Every remaining workflow must be placed into exactly one class:
 
 Unique test commands, receipt generation, release gates, and propagation behavior must be preserved in scripts/tasks/contracts before the workflow file is removed. File-count reduction alone is not completion.
 
-## High-priority groups already identified
+## High-priority remaining groups
 
 ```text
 HIL dedicated workflow family
   canonical production owner: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md + TVC#8
-  expected action: preserve compatibility tests under dispatcher; retire duplicate lifecycle/hosted workflows
-
-sovereign/local-runtime workflow family
-  canonical model/runtime owner: StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md
-  live execution owner: StegVerse-Labs/.github resident sovereign carrier + .github#60
-  expected action: retain only non-authorizing validation needed by dispatcher; do not recreate execution authority
+  next action: preserve compatibility tests under dispatcher; retire duplicate lifecycle/hosted workflows
 
 VACC workflow family
-  expected action: read VACC handoffs/claims before consolidation; transfer unique checks to scripts/tasks and canonical VACC worker lane
-
-Math Solver workflow family
-  canonical runtime: StegVerse portable node + canonical StegGate
-  public activation: StegVerse-Labs/Site#240
-  expected action: retain deterministic tests/receipts while eliminating hosted observer duplication
+  next action: read VACC handoffs/claims before consolidation; transfer unique checks to canonical VACC worker lane
 
 publication/image/service-gateway workflows
-  expected action: classify separately; no GitHub credential or package permission may become production runtime authority
+  next action: classify separately; no GitHub credential or package permission may become production runtime authority
 ```
 
 ## Credential rule
@@ -98,11 +143,7 @@ repository secrets for provider/Master Records production path: prohibited
 TV/TVC protected values exported into GitHub Actions: prohibited
 ```
 
-Any remaining workflow that relies on GitHub's repository token for hosted validation mechanics is not production authority, but still remains consolidation debt under the user's stronger no-non-TV/TVC-token requirement. The target architecture minimizes/removes those hosted mechanics by moving execution to StegVerse workers and retaining at most the adopted bounded doorway/dispatcher surface.
-
-## Validation / evidence
-
-Current reconciliation evidence is PR #145. Final-head repository checks must be inspected before merge. Earlier functional Math Solver head passed canonical `validate`, Platform-Agnostic Runtime, capability-runtime, Architecture Guard, provider-usage validation, and the retained HIL compatibility checks.
+Any remaining workflow that relies on GitHub's repository token for hosted validation mechanics is not production authority, but remains consolidation debt under the stronger no-non-TV/TVC-token requirement.
 
 ## Cross-repository continuation
 
@@ -110,21 +151,22 @@ Current reconciliation evidence is PR #145. Final-head repository checks must be
 StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
 StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md
 StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
-StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md
 StegVerse-Labs/Site#240
 StegVerse-org/LLM-adapter#139
 ```
+
+StegFin wallet/trade execution is not owned by this workflow-reconciliation lane; it remains with its canonical StegFin/TV-TVC/USER_ONLY continuation.
 
 ## Completion and archive conditions
 
 ```text
 workflow_files_baseline: 49
-workflow_files_after_current_reconciliation: 45
+workflow_files_after_pr145: 45
+workflow_files_after_current_tranche_if_merged: 40
 restoration_target: <=2
-classified_remaining: 0/45 as a complete census
-production Render dependency: removed in PR #145
-GitHub Models provider-token workflow: removed in PR #145
-HIL duplicate restart workflow: removed in PR #145
+classified_and_remediated_so_far_if_merged: 9/49
+remaining_unclassified_or_unconsolidated_if_merged: 40/49
+current_tranche_validation: PENDING
 session_consolidation_state: ACTIVE_DISTINCT_SUPPORT
 ```
 
