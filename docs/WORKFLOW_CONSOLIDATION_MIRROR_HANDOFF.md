@@ -24,6 +24,7 @@ Production continuity remains `StegVerse task -> StegVerse worker -> TV/TVC auth
 ```text
 resident carrier owns continuity
 resident StegVerse carrier + TV/TVC
+resident sovereign carrier
 GitHub token as provider credential: prohibited
 GitHub token as runtime/control-plane authority: prohibited
 GitHub Actions activation role: NONE
@@ -33,6 +34,17 @@ TV/TVC protected values exported into GitHub Actions: prohibited
 GitHub-hosted runtime secret generation: prohibited
 non-TV/TVC test-token substitution: prohibited
 third-party production/runtime dependency: prohibited
+StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
+```
+
+## Retired hosted continuity provenance
+
+```text
+ecosystem-chat-live-activation.yml: RETIRED — resident StegVerse carrier + TV/TVC owns live activation
+ecosystem-chat-live-activation-monitor.yml: RETIRED — resident carrier owns continuity
+platform-agnostic-runtime.yml: RETIRED/TRANSFERRED — sovereign runtime proof belongs to StegVerse runtime owners
+hil-process-restart-controlled-cycle.yml: RETIRED/TRANSFERRED_TO_TVC
+legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 ```
 
 ## Completed tranches 1-19
@@ -102,6 +114,8 @@ scripts/check_llm_adapter_orchestration_state.py
 ```
 
 No session/provider/archive/orchestration data semantics were changed. No provider execution, publication, deployment, custody, Site mutation, wallet effect, GitHub/OIDC authority, Render authority, or non-TV/TVC secret/token was introduced.
+
+The first exact-head validation run `31977078758` exposed a documentation regression only: three existing live-activation tests required the retained retirement markers above. No production code or validator semantics failed. Those canonical retirement/sovereign ownership markers have now been restored in this handoff before revalidation.
 
 Tranche 20 remains incomplete until exact final-head Architecture Guard and global validate pass with all three validator markers visible in the Goal 4 log, PR merge completes, claim 043 is released, and this handoff is finalized on main.
 
