@@ -86,13 +86,7 @@ PR #159 merged at `ee193f96c1d3b6fca2f0d1d009536fec83c6a884`; final implementati
 
 PR #160 merged at `c7bb207042259b11060e8cf8d93019a7cff0ccbe`; final implementation head `a7bf10d659fa329654d757644c97b01835ca1ce6`.
 
-`.github/workflows/ecosystem-chat-service-adoption.yml` was classified `CONSOLIDATE_INTO_STABLE_DISPATCHER` and removed. Its unique deterministic sovereignty check is retained in `.github/workflows/validate.yml` and its exact iOS mirror:
-
-```text
-$PYTHON_BIN scripts/check_ecosystem_chat_service_adoption.py
-```
-
-`docs/ECOSYSTEM_CHAT_SERVICE_ADOPTION_MIRROR_HANDOFF.md` now points validation automation to `.github/workflows/validate.yml` while preserving `StegVerse-org/LLM-adapter#18` as the runtime/sovereignty continuation owner and TV/TVC as runtime credential authority.
+`.github/workflows/ecosystem-chat-service-adoption.yml` was classified `CONSOLIDATE_INTO_STABLE_DISPATCHER` and removed. Its unique deterministic sovereignty check remains in `.github/workflows/validate.yml` and its exact iOS mirror as `$PYTHON_BIN scripts/check_ecosystem_chat_service_adoption.py`. `docs/ECOSYSTEM_CHAT_SERVICE_ADOPTION_MIRROR_HANDOFF.md` now points validation automation to `.github/workflows/validate.yml` while preserving `StegVerse-org/LLM-adapter#18` as runtime/sovereignty continuation owner and TV/TVC as runtime credential authority.
 
 Final-head evidence:
 
@@ -105,28 +99,34 @@ all 60 substantive validate steps SUCCESS
 PR #160 merge c7bb207042259b11060e8cf8d93019a7cff0ccbe
 ```
 
-Claim `tasks/LLMA-WORKFLOW-CONSOLIDATE-SERVICE-ADOPTION-037.json` is released as `MERGED_INTO_CANONICAL_WORKSTREAM`.
+Claim 037 is released as `MERGED_INTO_CANONICAL_WORKSTREAM`.
 
-## Current accounting and live-registry reconciliation
+## Current accounting — reconciled
+
+Direct post-merge default-branch directory enumeration shows exactly 23 workflow files. Direct GitHub Actions registry enumeration shows 27 registered `active` workflows. The four-entry difference is fully reconciled: these registered workflow paths are absent from the default-branch workflow directory and are therefore registry-retained historical entries rather than current workflow files:
+
+```text
+.github/workflows/internal-governed-reference.yml
+.github/workflows/stack-conformance.yml
+.github/workflows/portable-node-process-restart-proof.yml
+.github/workflows/authorized-provider-execution-boundary.yml
+```
+
+All other 23 registered paths correspond to the 23 files present on main.
 
 ```text
 workflow_files_baseline: 49
-released_lineage_expected_workflow_files_after_tranche_14: 23
+workflow_files_current_on_main: 23
 workflow_files_removed_or_consolidated_from_audit_start: 26
 classified_and_remediated: 29/49 = 59.18%
 remaining_unclassified_or_unconsolidated_from_audit_start: 20/49
+live_actions_registry_total: 27
+registry_only_absent_file_entries: 4
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
 current_active_tranche_claim: NONE
 ```
 
-A direct post-merge GitHub Actions registry query reported `total_count: 27` registered active workflows. That does not agree with the prior handoff lineage count of 23 expected files after tranche 14. Because live repository state is authoritative, the next task is not allowed to assume 23 as the operational count. A fresh reconciliation must identify the four-workflow delta as concurrent additions, registry-retained entries, or prior accounting omissions before the next consolidation claim. Until reconciled, use:
-
-```text
-live_registered_workflow_count: 27
-canonical_audit_start_denominator: 49
-canonical_classified_remediated: 29/49
-operational_file_count: RECONCILIATION_REQUIRED
-```
+The 49-surface denominator remains valid because the four registry-only entries are already removed file surfaces represented in the historical audit/retirement lineage; they are not newly added default-branch workflow files.
 
 ## Canonical ownership / convergence
 
@@ -150,13 +150,13 @@ Formal local-model development and actual discovery/launch/inference/proof are `
 - Do not infer live activation from workflow cleanup.
 - Do not create non-TV/TVC runtime/test tokens.
 - Do not restore GitHub-hosted activation, artifact transport, or repository writeback.
-- Do not recreate provider-owned usage-event or Ecosystem Chat service-adoption standalone validation.
+- Do not recreate retired standalone validation surfaces.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
 
 ## Next safe task
 
-First reconcile the live `27` registered workflow count against the canonical 49-surface audit and the released lineage. Then, under a fresh noncolliding claim, classify the next remaining workflow surface against canonical StegVerse owners and the `<=2` target. Any necessary deterministic validation should be consolidated into an existing token-clean dispatcher where technically compatible; any recurring operational capability belongs to a named StegVerse worker before standalone workflow removal.
+Under a fresh noncolliding claim, classify the next remaining default-branch workflow file against canonical StegVerse owners and the `<=2` target. Any necessary deterministic validation should be consolidated into an existing token-clean dispatcher where technically compatible; any recurring operational capability belongs to a named StegVerse worker before standalone workflow removal.
 
 ## Archive condition
 
-This session remains a distinct support lane while workflow/token remediation remains incomplete. The live Actions registry reports 27 active registered workflows versus the adopted <=2 target, 20/49 canonical audit-start surfaces remain unclassified/unconsolidated, and the registry/file-lineage delta requires reconciliation. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
+This session remains a distinct support lane while workflow/token remediation remains incomplete. Twenty-three actual workflow files remain on main versus the adopted <=2 target, and 20/49 canonical audit-start surfaces remain unclassified/unconsolidated. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
