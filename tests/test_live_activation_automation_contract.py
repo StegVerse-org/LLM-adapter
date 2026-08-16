@@ -123,7 +123,7 @@ def test_portable_node_manifest_supports_authorized_binding_and_fails_closed(tmp
     receipt = bootstrap(tmp_path)
     manifest = json.loads(Path(receipt["capability_manifest"]).read_text(encoding="utf-8"))
 
-    assert manifest["version"] == "1.3.0"
+    assert manifest["version"] == "1.4.0"
     assert manifest["entrypoint"][-4:] == ["--host", "${HOST}", "--port", "${PORT}"]
     assert manifest["environment_defaults"]["HOST"] == "127.0.0.1"
     assert manifest["environment_defaults"]["STEGVERSE_PROVIDER_ENABLED"] == "false"
