@@ -18,6 +18,7 @@ on:
       - "llm_adapter/notification_delivery.py"
       - "schemas/hil-*.schema.json"
       - "tests/test_hil_*.py"
+      - "tests/test_service_gateway.py"
       - ".github/workflows/hil-deployment-profile.yml"
   push:
     branches: [main]
@@ -37,6 +38,7 @@ on:
       - "llm_adapter/notification_delivery.py"
       - "schemas/hil-*.schema.json"
       - "tests/test_hil_*.py"
+      - "tests/test_service_gateway.py"
       - ".github/workflows/hil-deployment-profile.yml"
   workflow_dispatch:
 
@@ -197,6 +199,9 @@ jobs:
           tests/test_hil_readiness_schema.py
           tests/test_hil_authority_evidence.py
           tests/test_hil_authority_evidence_schema.py
+
+      - name: Test deterministic service-gateway TVC binding, durable intake, idempotency, and provider-scope rejection
+        run: python3 -m pytest -q tests/test_service_gateway.py
 
       - name: Confirm non-authorizing compatibility scope
         run: |
