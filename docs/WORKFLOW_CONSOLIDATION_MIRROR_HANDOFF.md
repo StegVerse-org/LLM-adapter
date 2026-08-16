@@ -24,13 +24,29 @@ Production continuity remains `StegVerse task -> StegVerse worker -> TV/TVC auth
 ```text
 resident carrier owns continuity
 resident StegVerse carrier + TV/TVC
-GitHub token as provider credential/runtime authority: prohibited
+resident sovereign carrier
+GitHub token as provider credential: prohibited
+GitHub token as runtime/control-plane authority: prohibited
 GitHub Actions activation role: NONE
-GitHub OIDC runtime authority: prohibited
-repository provider/Master Records production secrets: prohibited
-TV/TVC protected values in GitHub Actions: prohibited
+GitHub OIDC as runtime/control-plane authority: prohibited
+repository secrets for provider/Master Records production path: prohibited
+TV/TVC protected values exported into GitHub Actions: prohibited
+GitHub-hosted runtime secret generation: prohibited
 non-TV/TVC test-token substitution: prohibited
 third-party production/runtime dependency: prohibited
+StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
+```
+
+## Retired hosted continuity provenance
+
+These names are retained only for deterministic reconstruction and tests. They are not active production or activation owners and must not be recreated as such.
+
+```text
+ecosystem-chat-live-activation.yml: RETIRED — resident StegVerse carrier + TV/TVC owns live activation
+ecosystem-chat-live-activation-monitor.yml: RETIRED — resident carrier owns continuity
+platform-agnostic-runtime.yml: RETIRED/TRANSFERRED — sovereign runtime proof belongs to StegVerse runtime owners
+hil-process-restart-controlled-cycle.yml: RETIRED/TRANSFERRED_TO_TVC
+legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 ```
 
 ## Completed tranches 1-14
@@ -52,19 +68,15 @@ third-party production/runtime dependency: prohibited
 14 #160 c7bb207042259b11060e8cf8d93019a7cff0ccbe
 ```
 
-Claims 025-037 are released. Tranche 12 made the global validator credential-clean and non-activating; tranche 13 consolidated provider-owned usage validation; tranche 14 consolidated Ecosystem Chat zero-external-dependency sovereignty validation. Final evidence for tranche 14: Architecture Guard `31964932357` SUCCESS; validate `31964932396` SUCCESS with all 60 substantive steps successful; PR #160 merged at `c7bb207042259b11060e8cf8d93019a7cff0ccbe`.
+Claims 025-037 are released. Tranche 12 made the global validator credential-clean and non-activating; tranche 13 consolidated provider-owned usage validation; tranche 14 consolidated Ecosystem Chat zero-external-dependency sovereignty validation. Final tranche-14 evidence: Architecture Guard `31964932357` SUCCESS; validate `31964932396` SUCCESS with all 60 substantive steps successful; PR #160 merged at `c7bb207042259b11060e8cf8d93019a7cff0ccbe`.
 
 ## Active tranche 15 — outcome-level objective-contract validation consolidation
 
 Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-OBJECTIVE-CONTRACT-038.json`.
 
-Direct inspection of `.github/workflows/validate-objective-contract.yml` showed a scheduled GitHub-hosted validation surface with `actions/checkout@v4`, `actions/setup-python@v5`, `contents: read`, and a six-hour cron. Its only unique capability is deterministic execution of:
+Direct inspection of `.github/workflows/validate-objective-contract.yml` showed a scheduled GitHub-hosted validation surface with `actions/checkout@v4`, `actions/setup-python@v5`, `contents: read`, and a six-hour cron. Its only unique capability is deterministic execution of `python scripts/validate_objective_contract.py`.
 
-```text
-python scripts/validate_objective_contract.py
-```
-
-The validator itself remains authoritative and fail-closed. It preserves required runtime outcomes, downstream destinations, disallowed false-completion substitutes, false authority flags, `manual_user_action_required=false`, and the requirement that completion evidence be outcome-level rather than source/workflow presence alone.
+The validator remains authoritative and fail-closed. It preserves required runtime outcomes, downstream destinations, disallowed false-completion substitutes, false authority flags, `manual_user_action_required=false`, and the requirement that completion evidence be outcome-level rather than source/workflow presence alone.
 
 Disposition installed on the active branch:
 
@@ -72,23 +84,19 @@ Disposition installed on the active branch:
 .github/workflows/validate-objective-contract.yml
   -> CONSOLIDATE_INTO_STABLE_DISPATCHER
   -> removed from active branch
-
 .github/workflows/validate.yml
   -> runs $PYTHON_BIN scripts/validate_objective_contract.py
-  -> permissions: {}
-  -> anonymous exact-SHA fetch
-  -> credential-bearing environment refused
+  -> permissions: {}; anonymous exact-SHA fetch; credential refusal
   -> no schedule/writeback/activation/provider execution
-
 iosnoperiod/github/workflows/validate.yml
   -> exact mirror contains the same objective-contract validator
 ```
 
-No provider execution, activation, custody, publication, deployment, wallet action, or credential authority is added. Tranche 15 is not complete until exact final-head validation passes, its PR merges, claim 038 is released, and this handoff is finalized on main.
+Initial exact-head validation run `31965351547` directly proved the new objective-contract step SUCCESS but failed later because this handoff revision had accidentally compressed away historical retirement strings required by existing activation-boundary tests. No runtime or implementation regression was observed. This revision restores those exact authoritative provenance/invariant strings; a fresh exact-head validation is required before merge.
+
+No provider execution, activation, custody, publication, deployment, wallet action, or credential authority is added. Tranche 15 is not complete until fresh exact final-head validation passes, PR #161 merges, claim 038 is released, and this handoff is finalized on main.
 
 ## Current accounting — released work only
-
-Direct post-tranche-14 default-branch enumeration showed 23 workflow files. Four additional GitHub Actions registry entries are historical registry-only paths absent from main: `internal-governed-reference.yml`, `stack-conformance.yml`, `portable-node-process-restart-proof.yml`, and `authorized-provider-execution-boundary.yml`.
 
 ```text
 workflow_files_baseline: 49
@@ -101,6 +109,8 @@ current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-OBJECTIVE-CONTRACT-038
 ```
 
 If tranche 15 releases as implemented and no concurrent workflow-file change occurs, main will contain 22 workflow files; removed/consolidated will become 27; classified/remediated will become 30/49 = 61.22%; remaining will become 19/49.
+
+Post-tranche-14 reconciliation remains authoritative: GitHub Actions listed 27 registered active entries while main contained 23 workflow files; the four registry-only historical paths absent from main were `internal-governed-reference.yml`, `stack-conformance.yml`, `portable-node-process-restart-proof.yml`, and `authorized-provider-execution-boundary.yml`.
 
 ## Canonical ownership / convergence
 
