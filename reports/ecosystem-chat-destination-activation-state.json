@@ -1,11 +1,11 @@
 {
   "schema_version": "1.1.0",
   "record_type": "ecosystem_chat_destination_activation_state",
-  "generated_at": "2026-08-16T02:00:51.377637+00:00",
+  "generated_at": "2026-08-16T02:36:45.865733+00:00",
   "repository": "StegVerse-org/LLM-adapter",
-  "commit_sha": "0e266f60aa50d63728a564a8610994865cdfa954",
-  "event_name": "schedule",
-  "workflow_run_id": "31920855380",
+  "commit_sha": "c9f561254ec5671c2329c3deb7ce0bfb511331ab",
+  "event_name": "push",
+  "workflow_run_id": "31922279034",
   "state": "DESTINATION_ACTIVATION_PENDING_EXTERNAL_EVIDENCE",
   "manual_user_action_required": false,
   "gates": {
@@ -26,10 +26,10 @@
       "complete": false,
       "owner": "StegVerse-org/LLM-adapter",
       "automation": "render-production.yaml and deployment platform",
-      "declared_topology_complete": true
+      "declared_topology_complete": false
     },
     "automatic_provider_usage_submission": {
-      "complete": true,
+      "complete": false,
       "owner": "StegVerse-org/LLM-adapter",
       "automation": "private Render service binding and llm_adapter/master_records_usage_submission.py"
     },
@@ -40,15 +40,15 @@
     }
   },
   "production_topology": {
-    "gateway_declared": true,
-    "custody_private_service_declared": true,
-    "custody_durable": true,
-    "custody_auth_generated": true,
-    "custody_receipt_key_generated": true,
-    "private_hostport_bound": true,
-    "shared_token_bound": true,
-    "provider_enabled": true,
-    "mutation_disabled": true
+    "gateway_declared": false,
+    "custody_private_service_declared": false,
+    "custody_durable": false,
+    "custody_auth_generated": false,
+    "custody_receipt_key_generated": false,
+    "private_hostport_bound": false,
+    "shared_token_bound": false,
+    "provider_enabled": false,
+    "mutation_disabled": false
   },
   "live_receipt": {
     "present": false,
@@ -62,5 +62,5 @@
     "publication_authorized": false,
     "execution_authorized": false
   },
-  "state_sha256": "436ab75aee33039f665937c497c2bf5c470b443d0aa0579202b9d673192489ce"
+  "state_sha256": "b619924f8416074e1f4c7256128d50944b4c3dc4835b274addf6f145cfbd23aa"
 }
