@@ -11,11 +11,13 @@
   "claim_release_condition": "Merge the bounded global validate credential-remediation PR after final-head validation; verify deterministic validation remains intact, hosted activation/artifact/writeback mechanics are absent, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
   "surfaces": [
     ".github/workflows/validate.yml",
+    "scripts/check_ai_entry_no_manual_tasks.py",
     "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
     "tasks/LLMA-WORKFLOW-TOKEN-CLEAN-GLOBAL-VALIDATE-035.json"
   ],
   "classifications": {
-    ".github/workflows/validate.yml": "KEEP_STANDALONE_EXCEPTION_TEMPORARY_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER"
+    ".github/workflows/validate.yml": "KEEP_STANDALONE_EXCEPTION_TEMPORARY_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER",
+    "scripts/check_ai_entry_no_manual_tasks.py": "UPDATE_VALIDATOR_FOR_TOKEN_CLEAN_INTERPRETER_SELECTION"
   },
   "credential_boundary": {
     "credential_authority": "TV/TVC",
@@ -29,6 +31,7 @@
   },
   "collision_boundaries": [
     "Preserve deterministic source, unit, integration, schema, authority-boundary and replay validation already unique to validate.yml.",
+    "Preserve the no-manual-task validator semantics while allowing the selected token-clean Python interpreter form.",
     "Do not move live activation authority into GitHub Actions.",
     "Do not use Render or any third-party runtime as a production or validation dependency.",
     "Do not add replacement GitHub/OIDC/repository credentials.",
@@ -41,13 +44,14 @@
     "Validate Provider-Owned Usage Event PASS on final head",
     "workflow has permissions: {} and refuses credential-bearing environment",
     "anonymous exact-SHA source acquisition without actions/checkout or actions/setup-python",
+    "no-manual-task validator accepts token-clean selected-Python Goal 4 command without weakening workflow_dispatch requirement",
     "schedule removed",
     "hosted live activation probe removed",
     "GitHub artifact upload and repository writeback removed",
     "exact PR merged",
     "released claim and finalized canonical handoff"
   ],
-  "next_executable_action": "Replace token-backed source/Python setup, schedule, hosted activation probe, artifact transport and repository writeback while preserving deterministic repository validation; validate exact PR.",
+  "next_executable_action": "Repair the no-manual-task validator for the token-clean selected-Python command, then validate the exact PR head.",
   "next_task_after_release": "Continue classifying remaining hosted validation/publication surfaces toward the <=2 workflow target.",
   "authority_effect": false,
   "activation_effect": false
