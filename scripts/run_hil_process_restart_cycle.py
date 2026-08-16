@@ -121,7 +121,7 @@ def main() -> None:
     pdf = b"%PDF-1.7\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n"
     response_hash = hashlib.sha256(pdf).hexdigest()
     manifest = {
-        "schema_version": "HIL-RESPONSE-PROVENANCE-v1",
+        "schema_version": "HIL-RESPONSE-PROVENANCE-v1.1",
         "primary_version": "v1.1",
         "primary_sha256": PRIMARY,
         "protocol_version": "HIL-PROTOCOL-v1.1",
