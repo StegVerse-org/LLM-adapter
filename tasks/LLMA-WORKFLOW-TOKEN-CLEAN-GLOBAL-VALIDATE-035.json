@@ -1,0 +1,54 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-TOKEN-CLEAN-GLOBAL-VALIDATE-035",
+  "originating_goal": "Eliminate non-TV/TVC GitHub credential mechanics and hosted activation behavior from the retained global validation dispatcher while preserving necessary deterministic repository validation.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/token-clean-global-validate-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T03:30:00-05:00",
+  "claim_release_condition": "Merge the bounded global validate credential-remediation PR after final-head validation; verify deterministic validation remains intact, hosted activation/artifact/writeback mechanics are absent, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "surfaces": [
+    ".github/workflows/validate.yml",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-TOKEN-CLEAN-GLOBAL-VALIDATE-035.json"
+  ],
+  "classifications": {
+    ".github/workflows/validate.yml": "KEEP_STANDALONE_EXCEPTION_TEMPORARY_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "actions_checkout_allowed": false,
+    "actions_setup_python_allowed": false,
+    "actions_artifact_transport_allowed": false,
+    "repository_writeback_allowed": false,
+    "hosted_live_activation_probe_allowed": false
+  },
+  "collision_boundaries": [
+    "Preserve deterministic source, unit, integration, schema, authority-boundary and replay validation already unique to validate.yml.",
+    "Do not move live activation authority into GitHub Actions.",
+    "Do not use Render or any third-party runtime as a production or validation dependency.",
+    "Do not add replacement GitHub/OIDC/repository credentials.",
+    "Do not alter TV/TVC route authority or resident heartbeat ownership.",
+    "Do not touch StegFin signing, broadcast, settlement, or provider execution."
+  ],
+  "expected_evidence": [
+    "validate workflow passes on final head",
+    "Architecture Guard PASS on final head",
+    "Validate Provider-Owned Usage Event PASS on final head",
+    "workflow has permissions: {} and refuses credential-bearing environment",
+    "anonymous exact-SHA source acquisition without actions/checkout or actions/setup-python",
+    "schedule removed",
+    "hosted live activation probe removed",
+    "GitHub artifact upload and repository writeback removed",
+    "exact PR merged",
+    "released claim and finalized canonical handoff"
+  ],
+  "next_executable_action": "Replace token-backed source/Python setup, schedule, hosted activation probe, artifact transport and repository writeback while preserving deterministic repository validation; validate exact PR.",
+  "next_task_after_release": "Continue classifying remaining hosted validation/publication surfaces toward the <=2 workflow target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
