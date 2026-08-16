@@ -3,12 +3,11 @@
   "task_id": "MATH-SOLVER-STEGGATE-RUNTIME-001",
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "fix/math-solver-stegverse-portable-node-20260815",
-  "originating_goal": "Convert the public Math Solver from RESEARCH_NOTE into a real canonical-Steggate-gated deterministic execution surface for the four-public-application proof.",
+  "originating_goal": "Convert the public Math Solver into a canonical-Steggate-gated deterministic execution surface and remove third-party runtime dependency from its completion path.",
   "state": "CLAIMED_FOR_INTEGRATION",
   "role": "STEGVERSE_PORTABLE_NODE_RUNTIME_REALIGNMENT",
-  "integration_claim_created_at": "2026-08-15T18:58:00-05:00",
-  "integration_claim_release_condition": "Merge the StegVerse-portable-node binding with passing deterministic/runtime validation, then return live carrier execution to the canonical StegVerse runtime worker and Site consumer.",
-  "execution_owner_after_release": "StegVerse portable-node/service-gateway carrier + StegVerse-Labs/Site#240 consumer",
+  "claim_created_at": "2026-08-15T18:58:00-05:00",
+  "claim_release_condition": "Merge the StegVerse portable-node binding after repository validation; then return live carrier observation to the canonical resident sovereign carrier and Site#240.",
   "implementation_locations": [
     "llm_adapter/math_solver_gateway.py",
     "llm_adapter/deployed_gateway.py",
@@ -20,53 +19,40 @@
     "tests/test_node_advertisement.py",
     "docs/MATH_SOLVER_RUNTIME_MIRROR_HANDOFF.md"
   ],
-  "validation_state": "SOURCE_REALIGNMENT_IMPLEMENTED_VALIDATION_PENDING",
-  "previous_ci_evidence": {
-    "run_id": 31338939595,
-    "artifact_id": 9045196248,
-    "artifact_digest": "sha256:5389162e3bef48594802aead69d309d5726bf0e046121129696179c60bce293d"
-  },
-  "superseded_host_dependency": {
-    "provider": "Render",
-    "state": "SUPERSEDED_AS_REQUIRED_RUNTIME",
-    "reason": "Required production/runtime continuity is StegVerse-native. Third-party hosting may not be a release condition or execution owner."
-  },
-  "current_runtime_path": {
-    "carrier": "StegVerse portable node / service gateway",
-    "bootstrap": "llm_adapter.node_bootstrap",
-    "service": "llm_adapter.node_service",
-    "entrypoint": "llm_adapter.deployed_gateway:app",
-    "local_default_origin": "http://127.0.0.1:8000",
-    "node_advertisement": "/api/stegverse-node",
-    "math_readiness": "/api/math-solver/v1/readiness",
-    "math_solve": "/api/math-solver/v1/solve",
-    "authorized_host_binding_supported": true
-  },
+  "source_state": "IMPLEMENTED_AND_REPOSITORY_VALIDATED",
   "credential_boundary": {
     "credential_authority": "TV/TVC",
     "github_token_runtime_authority": "NONE",
     "provider_credentials_required_for_math_solver": false,
-    "hosted_provider_fallback_required": false
+    "non_tv_tvc_production_secret_or_token_allowed": false
   },
-  "machine_release_condition": "An eligible StegVerse-owned carrier runs the portable node, its advertisement exposes the Math Solver endpoints, readiness is READY with canonical StegGate bound, two governed solve/replay calls pass, and Site#240 consumes the resulting receipt. A third-party host is not required.",
+  "runtime_boundary": {
+    "required_carrier": "STEGVERSE_PORTABLE_NODE_OR_CANONICAL_SOVEREIGN_CARRIER",
+    "third_party_runtime_required": false,
+    "third_party_build_capacity_release_condition": false,
+    "default_observation_origin": "http://127.0.0.1:8000"
+  },
+  "validation_evidence": {
+    "final_functional_head": "39af6fe36a1021f2e53f9cce055ccce6d2de3da6",
+    "validate_run": 31917502963,
+    "validate_conclusion": "SUCCESS",
+    "platform_agnostic_runtime_run": 31917502881,
+    "platform_agnostic_runtime_conclusion": "SUCCESS",
+    "capability_runtime_run": 31917502959,
+    "capability_runtime_conclusion": "SUCCESS",
+    "architecture_guard_run": 31917502880,
+    "architecture_guard_conclusion": "SUCCESS",
+    "legacy_hil_restart_lane": "SUPERSEDED_BY_TVC_AND_RETIRED"
+  },
   "machine_owned_continuation": [
-    "llm_adapter/node_service.py",
-    "llm_adapter/node_bootstrap.py",
-    "scripts/observe_math_solver_public_runtime.py",
-    "StegVerse-Labs/Site#240",
-    "StegVerse-Labs/.github resident sovereign carrier"
-  ],
-  "canonical_dependencies": [
-    "StegVerse-Labs/StegCore#68",
-    "StegVerse-Labs/StegCore#70",
+    "StegVerse-Labs/.github resident sovereign carrier",
     "StegVerse-org/LLM-adapter#72",
+    "StegVerse-org/LLM-adapter#132",
     "StegVerse-Labs/Site#240",
-    "StegVerse-Labs/Site#239"
+    "StegVerse-Labs/StegCore#70"
   ],
-  "collision_boundary": "No parallel StegGate evaluator and no third-party production carrier dependency. Use the canonical StegCore consumer plus the existing StegVerse portable-node/service-gateway runtime.",
-  "next_executable_action": "Validate and merge this portable-node realignment; then the canonical StegVerse carrier executes/observes the route and Site#240 consumes only directly proven evidence.",
-  "session_consolidation": "DISTINCT_INTEGRATION_SUPPORT",
-  "canonical_continuation": "StegVerse-org/LLM-adapter#132 + #72 + StegVerse-Labs/Site#240",
+  "collision_boundary": "No parallel Math Solver evaluator, provider route, runtime carrier, or HIL lifecycle lane. Use canonical StegGate, StegVerse portable-node/service-gateway, and TVC HIL owners.",
+  "next_executable_action": "Merge the validated integration, release this chat integration claim, and allow canonical StegVerse carrier/Site owners to produce direct live carrier evidence.",
   "authority_effect": false,
   "activation_effect": false
 }
