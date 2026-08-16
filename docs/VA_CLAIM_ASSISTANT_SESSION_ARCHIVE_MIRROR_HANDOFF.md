@@ -1,10 +1,6 @@
 # VA Claim Assistant Session Archive Mirror Handoff
 
-This is the canonical archive-disposition handoff for the ChatGPT session that established and advanced the governed VA Claims Guide, Claims Chat, private document workspace, veteran-approved filing boundary, federal-plus security, PII realignment, provider execution, custody, and adjacent Ecosystem Chat work.
-
-It does not replace capability-specific handoffs. It proves that all unique session state is complete, superseded, or durably transferred to repository handoffs, issues, tasks, workflows, receipts, and machine-observable release conditions.
-
-## Goal identity
+## Canonical identity
 
 ```text
 Goal ID: VACP-SESSION-CONSOLIDATION-007
@@ -13,26 +9,24 @@ Branch: main
 Canonical issue: StegVerse-org/LLM-adapter#90
 Inventory: data/va-claim-assistant-session-consolidation.json
 Validator: scripts/validate_va_claim_assistant_session_consolidation.py
-Workflow: .github/workflows/va-claim-assistant-session-consolidation.yml
 Receipt: receipts/va-claim-assistant-session-consolidation-validation.json
 Task: tasks/VACP-SESSION-CONSOLIDATION-007.json
 Archive disposition: ARCHIVE_READY
 ```
 
+This handoff preserves the completed ChatGPT session that established the governed VA Claims Guide/Chat, private-document boundary, veteran filing boundary, federal-plus security, PII realignment, provider execution requirements, custody/reconstruction, and adjacent Ecosystem Chat work. It does not grant provider, filing, custody, publication, deployment, Site, or activation authority.
+
 ## Original and adjacent goals
 
 ```text
-Original goal:
-  GOVERNED_VA_CLAIMS_GUIDE_AND_CHAT
-
-Adjacent goals:
-  PRIVATE_CLAIM_DOCUMENT_WORKSPACE
-  VETERAN_APPROVED_AUTOMATED_CLAIM_FILING
-  FEDERAL_PLUS_SECURITY
-  PII_REDACTION_AND_POST_CREDENTIAL_IDENTITY_REALIGNMENT
-  MASTER_RECORDS_CUSTODY_AND_RECONSTRUCTION
-  GOVERNED_PROVIDER_EXECUTION
-  ECOSYSTEM_CHAT_ACTIVATION_AND_PROPAGATION
+Original: GOVERNED_VA_CLAIMS_GUIDE_AND_CHAT
+Adjacent: PRIVATE_CLAIM_DOCUMENT_WORKSPACE
+          VETERAN_APPROVED_AUTOMATED_CLAIM_FILING
+          FEDERAL_PLUS_SECURITY
+          PII_REDACTION_AND_POST_CREDENTIAL_IDENTITY_REALIGNMENT
+          MASTER_RECORDS_CUSTODY_AND_RECONSTRUCTION
+          GOVERNED_PROVIDER_EXECUTION
+          ECOSYSTEM_CHAT_ACTIVATION_AND_PROPAGATION
 ```
 
 ## Canonical continuation
@@ -41,113 +35,73 @@ Adjacent goals:
 StegVerse-Labs/Site#113
 StegVerse-Labs/Site#116
 StegVerse-org/LLM-adapter#90
-StegVerse-org/LLM-adapter/tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json
-StegVerse-Labs/TVC#9
+StegVerse-org/LLM-adapter#142
+StegVerse-org/LLM-adapter/tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
+StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json
 master-records/orchestration#15
 StegVerse-org/LLM-adapter#18
 StegVerse-Labs/Site#24
 ```
 
-The machine-readable inventory contains 13 goal groups and all 27 session requirements. Every item records its destination repository, branch, exact location, owner, claim state, completion state, validation state, integration state, evidence, release condition, and next executable action.
+The historical inventory remains immutable evidence of 13 goal groups and 27/27 session requirements transferred or complete. It records the then-blocked `VACP-ADAPTER-AUTHORIZED-EXECUTION-005`; current live repository state supersedes that GitHub Models/GITHUB_TOKEN route.
 
-## Final claim posture
+## Provider-continuation correction
+
+`tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json` is now `SUPERSEDED`. Its GitHub Models / ephemeral GitHub Actions token route is retired because the integrated credential contract requires TV/TVC-only authority and GitHub token runtime authority `NONE`.
+
+Canonical continuation is `tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json`, which is machine-owned by the resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records lane and requires:
 
 ```text
-Released session claims:
-  TVC-VA-EPHEMERAL-ADMISSION-003
-  VACP-ADAPTER-EXECUTION-PREFLIGHT-004
-  VACP-ADAPTER-PII-RUNTIME-006
-  VACP-SESSION-CONSOLIDATION-007
-
-Blocked unclaimed continuation:
-  VACP-ADAPTER-AUTHORIZED-EXECUTION-005
-
-Active chat-owned claims:
-  NONE
-
-Unowned tasks:
-  NONE
-
-Manual user tasks:
-  NONE
+credential_authority: TV/TVC
+credential_requirement: NONE
+github_token_required: false
+github_token_runtime_authority: NONE
+third_party_inference_required: false
+hosted_provider_fallback: DISALLOWED
+model_output_authority: NONE
 ```
 
-The consolidation task is `RELEASED_COMPLETE`. Its final evidence is committed at `087206745a1f843abf9aaef40f93054d22cfd5ea`.
+The preserved VACC gates remain: privacy guard PASS before model input, admitted official/federal grounding, fresh TVC admission, bounded generation, Master Records custody, same-execution reconstruction PASS, and Site projection only from verified execution evidence.
 
-## Final hosted release-proof validation
+## Historical release proof
 
 ```text
 Validation PR: #101
 Validator/workflow merge: 0569fdddfd3160eb661425e18c355716615841c4
-Workflow run: 30875265849
-Workflow conclusion: success
-Job: 91885352717
-Job conclusion: success
-Inventory-validator step: success
-Released-task assertion step: success
-Decoded logs: directly inspected
+Workflow run: 30875265849 SUCCESS
+Job: 91885352717 SUCCESS
 Artifact: 8879295395
-Artifact name: va-claim-assistant-session-consolidation-30875265849-1
 Artifact digest: sha256:10a9f4f4f9f24fd8bda2033957a20742442964e4999230f39bbc8ac188978be6
-Artifact files: 3
-Artifact expiry: 2026-11-02T03:37:06Z
-Main receipt commit: 4250a39d8a68877532c939a785300b42a1b22985
 Receipt state: PASS
 Receipt posture: ARCHIVE_READY
-Consolidation task state: RELEASED_COMPLETE
 Receipt hash: eb11aa38365a7c529663b1cb0e7ad9be14eb8e7fac9fd8bb2344a4615aefae16
 ```
 
-The downloaded artifact digest matched GitHub’s retained digest. The artifact contains the complete inventory, the released consolidation task, and the exact final receipt. All PR checks—Session Consolidation, Architecture Guard, Validate Provider-Owned Usage Event, and repository `validate`—completed successfully.
+Historical hosted evidence remains valid evidence of the archive state at release time. It is not current execution authority and is not required to recur.
 
-### Superseded archive proof
+## Current validation carrier
 
-PR `#100`, run `30874931858`, and receipt `34559e27a0ae9f201fdf8ffc3409e6720fb680fb3ec215d954b58fd3b320c8f1` proved the inventory but did not directly inspect the consolidation task’s own state. PR `#101` and receipt `eb11aa38365a7c529663b1cb0e7ad9be14eb8e7fac9fd8bb2344a4615aefae16` supersede that proof by requiring `VACP-SESSION-CONSOLIDATION-007 = RELEASED_COMPLETE`.
+The former standalone `.github/workflows/va-claim-assistant-session-consolidation.yml` is being retired under workflow-consolidation claim `LLMA-WORKFLOW-CONSOLIDATE-VA-SESSION-045` because it used GitHub-hosted checkout/setup, a 12-hour schedule, `contents: write`, repository pushback, and artifact upload for deterministic archive validation.
 
-## Completed final implementation slice
-
-PII-RDY-06 is complete at the adapter level:
+The deterministic validator is now carried by the canonical credential-clean path:
 
 ```text
-Privacy runtime: e14e70be89f24d418d28a2a44c091d3349414ebc
-Privacy dispatcher: e007689277cc2f3961bbcd9361b7b2373e1340ce
-Hosted receipt commit: 97767eb8dbca4a2fd75e1a6052195ca680bd1148
-Receipt hash: bcd39b3689ba0fbe7f18b99e114984543d784c80d3fd8ad5842cc551926df34c
-Workflow run: 30874416525
-Job: 91882865431
-Artifact: 8879004626
-Artifact digest: sha256:c6078147307ef853887a3618394c4758b6ed422b7ec815b1f22e92a554960961
-Task release: 467eb279a526799774607c1ddfdc8c01767ddeb7
-Provider dependency binding: 3d7345b08547c51fa22cde8a443982d77ae80c5b
+.github/workflows/validate.yml
+  -> scripts/verify_goal4_full.py
+  -> scripts/validate_va_claim_assistant_session_consolidation.py
 ```
 
-## Truthful incomplete project work
-
-Session archival does not mark the program operationally complete. These remain incomplete under durable owners:
-
-- Site#116 production PII detection, redaction, leakage, and document execution;
-- TVC operational credential handoff and identity linkage;
-- adapter protected Master Records configuration and explicit provider authority;
-- one real bounded provider request;
-- Master Records operational custody and reconstruction;
-- Site receipt-derived projection and veteran-visible privacy controls;
-- current official urgent-safety source admission;
-- veteran-approved filing transport and confirmation;
-- independent privacy/security assessment;
-- Ecosystem Chat zero-blocker activation and downstream propagation.
-
-Each has a named repository owner, exact durable location, machine-observable release condition, evidence requirement, and next executable action in the inventory or its canonical handoff/task.
+Current validation generates the receipt only in the validation workspace. It does not persist the receipt through GitHub writeback and does not upload archive artifacts.
 
 ## Final archive assertions
 
 ```text
-inventory goal groups: 13
+session goal groups: 13
 session requirements transferred or complete: 27/27
 consolidation task state: RELEASED_COMPLETE
 active chat-owned claims: 0
 unowned tasks: 0
 manual user tasks: 0
-blocked unclaimed tasks: VACP-ADAPTER-AUTHORIZED-EXECUTION-005
 archive safe: true
 deleting chat impairs execution: false
 authority effect: false
@@ -163,25 +117,10 @@ publication authorized: false
 session archive != project completion
 session archive != provider authority
 session archive != custody
-session archive != filing or signature authority
+session archive != filing/signature authority
 session archive != publication authority
-session archive != deployment or activation authority
+session archive != deployment/activation authority
 ```
-
-## Integration and consolidation
-
-```text
-MERGED INTO: StegVerse-Labs/Site#113
-MERGED INTO: StegVerse-Labs/Site#116
-MERGED INTO: StegVerse-org/LLM-adapter#90
-MERGED INTO: StegVerse-org/LLM-adapter/tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json
-MERGED INTO: StegVerse-Labs/TVC#9
-MERGED INTO: master-records/orchestration#15
-MERGED INTO: StegVerse-org/LLM-adapter#18
-MERGED INTO: StegVerse-Labs/Site#24
-```
-
-All unique requirements, implementation history, validation evidence, unresolved work, collision boundaries, and continuation authority from this session are durable. No other active session requires undocumented information from this thread.
 
 ## Metrics
 
@@ -189,15 +128,12 @@ All unique requirements, implementation history, validation evidence, unresolved
 developed files: 6/6
 scaffolding or stubs: 0
 missing required files: 0
-validation: 7/7
-integration: 5/5
+historical release validation: complete
 session requirements transferred or complete: 27/27
 session consolidation: 27/27
-archive readiness: 100 percent
+archive readiness of original VA session: 100 percent
 ```
 
 ## Archive determination
 
-This session owns no unique implementation, validation, integration, propagation, reconciliation, or observation work. Deleting or archiving the conversation does not impair future execution. Continue the project only through the canonical locations above.
-
-ARCHIVE THIS SESSION.
+The original VA Claim Assistant session remains archive-safe. Its incomplete project work has durable owners above. The current workflow-consolidation support session must not recreate that product work; it may only preserve validation while retiring unnecessary hosted workflow/token mechanics.
