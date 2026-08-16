@@ -5,10 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: chore/remove-render-managed-hil-20260816
+branch: main
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove Render/third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: tasks/LLMA-WORKFLOW-CONSOLIDATION-RENDER-HIL-029.json
-role: CLAIMED_FOR_IMPLEMENTATION
+active_claim: NONE
+role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
 render_runtime_authority: NONE
@@ -98,37 +98,47 @@ hil-full-cycle-artifact-contract.yml -> CONSOLIDATE_INTO_STABLE_DISPATCHER
 
 The first two GitHub-hosted workflows minted review/publication bearer values with Python `secrets.token_urlsafe(...)`; those surfaces are retired. Deterministic controlled-cycle, artifact and deployed-evidence validation remains in the token-refusing dispatcher. Final-head validation passed HIL Compatibility `31927907026`, Architecture Guard `31927907100`, Provider Usage `31927907117`, and validate `31927907146`. Claim 028 is released.
 
-## Current tranche 6 — eliminate remaining Render HIL managed-host surface
+### Tranche 6 — remaining Render HIL managed-host retirement
 
-Exact claim: `tasks/LLMA-WORKFLOW-CONSOLIDATION-RENDER-HIL-029.json`.
+PR #152 merged at `91bb8578662fe2ef0e6276516efb98fce78827b0`.
 
-Direct inspection found the remaining `.github/workflows/hil-managed-receiver-validation.yml` validates `render.yaml`, uses GitHub-hosted execution, injects non-TV/TVC review/publication token values into a container, and records GitHub Actions as its execution venue. Direct inspection of `render.yaml` found a Render-managed HIL receiver service with `generateValue: true` for `STEGVERSE_HIL_REVIEW_TOKEN` and `STEGVERSE_HIL_PUBLICATION_TOKEN`.
+Direct inspection established that `.github/workflows/hil-managed-receiver-validation.yml` validated `render.yaml`, ran a GitHub-hosted managed-runtime simulation, injected review/publication token values outside TV/TVC authority, and recorded GitHub Actions as the execution venue. Direct inspection of `render.yaml` established that it declared a Render-managed HIL receiver and delegated `STEGVERSE_HIL_REVIEW_TOKEN` / `STEGVERSE_HIL_PUBLICATION_TOKEN` generation to that host.
 
-Disposition on this branch:
+Disposition:
 
 ```text
 .github/workflows/hil-managed-receiver-validation.yml -> ELIMINATE
   removed by efe5ec30e4c86b440f0f5531bf2b0e9aab5e8d99
-  reason: validates a prohibited third-party managed runtime and injects review/publication credentials outside TV/TVC authority
 
 render.yaml -> ELIMINATE_OBSOLETE_THIRD_PARTY_RUNTIME_MANIFEST
   removed by a1e74f1a684e29da87855a09e6ca9dd01c64c0b0
-  reason: declares Render as HIL receiver runtime and delegates review/publication credential generation to that host
 ```
 
-Provider-neutral source implementation, Dockerfile, HIL protocol code, deterministic tests and the token-refusing HIL compatibility dispatcher remain installed. No replacement third-party runtime or credential source is created.
+No replacement third-party runtime or credential source was created. Provider-neutral source implementation, Dockerfile, HIL protocol code, deterministic tests and the token-refusing HIL compatibility dispatcher remain installed.
 
-If this exact tranche passes final-head validation and merges:
+The first validation attempt `31931873262` failed only because the handoff rewrite omitted pre-existing required `resident sovereign carrier` and organization-handoff assertions. Those continuity assertions were restored without restoring either Render surface. Final-head validation then passed:
+
+```text
+Architecture Guard 31931918154 SUCCESS
+Validate Provider-Owned Usage Event 31931918138 SUCCESS
+validate 31931918137 SUCCESS
+```
+
+Claim `tasks/LLMA-WORKFLOW-CONSOLIDATION-RENDER-HIL-029.json` is released as `MERGED_INTO_CANONICAL_WORKSTREAM` by commit `b112c30b207a3d13a5ab83d9baa2886379a58197`.
+
+## Current accounting
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_before_tranche: 30
-workflow_files_after_tranche: 29
-workflow_files_removed_or_consolidated_after_tranche: 20
-classified_and_remediated_after_tranche: 21/49 = 42.86%
+workflow_files_current: 29
+workflow_files_removed_or_consolidated: 20
+classified_and_remediated: 21/49 = 42.86%
 remaining_unclassified_or_unconsolidated: 28/49 audit-start surfaces
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
+current_active_tranche_claim: NONE
 ```
+
+The 29-file count is reconciled from the directly verified 30-file post-tranche-5 state minus the exact one workflow deletion in PR #152; PR #152 added no workflow file. GitHub's Actions registry may retain historical workflow registrations after file deletion and must not be substituted for current workflow-file count.
 
 ## Canonical ownership / convergence
 
@@ -154,7 +164,7 @@ Formal local-model development and local discovery/launch/inference/proof remain
 - Do not recreate released local-model/runtime work.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
 
-## Next safe families after claim 029 releases
+## Next safe families
 
 ```text
 remaining HIL lifecycle/evidence workflows
@@ -171,18 +181,6 @@ global validate.yml
   redistribute unique validation, eliminate repository-token writeback and hosted token mechanics, then retire or reduce to a token-clean validation surface
 ```
 
-## Validation / release requirements for tranche 6
-
-```text
-Architecture Guard: required PASS
-Validate Provider-Owned Usage Event: required PASS
-validate: required PASS
-PR changed-file set: exact bounded surfaces only
-post-merge workflow count: direct verification required
-claim 029: release to MERGED_INTO_CANONICAL_WORKSTREAM only after merge
-handoff: finalize on main after merge
-```
-
 ## Archive condition
 
-This session remains a distinct support lane while workflow/token remediation remains incomplete. After this tranche, 29 workflow files would remain versus the adopted <=2 target. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct validation/integration/reconciliation role remains.
+This session remains a distinct support lane while workflow/token remediation remains incomplete. Twenty-nine workflow files remain versus the adopted <=2 target, 28/49 audit-start surfaces remain unclassified/unconsolidated, and `validate.yml` still carries repository-token checkout/artifact/writeback mechanics that must be redistributed or redesigned. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct validation/integration/reconciliation role remains.
