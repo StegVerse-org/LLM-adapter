@@ -2,33 +2,36 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOW = ROOT / ".github/workflows/ecosystem-chat-live-activation.yml"
+HOSTED_WORKFLOW = ROOT / ".github/workflows/ecosystem-chat-live-activation.yml"
 VALIDATE_WORKFLOW = ROOT / ".github/workflows/validate.yml"
+STATUS_WRITER = ROOT / "scripts/write_live_activation_status.py"
+HANDOFF = ROOT / "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md"
 
 
-def _persistence_block(source: str) -> str:
-    start = source.index("      - name: Persist stable activation status")
-    end = source.index("      - name: Retain first verified activation receipt", start)
-    return source[start:end]
+def test_hosted_activation_persistence_workflow_is_retired() -> None:
+    assert not HOSTED_WORKFLOW.exists()
+    source = HANDOFF.read_text(encoding="utf-8")
+    assert "ecosystem-chat-live-activation.yml" in source
+    assert "resident StegVerse carrier + TV/TVC" in source
 
 
-def test_mutable_observation_is_artifact_only_and_stable_status_is_force_added() -> None:
-    block = _persistence_block(WORKFLOW.read_text(encoding="utf-8"))
-    assert "git add -f reports/ecosystem-chat-live-activation-status.json" in block
-    assert "git add receipts/ecosystem-chat-live-activation.latest.json" not in block
-    assert "git add -f receipts/ecosystem-chat-live-activation.latest.json" not in block
-    assert 'echo "Stable activation status unchanged."' in block
-    assert 'git commit -m "chore: retain Ecosystem Chat live activation status [skip ci]"' in block
-
-
-def test_status_persistence_remains_semantic_and_fail_closed() -> None:
-    source = WORKFLOW.read_text(encoding="utf-8")
-    assert "Write stable activation blocker status" in source
-    assert "python scripts/write_live_activation_status.py" in source
-    assert "Validate generated live observation" in source
-    assert "reports/ecosystem-chat-live-activation-status.json" in source
-    assert "Upload current activation evidence" in source
-    assert "receipts/ecosystem-chat-live-activation.latest.json" in source
+def test_status_writer_remains_semantic_fail_closed_and_non_authorizing() -> None:
+    source = STATUS_WRITER.read_text(encoding="utf-8")
+    for required in (
+        "live_activation_status.v1",
+        "live_activation_observation_file_missing",
+        "live_activation_observation_unreadable",
+        "live_activation_observation_not_object",
+        "verified_live_activation_contains_blockers",
+        '"status_is_activation_authority": False',
+        '"status_is_deployment_authority": False',
+        '"status_is_custody": False',
+        '"status_is_release_authority": False',
+        "status_sha256",
+    ):
+        assert required in source
+    assert "observed_at" not in source
+    assert "generated_at" not in source
 
 
 def test_validation_workflow_persists_only_stable_status_and_verified_receipt() -> None:
