@@ -5,10 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: chore/consolidate-va-session-validation-20260816
+branch: main
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: LLMA-WORKFLOW-CONSOLIDATE-VA-SESSION-045
-active_claim_state: CLAIMED_FOR_IMPLEMENTATION
+active_claim: NONE
+active_claim_state: NONE
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -49,91 +49,43 @@ hil-process-restart-controlled-cycle.yml: RETIRED/TRANSFERRED_TO_TVC
 legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 ```
 
-## Released tranches 1-21
+## Released tranches 1-22
 
 Latest release:
 
 ```text
-21 PR #167
-final head: 3d1a91fce6e335dfabfb7acfd8b8982d47ed1693
-merge: 7c85481031a5120202ca387e8589628748986e32
-Architecture Guard: 31977852100 SUCCESS
-validate: 31977852076 SUCCESS
-validate job: 95239935541 SUCCESS
+22 PR #168
+final head: 9c64c385e80b2bf9f44dd44996f5feb3b41b2f4d
+merge: 2068b11061f08d5b6e602dd46b66dc35b34620ca
+Architecture Guard: 31979872823 SUCCESS
+validate: 31979872814 SUCCESS
+validate job: 95244823946 SUCCESS
 workflow parity: SUCCESS
 canonical Goal 4: SUCCESS
 validation-only authority boundary: SUCCESS
-claim 044: MERGED_INTO_CANONICAL_WORKSTREAM
-post-merge workflow files: 16
-classified/remediated: 36/49 = 73.47%
+claim 045: MERGED_INTO_CANONICAL_WORKSTREAM
+post-merge workflow files: 15
+classified/remediated: 37/49 = 75.51%
 ```
+
+Tranche 22 removed `.github/workflows/va-claim-assistant-session-consolidation.yml`, retiring its 12-hour schedule, `contents: write`, checkout/setup actions, repository git commit/pull/push writeback, and artifact upload. Its deterministic archive validation now executes through `scripts/verify_goal4_full.py` -> `scripts/validate_va_claim_assistant_session_consolidation.py` in the credential-clean global validation lane. The validator requires the historical GitHub-token provider task to remain `SUPERSEDED` and the sovereign successor `VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023` to remain machine-owned under TV/TVC authority with credential requirement `NONE`, GitHub token requirement `false`, GitHub-token runtime authority `NONE`, third-party inference `false`, and hosted fallback `DISALLOWED`.
+
+The first tranche-22 validate run correctly failed because this handoff had compressed away historical sovereign/retired-path strings consumed by existing boundary tests. Commit `9c64c385e80b2bf9f44dd44996f5feb3b41b2f4d` restored those invariants rather than weakening tests; the fresh exact-head Architecture Guard and all global validation steps then passed.
 
 ## Global validation carrier
 
 `.github/workflows/validate.yml` and its exact iOS mirror remain deterministic-validation-only: `permissions: {}`, anonymous exact-SHA source acquisition, explicit refusal of GitHub/provider/Master-Records/HIL/public-provider credential-shaped environment values, no checkout/setup/upload actions, no schedule, no repository writeback, no hosted activation, and no GitHub-token runtime/control-plane authority.
 
-## Active tranche 22 — VA Claim Assistant session archive validation
-
-Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-VA-SESSION-045.json`.
-
-Applicable handoffs and validator were read before mutation:
-
-```text
-docs/VA_CLAIM_ASSISTANT_SESSION_ARCHIVE_MIRROR_HANDOFF.md
-scripts/validate_va_claim_assistant_session_consolidation.py
-```
-
-The VA subordinate session is already archive-safe: 13 goal groups, 27/27 requirements transferred/complete, no active chat-owned claims, no unowned/manual tasks. Its current provider continuation is not the historical GitHub Models task. `tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json` is `SUPERSEDED`; canonical continuation is `tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json` under resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records with TV/TVC-only authority, credential requirement NONE, no GitHub token, no third-party inference, and hosted fallback DISALLOWED.
-
-Direct inspection of `.github/workflows/va-claim-assistant-session-consolidation.yml` showed a standalone GitHub-hosted deterministic archive-validation surface with:
-
-```text
-schedule: every 12 hours
-permissions: contents: write
-actions/checkout@v4
-actions/setup-python@v5
-repository git commit/pull/push writeback
-actions/upload-artifact@v4
-```
-
-Installed on the active branch:
-
-```text
-.github/workflows/va-claim-assistant-session-consolidation.yml
-  -> CONSOLIDATE_INTO_STABLE_DISPATCHER
-  -> removed
-scripts/verify_goal4_full.py
-  -> now executes scripts/validate_va_claim_assistant_session_consolidation.py
-scripts/validate_va_claim_assistant_session_consolidation.py
-  -> reconciled to require legacy GitHub-token route SUPERSEDED
-  -> requires sovereign successor MACHINE_OWNED
-  -> requires credential_authority TV/TVC
-  -> requires credential_requirement NONE
-  -> requires github_token_required false
-  -> requires github_token_runtime_authority NONE
-  -> requires third_party_inference_required false
-  -> requires hosted_provider_fallback DISALLOWED
-```
-
-The specialized VA archive handoff now distinguishes immutable historical blocked-task inventory from current sovereign continuation and identifies the credential-clean global dispatcher as the current validation carrier. Historical release workflow/artifact evidence remains preserved as evidence, not recurring authority.
-
-Initial exact-head validate run `31979357076` failed only because this active handoff revision had compressed away historical retirement/invariant strings consumed by existing live-activation boundary tests. The runtime implementation, credential-clean dispatcher, Chat profile/session checks, public-knowledge/VACC checks, and all preceding validation steps were green. This revision restores those authoritative strings rather than weakening the tests.
-
-No provider execution, custody, filing, publication, Site mutation, wallet effect, GitHub/OIDC authority, Render authority, or non-TV/TVC secret/token was introduced.
-
-Tranche 22 remains incomplete until fresh exact final-head Architecture Guard and global validate pass, PR #168 merges, post-merge workflow count is directly observed, claim 045 is released, and this handoff is finalized on main.
-
 ## Current accounting
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_on_released_main: 16
-workflow_files_removed_or_consolidated_released: 33
-classified_and_remediated_released: 36/49 = 73.47%
-remaining_unclassified_or_unconsolidated_released: 13/49
-expected_if_tranche_22_releases_without_concurrent_change: 15 workflow files, 34 removed/consolidated, 37/49 = 75.51%, 12/49 remaining
+workflow_files_current_on_main: 15
+workflow_files_removed_or_consolidated_released: 34
+classified_and_remediated_released: 37/49 = 75.51%
+remaining_unclassified_or_unconsolidated_released: 12/49
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-VA-SESSION-045
+current_active_tranche_claim: NONE
 ```
 
 ## Canonical ownership / convergence
@@ -160,6 +112,10 @@ StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/T
 - Do not restore hosted schedules, repository writeback, artifact transport, or activation.
 - Do not touch wallet signing, broadcast, or settlement.
 
+## Next safe task
+
+Under a fresh noncolliding claim, read the applicable specialized handoff and classify the next remaining default-branch workflow surface against canonical StegVerse owners and the `<=2` target. Prefer pure deterministic validation surfaces before workflows that perform publication, image creation, package publication, HIL lifecycle effects, or other stateful outputs.
+
 ## Archive condition
 
-This support session remains active while claim 045 and remaining workflow/token remediation are incomplete. Released main has 16 workflows against the <=2 target and 13/49 audit-start surfaces remain unclassified/unconsolidated.
+This support session remains active while workflow/token remediation is incomplete. Released main has 15 workflow files against the <=2 target and 12/49 audit-start surfaces remain unclassified/unconsolidated. The original local-model/runtime implementation is already complete/released and is not reopened by this maintenance lane.
