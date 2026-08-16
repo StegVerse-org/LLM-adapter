@@ -1,0 +1,76 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATION-HIL-CYCLE-028",
+  "originating_goal": "Eliminate GitHub-hosted HIL credential minting and duplicate lifecycle execution while preserving deterministic non-authorizing HIL compatibility validation under TV/TVC authority.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/workflow-consolidation-hil-cycle-20260815",
+  "claimant": "chatgpt-session-backend-support-20260815",
+  "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
+  "state": "CLAIMED_FOR_VALIDATION",
+  "claim_timestamp": "2026-08-15T23:55:00-05:00",
+  "claim_release_condition": "Merge this exact bounded cycle-workflow consolidation after final-head validation, verify post-merge workflow count, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "surfaces": [
+    ".github/workflows/hil-automated-full-cycle.yml",
+    ".github/workflows/hil-automated-deployment-proof.yml",
+    ".github/workflows/hil-controlled-cycle.yml",
+    ".github/workflows/hil-deployed-cycle-evidence-contract.yml",
+    ".github/workflows/hil-full-cycle-artifact-contract.yml",
+    ".github/workflows/hil-deployment-profile.yml",
+    "scripts/run_hil_automated_full_cycle.py",
+    "scripts/verify_hil_deployed_cycle_evidence.py",
+    "scripts/verify_hil_full_cycle_artifact.py",
+    "tests/test_hil_intake_api.py",
+    "tests/test_hil_provenance_chain.py",
+    "tests/test_hil_publication_api.py",
+    "tests/test_hil_controlled_cycle.py",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md"
+  ],
+  "classifications": {
+    ".github/workflows/hil-automated-full-cycle.yml": "TRANSFER_TO_STEGVERSE_TASK_OR_WORKER",
+    ".github/workflows/hil-automated-deployment-proof.yml": "TRANSFER_TO_STEGVERSE_TASK_OR_WORKER",
+    ".github/workflows/hil-controlled-cycle.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    ".github/workflows/hil-deployed-cycle-evidence-contract.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    ".github/workflows/hil-full-cycle-artifact-contract.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    ".github/workflows/hil-deployment-profile.yml": "KEEP_STANDALONE_EXCEPTION_TEMPORARY_STABLE_DISPATCHER"
+  },
+  "implementation_evidence": [
+    "c5b244b1b7cabf0cfba1b4554458e97d44c19a2a removed GitHub-hosted full-cycle credential minting workflow",
+    "de35802d487423779e7efac5b2d4657a0702cb1d removed GitHub-hosted deployment proof credential minting workflow",
+    "d3d4c9ebc65717c23f410e8a1b0035e2959a0caf removed standalone controlled-cycle workflow",
+    "e88dffef681f33b6fdcc9e26c751271dc39048c2 removed standalone deployed-cycle evidence contract workflow",
+    "717dc4ca1964a54dd95f9fa57f4207e9759636d0 removed standalone full-cycle artifact contract workflow",
+    "c97784d57067cd63bad3c82b699258753f902de8 folded deterministic cycle/evidence tests into the token-refusing HIL compatibility dispatcher"
+  ],
+  "canonical_owners": {
+    "hil_runtime_and_lifecycle": "StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md",
+    "hil_private_review": "StegVerse-Labs/TVC#8",
+    "site_projection": "StegVerse-Labs/Site#67",
+    "master_records": "master-records/orchestration#13"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_production_secret_or_token_allowed": false,
+    "github_hosted_review_or_publication_credential_minting_allowed": false
+  },
+  "collision_boundaries": [
+    "Do not duplicate TVC#8 authenticated private-review implementation.",
+    "Do not remove deterministic source/tests/verifiers needed for compatibility validation.",
+    "Do not infer HIL activation from synthetic or repository-local tests.",
+    "Do not create/export review, publication, provider, Master Records, or wallet credentials.",
+    "Do not touch StegFin signing, broadcast, settlement, or provider execution."
+  ],
+  "expected_evidence": [
+    "HIL Compatibility Validation PASS on final head",
+    "Architecture Guard PASS on final head",
+    "Validate Provider-Owned Usage Event PASS on final head",
+    "validate PASS on final head",
+    "exact PR merged",
+    "post-merge workflow tree count",
+    "released claim and finalized handoff"
+  ],
+  "next_executable_action": "Open the exact PR and validate its final head; merge only if all four required validation groups pass.",
+  "next_task_after_release": "Inspect the next unclaimed HIL/VACC/publication workflow family against its canonical handoff before creating another claim.",
+  "authority_effect": false,
+  "activation_effect": false
+}
