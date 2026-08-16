@@ -1,0 +1,53 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-OBJECTIVE-CONTRACT-038",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target while preserving the fail-closed outcome-level objective contract validator under StegVerse + TV/TVC authority boundaries.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-objective-contract-validation-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T13:41:00-05:00",
+  "claim_release_condition": "Merge the bounded objective-contract validation consolidation after exact final-head validation; verify scripts/validate_objective_contract.py runs from the token-clean global dispatcher, standalone workflow is absent, canonical/iOS parity passes, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "surfaces": [
+    ".github/workflows/validate-objective-contract.yml",
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-OBJECTIVE-CONTRACT-038.json"
+  ],
+  "classifications": {
+    ".github/workflows/validate-objective-contract.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    ".github/workflows/validate.yml": "RETAIN_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER",
+    "iosnoperiod/github/workflows/validate.yml": "MIRROR_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "actions_checkout_allowed": false,
+    "actions_setup_python_allowed": false,
+    "repository_writeback_allowed": false,
+    "activation_effect": false
+  },
+  "collision_boundaries": [
+    "Preserve scripts/validate_objective_contract.py fail-closed semantics and exact required outcome/authority boundary checks.",
+    "Do not remove objective-contract validation when deleting the standalone workflow.",
+    "Keep canonical/iOS validate workflow parity exact.",
+    "Do not add GitHub/OIDC/provider/Master-Records credentials.",
+    "Do not create live provider execution, activation, custody, publication, or wallet effects.",
+    "Do not use third-party runtime authority."
+  ],
+  "expected_evidence": [
+    "global validate runs scripts/validate_objective_contract.py",
+    "standalone validate-objective-contract.yml absent",
+    "canonical/iOS workflow parity PASS",
+    "validate exact final head PASS",
+    "Architecture Guard exact final head PASS",
+    "PR merged and claim released"
+  ],
+  "next_executable_action": "Add the objective-contract validator to the token-clean global validate dispatcher and mirror, then remove the redundant scheduled standalone workflow.",
+  "next_task_after_release": "Classify the next remaining default-branch workflow file against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
