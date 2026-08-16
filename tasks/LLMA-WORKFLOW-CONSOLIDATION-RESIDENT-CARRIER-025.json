@@ -3,12 +3,25 @@
   "task_id": "LLMA-WORKFLOW-CONSOLIDATION-RESIDENT-CARRIER-025",
   "originating_goal": "Reduce GitHub-hosted workflow/token surfaces while preserving all production capability inside StegVerse workers and TV/TVC authority.",
   "repository": "StegVerse-org/LLM-adapter",
-  "branch": "chore/workflow-consolidation-resident-carriers-20260815",
+  "branch": "main",
   "claimant": "chatgpt-session-backend-support-20260815",
-  "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "role": "INTEGRATION_AND_RECONCILIATION",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claim_timestamp": "2026-08-15T22:49:00-05:00",
-  "claim_release_condition": "Merge this exact bounded workflow-transfer tranche after final-head repository validation, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "released_at": "2026-08-15T23:04:00-05:00",
+  "release_evidence": {
+    "main_commit": "b5ec49b78c58c0cf9592b19b2e1b02825c96ec3f",
+    "architecture_guard_run": 31925681061,
+    "architecture_guard_conclusion": "SUCCESS",
+    "provider_usage_run": 31925681054,
+    "provider_usage_conclusion": "SUCCESS",
+    "validate_run": 31925681058,
+    "validate_conclusion": "SUCCESS",
+    "workflow_tree_sha": "728579c395699f1497031fbe200db5245a0ddb83",
+    "workflow_files_after_release": 40,
+    "pr_history": [146, 147, 148],
+    "pr_resolution": "Superseded PR branches were closed or bypassed after scheduled GitHub writeback repeatedly advanced main. The exact validated seven-file tranche was applied atomically to current main to stop the churn-producing workflows themselves."
+  },
   "surfaces": [
     ".github/workflows/local-runtime-model-proof.yml",
     ".github/workflows/sovereign-local-model-binding.yml",
@@ -59,15 +72,7 @@
     "Do not infer activation from workflow/test success.",
     "Do not touch wallet signing, broadcast, settlement, or StegFin trade execution."
   ],
-  "expected_evidence": [
-    "final-head Architecture Guard PASS",
-    "final-head validate PASS",
-    "final-head provider-usage validation PASS",
-    "merged pull request",
-    "post-merge workflow count",
-    "updated canonical workflow consolidation handoff"
-  ],
-  "next_task_after_release": "Create a fresh nonoverlapping workflow-consolidation claim for the next classified workflow family; prioritize remaining scheduled/write-capable hosted surfaces and HIL/VACC duplicates after reading their canonical handoffs.",
+  "next_task_after_release": "Create a fresh nonoverlapping workflow-consolidation claim for the next classified workflow family; prioritize HIL/VACC duplicate hosted surfaces only after reading their canonical handoffs.",
   "authority_effect": false,
   "activation_effect": false
 }
