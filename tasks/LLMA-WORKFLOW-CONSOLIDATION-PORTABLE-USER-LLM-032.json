@@ -1,0 +1,59 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATION-PORTABLE-USER-LLM-032",
+  "originating_goal": "Remove duplicate GitHub-hosted portable user-LLM runtime proof now that sovereign local-model discovery/launch/inference/proof is complete and released under the micro-node runtime and resident StegVerse carrier.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/transfer-portable-user-llm-proof-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
+  "state": "CLAIMED_FOR_VALIDATION",
+  "claim_timestamp": "2026-08-16T01:58:00-05:00",
+  "claim_release_condition": "Merge the exact bounded portable user-LLM workflow transfer after final-head validation, verify post-merge workflow-file count, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "surfaces": [
+    ".github/workflows/portable-user-llm-execution.yml",
+    "scripts/run_user_llm_portable_test.sh",
+    "scripts/user_llm_smoke_test.py",
+    "scripts/capture_site_compatible_user_llm_route_receipts.py",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATION-PORTABLE-USER-LLM-032.json"
+  ],
+  "classifications": {
+    ".github/workflows/portable-user-llm-execution.yml": "TRANSFER_TO_STEGVERSE_TASK_OR_WORKER"
+  },
+  "implementation_evidence": [
+    "dd6ae54a47174a54b0d91a0b206b56122def01d6 removed only the duplicate GitHub-hosted portable user-LLM execution workflow",
+    "ee5828633c03f1ff5c20db65269715672f447a6c recorded the active transfer and projected accounting in the canonical handoff",
+    "portable runtime scripts/source remain installed and canonical local-model/runtime source is already COMPLETE_RELEASED in StegVerse-002/micro-node-runtime"
+  ],
+  "canonical_owners": {
+    "sovereign_local_model_source_and_runtime": "StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md",
+    "live_activation": "StegVerse-Labs/.github#60 + resident sovereign heartbeat",
+    "route_authority": "StegVerse-Labs/TVC",
+    "transport": "StegVerse-org/LLM-adapter#18"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "github_actions_activation_role": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false
+  },
+  "collision_boundaries": [
+    "Do not recreate or duplicate the released micro-node runtime source implementation.",
+    "Do not delete portable-user-LLM source scripts merely because the GitHub workflow is retired.",
+    "Do not infer live local-model activation from workflow removal.",
+    "Do not compete with .github#60 resident heartbeat or TVC route authority.",
+    "Do not touch StegFin signing, broadcast, settlement, or provider execution."
+  ],
+  "expected_evidence": [
+    "Architecture Guard PASS on final head",
+    "Validate Provider-Owned Usage Event PASS on final head",
+    "validate PASS on final head",
+    "exact PR merged",
+    "post-merge workflow-file count",
+    "released claim and finalized canonical handoff"
+  ],
+  "next_executable_action": "Open the exact PR and validate its final head; merge only if all required validation groups pass.",
+  "next_task_after_release": "Inspect the next unclaimed workflow family against its canonical handoff before creating a new claim.",
+  "authority_effect": false,
+  "activation_effect": false
+}
