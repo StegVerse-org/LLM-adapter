@@ -1,0 +1,56 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-SESSION-PROVIDER-LAYER-043",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target while preserving durable session-provider consolidation/archive/orchestration validation under StegVerse + TV/TVC authority boundaries.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-session-provider-layer-validation-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T17:42:00-05:00",
+  "claim_release_condition": "Merge after exact final-head validation proves the three session-provider consolidation/archive/orchestration checks remain fail-closed under the canonical credential-clean validation path, standalone workflow is absent, workflow parity passes, then release claim.",
+  "surfaces": [
+    ".github/workflows/session-provider-layer-consolidation.yml",
+    "scripts/check_session_provider_layer_consolidation.py",
+    "scripts/check_session_provider_layer_archive_disposition.py",
+    "scripts/check_llm_adapter_orchestration_state.py",
+    "scripts/verify_goal4_full.py",
+    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-SESSION-PROVIDER-LAYER-043.json"
+  ],
+  "classifications": {
+    ".github/workflows/session-provider-layer-consolidation.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    "scripts/verify_goal4_full.py": "CANDIDATE_CANONICAL_AGGREGATE_VALIDATION_PATH"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "actions_checkout_allowed": false,
+    "actions_setup_python_allowed": false,
+    "artifact_transport_allowed": false,
+    "repository_writeback_allowed": false,
+    "activation_effect": false
+  },
+  "collision_boundaries": [
+    "Do not reopen archived stale-activation reconciliation or publication implementation as live authority.",
+    "Preserve issue #18 and StegVerse-Healer ownership boundaries from the applicable handoffs.",
+    "Do not modify session-provider/archive/orchestration data semantics merely to make validation pass.",
+    "Keep canonical/iOS global workflow parity exact.",
+    "Do not add GitHub/OIDC/provider/Master-Records credentials, artifacts, writeback, provider execution, publication, deployment, or activation."
+  ],
+  "expected_evidence": [
+    "all three existing deterministic check scripts execute successfully from canonical validation path",
+    "standalone session-provider-layer-consolidation.yml absent",
+    "canonical/iOS workflow parity PASS",
+    "Architecture Guard exact final head PASS",
+    "validate exact final head PASS",
+    "PR merged and claim released"
+  ],
+  "next_executable_action": "Create the implementation branch from this claimed main state, inspect the three validators, integrate them into the existing aggregate validation path if compatible, remove the standalone workflow, validate, merge, and release.",
+  "next_task_after_release": "Classify the next remaining default-branch workflow file against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
