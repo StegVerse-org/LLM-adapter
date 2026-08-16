@@ -112,6 +112,10 @@ jobs:
         run: "$PYTHON_BIN scripts/check_ecosystem_chat_service_adoption.py"
       - name: Validate outcome-level objective contract
         run: "$PYTHON_BIN scripts/validate_objective_contract.py"
+      - name: Test Chat LLM profile policy layer
+        run: "$PYTHON_BIN -m pytest tests/test_chat_llm_profiles.py -q"
+      - name: Build deterministic Chat LLM profile validation receipt
+        run: "$PYTHON_BIN scripts/verify_chat_llm_profiles.py --write-receipt"
       - name: Verify authenticated usage session endpoint
         run: "$PYTHON_BIN scripts/verify_usage_session_api.py"
       - name: Verify External Chat staging posture
@@ -217,6 +221,8 @@ jobs:
           assert 'tests/test_provider_usage_event.py' in workflow
           assert 'check_ecosystem_chat_service_adoption.py' in workflow
           assert 'validate_objective_contract.py' in workflow
+          assert 'tests/test_chat_llm_profiles.py' in workflow
+          assert 'verify_chat_llm_profiles.py --write-receipt' in workflow
           assert all(marker not in workflow for marker in forbidden), forbidden
           print('GLOBAL_VALIDATE_CREDENTIAL_AUTHORITY=TV_TVC')
           print('GLOBAL_VALIDATE_GITHUB_TOKEN_AUTHORITY=NONE')
