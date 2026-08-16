@@ -1,29 +1,27 @@
-# HIL Runtime Activation Profile
+# HIL Compatibility Runtime Profile
 
-Version: `HIL-RUNTIME-ACTIVATION-PROFILE-v2`
+Version: `HIL-RUNTIME-COMPATIBILITY-PROFILE-v3`
 
 ## Purpose
 
-This document defines the platform-agnostic runtime contract for the `Humans as the Interoperability Layer` controlled cycle.
+This document defines the non-authorizing LLM-adapter compatibility contract for the `Humans as the Interoperability Layer` v1.1 controlled-cycle interface.
 
-There is no hosting-platform dependency, hosting-provider requirement, container-platform requirement, or external secret-store requirement. Runtime construction, configuration delivery, lifecycle transitions, restart, persistence binding, and evidence emission are governed by TV/TVC.
-
-```text
-application code != hosting platform
-runtime environment != vendor environment
-configuration != unmanaged environment variables
-process restart != provider redeploy
-```
-
-## Required application boundary
-
-The runtime must execute repository code at or after:
+Production HIL runtime construction, protected configuration delivery, lifecycle transitions, restart, persistence, private review, and evidence authority belong to TV/TVC. The canonical production handoff is:
 
 ```text
-b2e612dd74d311e0cbe66cd1c1d4758bff129fd4
+StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
+backend: tvc.experiment.controlled-cycle.v1
+private_review_owner: StegVerse-Labs/TVC#8
+credential_authority: TV/TVC
+github_token_runtime_authority: NONE
+third_party_runtime_dependency: NONE_ALLOWED
 ```
 
-The application boundary is `llm_adapter.combined_gateway:app` and must expose:
+LLM-adapter does not require or select a vendor host, hosted compute provider, external secret store, or third-party runtime for HIL production continuity.
+
+## Required compatibility boundary
+
+The compatibility application surface is `llm_adapter.combined_gateway:app` and exposes protocol-compatible endpoints including:
 
 ```text
 GET  /health
@@ -32,29 +30,41 @@ POST /api/hil/submissions
 GET  /api/hil/publication-readiness
 ```
 
-Review and publication mutation endpoints remain separately governed and authenticated.
+Review and publication mutation endpoints remain separately governed and authenticated. Endpoint presence is not authority.
+
+## Canonical HIL v1.1 identity
+
+```text
+Primary: v1.1
+Primary SHA-256: a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462
+Protocol: HIL-PROTOCOL-v1.1
+Prompt: HIL-PROMPT-v1.1
+Prompt SHA-256: cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c
+```
+
+These values must agree with the canonical TVC/Site HIL v1.1 state. Historical hashes are provenance only and must not be accepted as current activation identity.
 
 ## TV/TVC configuration ownership
 
-TV/TVC owns all runtime values, including values currently consumed through process-environment compatibility keys.
+Compatibility keys may still be consumed by adapter code, but protected values are issued and managed only by TV/TVC:
 
-| Compatibility key | TV/TVC-governed meaning |
+| Compatibility key | Governed meaning |
 |---|---|
 | `STEGVERSE_HIL_INTAKE_ENABLED` | Controlled-cycle intake gate |
 | `STEGVERSE_HIL_DATA_DIR` | Governed durable-state namespace or resolved local projection |
-| `STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS` | TV/TVC durability attestation result |
-| `STEGVERSE_HIL_REVIEW_TOKEN` | Ephemeral or durable capability credential for private review |
-| `STEGVERSE_HIL_PUBLICATION_TOKEN` | Separate capability credential for publication |
+| `STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS` | Durability attestation result |
+| `STEGVERSE_HIL_REVIEW_TOKEN` | TV/TVC-owned private-review capability credential |
+| `STEGVERSE_HIL_PUBLICATION_TOKEN` | Separately governed publication capability credential |
 
-These names are adapter compatibility inputs, not a requirement that a human, hosting provider, shell, `.env` file, or platform dashboard manage them.
+These names are compatibility inputs. They do not authorize a repository workflow, GitHub token, shell, `.env` file, or deployment dashboard to mint or own production credentials.
 
-TV/TVC may inject them into a process environment, bind them through a runtime adapter, resolve them from governed capability records, or replace the compatibility interface later without changing the HIL protocol.
+Raw credential or capability material must never enter repository records, workflow artifacts, logs, or public projections.
 
-## Storage contract
+## Persistence compatibility
 
-HIL state must survive a TV/TVC-governed runtime restart. The persistence implementation is abstract and may be local, distributed, replicated, content-addressed, database-backed, filesystem-backed, or another admissible TV/TVC storage capability.
+The protocol requires exact-byte and provenance continuity across an authorized runtime replacement. The canonical TVC backend owns the production state transition and custody proof. LLM-adapter compatibility tests may verify data-shape and fail-closed behavior, but they do not create custody or activation evidence.
 
-The persistence contract must preserve:
+Required preserved state includes:
 
 - exact response bytes;
 - normalized provenance manifests;
@@ -63,43 +73,40 @@ The persistence contract must preserve:
 - publication records;
 - stable identifiers and hashes.
 
-No mounted volume, container, host, service provider, or vendor storage class is required by the protocol.
+No vendor-specific storage product or hosted service class is required by the protocol.
 
-## Runtime lifecycle
+## Runtime lifecycle authority
+
+Canonical production lifecycle:
 
 ```text
-TV/TVC resolves runtime capability set
--> TV/TVC binds governed storage namespace
--> TV/TVC issues distinct review and publication capabilities
--> TV/TVC starts gateway runtime
--> readiness contracts are observed
--> controlled response is submitted
--> TV/TVC terminates the runtime instance
--> TV/TVC starts a new runtime instance against the same governed state
--> exact-byte and provenance persistence are verified
--> private review is executed under review capability
--> publication is executed under separate publication capability
--> governed evidence is transferred to Site
+TVC admits HIL profile/package identity
+-> TV/TVC resolves protected capability bindings
+-> StegVerse runtime executes the admitted controlled-cycle task
+-> custody/reconstruction evidence is retained
+-> authenticated private review occurs under TVC#8
+-> publication remains a separate authority boundary
+-> Site receives only admissible projection
+-> Master Records assembly/release remains separately governed
 ```
+
+LLM-adapter compatibility code does not independently perform or authorize these production lifecycle transitions.
 
 ## Readiness acceptance
 
-The intake readiness response must identify:
+Compatibility readiness must bind the current HIL v1.1 identity:
 
 ```text
-primary_sha256 = 52102cccb9ba9016c76434a64e22031b6a8c3edd3b8806e7b664e609216b2946
-prompt_sha256  = 0ebe215318b4eeeb8ed6422e0954372c314fadc8fac9254e452bc7670a1b9922
+primary_sha256 = a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462
+prompt_sha256  = cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c
 state          = READY
-private_review_configured = true
 ```
 
-Publication readiness must independently report that publication configuration is present and append-only. Readiness grants no mutation authority.
+A READY response is protocol compatibility evidence only. It does not establish authenticated private review, publication, Master Record custody, release, or product activation.
 
-## Capability-separation evidence
+## Capability-separation projection
 
-Evidence must establish that intake, private review, and publication are distinct TV/TVC capability bindings. Raw credentials or capability material must never enter repository records.
-
-A permitted projection is:
+A non-secret compatibility projection may identify role binding without revealing capability material:
 
 ```json
 {
@@ -110,41 +117,43 @@ A permitted projection is:
 }
 ```
 
-## Restart proof
-
-A valid restart proof must bind:
-
-- TV/TVC transition identifier for termination;
-- TV/TVC transition identifier for subsequent start;
-- prior and successor runtime-instance identifiers;
-- submission identifier;
-- response SHA-256 before and after restart;
-- provenance-manifest SHA-256 before and after restart;
-- governed storage-state reference;
-- post-restart lookup result.
-
-An in-process application-object recreation does not satisfy this requirement. A TV/TVC-governed process or runtime-instance replacement does.
-
 ## Non-authority boundaries
 
 ```text
-runtime configured != public acquisition authorized
+compatibility validated != production runtime activated
 readiness READY != controlled cycle complete
-capability bound != mutation authorized for every actor
 receiver receipt != private acceptance
 private acceptance != publication
 publication != Master Record custody
-restart success != evidence packet approval
-TV/TVC orchestration != automatic release authority
+restart compatibility != TVC lifecycle proof
+GitHub workflow success != HIL activation
+GitHub token != HIL runtime authority
+LLM-adapter != production credential authority
 ```
 
-## Completion handoff
+## Activation denominator
 
-Runtime evidence is transferred into:
+Canonical HIL product activation remains governed by the TVC handoff:
 
 ```text
-StegVerse-Labs/Site/data/hil-activation-state.json
-StegVerse-Labs/Site/data/hil-deployed-controlled-cycle-evidence.json
+1 generalized TVC backend merged/validated: COMPLETE
+2 authentic participant custody/reconstruction: COMPLETE
+3 authenticated private review: PENDING / TVC#8
+4 separately authenticated publication: PENDING
+5 Site projection after authenticated decision: PENDING
+6 Master Record assembly/release: PENDING
+7 downstream verification/publication: PENDING
 ```
 
-`LLM-adapter` owns gateway behavior. TV/TVC owns runtime configuration and lifecycle. Site owns public activation state and the evidence chain leading to the first HIL Master Record release.
+Therefore compatibility validation in this repository does not advance the product activation denominator beyond the canonical **2/7** state.
+
+## Canonical continuation
+
+```text
+StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
+StegVerse-Labs/TVC#8
+StegVerse-Labs/Site#67
+master-records/orchestration#13
+```
+
+`LLM-adapter` retains compatibility code and deterministic tests only. TV/TVC retains credential and runtime authority. Site and Master Records retain their separately governed downstream roles.
