@@ -5,9 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/consolidate-federal-security-baseline-validation-20260816
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
+active_claim: LLMA-WORKFLOW-CONSOLIDATE-FEDERAL-SECURITY-BASELINE-042
+active_claim_state: CLAIMED_FOR_IMPLEMENTATION
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -69,62 +70,57 @@ legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 18 #164 2452d23531bafdbd9a20de0ba0dd28aa127991a4
 ```
 
-Claims 025-041 are released.
+Claims 025-041 are released. Tranche 18 final-head evidence: Architecture Guard `31974215930` SUCCESS; validate `31974215875` SUCCESS with all 67 substantive validation steps successful; PR #164 merged at `2452d23531bafdbd9a20de0ba0dd28aa127991a4`.
 
 ## Global validation authority cleanup
 
 `.github/workflows/validate.yml` and its exact iOS mirror are deterministic-validation-only: `permissions: {}`, anonymous exact-SHA source acquisition, explicit refusal of GitHub/provider/Master-Records/HIL and public-provider credential-shaped environment values, no checkout/setup/upload actions, no schedule, no repository writeback, no hosted activation probe, and no GitHub-token runtime/control-plane authority.
 
-## Tranche 18 — public-knowledge/VACC source validation consolidated
+## Active tranche 19 — exceed-federal security baseline validation consolidation
 
-PR #164 merged at `2452d23531bafdbd9a20de0ba0dd28aa127991a4`; final implementation head `e95786a8210ea8eb78666e6f545cb62a7a7c832e`.
+Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-FEDERAL-SECURITY-BASELINE-042.json`.
 
-The standalone `.github/workflows/public-knowledge-vacc-source-validation.yml` was removed. Its deterministic capability now runs from the shared credential-clean dispatcher and exact iOS mirror:
+Before mutation, the repository-level canonical handoff `docs/LLM_ADAPTER_MIRROR_HANDOFF.md` was read. Its archived stale-activation-reconciliation workload is not reopened; issue #18 and the named StegVerse/TV-TVC owners retain live-provider/runtime authority.
 
-```text
-compile:
-  llm_adapter/public_knowledge.py
-  llm_adapter/ai_entry_backend_service.py
-  llm_adapter/vacc_public_information.py
-  tests/test_public_knowledge.py
-  tests/test_vacc_public_information.py
-focused validation:
-  $PYTHON_BIN -m unittest -q tests.test_public_knowledge tests.test_vacc_public_information
-```
-
-`docs/ECOSYSTEM_PUBLIC_KNOWLEDGE_MIRROR_HANDOFF.md` and `docs/VACC_PUBLIC_INFORMATION_PROFILE_MIRROR_HANDOFF.md` preserve historical run `31875248198`, job `94989892925`, 11/11 focused tests, anonymous exact-SHA acquisition, compile PASS, and the original `PUBLIC_KNOWLEDGE_VACC_SOURCE_VALIDATION_PASS` marker while naming `.github/workflows/validate.yml` as the current validation carrier.
-
-The current global credential-refusal gate now explicitly includes `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` in addition to GitHub and StegVerse credential-shaped values. This does not grant those providers authority; it prevents their credential-bearing environment values from entering deterministic source validation.
-
-Exact final-head evidence:
+Direct inspection of `.github/workflows/exceed-federal-security-baseline.yml` showed a standalone deterministic validation surface using `actions/checkout@v4`, `actions/setup-python@v5`, `contents: read`, and Python 3.12. Its unique capability is:
 
 ```text
-Architecture Guard 31974215930 SUCCESS
-validate 31974215875 SUCCESS
-Compile public-knowledge and VACC source surfaces SUCCESS
-Validate public-knowledge and VACC source policy SUCCESS
-workflow parity SUCCESS
-Run canonical Goal 4 verification SUCCESS
-Confirm validation-only authority boundary SUCCESS
-all 67 substantive validate steps SUCCESS
-PR #164 merge 2452d23531bafdbd9a20de0ba0dd28aa127991a4
+python scripts/check_exceed_federal_security_baseline.py
 ```
 
-Claim `tasks/LLMA-WORKFLOW-CONSOLIDATE-PUBLIC-KNOWLEDGE-VACC-041.json` is released as `MERGED_INTO_CANONICAL_WORKSTREAM`.
+The authoritative contract and validator remain:
 
-## Current accounting
+```text
+data/security/exceed-federal-baseline.json
+scripts/check_exceed_federal_security_baseline.py
+```
 
-The preceding released main contained 20 workflow files. PR #164 removed exactly one default-branch workflow file and added no workflow file. Therefore:
+Classification:
+
+```text
+.github/workflows/exceed-federal-security-baseline.yml
+  -> CONSOLIDATE_INTO_STABLE_DISPATCHER
+.github/workflows/validate.yml
+  -> RETAIN_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER
+iosnoperiod/github/workflows/validate.yml
+  -> MIRROR_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER
+```
+
+No contract semantics, provider/runtime authority, custody, publication, deployment, activation, wallet effect, or credential boundary is authorized to change. Tranche 19 is currently `CLAIMED_FOR_IMPLEMENTATION`; the next executable mutation is to add the security-baseline validator to both stable dispatchers, remove the standalone checkout/setup workflow, validate exact final head, merge, release claim 042, and finalize this handoff on main.
+
+## Current accounting — released work only
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_on_main: 19
+workflow_files_current_on_released_main: 19
 workflow_files_removed_or_consolidated: 30
 classified_and_remediated: 33/49 = 67.35%
 remaining_unclassified_or_unconsolidated: 16/49
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
+current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-FEDERAL-SECURITY-BASELINE-042
 ```
+
+If tranche 19 releases as classified, the expected released accounting becomes 18 workflow files, 31 removed/consolidated, 34/49 = 69.39% classified/remediated, and 15/49 remaining, subject to direct post-merge observation.
 
 ## Canonical ownership / convergence
 
@@ -136,26 +132,19 @@ local runtime discovery/launch/inference/proof: COMPLETE_RELEASED
 live local-model activation: StegVerse-Labs/.github#60 + resident sovereign heartbeat
 credential/route authority: TV/TVC / StegVerse-Labs/TVC
 Ecosystem Chat runtime binding: StegVerse-org/LLM-adapter#18
-public corpus expansion: StegVerse-org/LLM-adapter#140
-VACC source profile: StegVerse-org/LLM-adapter#141
-VACC runtime: StegVerse-org/LLM-adapter#90
 StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
 ```
 
 ## Collision boundaries
 
 - Do not recreate sovereign runtime source work.
-- Do not weaken claim-specific official-VA-only grounding.
-- Do not make VAwatchdog/private material public grounding without separately admitted sanitized projection.
-- Do not infer runtime activation from source-policy validation.
+- Do not reopen the archived stale-activation reconciliation as live execution authority.
+- Do not infer runtime activation from source/security validation.
 - Do not create non-TV/TVC runtime/test tokens.
+- Do not modify the security contract while only consolidating its validation carrier.
 - Do not restore hosted activation, artifact transport, or repository writeback.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
 
-## Next safe task
-
-Under a fresh noncolliding claim, read the applicable specialized handoff and classify the next remaining default-branch workflow file against canonical StegVerse owners and the `<=2` target. Reusable `workflow_call`, publication, HIL, VACC governed-runtime, image-publication, and portable-image surfaces require their specific ownership/permission semantics to be read before mutation.
-
 ## Archive condition
 
-This session remains a distinct support lane while workflow/token remediation remains incomplete. Nineteen actual workflow files remain on main versus the adopted <=2 target, and 16/49 canonical audit-start surfaces remain unclassified/unconsolidated. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
+This session remains a distinct support lane while workflow/token remediation remains incomplete. Nineteen actual workflow files remain on released main versus the adopted <=2 target, 16/49 canonical audit-start surfaces remain unclassified/unconsolidated, and claim 042 is active.
