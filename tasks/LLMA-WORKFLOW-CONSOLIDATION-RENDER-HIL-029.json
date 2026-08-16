@@ -1,0 +1,57 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATION-RENDER-HIL-029",
+  "originating_goal": "Remove Render as a HIL/runtime dependency and eliminate non-TV/TVC managed-host credential generation while preserving HIL capability under StegVerse/TV-TVC authority.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/remove-render-managed-hil-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T01:35:00-05:00",
+  "claim_release_condition": "Merge the exact bounded Render/HIL retirement after final-head validation, verify post-merge workflow count, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "surfaces": [
+    ".github/workflows/hil-managed-receiver-validation.yml",
+    "render.yaml",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATION-RENDER-HIL-029.json"
+  ],
+  "classifications": {
+    ".github/workflows/hil-managed-receiver-validation.yml": "ELIMINATE",
+    "render.yaml": "ELIMINATE_OBSOLETE_THIRD_PARTY_RUNTIME_MANIFEST"
+  },
+  "canonical_owners": {
+    "hil_runtime_and_lifecycle": "StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md",
+    "hil_private_review": "StegVerse-Labs/TVC#8",
+    "sovereign_runtime": "StegVerse resident carrier / TV-TVC control plane"
+  },
+  "direct_conflict_evidence": {
+    "hil_managed_receiver_validation": "Workflow validates render.yaml, runs GitHub-hosted managed-runtime simulation, injects review/publication token values outside TV/TVC, and describes repository-owned GitHub Actions as the execution venue.",
+    "render_yaml": "Manifest declares a Render-managed HIL receiver service and asks the host to generate STEGVERSE_HIL_REVIEW_TOKEN and STEGVERSE_HIL_PUBLICATION_TOKEN. User and canonical architecture prohibit Render as a production dependency and reserve protected capability issuance to TV/TVC."
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "third_party_host_generated_review_or_publication_token_allowed": false,
+    "render_runtime_dependency_allowed": false
+  },
+  "collision_boundaries": [
+    "Do not duplicate TVC#8 private-review implementation.",
+    "Do not remove provider-neutral Dockerfile or HIL source implementation solely because Render is retired.",
+    "Do not infer HIL product activation from removing a hosted manifest/workflow.",
+    "Do not create replacement provider credentials or third-party hosting.",
+    "Do not touch StegFin signing, broadcast, settlement, or provider execution."
+  ],
+  "expected_evidence": [
+    "Architecture Guard PASS on final head",
+    "Validate Provider-Owned Usage Event PASS on final head",
+    "validate PASS on final head",
+    "exact PR merged",
+    "post-merge workflow tree count",
+    "released claim and finalized canonical handoff"
+  ],
+  "next_executable_action": "Delete the obsolete Render-dependent HIL workflow and render.yaml, update the canonical workflow-consolidation handoff, then open and validate the exact PR.",
+  "next_task_after_release": "Inspect the next unclaimed HIL/VACC/publication workflow family against its canonical handoff before creating a new claim.",
+  "authority_effect": false,
+  "activation_effect": false
+}
