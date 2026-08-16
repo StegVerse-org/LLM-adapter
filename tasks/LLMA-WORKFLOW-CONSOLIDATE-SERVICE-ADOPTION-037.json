@@ -1,0 +1,57 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-SERVICE-ADOPTION-037",
+  "originating_goal": "Reduce GitHub workflow surfaces while preserving Ecosystem Chat zero-external-dependency sovereignty validation under StegVerse + TV/TVC authority boundaries.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-service-adoption-validation-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T03:54:00-05:00",
+  "claim_release_condition": "Merge the bounded service-adoption validation consolidation after exact final-head validation; verify the sovereignty validator runs from the token-clean global dispatcher, standalone workflow is absent, specialized handoff points to the canonical dispatcher, canonical/iOS parity passes, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
+  "surfaces": [
+    ".github/workflows/ecosystem-chat-service-adoption.yml",
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "docs/ECOSYSTEM_CHAT_SERVICE_ADOPTION_MIRROR_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-SERVICE-ADOPTION-037.json"
+  ],
+  "classifications": {
+    ".github/workflows/ecosystem-chat-service-adoption.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    ".github/workflows/validate.yml": "RETAIN_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER",
+    "iosnoperiod/github/workflows/validate.yml": "MIRROR_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER"
+  },
+  "canonical_owner": "StegVerse-org/LLM-adapter#18",
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "actions_checkout_allowed": false,
+    "actions_setup_python_allowed": false,
+    "repository_writeback_allowed": false,
+    "activation_effect": false
+  },
+  "collision_boundaries": [
+    "Preserve scripts/check_ecosystem_chat_service_adoption.py semantics and zero-external-platform completion target.",
+    "Update the specialized handoff validation automation pointer; do not rewrite its canonical owner or sovereignty completion boundary.",
+    "Keep canonical/iOS validate workflow parity exact.",
+    "Do not add GitHub/OIDC/provider/Master-Records credentials.",
+    "Do not execute or restore Render/Cloudflare/hosted-provider production paths.",
+    "Do not create live activation or provider execution.",
+    "Do not touch StegFin signing, broadcast, settlement, or provider execution."
+  ],
+  "expected_evidence": [
+    "global validate runs scripts/check_ecosystem_chat_service_adoption.py",
+    "standalone ecosystem-chat-service-adoption.yml absent",
+    "specialized handoff names .github/workflows/validate.yml as validation automation",
+    "canonical/iOS workflow parity PASS",
+    "validate exact final head PASS",
+    "Architecture Guard exact final head PASS",
+    "PR merged and claim released"
+  ],
+  "next_executable_action": "Add the service-adoption sovereignty validator to the token-clean global validate dispatcher and mirror, update the specialized handoff automation pointer, and remove the redundant standalone workflow.",
+  "next_task_after_release": "Classify the next remaining workflow surface against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
