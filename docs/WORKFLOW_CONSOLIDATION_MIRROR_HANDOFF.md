@@ -5,9 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/consolidate-objective-contract-validation-20260816
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
+active_claim: LLMA-WORKFLOW-CONSOLIDATE-OBJECTIVE-CONTRACT-038
+active_claim_state: CLAIMED_FOR_IMPLEMENTATION
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -23,26 +24,13 @@ Production continuity remains `StegVerse task -> StegVerse worker -> TV/TVC auth
 ```text
 resident carrier owns continuity
 resident StegVerse carrier + TV/TVC
-resident sovereign carrier
-GitHub token as provider credential: prohibited
-GitHub token as runtime/control-plane authority: prohibited
+GitHub token as provider credential/runtime authority: prohibited
 GitHub Actions activation role: NONE
-GitHub OIDC as runtime/control-plane authority: prohibited
-repository secrets for provider/Master Records production path: prohibited
-TV/TVC protected values exported into GitHub Actions: prohibited
-GitHub-hosted runtime secret generation: prohibited
+GitHub OIDC runtime authority: prohibited
+repository provider/Master Records production secrets: prohibited
+TV/TVC protected values in GitHub Actions: prohibited
 non-TV/TVC test-token substitution: prohibited
 third-party production/runtime dependency: prohibited
-```
-
-## Retired hosted continuity provenance
-
-```text
-ecosystem-chat-live-activation.yml: RETIRED — resident StegVerse carrier + TV/TVC owns live activation
-ecosystem-chat-live-activation-monitor.yml: RETIRED — resident carrier owns continuity
-platform-agnostic-runtime.yml: RETIRED/TRANSFERRED
-hil-process-restart-controlled-cycle.yml: RETIRED/TRANSFERRED_TO_TVC
-legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 ```
 
 ## Completed tranches 1-14
@@ -64,69 +52,55 @@ legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 14 #160 c7bb207042259b11060e8cf8d93019a7cff0ccbe
 ```
 
-All completed tranche claims 025-037 are released.
+Claims 025-037 are released. Tranche 12 made the global validator credential-clean and non-activating; tranche 13 consolidated provider-owned usage validation; tranche 14 consolidated Ecosystem Chat zero-external-dependency sovereignty validation. Final evidence for tranche 14: Architecture Guard `31964932357` SUCCESS; validate `31964932396` SUCCESS with all 60 substantive steps successful; PR #160 merged at `c7bb207042259b11060e8cf8d93019a7cff0ccbe`.
 
-### Tranche 10
+## Active tranche 15 — outcome-level objective-contract validation consolidation
 
-Hosted `platform-agnostic-runtime.yml` was retired because it created non-TV/TVC credential-shaped HIL values. Sovereign local runtime discovery/launch/inference/proof remains `COMPLETE_RELEASED` in `StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md`.
+Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-OBJECTIVE-CONTRACT-038.json`.
 
-### Tranche 11
-
-`capability-runtime.yml` remains a temporary cross-platform validation exception but is credential-clean: `permissions: {}`, anonymous exact-SHA source acquisition, no checkout/setup actions, explicit credential refusal, no writeback, 3-OS × Python 3.11/3.12 matrix, and cancel-in-progress. Validation run `31936410223` passed 6/6 matrix jobs.
-
-### Tranche 12
-
-PR #158 made global `validate.yml` and its iOS mirror deterministic-validation-only and credential-clean. Schedule, checkout/setup actions, artifact upload, hosted live activation probe, and GitHub writeback were removed. Final validation: Architecture Guard `31937093509` SUCCESS; Provider-Owned Usage `31937093522` SUCCESS; validate `31937093538` SUCCESS with 57/57 validation steps successful.
-
-### Tranche 13 — provider-owned usage validation consolidated
-
-PR #159 merged at `ee193f96c1d3b6fca2f0d1d009536fec83c6a884`; final implementation head `24b1205eddd5a7768fb1804fe142afda9a2782fa`. `.github/workflows/validate-provider-usage-event.yml` was consolidated into the token-clean global dispatcher. Final validation: Architecture Guard `31937348046` SUCCESS; validate `31937348003` SUCCESS with 59/59 validation steps successful; provider-event validator, adversarial tests, and workflow parity all passed. Claim 036 is released.
-
-### Tranche 14 — Ecosystem Chat sovereignty validation consolidated
-
-PR #160 merged at `c7bb207042259b11060e8cf8d93019a7cff0ccbe`; final implementation head `a7bf10d659fa329654d757644c97b01835ca1ce6`.
-
-`.github/workflows/ecosystem-chat-service-adoption.yml` was classified `CONSOLIDATE_INTO_STABLE_DISPATCHER` and removed. Its unique deterministic sovereignty check remains in `.github/workflows/validate.yml` and its exact iOS mirror as `$PYTHON_BIN scripts/check_ecosystem_chat_service_adoption.py`. `docs/ECOSYSTEM_CHAT_SERVICE_ADOPTION_MIRROR_HANDOFF.md` now points validation automation to `.github/workflows/validate.yml` while preserving `StegVerse-org/LLM-adapter#18` as runtime/sovereignty continuation owner and TV/TVC as runtime credential authority.
-
-Final-head evidence:
+Direct inspection of `.github/workflows/validate-objective-contract.yml` showed a scheduled GitHub-hosted validation surface with `actions/checkout@v4`, `actions/setup-python@v5`, `contents: read`, and a six-hour cron. Its only unique capability is deterministic execution of:
 
 ```text
-Architecture Guard 31964932357 SUCCESS
-validate 31964932396 SUCCESS
-Validate Ecosystem Chat zero-external-dependency sovereignty contract SUCCESS
-workflow parity SUCCESS
-all 60 substantive validate steps SUCCESS
-PR #160 merge c7bb207042259b11060e8cf8d93019a7cff0ccbe
+python scripts/validate_objective_contract.py
 ```
 
-Claim 037 is released as `MERGED_INTO_CANONICAL_WORKSTREAM`.
+The validator itself remains authoritative and fail-closed. It preserves required runtime outcomes, downstream destinations, disallowed false-completion substitutes, false authority flags, `manual_user_action_required=false`, and the requirement that completion evidence be outcome-level rather than source/workflow presence alone.
 
-## Current accounting — reconciled
-
-Direct post-merge default-branch directory enumeration shows exactly 23 workflow files. Direct GitHub Actions registry enumeration shows 27 registered `active` workflows. The four-entry difference is fully reconciled: these registered workflow paths are absent from the default-branch workflow directory and are therefore registry-retained historical entries rather than current workflow files:
+Disposition installed on the active branch:
 
 ```text
-.github/workflows/internal-governed-reference.yml
-.github/workflows/stack-conformance.yml
-.github/workflows/portable-node-process-restart-proof.yml
-.github/workflows/authorized-provider-execution-boundary.yml
+.github/workflows/validate-objective-contract.yml
+  -> CONSOLIDATE_INTO_STABLE_DISPATCHER
+  -> removed from active branch
+
+.github/workflows/validate.yml
+  -> runs $PYTHON_BIN scripts/validate_objective_contract.py
+  -> permissions: {}
+  -> anonymous exact-SHA fetch
+  -> credential-bearing environment refused
+  -> no schedule/writeback/activation/provider execution
+
+iosnoperiod/github/workflows/validate.yml
+  -> exact mirror contains the same objective-contract validator
 ```
 
-All other 23 registered paths correspond to the 23 files present on main.
+No provider execution, activation, custody, publication, deployment, wallet action, or credential authority is added. Tranche 15 is not complete until exact final-head validation passes, its PR merges, claim 038 is released, and this handoff is finalized on main.
+
+## Current accounting — released work only
+
+Direct post-tranche-14 default-branch enumeration showed 23 workflow files. Four additional GitHub Actions registry entries are historical registry-only paths absent from main: `internal-governed-reference.yml`, `stack-conformance.yml`, `portable-node-process-restart-proof.yml`, and `authorized-provider-execution-boundary.yml`.
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_on_main: 23
-workflow_files_removed_or_consolidated_from_audit_start: 26
+workflow_files_current_on_released_main: 23
+workflow_files_removed_or_consolidated: 26
 classified_and_remediated: 29/49 = 59.18%
-remaining_unclassified_or_unconsolidated_from_audit_start: 20/49
-live_actions_registry_total: 27
-registry_only_absent_file_entries: 4
+remaining_unclassified_or_unconsolidated: 20/49
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
+current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-OBJECTIVE-CONTRACT-038
 ```
 
-The 49-surface denominator remains valid because the four registry-only entries are already removed file surfaces represented in the historical audit/retirement lineage; they are not newly added default-branch workflow files.
+If tranche 15 releases as implemented and no concurrent workflow-file change occurs, main will contain 22 workflow files; removed/consolidated will become 27; classified/remediated will become 30/49 = 61.22%; remaining will become 19/49.
 
 ## Canonical ownership / convergence
 
@@ -134,10 +108,9 @@ The 49-surface denominator remains valid because the four registry-only entries 
 organization authority: StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
 sovereign local model/runtime: StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md
 live local-model activation: StegVerse-Labs/.github#60 + resident sovereign heartbeat
-credential authority: TV/TVC
-route authority: StegVerse-Labs/TVC
+credential/route authority: TV/TVC / StegVerse-Labs/TVC
 HIL runtime/lifecycle: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
-LLM transport and Ecosystem Chat sovereignty owner: StegVerse-org/LLM-adapter#18
+LLM transport and Ecosystem Chat sovereignty: StegVerse-org/LLM-adapter#18
 StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
 ```
 
@@ -150,13 +123,13 @@ Formal local-model development and actual discovery/launch/inference/proof are `
 - Do not infer live activation from workflow cleanup.
 - Do not create non-TV/TVC runtime/test tokens.
 - Do not restore GitHub-hosted activation, artifact transport, or repository writeback.
-- Do not recreate retired standalone validation surfaces.
+- Do not drop objective-contract semantics when removing its standalone workflow.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
 
-## Next safe task
+## Next task after release
 
-Under a fresh noncolliding claim, classify the next remaining default-branch workflow file against canonical StegVerse owners and the `<=2` target. Any necessary deterministic validation should be consolidated into an existing token-clean dispatcher where technically compatible; any recurring operational capability belongs to a named StegVerse worker before standalone workflow removal.
+Under a fresh noncolliding claim, classify the next remaining default-branch workflow file against canonical StegVerse owners and the `<=2` target. Necessary deterministic checks should be consolidated into an existing credential-clean dispatcher where technically compatible; recurring operational capability must transfer to a named StegVerse worker before workflow removal.
 
 ## Archive condition
 
-This session remains a distinct support lane while workflow/token remediation remains incomplete. Twenty-three actual workflow files remain on main versus the adopted <=2 target, and 20/49 canonical audit-start surfaces remain unclassified/unconsolidated. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
+This session remains a distinct support lane while workflow/token remediation remains incomplete. Released main has 23 actual workflow files versus the adopted <=2 target, 20/49 canonical audit-start surfaces remain unclassified/unconsolidated, and claim 038 is active. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
