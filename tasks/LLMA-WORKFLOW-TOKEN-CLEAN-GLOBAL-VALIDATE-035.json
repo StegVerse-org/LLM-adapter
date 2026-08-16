@@ -14,6 +14,7 @@
     "iosnoperiod/github/workflows/validate.yml",
     "scripts/check_ai_entry_no_manual_tasks.py",
     "scripts/check_ecosystem_chat_verified_receipt_contract.py",
+    "scripts/check_workflow_parity.py",
     "tests/test_live_activation_automation_contract.py",
     "tests/test_live_activation_monitor_no_deploy_churn.py",
     "tests/test_live_activation_status_persistence.py",
@@ -25,6 +26,7 @@
     "iosnoperiod/github/workflows/validate.yml": "MIRROR_CANONICAL_TOKEN_CLEAN_GLOBAL_VALIDATION_DISPATCHER",
     "scripts/check_ai_entry_no_manual_tasks.py": "UPDATE_VALIDATOR_FOR_TOKEN_CLEAN_INTERPRETER_SELECTION",
     "scripts/check_ecosystem_chat_verified_receipt_contract.py": "UPDATE_STALE_GITHUB_PERSISTENCE_CONTRACT_TO_RESIDENT_STEGVERSE_RECEIPT_BOUNDARY",
+    "scripts/check_workflow_parity.py": "UPDATE_PARITY_VALIDATOR_FOR_TOKEN_CLEAN_SELECTED_PYTHON_COMMAND",
     "tests/test_live_activation_automation_contract.py": "UPDATE_STALE_HOSTED_ACTIVATION_EXPECTATIONS_TO_STEGVERSE_RESIDENT_OWNER",
     "tests/test_live_activation_monitor_no_deploy_churn.py": "PRESERVE_RETIRED_WORKFLOW_PROVENANCE_AND_RESIDENT_OWNER_ASSERTIONS",
     "tests/test_live_activation_status_persistence.py": "UPDATE_STALE_GITHUB_WRITEBACK_EXPECTATIONS_TO_ABSENCE_ASSERTIONS"
@@ -43,7 +45,7 @@
     "Preserve exact canonical/iOS workflow parity.",
     "Preserve deterministic source, unit, integration, schema, authority-boundary and replay validation already unique to validate.yml.",
     "Preserve immutable receipt compatibility as a source contract without requiring GitHub-hosted live probing or repository persistence.",
-    "Preserve the no-manual-task validator semantics while allowing the selected token-clean Python interpreter form.",
+    "Preserve no-manual-task and parity validators while accepting the selected token-clean Python interpreter form.",
     "Update stale tests to the already-canonical resident StegVerse + TV/TVC activation ownership; do not weaken activation boundaries.",
     "Preserve retired hosted workflow names as historical provenance in the canonical handoff, never as active owners.",
     "Do not move live activation authority into GitHub Actions.",
@@ -59,7 +61,7 @@
     "canonical/iOS workflow parity PASS",
     "workflow has permissions: {} and refuses credential-bearing environment",
     "anonymous exact-SHA source acquisition without actions/checkout or actions/setup-python",
-    "no-manual-task validator accepts token-clean selected-Python Goal 4 command without weakening workflow_dispatch requirement",
+    "no-manual-task and parity validators accept token-clean selected-Python Goal 4 command without weakening workflow_dispatch requirement",
     "receipt-contract checker validates resident StegVerse receipt semantics without requiring GitHub writeback/live probe",
     "activation-contract tests assert hosted probe/writeback absence and resident StegVerse + TV/TVC ownership",
     "canonical handoff preserves retired ecosystem-chat-live-activation.yml and ecosystem-chat-live-activation-monitor.yml provenance",
@@ -69,7 +71,7 @@
     "exact PR merged",
     "released claim and finalized canonical handoff"
   ],
-  "next_executable_action": "Synchronize the iOS workflow mirror exactly to the token-clean canonical validate workflow, then validate the exact PR head.",
+  "next_executable_action": "Update the parity validator to accept the token-clean selected-Python Goal 4 command while retaining exact canonical/mirror equality, then validate the exact PR head.",
   "next_task_after_release": "Continue classifying remaining hosted validation/publication surfaces toward the <=2 workflow target.",
   "authority_effect": false,
   "activation_effect": false
