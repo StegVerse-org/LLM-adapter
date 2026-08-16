@@ -12,12 +12,18 @@
   "surfaces": [
     ".github/workflows/validate.yml",
     "scripts/check_ai_entry_no_manual_tasks.py",
+    "tests/test_live_activation_automation_contract.py",
+    "tests/test_live_activation_monitor_no_deploy_churn.py",
+    "tests/test_live_activation_status_persistence.py",
     "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
     "tasks/LLMA-WORKFLOW-TOKEN-CLEAN-GLOBAL-VALIDATE-035.json"
   ],
   "classifications": {
     ".github/workflows/validate.yml": "KEEP_STANDALONE_EXCEPTION_TEMPORARY_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER",
-    "scripts/check_ai_entry_no_manual_tasks.py": "UPDATE_VALIDATOR_FOR_TOKEN_CLEAN_INTERPRETER_SELECTION"
+    "scripts/check_ai_entry_no_manual_tasks.py": "UPDATE_VALIDATOR_FOR_TOKEN_CLEAN_INTERPRETER_SELECTION",
+    "tests/test_live_activation_automation_contract.py": "UPDATE_STALE_HOSTED_ACTIVATION_EXPECTATIONS_TO_STEGVERSE_RESIDENT_OWNER",
+    "tests/test_live_activation_monitor_no_deploy_churn.py": "PRESERVE_RETIRED_WORKFLOW_PROVENANCE_AND_RESIDENT_OWNER_ASSERTIONS",
+    "tests/test_live_activation_status_persistence.py": "UPDATE_STALE_GITHUB_WRITEBACK_EXPECTATIONS_TO_ABSENCE_ASSERTIONS"
   },
   "credential_boundary": {
     "credential_authority": "TV/TVC",
@@ -32,6 +38,8 @@
   "collision_boundaries": [
     "Preserve deterministic source, unit, integration, schema, authority-boundary and replay validation already unique to validate.yml.",
     "Preserve the no-manual-task validator semantics while allowing the selected token-clean Python interpreter form.",
+    "Update stale tests to the already-canonical resident StegVerse + TV/TVC activation ownership; do not weaken activation boundaries.",
+    "Preserve retired hosted workflow names as historical provenance in the canonical handoff, never as active owners.",
     "Do not move live activation authority into GitHub Actions.",
     "Do not use Render or any third-party runtime as a production or validation dependency.",
     "Do not add replacement GitHub/OIDC/repository credentials.",
@@ -45,13 +53,15 @@
     "workflow has permissions: {} and refuses credential-bearing environment",
     "anonymous exact-SHA source acquisition without actions/checkout or actions/setup-python",
     "no-manual-task validator accepts token-clean selected-Python Goal 4 command without weakening workflow_dispatch requirement",
+    "activation-contract tests assert hosted probe/writeback absence and resident StegVerse + TV/TVC ownership",
+    "canonical handoff preserves retired ecosystem-chat-live-activation.yml and ecosystem-chat-live-activation-monitor.yml provenance",
     "schedule removed",
     "hosted live activation probe removed",
     "GitHub artifact upload and repository writeback removed",
     "exact PR merged",
     "released claim and finalized canonical handoff"
   ],
-  "next_executable_action": "Repair the no-manual-task validator for the token-clean selected-Python command, then validate the exact PR head.",
+  "next_executable_action": "Reconcile stale activation-contract tests and historical handoff markers to the token-clean resident-SteGVerse activation boundary, then validate the exact PR head.",
   "next_task_after_release": "Continue classifying remaining hosted validation/publication surfaces toward the <=2 workflow target.",
   "authority_effect": false,
   "activation_effect": false
