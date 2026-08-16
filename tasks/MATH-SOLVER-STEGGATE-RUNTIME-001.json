@@ -2,53 +2,57 @@
   "schema_version": "stegverse.llm_adapter.task.v1",
   "task_id": "MATH-SOLVER-STEGGATE-RUNTIME-001",
   "repository": "StegVerse-org/LLM-adapter",
-  "branch": "main",
-  "originating_goal": "Convert the public Math Solver from RESEARCH_NOTE into a real canonical-Steggate-gated deterministic execution surface for the four-public-application proof.",
-  "state": "MACHINE_OWNED",
-  "role": "BLOCKED_HOST_OBSERVATION_AND_CROSS_REPO_ACTIVATION",
-  "owner": ".github/workflows/observe-math-solver-public-runtime.yml + StegVerse-Labs/Site/.github/workflows/math-solver-public-activation.yml",
-  "claim_created_at": "2026-08-08T21:15:00-05:00",
-  "claim_released_at": "2026-08-08T23:56:00-05:00",
-  "claim_release_reason": "Unique chat-owned implementation/integration work was transferred to repository-native observers and activation consumers with deterministic release conditions.",
+  "branch": "fix/math-solver-stegverse-portable-node-20260815",
+  "originating_goal": "Convert the public Math Solver into a canonical-Steggate-gated deterministic execution surface and remove third-party runtime dependency from its completion path.",
+  "state": "CLAIMED_FOR_INTEGRATION",
+  "role": "STEGVERSE_PORTABLE_NODE_RUNTIME_REALIGNMENT",
+  "claim_created_at": "2026-08-15T18:58:00-05:00",
+  "claim_release_condition": "Merge the StegVerse portable-node binding after repository validation; then return live carrier observation to the canonical resident sovereign carrier and Site#240.",
   "implementation_locations": [
     "llm_adapter/math_solver_gateway.py",
     "llm_adapter/deployed_gateway.py",
-    "pyproject.toml",
+    "llm_adapter/node_bootstrap.py",
+    "llm_adapter/combined_gateway.py",
+    "scripts/observe_math_solver_public_runtime.py",
     "tests/test_math_solver_gateway.py",
-    ".github/workflows/math-solver-governed-runtime.yml",
+    "tests/test_node_bootstrap.py",
+    "tests/test_node_advertisement.py",
     "docs/MATH_SOLVER_RUNTIME_MIRROR_HANDOFF.md"
   ],
-  "validation_state": "CI_PASS",
-  "validation_evidence": {
-    "run_id": 31290093572,
-    "job_id": 93185673393,
-    "head_sha": "e9fda1911915964e002dcb2d2c4c3aaf02a420cd",
-    "artifact_id": 9031088299,
-    "artifact_digest": "sha256:e863d4aaa6bf6fbc34746e1f0eb10028a320bf861bf2d2246cd673fdf0de67c1"
+  "source_state": "IMPLEMENTED_AND_REPOSITORY_VALIDATED",
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "provider_credentials_required_for_math_solver": false,
+    "non_tv_tvc_production_secret_or_token_allowed": false
   },
-  "blocker": {
-    "state": "BLOCKED_HOST_BUILD_CAPACITY",
-    "owner": "Render service srv-d9epkh3rjlhs73csc3qg",
-    "latest_observation": "receipts/math-solver-public-runtime.latest.json",
-    "machine_cause": "public runtime remains unavailable while Render source deployments cannot complete",
-    "release_condition": "The LLM-adapter observer records COMPLETE after readiness plus two governed solve/replay calls pass; Site then consumes that receipt automatically and advances only directly proven gates."
+  "runtime_boundary": {
+    "required_carrier": "STEGVERSE_PORTABLE_NODE_OR_CANONICAL_SOVEREIGN_CARRIER",
+    "third_party_runtime_required": false,
+    "third_party_build_capacity_release_condition": false,
+    "default_observation_origin": "http://127.0.0.1:8000"
+  },
+  "validation_evidence": {
+    "final_functional_head": "39af6fe36a1021f2e53f9cce055ccce6d2de3da6",
+    "validate_run": 31917502963,
+    "validate_conclusion": "SUCCESS",
+    "platform_agnostic_runtime_run": 31917502881,
+    "platform_agnostic_runtime_conclusion": "SUCCESS",
+    "capability_runtime_run": 31917502959,
+    "capability_runtime_conclusion": "SUCCESS",
+    "architecture_guard_run": 31917502880,
+    "architecture_guard_conclusion": "SUCCESS",
+    "legacy_hil_restart_lane": "SUPERSEDED_BY_TVC_AND_RETIRED"
   },
   "machine_owned_continuation": [
-    "StegVerse-org/LLM-adapter/.github/workflows/observe-math-solver-public-runtime.yml",
-    "StegVerse-org/LLM-adapter/scripts/observe_math_solver_public_runtime.py",
-    "StegVerse-Labs/Site/.github/workflows/math-solver-public-activation.yml",
-    "StegVerse-Labs/Site/scripts/advance_math_solver_public_activation.py"
-  ],
-  "canonical_dependencies": [
-    "StegVerse-Labs/StegCore#68",
-    "StegVerse-Labs/StegCore#70",
+    "StegVerse-Labs/.github resident sovereign carrier",
+    "StegVerse-org/LLM-adapter#72",
+    "StegVerse-org/LLM-adapter#132",
     "StegVerse-Labs/Site#240",
-    "StegVerse-Labs/Site#239"
+    "StegVerse-Labs/StegCore#70"
   ],
-  "collision_boundary": "No parallel StegGate evaluator; use llm_adapter/steggate_portable_consumer.py and canonical StegCore only.",
-  "next_executable_action": "Repository workflows retry automatically; no chat polling or manual dispatch is required.",
-  "session_consolidation": "MERGED_INTO_CANONICAL_WORKSTREAM",
-  "canonical_continuation": "StegVerse-Labs/Site#240 + docs/STEGGATE_FOUR_APP_MIRROR_HANDOFF.md",
+  "collision_boundary": "No parallel Math Solver evaluator, provider route, runtime carrier, or HIL lifecycle lane. Use canonical StegGate, StegVerse portable-node/service-gateway, and TVC HIL owners.",
+  "next_executable_action": "Merge the validated integration, release this chat integration claim, and allow canonical StegVerse carrier/Site owners to produce direct live carrier evidence.",
   "authority_effect": false,
   "activation_effect": false
 }

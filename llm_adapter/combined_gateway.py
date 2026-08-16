@@ -48,6 +48,8 @@ def stegverse_node_advertisement(request: Request) -> dict:
         "capability_id": "ecosystem-chat-gateway",
         "endpoint": f"{base_url}/api/ecosystem-chat",
         "health_endpoint": f"{base_url}/health",
+        "math_solver_readiness_endpoint": f"{base_url}/api/math-solver/v1/readiness",
+        "math_solver_solve_endpoint": f"{base_url}/api/math-solver/v1/solve",
         "hil_intake_readiness_endpoint": f"{base_url}/api/hil/readiness",
         "hil_intake_submission_endpoint": f"{base_url}/api/hil/submissions",
         "hil_publication_readiness_endpoint": f"{base_url}/api/hil/publication-readiness",
@@ -58,6 +60,8 @@ def stegverse_node_advertisement(request: Request) -> dict:
         "durable_storage": os.getenv(
             "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "false"
         ).lower() == "true",
+        "credential_authority": "TV/TVC",
+        "github_token_runtime_authority": "NONE",
         "authority_granted": False,
         "publication_authority": False,
         "execution_authority": False,
