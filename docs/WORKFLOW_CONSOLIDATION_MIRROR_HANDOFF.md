@@ -21,6 +21,7 @@ Production continuity remains `StegVerse task -> StegVerse worker -> TV/TVC auth
 ```text
 resident carrier owns continuity
 resident StegVerse carrier + TV/TVC
+resident sovereign carrier
 GitHub token as provider credential: prohibited
 GitHub token as runtime/control-plane authority: prohibited
 repository secrets for provider/Master Records production path: prohibited
@@ -28,6 +29,7 @@ TV/TVC protected values exported into GitHub Actions: prohibited
 GitHub-hosted review/publication credential minting: prohibited
 third-party host generated review/publication credential: prohibited
 Render production/runtime dependency: prohibited
+StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
 ```
 
 ## Completed tranches
@@ -131,12 +133,13 @@ restoration_target: <=2 unless evidence-backed standalone technical necessity ex
 ## Canonical ownership / convergence
 
 ```text
+organization authority handoff: StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
 HIL runtime/lifecycle: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
 HIL authenticated private review: StegVerse-Labs/TVC#8
 Site projection: StegVerse-Labs/Site#67
 Master Records: master-records/orchestration#13
 sovereign local model/runtime: StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md
-resident activation/control plane: StegVerse-Labs/.github#59/#60/#65
+resident activation/control plane: resident sovereign carrier + StegVerse-Labs/.github#59/#60/#65
 StegFin continuation: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
 ```
 
