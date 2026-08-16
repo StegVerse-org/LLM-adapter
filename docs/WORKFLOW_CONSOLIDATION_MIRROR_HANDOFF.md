@@ -5,10 +5,9 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: chore/consolidate-service-adoption-validation-20260816
+branch: main
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: LLMA-WORKFLOW-CONSOLIDATE-SERVICE-ADOPTION-037
-active_claim_state: CLAIMED_FOR_IMPLEMENTATION
+active_claim: NONE
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -46,7 +45,7 @@ hil-process-restart-controlled-cycle.yml: RETIRED/TRANSFERRED_TO_TVC
 legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 ```
 
-## Completed tranches 1-13
+## Completed tranches 1-14
 
 ```text
 1 #145 c9f561254ec5671c2329c3deb7ce0bfb511331ab
@@ -62,9 +61,10 @@ legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 11 #157 310f0225d3700fda735d3f2d70943a12e9bda0cc
 12 #158 695ad0723d303b140c19c6c15abbb8f0653b05ee
 13 #159 ee193f96c1d3b6fca2f0d1d009536fec83c6a884
+14 #160 c7bb207042259b11060e8cf8d93019a7cff0ccbe
 ```
 
-All completed tranche claims 025-036 are released.
+All completed tranche claims 025-037 are released.
 
 ### Tranche 10
 
@@ -80,50 +80,53 @@ PR #158 made global `validate.yml` and its iOS mirror deterministic-validation-o
 
 ### Tranche 13 — provider-owned usage validation consolidated
 
-PR #159 merged at `ee193f96c1d3b6fca2f0d1d009536fec83c6a884`; final implementation head `24b1205eddd5a7768fb1804fe142afda9a2782fa`.
+PR #159 merged at `ee193f96c1d3b6fca2f0d1d009536fec83c6a884`; final implementation head `24b1205eddd5a7768fb1804fe142afda9a2782fa`. `.github/workflows/validate-provider-usage-event.yml` was consolidated into the token-clean global dispatcher. Final validation: Architecture Guard `31937348046` SUCCESS; validate `31937348003` SUCCESS with 59/59 validation steps successful; provider-event validator, adversarial tests, and workflow parity all passed. Claim 036 is released.
 
-`.github/workflows/validate-provider-usage-event.yml` was consolidated into the token-clean global dispatcher. Final validation: Architecture Guard `31937348046` SUCCESS; validate `31937348003` SUCCESS with 59/59 validation steps successful; provider-event validator, adversarial tests, and workflow parity all passed. Claim 036 is released as `MERGED_INTO_CANONICAL_WORKSTREAM`.
+### Tranche 14 — Ecosystem Chat sovereignty validation consolidated
 
-## Active tranche 14 — Ecosystem Chat service-adoption sovereignty validation consolidation
+PR #160 merged at `c7bb207042259b11060e8cf8d93019a7cff0ccbe`; final implementation head `a7bf10d659fa329654d757644c97b01835ca1ce6`.
 
-Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-SERVICE-ADOPTION-037.json`.
-
-Direct inspection showed `.github/workflows/ecosystem-chat-service-adoption.yml` was a separate 3-Python GitHub-hosted validator using `actions/checkout` and `actions/setup-python`. Its unique deterministic capability is `scripts/check_ecosystem_chat_service_adoption.py`; the specialized handoff already assigns runtime/platform absorption to `StegVerse-org/LLM-adapter#18` and requires zero external operational platform dependency at sovereign completion.
-
-Disposition installed on the active branch:
+`.github/workflows/ecosystem-chat-service-adoption.yml` was classified `CONSOLIDATE_INTO_STABLE_DISPATCHER` and removed. Its unique deterministic sovereignty check is retained in `.github/workflows/validate.yml` and its exact iOS mirror:
 
 ```text
-.github/workflows/ecosystem-chat-service-adoption.yml
-  -> CONSOLIDATE_INTO_STABLE_DISPATCHER
-  -> removed from active branch
-
-.github/workflows/validate.yml
-  -> runs $PYTHON_BIN scripts/check_ecosystem_chat_service_adoption.py
-  -> remains permissions: {}, anonymous exact-SHA, credential-refusing, non-activating
-
-iosnoperiod/github/workflows/validate.yml
-  -> exact mirror includes the same sovereignty validator
-
-docs/ECOSYSTEM_CHAT_SERVICE_ADOPTION_MIRROR_HANDOFF.md
-  -> workflow pointer updated to .github/workflows/validate.yml
-  -> runtime credential authority remains TV/TVC
+$PYTHON_BIN scripts/check_ecosystem_chat_service_adoption.py
 ```
 
-No live provider execution, deployment, activation, custody, publication, wallet action, or repository credential authority is added. Tranche 14 is not complete until exact final-head validation passes, the PR merges, claim 037 is released, and this handoff is finalized on main.
+`docs/ECOSYSTEM_CHAT_SERVICE_ADOPTION_MIRROR_HANDOFF.md` now points validation automation to `.github/workflows/validate.yml` while preserving `StegVerse-org/LLM-adapter#18` as the runtime/sovereignty continuation owner and TV/TVC as runtime credential authority.
 
-## Current accounting — released work only
+Final-head evidence:
+
+```text
+Architecture Guard 31964932357 SUCCESS
+validate 31964932396 SUCCESS
+Validate Ecosystem Chat zero-external-dependency sovereignty contract SUCCESS
+workflow parity SUCCESS
+all 60 substantive validate steps SUCCESS
+PR #160 merge c7bb207042259b11060e8cf8d93019a7cff0ccbe
+```
+
+Claim `tasks/LLMA-WORKFLOW-CONSOLIDATE-SERVICE-ADOPTION-037.json` is released as `MERGED_INTO_CANONICAL_WORKSTREAM`.
+
+## Current accounting and live-registry reconciliation
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current: 24
-workflow_files_removed_or_consolidated: 25
-classified_and_remediated: 28/49 = 57.14%
-remaining_unclassified_or_unconsolidated: 21/49
+released_lineage_expected_workflow_files_after_tranche_14: 23
+workflow_files_removed_or_consolidated_from_audit_start: 26
+classified_and_remediated: 29/49 = 59.18%
+remaining_unclassified_or_unconsolidated_from_audit_start: 20/49
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-SERVICE-ADOPTION-037
+current_active_tranche_claim: NONE
 ```
 
-If tranche 14 releases as implemented, active workflow files become 23, removed/consolidated becomes 26, classified/remediated becomes 29/49 = 59.18%, and remaining unclassified becomes 20/49.
+A direct post-merge GitHub Actions registry query reported `total_count: 27` registered active workflows. That does not agree with the prior handoff lineage count of 23 expected files after tranche 14. Because live repository state is authoritative, the next task is not allowed to assume 23 as the operational count. A fresh reconciliation must identify the four-workflow delta as concurrent additions, registry-retained entries, or prior accounting omissions before the next consolidation claim. Until reconciled, use:
+
+```text
+live_registered_workflow_count: 27
+canonical_audit_start_denominator: 49
+canonical_classified_remediated: 29/49
+operational_file_count: RECONCILIATION_REQUIRED
+```
 
 ## Canonical ownership / convergence
 
@@ -147,9 +150,13 @@ Formal local-model development and actual discovery/launch/inference/proof are `
 - Do not infer live activation from workflow cleanup.
 - Do not create non-TV/TVC runtime/test tokens.
 - Do not restore GitHub-hosted activation, artifact transport, or repository writeback.
-- Do not remove the Ecosystem Chat sovereignty validator while deleting its standalone workflow.
+- Do not recreate provider-owned usage-event or Ecosystem Chat service-adoption standalone validation.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
+
+## Next safe task
+
+First reconcile the live `27` registered workflow count against the canonical 49-surface audit and the released lineage. Then, under a fresh noncolliding claim, classify the next remaining workflow surface against canonical StegVerse owners and the `<=2` target. Any necessary deterministic validation should be consolidated into an existing token-clean dispatcher where technically compatible; any recurring operational capability belongs to a named StegVerse worker before standalone workflow removal.
 
 ## Archive condition
 
-This session remains a distinct support lane while workflow/token remediation remains incomplete. Released main has 24 workflow files versus the adopted <=2 target and 21/49 audit-start surfaces remain unclassified/unconsolidated. Claim 037 is active. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
+This session remains a distinct support lane while workflow/token remediation remains incomplete. The live Actions registry reports 27 active registered workflows versus the adopted <=2 target, 20/49 canonical audit-start surfaces remain unclassified/unconsolidated, and the registry/file-lineage delta requires reconciliation. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
