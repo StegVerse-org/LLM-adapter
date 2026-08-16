@@ -5,8 +5,8 @@
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "chore/consolidate-hil-rtg-validation-20260816",
   "claimant": "chatgpt-session-backend-support-20260816",
-  "role": "CLAIMED_FOR_IMPLEMENTATION",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "role": "CLAIMED_FOR_INTEGRATION_AND_RECONCILIATION",
+  "state": "CLAIMED_FOR_VALIDATION",
   "claim_timestamp": "2026-08-16T01:42:00-05:00",
   "claim_release_condition": "Merge the exact bounded RTG validation consolidation after final-head validation, verify post-merge workflow count, then mark MERGED_INTO_CANONICAL_WORKSTREAM.",
   "surfaces": [
@@ -28,6 +28,11 @@
     ".github/workflows/hil-rtg-notification-contract.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
     ".github/workflows/hil-deployment-profile.yml": "KEEP_STANDALONE_EXCEPTION_TEMPORARY_STABLE_DISPATCHER"
   },
+  "implementation_evidence": [
+    "ce3127e39939dcd919b03031af37b54d7f8571b8 folded RTG verifier/test semantics and trigger paths into the token-refusing HIL compatibility dispatcher",
+    "ddf0d7fc1c587eff9814a8338e0fb6ea2a9878be removed the standalone HIL RTG Notification Contract workflow",
+    "dcb0dbd4a2008e3797c40f1450a40eb84300ec4a recorded the active tranche and projected accounting in the canonical handoff"
+  ],
   "canonical_owners": {
     "hil_runtime_and_lifecycle": "StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md",
     "hil_private_review": "StegVerse-Labs/TVC#8",
@@ -56,7 +61,7 @@
     "post-merge workflow-file count",
     "released claim and finalized handoff"
   ],
-  "next_executable_action": "Fold RTG verifier/tests into the existing token-refusing HIL compatibility dispatcher, delete the standalone RTG workflow, update the canonical handoff, and validate the exact PR.",
+  "next_executable_action": "Open the exact PR and validate its final head; merge only if all required validation groups pass.",
   "next_task_after_release": "Inspect the next unclaimed HIL/VACC/publication workflow family against its canonical handoff before creating a new claim.",
   "authority_effect": false,
   "activation_effect": false
