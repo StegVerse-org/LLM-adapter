@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """Run a bounded HIL cycle across two real gateway processes.
 
-This produces GitHub-hosted evidence only. It grants no production deployment,
-publication, execution, or Master Record authority.
+This produces validation evidence only. It grants no production deployment,
+publication, execution, or Master Record authority. Authentication material for
+production HIL execution is owned by TV/TVC; this controlled validation lane uses
+non-authorizing process-local fixture values and does not export them.
 """
 from __future__ import annotations
 
 import hashlib
 import json
 import os
-import secrets
 import signal
 import subprocess
 import sys
@@ -19,11 +20,17 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 BASE = "http://127.0.0.1:8011"
-PRIMARY = "52102cccb9ba9016c76434a64e22031b6a8c3edd3b8806e7b664e609216b2946"
-PROMPT = "0ebe215318b4eeeb8ed6422e0954372c314fadc8fac9254e452bc7670a1b9922"
+PRIMARY = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
+PROMPT = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c"
 ROOT = Path(__file__).resolve().parents[1]
 REPORTS = ROOT / "reports" / "hil-process-cycle"
 DATA = ROOT / ".hil-process-cycle-data"
+
+# Validation fixtures are not credentials and are intentionally non-secret. They
+# exist only inside the loopback controlled-cycle process. Production HIL review
+# and publication credentials MUST be issued/managed by TV/TVC.
+VALIDATION_REVIEW_FIXTURE = "HIL-VALIDATION-REVIEW-NONAUTH"
+VALIDATION_PUBLICATION_FIXTURE = "HIL-VALIDATION-PUBLICATION-NONAUTH"
 
 
 def request_json(path: str, *, method: str = "GET", headers: dict[str, str] | None = None,
@@ -43,7 +50,7 @@ def request_json(path: str, *, method: str = "GET", headers: dict[str, str] | No
 
 
 def multipart(fields: dict[str, str], files: dict[str, tuple[str, bytes, str]]) -> tuple[bytes, str]:
-    boundary = "----stegverse-" + secrets.token_hex(18)
+    boundary = "----stegverse-validation-boundary"
     chunks: list[bytes] = []
     for name, value in fields.items():
         chunks.extend([
@@ -101,16 +108,13 @@ def canonical_hash(payload: dict) -> str:
 def main() -> None:
     REPORTS.mkdir(parents=True, exist_ok=True)
     DATA.mkdir(parents=True, exist_ok=True)
-    review_token = secrets.token_urlsafe(48)
-    publication_token = secrets.token_urlsafe(48)
-    assert review_token != publication_token
     env = os.environ.copy()
     env.update({
         "STEGVERSE_HIL_INTAKE_ENABLED": "true",
         "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS": "true",
         "STEGVERSE_HIL_DATA_DIR": str(DATA.resolve()),
-        "STEGVERSE_HIL_REVIEW_TOKEN": review_token,
-        "STEGVERSE_HIL_PUBLICATION_TOKEN": publication_token,
+        "STEGVERSE_HIL_REVIEW_TOKEN": VALIDATION_REVIEW_FIXTURE,
+        "STEGVERSE_HIL_PUBLICATION_TOKEN": VALIDATION_PUBLICATION_FIXTURE,
         "STEGVERSE_ALLOWED_ORIGINS": BASE,
     })
 
@@ -118,16 +122,16 @@ def main() -> None:
     response_hash = hashlib.sha256(pdf).hexdigest()
     manifest = {
         "schema_version": "HIL-RESPONSE-PROVENANCE-v1",
-        "primary_version": "v0.5",
+        "primary_version": "v1.1",
         "primary_sha256": PRIMARY,
-        "protocol_version": "HIL-PROTOCOL-v1.0",
-        "prompt_version": "HIL-PROMPT-v1.0",
+        "protocol_version": "HIL-PROTOCOL-v1.1",
+        "prompt_version": "HIL-PROMPT-v1.1",
         "prompt_sha256": PROMPT,
         "response_sha256": response_hash,
-        "model": "github-process-cycle-model",
-        "provider": "github-process-cycle-provider",
+        "model": "stegverse-controlled-cycle-validation",
+        "provider": "stegverse-loopback-validation",
         "generated_at": "2026-07-25T00:00:00Z",
-        "conversation_reference": "github-process-cycle",
+        "conversation_reference": "stegverse-controlled-cycle",
         "producer_signature": {"state": "UNAVAILABLE", "scheme": None, "value": None, "key_id": None},
     }
 
@@ -136,7 +140,7 @@ def main() -> None:
         readiness_before = request_json("/api/hil/readiness")
         body, content_type = multipart(
             {
-                "participant_identifier": "GitHub Controlled Participant",
+                "participant_identifier": "StegVerse Controlled Participant",
                 "publication_consent": "public",
                 "primary_sha256": PRIMARY,
                 "model_response_declared_unedited": "true",
@@ -157,28 +161,28 @@ def main() -> None:
         submission_id = receiver["submission_id"]
         persisted = request_json(
             f"/api/hil/submissions/{submission_id}/review-state",
-            headers={"X-SteGVerse-HIL-Review-Token": review_token},
+            headers={"X-SteGVerse-HIL-Review-Token": VALIDATION_REVIEW_FIXTURE},
         )
         body, content_type = multipart(
-            {"decision": "ACCEPT_PRIVATE", "reviewer": "github-process-reviewer", "notes": "bounded proof"}, {}
+            {"decision": "ACCEPT_PRIVATE", "reviewer": "stegverse-process-reviewer", "notes": "bounded proof"}, {}
         )
         review = request_json(
             f"/api/hil/submissions/{submission_id}/review-decisions", method="POST",
-            headers={"X-SteGVerse-HIL-Review-Token": review_token}, body=body, content_type=content_type,
+            headers={"X-SteGVerse-HIL-Review-Token": VALIDATION_REVIEW_FIXTURE}, body=body, content_type=content_type,
         )
         body, content_type = multipart(
             {
-                "response_id": "HIL-RESP-GITHUB-PROCESS-0001",
-                "publisher": "github-process-publisher",
-                "participant_display_name": "GitHub Controlled Participant",
-                "artifact_public_path": "data/hil-responses/HIL-RESP-GITHUB-PROCESS-0001.pdf",
+                "response_id": "HIL-RESP-STEGVERSE-PROCESS-0001",
+                "publisher": "stegverse-process-publisher",
+                "participant_display_name": "StegVerse Controlled Participant",
+                "artifact_public_path": "data/hil-responses/HIL-RESP-STEGVERSE-PROCESS-0001.pdf",
             }, {},
         )
         publication = request_json(
             f"/api/hil/submissions/{submission_id}/publication-decisions", method="POST",
-            headers={"X-SteGVerse-HIL-Publication-Token": publication_token}, body=body, content_type=content_type,
+            headers={"X-SteGVerse-HIL-Publication-Token": VALIDATION_PUBLICATION_FIXTURE}, body=body, content_type=content_type,
         )
-        lookup = request_json("/api/hil/publications/HIL-RESP-GITHUB-PROCESS-0001")
+        lookup = request_json("/api/hil/publications/HIL-RESP-STEGVERSE-PROCESS-0001")
     finally:
         stop_gateway(second, second_log)
 
@@ -186,12 +190,13 @@ def main() -> None:
     provenance = json.loads(next((DATA / "provenance").glob("*.json")).read_text())
     evidence = {
         "schema_version": "HIL-PROCESS-RESTART-CONTROLLED-CYCLE-v1",
-        "observation_scope": "GITHUB_HOSTED_REAL_PROCESS_CONTROLLED_CYCLE",
+        "observation_scope": "STEGVERSE_LOOPBACK_REAL_PROCESS_CONTROLLED_CYCLE",
         "commit_sha": os.environ.get("GITHUB_SHA"),
         "run_id": os.environ.get("GITHUB_RUN_ID"),
         "readiness_before": readiness_before,
         "readiness_after": readiness_after,
-        "credential_separation_verified": True,
+        "credential_authority": "TV/TVC",
+        "validation_fixture_values_are_production_credentials": False,
         "receiver_receipt": receiver,
         "restart_performed": True,
         "post_restart_submission_state": persisted,
