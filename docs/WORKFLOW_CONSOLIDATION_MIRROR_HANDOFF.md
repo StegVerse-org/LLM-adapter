@@ -5,9 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/consolidate-public-knowledge-vacc-validation-20260816
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
+active_claim: LLMA-WORKFLOW-CONSOLIDATE-PUBLIC-KNOWLEDGE-VACC-041
+active_claim_state: CLAIMED_FOR_IMPLEMENTATION
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -68,54 +69,56 @@ legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 17 #163 1885754f60a1d08a8219e4244e383c3e4ceea0de
 ```
 
-Claims 025-040 are released.
+Claims 025-040 are released. The global dispatcher is credential-clean deterministic validation only: `permissions: {}`, anonymous exact-SHA source acquisition, explicit credential refusal, no checkout/setup/upload actions, no schedule, no repository writeback, no hosted activation, and no GitHub-token runtime/control-plane authority.
 
-### Global validation authority cleanup
+## Active tranche 18 — public-knowledge/VACC source validation consolidation
 
-`.github/workflows/validate.yml` and its iOS mirror are deterministic-validation-only: `permissions: {}`, anonymous exact-SHA fetch, explicit credential refusal, no schedule, no checkout/setup/upload actions, no hosted activation probe, no repository writeback, and no GitHub-token runtime/control-plane authority.
+Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-PUBLIC-KNOWLEDGE-VACC-041.json`.
 
-### Tranche 17 — Chat session-binding validation consolidated
+Before mutation, both specialized handoffs were read. `docs/ECOSYSTEM_PUBLIC_KNOWLEDGE_MIRROR_HANDOFF.md` marks public-knowledge source implementation `COMPLETE_VALIDATED_SOURCE` with issue #140 as corpus-expansion owner. `docs/VACC_PUBLIC_INFORMATION_PROFILE_MIRROR_HANDOFF.md` marks the source profile `COMPLETE_VALIDATED_SOURCE_PROFILE`, preserves the claim-specific official-VA-only boundary, assigns issue #141 source-profile history, issue #90 runtime execution, and Site orchestration the canonical source registry/projection.
 
-PR #163 merged at `1885754f60a1d08a8219e4244e383c3e4ceea0de`; final head `e904274e0833197e3f7ef6954a78d416b946136e`.
-
-The standalone `.github/workflows/validate-chat-session-binding.yml` was removed. Its continuing deterministic checks now run from the token-clean global dispatcher and exact iOS mirror:
+The standalone `.github/workflows/public-knowledge-vacc-source-validation.yml` was credential-free but still duplicated its own GitHub-hosted source acquisition and focused validation. Its unique deterministic capability is now installed in the stable global dispatcher and exact iOS mirror:
 
 ```text
-$PYTHON_BIN -m pytest tests/test_chat_session_binding.py -q
-$PYTHON_BIN scripts/verify_chat_session_binding.py --write-receipt
+compile:
+  llm_adapter/public_knowledge.py
+  llm_adapter/ai_entry_backend_service.py
+  llm_adapter/vacc_public_information.py
+  tests/test_public_knowledge.py
+  tests/test_vacc_public_information.py
+focused validation:
+  $PYTHON_BIN -m unittest -q tests.test_public_knowledge tests.test_vacc_public_information
 ```
 
-`docs/CHAT_LLM_SESSION_BINDING_MIRROR_HANDOFF.md` preserves the historical Python 3.9/3.11/3.12 release matrix and retained receipt while accurately naming `.github/workflows/validate.yml` as the current Python 3.11 validation carrier. `privacy_guarded_dispatch` and issues #18/#90 remain the live-provider boundaries.
+The global credential refusal now explicitly includes `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` in addition to GitHub and StegVerse provider/Master-Records/HIL credential-shaped environment values. Both specialized handoffs preserve historical run `31875248198`, job `94989892925`, 11/11 focused tests, compile PASS, anonymous source acquisition, and `PUBLIC_KNOWLEDGE_VACC_SOURCE_VALIDATION_PASS`, while naming `.github/workflows/validate.yml` as current validation.
 
-Exact final-head evidence:
+Disposition on the active branch:
 
 ```text
-Architecture Guard 31973895768 SUCCESS
-validate 31973895736 SUCCESS
-Test Chat provider-neutral session binding SUCCESS
-Build deterministic Chat session-binding validation receipt SUCCESS
-workflow parity SUCCESS
-Run canonical Goal 4 verification SUCCESS
-Confirm validation-only authority boundary SUCCESS
-all 65 substantive validate steps SUCCESS
-PR #163 merge 1885754f60a1d08a8219e4244e383c3e4ceea0de
+.github/workflows/public-knowledge-vacc-source-validation.yml
+  -> CONSOLIDATE_INTO_STABLE_DISPATCHER
+  -> removed
+.github/workflows/validate.yml
+  -> current deterministic source-policy validation
+iosnoperiod/github/workflows/validate.yml
+  -> exact mirror
 ```
 
-Claim `tasks/LLMA-WORKFLOW-CONSOLIDATE-CHAT-SESSION-BINDING-040.json` is released as `MERGED_INTO_CANONICAL_WORKSTREAM`.
+No public-corpus authority, VACC route execution, provider execution, custody, Site mutation, filing, publication, activation, wallet effect, GitHub-token authority, or non-TV/TVC credential is added. Tranche 18 remains incomplete until exact final-head Architecture Guard and validate pass, the PR merges, claim 041 is released, and this handoff is finalized on main.
 
-## Current accounting
-
-The immediately preceding released main contained 21 workflow files. PR #163 removed exactly one default-branch workflow and added no workflow file; direct post-merge directory observation confirms `validate-chat-session-binding.yml` is absent and the remaining workflow directory is the expected reduced set.
+## Current accounting — released work only
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_on_main: 20
+workflow_files_current_on_released_main: 20
 workflow_files_removed_or_consolidated: 29
 classified_and_remediated: 32/49 = 65.31%
 remaining_unclassified_or_unconsolidated: 17/49
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
+current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-PUBLIC-KNOWLEDGE-VACC-041
 ```
+
+If tranche 18 releases as installed and no concurrent workflow-file change occurs, main becomes 19 workflow files, 30 removed/consolidated, 33/49 = 67.35% classified/remediated, and 16/49 remaining.
 
 ## Canonical ownership / convergence
 
@@ -127,24 +130,26 @@ local runtime discovery/launch/inference/proof: COMPLETE_RELEASED
 live local-model activation: StegVerse-Labs/.github#60 + resident sovereign heartbeat
 credential/route authority: TV/TVC / StegVerse-Labs/TVC
 Ecosystem Chat runtime binding: StegVerse-org/LLM-adapter#18
-VA Claims Chat runtime binding: StegVerse-org/LLM-adapter#90
+public corpus expansion: StegVerse-org/LLM-adapter#140
+VACC source profile: StegVerse-org/LLM-adapter#141
+VACC runtime: StegVerse-org/LLM-adapter#90
 StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
 ```
 
 ## Collision boundaries
 
 - Do not recreate sovereign runtime source work.
-- Do not bypass privacy_guarded_dispatch or compete with issues #18/#90.
-- Do not infer live activation from workflow cleanup.
+- Do not weaken claim-specific official-VA-only grounding.
+- Do not make VAwatchdog/private material public grounding without separately admitted sanitized projection.
+- Do not infer runtime activation from source-policy validation.
 - Do not create non-TV/TVC runtime/test tokens.
-- Preserve retained release receipts and historical compatibility evidence.
 - Do not restore hosted activation, artifact transport, or repository writeback.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
 
-## Next safe task
+## Next task after release
 
-Under a fresh noncolliding claim, read the applicable specialized handoff and classify the next remaining default-branch workflow file against canonical StegVerse owners and the `<=2` target. Reusable `workflow_call`, publication, HIL, VACC, image-publication, and governed-runtime surfaces require their specific ownership/permission semantics to be read before mutation.
+Under a fresh noncolliding claim, read the applicable specialized handoff and classify the next remaining default-branch workflow file against canonical StegVerse owners and the `<=2` target.
 
 ## Archive condition
 
-This session remains a distinct support lane while workflow/token remediation remains incomplete. Twenty actual workflow files remain on main versus the adopted <=2 target, and 17/49 canonical audit-start surfaces remain unclassified/unconsolidated. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
+This session remains a distinct support lane while workflow/token remediation remains incomplete. Released main has 20 workflow files versus the adopted <=2 target, 17/49 audit-start surfaces remain unclassified/unconsolidated, and claim 041 is active.
