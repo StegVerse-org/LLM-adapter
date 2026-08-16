@@ -6,11 +6,12 @@
 goal_id: LLMA-ECOSYSTEM-PUBLIC-KNOWLEDGE-021
 originating_goal: Ecosystem Chat can answer public StegVerse details and explain public SDK/governance/integration modes from canonical sources rather than model memory
 repository: StegVerse-org/LLM-adapter
-branch: main
 canonical_issue: #140
+state: COMPLETE_VALIDATED_SOURCE
+claim_state: RELEASED
 ```
 
-## Installed source
+## Authoritative implementation
 
 ```text
 data/stegverse-public-knowledge.v1.json
@@ -19,14 +20,11 @@ llm_adapter/ai_entry_backend_service.py
 tests/test_public_knowledge.py
 tasks/LLMA-ECOSYSTEM-PUBLIC-KNOWLEDGE-021.json
 docs/ECOSYSTEM_PUBLIC_KNOWLEDGE_MIRROR_HANDOFF.md
-.github/workflows/public-knowledge-vacc-source-validation.yml
 ```
 
-The public knowledge manifest is local, credential-free, and non-authorizing. Initial coverage includes StegVerse overview, governance modes 000/00/0A/0B/1/2, SDK Connect my LLM, MCP, Ecosystem Chat, and VACC.
+The local public-knowledge manifest is credential-free and non-authorizing. Each entry must reference a declared public repository/path source. `model_memory_is_source` is false. Unknown or unindexed questions return no grounded answer rather than inventing a StegVerse fact. `ai_entry_backend_service.py` consults this resolver before deterministic fallback; provider/model execution remains a separate governed lane.
 
-The resolver requires every entry to reference a declared public repository/path source. `model_memory_is_source` is false. Unknown/unindexed questions return no grounded answer; the bounded fallback states that it will not invent a StegVerse fact.
-
-`ai_entry_backend_service.py` consults this resolver before returning its deterministic fallback. Recognized public help questions therefore produce a source-grounded response even when the separately governed provider/model lane is unavailable. Provider execution remains independent and authoritative runtime ownership is unchanged.
+Initial coverage includes the StegVerse overview, governance modes 000/00/0A/0B/1/2, SDK Connect my LLM, MCP, Ecosystem Chat, and VACC.
 
 ## Authority and credential boundary
 
@@ -40,14 +38,14 @@ Master Records authority changed: false
 Site activation authority changed: false
 ```
 
-Public knowledge output is explanation only and grants no execution or publication authority.
+Public-knowledge output is explanation only and grants no execution, custody, publication, deployment, filing, or activation authority.
 
-## Validation evidence
+## Historical release validation
 
-Credential-free source workflow:
+The original combined source-validation evidence remains immutable historical release evidence:
 
 ```text
-workflow: .github/workflows/public-knowledge-vacc-source-validation.yml
+historical_workflow: .github/workflows/public-knowledge-vacc-source-validation.yml
 workflow_run: 31875248198
 job: 94989892925
 result: SUCCESS
@@ -59,27 +57,29 @@ marker: PUBLIC_KNOWLEDGE_VACC_SOURCE_VALIDATION_PASS
 manual workflow dispatch: NO
 ```
 
-Current state:
+## Current deterministic validation
+
+Workflow consolidation claim `LLMA-WORKFLOW-CONSOLIDATE-PUBLIC-KNOWLEDGE-VACC-041` transfers continuing source validation into the shared credential-clean dispatcher:
 
 ```text
-source installed on main: YES
-focused source validation: COMPLETE
-task state: COMPLETE_VALIDATED_SOURCE
-claim state: RELEASED
-live sovereign provider/model activation: SEPARATE MACHINE-OWNED LANE
+current_workflow: .github/workflows/validate.yml
+workflow_credential_authority: NONE
+runtime_credential_authority: TV/TVC
+checkout/setup/artifact transport: NONE
+repository writeback: NONE
+activation effect: NONE
 ```
 
-## Expansion rule
+The dispatcher compiles `public_knowledge.py`, `ai_entry_backend_service.py`, `vacc_public_information.py`, and the focused tests, then runs:
 
-Issue #140 owns future public corpus expansion. Add entries only when a canonical public StegVerse repository/path exists. Do not ingest private project material merely because a model can access it. For changed operational instructions, update the canonical source first, then refresh the public knowledge manifest.
+```bash
+$PYTHON_BIN -m unittest -q tests.test_public_knowledge tests.test_vacc_public_information
+```
 
-## Collision boundaries
-
-- sovereign Ecosystem runtime lanes retain provider/model activation ownership;
-- heartbeat and local model lanes are not reopened;
-- Site is not mutated without its mandatory orchestrator;
-- Master Records remains custody/reconstruction authority.
+It explicitly refuses `GITHUB_TOKEN`, `GH_TOKEN`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, TV/TVC protected values, and other credential-bearing environment values before source acquisition. No provider call occurs.
 
 ## Continuation
 
-The initial public-knowledge source slice is source-complete, validated, and released. Issue #140 remains the canonical continuation for corpus coverage expansion. Live Ecosystem Chat provider/custody activation remains separately machine-owned and is not implied by this source completion.
+Issue #140 owns future public corpus expansion. Add entries only when a canonical public StegVerse repository/path exists. Update changed operational instructions at the canonical source before refreshing the public manifest. Sovereign runtime/provider/model activation remains a separate machine-owned lane; heartbeat/local-model work is not reopened; Site requires its own orchestrator; Master Records remains custody/reconstruction authority.
+
+The originating public-knowledge implementation is complete and released. Workflow consolidation is repository maintenance and does not reopen the product implementation.
