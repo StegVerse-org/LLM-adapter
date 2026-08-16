@@ -41,6 +41,10 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: capability-runtime-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     strategy:
@@ -158,6 +162,7 @@ jobs:
           assert 'actions/checkout@' not in workflow
           assert 'actions/setup-python@' not in workflow
           assert 'persist-credentials' not in workflow
+          assert 'cancel-in-progress: true' in workflow
           assert 'github_token_runtime_authority' in Path('llm_adapter/node_bootstrap.py').read_text(encoding='utf-8')
           print('CAPABILITY_RUNTIME_CREDENTIAL_AUTHORITY=TV_TVC')
           print('CAPABILITY_RUNTIME_GITHUB_TOKEN_AUTHORITY=NONE')
