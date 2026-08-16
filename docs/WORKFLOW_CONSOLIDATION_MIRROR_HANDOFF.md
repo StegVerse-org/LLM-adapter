@@ -5,10 +5,9 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: chore/consolidate-chat-session-binding-validation-20260816
+branch: main
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: LLMA-WORKFLOW-CONSOLIDATE-CHAT-SESSION-BINDING-040
-active_claim_state: CLAIMED_FOR_IMPLEMENTATION
+active_claim: NONE
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -47,7 +46,7 @@ hil-process-restart-controlled-cycle.yml: RETIRED/TRANSFERRED_TO_TVC
 legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 ```
 
-## Completed tranches 1-16
+## Completed tranches 1-17
 
 ```text
 1 #145 c9f561254ec5671c2329c3deb7ce0bfb511331ab
@@ -66,53 +65,57 @@ legacy third-party deployment manifests: RETIRED_AS_PRODUCTION_DEPENDENCY
 14 #160 c7bb207042259b11060e8cf8d93019a7cff0ccbe
 15 #161 c0ea3bd5c3c300cce3be7e8442f30def1c41b07b
 16 #162 c921766daefbb14c48502e51c324883510c004a5
+17 #163 1885754f60a1d08a8219e4244e383c3e4ceea0de
 ```
 
-Claims 025-039 are released. Tranches 12-16 established the credential-clean global dispatcher and consolidated provider-usage, sovereignty, objective-contract, and Chat-profile validation into it.
+Claims 025-040 are released.
 
-## Active tranche 17 — Chat session-binding validation consolidation
+### Global validation authority cleanup
 
-Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-CHAT-SESSION-BINDING-040.json`.
+`.github/workflows/validate.yml` and its iOS mirror are deterministic-validation-only: `permissions: {}`, anonymous exact-SHA fetch, explicit credential refusal, no schedule, no checkout/setup/upload actions, no hosted activation probe, no repository writeback, and no GitHub-token runtime/control-plane authority.
 
-The specialized source of truth `docs/CHAT_LLM_SESSION_BINDING_MIRROR_HANDOFF.md` was read before mutation. It establishes the provider-neutral session-binding layer as `RELEASED_COMPLETE`, with historical Python 3.9/3.11/3.12 release evidence and a retained canonical receipt. Live provider execution remains owned by issues #18 and #90, and `privacy_guarded_dispatch` remains mandatory for VA Claims Chat.
+### Tranche 17 — Chat session-binding validation consolidated
 
-Direct inspection of `.github/workflows/validate-chat-session-binding.yml` showed a GitHub-hosted three-runtime matrix using `actions/checkout`, `actions/setup-python`, and `actions/upload-artifact`. Its continuing deterministic capability is the session-binding test suite plus deterministic receipt generation.
+PR #163 merged at `1885754f60a1d08a8219e4244e383c3e4ceea0de`; final head `e904274e0833197e3f7ef6954a78d416b946136e`.
 
-Disposition installed on this branch:
+The standalone `.github/workflows/validate-chat-session-binding.yml` was removed. Its continuing deterministic checks now run from the token-clean global dispatcher and exact iOS mirror:
 
 ```text
-.github/workflows/validate-chat-session-binding.yml
-  -> CONSOLIDATE_INTO_STABLE_DISPATCHER
-  -> removed from active branch
-.github/workflows/validate.yml
-  -> runs $PYTHON_BIN -m pytest tests/test_chat_session_binding.py -q
-  -> runs $PYTHON_BIN scripts/verify_chat_session_binding.py --write-receipt
-  -> permissions: {}; anonymous exact-SHA fetch; credential refusal
-  -> no artifact upload/writeback/activation/provider execution
-iosnoperiod/github/workflows/validate.yml
-  -> exact mirror contains the same session-binding validation
-docs/CHAT_LLM_SESSION_BINDING_MIRROR_HANDOFF.md
-  -> preserves historical 3-runtime release evidence
-  -> current deterministic validation carrier changed to .github/workflows/validate.yml
+$PYTHON_BIN -m pytest tests/test_chat_session_binding.py -q
+$PYTHON_BIN scripts/verify_chat_session_binding.py --write-receipt
 ```
 
-The dispatcher claims only its current Python 3.11 deterministic lane. Historical 3.9/3.11/3.12 release evidence remains preserved and is not represented as current matrix execution. Generated receipt data is workspace-local and is not uploaded or committed by GitHub Actions.
+`docs/CHAT_LLM_SESSION_BINDING_MIRROR_HANDOFF.md` preserves the historical Python 3.9/3.11/3.12 release matrix and retained receipt while accurately naming `.github/workflows/validate.yml` as the current Python 3.11 validation carrier. `privacy_guarded_dispatch` and issues #18/#90 remain the live-provider boundaries.
 
-No provider execution, permission request, custody, Site mutation, filing, publication, deployment, activation, wallet effect, GitHub token authority, or non-TV/TVC credential is introduced. Tranche 17 is incomplete until exact final-head Architecture Guard and global validate pass, PR merge is complete, claim 040 is released, and this handoff is finalized on main.
+Exact final-head evidence:
 
-## Current accounting — released work only
+```text
+Architecture Guard 31973895768 SUCCESS
+validate 31973895736 SUCCESS
+Test Chat provider-neutral session binding SUCCESS
+Build deterministic Chat session-binding validation receipt SUCCESS
+workflow parity SUCCESS
+Run canonical Goal 4 verification SUCCESS
+Confirm validation-only authority boundary SUCCESS
+all 65 substantive validate steps SUCCESS
+PR #163 merge 1885754f60a1d08a8219e4244e383c3e4ceea0de
+```
+
+Claim `tasks/LLMA-WORKFLOW-CONSOLIDATE-CHAT-SESSION-BINDING-040.json` is released as `MERGED_INTO_CANONICAL_WORKSTREAM`.
+
+## Current accounting
+
+The immediately preceding released main contained 21 workflow files. PR #163 removed exactly one default-branch workflow and added no workflow file; direct post-merge directory observation confirms `validate-chat-session-binding.yml` is absent and the remaining workflow directory is the expected reduced set.
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_on_released_main: 21
-workflow_files_removed_or_consolidated: 28
-classified_and_remediated: 31/49 = 63.27%
-remaining_unclassified_or_unconsolidated: 18/49
+workflow_files_current_on_main: 20
+workflow_files_removed_or_consolidated: 29
+classified_and_remediated: 32/49 = 65.31%
+remaining_unclassified_or_unconsolidated: 17/49
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-CHAT-SESSION-BINDING-040
+current_active_tranche_claim: NONE
 ```
-
-If tranche 17 releases as installed and no concurrent workflow-file change occurs, main will contain 20 workflow files; removed/consolidated becomes 29; classified/remediated becomes 32/49 = 65.31%; remaining becomes 17/49.
 
 ## Canonical ownership / convergence
 
@@ -132,16 +135,16 @@ StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/T
 
 - Do not recreate sovereign runtime source work.
 - Do not bypass privacy_guarded_dispatch or compete with issues #18/#90.
-- Do not infer activation from workflow cleanup.
+- Do not infer live activation from workflow cleanup.
 - Do not create non-TV/TVC runtime/test tokens.
 - Preserve retained release receipts and historical compatibility evidence.
 - Do not restore hosted activation, artifact transport, or repository writeback.
 - Do not touch wallet/trade signing, broadcast, settlement, or StegFin provider execution.
 
-## Next task after release
+## Next safe task
 
-Under a fresh noncolliding claim, read the applicable specialized handoff and classify the next remaining workflow file against canonical StegVerse owners and the `<=2` target.
+Under a fresh noncolliding claim, read the applicable specialized handoff and classify the next remaining default-branch workflow file against canonical StegVerse owners and the `<=2` target. Reusable `workflow_call`, publication, HIL, VACC, image-publication, and governed-runtime surfaces require their specific ownership/permission semantics to be read before mutation.
 
 ## Archive condition
 
-This session remains a distinct support lane while workflow/token remediation remains incomplete. Released main still has 21 actual workflow files versus the adopted <=2 target, 18/49 audit-start surfaces remain unclassified/unconsolidated, and claim 040 is active.
+This session remains a distinct support lane while workflow/token remediation remains incomplete. Twenty actual workflow files remain on main versus the adopted <=2 target, and 17/49 canonical audit-start surfaces remain unclassified/unconsolidated. No archive claim is permitted until all session-specific requirements are complete, superseded, or durably transferred and no distinct support role remains.
