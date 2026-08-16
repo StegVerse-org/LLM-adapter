@@ -1,0 +1,14 @@
+task_id=LLMA-WORKFLOW-CONSOLIDATION-HIL-LIFECYCLE-027
+state=IMPLEMENTED_AWAITING_FINAL_HEAD_VALIDATION
+credential_authority=TV/TVC
+github_token_runtime_authority=NONE
+non_tv_tvc_production_secret_or_token_allowed=false
+removed=.github/workflows/hil-live-activation.yml
+removed=.github/workflows/observe-hil-layer.yml
+canonical_runtime_lifecycle=StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
+private_review_owner=StegVerse-Labs/TVC#8
+site_projection=StegVerse-Labs/Site#67
+master_records=master-records/orchestration#13
+expected_post_merge_workflow_count=35
+authority_effect=false
+activation_effect=false

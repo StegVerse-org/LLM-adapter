@@ -1,0 +1,4 @@
+production_continuity=StegVerse task -> StegVerse worker -> TV/TVC authority -> StegVerse runtime -> StegVerse evidence/continuity
+no_hil_activation_inference=true
+no_wallet_or_trade_authority=true
+no_non_tv_tvc_runtime_or_control_plane_credential=true
