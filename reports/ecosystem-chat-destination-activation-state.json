@@ -1,16 +1,16 @@
 {
   "schema_version": "1.1.0",
   "record_type": "ecosystem_chat_destination_activation_state",
-  "generated_at": "2026-08-16T08:27:23.185905+00:00",
+  "generated_at": "2026-08-16T08:28:11.910822+00:00",
   "repository": "StegVerse-org/LLM-adapter",
-  "commit_sha": "310f0225d3700fda735d3f2d70943a12e9bda0cc",
+  "commit_sha": "bed54b84f81afe25369d9810da523f86f963144e",
   "event_name": "push",
-  "workflow_run_id": "31936475727",
+  "workflow_run_id": "31936514107",
   "state": "DESTINATION_ACTIVATION_PENDING_EXTERNAL_EVIDENCE",
   "manual_user_action_required": false,
   "gates": {
     "destination_current_main_validation": {
-      "complete": true,
+      "complete": false,
       "owner": "StegVerse-org/LLM-adapter",
       "automation": ".github/workflows/validate.yml",
       "evidence": {
@@ -18,8 +18,8 @@
         "workflow_run_id_present": true,
         "git_ref": "refs/heads/main",
         "current_main_context": true,
-        "validation_job_status": "success",
-        "validation_succeeded": true
+        "validation_job_status": "failure",
+        "validation_succeeded": false
       }
     },
     "same_origin_authenticated_deployment": {
@@ -62,5 +62,5 @@
     "publication_authorized": false,
     "execution_authorized": false
   },
-  "state_sha256": "1ab83ede8466c12e30c9232f6bbf43f373eadddc40cf152b73115f1e365e3d2b"
+  "state_sha256": "341f1a972ab2a83ff6fec577fcbe6f8d3daed4d6f5c36266493f8fa5f6121db0"
 }
