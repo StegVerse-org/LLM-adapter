@@ -1,0 +1,64 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-RETIRE-COMPLETE-PR-CONSOLIDATION-051",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target and eliminate non-TV/TVC GitHub-token coordination after the bounded stale-activation-PR reconciliation task reached COMPLETE and archive-safe state.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/retire-complete-pr-consolidation-workflow-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T21:56:00-05:00",
+  "claim_release_condition": "Merge after exact-head Architecture Guard/global validate pass; the completed bounded reconciliation task, inventory, validator, historical receipt and PR/run/artifact provenance remain preserved; the GitHub-token/API/artifact workflow is absent; current live-provider authority is reconciled to sovereign owners; and no active PR claim or collision-control capability is falsely represented as removed.",
+  "surfaces": [
+    ".github/workflows/llm-adapter-open-pr-consolidation.yml",
+    "data/llm-adapter-open-pr-consolidation.json",
+    "scripts/check_llm_adapter_open_pr_consolidation.py",
+    "tasks/LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.json",
+    "receipts/llm-adapter-open-pr-consolidation.json",
+    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-RETIRE-COMPLETE-PR-CONSOLIDATION-051.json"
+  ],
+  "classifications": {
+    ".github/workflows/llm-adapter-open-pr-consolidation.yml": "ELIMINATE_COMPLETED_BOUNDED_GITHUB_TOKEN_OBSERVER",
+    "data/llm-adapter-open-pr-consolidation.json": "RETAIN_HISTORICAL_RECONCILIATION_INVENTORY",
+    "scripts/check_llm_adapter_open_pr_consolidation.py": "RETAIN_HISTORICAL_DETERMINISTIC_VALIDATOR",
+    "receipts/llm-adapter-open-pr-consolidation.json": "RETAIN_HISTORICAL_COMPLETION_RECEIPT"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "github_api_token_observation_allowed": false,
+    "artifact_transport_allowed": false,
+    "activation_effect": false
+  },
+  "canonical_current_continuation": {
+    "organization_handoff": "StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md",
+    "live_local_model_owner": "StegVerse-Labs/.github#60 + resident sovereign heartbeat",
+    "vaccine_claim_provider_correction": "StegVerse-org/LLM-adapter#142 + tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+    "ecosystem_chat_runtime_binding": "StegVerse-org/LLM-adapter#18",
+    "credential_authority": "TV/TVC"
+  },
+  "collision_boundaries": [
+    "Do not reopen completed task LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.",
+    "Preserve historical PR classifications and immutable run/artifact evidence as provenance only.",
+    "Do not use GitHub token/API polling as current production coordination authority.",
+    "Do not merge or close preserved historical PRs merely as part of workflow cleanup.",
+    "Do not introduce Render, GitHub/OIDC runtime authority, non-TV/TVC credentials, repository writeback, artifact transport, provider execution, custody, Site mutation, filing, or wallet authority."
+  ],
+  "expected_evidence": [
+    "bounded task 016 remains COMPLETE and archive dependency SATISFIED",
+    "historical inventory/validator/receipt remain present",
+    "standalone llm-adapter-open-pr-consolidation.yml absent",
+    "specialized handoff marks hosted observer retired and historical only",
+    "Architecture Guard exact head PASS",
+    "global validate exact head PASS",
+    "PR merged and claim released",
+    "post-merge workflow census directly observed"
+  ],
+  "next_executable_action": "Retire the token-bearing completed-task workflow, reconcile specialized/canonical handoffs to current sovereign owners, validate, merge, release, and recount.",
+  "next_task_after_release": "Classify the next remaining default-branch workflow surface against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}

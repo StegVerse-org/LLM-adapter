@@ -18,7 +18,7 @@ COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "scripts/check_exceed_federal_security_baseline.py"),
     (sys.executable, "scripts/check_session_provider_layer_consolidation.py"),
     (sys.executable, "scripts/check_session_provider_layer_archive_disposition.py"),
-    (sys.executable, "scripts/check_llm_adapter_orchestration_state.py"),
+    (sys.executable, "scripts/check_llm_adapter_orchestration_state_current.py"),
     (sys.executable, "scripts/validate_ecosystem_va_chat_session_consolidation.py"),
     (sys.executable, "scripts/validate_va_claim_assistant_session_consolidation.py"),
     (sys.executable, "scripts/validate_va_claims_chat_runtime_contract.py"),
