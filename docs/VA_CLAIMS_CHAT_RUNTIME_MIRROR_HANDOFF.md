@@ -14,7 +14,7 @@ Document workspace issue: StegVerse-Labs/Site#116
 
 ## Collision and ownership
 
-The active governed-retrieval implementation owns `va_claim_assistant/**`, its tests, and `.github/workflows/va-claim-assistant-governed-retrieval.yml`. This subordinate contract task owns only the runtime contract, its fail-closed validator and retained receipt, and this handoff. Workflow-maintenance claim `LLMA-WORKFLOW-CONSOLIDATE-VA-RUNTIME-CONTRACT-048` may alter only how deterministic validation is invoked; it does not seize runtime ownership.
+The active governed-retrieval/runtime implementation remains the canonical owner. This subordinate contract task owns only the runtime contract, fail-closed validator, retained receipt, and this handoff. Workflow-maintenance claim `LLMA-WORKFLOW-CONSOLIDATE-VA-RUNTIME-CONTRACT-048` changed only deterministic validation transport and is now released.
 
 ## Released contract
 
@@ -41,28 +41,44 @@ authority_effect: false
 activation_effect: false
 ```
 
-The retained canonical receipt remains release evidence. `scripts/validate_va_claims_chat_runtime_contract.py` remains the authoritative fail-closed validator and writes its deterministic receipt into the local workspace when invoked.
+The committed canonical PASS receipt remains release evidence. `scripts/validate_va_claims_chat_runtime_contract.py` remains the authoritative fail-closed validator and writes a deterministic receipt only into the current workspace when invoked.
 
-## Current validation carrier
+## Validation transport consolidation — RELEASED
 
-The historical standalone `.github/workflows/va-claims-chat-runtime-contract.yml` had a six-hour schedule, `contents: write`, token-backed `actions/checkout@v4` with persisted credentials, repository commit/pull/push writeback, and `actions/upload-artifact@v4`. That recurring GitHub surface is being consolidated under claim `LLMA-WORKFLOW-CONSOLIDATE-VA-RUNTIME-CONTRACT-048`.
+The retired standalone `.github/workflows/va-claims-chat-runtime-contract.yml` previously had a six-hour schedule, `contents: write`, token-backed checkout with persisted credentials, repository commit/pull/push writeback, and artifact upload.
 
-Current deterministic path on the cleanup branch:
+It is now removed. Deterministic validation continues through:
 
 ```text
 .github/workflows/validate.yml
   -> permissions: {}
   -> anonymous exact-SHA source acquisition
   -> explicit credential refusal
-  -> no schedule
-  -> no repository writeback
-  -> no artifact transport
-  -> executes scripts/verify_goal4_full.py
+  -> no schedule/writeback/artifact transport
+  -> scripts/verify_goal4_full.py
 scripts/verify_goal4_full.py
-  -> executes scripts/validate_va_claims_chat_runtime_contract.py
+  -> scripts/validate_va_claims_chat_runtime_contract.py
+iosnoperiod/github/workflows/validate.yml
+  -> exact mirror invokes the same Goal 4 aggregate
 ```
 
-The exact iOS global workflow mirror already invokes the same Goal 4 aggregate, so no separate mirror-only contract step or second dispatcher is required. Receipt generation during hosted validation is workspace-local; the committed PASS receipt is not rewritten by GitHub Actions.
+Release evidence:
+
+```text
+cleanup claim: LLMA-WORKFLOW-CONSOLIDATE-VA-RUNTIME-CONTRACT-048
+cleanup PR: #171
+final head: 6da12cb2562a76540fdb5d39faa0fc70e082bd60
+merge: b3a17c81d89d2cc8a69497d4d0a277788389bc8b
+Architecture Guard: 31987117708 SUCCESS
+validate: 31987118201 SUCCESS
+validate job: 95263934427 SUCCESS
+67/67 substantive validate steps: SUCCESS
+canonical Goal 4: SUCCESS including runtime-contract validator
+workflow parity: SUCCESS
+validation-only authority boundary: SUCCESS
+post-merge workflow files: 11
+claim 048: MERGED_INTO_CANONICAL_WORKSTREAM
+```
 
 ## Authority boundary
 
@@ -80,10 +96,8 @@ The filing state may not advance beyond preparation until every gate in `filing_
 MERGED INTO: StegVerse-org/LLM-adapter#90
 ```
 
-Continuation owner remains the active governed-retrieval/runtime implementation lane; this workflow cleanup creates no competing owner.
+Continuation owner remains the governed-retrieval/runtime lane. Broader VACC activation remains machine-owned/incomplete.
 
 ## Archive conditions
 
-The originating subordinate runtime-contract task remains archive-safe: its complete state is committed in the contract, retained PASS receipt, issue state, and this handoff. Broader VACC activation remains machine-owned/incomplete.
-
-Workflow cleanup claim 048 is not complete until exact-head Architecture Guard/global validate pass, PR merge, post-merge census, claim release, and canonical workflow handoff finalization.
+The originating subordinate runtime-contract task remains archive-safe and the workflow-cleanup claim is released. No chat history is required for this contract's continuation.
