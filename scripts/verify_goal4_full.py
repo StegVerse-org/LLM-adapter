@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "scripts/verify_goal4.py"),
+    (sys.executable, "scripts/check_architecture_guard.py"),
     (sys.executable, "-m", "pytest", "tests/test_local_node_vertical_slice.py", "-v"),
     (sys.executable, "scripts/check_stegverse_live_baseline_runtime_readiness.py"),
     (sys.executable, "scripts/check_stegverse_live_baseline_provider_authority_binding.py"),
