@@ -67,15 +67,13 @@ post-merge workflow files: 14
 classified/remediated: 38/49 = 77.55%
 ```
 
-## Active tranche 24 — superseded VA hosted-preflight retirement
+## Active tranche 24 — superseded VA hosted-preflight family retirement
 
 Claim: `tasks/LLMA-WORKFLOW-RETIRE-SUPERSEDED-VA-PREFLIGHT-047.json`.
 
-The specialized source of truth `docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md` was read before mutation. It states the historical GitHub-Models preflight is `COMPLETE/SUPERSEDED` as an activation route, while current continuation is issue #142 + `tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json` under resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records. Current route requirements are TV/TVC credential authority, credential requirement NONE, GitHub token requirement false, GitHub-token runtime authority NONE, third-party inference false, and hosted fallback DISALLOWED.
+The specialized source of truth `docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md` was read before mutation. It marks the historical GitHub-Models preflight `COMPLETE/SUPERSEDED` as an activation route. Current continuation is issue #142 + `tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json` under resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records with TV/TVC credential authority, credential requirement NONE, GitHub token requirement false, GitHub-token runtime authority NONE, third-party inference false, and hosted fallback DISALLOWED.
 
-Direct inspection showed `.github/workflows/validate-va-provider-preflight-hosted-path.yml` still used `actions/checkout@v4` and `actions/setup-python@v5` only to execute `scripts/check_va_provider_preflight_hosted_path.py`. That script was itself bound to the already-removed `.github/workflows/va-claim-assistant-provider-preflight.yml` and superseded `VACP-PREFLIGHT-HOSTED-EXECUTION-008` experiment. Repository search found no caller/reference to either hosted validation surface.
-
-Installed on the active branch:
+Initial retirement removed the stale validation wrapper and its obsolete validator:
 
 ```text
 .github/workflows/validate-va-provider-preflight-hosted-path.yml
@@ -84,14 +82,30 @@ Installed on the active branch:
 scripts/check_va_provider_preflight_hosted_path.py
   -> ELIMINATE_OBSOLETE_VALIDATOR_BOUND_TO_REMOVED_GITHUB_MODELS_PREFLIGHT
   -> removed
-docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md
-  -> historical PR #120/run evidence preserved
-  -> current continuation remains issue #142 / task 023 only
 ```
 
-No current sovereign activation predicate is removed. No replacement hosted workflow is created because the current VACC route is machine-owned by StegVerse + TV/TVC. No provider execution, custody, filing, Site mutation, wallet effect, GitHub/OIDC authority, Render authority, repository writeback, artifact transport, or non-TV/TVC secret/token is introduced.
+That mutation caused the separate `VA Provider Preflight Ubuntu 22.04 Proof` run `31986578857`, job `95262528654`, to fail closed in `Verify hosted-path contract` because it tried to execute the removed validator. Direct logs additionally proved that coupled workflow still used:
 
-Tranche 24 remains incomplete until exact-head Architecture Guard/global validate pass, PR merge completes, post-merge workflow census is observed, claim 047 is released, and this handoff is finalized on main.
+```text
+GITHUB_TOKEN Contents: read / Metadata: read
+actions/checkout@v4 with token
+actions/setup-python@v5 with token
+secrets.STEGVERSE_MASTER_RECORDS_TOKEN
+actions/upload-artifact@v4
+historical vendored TVC GitHub-hosted admission proof mechanics
+```
+
+That workflow is therefore part of the same superseded GitHub-hosted preflight experiment and violates the current no-non-TV/TVC-token boundary. It is now also removed on the active branch:
+
+```text
+.github/workflows/va-provider-preflight-ubuntu2204-proof.yml
+  -> ELIMINATE_SUPERSEDED_HOSTED_PROOF_WORKFLOW
+  -> removed
+```
+
+The specialized handoff preserves historical PR #120/run evidence while explicitly retaining only issue #142/task 023 as current continuation. No current sovereign activation predicate is removed and no replacement hosted workflow is created.
+
+No provider execution, custody, filing, Site mutation, wallet effect, GitHub/OIDC authority, Render authority, repository writeback, artifact transport, or non-TV/TVC secret/token is introduced. Tranche 24 remains incomplete until fresh exact-head Architecture Guard/global validate pass after the coupled proof removal, PR #170 merges, post-merge workflow census is observed, claim 047 is released, and this handoff is finalized on main.
 
 ## Global validation carrier
 
@@ -105,7 +119,7 @@ workflow_files_current_on_released_main: 14
 workflow_files_removed_or_consolidated_released: 35
 classified_and_remediated_released: 38/49 = 77.55%
 remaining_unclassified_or_unconsolidated_released: 11/49
-expected_if_tranche_24_releases_without_concurrent_change: 13 workflow files, 36 removed/consolidated, 39/49 = 79.59%, 10/49 remaining
+expected_if_tranche_24_releases_without_concurrent_change: 12 workflow files, 37 removed/consolidated, 40/49 = 81.63%, 9/49 remaining
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
 current_active_tranche_claim: LLMA-WORKFLOW-RETIRE-SUPERSEDED-VA-PREFLIGHT-047
 ```
