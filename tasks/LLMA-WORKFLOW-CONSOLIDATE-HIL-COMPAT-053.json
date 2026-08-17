@@ -1,0 +1,57 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-HIL-COMPAT-053",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target and remove redundant hosted HIL validation while preserving deterministic HIL compatibility checks under StegVerse + TV/TVC authority without duplicating TVC #8 lifecycle ownership.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-hil-compatibility-20260817",
+  "claimant": "chatgpt-session-backend-support-20260817",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-17T00:04:00-05:00",
+  "claim_release_condition": "Merge only after exact-head Architecture Guard and global validate pass; all deterministic HIL compatibility assertions from hil-deployment-profile.yml execute through canonical Goal 4; the standalone workflow is absent; TVC #8 remains untouched; and no credential, activation, publication, release, Master Records, or Site authority boundary regresses.",
+  "surfaces": [
+    ".github/workflows/hil-deployment-profile.yml",
+    "scripts/verify_hil_compatibility_full.py",
+    "scripts/verify_goal4_full.py",
+    "docs/HIL_LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-HIL-COMPAT-053.json"
+  ],
+  "classifications": {
+    ".github/workflows/hil-deployment-profile.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    "scripts/verify_hil_compatibility_full.py": "RETAIN_DETERMINISTIC_COMPATIBILITY_VALIDATOR",
+    "scripts/verify_goal4_full.py": "CANONICAL_AGGREGATE_VALIDATION_PATH"
+  },
+  "canonical_owner": {
+    "hil_runtime": "StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md",
+    "private_review": "StegVerse-Labs/TVC#8",
+    "resident_carrier": "StegVerse-Labs/.github resident sovereign carrier",
+    "site_projection": "StegVerse-Labs/Site#67",
+    "master_records": "master-records/orchestration#13"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "third_party_runtime_authority": false,
+    "activation_effect": false
+  },
+  "collision_boundaries": [
+    "Do not duplicate TVC #8 authenticated private-review claim.",
+    "Do not claim HIL product activation from compatibility validation.",
+    "Do not introduce Render or any third-party runtime dependency.",
+    "Do not introduce GitHub/OIDC runtime authority, repository writeback, artifact transport, or non-TV/TVC credentials.",
+    "Do not grant publication, release, Master Records, Site mutation, filing, or wallet authority."
+  ],
+  "expected_evidence": [
+    "standalone hil-deployment-profile.yml absent",
+    "canonical Goal 4 executes full deterministic HIL compatibility validator",
+    "Architecture Guard exact head PASS",
+    "global validate exact head PASS",
+    "TVC #8 ownership preserved",
+    "post-merge workflow census directly observed"
+  ],
+  "next_task_after_release": "Classify the next remaining default-branch workflow surface against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
