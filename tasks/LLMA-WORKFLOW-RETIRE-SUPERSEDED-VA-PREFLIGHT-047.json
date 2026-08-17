@@ -5,10 +5,11 @@
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "chore/retire-superseded-va-hosted-preflight-20260816",
   "claimant": "chatgpt-session-backend-support-20260816",
-  "role": "CLAIMED_FOR_IMPLEMENTATION",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "role": "IMPLEMENTATION_RELEASED",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claim_timestamp": "2026-08-16T20:58:00-05:00",
-  "claim_release_condition": "Merge after exact-head Architecture Guard/global validate pass, all superseded hosted-preflight wrapper/proof surfaces and the obsolete hosted-path validator are absent, specialized handoff preserves historical evidence and points only to sovereign task 023, and no authority or credential boundary regresses.",
+  "claim_released_at": "2026-08-16T21:03:00-05:00",
+  "claim_release_condition": "SATISFIED",
   "surfaces": [
     ".github/workflows/validate-va-provider-preflight-hosted-path.yml",
     ".github/workflows/va-provider-preflight-ubuntu2204-proof.yml",
@@ -18,9 +19,9 @@
     "tasks/LLMA-WORKFLOW-RETIRE-SUPERSEDED-VA-PREFLIGHT-047.json"
   ],
   "classifications": {
-    ".github/workflows/validate-va-provider-preflight-hosted-path.yml": "ELIMINATE_SUPERSEDED_HOSTED_VALIDATION_WRAPPER",
-    ".github/workflows/va-provider-preflight-ubuntu2204-proof.yml": "ELIMINATE_SUPERSEDED_HOSTED_PROOF_WORKFLOW",
-    "scripts/check_va_provider_preflight_hosted_path.py": "ELIMINATE_OBSOLETE_VALIDATOR_BOUND_TO_REMOVED_GITHUB_MODELS_PREFLIGHT"
+    ".github/workflows/validate-va-provider-preflight-hosted-path.yml": "ELIMINATED_SUPERSEDED_HOSTED_VALIDATION_WRAPPER",
+    ".github/workflows/va-provider-preflight-ubuntu2204-proof.yml": "ELIMINATED_SUPERSEDED_HOSTED_PROOF_WORKFLOW",
+    "scripts/check_va_provider_preflight_hosted_path.py": "ELIMINATED_OBSOLETE_VALIDATOR_BOUND_TO_REMOVED_GITHUB_MODELS_PREFLIGHT"
   },
   "canonical_replacement": {
     "issue": "StegVerse-org/LLM-adapter#142",
@@ -38,7 +39,6 @@
     "job": 95262528654,
     "result": "FAIL_CLOSED_AFTER_HOSTED_VALIDATOR_REMOVAL",
     "failing_step": "Verify hosted-path contract",
-    "failure": "scripts/check_va_provider_preflight_hosted_path.py missing",
     "credential_evidence": [
       "GITHUB_TOKEN Contents: read / Metadata: read",
       "actions/checkout@v4 token present",
@@ -47,25 +47,29 @@
       "actions/upload-artifact@v4 present"
     ]
   },
-  "collision_boundaries": [
-    "Preserve historical PR #120/run evidence in the specialized handoff as provenance only.",
-    "Do not recreate va-claim-assistant-provider-preflight.yml or GitHub Models/GITHUB_TOKEN VACC inference.",
-    "Do not alter privacy, Master Records custody, Site projection, filing, publication, wallet, or activation authority.",
-    "Do not introduce non-TV/TVC credentials, GitHub/OIDC runtime authority, hosted provider fallback, repository writeback, artifact transport, or third-party runtime authority."
+  "release_evidence": {
+    "pull_request": 170,
+    "final_head": "2cfc47455737278607ae7588ce53ce7fff39fcdd",
+    "merge_commit": "d32b97517cad5933f26639a63156b928559661b2",
+    "architecture_guard_run": 31986711716,
+    "architecture_guard_result": "SUCCESS",
+    "validate_run": 31986711718,
+    "validate_job": 95262878966,
+    "validate_result": "SUCCESS",
+    "validate_substantive_steps": "67/67 SUCCESS",
+    "workflow_parity": "SUCCESS",
+    "canonical_goal4": "SUCCESS",
+    "validation_only_authority_boundary": "SUCCESS",
+    "post_merge_default_branch_workflow_files": 12
+  },
+  "collision_boundaries_preserved": [
+    "Historical PR #120/run evidence remains preserved as provenance only.",
+    "No GitHub Models/GITHUB_TOKEN VACC inference route was recreated.",
+    "No privacy, Master Records custody, Site projection, filing, publication, wallet, or activation authority changed.",
+    "No non-TV/TVC credentials, GitHub/OIDC runtime authority, hosted provider fallback, repository writeback, artifact transport, or third-party runtime authority introduced."
   ],
-  "expected_evidence": [
-    "validate-va-provider-preflight-hosted-path.yml absent",
-    "va-provider-preflight-ubuntu2204-proof.yml absent",
-    "check_va_provider_preflight_hosted_path.py absent",
-    "historical hosted preflight evidence retained in specialized handoff",
-    "specialized handoff current continuation remains task 023 / issue 142",
-    "Architecture Guard PASS",
-    "global validate PASS",
-    "PR merged and claim released",
-    "post-merge workflow census directly observed"
-  ],
-  "next_executable_action": "Retire the newly exposed coupled Ubuntu hosted-proof workflow, update specialized/canonical handoffs, revalidate exact head, merge, release claim, and recount workflows.",
-  "next_task_after_release": "Classify the next remaining default-branch workflow surface against canonical owners and the <=2 target.",
+  "next_executable_action": "NONE_FOR_CLAIM_047",
+  "next_task_after_release": "Under a fresh noncolliding claim, classify the next remaining default-branch workflow surface against canonical owners and the <=2 target.",
   "authority_effect": false,
   "activation_effect": false
 }
