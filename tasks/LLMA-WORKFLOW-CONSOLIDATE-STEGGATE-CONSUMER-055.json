@@ -6,9 +6,23 @@
   "branch": "chore/consolidate-steggate-consumer-20260817",
   "claimant": "chatgpt-session-backend-support-20260817",
   "role": "CLAIMED_FOR_IMPLEMENTATION",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claim_timestamp": "2026-08-17T00:29:00-05:00",
-  "claim_release_condition": "Merge only after steggate-portable-consumer.yml is absent, deterministic portable-consumer checks execute through canonical Goal 4, canonical StegCore owner/commit identity remains verified, exact-head Architecture Guard and global validate pass, post-merge workflow census is observed, and no runtime/provider/publication/Site/Master Records/wallet authority is introduced.",
+  "release_timestamp": "2026-08-17T01:48:00-05:00",
+  "release_evidence": {
+    "pull_request": 178,
+    "final_head": "0b7588b8c80cb3dd5e97a9dcb4c947a5557731d6",
+    "merge_commit": "9ff6304f9a84b28ca54db86ae9faeb7814f84651",
+    "architecture_guard_run": 32002977860,
+    "architecture_guard_conclusion": "SUCCESS",
+    "validate_run": 32002977858,
+    "validate_job": 95306767617,
+    "validate_conclusion": "SUCCESS",
+    "substantive_validation_steps": "67/67 SUCCESS",
+    "canonical_goal4": "SUCCESS",
+    "post_merge_workflow_count": 3,
+    "classified_and_remediated": "49/49 = 100.00%"
+  },
   "surfaces": [
     ".github/workflows/steggate-portable-consumer.yml",
     "llm_adapter/steggate_portable_consumer.py",
@@ -43,14 +57,6 @@
     "Do not change canonical StegCore runtime identity or admit transport identity as authority.",
     "Do not introduce GitHub/OIDC runtime authority, artifact transport, repository writeback, or TV/TVC credential export into Actions.",
     "Do not claim public provider execution, carrier activation, Site mutation, Master Records custody, filing, or wallet/trade authority."
-  ],
-  "expected_evidence": [
-    "steggate-portable-consumer.yml absent",
-    "portable-consumer deterministic test PASS in canonical Goal 4",
-    "canonical identity receipt validator PASS in canonical Goal 4",
-    "Architecture Guard exact head PASS",
-    "global validate exact head PASS",
-    "post-merge workflow census directly observed"
   ],
   "next_task_after_release": "Reconcile architecture-guard.yml and capability-runtime.yml against the no-non-TV/TVC-token rule and <=2 final workflow target.",
   "authority_effect": false,
