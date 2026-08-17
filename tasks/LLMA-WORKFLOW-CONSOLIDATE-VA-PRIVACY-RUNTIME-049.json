@@ -1,0 +1,65 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-VA-PRIVACY-RUNTIME-049",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target and remove scheduled/writeback/artifact/token mechanics while preserving fail-closed PII-RDY-06 privacy runtime validation under StegVerse + TV/TVC authority.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-va-privacy-runtime-validation-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T21:14:00-05:00",
+  "claim_release_condition": "Merge after exact-head Architecture Guard/global validate pass, local deterministic privacy fixtures plus independent receipt validation execute through canonical Goal 4, the scheduled/writeback/artifact workflow is absent, the specialized handoff is reconciled to sovereign task 023 instead of superseded task 005, and no privacy/authority boundary regresses.",
+  "surfaces": [
+    ".github/workflows/va-claim-assistant-privacy-runtime.yml",
+    "tests/test_va_claim_assistant_privacy_runtime.py",
+    "scripts/validate_va_claim_assistant_privacy_runtime.py",
+    "scripts/verify_goal4_full.py",
+    "docs/VA_CLAIM_ASSISTANT_PRIVACY_RUNTIME_MIRROR_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-VA-PRIVACY-RUNTIME-049.json"
+  ],
+  "classifications": {
+    ".github/workflows/va-claim-assistant-privacy-runtime.yml": "CONSOLIDATE_INTO_CANONICAL_GOAL4",
+    "tests/test_va_claim_assistant_privacy_runtime.py": "RETAIN_LOCAL_DETERMINISTIC_FIXTURE_AND_RECEIPT_GENERATOR",
+    "scripts/validate_va_claim_assistant_privacy_runtime.py": "RETAIN_FAIL_CLOSED_PRIVACY_RECEIPT_AND_SOURCE_ORDER_VALIDATOR",
+    "scripts/verify_goal4_full.py": "CANONICAL_AGGREGATE_VALIDATION_PATH"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "repository_writeback_allowed": false,
+    "artifact_transport_allowed": false,
+    "activation_effect": false
+  },
+  "canonical_current_provider_continuation": {
+    "issue": "StegVerse-org/LLM-adapter#142",
+    "task": "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+    "credential_authority": "TV/TVC",
+    "credential_requirement": "NONE",
+    "github_token_required": false,
+    "github_token_runtime_authority": "NONE"
+  },
+  "collision_boundaries": [
+    "Preserve privacy gate before classification/governed dispatch/model input.",
+    "Preserve raw PII rejection, no rejected value/hash retention, sanitized derived-context requirement, safe custody projection, and no authority/activation effect.",
+    "Preserve historical hosted PR #99/run/artifact evidence as provenance only; do not require it as a live provider-release predicate.",
+    "Do not modify Site#116 production document ownership or Master Records custody authority.",
+    "Do not add GitHub/OIDC/provider/Master-Records credentials, hosted activation, repository writeback, artifact transport, filing, custody, Site mutation, or wallet authority."
+  ],
+  "expected_evidence": [
+    "canonical Goal 4 executes tests/test_va_claim_assistant_privacy_runtime.py",
+    "canonical Goal 4 executes scripts/validate_va_claim_assistant_privacy_runtime.py",
+    "standalone va-claim-assistant-privacy-runtime.yml absent",
+    "specialized handoff points current provider continuation to task 023/issue 142",
+    "workflow parity PASS",
+    "Architecture Guard exact head PASS",
+    "global validate exact head PASS",
+    "PR merged and claim released",
+    "post-merge workflow census directly observed"
+  ],
+  "next_executable_action": "Bind local privacy fixtures and independent validator into Goal 4, retire the hosted workflow, reconcile the specialized/canonical handoffs, validate, merge, release, and recount.",
+  "next_task_after_release": "Classify the next remaining default-branch workflow surface against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
