@@ -5,10 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: chore/retire-complete-pr-consolidation-workflow-20260816
+branch: main
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: LLMA-WORKFLOW-RETIRE-COMPLETE-PR-CONSOLIDATION-051
-active_claim_state: CLAIMED_FOR_IMPLEMENTATION
+active_claim: NONE
+active_claim_state: NONE
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -44,9 +44,9 @@ ecosystem-chat-live-activation.yml: RETIRED — resident StegVerse carrier + TV/
 ecosystem-chat-live-activation-monitor.yml: RETIRED — resident carrier owns continuity
 ```
 
-## Released tranches 1-27
+## Released tranches 1-28
 
-Latest release:
+Latest releases:
 
 ```text
 27 PR #173
@@ -56,58 +56,55 @@ Architecture Guard: 31989374647 SUCCESS
 validate: 31989374615 SUCCESS
 validate job: 95270003644 SUCCESS
 67/67 substantive validation steps: SUCCESS
-canonical Goal 4: SUCCESS
-workflow parity: SUCCESS
-capability-runtime: 31989374599 SUCCESS
 claim 050: MERGED_INTO_CANONICAL_WORKSTREAM
 post-merge workflow files: 9
 classified/remediated: 43/49 = 87.76%
+
+28 PR #174
+final head: e453eee4adf4814810870b18905d333e6d6b6a40
+merge: 842b6980f227a2b1e44f6b4431fbdca7fe88d8b0
+Architecture Guard: 31989860425 SUCCESS
+validate: 31989860454 SUCCESS
+validate job: 95271358484 SUCCESS
+67/67 substantive validation steps: SUCCESS
+canonical Goal 4: SUCCESS
+workflow parity: SUCCESS
+claim 051: MERGED_INTO_CANONICAL_WORKSTREAM
+post-merge workflow files: 8
+classified/remediated: 44/49 = 89.80%
 ```
 
-## Active tranche 28 — completed open-PR observer retirement
+Tranche 28 retired `.github/workflows/llm-adapter-open-pr-consolidation.yml`, which used token-backed checkout/setup, `GH_TOKEN: ${{ github.token }}`, fixed-list `gh api` polling and artifact upload for an already `COMPLETE`/archive-safe bounded reconciliation task. Historical inventory, validator, task record, receipt and immutable PR/run/artifact evidence remain preserved. `docs/LLM_ADAPTER_MIRROR_HANDOFF.md` now identifies historical Render/provider state as provenance only and points current authority to the resident StegVerse heartbeat, TV/TVC, current adapter owners and Master Records.
 
-Claim: `tasks/LLMA-WORKFLOW-RETIRE-COMPLETE-PR-CONSOLIDATION-051.json`.
-
-The specialized handoff `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`, historical inventory `data/llm-adapter-open-pr-consolidation.json`, validator `scripts/check_llm_adapter_open_pr_consolidation.py`, and completed task `tasks/LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.json` were read before mutation. Task 016 is `COMPLETE`, released, and its archive dependency is `SATISFIED`; it has no active claimant and explicitly has no remaining executable action for that bounded reconciliation.
-
-Direct inspection of `.github/workflows/llm-adapter-open-pr-consolidation.yml` showed a GitHub-hosted observer using `actions/checkout@v4`, `actions/setup-python@v5`, `GH_TOKEN: ${{ github.token }}`, repeated `gh api` calls for a fixed historical nine-PR inventory, and `actions/upload-artifact@v4` with 90-day retention. That mechanism is no longer required to complete task 016 and directly conflicts with the current no-non-TV/TVC-token coordination rule.
-
-Installed on the active branch:
-
-```text
-.github/workflows/llm-adapter-open-pr-consolidation.yml
-  -> ELIMINATE_COMPLETED_BOUNDED_GITHUB_TOKEN_OBSERVER
-  -> removed
-
-data/llm-adapter-open-pr-consolidation.json
-scripts/check_llm_adapter_open_pr_consolidation.py
-receipts/llm-adapter-open-pr-consolidation.json
-tasks/LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.json
-  -> retained as historical reconciliation provenance
-
-docs/LLM_ADAPTER_MIRROR_HANDOFF.md
-  -> reconciled: old bounded session remains archive-safe, Render is historical only, hosted PR observer is retired, and current runtime/credential continuation points to StegVerse resident heartbeat + TV/TVC + current LLM-adapter/Master Records owners
-```
-
-No current PR is mutated by this cleanup. A future PR-state collision requires a fresh bounded claim; the fixed historical snapshot list is not treated as a current production control plane. No replacement GitHub-token observer is created.
-
-No provider execution, custody, filing, Site mutation, wallet effect, GitHub/OIDC runtime authority, Render authority, repository writeback, artifact transport, or non-TV/TVC secret/token is introduced. Tranche 28 remains incomplete until exact-head Architecture Guard/global validate pass, PR merge, post-merge workflow census, claim 051 release, and main handoff finalization.
+The first exact-head validate run `31989735496` failed closed because the historical orchestration validator still required the now-retired workflow. That coupling was corrected by installing `scripts/check_llm_adapter_orchestration_state_current.py` and changing canonical Goal 4 to use the supersession-aware validator while retaining the old orchestration validator as historical provenance. The final exact head then passed Architecture Guard and all 67 global-validation substantive steps. No current PR state was mutated as part of cleanup.
 
 ## Global validation carrier
 
 `.github/workflows/validate.yml` and its exact iOS mirror remain deterministic-validation-only: `permissions: {}`, anonymous exact-SHA source acquisition, explicit credential refusal, no checkout/setup/upload actions, no schedule, no repository writeback, no hosted activation, and no GitHub-token runtime/control-plane authority.
 
-## Current accounting — released work only
+## Current accounting
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_on_released_main: 9
-workflow_files_removed_or_consolidated_released: 40
-classified_and_remediated_released: 43/49 = 87.76%
-remaining_unclassified_or_unconsolidated_released: 6/49
-expected_if_tranche_28_releases_without_concurrent_change: 8 workflow files, 41 removed/consolidated, 44/49 = 89.80%, 5/49 remaining
+workflow_files_current_on_main: 8
+workflow_files_removed_or_consolidated_released: 41
+classified_and_remediated_released: 44/49 = 89.80%
+remaining_unclassified_or_unconsolidated_released: 5/49
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: LLMA-WORKFLOW-RETIRE-COMPLETE-PR-CONSOLIDATION-051
+current_active_tranche_claim: NONE
+```
+
+Current default-branch workflow files are:
+
+```text
+architecture-guard.yml
+capability-runtime.yml
+hil-deployment-profile.yml
+math-solver-governed-runtime.yml
+publish-portable-node-image.yml
+stegdeploy-image.yml
+steggate-portable-consumer.yml
+validate.yml
 ```
 
 ## Canonical ownership / convergence
@@ -127,14 +124,31 @@ StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/T
 
 The original local-model/runtime discovery/launch/inference/proof and formal local-model development are complete/released and are not duplicated. Live activation remains machine-owned and requires direct runtime evidence.
 
+## Remaining workflow disposition work
+
+`capability-runtime.yml` has been directly inspected: it is credential-clean (`permissions: {}` plus explicit credential refusal), has no schedule/writeback/artifact transport, and uniquely validates the portable capability/bootstrap/service/autostart surface across Ubuntu, Windows, macOS and Python 3.11/3.12. Its latest observed exact-head run during tranche 27 was SUCCESS. It is therefore a strong `KEEP_STANDALONE_EXCEPTION` candidate unless an equally strong cross-platform replacement is installed.
+
+Still requiring fresh bounded disposition:
+
+```text
+hil-deployment-profile.yml
+math-solver-governed-runtime.yml
+publish-portable-node-image.yml
+stegdeploy-image.yml
+steggate-portable-consumer.yml
+```
+
+`architecture-guard.yml` and `validate.yml` are currently retained core deterministic validation surfaces. Any attempt to combine them must prove no loss of boundary coverage.
+
 ## Collision boundaries
 
-- Do not reopen completed task 016.
+- Do not recreate sovereign local-model/runtime source work.
+- Do not reopen completed task 016 or restore GitHub-token API polling.
+- Preserve unique multi-platform capability validation unless a verified replacement exists.
 - Do not treat historical PR snapshots or Render evidence as current runtime authority.
-- New PR mutation requires a fresh bounded claim.
-- Do not restore GitHub-token API polling, hosted schedules, writeback, artifact transport, or activation.
+- Do not restore hosted schedules, repository writeback, artifact transport, or activation.
 - Do not touch wallet signing, broadcast, settlement, or Master Record authorization.
 
 ## Archive condition
 
-This support session remains active while claim 051 and remaining workflow/token remediation are incomplete. Released main has 9 workflow files against the <=2 target and 6/49 audit-start surfaces remain unclassified/unconsolidated.
+This support session remains active while workflow/token remediation is incomplete. Main has 8 workflow files against the <=2 preference and 5/49 audit-start surfaces remain unclassified/unconsolidated. The original local-model/runtime implementation is already complete/released and live activation remains machine-owned.
