@@ -6,24 +6,34 @@
   "branch": "chore/retire-complete-pr-consolidation-workflow-20260816",
   "claimant": "chatgpt-session-backend-support-20260816",
   "role": "CLAIMED_FOR_IMPLEMENTATION",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claim_timestamp": "2026-08-16T21:56:00-05:00",
-  "claim_release_condition": "Merge after exact-head Architecture Guard/global validate pass; the completed bounded reconciliation task, inventory, validator, historical receipt and PR/run/artifact provenance remain preserved; the GitHub-token/API/artifact workflow is absent; current live-provider authority is reconciled to sovereign owners; and no active PR claim or collision-control capability is falsely represented as removed.",
-  "surfaces": [
-    ".github/workflows/llm-adapter-open-pr-consolidation.yml",
-    "data/llm-adapter-open-pr-consolidation.json",
-    "scripts/check_llm_adapter_open_pr_consolidation.py",
-    "tasks/LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.json",
-    "receipts/llm-adapter-open-pr-consolidation.json",
-    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
-    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
-    "tasks/LLMA-WORKFLOW-RETIRE-COMPLETE-PR-CONSOLIDATION-051.json"
-  ],
-  "classifications": {
-    ".github/workflows/llm-adapter-open-pr-consolidation.yml": "ELIMINATE_COMPLETED_BOUNDED_GITHUB_TOKEN_OBSERVER",
-    "data/llm-adapter-open-pr-consolidation.json": "RETAIN_HISTORICAL_RECONCILIATION_INVENTORY",
-    "scripts/check_llm_adapter_open_pr_consolidation.py": "RETAIN_HISTORICAL_DETERMINISTIC_VALIDATOR",
-    "receipts/llm-adapter-open-pr-consolidation.json": "RETAIN_HISTORICAL_COMPLETION_RECEIPT"
+  "released_at": "2026-08-16T22:03:00-05:00",
+  "pull_request": 174,
+  "final_head": "e453eee4adf4814810870b18905d333e6d6b6a40",
+  "merge_commit": "842b6980f227a2b1e44f6b4431fbdca7fe88d8b0",
+  "validation": {
+    "first_validate_run": 31989735496,
+    "first_validate_result": "FAIL_CLOSED",
+    "first_failure": "historical orchestration validator still required retired workflow",
+    "remediation": "installed scripts/check_llm_adapter_orchestration_state_current.py and moved canonical Goal 4 to the supersession-aware validator while retaining the old validator as historical provenance",
+    "architecture_guard_run": 31989860425,
+    "architecture_guard": "SUCCESS",
+    "global_validate_run": 31989860454,
+    "global_validate_job": 95271358484,
+    "global_validate": "SUCCESS",
+    "global_validate_substantive_steps": "67/67 SUCCESS",
+    "canonical_goal4": "SUCCESS",
+    "workflow_parity": "SUCCESS"
+  },
+  "released_surfaces": {
+    ".github/workflows/llm-adapter-open-pr-consolidation.yml": "REMOVED",
+    "data/llm-adapter-open-pr-consolidation.json": "RETAINED_HISTORICAL",
+    "scripts/check_llm_adapter_open_pr_consolidation.py": "RETAINED_HISTORICAL",
+    "scripts/check_llm_adapter_orchestration_state.py": "RETAINED_HISTORICAL",
+    "scripts/check_llm_adapter_orchestration_state_current.py": "INSTALLED_CURRENT_SUPERSESSION_VALIDATOR",
+    "receipts/llm-adapter-open-pr-consolidation.json": "RETAINED_HISTORICAL_COMPLETION_RECEIPT",
+    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md": "RECONCILED_TO_CURRENT_SOVEREIGN_CONTINUATION"
   },
   "credential_boundary": {
     "credential_authority": "TV/TVC",
@@ -36,29 +46,12 @@
   "canonical_current_continuation": {
     "organization_handoff": "StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md",
     "live_local_model_owner": "StegVerse-Labs/.github#60 + resident sovereign heartbeat",
-    "vaccine_claim_provider_correction": "StegVerse-org/LLM-adapter#142 + tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+    "vacc_provider_correction": "StegVerse-org/LLM-adapter#142 + tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
     "ecosystem_chat_runtime_binding": "StegVerse-org/LLM-adapter#18",
     "credential_authority": "TV/TVC"
   },
-  "collision_boundaries": [
-    "Do not reopen completed task LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.",
-    "Preserve historical PR classifications and immutable run/artifact evidence as provenance only.",
-    "Do not use GitHub token/API polling as current production coordination authority.",
-    "Do not merge or close preserved historical PRs merely as part of workflow cleanup.",
-    "Do not introduce Render, GitHub/OIDC runtime authority, non-TV/TVC credentials, repository writeback, artifact transport, provider execution, custody, Site mutation, filing, or wallet authority."
-  ],
-  "expected_evidence": [
-    "bounded task 016 remains COMPLETE and archive dependency SATISFIED",
-    "historical inventory/validator/receipt remain present",
-    "standalone llm-adapter-open-pr-consolidation.yml absent",
-    "specialized handoff marks hosted observer retired and historical only",
-    "Architecture Guard exact head PASS",
-    "global validate exact head PASS",
-    "PR merged and claim released",
-    "post-merge workflow census directly observed"
-  ],
-  "next_executable_action": "Retire the token-bearing completed-task workflow, reconcile specialized/canonical handoffs to current sovereign owners, validate, merge, release, and recount.",
-  "next_task_after_release": "Classify the next remaining default-branch workflow surface against canonical owners and the <=2 target.",
+  "post_merge_workflow_files": 8,
+  "next_task_after_release": "Classify the next remaining default-branch workflow surface against canonical owners and the <=2 target under a fresh claim.",
   "authority_effect": false,
   "activation_effect": false
 }
