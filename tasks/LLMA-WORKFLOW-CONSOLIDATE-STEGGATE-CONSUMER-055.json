@@ -1,0 +1,58 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-STEGGATE-CONSUMER-055",
+  "originating_goal": "Classify the final audit-start workflow surface and remove GitHub-token/artifact mechanics while preserving canonical StegGate portable-consumer identity, execution-order, and replay validation in the stable deterministic dispatcher.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-steggate-consumer-20260817",
+  "claimant": "chatgpt-session-backend-support-20260817",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-17T00:29:00-05:00",
+  "claim_release_condition": "Merge only after steggate-portable-consumer.yml is absent, deterministic portable-consumer checks execute through canonical Goal 4, canonical StegCore owner/commit identity remains verified, exact-head Architecture Guard and global validate pass, post-merge workflow census is observed, and no runtime/provider/publication/Site/Master Records/wallet authority is introduced.",
+  "surfaces": [
+    ".github/workflows/steggate-portable-consumer.yml",
+    "llm_adapter/steggate_portable_consumer.py",
+    "tests/test_steggate_portable_consumer.py",
+    "scripts/verify_steggate_portable_consumer.py",
+    "scripts/verify_goal4_full.py",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-STEGGATE-CONSUMER-055.json"
+  ],
+  "classifications": {
+    ".github/workflows/steggate-portable-consumer.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    "tests/test_steggate_portable_consumer.py": "RETAIN_DETERMINISTIC_CONSUMER_TESTS",
+    "scripts/verify_steggate_portable_consumer.py": "RETAIN_DETERMINISTIC_IDENTITY_RECEIPT_VALIDATOR",
+    "scripts/verify_goal4_full.py": "CANONICAL_AGGREGATE_VALIDATION_PATH"
+  },
+  "canonical_owner": {
+    "steggate": "StegVerse-Labs/StegCore",
+    "canonical_commit": "8c484e584d60a3bd2763d6948d0eb3f4afd67e0c",
+    "runtime_binding": "StegVerse-Labs/StegCore#70",
+    "adapter_runtime": "StegVerse-org/LLM-adapter#18",
+    "resident_carrier": "StegVerse-Labs/.github resident sovereign carrier"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "artifact_transport_allowed": false,
+    "activation_effect": false
+  },
+  "collision_boundaries": [
+    "Do not create another StegGate authority or evaluator.",
+    "Do not change canonical StegCore runtime identity or admit transport identity as authority.",
+    "Do not introduce GitHub/OIDC runtime authority, artifact transport, repository writeback, or TV/TVC credential export into Actions.",
+    "Do not claim public provider execution, carrier activation, Site mutation, Master Records custody, filing, or wallet/trade authority."
+  ],
+  "expected_evidence": [
+    "steggate-portable-consumer.yml absent",
+    "portable-consumer deterministic test PASS in canonical Goal 4",
+    "canonical identity receipt validator PASS in canonical Goal 4",
+    "Architecture Guard exact head PASS",
+    "global validate exact head PASS",
+    "post-merge workflow census directly observed"
+  ],
+  "next_task_after_release": "Reconcile architecture-guard.yml and capability-runtime.yml against the no-non-TV/TVC-token rule and <=2 final workflow target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
