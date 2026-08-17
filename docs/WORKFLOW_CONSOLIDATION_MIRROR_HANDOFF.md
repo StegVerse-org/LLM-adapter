@@ -40,6 +40,15 @@ third-party production/runtime dependency: prohibited
 StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
 ```
 
+## Retired activation provenance
+
+These historical workflow names remain recorded because their absence from the live workflow tree plus explicit transfer of continuity is a validation invariant, not a request to restore them.
+
+```text
+ecosystem-chat-live-activation.yml: RETIRED — resident StegVerse carrier + TV/TVC owns activation
+ecosystem-chat-live-activation-monitor.yml: RETIRED — resident carrier owns continuity
+```
+
 ## Released tranches 1-30
 
 Latest released tranche:
