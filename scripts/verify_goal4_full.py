@@ -33,6 +33,8 @@ COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "-m", "pytest", "-q", "tests/test_math_solver_gateway.py"),
     (sys.executable, "scripts/verify_math_solver_governed_runtime.py"),
     (sys.executable, "scripts/verify_hil_compatibility_full.py"),
+    (sys.executable, "-m", "pytest", "-q", "tests/test_steggate_portable_consumer.py"),
+    (sys.executable, "scripts/verify_steggate_portable_consumer.py"),
     (sys.executable, "scripts/check_workflow_parity.py"),
     (sys.executable, "scripts/check_ai_entry_authority_boundary.py"),
     (sys.executable, "scripts/check_ai_entry_receipt_boundary.py"),
