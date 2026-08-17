@@ -5,10 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/final-workflow-token-reconciliation-20260817
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
-active_claim_state: UNCLAIMED
+active_claim: LLMA-WORKFLOW-FINAL-TOKEN-RECONCILIATION-056
+active_claim_state: CLAIMED_FOR_IMPLEMENTATION
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -65,13 +65,54 @@ post-merge workflow files: 3
 classified/remediated: 49/49 = 100.00%
 ```
 
-Tranche 32 removed `.github/workflows/steggate-portable-consumer.yml`, retained deterministic consumer tests, added `scripts/verify_steggate_portable_consumer.py`, and folded both checks into `scripts/verify_goal4_full.py`. StegCore remains canonical owner at commit `8c484e584d60a3bd2763d6948d0eb3f4afd67e0c`; transport identity remains non-authoritative. No GitHub artifact transport is required for this capability.
+## Active tranche 33 — final hosted workflow/token reconciliation
 
-Tranche 31 remains the canonical retirement of GitHub package/OIDC image-publication authority. StegDeploy generates no protected provider/Master Records/review credentials, uses TV/TVC-injected protected values only, and defaults to local image build with `pull_policy: never`.
+Claim:
 
-## Global validation carrier
+```text
+tasks/LLMA-WORKFLOW-FINAL-TOKEN-RECONCILIATION-056.json
+state: CLAIMED_FOR_IMPLEMENTATION
+claimant: chatgpt-session-backend-support-20260817
+```
 
-`.github/workflows/validate.yml` is deterministic-validation-only: `permissions: {}`, anonymous exact-SHA source acquisition, explicit credential refusal, no checkout/setup/upload actions, no schedule, no repository writeback, no hosted activation, and no GitHub-token runtime/control-plane authority.
+Direct inspection established:
+
+```text
+architecture-guard.yml
+  scheduled hosted run
+  actions/checkout@v4
+  actions/setup-python@v5
+  actions/upload-artifact@v4
+  remote StegDB validator download
+  disposition: CONSOLIDATE_INTO_STABLE_DISPATCHER
+
+capability-runtime.yml
+  permissions: {}
+  explicit refusal of GITHUB_TOKEN, GH_TOKEN, GITHUB_PAT and TVC/protected token names
+  anonymous exact-SHA git fetch
+  no checkout/setup/upload actions
+  no repository writeback or activation effect
+  matrix: Ubuntu/Windows/macOS x Python 3.11/3.12
+  disposition: KEEP_STANDALONE_EXCEPTION because the matrix supplies portability coverage unavailable from the Ubuntu-only stable dispatcher
+
+validate.yml
+  permissions: {}
+  explicit credential refusal
+  anonymous exact-SHA source fetch
+  no checkout/setup/upload actions
+  no schedule/writeback/activation
+  disposition: stable deterministic dispatcher
+```
+
+Implementation installed on this branch:
+
+```text
+.github/workflows/architecture-guard.yml -> removed
+scripts/check_architecture_guard.py -> local deterministic strict architecture-manifest verifier
+scripts/verify_goal4_full.py -> invokes check_architecture_guard.py through canonical Goal 4
+```
+
+The replacement uses only repository-local `stegverse.architecture.json`; it does not fetch a remote validator and does not require artifact transport. The manifest remains strict. Required paths, forbidden filename/path patterns, Python naming conventions, and migration filename syntax are checked deterministically.
 
 ## Current accounting
 
@@ -79,15 +120,14 @@ Tranche 31 remains the canonical retirement of GitHub package/OIDC image-publica
 workflow_files_baseline: 49
 workflow_files_current_on_released_main: 3
 classified_and_remediated_released: 49/49 = 100.00%
-remaining_unclassified_audit_start_surfaces: 0
-restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
+active_branch_expected_workflow_files: 2
+restoration_target: <=2
+current_active_tranche_claim: LLMA-WORKFLOW-FINAL-TOKEN-RECONCILIATION-056
 ```
 
-Current default-branch workflow census:
+Expected branch workflow census:
 
 ```text
-architecture-guard.yml
 capability-runtime.yml
 validate.yml
 ```
@@ -102,7 +142,6 @@ local runtime discovery/launch/inference/proof: COMPLETE_RELEASED
 live local-model activation: StegVerse-Labs/.github#60 + resident sovereign heartbeat
 credential/route authority: TV/TVC / StegVerse-Labs/TVC
 StegDeploy scheduler: StegVerse-Labs/.github/handoffs/SHWP-HEALER-SOVEREIGN-SCHEDULER-001.json
-StegDeploy Healer continuation: StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md
 Ecosystem Chat runtime binding: StegVerse-org/LLM-adapter#18
 HIL private review: StegVerse-Labs/TVC#8
 StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
@@ -110,9 +149,9 @@ StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/T
 
 The original local-model/runtime discovery/launch/inference/proof and formal local-model development are complete/released and are not duplicated. Live activation remains machine-owned and requires direct runtime evidence.
 
-## Next bounded task
+## Release gate
 
-Reconcile `architecture-guard.yml` and `capability-runtime.yml` against the strict no-non-TV/TVC-token rule and the `<=2` final workflow target. `validate.yml` is already the credential-refusing stable dispatcher. Do not retain standalone hosted workflows merely because they historically carried validation.
+Tranche 33 releases only after the branch has exactly two workflows, the architecture check passes inside canonical Goal 4, `capability-runtime.yml` and `validate.yml` retain explicit token refusal and no-token acquisition mechanics, hosted validation passes on the exact head, and claim 056 is released. No runtime activation, provider execution, Site mutation, Master Records custody, publication, filing, wallet signature, broadcast, settlement, or trade is inferred from validation.
 
 ## Collision boundaries
 
@@ -125,4 +164,4 @@ Reconcile `architecture-guard.yml` and `capability-runtime.yml` against the stri
 
 ## Archive condition
 
-This support session remains active while the final retained workflow/token reconciliation is incomplete. Audit-start classification is now complete at 49/49 and the released tree has 3 workflows, but `architecture-guard.yml` and `capability-runtime.yml` still require explicit disposition against the stronger credential boundary and <=2 technical-minimum target.
+This support session remains active until claim 056 is validated/released and the remaining session goals are checked against their canonical worker-owned continuation records. If no unique support work remains after that check, the session can be consolidated into those canonical workstreams and archived without losing execution state.

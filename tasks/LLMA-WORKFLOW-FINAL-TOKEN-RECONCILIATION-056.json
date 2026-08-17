@@ -1,0 +1,56 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-FINAL-TOKEN-RECONCILIATION-056",
+  "originating_goal": "Reach the minimum technically necessary hosted validation surface while ensuring no non-TV/TVC secret or token is used and preserving deterministic architecture and cross-platform capability validation.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/final-workflow-token-reconciliation-20260817",
+  "claimant": "chatgpt-session-backend-support-20260817",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-17T01:50:00-05:00",
+  "claim_release_condition": "Merge only after architecture-guard.yml is absent, its deterministic structure checks execute through the stable validate dispatcher without checkout/setup/artifact/token mechanics, capability-runtime.yml is explicitly proven credential-refusing and retained only for evidence-backed cross-platform matrix necessity, final workflow census is <=2, exact-head validation passes, and no activation/runtime/provider/publication/Site/Master Records/wallet authority is introduced.",
+  "surfaces": [
+    ".github/workflows/architecture-guard.yml",
+    ".github/workflows/capability-runtime.yml",
+    ".github/workflows/validate.yml",
+    "scripts/check_architecture_guard.py",
+    "scripts/verify_goal4_full.py",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-FINAL-TOKEN-RECONCILIATION-056.json"
+  ],
+  "classifications": {
+    ".github/workflows/architecture-guard.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    ".github/workflows/capability-runtime.yml": "KEEP_STANDALONE_EXCEPTION",
+    ".github/workflows/validate.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER"
+  },
+  "standalone_exception_basis": {
+    "workflow": ".github/workflows/capability-runtime.yml",
+    "necessity": "cross-platform Ubuntu/Windows/macOS x Python 3.11/3.12 portability matrix cannot be represented by the single Ubuntu stable dispatcher without losing portability validation coverage",
+    "credential_boundary": "permissions empty, explicit GITHUB_TOKEN/GH_TOKEN/GITHUB_PAT and TVC/protected-token refusal, anonymous exact-SHA fetch, no checkout/setup/upload actions, no repository writeback, no activation effect"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "github_actions_activation_role": "NONE",
+    "github_actions_publication_role": "NONE"
+  },
+  "collision_boundaries": [
+    "Do not replace architecture validation with another token-backed action chain.",
+    "Do not remove cross-platform capability coverage unless equivalent deterministic portability validation remains.",
+    "Do not inject TV/TVC protected values into GitHub Actions.",
+    "Do not compete with resident carrier, Healer scheduler, TVC private-review, or StegFin USER_ONLY authority.",
+    "Do not manufacture activation, provider, publication, Site, Master Records, or trade evidence."
+  ],
+  "expected_evidence": [
+    "architecture-guard.yml absent",
+    "deterministic architecture guard check executes in stable validate path",
+    "capability-runtime credential refusal and anonymous-fetch boundary directly inspected",
+    "validate credential refusal and anonymous-fetch boundary directly inspected",
+    "final workflow census <=2",
+    "exact-head hosted validation PASS"
+  ],
+  "next_task_after_release": "Determine whether any unique session support requirement remains outside canonical worker-owned activation/trade paths; if none, consolidate and archive.",
+  "authority_effect": false,
+  "activation_effect": false
+}
