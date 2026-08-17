@@ -5,10 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/consolidate-math-solver-validation-20260816
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
-active_claim_state: NONE
+active_claim: LLMA-WORKFLOW-CONSOLIDATE-MATH-SOLVER-052
+active_claim_state: CLAIMED_FOR_IMPLEMENTATION
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -46,20 +46,9 @@ ecosystem-chat-live-activation-monitor.yml: RETIRED — resident carrier owns co
 
 ## Released tranches 1-28
 
-Latest releases:
+Latest release:
 
 ```text
-27 PR #173
-final head: e6f100b2dd4c3c024239a50248a71e379f42d5ce
-merge: cf51da459b0317f12c58fa3c365630a104439706
-Architecture Guard: 31989374647 SUCCESS
-validate: 31989374615 SUCCESS
-validate job: 95270003644 SUCCESS
-67/67 substantive validation steps: SUCCESS
-claim 050: MERGED_INTO_CANONICAL_WORKSTREAM
-post-merge workflow files: 9
-classified/remediated: 43/49 = 87.76%
-
 28 PR #174
 final head: e453eee4adf4814810870b18905d333e6d6b6a40
 merge: 842b6980f227a2b1e44f6b4431fbdca7fe88d8b0
@@ -74,37 +63,66 @@ post-merge workflow files: 8
 classified/remediated: 44/49 = 89.80%
 ```
 
-Tranche 28 retired `.github/workflows/llm-adapter-open-pr-consolidation.yml`, which used token-backed checkout/setup, `GH_TOKEN: ${{ github.token }}`, fixed-list `gh api` polling and artifact upload for an already `COMPLETE`/archive-safe bounded reconciliation task. Historical inventory, validator, task record, receipt and immutable PR/run/artifact evidence remain preserved. `docs/LLM_ADAPTER_MIRROR_HANDOFF.md` now identifies historical Render/provider state as provenance only and points current authority to the resident StegVerse heartbeat, TV/TVC, current adapter owners and Master Records.
+## Active tranche 29 — Math Solver governed validation consolidation
 
-The first exact-head validate run `31989735496` failed closed because the historical orchestration validator still required the now-retired workflow. That coupling was corrected by installing `scripts/check_llm_adapter_orchestration_state_current.py` and changing canonical Goal 4 to use the supersession-aware validator while retaining the old orchestration validator as historical provenance. The final exact head then passed Architecture Guard and all 67 global-validation substantive steps. No current PR state was mutated as part of cleanup.
+Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-MATH-SOLVER-052.json`.
+
+The specialized source of truth `docs/MATH_SOLVER_RUNTIME_MIRROR_HANDOFF.md` was read before mutation. It records the Math Solver source/runtime integration claim as released by convergence, source gates 1-7 complete, and only eligible sovereign-carrier observation plus Site#240 consumption pending under existing machine/Site owners.
+
+Direct inspection of `.github/workflows/math-solver-governed-runtime.yml` showed a GitHub-hosted deterministic validation surface using `actions/checkout@v4`, `actions/setup-python@v5`, a pinned StegCore install and `actions/upload-artifact@v4` with 90-day retention. Its substantive checks are deterministic Math Solver tests, canonical StegGate runtime identity, replay equality and ALLOW-before-executor ordering; it does not prove a sovereign carrier.
+
+Installed on the active branch:
+
+```text
+.github/workflows/math-solver-governed-runtime.yml
+  -> CONSOLIDATE_INTO_STABLE_DISPATCHER
+  -> removed
+scripts/verify_math_solver_governed_runtime.py
+  -> installed deterministic runtime-identity/replay validator
+  -> canonical owner StegVerse-Labs/StegCore
+  -> request/result/runtime-identity replay checks
+  -> executor invoked only after ALLOW
+  -> deterministic 6 * 7 result = 42
+  -> authority_effect=false
+  -> public_deployment_proven=false
+  -> sovereign_carrier_observed=false
+scripts/verify_goal4_full.py
+  -> now executes tests/test_math_solver_gateway.py
+  -> now executes scripts/verify_math_solver_governed_runtime.py
+```
+
+Canonical StegCore is already pinned in the dev dependency set, so no second hosted setup/proof workflow is required. The credential-clean global `validate.yml` executes canonical Goal 4 with `permissions: {}`, explicit credential refusal, anonymous exact-source acquisition, no schedule/writeback/artifact transport, and no activation authority.
+
+Live Math Solver continuation remains:
+
+```text
+StegVerse-Labs/.github resident sovereign carrier
+-> StegVerse-org/LLM-adapter#72 service gateway
+-> StegVerse-org/LLM-adapter#132 Math Solver runtime
+-> scripts/observe_math_solver_public_runtime.py
+-> StegVerse-Labs/Site#240 activation consumer
+-> StegVerse-Labs/StegCore#70 canonical runtime binding
+```
+
+No carrier execution evidence is manufactured by this cleanup. No provider execution, custody, filing, Site mutation, wallet effect, GitHub/OIDC runtime authority, Render authority, repository writeback, artifact transport, or non-TV/TVC secret/token is introduced.
+
+Tranche 29 remains incomplete until exact-head Architecture Guard/global validate pass, PR merge, post-merge workflow census, claim 052 release, and main handoff finalization.
 
 ## Global validation carrier
 
 `.github/workflows/validate.yml` and its exact iOS mirror remain deterministic-validation-only: `permissions: {}`, anonymous exact-SHA source acquisition, explicit credential refusal, no checkout/setup/upload actions, no schedule, no repository writeback, no hosted activation, and no GitHub-token runtime/control-plane authority.
 
-## Current accounting
+## Current accounting — released work only
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_on_main: 8
+workflow_files_current_on_released_main: 8
 workflow_files_removed_or_consolidated_released: 41
 classified_and_remediated_released: 44/49 = 89.80%
 remaining_unclassified_or_unconsolidated_released: 5/49
+expected_if_tranche_29_releases_without_concurrent_change: 7 workflow files, 42 removed/consolidated, 45/49 = 91.84%, 4/49 remaining
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
-```
-
-Current default-branch workflow files are:
-
-```text
-architecture-guard.yml
-capability-runtime.yml
-hil-deployment-profile.yml
-math-solver-governed-runtime.yml
-publish-portable-node-image.yml
-stegdeploy-image.yml
-steggate-portable-consumer.yml
-validate.yml
+current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-MATH-SOLVER-052
 ```
 
 ## Canonical ownership / convergence
@@ -118,6 +136,7 @@ live local-model activation: StegVerse-Labs/.github#60 + resident sovereign hear
 credential/route authority: TV/TVC / StegVerse-Labs/TVC
 Ecosystem Chat runtime binding: StegVerse-org/LLM-adapter#18
 VACC sovereign continuation: StegVerse-org/LLM-adapter#142 + tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
+Math Solver machine continuation: StegVerse-org/LLM-adapter#72/#132 + Site#240 + StegCore#70
 Master Records: master-records/orchestration
 StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
 ```
@@ -126,29 +145,27 @@ The original local-model/runtime discovery/launch/inference/proof and formal loc
 
 ## Remaining workflow disposition work
 
-`capability-runtime.yml` has been directly inspected: it is credential-clean (`permissions: {}` plus explicit credential refusal), has no schedule/writeback/artifact transport, and uniquely validates the portable capability/bootstrap/service/autostart surface across Ubuntu, Windows, macOS and Python 3.11/3.12. Its latest observed exact-head run during tranche 27 was SUCCESS. It is therefore a strong `KEEP_STANDALONE_EXCEPTION` candidate unless an equally strong cross-platform replacement is installed.
+`capability-runtime.yml` remains a strong `KEEP_STANDALONE_EXCEPTION` candidate because it is credential-clean and uniquely validates Ubuntu, Windows and macOS portable capability/bootstrap/service/autostart behavior across Python 3.11/3.12.
 
-Still requiring fresh bounded disposition:
+Still requiring fresh bounded disposition after tranche 29:
 
 ```text
 hil-deployment-profile.yml
-math-solver-governed-runtime.yml
 publish-portable-node-image.yml
 stegdeploy-image.yml
 steggate-portable-consumer.yml
 ```
 
-`architecture-guard.yml` and `validate.yml` are currently retained core deterministic validation surfaces. Any attempt to combine them must prove no loss of boundary coverage.
+`architecture-guard.yml` and `validate.yml` remain core deterministic validation surfaces unless a verified combined replacement preserves all coverage.
 
 ## Collision boundaries
 
-- Do not recreate sovereign local-model/runtime source work.
-- Do not reopen completed task 016 or restore GitHub-token API polling.
-- Preserve unique multi-platform capability validation unless a verified replacement exists.
-- Do not treat historical PR snapshots or Render evidence as current runtime authority.
-- Do not restore hosted schedules, repository writeback, artifact transport, or activation.
+- Do not create another Math Solver evaluator, provider route, or runtime carrier.
+- Do not manufacture carrier/public activation evidence.
+- Preserve canonical StegGate pre-execution/replay semantics.
+- Do not restore hosted schedules, token-backed setup, repository writeback, artifact transport, or activation.
 - Do not touch wallet signing, broadcast, settlement, or Master Record authorization.
 
 ## Archive condition
 
-This support session remains active while workflow/token remediation is incomplete. Main has 8 workflow files against the <=2 preference and 5/49 audit-start surfaces remain unclassified/unconsolidated. The original local-model/runtime implementation is already complete/released and live activation remains machine-owned.
+This support session remains active while claim 052 and remaining workflow/token remediation are incomplete. Released main has 8 workflow files against the <=2 preference and 5/49 audit-start surfaces remain unclassified/unconsolidated.
