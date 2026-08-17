@@ -5,10 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/retire-complete-pr-consolidation-workflow-20260816
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
-active_claim_state: NONE
+active_claim: LLMA-WORKFLOW-RETIRE-COMPLETE-PR-CONSOLIDATION-051
+active_claim_state: CLAIMED_FOR_IMPLEMENTATION
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -44,8 +44,6 @@ ecosystem-chat-live-activation.yml: RETIRED — resident StegVerse carrier + TV/
 ecosystem-chat-live-activation-monitor.yml: RETIRED — resident carrier owns continuity
 ```
 
-Historical workflow names remain only as proof that hosted activation/persistence stays retired.
-
 ## Released tranches 1-27
 
 Latest release:
@@ -58,7 +56,7 @@ Architecture Guard: 31989374647 SUCCESS
 validate: 31989374615 SUCCESS
 validate job: 95270003644 SUCCESS
 67/67 substantive validation steps: SUCCESS
-canonical Goal 4: SUCCESS including governed VACC classifier/generator/retrieval/dispatch, fail-closed service-connection observer, and extracted receipt validator
+canonical Goal 4: SUCCESS
 workflow parity: SUCCESS
 capability-runtime: 31989374599 SUCCESS
 claim 050: MERGED_INTO_CANONICAL_WORKSTREAM
@@ -66,36 +64,50 @@ post-merge workflow files: 9
 classified/remediated: 43/49 = 87.76%
 ```
 
-Tranche 27 removed `.github/workflows/va-claim-assistant-governed-retrieval.yml`, retiring its six-hour schedule, `contents: write`, token-backed checkout/setup, receipt commit/pull/push writeback, and artifact upload. The deterministic capability is retained in canonical Goal 4 through the route classifier/generator/retrieval/dispatch fixtures, `scripts/observe_va_service_connection_execution.py`, and new `scripts/validate_va_claim_assistant_governed_retrieval_receipts.py`. Canonical StegCore is pinned in the dev dependency set for credential-clean validation. Live VACC execution/observation is transferred to resident sovereign heartbeat -> TVC -> issue #142/task `VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023` -> Master Records -> Site projection. Missing execution evidence remains `BLOCKED` and no execution evidence was manufactured.
+## Active tranche 28 — completed open-PR observer retirement
+
+Claim: `tasks/LLMA-WORKFLOW-RETIRE-COMPLETE-PR-CONSOLIDATION-051.json`.
+
+The specialized handoff `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`, historical inventory `data/llm-adapter-open-pr-consolidation.json`, validator `scripts/check_llm_adapter_open_pr_consolidation.py`, and completed task `tasks/LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.json` were read before mutation. Task 016 is `COMPLETE`, released, and its archive dependency is `SATISFIED`; it has no active claimant and explicitly has no remaining executable action for that bounded reconciliation.
+
+Direct inspection of `.github/workflows/llm-adapter-open-pr-consolidation.yml` showed a GitHub-hosted observer using `actions/checkout@v4`, `actions/setup-python@v5`, `GH_TOKEN: ${{ github.token }}`, repeated `gh api` calls for a fixed historical nine-PR inventory, and `actions/upload-artifact@v4` with 90-day retention. That mechanism is no longer required to complete task 016 and directly conflicts with the current no-non-TV/TVC-token coordination rule.
+
+Installed on the active branch:
+
+```text
+.github/workflows/llm-adapter-open-pr-consolidation.yml
+  -> ELIMINATE_COMPLETED_BOUNDED_GITHUB_TOKEN_OBSERVER
+  -> removed
+
+data/llm-adapter-open-pr-consolidation.json
+scripts/check_llm_adapter_open_pr_consolidation.py
+receipts/llm-adapter-open-pr-consolidation.json
+tasks/LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.json
+  -> retained as historical reconciliation provenance
+
+docs/LLM_ADAPTER_MIRROR_HANDOFF.md
+  -> reconciled: old bounded session remains archive-safe, Render is historical only, hosted PR observer is retired, and current runtime/credential continuation points to StegVerse resident heartbeat + TV/TVC + current LLM-adapter/Master Records owners
+```
+
+No current PR is mutated by this cleanup. A future PR-state collision requires a fresh bounded claim; the fixed historical snapshot list is not treated as a current production control plane. No replacement GitHub-token observer is created.
+
+No provider execution, custody, filing, Site mutation, wallet effect, GitHub/OIDC runtime authority, Render authority, repository writeback, artifact transport, or non-TV/TVC secret/token is introduced. Tranche 28 remains incomplete until exact-head Architecture Guard/global validate pass, PR merge, post-merge workflow census, claim 051 release, and main handoff finalization.
 
 ## Global validation carrier
 
 `.github/workflows/validate.yml` and its exact iOS mirror remain deterministic-validation-only: `permissions: {}`, anonymous exact-SHA source acquisition, explicit credential refusal, no checkout/setup/upload actions, no schedule, no repository writeback, no hosted activation, and no GitHub-token runtime/control-plane authority.
 
-## Current accounting
+## Current accounting — released work only
 
 ```text
 workflow_files_baseline: 49
-workflow_files_current_on_main: 9
+workflow_files_current_on_released_main: 9
 workflow_files_removed_or_consolidated_released: 40
 classified_and_remediated_released: 43/49 = 87.76%
 remaining_unclassified_or_unconsolidated_released: 6/49
+expected_if_tranche_28_releases_without_concurrent_change: 8 workflow files, 41 removed/consolidated, 44/49 = 89.80%, 5/49 remaining
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
-```
-
-Current default-branch workflow files are:
-
-```text
-architecture-guard.yml
-capability-runtime.yml
-hil-deployment-profile.yml
-llm-adapter-open-pr-consolidation.yml
-math-solver-governed-runtime.yml
-publish-portable-node-image.yml
-stegdeploy-image.yml
-steggate-portable-consumer.yml
-validate.yml
+current_active_tranche_claim: LLMA-WORKFLOW-RETIRE-COMPLETE-PR-CONSOLIDATION-051
 ```
 
 ## Canonical ownership / convergence
@@ -108,26 +120,21 @@ local runtime discovery/launch/inference/proof: COMPLETE_RELEASED
 live local-model activation: StegVerse-Labs/.github#60 + resident sovereign heartbeat
 credential/route authority: TV/TVC / StegVerse-Labs/TVC
 Ecosystem Chat runtime binding: StegVerse-org/LLM-adapter#18
-VACC runtime/route implementation: StegVerse-org/LLM-adapter#90/#142
-VA custody: master-records/orchestration#15
-VA Site projection/privacy: StegVerse-Labs/Site#113/#116/#241
+VACC sovereign continuation: StegVerse-org/LLM-adapter#142 + tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
+Master Records: master-records/orchestration
 StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
 ```
 
-The original local-model/runtime discovery/launch/inference/proof and formal local-model development are complete/released and are not duplicated by this maintenance lane. Live activation remains machine-owned and requires direct runtime evidence.
+The original local-model/runtime discovery/launch/inference/proof and formal local-model development are complete/released and are not duplicated. Live activation remains machine-owned and requires direct runtime evidence.
 
 ## Collision boundaries
 
-- Do not recreate sovereign local-model/runtime source work.
-- Do not manufacture VACC provider execution evidence.
-- Preserve route, urgent-safety, privacy, filing, custody, veteran-authority, StegGate, and Master Records boundaries.
-- Do not restore hosted schedules, repository writeback, artifact transport, or activation.
+- Do not reopen completed task 016.
+- Do not treat historical PR snapshots or Render evidence as current runtime authority.
+- New PR mutation requires a fresh bounded claim.
+- Do not restore GitHub-token API polling, hosted schedules, writeback, artifact transport, or activation.
 - Do not touch wallet signing, broadcast, settlement, or Master Record authorization.
-
-## Next safe task
-
-Under a fresh noncolliding claim, read the applicable specialized handoff and classify one of the remaining stateful surfaces: `capability-runtime.yml`, `hil-deployment-profile.yml`, `math-solver-governed-runtime.yml`, `steggate-portable-consumer.yml`, `publish-portable-node-image.yml`, `stegdeploy-image.yml`, or `llm-adapter-open-pr-consolidation.yml`. Preserve `architecture-guard.yml` and `validate.yml` unless evidence proves they can be combined without weakening deterministic validation.
 
 ## Archive condition
 
-This support session remains active while workflow/token remediation is incomplete. Main has 9 workflow files against the <=2 target and 6/49 audit-start surfaces remain unclassified/unconsolidated. The original local-model/runtime implementation is already complete/released and live activation remains machine-owned.
+This support session remains active while claim 051 and remaining workflow/token remediation are incomplete. Released main has 9 workflow files against the <=2 target and 6/49 audit-start surfaces remain unclassified/unconsolidated.
