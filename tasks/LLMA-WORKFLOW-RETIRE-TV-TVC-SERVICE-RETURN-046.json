@@ -1,0 +1,46 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-RETIRE-TV-TVC-SERVICE-RETURN-046",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target while preserving fail-closed TV/TVC service-return validation as a repository-native deterministic CLI under StegVerse + TV/TVC authority.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/retire-tv-tvc-service-return-workflow-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T18:53:00-05:00",
+  "claim_release_condition": "Merge after exact-head validation proves the GitHub wrapper is absent, scripts/validate_tv_tvc_service_return.py remains intact and fail-closed, no repository workflow references the removed wrapper, sovereign authority invariants remain present, and Architecture Guard/global validate pass.",
+  "surfaces": [
+    ".github/workflows/validate-tv-tvc-service-return.yml",
+    "scripts/validate_tv_tvc_service_return.py",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-RETIRE-TV-TVC-SERVICE-RETURN-046.json"
+  ],
+  "classifications": {
+    ".github/workflows/validate-tv-tvc-service-return.yml": "ELIMINATE_GITHUB_WRAPPER_RETAIN_REPOSITORY_NATIVE_VALIDATOR",
+    "scripts/validate_tv_tvc_service_return.py": "RETAIN_CANONICAL_FAIL_CLOSED_VALIDATOR"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "repository_writeback_allowed": false,
+    "artifact_transport_allowed": false,
+    "activation_effect": false
+  },
+  "collision_boundaries": [
+    "Do not change TV/TVC bundle or ledger receipt semantics.",
+    "Do not convert GitHub Actions into a production validation authority.",
+    "Do not add provider, Master Records, GitHub, OIDC, or third-party credentials.",
+    "Do not touch wallet signing, broadcast, settlement, custody, or live activation authority."
+  ],
+  "evidence_before_mutation": {
+    "wrapper_behavior": "workflow_call/workflow_dispatch + actions/checkout@v4 + actions/setup-python@v5 + python scripts/validate_tv_tvc_service_return.py",
+    "repository_search_for_wrapper_references": "NO_RESULTS",
+    "canonical_validator": "scripts/validate_tv_tvc_service_return.py",
+    "validator_authority_guard": "service return must not imply Master Record authority"
+  },
+  "next_executable_action": "Remove the GitHub wrapper, record the retirement in the canonical workflow handoff, validate exact head, merge, release claim, and recount workflows.",
+  "next_task_after_release": "Classify the next remaining default-branch workflow surface against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
