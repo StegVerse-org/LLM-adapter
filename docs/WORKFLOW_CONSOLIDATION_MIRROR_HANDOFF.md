@@ -5,10 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/consolidate-steggate-consumer-20260817
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
-active_claim_state: UNCLAIMED
+active_claim: LLMA-WORKFLOW-CONSOLIDATE-STEGGATE-CONSUMER-055
+active_claim_state: CLAIMED_FOR_IMPLEMENTATION
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -68,7 +68,7 @@ post-merge workflow files: 4
 classified/remediated: 48/49 = 97.96%
 ```
 
-Tranche 31 retired both GitHub package/OIDC image-publication workflows and corrected a stronger credential-boundary defect discovered during implementation: `scripts/stegdeploy_bootstrap.py` had generated provider, Master Records, review, and receipt credentials locally. It now generates none. Protected values are TV/TVC-injected only, optional privileged capabilities remain disabled/fail-closed when values are absent, and the runtime defaults to a local image build with `pull_policy: never` rather than GHCR continuity. The last GHCR receipt remains immutable historical evidence only.
+Tranche 31 retired both GitHub package/OIDC image-publication workflows. StegDeploy now generates no protected provider/Master Records/review credentials, uses TV/TVC-injected protected values only, and defaults to a local image build with `pull_policy: never`. The last GHCR receipt is immutable historical evidence only.
 
 Canonical StegDeploy continuation:
 
@@ -80,30 +80,60 @@ StegVerse-org/core-node-runtime-demo/tools/stegdeploy_runtime_intake_local.py
 StegVerse-org/LLM-adapter#18
 ```
 
-No fresh image publication, persistent deployment, provider execution, custody, Site activation, release, or wallet/trade action is claimed by this release.
+## Active tranche 32 — consolidate StegGate portable consumer validation
+
+Claim:
+
+```text
+tasks/LLMA-WORKFLOW-CONSOLIDATE-STEGGATE-CONSUMER-055.json
+state: CLAIMED_FOR_IMPLEMENTATION
+claimant: chatgpt-session-backend-support-20260817
+release_condition: merge only after deterministic consumer checks execute through canonical Goal 4, hosted StegGate consumer workflow is absent, exact-head Architecture Guard and global validate PASS, post-merge workflow census is observed, and no new authority is introduced
+```
+
+Implementation installed on this branch:
+
+```text
+.github/workflows/steggate-portable-consumer.yml -> removed / CONSOLIDATE_INTO_STABLE_DISPATCHER
+scripts/verify_steggate_portable_consumer.py -> deterministic canonical identity/receipt verifier
+tests/test_steggate_portable_consumer.py -> retained deterministic consumer tests
+scripts/verify_goal4_full.py -> now invokes both StegGate consumer test and deterministic verifier
+llm_adapter/steggate_portable_consumer.py -> unchanged authority model; thin consumer delegates to canonical StegCore
+```
+
+Canonical StegGate ownership remains:
+
+```text
+canonical_owner: StegVerse-Labs/StegCore
+canonical_commit: 8c484e584d60a3bd2763d6948d0eb3f4afd67e0c
+runtime_binding: StegVerse-Labs/StegCore#70
+adapter_runtime: StegVerse-org/LLM-adapter#18
+transport_identity_authoritative: false
+```
+
+The removed workflow previously used checkout/setup/artifact Actions. The deterministic checks now live in the stable Goal 4 validation path and no GitHub artifact transport is required for this capability. This tranche has no activation, provider, publication, Site, Master Records custody, filing, or wallet/trade authority effect.
 
 ## Global validation carrier
 
 `.github/workflows/validate.yml` remains deterministic-validation-only: `permissions: {}`, anonymous exact-SHA source acquisition, explicit credential refusal, no checkout/setup/upload actions, no schedule, no repository writeback, no hosted activation, and no GitHub-token runtime/control-plane authority.
 
-## Current accounting — released work only
+## Current accounting
 
 ```text
 workflow_files_baseline: 49
 workflow_files_current_on_released_main: 4
-workflow_files_removed_or_consolidated_released: 45
 classified_and_remediated_released: 48/49 = 97.96%
-remaining_unclassified_or_unconsolidated_released: 1/49
+active_branch_expected_workflow_files: 3
+expected_if_tranche_32_releases_without_concurrent_change: 49/49 = 100.00%
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
+current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-STEGGATE-CONSUMER-055
 ```
 
-Current default-branch workflow census:
+Expected active-branch workflow census:
 
 ```text
 architecture-guard.yml
 capability-runtime.yml
-steggate-portable-consumer.yml
 validate.yml
 ```
 
@@ -116,8 +146,6 @@ formal local model development: COMPLETE_RELEASED
 local runtime discovery/launch/inference/proof: COMPLETE_RELEASED
 live local-model activation: StegVerse-Labs/.github#60 + resident sovereign heartbeat
 credential/route authority: TV/TVC / StegVerse-Labs/TVC
-StegDeploy scheduler: StegVerse-Labs/.github/handoffs/SHWP-HEALER-SOVEREIGN-SCHEDULER-001.json
-StegDeploy Healer continuation: StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md
 Ecosystem Chat runtime binding: StegVerse-org/LLM-adapter#18
 HIL private review: StegVerse-Labs/TVC#8
 StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
@@ -125,27 +153,21 @@ StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/T
 
 The original local-model/runtime discovery/launch/inference/proof and formal local-model development are complete/released and are not duplicated. Live activation remains machine-owned and requires direct runtime evidence.
 
-## Remaining workflow disposition
+## Next bounded task after claim 055 releases
 
-One audit-start workflow surface remains unclassified:
-
-```text
-steggate-portable-consumer.yml
-```
-
-`capability-runtime.yml` remains a candidate standalone portability test but its hosted action/token mechanics still require explicit reconciliation with the no-non-TV/TVC-token rule. `architecture-guard.yml` still contains checkout/setup/artifact mechanics plus a schedule and likewise is not yet acceptable under the stronger rule. `validate.yml` is already credential-refusing, anonymous-fetch, permissions-empty validation-only.
-
-Next safe bounded task: classify and consolidate `steggate-portable-consumer.yml`; then reconcile `architecture-guard.yml` and `capability-runtime.yml` so the final retained workflow count and mechanics satisfy the technical-minimum and TV/TVC-only credential boundary.
+Reconcile `architecture-guard.yml` and `capability-runtime.yml` against the strict no-non-TV/TVC-token rule and the `<=2` final workflow target. `validate.yml` is already the credential-refusing stable dispatcher. Do not retain standalone hosted workflows merely because they historically carried validation.
 
 ## Collision boundaries
 
-- Do not compete with machine-owned Healer scheduler execution.
-- Do not restore GitHub package/OIDC publication authority.
+- Do not create another StegGate authority or evaluator.
+- Do not change canonical StegCore identity or admit transport identity as authority.
+- Do not compete with machine-owned resident carrier execution.
+- Do not restore GitHub package/OIDC/runtime authority.
 - Do not inject TV/TVC protected values into GitHub Actions.
 - Do not duplicate TVC #8 authenticated private-review work.
-- Do not manufacture activation, publication, Site, or Master Records evidence.
+- Do not manufacture activation, provider, publication, Site, Master Records, or trade evidence.
 - Do not touch wallet signing, broadcast, settlement, or trade authority.
 
 ## Archive condition
 
-This support session remains active while the final workflow/token reconciliation is incomplete. Released main has 4 workflow files against the <=2 preference, 1/49 audit-start workflow remains unclassified, and two retained hosted validation surfaces still require explicit no-non-TV/TVC-token reconciliation.
+This support session remains active while claim 055 and final workflow/token reconciliation are incomplete. The branch reduces the workflow surface from 4 to 3 and classifies the last audit-start workflow, but release requires exact-head validation and merge; afterward `architecture-guard.yml` and `capability-runtime.yml` still require explicit disposition against the stronger credential boundary and <=2 target.
