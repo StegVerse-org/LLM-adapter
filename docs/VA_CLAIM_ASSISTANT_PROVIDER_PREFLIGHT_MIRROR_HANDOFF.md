@@ -21,9 +21,9 @@ third_party_inference_required: false
 hosted_provider_fallback: DISALLOWED
 ```
 
-## Historical preflight result
+## Historical preflight evidence
 
-The GitHub-Models-specific preflight was previously implemented and validated as a non-executing/fail-closed experiment. Its evidence remains immutable historical provenance only:
+The GitHub-Models-specific preflight remains historical, non-authorizing evidence only:
 
 ```text
 PR #120 merge: 8fb86f92f70f23c1042d4f2eb782e1a3a6797b65
@@ -40,7 +40,7 @@ Those runs do not grant runtime authority and are not current VACC activation pr
 
 ## Supersession — current authority
 
-The GitHub-Models activation path is no longer admissible because it depended on GitHub Actions runtime permission/credential semantics (`models: read` / ephemeral `GITHUB_TOKEN`). Current governing requirements are:
+The GitHub-Models activation path is no longer admissible because it depended on GitHub Actions permission/credential semantics (`models: read` / ephemeral `GITHUB_TOKEN`). Current governing requirements are:
 
 ```text
 credential_authority: TV/TVC
@@ -77,44 +77,38 @@ realignment task install commit: 38478376d814e44f4de91846423d16c3800a509e
 
 Historical request/receipt files whose names contain `github-models` remain provenance only.
 
-## Hosted-preflight validation/proof surface retirement
+## Hosted-preflight validation/proof retirement — RELEASED
 
 Cleanup claim: `tasks/LLMA-WORKFLOW-RETIRE-SUPERSEDED-VA-PREFLIGHT-047.json`.
 
-Before this cleanup, `.github/workflows/validate-va-provider-preflight-hosted-path.yml` still used `actions/checkout@v4` and `actions/setup-python@v5` to execute `scripts/check_va_provider_preflight_hosted_path.py`. That validator was itself bound to the already-removed `.github/workflows/va-claim-assistant-provider-preflight.yml` and superseded `VACP-PREFLIGHT-HOSTED-EXECUTION-008` experiment.
+The stale hosted validation wrapper and validator were first removed. That caused the coupled `VA Provider Preflight Ubuntu 22.04 Proof` run `31986578857`, job `95262528654`, to fail closed in `Verify hosted-path contract`, proving the second workflow was part of the same obsolete family. Its logs also directly exposed `GITHUB_TOKEN` read permissions, token-backed `actions/checkout@v4`, token-backed `actions/setup-python@v5`, `secrets.STEGVERSE_MASTER_RECORDS_TOKEN`, and `actions/upload-artifact@v4`.
 
-Repository search found no caller/reference to that wrapper or validator. Removing them caused the separate `.github/workflows/va-provider-preflight-ubuntu2204-proof.yml` to fail closed on PR #170 at run `31986578857`, job `95262528654`, because its first substantive step tried to execute the now-removed hosted-path validator.
-
-Direct inspection of that coupled Ubuntu proof showed it also belonged to the obsolete GitHub-hosted experiment and violated the current credential boundary:
+The complete obsolete hosted family is now retired on main:
 
 ```text
-runs-on: ubuntu-22.04
-actions/checkout@v4 with GitHub token
-actions/setup-python@v5 with token
-scripts/check_va_provider_preflight_hosted_path.py
-secrets.STEGVERSE_MASTER_RECORDS_TOKEN
-actions/upload-artifact@v4
-historical TVC vendored admission source
-historical GitHub-run-derived admission/proof manifest
+.github/workflows/validate-va-provider-preflight-hosted-path.yml: REMOVED
+.github/workflows/va-provider-preflight-ubuntu2204-proof.yml: REMOVED
+scripts/check_va_provider_preflight_hosted_path.py: REMOVED
 ```
 
-The failed run directly logged `GITHUB_TOKEN` read permissions, token-backed checkout/setup actions, and the attempted call to the removed hosted validator. Because the current sovereign route requires `credential_requirement: NONE`, `github_token_required: false`, no third-party inference, and TV/TVC-only authority, the coupled proof workflow is also superseded rather than a current activation predicate.
+Historical PR #120/run evidence remains above. No replacement hosted workflow was created because the current route is machine-owned by StegVerse + TV/TVC.
 
-Under claim 047 the complete obsolete hosted validation family is therefore retired:
+Release evidence:
 
 ```text
-.github/workflows/validate-va-provider-preflight-hosted-path.yml
-  -> ELIMINATE_SUPERSEDED_HOSTED_VALIDATION_WRAPPER
-  -> removed
-.github/workflows/va-provider-preflight-ubuntu2204-proof.yml
-  -> ELIMINATE_SUPERSEDED_HOSTED_PROOF_WORKFLOW
-  -> removed
-scripts/check_va_provider_preflight_hosted_path.py
-  -> ELIMINATE_OBSOLETE_VALIDATOR_BOUND_TO_REMOVED_GITHUB_MODELS_PREFLIGHT
-  -> removed
+cleanup PR: #170
+final head: 2cfc47455737278607ae7588ce53ce7fff39fcdd
+merge: d32b97517cad5933f26639a63156b928559661b2
+Architecture Guard: 31986711716 SUCCESS
+validate: 31986711718 SUCCESS
+validate job: 95262878966 SUCCESS
+67/67 substantive validate steps: SUCCESS
+workflow parity: SUCCESS
+canonical Goal 4: SUCCESS
+validation-only authority boundary: SUCCESS
+post-merge workflow files: 12
+claim 047: MERGED_INTO_CANONICAL_WORKSTREAM
 ```
-
-The removals do not erase historical PR/run evidence above and do not remove any current sovereign activation predicate. No replacement GitHub workflow is created because the current route is machine-owned by StegVerse + TV/TVC and the historical hosted path is explicitly superseded.
 
 ## Preserved VACC safety gates
 
@@ -174,11 +168,10 @@ The historical hosted-preflight implementation is COMPLETE/SUPERSEDED as an acti
 historical preflight task completion: 8/8
 historical preflight validation: 8/8
 historical activation authority: 0; intentionally non-authorizing
+hosted-preflight cleanup claim: RELEASED
 sovereign source/control records: 4/4
 source-policy validation: COMPLETE
 live route validation: PENDING MACHINE OWNED
 integration predicates complete: 4/8
 goal activation: 4/8
 ```
-
-Claim 047 is not complete until fresh exact-head Architecture Guard/global validate pass after the coupled proof retirement, its PR merges, the post-merge workflow census is observed, the claim is released, and the canonical workflow-consolidation handoff is finalized on main.
