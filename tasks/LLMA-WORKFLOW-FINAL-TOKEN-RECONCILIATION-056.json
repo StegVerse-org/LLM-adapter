@@ -6,9 +6,22 @@
   "branch": "chore/final-workflow-token-reconciliation-20260817",
   "claimant": "chatgpt-session-backend-support-20260817",
   "role": "CLAIMED_FOR_IMPLEMENTATION",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
   "claim_timestamp": "2026-08-17T01:50:00-05:00",
-  "claim_release_condition": "Merge only after architecture-guard.yml is absent, its deterministic structure checks execute through the stable validate dispatcher without checkout/setup/artifact/token mechanics, capability-runtime.yml is explicitly proven credential-refusing and retained only for evidence-backed cross-platform matrix necessity, final workflow census is <=2, exact-head validation passes, and no activation/runtime/provider/publication/Site/Master Records/wallet authority is introduced.",
+  "release_timestamp": "2026-08-17T01:55:00-05:00",
+  "release_evidence": {
+    "pull_request": 179,
+    "final_head": "2b6f659d0ff9937f6c6e8387d49943efdfd3b1cf",
+    "merge_commit": "1dbca018688078a888bd5e9ce23a6d2e78146b26",
+    "validate_run": 32003317844,
+    "validate_job": 95307755177,
+    "validate_conclusion": "SUCCESS",
+    "substantive_validation_steps": "67/67 SUCCESS",
+    "canonical_goal4": "SUCCESS",
+    "post_merge_workflow_count": 2,
+    "workflow_target": "<=2 SATISFIED",
+    "audit_start_classification": "49/49 = 100.00%"
+  },
   "surfaces": [
     ".github/workflows/architecture-guard.yml",
     ".github/workflows/capability-runtime.yml",
@@ -41,14 +54,6 @@
     "Do not inject TV/TVC protected values into GitHub Actions.",
     "Do not compete with resident carrier, Healer scheduler, TVC private-review, or StegFin USER_ONLY authority.",
     "Do not manufacture activation, provider, publication, Site, Master Records, or trade evidence."
-  ],
-  "expected_evidence": [
-    "architecture-guard.yml absent",
-    "deterministic architecture guard check executes in stable validate path",
-    "capability-runtime credential refusal and anonymous-fetch boundary directly inspected",
-    "validate credential refusal and anonymous-fetch boundary directly inspected",
-    "final workflow census <=2",
-    "exact-head hosted validation PASS"
   ],
   "next_task_after_release": "Determine whether any unique session support requirement remains outside canonical worker-owned activation/trade paths; if none, consolidate and archive.",
   "authority_effect": false,
