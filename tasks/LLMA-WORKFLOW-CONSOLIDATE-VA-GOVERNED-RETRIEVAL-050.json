@@ -1,0 +1,68 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-VA-GOVERNED-RETRIEVAL-050",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target and remove scheduled/writeback/artifact/token mechanics while preserving deterministic governed VA route validation and fail-closed service-connection execution observation under StegVerse + TV/TVC authority.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-va-governed-retrieval-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T21:48:00-05:00",
+  "claim_release_condition": "Merge after exact-head Architecture Guard/global validate pass; deterministic classifier, generator, retrieval, dispatch and service-connection observer checks execute through canonical Goal 4; the standalone scheduled/writeback/artifact workflow is absent; the specialized handoff transfers machine-owned live execution observation to issue #142/task 023 plus resident heartbeat/TVC/Master Records; and no route, privacy, authority, credential, custody or activation boundary regresses.",
+  "surfaces": [
+    ".github/workflows/va-claim-assistant-governed-retrieval.yml",
+    "scripts/verify_goal4_full.py",
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "scripts/observe_va_service_connection_execution.py",
+    "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-VA-GOVERNED-RETRIEVAL-050.json"
+  ],
+  "classifications": {
+    ".github/workflows/va-claim-assistant-governed-retrieval.yml": "CONSOLIDATE_DETERMINISTIC_VALIDATION_INTO_CANONICAL_GOAL4_AND_TRANSFER_LIVE_OBSERVATION_TO_STEGVERSE_WORKER",
+    "scripts/observe_va_service_connection_execution.py": "RETAIN_FAIL_CLOSED_OBSERVER_FOR_RESIDENT_STEGVERSE_EXECUTION_AND_LOCAL_VALIDATION",
+    "scripts/verify_goal4_full.py": "CANONICAL_AGGREGATE_VALIDATION_PATH",
+    ".github/workflows/validate.yml": "RETAIN_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "repository_writeback_allowed": false,
+    "artifact_transport_allowed": false,
+    "activation_effect": false
+  },
+  "canonical_live_continuation": {
+    "issues": ["StegVerse-org/LLM-adapter#90", "StegVerse-org/LLM-adapter#142"],
+    "task": "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+    "execution_owner": "resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records",
+    "custody_owner": "master-records/orchestration#15",
+    "site_projection_owner": "StegVerse-Labs/Site#113/#241",
+    "credential_authority": "TV/TVC",
+    "github_token_required": false
+  },
+  "collision_boundaries": [
+    "Preserve all thirteen governed routes and urgent-safety fail-closed state.",
+    "Preserve canonical StegGate runtime identity checks and service-connection observer fail-closed semantics.",
+    "Do not manufacture provider execution evidence; absent evidence remains BLOCKED.",
+    "Do not modify Site#116 raw-document/privacy ownership, Master Records custody authority, filing authority, veteran submission authority, or wallet/trade authority.",
+    "Do not introduce GitHub/OIDC/provider/Master-Records credentials, repository writeback, artifact transport, hosted activation, Render, or third-party runtime authority."
+  ],
+  "expected_evidence": [
+    "canonical Goal 4 executes governed route classifier/generator/retrieval/dispatch tests",
+    "canonical Goal 4 executes fail-closed service-connection observer",
+    "pinned canonical StegCore dependency is available to the credential-clean validation path without credentials",
+    "standalone va-claim-assistant-governed-retrieval.yml absent",
+    "specialized handoff transfers live continuation to resident heartbeat/TVC/task 023",
+    "workflow parity PASS",
+    "Architecture Guard exact head PASS",
+    "global validate exact head PASS",
+    "PR merged and claim released",
+    "post-merge workflow census directly observed"
+  ],
+  "next_executable_action": "Bind governed-route fixtures and observer into canonical Goal 4, make pinned StegCore available through the credential-clean validation dependency set, retire the standalone workflow, reconcile handoffs, validate, merge, release, and recount.",
+  "next_task_after_release": "Classify the next remaining default-branch workflow surface against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}

@@ -35,6 +35,7 @@ dev = [
     "httpx>=0.27",
     "fastapi>=0.115",
     "python-multipart>=0.0.9",
+    "stegcore @ git+https://github.com/StegVerse-Labs/StegCore.git@8c484e584d60a3bd2763d6948d0eb3f4afd67e0c",
 ]
 service = [
     "fastapi>=0.115",

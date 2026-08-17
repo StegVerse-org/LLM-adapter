@@ -2,82 +2,27 @@
 
 ## Identity
 
-```yaml
+```text
 program: VA Claim Assistant governed session layer
 goal_id: VACP-ADAPTER-GOVERNED-ROUTES
-originating_goal: expand Governed VA Claims Chat while preserving veteran authority, PII isolation, source precedence, custody, and fail-closed activation
 repository: StegVerse-org/LLM-adapter
-branch: main
 canonical_issue: StegVerse-org/LLM-adapter#90
+current_sovereign_correction_issue: StegVerse-org/LLM-adapter#142
+current_sovereign_task: tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
 site_parent_issue: StegVerse-Labs/Site#113
 four_app_issue: StegVerse-Labs/Site#241
-four_app_parent: StegVerse-Labs/Site#239
-common_steggate_binding_issue: StegVerse-Labs/StegCore#70
 site_document_issue: StegVerse-Labs/Site#116
-tvc_issue: StegVerse-Labs/TVC#9
 master_records_issue: master-records/orchestration#15
-public_activation: NOT_AUTHORIZED
+credential_authority: TV/TVC
+github_token_runtime_authority: NONE
+public_activation: NOT_AUTHORIZED_BY_THIS_SLICE
 ```
 
 ## Source of truth
 
-```text
-Site source registry:
-  StegVerse-Labs/Site/data/va-claim-assistant/source-registry.json
-  source commit e69e8421084b1343a9dc809fdb2a579089d37813
-  observed blob a83ff2dd8343f947265981609b154693cc5deecc
+The adapter consumes, and does not silently fork, the Site VA source registry and answer-record schema, TVC service-connection admission, and canonical StegGate runtime identity owned by `StegVerse-Labs/StegCore`.
 
-Site answer-record schema:
-  StegVerse-Labs/Site/data/va-claim-assistant/answer-record.schema.json
-  source commit ae64a81df7ac91a9b2df00e9b8ff1a8358fcb9ab
-
-TVC service-connection admission:
-  StegVerse-Labs/TVC/docs/VA_CLAIM_ASSISTANT_TVC_MIRROR_HANDOFF.md
-  receipt hash aec5c2fa8c2c6b73e6dd9dddbafa39314a30bd0ccf19bb881349be2d3e9724f8
-
-Canonical StegGate identity:
-  StegVerse-Labs/StegCore/docs/STEGGATE_RUNTIME_IDENTITY_CONTRACT.md
-  StegVerse-Labs/StegCore/management/steggate-four-app-runtime-binding.json
-```
-
-The adapter consumes these authority/capability records and does not silently fork them.
-
-## Claim history
-
-```yaml
-VACP-ADAPTER-DISPATCH-001:
-  state: EXPIRED
-
-VACP-ADAPTER-ROUTES-002:
-  state: RELEASED_COMPLETE
-  task_record: tasks/VACP-ADAPTER-ROUTES-002.json
-
-VACP-ADAPTER-SERVICE-CONNECTION-EXEC-003:
-  state: RELEASED_COMPLETE
-  task_record: tasks/VACP-ADAPTER-SERVICE-CONNECTION-EXEC-003.json
-  execution evidence observer: COMPLETE
-  real provider/model execution: BLOCKED
-
-StegCore#70 VACC common-runtime-binding lane:
-  state: IMPLEMENTED_CI_VALIDATED_PUBLIC_EXECUTION_PENDING
-  owner: current four-app integration workstream
-```
-
-No duplicate VACC evaluator is authorized.
-
-## Current route implementation
-
-`va_claim_assistant/route_classifier.py` deterministically classifies thirteen governed routes, prioritizes urgent safety, and routes ambiguous/unsupported input to `REVIEW_REQUIRED`.
-
-`va_claim_assistant/route_generators.py` implements eleven public-source generators plus document organization from sanitized derived context; raw documents/direct identifiers are rejected. Urgent safety remains fail-closed until an admitted official source is available.
-
-`va_claim_assistant/governed_retrieval.py` remains classifier-first and returns only bounded states such as `ANSWER_READY_PENDING_TVC_AND_CUSTODY`, `DOCUMENT_CONTEXT_REQUIRED`, `AUTHORITY_RESOLUTION_REQUIRED`, and `REVIEW_REQUIRED`.
-
-The current bounded public/source-grounded product remains intact while the real provider-backed path is activated.
-
-## Canonical StegGate runtime identity binding — IMPLEMENTED + HOSTED CI VALIDATED
-
-The VACC service-connection execution evidence path now consumes the same transport-independent identity used by Ecosystem Chat and Math Solver:
+Canonical StegGate identity remains:
 
 ```text
 contract_version: stegverse.steggate.runtime-identity.v1
@@ -88,131 +33,119 @@ transport_identity_authoritative: false
 application_specific_policy_authority: false
 ```
 
-Installed changes:
+## Released implementation
+
+The route implementation remains released and complete at source level:
+
+- thirteen deterministic governed routes;
+- urgent safety fails closed pending admitted official source;
+- public-source generators remain bounded;
+- document organization accepts only sanitized derived context;
+- raw documents and direct identifiers are rejected;
+- governed retrieval remains classifier-first;
+- provider/model execution is not inferred from deterministic route success;
+- service-connection execution observation remains fail closed.
+
+The observer `scripts/observe_va_service_connection_execution.py` remains authoritative for execution-readiness state. Absent real execution evidence produces `BLOCKED`; invalid evidence produces `REVIEW_REQUIRED`; only schema-valid TVC-bound evidence may produce `COMPLETE` and `READY_FOR_MASTER_RECORDS`.
+
+## Historical hosted evidence
+
+Historical workflow run `31339681257`, job `93311292315`, artifact `9045428133`, and its digest remain release provenance only. They proved CI identity binding and deterministic route/observer behavior at that time. They did not prove real provider execution or public activation.
+
+## Workflow consolidation
+
+Cleanup claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-VA-GOVERNED-RETRIEVAL-050.json`.
+
+The historical `.github/workflows/va-claim-assistant-governed-retrieval.yml` combined two different responsibilities:
+
+1. deterministic source/route/dispatch/observer validation; and
+2. recurring GitHub-hosted observation with `contents: write`, token-backed checkout/setup, receipt writeback, and artifact transport.
+
+Under claim 050 the deterministic capability is preserved while the hosted lifecycle is removed:
 
 ```text
-scripts/observe_va_service_connection_execution.py
-  commit 9212f6cda2c98eea7de072badbbc1252a0755278
-  import-path repair df1d5b0d42938e7cbb696a06f321661515955cf1
-
-contracts/va-service-connection-execution-evidence.schema.json
-  commit e0c95a0b3e036a46a81be066f5695f27878a0f71
-
 .github/workflows/va-claim-assistant-governed-retrieval.yml
-  commit f617aba650128ca5635701f8dcafce434a337a16
+  -> CONSOLIDATED/TRANSFERRED
+  -> removed
+scripts/verify_goal4_full.py
+  -> executes route-classifier fixture
+  -> executes route-generator fixture
+  -> executes governed-retrieval fixture
+  -> executes governed-dispatch fixture
+  -> executes service-connection observer
+  -> executes scripts/validate_va_claim_assistant_governed_retrieval_receipts.py
+scripts/validate_va_claim_assistant_governed_retrieval_receipts.py
+  -> preserves the former inline hash/route/identity/readiness assertions
+pyproject.toml dev dependency set
+  -> includes canonical StegCore pinned to 8c484e584d60a3bd2763d6948d0eb3f4afd67e0c
+  -> anonymous source dependency; no GitHub credential is required by the validation path
 ```
 
-The execution schema is now v1.1.0 and requires the canonical StegGate identity in every future real provider-execution receipt. The observer writes the same identity into BLOCKED/REVIEW_REQUIRED/COMPLETE readiness evidence and fails closed if the installed StegCore identity does not match.
+The canonical global `validate.yml` remains `permissions: {}`, explicitly refuses credential-bearing environment variables, acquires the exact source anonymously, performs no schedule, writeback, artifact upload, hosted activation, or runtime/control-plane action, and executes canonical Goal 4. Its exact iOS workflow mirror remains the same validation carrier.
 
-Initial identity-binding workflow run `31339637616` failed at observer import because the standalone script did not include the repository root on `sys.path`. That failure was inspected and repaired rather than ignored.
+## Current machine-owned live continuation
 
-Strongest current validation:
+Live VACC provider execution/observation is not owned by GitHub Actions. Canonical continuation is:
 
 ```text
-workflow: VA Claim Assistant Governed Retrieval
-run: 31339681257
-job: 93311292315
-conclusion: SUCCESS
-artifact: 9045428133
-artifact digest: sha256:5127b21f40554f9f6894c550ad54bb496d2bbbb0af374c927ebf0bc871309813
+StegVerse-Labs/.github resident sovereign heartbeat
+-> StegVerse-Labs/TVC route authority
+-> StegVerse-org/LLM-adapter#142
+-> tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
+-> scripts/observe_va_service_connection_execution.py
+-> master-records/orchestration#15
+-> StegVerse-Labs/Site#113/#241 after immutable evidence
 ```
 
-All deterministic route/classifier/generator/dispatch steps passed; the canonical runtime identity was validated; the observer executed successfully; receipts were persisted; and evidence was uploaded.
-
-This proves VACC's execution-evidence lane is bound to canonical StegGate semantics in CI. It does **not** prove a real provider-backed VACC execution or public end-to-end activation.
-
-## Current execution readiness receipt
+Credential rules:
 
 ```text
-path: receipts/va-claim-assistant-service-connection-execution-readiness.json
-schema_version: 1.1.0
-observer: va_claim_assistant.service_connection_execution_observer.v2
-state: BLOCKED
-blocker: provider_execution_evidence_missing
-provider_execution_observed: false
-custody: PENDING_REAL_ADAPTER_EXECUTION
-reconstruction: PENDING_REAL_ADAPTER_EXECUTION
-receipt_hash: e787e3bc1e2f4e4eabe6bda89f1baf946410474ca35ca7494f8bf07dc1d56ae1
-canonical runtime identity: VERIFIED
-activation effect: false
+credential_authority: TV/TVC
+credential_requirement: NONE for the admitted sovereign local-model route
+github_token_required: false
+github_token_runtime_authority: NONE
+non-TV/TVC secrets or tokens: PROHIBITED
+hosted provider fallback: DISALLOWED
+third_party_runtime_authority: NONE
 ```
 
-A future real execution receipt at `receipts/va-claim-assistant-service-connection-execution.json` must use schema v1.1.0 and prove:
+## Machine-observable release condition for live activation
 
-- exact canonical StegGate runtime identity;
-- actual provider use;
-- model class `retrieval_grounded_text_generation`;
-- TVC-controlled credential source without a credential value;
-- exact TVC/answer/dispatch hash binding;
-- only admitted source domains;
-- bounded cost no greater than USD 1.00;
-- valid execution time order;
-- no secrets, PII, raw documents, identity artifacts, prompts, traces, prohibited logs, or medical narrative;
-- all authority/activation flags false;
-- valid canonical receipt hash.
+The live lane remains incomplete until a resident sovereign worker produces real service-connection execution evidence through the admitted TVC capability and canonical StegGate identity, the observer transitions to `COMPLETE`, Master Records returns custody `RECORDED` plus reconstruction `PASS`, and Site projects only the immutable verified capability. Missing execution evidence must remain `BLOCKED`.
 
-The observer returns `COMPLETE` only when all checks pass. Invalid evidence becomes `REVIEW_REQUIRED`; absent evidence remains `BLOCKED`.
+## Exact remaining product tasks
 
-## Machine-owned continuation
-
-```text
-workflow: .github/workflows/va-claim-assistant-governed-retrieval.yml
-triggers: owned-path push, pull request, every six hours, workflow dispatch
-receipt: receipts/va-claim-assistant-service-connection-execution-readiness.json
-provider execution owner: StegVerse-org/LLM-adapter#90
-custody owner after valid execution: master-records/orchestration#15
-Site projection owner: StegVerse-Labs/Site#113 / #241
-privacy/document owner: StegVerse-Labs/Site#116
-```
-
-Missing provider execution stays machine-visible and cannot be converted into success by CI or documentation.
-
-## Exact remaining tasks
-
-1. `StegVerse-org/LLM-adapter#90` must perform one real `service_connection` provider/model execution through the admitted TVC capability and canonical StegGate identity and write the schema-valid execution receipt.
-2. The machine observer must transition from `BLOCKED` to `COMPLETE`.
-3. `master-records/orchestration#15` must record the execution and TVC receipts, return custody `RECORDED`, and prove reconstruction `PASS`.
-4. `StegVerse-Labs/Site#113/#241` must project only the resulting receipt-verified deployed capability and prove public end-to-end governed execution.
-5. `StegVerse-Labs/Site#116` must complete admitted production PII detection/redaction/model-leakage and substantive document execution evidence.
-6. Site must admit an official current `VA-CRISIS-LINE` source or retain urgent-safety fail-closed posture.
-7. Filing remains blocked until veteran-approved transport, revocation, duplicate prevention, confirmation, and custody are admitted.
+- issue #142/task 023: sovereign VACC provider execution through TVC;
+- `master-records/orchestration#15`: custody and reconstruction of genuine execution/privacy events;
+- `StegVerse-Labs/Site#113/#241`: receipt-derived deployed capability projection;
+- `StegVerse-Labs/Site#116`: production PII detection/redaction/model-leakage and substantive document evidence;
+- admitted current `VA-CRISIS-LINE` source or continued urgent-safety fail-closed posture;
+- veteran-authorized filing transport with revocation, duplicate prevention, confirmation and custody before filing can activate.
 
 ## Authority boundary
 
 ```text
-generator implementation != deployment
-canonical runtime identity binding != provider execution
+deterministic validation != provider execution
+canonical runtime identity != provider execution
 TVC admission != provider execution
 provider execution != claim authority
-answer record != adjudication
-sanitized context != raw-document access
 custody != execution
 reconstruction != filing authority
-receipt verification != signature or submission
+receipt verification != signature/submission
+GitHub workflow success != governed activation
 ```
 
-## Session consolidation and metrics
-
-```yaml
-developed_files_percent: 100
-route_generator_implementation_percent: 100
-execution_observer_implementation_percent: 100
-canonical_steggate_identity_binding_percent: 100_in_ci
-real_provider_execution_percent: 0
-public_direct_four_app_binding_percent: 0
-cross_repository_operational_integration_percent: 55
-deployed_activation_percent: 15
-```
-
-Canonical continuation:
+## Consolidation
 
 ```text
 MERGED INTO: StegVerse-org/LLM-adapter#90
-MERGED INTO: StegVerse-Labs/StegCore#70
+MERGED INTO: StegVerse-org/LLM-adapter#142
+MERGED INTO: StegVerse-org/LLM-adapter/tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
+MERGED INTO: StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
+MERGED INTO: StegVerse-Labs/TVC
 MERGED INTO: master-records/orchestration#15
 MERGED INTO: StegVerse-Labs/Site#113/#241
 MERGED INTO: StegVerse-Labs/Site#116
-PARENT: StegVerse-Labs/Site#239
 ```
 
-The VACC identity-binding implementation is durable and validated. The parent four-app conversation remains active until all four public applications satisfy their direct runtime gates or this active #70 integration claim is fully transferred/released under the parent archive rule.
+The source implementation remains complete. Claim 050 is not released until exact-head Architecture Guard/global validate pass, PR merge, post-merge workflow census, claim release, and canonical workflow handoff finalization.
