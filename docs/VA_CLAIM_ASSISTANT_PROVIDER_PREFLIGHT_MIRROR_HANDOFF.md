@@ -17,6 +17,7 @@ credential_requirement: NONE
 github_token_runtime_authority: NONE
 github_token_required: false
 non_tv_tvc_secret_or_token_required: false
+third_party_inference_required: false
 hosted_provider_fallback: DISALLOWED
 ```
 
@@ -76,24 +77,44 @@ realignment task install commit: 38478376d814e44f4de91846423d16c3800a509e
 
 Historical request/receipt files whose names contain `github-models` remain provenance only.
 
-## Hosted-preflight validation surface retirement
+## Hosted-preflight validation/proof surface retirement
 
 Cleanup claim: `tasks/LLMA-WORKFLOW-RETIRE-SUPERSEDED-VA-PREFLIGHT-047.json`.
 
-Before this cleanup, `.github/workflows/validate-va-provider-preflight-hosted-path.yml` still used `actions/checkout@v4` and `actions/setup-python@v5` to execute `scripts/check_va_provider_preflight_hosted_path.py`. That validator was itself bound to the already-removed `.github/workflows/va-claim-assistant-provider-preflight.yml` and the superseded GitHub-Models task.
+Before this cleanup, `.github/workflows/validate-va-provider-preflight-hosted-path.yml` still used `actions/checkout@v4` and `actions/setup-python@v5` to execute `scripts/check_va_provider_preflight_hosted_path.py`. That validator was itself bound to the already-removed `.github/workflows/va-claim-assistant-provider-preflight.yml` and superseded `VACP-PREFLIGHT-HOSTED-EXECUTION-008` experiment.
 
-Repository search found no caller/reference to the hosted-path validation wrapper or validator. Under claim 047 both are retired:
+Repository search found no caller/reference to that wrapper or validator. Removing them caused the separate `.github/workflows/va-provider-preflight-ubuntu2204-proof.yml` to fail closed on PR #170 at run `31986578857`, job `95262528654`, because its first substantive step tried to execute the now-removed hosted-path validator.
+
+Direct inspection of that coupled Ubuntu proof showed it also belonged to the obsolete GitHub-hosted experiment and violated the current credential boundary:
+
+```text
+runs-on: ubuntu-22.04
+actions/checkout@v4 with GitHub token
+actions/setup-python@v5 with token
+scripts/check_va_provider_preflight_hosted_path.py
+secrets.STEGVERSE_MASTER_RECORDS_TOKEN
+actions/upload-artifact@v4
+historical TVC vendored admission source
+historical GitHub-run-derived admission/proof manifest
+```
+
+The failed run directly logged `GITHUB_TOKEN` read permissions, token-backed checkout/setup actions, and the attempted call to the removed hosted validator. Because the current sovereign route requires `credential_requirement: NONE`, `github_token_required: false`, no third-party inference, and TV/TVC-only authority, the coupled proof workflow is also superseded rather than a current activation predicate.
+
+Under claim 047 the complete obsolete hosted validation family is therefore retired:
 
 ```text
 .github/workflows/validate-va-provider-preflight-hosted-path.yml
   -> ELIMINATE_SUPERSEDED_HOSTED_VALIDATION_WRAPPER
+  -> removed
+.github/workflows/va-provider-preflight-ubuntu2204-proof.yml
+  -> ELIMINATE_SUPERSEDED_HOSTED_PROOF_WORKFLOW
   -> removed
 scripts/check_va_provider_preflight_hosted_path.py
   -> ELIMINATE_OBSOLETE_VALIDATOR_BOUND_TO_REMOVED_GITHUB_MODELS_PREFLIGHT
   -> removed
 ```
 
-The removal does not erase historical PR/run evidence above and does not remove any current sovereign activation predicate. No replacement GitHub workflow is created because the current route is machine-owned by StegVerse + TV/TVC and the historical hosted path is explicitly superseded.
+The removals do not erase historical PR/run evidence above and do not remove any current sovereign activation predicate. No replacement GitHub workflow is created because the current route is machine-owned by StegVerse + TV/TVC and the historical hosted path is explicitly superseded.
 
 ## Preserved VACC safety gates
 
@@ -160,4 +181,4 @@ integration predicates complete: 4/8
 goal activation: 4/8
 ```
 
-Claim 047 is not complete until exact-head Architecture Guard/global validate pass, its PR merges, the post-merge workflow census is observed, the claim is released, and the canonical workflow-consolidation handoff is finalized on main.
+Claim 047 is not complete until fresh exact-head Architecture Guard/global validate pass after the coupled proof retirement, its PR merges, the post-merge workflow census is observed, the claim is released, and the canonical workflow-consolidation handoff is finalized on main.
