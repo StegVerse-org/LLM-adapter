@@ -8,18 +8,20 @@
   "role": "CLAIMED_FOR_IMPLEMENTATION",
   "state": "CLAIMED_FOR_IMPLEMENTATION",
   "claim_timestamp": "2026-08-16T21:05:00-05:00",
-  "claim_release_condition": "Merge after exact-head Architecture Guard/global validate pass, deterministic VA runtime-contract validation runs from the credential-clean global dispatcher and exact iOS mirror, standalone scheduled/writeback/artifact workflow is absent, specialized handoff points to the stable dispatcher, and workflow parity passes.",
+  "claim_release_condition": "Merge after exact-head Architecture Guard/global validate pass, deterministic VA runtime-contract validation executes through canonical Goal 4 from the credential-clean global dispatcher and exact iOS mirror, standalone scheduled/writeback/artifact workflow is absent, specialized handoff points to the stable dispatcher, and workflow parity passes.",
   "surfaces": [
     ".github/workflows/va-claims-chat-runtime-contract.yml",
+    "scripts/verify_goal4_full.py",
+    "scripts/validate_va_claims_chat_runtime_contract.py",
     ".github/workflows/validate.yml",
     "iosnoperiod/github/workflows/validate.yml",
-    "scripts/validate_va_claims_chat_runtime_contract.py",
     "docs/VA_CLAIMS_CHAT_RUNTIME_MIRROR_HANDOFF.md",
     "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
     "tasks/LLMA-WORKFLOW-CONSOLIDATE-VA-RUNTIME-CONTRACT-048.json"
   ],
   "classifications": {
     ".github/workflows/va-claims-chat-runtime-contract.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    "scripts/verify_goal4_full.py": "CANONICAL_AGGREGATE_VALIDATION_PATH",
     ".github/workflows/validate.yml": "RETAIN_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER",
     "iosnoperiod/github/workflows/validate.yml": "MIRROR_TOKEN_CLEAN_GLOBAL_DETERMINISTIC_VALIDATION_DISPATCHER",
     "scripts/validate_va_claims_chat_runtime_contract.py": "RETAIN_CANONICAL_FAIL_CLOSED_VALIDATOR"
@@ -39,8 +41,9 @@
     "Do not add GitHub/OIDC/provider/Master-Records credentials, hosted activation, repository writeback, artifact transport, filing, custody, Site mutation, or wallet authority."
   ],
   "expected_evidence": [
-    "global validate executes scripts/validate_va_claims_chat_runtime_contract.py",
-    "exact iOS mirror contains the same validation step",
+    "scripts/verify_goal4_full.py executes scripts/validate_va_claims_chat_runtime_contract.py",
+    "global validate executes the canonical Goal 4 aggregate",
+    "exact iOS mirror executes the same canonical Goal 4 aggregate",
     "standalone va-claims-chat-runtime-contract.yml absent",
     "specialized handoff records stable dispatcher and historical PASS receipt",
     "workflow parity PASS",
@@ -49,7 +52,7 @@
     "PR merged and claim released",
     "post-merge workflow census directly observed"
   ],
-  "next_executable_action": "Move the runtime-contract validator into the credential-clean global dispatcher/mirror, update specialized and canonical handoffs, remove the standalone workflow, validate, merge, release, and recount.",
+  "next_executable_action": "Open the bounded PR, validate exact head, merge, release claim, finalize handoffs, and recount workflows.",
   "next_task_after_release": "Classify the next remaining default-branch workflow surface against canonical owners and the <=2 target.",
   "authority_effect": false,
   "activation_effect": false
