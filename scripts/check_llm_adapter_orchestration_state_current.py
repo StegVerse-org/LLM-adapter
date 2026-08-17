@@ -89,7 +89,7 @@ def main() -> int:
     required_canonical = (
         "credential_authority: TV/TVC",
         "github_token_runtime_authority: NONE",
-        "LLMA-WORKFLOW-RETIRE-COMPLETE-PR-CONSOLIDATION-051",
+        "resident carrier owns continuity",
         "formal local model development: COMPLETE_RELEASED",
         "local runtime discovery/launch/inference/proof: COMPLETE_RELEASED",
     )
