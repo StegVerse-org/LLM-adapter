@@ -1,0 +1,61 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-RETIRE-GITHUB-IMAGE-PUBLICATION-054",
+  "originating_goal": "Remove remaining GitHub-token/OIDC/package publication authority and duplicate hosted image publication surfaces while preserving deterministic local image contracts and transferring runtime continuation to governed StegVerse workers.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/retire-github-image-publication-20260817",
+  "claimant": "chatgpt-session-backend-support-20260817",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-17T00:18:00-05:00",
+  "claim_release_condition": "Merge only after both GitHub image-publication workflows are absent, deterministic image/runtime-contract checks remain in canonical Goal 4, publication handoff records GHCR workflow publication as historical/superseded, exact-head Architecture Guard and global validate pass, and no runtime/publication/provider/Master Records/Site/wallet authority is invented.",
+  "surfaces": [
+    ".github/workflows/publish-portable-node-image.yml",
+    ".github/workflows/stegdeploy-image.yml",
+    "scripts/check_stegdeploy_image_publication_readiness.py",
+    "scripts/check_stegdeploy_image_receipt_retention.py",
+    "scripts/verify_stegdeploy_runtime.py",
+    "scripts/verify_goal4_full.py",
+    "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-RETIRE-GITHUB-IMAGE-PUBLICATION-054.json"
+  ],
+  "classifications": {
+    ".github/workflows/publish-portable-node-image.yml": "TRANSFER_TO_STEGVERSE_WORKER",
+    ".github/workflows/stegdeploy-image.yml": "TRANSFER_TO_STEGVERSE_WORKER",
+    "existing deterministic image/runtime validators": "RETAIN_IN_STABLE_DISPATCHER"
+  },
+  "canonical_owner": {
+    "resident_scheduler": "StegVerse-Labs/.github/handoffs/SHWP-HEALER-SOVEREIGN-SCHEDULER-001.json",
+    "healer": "StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md",
+    "local_relay": "StegVerse-Labs/StegVerse-Healer/app/relay_stegdeploy_publication.py",
+    "local_intake": "StegVerse-org/core-node-runtime-demo/tools/stegdeploy_runtime_intake_local.py",
+    "adapter_consumption": "StegVerse-org/LLM-adapter#18"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "github_token_production_authority": "NONE",
+    "github_actions_production_role": "NONE",
+    "github_oidc_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "ghcr_publication_required_for_production_continuity": false
+  },
+  "collision_boundaries": [
+    "Do not compete with SHWP-HEALER-SOVEREIGN-SCHEDULER-001 machine-owned execution.",
+    "Do not create a replacement GitHub workflow or inject TV/TVC credentials into GitHub Actions.",
+    "Do not claim a new image publication, persistent deployment, provider execution, custody, Site activation, or release authority.",
+    "Preserve the last successful GHCR receipt as historical evidence only.",
+    "Do not touch wallet signing, broadcast, settlement, or trade authority."
+  ],
+  "expected_evidence": [
+    "publish-portable-node-image.yml absent",
+    "stegdeploy-image.yml absent",
+    "deterministic image/runtime validators still execute through canonical Goal 4",
+    "Architecture Guard exact head PASS",
+    "global validate exact head PASS",
+    "post-merge workflow census directly observed"
+  ],
+  "next_task_after_release": "Classify steggate-portable-consumer.yml and reconcile remaining hosted validation surfaces against the <=2 target and no-non-TV/TVC-token rule.",
+  "authority_effect": false,
+  "activation_effect": false
+}

@@ -5,62 +5,58 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOW = ROOT / ".github" / "workflows" / "stegdeploy-image.yml"
 RECEIPT = ROOT / "receipts" / "stegdeploy-image-publication.json"
 STATUS = ROOT / "status" / "stegdeploy-image-publication-readiness.json"
-
-REQUIRED_WORKFLOW_MARKERS = (
-    "Verify published main image pull",
-    "Write publication or blocker receipt",
-    '"schema": "stegdeploy.image-publication.v2"',
-    '"state": "PUBLISHED" if published else "BLOCKED"',
-    '"consumer_pull_verified"',
-    '"package_visibility_asserted": False',
-    "Retain publication evidence on main",
-    "Enforce successful publication after retaining evidence",
+HANDOFF = ROOT / "docs" / "STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md"
+RETIRED_WORKFLOWS = (
+    ROOT / ".github/workflows/stegdeploy-image.yml",
+    ROOT / ".github/workflows/publish-portable-node-image.yml",
 )
 
 
 def main() -> int:
-    failures: list[str] = []
-    if not WORKFLOW.exists():
-        failures.append("missing canonical StegDeploy image workflow")
-        workflow_text = ""
-    else:
-        workflow_text = WORKFLOW.read_text(encoding="utf-8")
-        for marker in REQUIRED_WORKFLOW_MARKERS:
-            if marker not in workflow_text:
-                failures.append(f"workflow missing marker: {marker}")
-        if "schedule:" in workflow_text:
-            failures.append("scheduled workflow is not permitted outside StegVerse-Healer")
+    blockers: list[str] = []
+    for workflow in RETIRED_WORKFLOWS:
+        if workflow.exists():
+            blockers.append(f"retired GitHub publication workflow still present: {workflow.name}")
+
+    handoff = HANDOFF.read_text(encoding="utf-8") if HANDOFF.exists() else ""
+    for marker in (
+        "github_actions_publication_authority: NONE",
+        "credential_authority: TV/TVC",
+        "resident sovereign heartbeat + healer-sovereign-scheduler-worker",
+        "historical_ghcr_receipt_retained: true",
+    ):
+        if marker not in handoff:
+            blockers.append(f"publication handoff missing marker: {marker}")
 
     receipt = json.loads(RECEIPT.read_text(encoding="utf-8")) if RECEIPT.exists() else None
-    receipt_schema = receipt.get("schema") if receipt else None
-    receipt_state = receipt.get("state") if receipt else None
-    digest = receipt.get("digest") if receipt else None
-    consumer_pull_verified = receipt.get("consumer_pull_verified") if receipt else False
-
-    publication_ready = (
-        receipt_schema == "stegdeploy.image-publication.v2"
-        and receipt_state == "PUBLISHED"
-        and isinstance(digest, str)
-        and digest.startswith("sha256:")
-        and consumer_pull_verified is True
-        and not failures
+    historical_digest = receipt.get("digest") if receipt else None
+    historical_receipt_valid_shape = bool(
+        receipt
+        and receipt.get("schema") == "stegdeploy.image-publication.v2"
+        and receipt.get("state") == "PUBLISHED"
+        and isinstance(historical_digest, str)
+        and historical_digest.startswith("sha256:")
+        and receipt.get("consumer_pull_verified") is True
     )
+    if not historical_receipt_valid_shape:
+        blockers.append("retained historical GHCR publication receipt is missing or invalid")
 
+    local_contract_ready = not blockers
     status = {
-        "schema": "stegdeploy.image-publication-readiness.v1",
+        "schema": "stegdeploy.image-publication-readiness.v2",
         "repository": "StegVerse-org/LLM-adapter",
-        "workflow": ".github/workflows/stegdeploy-image.yml",
-        "receipt": "receipts/stegdeploy-image-publication.json",
-        "workflow_contract_valid": not failures,
-        "observed_receipt_schema": receipt_schema,
-        "observed_receipt_state": receipt_state,
-        "observed_digest": digest,
-        "consumer_pull_verified": consumer_pull_verified is True,
-        "state": "READY" if publication_ready else "BLOCKED",
-        "blockers": failures + ([] if receipt_schema == "stegdeploy.image-publication.v2" else ["current retained receipt predates v2 publication contract"]) + ([] if consumer_pull_verified is True else ["fresh consumer pull verification not retained"]),
+        "hosted_publication_authority": "NONE",
+        "credential_authority": "TV/TVC",
+        "historical_receipt": "receipts/stegdeploy-image-publication.json",
+        "historical_digest": historical_digest,
+        "historical_ghcr_receipt_retained": historical_receipt_valid_shape,
+        "runtime_image_source": "LOCAL_BUILD",
+        "registry_pull_required": False,
+        "continuation_owner": "resident sovereign heartbeat + healer-sovereign-scheduler-worker",
+        "state": "LOCAL_CONTINUATION_READY" if local_contract_ready else "BLOCKED",
+        "blockers": blockers,
         "provider_execution_authorized": False,
         "persistent_deployment_authorized": False,
         "custody_authorized": False,
@@ -70,14 +66,12 @@ def main() -> int:
     STATUS.parent.mkdir(parents=True, exist_ok=True)
     STATUS.write_text(json.dumps(status, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
-    if failures:
-        print("STEGDEPLOY IMAGE PUBLICATION READINESS: FAIL")
-        for failure in failures:
-            print(f"- {failure}")
+    if blockers:
+        print("STEGDEPLOY IMAGE PUBLICATION READINESS: BLOCKED")
+        for blocker in blockers:
+            print(f"- {blocker}")
         return 1
-    print(f"STEGDEPLOY IMAGE PUBLICATION READINESS: {status['state']}")
-    for blocker in status["blockers"]:
-        print(f"- {blocker}")
+    print("STEGDEPLOY IMAGE PUBLICATION READINESS: LOCAL_CONTINUATION_READY")
     return 0
 
 

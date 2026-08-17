@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bootstrap, launch, verify, and receipt the provider-neutral StegDeploy runtime."""
+"""Bootstrap, launch, verify, and receipt the sovereign local StegDeploy runtime."""
 from __future__ import annotations
 
 import argparse
@@ -7,7 +7,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import secrets
 import subprocess
 import time
 import urllib.request
@@ -18,26 +17,44 @@ ENV_FILE = STATE_DIR / "runtime.env"
 RECEIPT_FILE = STATE_DIR / "deployment-receipt.json"
 COMPOSE_FILE = ROOT / "compose.stegdeploy.yaml"
 
+PROTECTED_KEYS = (
+    "STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN",
+    "STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY",
+    "STEGVERSE_MASTER_RECORDS_TOKEN",
+    "STEGVERSE_PROVIDER_TOKEN",
+)
+
 
 def _run(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(args, cwd=ROOT, check=check, text=True, capture_output=True)
 
 
-def _write_env() -> None:
+def _prepare_env_file() -> None:
+    """Create only a non-secret compose env file.
+
+    Protected credentials are never generated here. When a protected capability is
+    admitted, TV/TVC must inject its value into the process environment. Missing
+    protected values leave the corresponding optional capability disabled/fail-closed.
+    """
     STATE_DIR.mkdir(parents=True, exist_ok=True)
-    existing: dict[str, str] = {}
     if ENV_FILE.exists():
+        protected_on_disk: list[str] = []
         for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
-            if line and not line.startswith("#") and "=" in line:
-                key, value = line.split("=", 1)
-                existing[key] = value
-    generated = {
-        "STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN": existing.get("STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN") or secrets.token_urlsafe(32),
-        "STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY": existing.get("STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY") or secrets.token_urlsafe(48),
-        "STEGVERSE_MASTER_RECORDS_TOKEN": existing.get("STEGVERSE_MASTER_RECORDS_TOKEN") or secrets.token_urlsafe(32),
-        "STEGVERSE_PROVIDER_TOKEN": existing.get("STEGVERSE_PROVIDER_TOKEN") or secrets.token_urlsafe(32),
-    }
-    ENV_FILE.write_text("\n".join(f"{k}={v}" for k, v in generated.items()) + "\n", encoding="utf-8")
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            if key in PROTECTED_KEYS and value:
+                protected_on_disk.append(key)
+        if protected_on_disk:
+            raise RuntimeError(
+                "protected credentials must be injected by TV/TVC at runtime, not stored in .stegdeploy/runtime.env: "
+                + ",".join(sorted(protected_on_disk))
+            )
+    ENV_FILE.write_text(
+        "# Non-secret StegDeploy compose defaults only.\n"
+        "# Protected values are injected by TV/TVC into the process environment.\n",
+        encoding="utf-8",
+    )
     os.chmod(ENV_FILE, 0o600)
 
 
@@ -59,23 +76,29 @@ def _health(url: str, attempts: int = 30) -> dict[str, object]:
 
 
 def deploy(url: str) -> None:
-    _write_env()
-    _compose("pull")
+    _prepare_env_file()
+    _compose("build")
     _compose("up", "--detach", "--remove-orphans")
     health = _health(url)
     image_id = _compose("images", "--quiet").stdout.strip()
     source = _run("git", "rev-parse", "HEAD", check=False).stdout.strip() or "unknown"
+    tv_tvc_protected_values_present = sorted(key for key in PROTECTED_KEYS if os.environ.get(key))
     receipt = {
-        "schema": "stegdeploy.deployment-receipt.v1",
-        "runtime": "provider-neutral-docker-compose",
+        "schema": "stegdeploy.deployment-receipt.v2",
+        "runtime": "stegverse-local-docker-compose",
         "source_commit": source,
         "image_id": image_id,
+        "image_source": "LOCAL_BUILD",
+        "registry_pull_required": False,
         "health_url": url,
         "health": health,
         "durable_storage": True,
         "render_dependency": False,
         "manual_build_required": False,
         "manual_credentials_required": False,
+        "credential_authority": "TV/TVC",
+        "generated_credentials": False,
+        "protected_values_injected_by_tvc": tv_tvc_protected_values_present,
         "authority_effect": "RUNTIME_DEPLOYMENT_ONLY",
     }
     canonical = json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
@@ -92,10 +115,12 @@ def main() -> int:
     if args.command == "deploy":
         deploy(args.health_url)
     elif args.command == "status":
+        _prepare_env_file()
         print(_compose("ps").stdout)
         if RECEIPT_FILE.exists():
             print(RECEIPT_FILE.read_text(encoding="utf-8"))
     else:
+        _prepare_env_file()
         _compose("down")
     return 0
 

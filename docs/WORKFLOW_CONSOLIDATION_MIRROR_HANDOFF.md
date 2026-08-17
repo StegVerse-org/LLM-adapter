@@ -5,14 +5,15 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/retire-github-image-publication-20260817
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
-active_claim_state: UNCLAIMED
+active_claim: LLMA-WORKFLOW-RETIRE-GITHUB-IMAGE-PUBLICATION-054
+active_claim_state: CLAIMED_FOR_IMPLEMENTATION
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
 github_actions_activation_role: NONE
+github_actions_publication_authority: NONE
 github_oidc_runtime_authority: NONE
 third_party_runtime_authority: NONE
 ```
@@ -27,7 +28,9 @@ resident StegVerse carrier + TV/TVC
 resident sovereign carrier
 GitHub token as provider credential: prohibited
 GitHub token as runtime/control-plane authority: prohibited
+GitHub token as image-publication authority: prohibited
 GitHub Actions activation role: NONE
+GitHub Actions publication role: NONE
 GitHub OIDC as runtime/control-plane authority: prohibited
 repository secrets for provider/Master Records production path: prohibited
 TV/TVC protected values exported into GitHub Actions: prohibited
@@ -39,6 +42,8 @@ StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
 
 ## Retired activation provenance
 
+These historical workflow names remain recorded because their absence from the live workflow tree plus explicit transfer of continuity is a validation invariant, not a request to restore them.
+
 ```text
 ecosystem-chat-live-activation.yml: RETIRED — resident StegVerse carrier + TV/TVC owns activation
 ecosystem-chat-live-activation-monitor.yml: RETIRED — resident carrier owns continuity
@@ -46,7 +51,7 @@ ecosystem-chat-live-activation-monitor.yml: RETIRED — resident carrier owns co
 
 ## Released tranches 1-30
 
-Latest release:
+Latest released tranche:
 
 ```text
 30 PR #176
@@ -63,44 +68,84 @@ post-merge workflow files: 6
 classified/remediated: 46/49 = 93.88%
 ```
 
-Tranche 30 removed the standalone `hil-deployment-profile.yml` hosted compatibility surface and preserved its deterministic source validation through `scripts/verify_hil_compatibility_full.py` inside canonical Goal 4. The first exact-head run correctly exposed an undeclared `jsonschema` test dependency; `jsonschema>=4.23` is now explicitly declared in the repository dev dependency set, and the corrected exact head passed all required validation. This does not alter HIL runtime authority.
+## Active tranche 31 — retire GitHub image-publication authority
 
-Canonical HIL continuation remains:
+Authoritative handoffs read before mutation:
 
 ```text
-StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
-TVC #8 authenticated private review: CLAIMED_FOR_IMPLEMENTATION
-HIL product activation: 2/7 gates complete
-StegVerse-Labs/Site#67 projection
-master-records/orchestration#13
-resident StegVerse carrier
+docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md
+StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md
 ```
 
-No HIL activation, authenticated private-review decision, publication, Site mutation, Master Record release, wallet action, provider execution, Render dependency, GitHub/OIDC runtime authority, or non-TV/TVC secret/token is introduced.
+The Healer handoff already records GitHub API workflow dispatch and GitHub production credentials as superseded, and binds StegDeploy continuation to the resident sovereign heartbeat plus `healer-sovereign-scheduler-worker`. Its relay consumes materialized local state; core-node intake requires the exact image digest to already exist in the local Docker store and does not log in to or pull from GHCR.
+
+Claim `tasks/LLMA-WORKFLOW-RETIRE-GITHUB-IMAGE-PUBLICATION-054.json` therefore removes the two remaining GitHub publication surfaces rather than injecting TV/TVC credentials into them:
+
+```text
+.github/workflows/publish-portable-node-image.yml -> removed / TRANSFER_TO_STEGVERSE_WORKER
+.github/workflows/stegdeploy-image.yml -> removed / TRANSFER_TO_STEGVERSE_WORKER
+```
+
+Source/runtime corrections installed in the same bounded tranche:
+
+```text
+compose.stegdeploy.yaml
+  default image: stegverse/llm-adapter:local
+  local Dockerfile build
+  pull_policy: never
+scripts/stegdeploy_bootstrap.py
+  local compose build, no registry pull
+  no locally generated provider/Master Records/review credentials
+  credential_authority: TV/TVC
+  generated_credentials: false
+scripts/verify_stegdeploy_runtime.py
+  proves local-build/no-registry/no-generated-secret boundary
+scripts/check_stegdeploy_image_receipt_retention.py
+  validates last GHCR receipt as immutable historical evidence only
+scripts/check_stegdeploy_image_publication_readiness.py
+  projects LOCAL_CONTINUATION_READY only when hosted workflows are absent and sovereign handoff markers are present
+docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md
+  github_actions_publication_authority: NONE
+  historical_ghcr_receipt_retained: true
+```
+
+The last successful GHCR receipt remains historical evidence. This tranche does not claim a fresh publication, persistent deployment, provider execution, custody, Site activation, release, or wallet/trade action.
+
+Release requires exact-head Architecture Guard and global validate PASS, canonical Goal 4 success, both hosted publication workflows absent, post-merge workflow census, and released claim 054.
 
 ## Global validation carrier
 
 `.github/workflows/validate.yml` remains deterministic-validation-only: `permissions: {}`, anonymous exact-SHA source acquisition, explicit credential refusal, no checkout/setup/upload actions, no schedule, no repository writeback, no hosted activation, and no GitHub-token runtime/control-plane authority.
 
-## Current accounting — released work only
+## Current accounting
 
 ```text
 workflow_files_baseline: 49
 workflow_files_current_on_released_main: 6
-workflow_files_removed_or_consolidated_released: 43
 classified_and_remediated_released: 46/49 = 93.88%
 remaining_unclassified_or_unconsolidated_released: 3/49
+active_branch_expected_workflow_files: 4
+expected_if_tranche_31_releases_without_concurrent_change: 48/49 = 97.96%, 1/49 remaining
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
+current_active_tranche_claim: LLMA-WORKFLOW-RETIRE-GITHUB-IMAGE-PUBLICATION-054
 ```
 
-Current default-branch workflow census:
+Released-main workflow census:
 
 ```text
 architecture-guard.yml
 capability-runtime.yml
 publish-portable-node-image.yml
 stegdeploy-image.yml
+steggate-portable-consumer.yml
+validate.yml
+```
+
+Expected active-branch census after this tranche's removals:
+
+```text
+architecture-guard.yml
+capability-runtime.yml
 steggate-portable-consumer.yml
 validate.yml
 ```
@@ -114,42 +159,38 @@ formal local model development: COMPLETE_RELEASED
 local runtime discovery/launch/inference/proof: COMPLETE_RELEASED
 live local-model activation: StegVerse-Labs/.github#60 + resident sovereign heartbeat
 credential/route authority: TV/TVC / StegVerse-Labs/TVC
-HIL runtime/backend: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
-HIL private review: StegVerse-Labs/TVC#8
-HIL Site projection: StegVerse-Labs/Site#67
-HIL Master Records: master-records/orchestration#13
+StegDeploy scheduler: StegVerse-Labs/.github/handoffs/SHWP-HEALER-SOVEREIGN-SCHEDULER-001.json
+StegDeploy Healer continuation: StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md
+StegDeploy local relay: StegVerse-Labs/StegVerse-Healer/app/relay_stegdeploy_publication.py
+StegDeploy local intake: StegVerse-org/core-node-runtime-demo/tools/stegdeploy_runtime_intake_local.py
 Ecosystem Chat runtime binding: StegVerse-org/LLM-adapter#18
-VACC sovereign continuation: StegVerse-org/LLM-adapter#142 + tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
-Math Solver machine continuation: StegVerse-org/LLM-adapter#72/#132 + Site#240 + StegCore#70
+HIL private review: StegVerse-Labs/TVC#8
 StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
 ```
 
 The original local-model/runtime discovery/launch/inference/proof and formal local-model development are complete/released and are not duplicated. Live activation remains machine-owned and requires direct runtime evidence.
 
-## Remaining workflow disposition work
+## Remaining workflow disposition after claim 054 releases
 
-`capability-runtime.yml` remains a strong `KEEP_STANDALONE_EXCEPTION` candidate because it uniquely validates Ubuntu, Windows and macOS portable capability/bootstrap/service/autostart behavior across Python 3.11/3.12. Its actual token/action mechanics still require explicit classification against the user's no-non-TV/TVC-token rule before final retention.
-
-Still requiring fresh bounded disposition:
+One audit-start workflow surface remains unclassified:
 
 ```text
-publish-portable-node-image.yml
-stegdeploy-image.yml
 steggate-portable-consumer.yml
 ```
 
-`architecture-guard.yml` and `validate.yml` remain core validation surfaces for now. `architecture-guard.yml` still contains hosted checkout/setup/artifact mechanics and a schedule; it is therefore not yet proven compatible with the stronger no-non-TV/TVC-token requirement and must be reconciled before this workstream can close.
+`capability-runtime.yml` remains a candidate standalone portability test but its hosted action/token mechanics still require explicit reconciliation with the no-non-TV/TVC-token rule. `architecture-guard.yml` still contains checkout/setup/artifact mechanics plus a schedule and likewise is not yet acceptable under the stronger rule. `validate.yml` is already credential-refusing, anonymous-fetch, permissions-empty validation-only.
 
-Next safe bounded task: inspect the remaining portable-image publication pair (`publish-portable-node-image.yml`, `stegdeploy-image.yml`) against their canonical publication/runtime handoffs, determine whether publication belongs to a governed StegVerse worker rather than GitHub package authority, preserve repository-local deterministic image-contract validation in Goal 4, and eliminate duplicate hosted publication surfaces without granting GitHub token authority.
+Next safe bounded task after claim 054: classify and consolidate `steggate-portable-consumer.yml`, then reconcile `architecture-guard.yml` and `capability-runtime.yml` so final retained workflow count and token mechanics satisfy the technical-minimum and TV/TVC-only credential boundary.
 
 ## Collision boundaries
 
+- Do not compete with machine-owned Healer scheduler execution.
+- Do not restore GitHub package/OIDC publication authority.
+- Do not inject TV/TVC protected values into GitHub Actions.
 - Do not duplicate TVC #8 authenticated private-review work.
-- Do not manufacture HIL activation, publication, Site, or Master Records evidence.
-- Do not create another Math Solver evaluator, provider route, or runtime carrier.
-- Do not restore hosted schedules, token-backed setup, repository writeback, artifact transport, or activation.
-- Do not touch wallet signing, broadcast, settlement, or Master Record authorization.
+- Do not manufacture activation, publication, Site, or Master Records evidence.
+- Do not touch wallet signing, broadcast, settlement, or trade authority.
 
 ## Archive condition
 
-This support session remains active while remaining workflow/token remediation is incomplete. Released main has 6 workflow files against the <=2 preference, 3/49 audit-start surfaces remain unclassified/unconsolidated, and retained hosted validation/publication surfaces still require explicit no-non-TV/TVC-token reconciliation.
+This support session remains active while claim 054 and final workflow/token reconciliation are incomplete. Released main has 6 workflow files against the <=2 preference; the active branch has removed two publication workflows but that result is not released until exact-head validation and merge complete.
