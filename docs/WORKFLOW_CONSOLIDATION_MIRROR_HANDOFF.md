@@ -37,6 +37,15 @@ third-party production/runtime dependency: prohibited
 StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
 ```
 
+## Retired activation provenance
+
+```text
+ecosystem-chat-live-activation.yml: RETIRED — resident StegVerse carrier + TV/TVC owns activation
+ecosystem-chat-live-activation-monitor.yml: RETIRED — resident carrier owns continuity
+```
+
+These historical workflow names remain in this handoff only so tests and future operators can verify that hosted activation/persistence remain retired; they are not runnable production surfaces.
+
 ## Released tranches 1-26
 
 Latest release:
