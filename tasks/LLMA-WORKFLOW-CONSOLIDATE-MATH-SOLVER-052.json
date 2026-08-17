@@ -1,0 +1,64 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-CONSOLIDATE-MATH-SOLVER-052",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target and remove GitHub-token/artifact mechanics while preserving deterministic Math Solver StegGate validation under StegVerse + TV/TVC authority.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/consolidate-math-solver-validation-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T22:05:00-05:00",
+  "claim_release_condition": "Merge after exact-head Architecture Guard/global validate pass; Math Solver tests and deterministic runtime-identity/replay evidence execute through canonical Goal 4; the standalone token-backed artifact workflow is absent; specialized handoff transfers live carrier observation to its existing machine-owned owners; and no StegGate, execution-order, credential, authority or activation boundary regresses.",
+  "surfaces": [
+    ".github/workflows/math-solver-governed-runtime.yml",
+    "scripts/verify_math_solver_governed_runtime.py",
+    "scripts/verify_goal4_full.py",
+    "tests/test_math_solver_gateway.py",
+    "docs/MATH_SOLVER_RUNTIME_MIRROR_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-MATH-SOLVER-052.json"
+  ],
+  "classifications": {
+    ".github/workflows/math-solver-governed-runtime.yml": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+    "scripts/verify_math_solver_governed_runtime.py": "RETAIN_DETERMINISTIC_RUNTIME_IDENTITY_AND_REPLAY_VALIDATOR",
+    "tests/test_math_solver_gateway.py": "RETAIN_DETERMINISTIC_EXECUTION_ORDER_TESTS",
+    "scripts/verify_goal4_full.py": "CANONICAL_AGGREGATE_VALIDATION_PATH"
+  },
+  "credential_boundary": {
+    "credential_authority": "TV/TVC",
+    "provider_credentials_required_for_math_solver": false,
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_allowed": false,
+    "artifact_transport_allowed": false,
+    "activation_effect": false
+  },
+  "canonical_live_continuation": {
+    "resident_carrier": "StegVerse-Labs/.github resident sovereign carrier",
+    "service_gateway_owner": "StegVerse-org/LLM-adapter#72",
+    "math_solver_runtime_issue": "StegVerse-org/LLM-adapter#132",
+    "site_activation_owner": "StegVerse-Labs/Site#240",
+    "steggate_owner": "StegVerse-Labs/StegCore#70"
+  },
+  "collision_boundaries": [
+    "Do not create another Math Solver evaluator, provider route, or runtime carrier.",
+    "Preserve canonical StegGate pre-execution ordering; non-ALLOW must not invoke the arithmetic executor.",
+    "Preserve deterministic request/result/runtime-identity replay checks and non-authorizing evidence semantics.",
+    "Do not claim a sovereign carrier observation from hosted deterministic validation.",
+    "Do not introduce Render, GitHub/OIDC runtime authority, non-TV/TVC credentials, repository writeback, artifact transport, provider execution, custody, Site mutation, filing, or wallet authority."
+  ],
+  "expected_evidence": [
+    "canonical Goal 4 executes tests/test_math_solver_gateway.py",
+    "canonical Goal 4 executes scripts/verify_math_solver_governed_runtime.py",
+    "standalone math-solver-governed-runtime.yml absent",
+    "specialized handoff preserves machine-owned carrier/Site activation gates",
+    "workflow parity PASS",
+    "Architecture Guard exact head PASS",
+    "global validate exact head PASS",
+    "PR merged and claim released",
+    "post-merge workflow census directly observed"
+  ],
+  "next_executable_action": "Extract the workflow's deterministic runtime/replay assertions into a source validator, bind tests and validator into canonical Goal 4, retire the hosted artifact workflow, reconcile handoffs, validate, merge, release, and recount.",
+  "next_task_after_release": "Classify the next remaining default-branch workflow surface against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
