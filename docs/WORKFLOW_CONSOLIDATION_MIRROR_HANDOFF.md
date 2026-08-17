@@ -5,10 +5,10 @@
 ```text
 goal_id: LLM-ADAPTER-WORKFLOW-CONSOLIDATION-001
 repository: StegVerse-org/LLM-adapter
-branch: main
+branch: chore/consolidate-hil-compatibility-20260817
 originating_goal: restore the StegVerse/Core-Lite dispatcher architecture, contain hosted Actions cost, remove third-party runtime dependence, and ensure no non-TV/TVC token becomes runtime/control-plane authority
-active_claim: NONE
-active_claim_state: UNCLAIMED
+active_claim: LLMA-WORKFLOW-CONSOLIDATE-HIL-COMPAT-053
+active_claim_state: CLAIMED_FOR_IMPLEMENTATION
 role: ACTIVE_DISTINCT_SUPPORT
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
@@ -63,36 +63,55 @@ post-merge workflow files: 7
 classified/remediated: 45/49 = 91.84%
 ```
 
-Tranche 29 removed the standalone `math-solver-governed-runtime.yml` GitHub-token/artifact surface and preserved its deterministic capability in `scripts/verify_math_solver_governed_runtime.py`, `tests/test_math_solver_gateway.py`, and canonical `scripts/verify_goal4_full.py`. Hosted validation does not prove sovereign carrier execution.
+## Active tranche 30 — HIL deterministic compatibility consolidation
 
-Live Math Solver continuation remains machine/Site owned:
+Canonical TVC handoff read before mutation: `StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md`.
+
+TVC records HIL product activation as 2/7 gates complete, with authenticated private review still `CLAIMED_FOR_IMPLEMENTATION` by TVC #8. This tranche does not compete with that claim. It only consolidates the LLM-adapter's deterministic compatibility validation surface.
+
+Installed on the active branch:
 
 ```text
-StegVerse-Labs/.github resident sovereign carrier
--> StegVerse-org/LLM-adapter#72 service gateway
--> StegVerse-org/LLM-adapter#132 Math Solver runtime
--> scripts/observe_math_solver_public_runtime.py
--> StegVerse-Labs/Site#240 activation consumer
--> StegVerse-Labs/StegCore#70 canonical runtime binding
+.github/workflows/hil-deployment-profile.yml
+  -> CONSOLIDATE_INTO_STABLE_DISPATCHER
+  -> removed
+scripts/verify_hil_compatibility_full.py
+  -> installed deterministic compatibility aggregate
+  -> profile validation
+  -> storage consistency tests
+  -> HTTPS receiver probe-contract tests
+  -> controlled-cycle intake/provenance/publication tests
+  -> RTG notification/readiness/authority/schema tests
+  -> service-gateway TVC binding/idempotency tests
+  -> explicit authority-boundary verification
+scripts/verify_goal4_full.py
+  -> now executes scripts/verify_hil_compatibility_full.py
 ```
+
+No HIL activation, authenticated private-review decision, publication, Site mutation, Master Record release, wallet action, provider execution, Render dependency, GitHub/OIDC runtime authority, or non-TV/TVC secret/token is introduced.
+
+Claim: `tasks/LLMA-WORKFLOW-CONSOLIDATE-HIL-COMPAT-053.json`.
+
+Release requires exact-head Architecture Guard and global validate PASS, canonical Goal 4 execution of the HIL compatibility aggregate, PR merge, post-merge workflow census, and claim release.
 
 ## Global validation carrier
 
 `.github/workflows/validate.yml` and its exact iOS mirror remain deterministic-validation-only: `permissions: {}`, anonymous exact-SHA source acquisition, explicit credential refusal, no checkout/setup/upload actions, no schedule, no repository writeback, no hosted activation, and no GitHub-token runtime/control-plane authority.
 
-## Current accounting — released work only
+## Current accounting
 
 ```text
 workflow_files_baseline: 49
 workflow_files_current_on_released_main: 7
-workflow_files_removed_or_consolidated_released: 42
 classified_and_remediated_released: 45/49 = 91.84%
 remaining_unclassified_or_unconsolidated_released: 4/49
+active_branch_expected_workflow_files: 6
+expected_if_tranche_30_releases_without_concurrent_change: 46/49 = 93.88%, 3/49 remaining
 restoration_target: <=2 unless evidence-backed standalone technical necessity exists
-current_active_tranche_claim: NONE
+current_active_tranche_claim: LLMA-WORKFLOW-CONSOLIDATE-HIL-COMPAT-053
 ```
 
-Current default-branch workflow census:
+Current released-main workflows:
 
 ```text
 architecture-guard.yml
@@ -113,23 +132,25 @@ formal local model development: COMPLETE_RELEASED
 local runtime discovery/launch/inference/proof: COMPLETE_RELEASED
 live local-model activation: StegVerse-Labs/.github#60 + resident sovereign heartbeat
 credential/route authority: TV/TVC / StegVerse-Labs/TVC
+HIL runtime/backend: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
+HIL private review: StegVerse-Labs/TVC#8
+HIL Site projection: StegVerse-Labs/Site#67
+HIL Master Records: master-records/orchestration#13
 Ecosystem Chat runtime binding: StegVerse-org/LLM-adapter#18
 VACC sovereign continuation: StegVerse-org/LLM-adapter#142 + tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
 Math Solver machine continuation: StegVerse-org/LLM-adapter#72/#132 + Site#240 + StegCore#70
-Master Records: master-records/orchestration
 StegFin: StegVerse-Labs/stegfin-governance/docs/STEGFIN_MIRROR_HANDOFF.md + TV/TVC + USER_ONLY signing/broadcast
 ```
 
 The original local-model/runtime discovery/launch/inference/proof and formal local-model development are complete/released and are not duplicated. Live activation remains machine-owned and requires direct runtime evidence.
 
-## Remaining workflow disposition work
+## Remaining workflow disposition work after claim 053 releases
 
 `capability-runtime.yml` remains a strong `KEEP_STANDALONE_EXCEPTION` candidate because it is credential-clean and uniquely validates Ubuntu, Windows and macOS portable capability/bootstrap/service/autostart behavior across Python 3.11/3.12.
 
-Still requiring fresh bounded disposition:
+Still requiring fresh bounded disposition after claim 053:
 
 ```text
-hil-deployment-profile.yml
 publish-portable-node-image.yml
 stegdeploy-image.yml
 steggate-portable-consumer.yml
@@ -137,16 +158,14 @@ steggate-portable-consumer.yml
 
 `architecture-guard.yml` and `validate.yml` remain core deterministic validation surfaces unless a verified combined replacement preserves all coverage.
 
-Next safe bounded task: inspect `hil-deployment-profile.yml` against the canonical TVC HIL handoff and determine whether its deterministic compatibility checks can be folded into `validate.yml` while transferring all live HIL execution/observation to TVC/resident StegVerse workers. Do not duplicate TVC private-review ownership.
-
 ## Collision boundaries
 
+- Do not duplicate TVC #8 authenticated private-review work.
+- Do not manufacture HIL activation, publication, Site, or Master Records evidence.
 - Do not create another Math Solver evaluator, provider route, or runtime carrier.
-- Do not manufacture carrier/public activation evidence.
-- Preserve canonical StegGate pre-execution/replay semantics.
 - Do not restore hosted schedules, token-backed setup, repository writeback, artifact transport, or activation.
 - Do not touch wallet signing, broadcast, settlement, or Master Record authorization.
 
 ## Archive condition
 
-This support session remains active while remaining workflow/token remediation is incomplete. Released main has 7 workflow files against the <=2 preference and 4/49 audit-start surfaces remain unclassified/unconsolidated.
+This support session remains active while claim 053 and remaining workflow/token remediation are incomplete. Released main has 7 workflow files against the <=2 preference and 4/49 audit-start surfaces remain unclassified/unconsolidated.
