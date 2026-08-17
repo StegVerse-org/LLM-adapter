@@ -1,0 +1,54 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-WORKFLOW-RETIRE-SUPERSEDED-VA-PREFLIGHT-047",
+  "originating_goal": "Reduce GitHub workflow surfaces toward the <=2 target and eliminate superseded GitHub-hosted VACC preflight validation surfaces after the canonical TV/TVC sovereign route replaced the GitHub Models/GITHUB_TOKEN activation path.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "chore/retire-superseded-va-hosted-preflight-20260816",
+  "claimant": "chatgpt-session-backend-support-20260816",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-16T20:58:00-05:00",
+  "claim_release_condition": "Merge after exact-head Architecture Guard/global validate pass, superseded hosted-preflight wrapper and its obsolete validator are absent, specialized handoff preserves historical evidence and points only to sovereign task 023, and no authority or credential boundary regresses.",
+  "surfaces": [
+    ".github/workflows/validate-va-provider-preflight-hosted-path.yml",
+    "scripts/check_va_provider_preflight_hosted_path.py",
+    "docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md",
+    "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "tasks/LLMA-WORKFLOW-RETIRE-SUPERSEDED-VA-PREFLIGHT-047.json"
+  ],
+  "classifications": {
+    ".github/workflows/validate-va-provider-preflight-hosted-path.yml": "ELIMINATE_SUPERSEDED_HOSTED_VALIDATION_WRAPPER",
+    "scripts/check_va_provider_preflight_hosted_path.py": "ELIMINATE_OBSOLETE_VALIDATOR_BOUND_TO_REMOVED_GITHUB_MODELS_PREFLIGHT"
+  },
+  "canonical_replacement": {
+    "issue": "StegVerse-org/LLM-adapter#142",
+    "task": "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+    "execution_owner": "resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records",
+    "credential_authority": "TV/TVC",
+    "credential_requirement": "NONE",
+    "github_token_required": false,
+    "github_token_runtime_authority": "NONE",
+    "third_party_inference_required": false,
+    "hosted_provider_fallback": "DISALLOWED"
+  },
+  "collision_boundaries": [
+    "Preserve historical PR #120/run evidence in the specialized handoff as provenance only.",
+    "Do not recreate va-claim-assistant-provider-preflight.yml or GitHub Models/GITHUB_TOKEN VACC inference.",
+    "Do not alter privacy, Master Records custody, Site projection, filing, publication, wallet, or activation authority.",
+    "Do not introduce non-TV/TVC credentials, GitHub/OIDC runtime authority, hosted provider fallback, repository writeback, artifact transport, or third-party runtime authority."
+  ],
+  "expected_evidence": [
+    "validate-va-provider-preflight-hosted-path.yml absent",
+    "check_va_provider_preflight_hosted_path.py absent",
+    "historical hosted preflight evidence retained in specialized handoff",
+    "specialized handoff current continuation remains task 023 / issue 142",
+    "Architecture Guard PASS",
+    "global validate PASS",
+    "PR merged and claim released",
+    "post-merge workflow census directly observed"
+  ],
+  "next_executable_action": "Delete the superseded hosted-preflight wrapper and obsolete validator, update specialized/canonical handoffs, validate exact head, merge, release claim, and recount workflows.",
+  "next_task_after_release": "Classify the next remaining default-branch workflow surface against canonical owners and the <=2 target.",
+  "authority_effect": false,
+  "activation_effect": false
+}
