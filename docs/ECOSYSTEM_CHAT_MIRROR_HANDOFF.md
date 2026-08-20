@@ -9,23 +9,23 @@ branch: main
 canonical_runtime_owner: StegVerse-org/LLM-adapter#18
 canonical_model_runtime_owner: StegVerse-002/micro-node-runtime#16/#22
 canonical_binding_task: tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json
-heartbeat_continuation_owner: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
+canonical_execution_owner: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
+recovery_task: RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28
 custody_reconstruction_owner: master-records/orchestration
+credential_authority: TV/TVC
 third_party_deployment_dependency: NONE_ALLOWED
 third_party_inference_platform_dependency: NONE_ALLOWED
 production_provider_path: STEGVERSE_LOCAL_PRIVATE_ENDPOINT
-production_activation_state: BLOCKED_CANONICAL_SOVEREIGN_BINDING_AND_RECONSTRUCTION_NOT_OBSERVED
+production_activation_state: ACTIVE_MACHINE_CONTINUATION_RECOVERY_THEN_SAME_EXECUTION_PROOF
 session_specific_transport_task: LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019 COMPLETE_RELEASED
 session_consolidation: MERGED_INTO_CANONICAL_WORKSTREAM
 ```
 
-GitHub, GitHub Models, Render, Cloudflare, and similar services may remain mirrors, validation surfaces, or optional interoperability paths. None is production model-execution, heartbeat, custody, admissibility, or availability authority.
+GitHub, GitHub Models, Render, Cloudflare, and similar services may remain mirrors, validation surfaces, or optional interoperability paths. None is production model-execution, heartbeat, custody, admissibility, route, or availability authority.
 
-## Formally developed local model — complete
+## Formally developed local model — complete and released
 
-The descriptive “select a local model/runtime” step is gone. The canonical model/runtime implementation is `StegVerse-002/micro-node-runtime/SOVEREIGN-LOCAL-MODEL-001`, owned by micro-node issues #16/#22. It contains an actual locally developed reference language model, local corpus/training path, deterministic discovery, launch, OpenAI-compatible loopback/private serving, real-process inference proof, usage/latency measurement, and validation.
-
-Canonical retained evidence:
+The descriptive “select a local model/runtime” step is gone. `StegVerse-002/micro-node-runtime/SOVEREIGN-LOCAL-MODEL-001` contains the repository-developed reference language model, repository corpus/training path, deterministic discovery, launch, OpenAI-compatible private serving, real-process inference proof, token/latency measurement, and validation.
 
 ```text
 state: COMPLETE_RELEASED
@@ -37,17 +37,11 @@ model_output_grants_authority: false
 third_party_inference_required: false
 ```
 
-The reference model proves a real local/trainable execution path; it is not represented as a production-scale foundation LLM.
+`LLMA-LOCAL-RUNTIME-MODEL-017` is superseded as product authority and retained only as a compatibility fixture.
 
-The separate LLM-adapter-local task `LLMA-LOCAL-RUNTIME-MODEL-017` is formally `SUPERSEDED` as product authority and is retained only as a compatibility/conformance fixture.
+## Sovereign provider and transport/evidence path — complete and released
 
-## Sovereign provider and transport/evidence path — complete
-
-`StegVerseLocalHTTPProviderClient` is installed in `llm_adapter/http_provider_clients.py` and accepts only loopback/private/link-local/StegVerse-local endpoints in sovereign mode. It requires no external provider credential and leaves governance outside provider execution.
-
-Session task `LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019` extended the provider seam so exact model hash, local-training metadata, measured prompt/completion/total tokens, and measured latency survive the provider boundary and enter the existing provider-usage evidence path. It uses the existing Master Records usage submission path and preserves missing custody as incomplete rather than success.
-
-Task 019 release evidence:
+`StegVerseLocalHTTPProviderClient` accepts loopback/private/link-local/StegVerse-local endpoints in sovereign mode without external provider credentials. Task `LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019` preserves model hash, local-training metadata, measured prompt/completion/total tokens, and measured latency through the provider boundary and into the existing Master Records usage path.
 
 ```text
 state: COMPLETE_RELEASED
@@ -57,93 +51,114 @@ merged_main_binding_run: 31342485740 SUCCESS
 merged_main_binding_job: 93318434329 SUCCESS
 merged_main_binding_artifact: 9046241885
 artifact_digest: sha256:99216c44a21cafd619d900c8fcb79d73f8fff7dcb9707045e4c0da77fccfc6bc
-merged_main_validate_run: 31342485736 SUCCESS
-merged_main_architecture_guard_run: 31342485765 SUCCESS
 ```
 
-Task 019 explicitly does **not** satisfy canonical production binding task 018 and does not grant product activation.
+## Superseded blocker — do not restore
 
-## Exact current blocker and canonical continuation
+The former failure mode in which LLM-adapter Actions attempted to check out the private `StegVerse-002/micro-node-runtime` repository is superseded by task 018. GitHub source-repository credentials do not belong in the production runtime path.
 
 ```text
-task_id: LLMA-CANONICAL-LOCAL-MODEL-BINDING-018
-state: BLOCKED
-canonical_model_owner: StegVerse-002/micro-node-runtime#22
-provider_owner: StegVerse-org/LLM-adapter#18
-active_observer: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
-blocker: LLM-adapter Actions credential cannot read private StegVerse-002/micro-node-runtime
-machine_observable_release_condition: a repository-native lane with access to both private repositories executes the canonical HTTP contract, OR a sovereign StegVerse carrier presents the canonical private endpoint directly to LLM-adapter
-human_recheck_required: false
+superseded_blocker: LLM-adapter Actions credential cannot read private micro-node-runtime
+superseded_workflow: canonical-sovereign-local-model-binding.yml
+superseded_workflow_deleted_commit: e0c3c1e5d683d3066f869f205bc9034e630c2efb
+github_token_required: false
+github_actions_production_role: false
+credential_requirement_for_repository_local_model: NONE
 ```
 
-This blocker is not “choose a model.” The model exists and is released. The remaining boundary is executing the canonical private model on a carrier that can be consumed by LLM-adapter.
+Do not reintroduce cross-private-repository checkout, PATs, GitHub runtime credentials, or hosted control-plane authority as an Ecosystem Chat activation requirement.
 
-## Production completion sequence
+## Current execution state — recovery is already HANDOFF_READY
 
-The canonical machine-owned continuation is:
+The canonical recovery registry in `StegVerse-Labs/.github/control/worker-registry.d/ecosystem-chat-orphan-recovery-hb28.json` records:
 
-1. Task 018 / `.github#60` observes or launches the released canonical micro-node model on a StegVerse-owned/federated carrier.
-2. LLM-adapter consumes the canonical private endpoint through `StegVerseLocalHTTPProviderClient`.
-3. The real governed execution traverses E1 → model worker → E2.
-4. Provider/model usage is measured in that same execution.
-5. `master-records/orchestration` records provider-usage reconstruction `PASS`.
-6. `master-records/orchestration` records transition reconstruction `PASS` for the same execution.
-7. LLM-adapter produces immutable `receipts/ecosystem-chat-live-activation.verified.json` with `state=VERIFIED`, `blockers=[]`, valid result hash, and all authority flags false.
-8. `StegVerse-Labs/Site` imports it and reaches `ACTIVATION_COMPLETE`.
-9. `GCAT-BCAT-Engine/Publisher`, `StegVerse-Labs/admissibility-wiki`, and `StegVerse-002/stegguardian-wiki` record verified ingestion.
+```text
+state: HANDOFF_READY
+executor_binding: AUTHORIZED
+required_capability: orphan_lifecycle_reconstruction
+fresh_fence_required: true
+minimum_fencing_token_exclusive: 20
+g18_terminalization_required: false
+worker_registry_cleanup_required: false
+github_token_required: false
+human_action_required: false
+```
 
-No one of these levels implies the next.
+The recovery-only worker cannot execute parent inference authority. Any compliant StegVerse task-control executor advertising `orphan_lifecycle_reconstruction` may atomically acquire the recovery task under a fresh fencing token strictly greater than 20 and execute the bounded reconstruction.
+
+Neither G18 terminalization nor a WorkerCoordinator-specific promotion cycle is a prerequisite. HB31 `RELEASE_COMPLETE` is sufficient as the released heartbeat reference for this activation chain; heartbeat reference state does not itself grant execution authority.
+
+## Exact production completion sequence
+
+1. Acquire the already `HANDOFF_READY` recovery task under a fresh authorized fence `>20`.
+2. Execute `ecosystem-chat-orphan-recovery-worker` against the ended HB25/G20 checkpoint and canonical Master Records lifecycle custody.
+3. Persist recovery `PASS`; old G20 claim/fence remain unusable and no parent inference authority is inherited.
+4. Parent `SHWP-ECOSYSTEM-CHAT-INFERENCE-001` independently acquires another fresh authorized fence `>20`.
+5. Launch/observe the released canonical micro-node model as a live private process and keep it alive for the whole same-carrier execution.
+6. TVC evaluates that exact endpoint and emits `ROUTE_ADMITTED` with `credential_requirement=NONE`, `github_token_required=false`, and no third-party execution dependency.
+7. LLM-adapter consumes that exact admitted endpoint through `StegVerseLocalHTTPProviderClient`.
+8. Real governed execution traverses E1 → model worker → E2.
+9. Provider/model usage is measured and persisted for that execution.
+10. `master-records/orchestration` records provider-usage reconstruction `PASS`.
+11. `master-records/orchestration` records transition reconstruction `PASS` for the same execution and binds `same_execution=true`.
+12. LLM-adapter emits immutable `receipts/ecosystem-chat-live-activation.verified.json` with `state=VERIFIED`, `blockers=[]`, valid result hash, and no authority escalation.
+13. `StegVerse-Labs/Site` imports the verified receipt and reaches its Ecosystem Chat activation condition.
+14. Publisher, admissibility-wiki, and stegguardian-wiki consume the verified Site propagation under their existing contracts.
+
+No earlier level implies the next.
+
+## Same-carrier runtime seam
+
+`verify_sovereign_model_runtime.py` is proof-oriented and may terminate its probe process. Production activation therefore requires the canonical live model process to remain available across health/model-identity proof → TVC route admission → LLM-adapter request → E1/model/E2 evidence → usage persistence → Master Records custody/reconstruction. The process may be retired only after the bounded same-execution evidence path completes.
 
 ## Collision and authority boundaries
 
-- Do not restore GitHub Models, Render, or Cloudflare as production blockers.
+- Do not restore GitHub Models, Render, Cloudflare, GitHub Actions, PATs, or private-repository checkout as production blockers or authorities.
 - Do not create another local model/runtime authority in LLM-adapter.
-- Do not duplicate the heartbeat worker; `.github#60` owns the recheck.
-- Do not create a second governance/admissibility engine or Master Records custody authority.
-- Do not call a compatibility fixture or CI process a production-scale LLM activation.
-- Provider output, measured usage, custody, reconstruction, workflow success, task release, or session archival do not grant execution authority.
+- Do not create a second heartbeat, worker registry, TV/TVC route authority, governance engine, or Master Records custody path.
+- Recovery authority is continuity-only and may not execute parent inference.
+- Provider output, usage measurement, workflow success, recovery completion, custody, or reconstruction alone do not grant activation authority.
+- Activation requires the exact same-execution zero-blocker receipt and downstream verified consumption.
 
 ## Durable execution inventory
 
 ```text
-SOVEREIGN-LOCAL-MODEL-001 | micro-node-runtime #16/#22 | COMPLETE_RELEASED | run 31339534741 / artifact 9045384610 | next: canonical carrier execution
-LLMA-LOCAL-RUNTIME-MODEL-017 | LLM-adapter | SUPERSEDED | compatibility evidence only | no product authority
-LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019 | LLM-adapter #18 | COMPLETE_RELEASED | PR #134 / run 31342485740 / artifact 9046241885 | MERGED INTO task 018 + .github#60
-LLMA-CANONICAL-LOCAL-MODEL-BINDING-018 | LLM-adapter #18 + micro-node #16/#22 + .github#60 | BLOCKED | exact credential/carrier boundary recorded in task file | next: execute canonical private endpoint
-SHWP-ECOSYSTEM-CHAT-INFERENCE-001 | StegVerse-Labs/.github#60 | ACTIVE_BLOCKED_RECHECKING | heartbeat registry/checkpoint/receipt | release: canonical sovereign execution evidence observed
-Master Records same-execution reconstruction | master-records/orchestration | BLOCKED_ON_CANONICAL_EXECUTION | provider-usage + transition PASS required | next after canonical execution
-Site activation | StegVerse-Labs/Site | BLOCKED_ON_VERIFIED_RECEIPT | no VERIFIED receipt yet | import only after zero blockers
-Downstream propagation | Publisher/admissibility-wiki/stegguardian-wiki | BLOCKED_ON_SITE_VERIFIED_ACTIVATION | 0/3 verified ingestion | consume verified Site propagation only
+SOVEREIGN-LOCAL-MODEL-001 | micro-node-runtime #16/#22 | COMPLETE_RELEASED
+LLMA-LOCAL-RUNTIME-MODEL-017 | LLM-adapter | SUPERSEDED
+LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019 | LLM-adapter #18 | COMPLETE_RELEASED
+LLMA-CANONICAL-LOCAL-MODEL-BINDING-018 | MERGED_INTO_CANONICAL_WORKSTREAM | next: recovery then exact sovereign endpoint execution
+RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28 | HANDOFF_READY | next: fresh fence >20 and reconstruction now
+SHWP-ECOSYSTEM-CHAT-INFERENCE-001 | ACTIVE_MACHINE_CONTINUATION | next after recovery: fresh parent fence >20 and same-carrier execution
+Master Records same-execution reconstruction | WAITING_ON_REAL_EXECUTION | provider-usage + transition PASS required
+Site activation | WAITING_ON_VERIFIED_RECEIPT
+Downstream propagation | WAITING_ON_VERIFIED_SITE_ACTIVATION
 ```
 
-## Session consolidation and archive posture
-
-All unique requirements introduced by the originating session have either been implemented or durably transferred. The session-specific transport/evidence implementation is merged, validated on `main`, and released. The canonical model is formally developed and released upstream. The remaining product work has explicit owners, a durable blocked task, a machine-owned heartbeat observer, exact release conditions, and downstream destinations.
+## Session consolidation
 
 ```text
 MERGED INTO: StegVerse-org/LLM-adapter/tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json
 ALSO CONTINUED BY: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
+RECOVERY: StegVerse-Labs/.github/control/worker-registry.d/ecosystem-chat-orphan-recovery-hb28.json
 MODEL OWNER: StegVerse-002/micro-node-runtime#16/#22
 CUSTODY OWNER: master-records/orchestration
 unique_chat_owned_work_remaining: false
-session_archive_ready: true
 product_activation_complete: false
 ```
-
-Archiving the originating conversation must never be interpreted as `ACTIVATION_COMPLETE`. Only the canonical sovereign execution, same-execution reconstruction, immutable verified receipt, Site activation, and downstream verified ingestion can establish product activation.
 
 ## Completion accounting
 
 ```text
 session-specific developed surfaces: 10/10
 session-specific scaffolding/stubs: 0
-session-specific validation: 5/5
 session-specific implementation claim: RELEASED
 canonical local model development/runtime: COMPLETE_RELEASED
-canonical production binding: BLOCKED / task 018
+canonical provider/transport evidence seam: COMPLETE_RELEASED
+recovery registry admission: HANDOFF_READY
+fresh recovery execution: PENDING
+fresh parent sovereign execution: PENDING
 same-execution reconstruction: 0/2
 immutable verified activation receipt: 0/1
 Site activation: 0/1
 downstream verified ingestion: 0/3
-session consolidation: COMPLETE / archive-safe
 ```
