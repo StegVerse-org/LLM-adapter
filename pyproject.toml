@@ -60,4 +60,4 @@ Issues = "https://github.com/StegVerse-org/LLM-adapter/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["llm_adapter*"]
+include = ["llm_adapter*", "va_claim_assistant*"]
