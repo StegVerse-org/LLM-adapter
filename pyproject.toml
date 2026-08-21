@@ -51,7 +51,7 @@ stegnode-bootstrap = "llm_adapter.node_bootstrap:main"
 stegnode = "llm_adapter.node_service:main"
 stegnode-autostart = "llm_adapter.node_autostart:main"
 stegverse-user-llm-service = "llm_adapter.user_llm_service:main"
-stegverse-service-gateway = "llm_adapter.math_solver_gateway:main"
+stegverse-service-gateway = "llm_adapter.runtime_gateway:main"
 
 [project.urls]
 Homepage = "https://github.com/StegVerse-org/LLM-adapter"
