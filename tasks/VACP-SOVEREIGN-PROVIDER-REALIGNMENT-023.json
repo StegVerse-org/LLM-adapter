@@ -1,17 +1,29 @@
 {
   "schema_version": "STEGVERSE-TASK-v1",
   "task_id": "VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023",
-  "title": "Supersede VACC GitHub-token provider route with sovereign local model",
+  "title": "Activate VACC on the sovereign local-model route",
   "originating_goal": "Connect VACC through LLM-adapter using only TV/TVC-managed authority and no non-TV/TVC secret/token or GitHub runtime credential.",
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "main",
   "canonical_issue": "StegVerse-org/LLM-adapter#142",
   "parent_runtime_issue": "StegVerse-org/LLM-adapter#90",
-  "state": "MACHINE_OWNED_BLOCKED_ON_SOVEREIGN_ROUTE_ACTIVATION",
+  "state": "MACHINE_OWNED_READY_FOR_SOVEREIGN_OBSERVATION",
   "claim_state": "MACHINE_OWNED",
-  "execution_owner": "resident sovereign heartbeat -> StegVerse-Labs/TVC -> StegVerse-org/LLM-adapter -> master-records/orchestration",
+  "execution_owner": "resident sovereign heartbeat -> StegVerse-Labs/TVC -> StegVerse-org/LLM-adapter -> master-records/orchestration -> persistent VACC runtime",
   "source_model_handoff": "StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md",
   "route_task": "StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json",
+  "implemented_runtime_surfaces": [
+    "llm_adapter/va_claims_runtime_core.py",
+    "llm_adapter/va_claims_runtime_gateway.py",
+    "llm_adapter/va_runtime_http_server.py",
+    "llm_adapter/runtime_gateway.py",
+    "va_claim_assistant/source-registry.site-projection.json",
+    "tests/test_va_claims_runtime_gateway.py"
+  ],
+  "carrier_integration_surfaces": [
+    "StegVerse-Labs/.github/workers/va_conversational_runtime_bridge.py",
+    "StegVerse-Labs/.github/workers/master_records_sovereign_reconstruction_bridge.py"
+  ],
   "supersedes_provider_activation_paths": [
     "receipts/va-claim-assistant-provider-execution-authority.github-models.v1.json",
     "requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json",
@@ -27,8 +39,18 @@
     "hosted_provider_fallback": "DISALLOWED",
     "model_output_authority": "NONE"
   },
+  "implemented_behavior": [
+    "plain-language VA request classification across claims, housing, education, health care, Community Care, pharmacy/billing, VR&E, caregiver/family, burial/memorial, and urgent safety",
+    "admitted official VA/federal source projection consumed locally",
+    "exact TVC ROUTE_ADMITTED runtime-proof hash and endpoint binding",
+    "exact sovereign local-model execution through existing execute_verified_local_model path",
+    "provider-usage custody and reconstruction required before a response is accepted",
+    "dependency-light persistent HTTP service suitable for the sovereign carrier",
+    "private documents and filing remain fail-closed",
+    "no GitHub credential is consumed or forwarded"
+  ],
   "preserved_vacc_gates": [
-    "privacy_guarded_dispatch PASS before model input",
+    "privacy guarded dispatch before model input",
     "admitted VA/federal public grounding and provenance",
     "fresh TVC route admission",
     "bounded response generation",
@@ -36,23 +58,22 @@
     "same-execution reconstruction PASS",
     "Site projection only after verified activation evidence"
   ],
-  "blocked_reason": "Resident sovereign heartbeat has not yet produced post-HB29 admitted local-model execution with same-execution custody/reconstruction evidence.",
-  "machine_observable_release_condition": [
-    "resident heartbeat advances beyond HB29 under a fresh authorized fence",
-    "canonical private language-model runtime proof exists",
+  "remaining_activation_conditions": [
+    "recovery task receives independently admitted fresh fence greater than ended G20 fence",
+    "parent inference task receives its own fresh fence",
+    "canonical private language-model runtime proof exists and remains live",
     "TVC emits ROUTE_ADMITTED with credential_requirement NONE",
-    "TVC result records github_token_required false",
-    "VACC request is executed through LLM-adapter against that exact admitted private endpoint",
-    "privacy guard is PASS before model input",
-    "Master Records custody returns RECORDED",
-    "same-execution reconstruction returns PASS",
-    "Site projection is updated from immutable execution evidence"
+    "a real VACC request executes through the implemented runtime against that exact endpoint",
+    "Master Records custody returns RECORDED and same-execution reconstruction PASS",
+    "persistent VACC runtime readiness returns READY",
+    "an admitted public HTTPS transport is bound without gaining model or execution authority",
+    "Site performs a real end-to-end conversational request and updates its projection from immutable evidence"
   ],
-  "next_executable_action": "The existing resident sovereign heartbeat/TVC machine lane executes the released local model after its carrier/fence predicates pass; VACC issue #90 then consumes that admitted endpoint. No chat/session may substitute a GitHub credential or manually launch a competing model runtime.",
+  "next_executable_action": "The already-registered resident recovery/parent worker chain consumes these implemented runtime surfaces on its next independently admitted execution opportunity. After same-execution reconstruction PASS, the carrier bridge starts the persistent VACC HTTP runtime automatically; the following transition binds public HTTPS transport and observes Site -> runtime -> Site.",
   "collision_boundaries": [
-    "Do not create a second heartbeat, local model runtime, provider gateway, TVC authority, privacy path, or Master Records custody path.",
+    "Do not create a second heartbeat, local model runtime, provider authority, TVC authority, privacy path, or Master Records custody path.",
+    "The new VACC HTTP service is an application gateway consuming the existing admitted provider path, not a competing provider gateway.",
     "Do not authorize or consume GitHub Models/GITHUB_TOKEN for VACC inference.",
-    "Do not mutate Site outside its canonical orchestrator.",
     "Do not treat source/profile validation as live VACC activation."
   ],
   "authority_effect": false,
