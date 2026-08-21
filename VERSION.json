@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "component_id": "STEGVERSE-LLM-ADAPTER-ECOSYSTEM-CHAT-RUNTIME",
+  "repository": "StegVerse-org/LLM-adapter",
+  "component_version": "2026.08.21-dev.1",
+  "version_stage": "DEVELOPMENT",
+  "release": {
+    "tag": null,
+    "commit": null,
+    "release_evidence": []
+  },
+  "released_capabilities": [
+    {
+      "capability_id": "LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019",
+      "state": "COMPLETE_RELEASED",
+      "merge_commit": "8be63bfd2eddae4092b945032de956e4e9a63576",
+      "workflow_run": 31342485740,
+      "artifact_id": 9046241885
+    }
+  ],
+  "runtime": {
+    "state": "PENDING",
+    "evidence": [
+      "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
+      "tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json"
+    ],
+    "next_required_state": "RECOVERY_THEN_SAME_EXECUTION_PROOF"
+  },
+  "activation": {
+    "state": "PENDING",
+    "evidence": [
+      "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md"
+    ],
+    "required_receipt": "receipts/ecosystem-chat-live-activation.verified.json"
+  },
+  "source_of_truth": "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
+  "version_contract": "StegVerse-Labs/Site:docs/ECOSYSTEM_COMPONENT_VERSION_CONTRACT.md",
+  "credential_authority": "TV/TVC",
+  "github_token_runtime_authority": false,
+  "third_party_production_authority": false,
+  "authority_effect": "NONE"
+}
