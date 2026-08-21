@@ -1,0 +1,40 @@
+name: Check component version
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'VERSION.json'
+      - 'scripts/check_component_version.py'
+      - 'docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md'
+      - '.github/workflows/check-component-version.yml'
+  pull_request:
+    paths:
+      - 'VERSION.json'
+      - 'scripts/check_component_version.py'
+      - 'docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md'
+      - '.github/workflows/check-component-version.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-component-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate component version declaration
+        run: python scripts/check_component_version.py
+      - name: Preserve authority boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d = json.loads(Path('VERSION.json').read_text())
+          assert d['authority_effect'] == 'NONE'
+          assert d['credential_authority'] == 'TV/TVC'
+          assert d['github_token_runtime_authority'] is False
+          assert d['third_party_production_authority'] is False
+          print('COMPONENT_VERSION_VALIDATION_AUTHORITY_EFFECT=NONE')
+          PY
