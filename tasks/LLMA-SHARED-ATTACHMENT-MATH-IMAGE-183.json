@@ -2,7 +2,7 @@
   "schema": "stegverse.llm_adapter.task.v1",
   "task_id": "LLMA-SHARED-ATTACHMENT-MATH-IMAGE-183",
   "issue": 183,
-  "state": "SOURCE_IMPLEMENTATION_IN_PROGRESS",
+  "state": "SOURCE_VALIDATED_GLOBAL_CI_DEPENDENCY_BLOCKED",
   "goal": "Reuse the existing Service Gateway artifact-intake plane for mathematics images and add a real, bounded backend image-review state without duplicating HIL, provider, visual-runtime, or custody authority.",
   "parent_owners": {
     "shared_gateway": "StegVerse-org/LLM-adapter#72",
@@ -14,6 +14,7 @@
     "llm_adapter/attachment_intake.py",
     "tests/test_shared_attachment_math_image.py",
     "llm_adapter/deployed_gateway.py",
+    "llm_adapter/combined_gateway.py",
     "pyproject.toml",
     "docs/SHARED_ATTACHMENT_MATH_IMAGE_MIRROR_HANDOFF.md",
     "tasks/LLMA-SHARED-ATTACHMENT-MATH-IMAGE-183.json"
@@ -30,6 +31,36 @@
     "interpreted_mathematical_transcription": "NOT_PRODUCED_BY_THIS_SLICE",
     "math_capable_visual_transcription": "NEXT_BOUNDED_CAPABILITY"
   },
+  "validation": {
+    "implementation_head": "16d3ceb456c69f32213089b88a3dcbdd9948d817",
+    "focused_functional_harness": "PASS",
+    "focused_behaviors": [
+      "real PNG decode",
+      "canonical eight-feature output bounded 0..1",
+      "content-type spoof does not override decoded format",
+      "exact SHA-256 binding and byte preservation",
+      "invalid image rejection",
+      "declared hash mismatch rejection",
+      "same-source image review idempotency",
+      "source_image distinct from interpreted_mathematical_transcription",
+      "transcription remains NOT_PRODUCED"
+    ],
+    "hardening": [
+      "duplicate attachment id is idempotent only for identical profile/hash/media and conflicting bytes fail 409",
+      "decoded pixel bound checked before full image load",
+      "Python 3.9 compatibility preserved by avoiding PEP 604 union syntax",
+      "portable node service extra installs Pillow and pillow-heif",
+      "node advertisement exposes attachment intake and math image review"
+    ],
+    "validate_run": 32571850375,
+    "validate_result": "FAIL_BEFORE_PROJECT_TESTS",
+    "capability_runtime_run": 32571850359,
+    "capability_runtime_result": "FAIL_BEFORE_PROJECT_TESTS",
+    "hosted_failure_step": "Install runtime/validation dependencies",
+    "hosted_failure_reason": "existing direct protected StegCore source dependency cannot be anonymously installed by credential-clean workflow",
+    "failure_owned_by_issue_183_source": false,
+    "distribution_repair_owner": "StegVerse SDK + TVC portable artifact publication chain"
+  },
   "authority": {
     "credential_authority": "TV/TVC",
     "github_token_runtime_authority": "NONE",
@@ -42,11 +73,11 @@
     "model_output_execution_authority": false
   },
   "completion_requires": [
-    "real image decode validation passes",
-    "exact accepted bytes and SHA-256 reconstruct",
+    "focused source validation passes",
+    "real image decode and exact accepted bytes/hash are implemented",
     "canonical eight normalized visual features are produced",
     "content-type spoofing does not override decoded format",
-    "invalid image, oversize image, unknown profile, and hash mismatch fail closed",
+    "invalid image, oversize image, unknown profile, hash mismatch, and conflicting duplicate id fail closed",
     "math review is idempotent and source-hash bound",
     "source_image remains distinct from interpreted_mathematical_transcription",
     "transcription remains NOT_PRODUCED until a math-capable visual transcription runtime is admitted",
