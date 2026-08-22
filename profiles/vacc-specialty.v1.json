@@ -1,0 +1,52 @@
+{
+  "schema": "stegverse.chat_specialty_profile.v1",
+  "specialty_id": "vacc",
+  "display_name": "VACC",
+  "purpose": "VA-specialty conversation and navigation through the shared Ecosystem Chat LLM surface.",
+  "base_llm_profile": "ecosystem-chat-llm",
+  "inherits_full_llm_surface": true,
+  "input_modalities": ["text", "image", "file"],
+  "context_policy": {
+    "public_information_profile_ref": "profiles/vacc-public-information-llm.v1.json",
+    "claims_profile_ref": "profiles/va-claims-chat-llm.v1.json",
+    "broad_va_intent_supported": true,
+    "official_source_grounding_required_for_current_external_va_facts": true,
+    "private_record_use_requires_separate_privacy_admission": true,
+    "claims_are_a_deep_subdomain_not_the_entire_specialty": true
+  },
+  "response_behaviors": [
+    "plain_language_conversation",
+    "intent_relevant_authoritative_links",
+    "source_and_uncertainty_labels",
+    "ask_targeted_followup_when_needed",
+    "transition_to_deterministic_va_workflow_when_useful"
+  ],
+  "candidate_tools": [
+    {
+      "name": "va_official_source_retrieval",
+      "purpose": "Retrieve admitted VA/federal public information under the existing VACC source-policy implementation.",
+      "execution_state": "CANDIDATE_ONLY_NOT_EXECUTED",
+      "execution_authority": false
+    },
+    {
+      "name": "va_guided_workflow_transition",
+      "purpose": "Propose transition into an admitted VA guide, claim, record, or document workflow.",
+      "execution_state": "CANDIDATE_ONLY_NOT_EXECUTED",
+      "execution_authority": false
+    }
+  ],
+  "authority_policy": {
+    "specialty_selection_is_execution_authority": false,
+    "model_output_is_execution_authority": false,
+    "tool_candidate_is_execution_authority": false,
+    "provider_runtime_is_duplicated": false,
+    "custody_path_is_duplicated": false
+  },
+  "product_invariants": {
+    "single_shared_conversation": true,
+    "single_shared_provider_runtime": true,
+    "claims_profile_boundary_preserved": true,
+    "veteran_retains_submission_authority": true,
+    "tv_tvc_only_credential_authority": true
+  }
+}
