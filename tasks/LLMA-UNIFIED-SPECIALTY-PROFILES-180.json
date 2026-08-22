@@ -1,0 +1,37 @@
+{
+  "schema": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-UNIFIED-SPECIALTY-PROFILES-180",
+  "issue": 180,
+  "state": "SOURCE_IMPLEMENTATION_IN_PROGRESS",
+  "goal": "Represent VACC and mathematics as specialty capability profiles consumed by the single canonical ecosystem-chat-llm surface.",
+  "paths": [
+    "contracts/chat-specialty-profile.schema.json",
+    "profiles/vacc-specialty.v1.json",
+    "profiles/math-educator-specialty.v1.json",
+    "llm_adapter/chat_specialties.py",
+    "tests/test_chat_specialty_profiles.py",
+    "docs/UNIFIED_CHAT_SPECIALTIES_MIRROR_HANDOFF.md",
+    "tasks/LLMA-UNIFIED-SPECIALTY-PROFILES-180.json"
+  ],
+  "canonical_base_llm_profile": "ecosystem-chat-llm",
+  "runtime_owner": "StegVerse-org/LLM-adapter#18",
+  "vacc_route_owner": "StegVerse-org/LLM-adapter#90",
+  "site_owner": "StegVerse-Labs/Site#239",
+  "math_site_owner": "StegVerse-Labs/Site#240",
+  "authority": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_required": false,
+    "provider_runtime_created": false,
+    "execution_authority_created": false,
+    "custody_path_created": false,
+    "site_mutation_authority": false
+  },
+  "completion_requires": [
+    "deterministic specialty validation passes",
+    "VACC and math both bind ecosystem-chat-llm",
+    "math image source and interpreted transcription remain distinct states",
+    "candidate tools retain execution_authority false",
+    "no duplicate provider/runtime/custody path"
+  ]
+}

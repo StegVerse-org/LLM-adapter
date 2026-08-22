@@ -1,0 +1,58 @@
+{
+  "schema": "stegverse.chat_specialty_profile.v1",
+  "specialty_id": "mathematics-educator",
+  "display_name": "Mathematics Educator",
+  "purpose": "Broad mathematics education through the shared Ecosystem Chat LLM surface, with governed solver and verification tools as optional candidates.",
+  "base_llm_profile": "ecosystem-chat-llm",
+  "inherits_full_llm_surface": true,
+  "input_modalities": ["text", "image", "file"],
+  "context_policy": {
+    "subject_scope": ["arithmetic","algebra","geometry","trigonometry","precalculus","calculus","multivariable_calculus","differential_equations","linear_algebra","discrete_mathematics","probability","statistics","number_theory","abstract_algebra","real_analysis","complex_analysis","topology","differential_geometry","numerical_analysis","optimization","logic","set_theory","category_theory","mathematical_physics","history_of_mathematics","philosophy_of_mathematics"],
+    "educator_default": true,
+    "source_image_state": "source_image",
+    "interpreted_transcription_state": "interpreted_mathematical_transcription",
+    "transcription_is_source_fact": false,
+    "ambiguous_transcription_requires_visible_correction_path": true
+  },
+  "response_behaviors": [
+    "identify_math_type",
+    "explain_prerequisites",
+    "offer_hint",
+    "guided_solution",
+    "check_user_work",
+    "show_alternate_method",
+    "explain_why_method_works",
+    "generate_similar_problem",
+    "vary_difficulty",
+    "discuss_history_foundations_philosophy"
+  ],
+  "candidate_tools": [
+    {
+      "name": "governed_math_solver",
+      "purpose": "Propose deterministic or symbolic solving after the applicable governed decision boundary.",
+      "execution_state": "CANDIDATE_ONLY_NOT_EXECUTED",
+      "execution_authority": false
+    },
+    {
+      "name": "math_verifier",
+      "purpose": "Propose independent result or step verification without making successful calculation mathematical proof authority.",
+      "execution_state": "CANDIDATE_ONLY_NOT_EXECUTED",
+      "execution_authority": false
+    }
+  ],
+  "authority_policy": {
+    "specialty_selection_is_execution_authority": false,
+    "model_output_is_execution_authority": false,
+    "tool_candidate_is_execution_authority": false,
+    "provider_runtime_is_duplicated": false,
+    "custody_path_is_duplicated": false
+  },
+  "product_invariants": {
+    "single_shared_conversation": true,
+    "single_shared_provider_runtime": true,
+    "source_image_preserved_separately": true,
+    "transcription_correction_is_new_state": true,
+    "solver_success_is_not_proof_authority": true,
+    "tv_tvc_only_credential_authority": true
+  }
+}
