@@ -11,6 +11,7 @@ canonical_full_llm_profile: ecosystem-chat-llm
 runtime_owner: StegVerse-org/LLM-adapter#18
 vacc_route_owner: StegVerse-org/LLM-adapter#90
 math_site_owner: StegVerse-Labs/Site#240
+source_state: SOURCE_VALIDATED_GLOBAL_CI_DEPENDENCY_BLOCKED
 ```
 
 ## Product correction
@@ -66,6 +67,34 @@ Do not reopen or duplicate:
 - issue #90 VACC governed retrieval/runtime;
 - Master Records custody/reconstruction authority.
 
+## Validation evidence
+
+Focused validation was performed against implementation head `21a650e4eda96c4122a18d41a10e6a6ff952924a`.
+
+```text
+specialty invariants: 6/6 PASS
+JSON Schema Draft 2020-12 meta-validation: PASS
+VACC specialty manifest against schema: PASS
+mathematics specialty manifest against schema: PASS
+canonical base LLM for both specialties: ecosystem-chat-llm
+math source_image != interpreted_mathematical_transcription: PASS
+candidate tool execution_authority=false: PASS
+provider-runtime duplication rejection: PASS
+full-LLM inheritance loss rejection: PASS
+math transcription promotion to source fact rejection: PASS
+```
+
+Global dispatcher run `32553959905` failed before project tests at `Install validation dependencies`. The credential-clean job attempted the existing `.[dev]` direct Git dependency on `StegVerse-Labs/StegCore` and could not anonymously clone the current protected/private source. This failure predates and is outside the specialty source slice. It is the same repository-source/public-distribution defect already owned by the StegVerse SDK + TVC portable-artifact publication chain. This handoff does not authorize a GitHub-token workaround, repository visibility change, or parallel artifact publisher.
+
+Therefore:
+
+```text
+specialty source validation: PASS
+repository-wide credential-clean validation: BLOCKED_ON_EXISTING_DISTRIBUTION_DEPENDENCY
+provider/runtime activation effect: NONE
+Site activation effect: NONE
+```
+
 ## Authority boundary
 
 ```text
@@ -81,8 +110,12 @@ Site mutation authority: false
 Render production dependency: NONE
 ```
 
-## Validation gate
+## Completion / continuation
 
-Source completion requires deterministic tests proving both specialties bind `ecosystem-chat-llm`, preserve the full LLM surface, reject a duplicated provider/runtime or custody path, keep candidate tools non-authorizing, and preserve the mathematics image/transcription distinction.
+The bounded specialty source slice is implemented and focused-validated. Canonical completion still requires merge to `main` after a fresh collision check. After merge:
+- issue #90 consumes the VACC specialty for broad governed route execution;
+- Site#239 consumes the specialty contract after Site machine admission;
+- Site#240 consumes the mathematics specialty and replaces the independent/hardcoded hosted math path with the shared conversation + governed tool-candidate path;
+- issue #18 remains the sole provider/runtime owner.
 
 Source validation is not provider execution, Site activation, tool execution, custody, publication, or product activation.
