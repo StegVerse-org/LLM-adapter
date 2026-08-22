@@ -2,7 +2,7 @@
   "schema": "stegverse.llm_adapter.task.v1",
   "task_id": "LLMA-UNIFIED-SPECIALTY-PROFILES-180",
   "issue": 180,
-  "state": "SOURCE_IMPLEMENTATION_IN_PROGRESS",
+  "state": "SOURCE_VALIDATED_GLOBAL_CI_DEPENDENCY_BLOCKED",
   "goal": "Represent VACC and mathematics as specialty capability profiles consumed by the single canonical ecosystem-chat-llm surface.",
   "paths": [
     "contracts/chat-specialty-profile.schema.json",
@@ -27,11 +27,25 @@
     "custody_path_created": false,
     "site_mutation_authority": false
   },
+  "validation": {
+    "implementation_head": "21a650e4eda96c4122a18d41a10e6a6ff952924a",
+    "focused_invariants": "6/6 PASS",
+    "json_schema_draft_2020_12": "PASS",
+    "vacc_manifest_schema": "PASS",
+    "math_manifest_schema": "PASS",
+    "global_validate_run": 32553959905,
+    "global_validate_result": "FAIL_BEFORE_PROJECT_TESTS",
+    "global_validate_failure_step": "Install validation dependencies",
+    "global_validate_failure_reason": "credential-clean pip install attempts anonymous git clone of StegVerse-Labs/StegCore from the dev extra and cannot access the current protected/private source",
+    "failure_owned_by_specialty_code": false,
+    "distribution_repair_owner": "StegVerse SDK + TVC portable artifact publication chain"
+  },
   "completion_requires": [
     "deterministic specialty validation passes",
     "VACC and math both bind ecosystem-chat-llm",
     "math image source and interpreted transcription remain distinct states",
     "candidate tools retain execution_authority false",
-    "no duplicate provider/runtime/custody path"
+    "no duplicate provider/runtime/custody path",
+    "merge to canonical main after fresh collision check"
   ]
 }
