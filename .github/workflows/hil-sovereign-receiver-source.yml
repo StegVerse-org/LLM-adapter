@@ -1,0 +1,121 @@
+name: hil-sovereign-receiver-source
+
+on:
+  push:
+    branches:
+      - feat/hil-sovereign-receiver-185
+  pull_request:
+    paths:
+      - 'llm_adapter/hil_sovereign_receiver_profile.py'
+      - 'llm_adapter/combined_gateway.py'
+      - 'tests/test_hil_sovereign_receiver_profile.py'
+      - 'tasks/LLMA-HIL-SOVEREIGN-RECEIVER-021.json'
+      - 'docs/HIL_RUNTIME_MIRROR_HANDOFF.md'
+      - '.github/workflows/hil-sovereign-receiver-source.yml'
+
+permissions: {}
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Refuse credential-bearing environment
+        shell: bash
+        run: |
+          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT TVC_EPHEMERAL_GITHUB_TOKEN STEGVERSE_PROVIDER_TOKEN STEGVERSE_MASTER_RECORDS_TOKEN STEGVERSE_HIL_REVIEW_TOKEN STEGVERSE_HIL_PUBLICATION_TOKEN OPENAI_API_KEY ANTHROPIC_API_KEY; do
+            if [ -n "${!key:-}" ]; then
+              echo "credential_exposed:$key"
+              exit 1
+            fi
+          done
+
+      - name: Fetch exact source anonymously
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git init .
+          git remote add origin https://github.com/StegVerse-org/LLM-adapter.git
+          git -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+
+      - name: Validate sovereign HIL receiver contract
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import tempfile
+          from pathlib import Path
+          from llm_adapter.hil_sovereign_receiver_profile import SovereignHILProfileError, apply_sovereign_hil_receiver_profile
+
+          inactive = {}
+          result = apply_sovereign_hil_receiver_profile(inactive)
+          assert result['state'] == 'INACTIVE_NON_SOVEREIGN_RUNTIME'
+          assert result['participant_machine_required'] is False
+          assert result['developer_machine_required'] is False
+          assert result['github_hosted_runtime_required'] is False
+          assert result['third_party_runtime_required'] is False
+
+          active = {
+              'STEGVERSE_RUNTIME_PROFILE': 'sovereign-carrier',
+              'STEGVERSE_SOVEREIGN_STATE_DURABLE': 'true',
+              'STEGVERSE_SOVEREIGN_STATE_DIR': '/var/lib/stegverse',
+          }
+          result = apply_sovereign_hil_receiver_profile(active)
+          assert result['state'] == 'ACTIVE_SOVEREIGN_RECEIVER'
+          assert active['STEGVERSE_HIL_INTAKE_ENABLED'] == 'true'
+          assert active['STEGVERSE_HIL_DATA_DIR'] == '/var/lib/stegverse/hil-v1.1'
+          assert active['STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS'] == 'true'
+          assert result['credential_authority'] == 'TV/TVC'
+          assert result['credential_requirement'] == 'NONE_FOR_PARTICIPANT_INTAKE'
+
+          try:
+              apply_sovereign_hil_receiver_profile({
+                  'STEGVERSE_RUNTIME_PROFILE': 'sovereign-carrier',
+                  'STEGVERSE_SOVEREIGN_STATE_DIR': '/var/lib/stegverse',
+              })
+          except SovereignHILProfileError as exc:
+              assert str(exc) == 'sovereign_state_durability_not_attested'
+          else:
+              raise AssertionError('missing durability must fail closed')
+
+          try:
+              apply_sovereign_hil_receiver_profile({
+                  'STEGVERSE_RUNTIME_PROFILE': 'sovereign-carrier',
+                  'STEGVERSE_SOVEREIGN_STATE_DURABLE': 'true',
+                  'STEGVERSE_SOVEREIGN_STATE_DIR': '/tmp/stegverse',
+              })
+          except SovereignHILProfileError as exc:
+              assert str(exc) == 'sovereign_state_dir_must_not_be_temporary'
+          else:
+              raise AssertionError('temporary state root must fail closed')
+
+          task = json.loads(Path('tasks/LLMA-HIL-SOVEREIGN-RECEIVER-021.json').read_text())
+          assert task['participant_machine_required'] is False
+          assert task['developer_machine_required'] is False
+          assert task['third_party_runtime_required'] is False
+          assert task['credential_authority'] == 'TV/TVC'
+          assert task['github_token_runtime_authority'] == 'NONE'
+
+          gateway = Path('llm_adapter/combined_gateway.py').read_text()
+          for marker in [
+              '/api/hil/readiness',
+              '/api/hil/submissions',
+              '/api/hil/sovereign-receiver-profile',
+              'participant_machine_required',
+              'developer_machine_required',
+              'github_hosted_runtime_required',
+              'third_party_runtime_required',
+          ]:
+              assert marker in gateway, marker
+
+          print('HIL_SOVEREIGN_RECEIVER_SOURCE=PASS')
+          print('PARTICIPANT_MACHINE_REQUIRED=false')
+          print('DEVELOPER_MACHINE_REQUIRED=false')
+          print('GITHUB_HOSTED_RUNTIME_REQUIRED=false')
+          print('THIRD_PARTY_RUNTIME_REQUIRED=false')
+          print('CREDENTIAL_AUTHORITY=TV/TVC')
+          print('PRODUCTION_AUTHORITY_EFFECT=NONE')
+          PY
