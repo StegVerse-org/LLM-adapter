@@ -20,10 +20,10 @@ from llm_adapter.attachment_intake import (
 )
 
 
-def _png_bytes(size: tuple[int, int] = (320, 200)) -> bytes:
+def _png_bytes(size: tuple[int, int] = (320, 200), *, marker: str = "x^2 + 3x = 10") -> bytes:
     image = Image.new("RGB", size, "white")
     draw = ImageDraw.Draw(image)
-    draw.text((20, 40), "x^2 + 3x = 10", fill="black")
+    draw.text((20, 40), marker, fill="black")
     draw.line((15, 90, 290, 90), fill="black", width=2)
     stream = BytesIO()
     image.save(stream, format="PNG")
@@ -91,6 +91,14 @@ def test_shared_intake_persists_exact_bytes_and_review_is_idempotent(tmp_path: P
     stored = tmp_path / "attachments" / "MATH-IMG-001" / receipt["artifact_name"]
     assert stored.read_bytes() == data
 
+    duplicate = client.post(
+        "/api/attachments/v1/intake",
+        data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-001", "declared_sha256": digest},
+        files={"artifact": ("same-image.png", data, "image/jpeg")},
+    )
+    assert duplicate.status_code == 200
+    assert duplicate.json() == receipt
+
     review_response = client.post(
         "/api/math-solver/v1/image-review", json={"attachment_id": "MATH-IMG-001"}
     )
@@ -104,6 +112,25 @@ def test_shared_intake_persists_exact_bytes_and_review_is_idempotent(tmp_path: P
     )
     assert second.status_code == 200
     assert second.json() == review
+
+
+def test_duplicate_attachment_id_with_different_bytes_fails_closed(tmp_path: Path, monkeypatch) -> None:
+    client = _client(tmp_path, monkeypatch)
+    first = _png_bytes(marker="x + 1 = 2")
+    second = _png_bytes(marker="x + 2 = 9")
+    response = client.post(
+        "/api/attachments/v1/intake",
+        data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-CONFLICT"},
+        files={"artifact": ("first.png", first, "image/png")},
+    )
+    assert response.status_code == 200
+    conflict = client.post(
+        "/api/attachments/v1/intake",
+        data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-CONFLICT"},
+        files={"artifact": ("second.png", second, "image/png")},
+    )
+    assert conflict.status_code == 409
+    assert conflict.json()["detail"] == "attachment_id_content_conflict"
 
 
 def test_declared_hash_mismatch_fails_before_persistence(tmp_path: Path, monkeypatch) -> None:
@@ -156,6 +183,7 @@ def test_readiness_exposes_shared_profile_without_claiming_authority(tmp_path: P
     payload = response.json()
     assert payload["state"] == "READY"
     assert MATH_IMAGE_PROFILE in payload["profiles"]
+    assert payload["profiles"][MATH_IMAGE_PROFILE]["maximum_decoded_pixels"] == 80_000_000
     assert payload["hil_legacy_intake_remains_compatible"] is True
     assert payload["credential_authority"] == "TV/TVC"
     assert payload["github_token_runtime_authority"] == "NONE"

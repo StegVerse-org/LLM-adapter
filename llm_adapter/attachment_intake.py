@@ -36,6 +36,7 @@ MATH_REVIEW_SCHEMA = "stegverse.math-image-review.v1"
 FEATURE_SCHEMA = "stegverse.normalized-region-features/v1"
 MATH_IMAGE_PROFILE = "math-image-v1"
 MAX_MATH_IMAGE_BYTES = 25 * 1024 * 1024
+MAX_MATH_IMAGE_PIXELS = 80_000_000
 ATTACHMENT_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$")
 FEATURE_NAMES = (
     "mean_r",
@@ -137,15 +138,20 @@ def decode_math_image(image_bytes: bytes) -> DecodedImage:
             media_type = FORMAT_MEDIA_TYPES.get(detected_format)
             if media_type is None:
                 raise ValueError("unsupported_image_format")
+            raw_width, raw_height = source.size
+            if raw_width < 1 or raw_height < 1:
+                raise ValueError("image_dimensions_invalid")
+            if raw_width * raw_height > MAX_MATH_IMAGE_PIXELS:
+                raise ValueError("image_pixel_count_exceeded")
             corrected = ImageOps.exif_transpose(source)
             corrected.load()
             rgb = corrected.convert("RGB").copy()
-    except (UnidentifiedImageError, OSError) as exc:
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
         raise ValueError("image_decode_failed") from exc
     width, height = rgb.size
     if width < 1 or height < 1:
         raise ValueError("image_dimensions_invalid")
-    if width * height > 80_000_000:
+    if width * height > MAX_MATH_IMAGE_PIXELS:
         raise ValueError("image_pixel_count_exceeded")
     return DecodedImage(image=rgb, media_type=media_type, width=width, height=height)
 
@@ -309,6 +315,7 @@ def attachment_readiness() -> dict[str, Any]:
         "profiles": {
             MATH_IMAGE_PROFILE: {
                 "maximum_size_bytes": MAX_MATH_IMAGE_BYTES,
+                "maximum_decoded_pixels": MAX_MATH_IMAGE_PIXELS,
                 "accepted_media_types": sorted(MEDIA_EXTENSIONS),
                 "exact_bytes_preserved": True,
                 "review_endpoint": "/api/math-solver/v1/image-review",
@@ -332,10 +339,6 @@ async def attachment_intake(
         raise HTTPException(status_code=422, detail="attachment_profile_unsupported")
     identifier = _safe_attachment_id(attachment_id)
     attachment_dir, receipt_path, _ = _paths(identifier)
-    if receipt_path.exists():
-        return json.loads(receipt_path.read_text(encoding="utf-8"))
-    if attachment_dir.exists():
-        raise HTTPException(status_code=409, detail="attachment_exists_without_receipt")
 
     data = await artifact.read(MAX_MATH_IMAGE_BYTES + 1)
     if not data or len(data) > MAX_MATH_IMAGE_BYTES:
@@ -350,6 +353,18 @@ async def attachment_intake(
         declared = declared_sha256.removeprefix("sha256:").lower()
         if declared != digest:
             raise HTTPException(status_code=422, detail="attachment_hash_mismatch")
+
+    if receipt_path.exists():
+        existing = json.loads(receipt_path.read_text(encoding="utf-8"))
+        if (
+            existing.get("profile") == profile
+            and existing.get("content_hash") == f"sha256:{digest}"
+            and existing.get("media_type") == decoded.media_type
+        ):
+            return existing
+        raise HTTPException(status_code=409, detail="attachment_id_content_conflict")
+    if attachment_dir.exists():
+        raise HTTPException(status_code=409, detail="attachment_exists_without_receipt")
 
     attachment_dir.mkdir(parents=True, exist_ok=False)
     receipt_path.parent.mkdir(parents=True, exist_ok=True)
