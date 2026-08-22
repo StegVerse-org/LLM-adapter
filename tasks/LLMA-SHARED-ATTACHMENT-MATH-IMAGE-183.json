@@ -2,10 +2,16 @@
   "schema": "stegverse.llm_adapter.task.v1",
   "task_id": "LLMA-SHARED-ATTACHMENT-MATH-IMAGE-183",
   "issue": 183,
-  "state": "SOURCE_VALIDATED_GLOBAL_CI_DEPENDENCY_BLOCKED",
+  "state": "SOURCE_COMPLETE_RELEASED",
   "goal": "Reuse the existing Service Gateway artifact-intake plane for mathematics images and add a real, bounded backend image-review state without duplicating HIL, provider, visual-runtime, or custody authority.",
+  "release": {
+    "pull_request": 184,
+    "merge_commit": "4ed2b08789e8bbe0c7f474f1c448f71d5dbe5d55",
+    "validated_source_head": "16d3ceb456c69f32213089b88a3dcbdd9948d817",
+    "claim_state": "RELEASED"
+  },
   "parent_owners": {
-    "shared_gateway": "StegVerse-org/LLM-adapter#72",
+    "shared_gateway_live_carrier": "StegVerse-org/LLM-adapter#72",
     "math_runtime": "StegVerse-org/LLM-adapter#132",
     "site_math": "StegVerse-Labs/Site#240",
     "sovereign_visual_runtime": "StegVerse-002/micro-node-runtime:SOVEREIGN-LOCAL-VISION-RUNTIME-003"
@@ -19,45 +25,21 @@
     "docs/SHARED_ATTACHMENT_MATH_IMAGE_MIRROR_HANDOFF.md",
     "tasks/LLMA-SHARED-ATTACHMENT-MATH-IMAGE-183.json"
   ],
-  "attachment_profile": "math-image-v1",
-  "routes": [
-    "GET /api/attachments/v1/readiness",
-    "POST /api/attachments/v1/intake",
-    "POST /api/math-solver/v1/image-review"
-  ],
-  "source_states": {
-    "source_image": "IMPLEMENTED",
-    "normalized_visual_features": "IMPLEMENTED",
-    "interpreted_mathematical_transcription": "NOT_PRODUCED_BY_THIS_SLICE",
-    "math_capable_visual_transcription": "NEXT_BOUNDED_CAPABILITY"
+  "implemented": {
+    "attachment_profile": "math-image-v1",
+    "exact_bytes_preserved": true,
+    "sha256_bound": true,
+    "decoded_formats": ["PNG", "JPEG", "WebP", "HEIF/HEIC"],
+    "normalized_visual_features": "stegverse.normalized-region-features/v1",
+    "source_image_state": "IMPLEMENTED",
+    "interpreted_mathematical_transcription": "NOT_PRODUCED",
+    "node_discovery": true
   },
   "validation": {
-    "implementation_head": "16d3ceb456c69f32213089b88a3dcbdd9948d817",
     "focused_functional_harness": "PASS",
-    "focused_behaviors": [
-      "real PNG decode",
-      "canonical eight-feature output bounded 0..1",
-      "content-type spoof does not override decoded format",
-      "exact SHA-256 binding and byte preservation",
-      "invalid image rejection",
-      "declared hash mismatch rejection",
-      "same-source image review idempotency",
-      "source_image distinct from interpreted_mathematical_transcription",
-      "transcription remains NOT_PRODUCED"
-    ],
-    "hardening": [
-      "duplicate attachment id is idempotent only for identical profile/hash/media and conflicting bytes fail 409",
-      "decoded pixel bound checked before full image load",
-      "Python 3.9 compatibility preserved by avoiding PEP 604 union syntax",
-      "portable node service extra installs Pillow and pillow-heif",
-      "node advertisement exposes attachment intake and math image review"
-    ],
     "validate_run": 32571850375,
-    "validate_result": "FAIL_BEFORE_PROJECT_TESTS",
     "capability_runtime_run": 32571850359,
-    "capability_runtime_result": "FAIL_BEFORE_PROJECT_TESTS",
-    "hosted_failure_step": "Install runtime/validation dependencies",
-    "hosted_failure_reason": "existing direct protected StegCore source dependency cannot be anonymously installed by credential-clean workflow",
+    "hosted_repository_validation": "BLOCKED_BEFORE_PROJECT_TESTS_BY_EXISTING_PROTECTED_STEGCORE_SOURCE_DEPENDENCY",
     "failure_owned_by_issue_183_source": false,
     "distribution_repair_owner": "StegVerse SDK + TVC portable artifact publication chain"
   },
@@ -72,16 +54,6 @@
     "site_mutation_authority": false,
     "model_output_execution_authority": false
   },
-  "completion_requires": [
-    "focused source validation passes",
-    "real image decode and exact accepted bytes/hash are implemented",
-    "canonical eight normalized visual features are produced",
-    "content-type spoofing does not override decoded format",
-    "invalid image, oversize image, unknown profile, hash mismatch, and conflicting duplicate id fail closed",
-    "math review is idempotent and source-hash bound",
-    "source_image remains distinct from interpreted_mathematical_transcription",
-    "transcription remains NOT_PRODUCED until a math-capable visual transcription runtime is admitted",
-    "existing HIL routes remain compatible",
-    "merge to canonical main after fresh collision check"
-  ]
+  "next_capability": "MATH_CAPABLE_VISUAL_TRANSCRIPTION_RUNTIME",
+  "activation_effect": false
 }
