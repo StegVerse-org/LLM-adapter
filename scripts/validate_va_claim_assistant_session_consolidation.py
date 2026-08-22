@@ -27,6 +27,10 @@ ALLOWED_CLAIM_STATES = {
     "MACHINE_OWNED", "MACHINE_OWNED_BLOCKED", "MERGED_INTO_CANONICAL_WORKSTREAM",
     "SUPERSEDED",
 }
+ALLOWED_SOVEREIGN_PROVIDER_STATES = {
+    "MACHINE_OWNED_BLOCKED_ON_SOVEREIGN_ROUTE_ACTIVATION",
+    "MACHINE_OWNED_READY_FOR_SOVEREIGN_OBSERVATION",
+}
 
 
 def fail(message: str) -> None:
@@ -140,7 +144,7 @@ def main() -> int:
     sovereign = json.loads(SOVEREIGN_PROVIDER_TASK.read_text(encoding="utf-8"))
     if sovereign.get("claim_state") != "MACHINE_OWNED":
         fail("sovereign_provider_not_machine_owned")
-    if sovereign.get("state") != "MACHINE_OWNED_BLOCKED_ON_SOVEREIGN_ROUTE_ACTIVATION":
+    if sovereign.get("state") not in ALLOWED_SOVEREIGN_PROVIDER_STATES:
         fail("sovereign_provider_state_invalid")
     contract = sovereign.get("required_provider_contract") or {}
     expected = {
@@ -156,10 +160,21 @@ def main() -> int:
         if contract.get(key) != expected_value:
             fail(f"sovereign_provider_contract_invalid:{key}")
     gates = set(sovereign.get("preserved_vacc_gates") or [])
-    if "privacy_guarded_dispatch PASS before model input" not in gates or "Master Records custody" not in gates:
+    if "privacy guarded dispatch before model input" not in gates or "Master Records custody" not in gates:
         fail("sovereign_provider_preserved_gates_incomplete")
-    if not sovereign.get("machine_observable_release_condition"):
+    release_conditions = (
+        sovereign.get("machine_observable_release_condition")
+        or sovereign.get("remaining_activation_conditions")
+        or []
+    )
+    if not isinstance(release_conditions, list) or len(release_conditions) < 8:
         fail("sovereign_provider_release_condition_missing")
+    if sovereign.get("state") == "MACHINE_OWNED_READY_FOR_SOVEREIGN_OBSERVATION":
+        owner = str(sovereign.get("execution_owner") or "")
+        if "persistent VACC runtime" not in owner:
+            fail("sovereign_provider_observation_owner_invalid")
+    if sovereign.get("authority_effect") is not False or sovereign.get("activation_effect") is not False:
+        fail("sovereign_provider_authority_boundary_invalid")
 
     archive_task = json.loads(ARCHIVE_TASK.read_text(encoding="utf-8"))
     if archive_task.get("state") != "RELEASED_COMPLETE":
