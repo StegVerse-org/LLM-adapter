@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 import re
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
@@ -102,7 +102,7 @@ def _durable_declared() -> bool:
     return os.getenv("STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "false").strip().lower() == "true"
 
 
-def _safe_attachment_id(value: str | None = None) -> str:
+def _safe_attachment_id(value: Optional[str] = None) -> str:
     identifier = (value or f"ATT-{uuid4().hex[:20].upper()}").strip()
     if not ATTACHMENT_ID_RE.fullmatch(identifier):
         raise HTTPException(status_code=422, detail="attachment_id_invalid")
@@ -228,7 +228,7 @@ def review_math_image_bytes(
     image_bytes: bytes,
     *,
     attachment_id: str,
-    content_hash: str | None = None,
+    content_hash: Optional[str] = None,
 ) -> dict[str, Any]:
     decoded = decode_math_image(image_bytes)
     features = extract_normalized_visual_features(decoded.image)
@@ -332,8 +332,8 @@ def attachment_readiness() -> dict[str, Any]:
 async def attachment_intake(
     artifact: UploadFile = File(...),
     profile: str = Form(MATH_IMAGE_PROFILE),
-    attachment_id: str | None = Form(None),
-    declared_sha256: str | None = Form(None),
+    attachment_id: Optional[str] = Form(None),
+    declared_sha256: Optional[str] = Form(None),
 ) -> dict[str, Any]:
     if profile != MATH_IMAGE_PROFILE:
         raise HTTPException(status_code=422, detail="attachment_profile_unsupported")
