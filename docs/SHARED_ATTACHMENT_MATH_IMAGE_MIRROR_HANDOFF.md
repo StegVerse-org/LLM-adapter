@@ -12,11 +12,12 @@ site_math_owner: StegVerse-Labs/Site#240
 canonical_math_specialty: profiles/math-educator-specialty.v1.json
 credential_authority: TV/TVC
 github_token_runtime_authority: NONE
+source_state: SOURCE_VALIDATED_GLOBAL_CI_DEPENDENCY_BLOCKED
 ```
 
 ## Product decision
 
-HIL document upload and mathematics image upload are profiles over one shared governed attachment service, not independent upload systems.
+HIL document upload and mathematics image upload are profiles over one shared governed attachment/service-gateway concept, not independent upload systems.
 
 ```text
 browser / client
@@ -32,7 +33,7 @@ browser / client
        math: backend image review
 ```
 
-The HIL endpoints are not replaced by this source slice. Existing HIL protocol, provenance, review, TVC lifecycle, and publication ownership remain unchanged.
+The HIL endpoints are not replaced by this source slice. Existing HIL protocol, provenance, review, TVC lifecycle, and publication ownership remain unchanged. The new attachment root reuses `STEGVERSE_HIL_DATA_DIR` unless an explicit `STEGVERSE_ATTACHMENT_DATA_DIR` is configured, so the deployed gateway can share the established artifact-storage plane without coupling math to HIL-specific review semantics.
 
 ## Implemented source slice
 
@@ -40,16 +41,20 @@ The HIL endpoints are not replaced by this source slice. Existing HIL protocol, 
 llm_adapter/attachment_intake.py
 tests/test_shared_attachment_math_image.py
 llm_adapter/deployed_gateway.py
+llm_adapter/combined_gateway.py
 pyproject.toml
+tasks/LLMA-SHARED-ATTACHMENT-MATH-IMAGE-183.json
 ```
 
-The deployed gateway now exposes:
+The deployed gateway exposes:
 
 ```text
 GET  /api/attachments/v1/readiness
 POST /api/attachments/v1/intake
 POST /api/math-solver/v1/image-review
 ```
+
+The existing `/api/stegverse-node` advertisement now publishes all three endpoints so a client can discover image upload/review alongside ordinary Ecosystem Chat, Math Solver, and HIL endpoints.
 
 The first attachment profile is `math-image-v1`.
 
@@ -62,11 +67,11 @@ WebP
 HEIF/HEIC when supported by the installed pillow-heif decoder
 ```
 
-The service does not trust the browser-provided content type. It decodes the exact uploaded bytes and records the detected format. Maximum math image upload is 25 MiB and decoded images are bounded to 80,000,000 pixels before review.
+The portable-node image already installs `.[service]`; this slice adds `pillow` and `pillow-heif` to that service extra, so raw image decode is part of the actual portable-node dependency set rather than a documentation-only capability.
+
+The service does not trust the browser-provided content type. It decodes the exact uploaded bytes and records the detected format. Maximum math image upload is 25 MiB and decoded images are bounded to 80,000,000 pixels before full image load/review.
 
 ## Shared storage semantics
-
-The new attachment service reuses the existing Service Gateway storage plane. `STEGVERSE_ATTACHMENT_DATA_DIR`, when present, provides an explicit attachment root; otherwise the service reuses `STEGVERSE_HIL_DATA_DIR`, preserving the current HIL-backed durable storage deployment model.
 
 For each accepted attachment the service persists:
 
@@ -81,6 +86,8 @@ Math review is persisted separately:
 ```text
 math-image-reviews/<attachment_id>.json
 ```
+
+Duplicate attachment IDs are idempotent only when profile, content hash, and decoded media type match. Reusing an attachment ID with different bytes fails closed with `409 attachment_id_content_conflict` and does not replace the original source state.
 
 This separation is deliberate. Upload acceptance does not imply review, review does not imply transcription, and transcription would not imply mathematical truth or solver execution.
 
@@ -141,6 +148,49 @@ next_stage = MATH_CAPABLE_VISUAL_TRANSCRIPTION_REQUIRED
 
 A true math-capable visual transcription capability is the next bounded runtime/model integration requirement.
 
+## Validation evidence
+
+Implementation head before task-record writeback:
+
+```text
+16d3ceb456c69f32213089b88a3dcbdd9948d817
+```
+
+Focused functional validation passed for:
+
+```text
+real PNG decode
+canonical eight-feature vector in range 0..1
+browser content-type spoof resistance
+exact SHA-256 binding / exact-byte preservation
+invalid image fail closed
+declared hash mismatch fail closed
+same-source review idempotency
+source_image != interpreted_mathematical_transcription
+transcription state = NOT_PRODUCED
+```
+
+Source review then added:
+
+```text
+conflicting duplicate attachment-id rejection
+pre-load decoded pixel bound
+Python 3.9-compatible type syntax
+portable-node service dependency binding for Pillow/HEIF
+node endpoint advertisement for intake/review discovery
+```
+
+Hosted repository-wide validation remains blocked before project tests by the already-known public-distribution dependency defect:
+
+```text
+validate run: 32571850375 -> FAIL at dependency installation
+capability-runtime run: 32571850359 -> FAIL at dependency installation
+cause: credential-clean install cannot anonymously acquire the protected direct StegCore source dependency
+issue-183 code reached by hosted tests: NO
+```
+
+That defect is owned by the StegVerse SDK + TVC portable-artifact publication chain. This handoff does not authorize a GitHub-token workaround, repository-visibility change, or parallel publisher.
+
 ## Authority boundary
 
 ```text
@@ -160,31 +210,18 @@ second vision runtime = NOT CREATED
 second custody path = NOT CREATED
 ```
 
-## Validation requirements
+## Completion / continuation
 
-Focused source validation must prove:
+This source slice is implemented and focused-validated. Canonical source completion still requires PR merge after fresh collision check. Merge does not establish live carrier observation.
 
-1. real image bytes decode;
-2. the canonical eight-feature vector is produced in range 0..1;
-3. declared hash mismatch fails before persistence;
-4. browser content-type spoofing does not override detected image format;
-5. unknown profile and non-image input fail closed;
-6. exact accepted bytes are preserved;
-7. review is idempotent for the same source hash;
-8. `source_image` and transcription remain distinct;
-9. transcription remains `NOT_PRODUCED` and non-authorizing;
-10. HIL routes are not removed or replaced.
-
-Global repository validation may remain blocked before project tests by the already-known protected StegCore direct-source dependency. That dependency/publication problem is owned by the StegVerse SDK + TVC portable-artifact publication chain and must not be bypassed with a GitHub token or parallel publisher.
-
-## Continuation after source merge
+After merge:
 
 ```text
 #72 -> shared gateway persistent/live carrier observation
 #132 -> Math Solver consumes accepted math image + review state
 Site#240 -> public image composer only after Site mutation authority/admission
-micro-node runtime / TVC -> admit exact visual/transcription runtime when available
+micro-node runtime / TVC -> add/admit a genuine math-capable visual transcription runtime
 Master Records -> custody only under its existing authority after actual execution where required
 ```
 
-This handoff documents source implementation. It does not itself establish persistent public hosting, live vision-route admission, math transcription, Site activation, custody, or publication.
+This handoff does not claim persistent public hosting, live visual-route admission, semantic math transcription, Site activation, custody, or publication.
