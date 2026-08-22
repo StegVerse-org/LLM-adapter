@@ -36,12 +36,16 @@ dev = [
     "fastapi>=0.115",
     "python-multipart>=0.0.9",
     "jsonschema>=4.23",
+    "pillow>=10.0",
+    "pillow-heif>=0.16",
     "stegcore @ git+https://github.com/StegVerse-Labs/StegCore.git@8c484e584d60a3bd2763d6948d0eb3f4afd67e0c",
 ]
 service = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "python-multipart>=0.0.9",
+    "pillow>=10.0",
+    "pillow-heif>=0.16",
     "stegcore @ git+https://github.com/StegVerse-Labs/StegCore.git@8c484e584d60a3bd2763d6948d0eb3f4afd67e0c",
 ]
 
