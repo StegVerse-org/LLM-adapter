@@ -17,12 +17,31 @@ from llm_adapter.external_review_api import router as external_review_router
 from llm_adapter.external_publication_mutation import router as external_mutation_router
 from llm_adapter.hil_intake_v1_1_api import router as hil_intake_router
 from llm_adapter.hil_publication_api import router as hil_publication_router
+from llm_adapter.hil_sovereign_receiver_profile import (
+    SovereignHILProfileError,
+    apply_sovereign_hil_receiver_profile,
+)
 from llm_adapter.master_records_usage_submission import (
     MasterRecordsUsageError,
     submit_provider_usage_to_master_records,
 )
 from llm_adapter.provider_usage_submission import persist_provider_usage
 from llm_adapter.usage_session_api import router as usage_session_router
+
+
+try:
+    HIL_SOVEREIGN_RECEIVER_PROFILE = apply_sovereign_hil_receiver_profile()
+except SovereignHILProfileError as exc:
+    HIL_SOVEREIGN_RECEIVER_PROFILE = {
+        "schema": "stegverse.hil.sovereign-receiver-profile.v1",
+        "state": "FAIL_CLOSED_CONFIGURATION_REQUIRED",
+        "reason": str(exc),
+        "participant_machine_required": False,
+        "developer_machine_required": False,
+        "github_hosted_runtime_required": False,
+        "third_party_runtime_required": False,
+        "authority_granted": False,
+    }
 
 app.include_router(external_chat_router)
 app.include_router(external_review_router)
@@ -36,6 +55,12 @@ def _canonical_hash(payload: dict) -> str:
     return hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
+
+
+@app.get("/api/hil/sovereign-receiver-profile")
+def hil_sovereign_receiver_profile() -> dict:
+    """Expose the non-secret runtime binding used by public HIL discovery."""
+    return dict(HIL_SOVEREIGN_RECEIVER_PROFILE)
 
 
 @app.get("/api/stegverse-node")
@@ -55,11 +80,17 @@ def stegverse_node_advertisement(request: Request) -> dict:
         "math_solver_image_review_endpoint": f"{base_url}/api/math-solver/v1/image-review",
         "hil_intake_readiness_endpoint": f"{base_url}/api/hil/readiness",
         "hil_intake_submission_endpoint": f"{base_url}/api/hil/submissions",
+        "hil_sovereign_receiver_profile_endpoint": f"{base_url}/api/hil/sovereign-receiver-profile",
         "hil_publication_readiness_endpoint": f"{base_url}/api/hil/publication-readiness",
         "advertised_at": datetime.now(timezone.utc).isoformat(),
         "health_bound": True,
         "provider_enabled": os.getenv("STEGVERSE_PROVIDER_ENABLED", "false").lower() == "true",
         "hil_intake_enabled": os.getenv("STEGVERSE_HIL_INTAKE_ENABLED", "false").lower() == "true",
+        "hil_sovereign_receiver_state": HIL_SOVEREIGN_RECEIVER_PROFILE.get("state"),
+        "participant_machine_required": False,
+        "developer_machine_required": False,
+        "github_hosted_runtime_required": False,
+        "third_party_runtime_required": False,
         "durable_storage": os.getenv(
             "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "false"
         ).lower() == "true",
