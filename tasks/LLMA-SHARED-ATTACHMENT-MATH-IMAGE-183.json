@@ -1,0 +1,56 @@
+{
+  "schema": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-SHARED-ATTACHMENT-MATH-IMAGE-183",
+  "issue": 183,
+  "state": "SOURCE_IMPLEMENTATION_IN_PROGRESS",
+  "goal": "Reuse the existing Service Gateway artifact-intake plane for mathematics images and add a real, bounded backend image-review state without duplicating HIL, provider, visual-runtime, or custody authority.",
+  "parent_owners": {
+    "shared_gateway": "StegVerse-org/LLM-adapter#72",
+    "math_runtime": "StegVerse-org/LLM-adapter#132",
+    "site_math": "StegVerse-Labs/Site#240",
+    "sovereign_visual_runtime": "StegVerse-002/micro-node-runtime:SOVEREIGN-LOCAL-VISION-RUNTIME-003"
+  },
+  "paths": [
+    "llm_adapter/attachment_intake.py",
+    "tests/test_shared_attachment_math_image.py",
+    "llm_adapter/deployed_gateway.py",
+    "pyproject.toml",
+    "docs/SHARED_ATTACHMENT_MATH_IMAGE_MIRROR_HANDOFF.md",
+    "tasks/LLMA-SHARED-ATTACHMENT-MATH-IMAGE-183.json"
+  ],
+  "attachment_profile": "math-image-v1",
+  "routes": [
+    "GET /api/attachments/v1/readiness",
+    "POST /api/attachments/v1/intake",
+    "POST /api/math-solver/v1/image-review"
+  ],
+  "source_states": {
+    "source_image": "IMPLEMENTED",
+    "normalized_visual_features": "IMPLEMENTED",
+    "interpreted_mathematical_transcription": "NOT_PRODUCED_BY_THIS_SLICE",
+    "math_capable_visual_transcription": "NEXT_BOUNDED_CAPABILITY"
+  },
+  "authority": {
+    "credential_authority": "TV/TVC",
+    "github_token_runtime_authority": "NONE",
+    "non_tv_tvc_secret_or_token_required": false,
+    "second_gateway_created": false,
+    "second_provider_runtime_created": false,
+    "second_visual_runtime_created": false,
+    "second_custody_path_created": false,
+    "site_mutation_authority": false,
+    "model_output_execution_authority": false
+  },
+  "completion_requires": [
+    "real image decode validation passes",
+    "exact accepted bytes and SHA-256 reconstruct",
+    "canonical eight normalized visual features are produced",
+    "content-type spoofing does not override decoded format",
+    "invalid image, oversize image, unknown profile, and hash mismatch fail closed",
+    "math review is idempotent and source-hash bound",
+    "source_image remains distinct from interpreted_mathematical_transcription",
+    "transcription remains NOT_PRODUCED until a math-capable visual transcription runtime is admitted",
+    "existing HIL routes remain compatible",
+    "merge to canonical main after fresh collision check"
+  ]
+}
