@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-"""Run adapter Goal 4 aggregate plus boundary checks.
+"""Run the credential-free subset of the canonical Goal 4 validation matrix.
 
-When the explicit pinned StegCore integration extra is installed, this executes
-all canonical Goal 4 checks. In a credential-free source-validation environment
-where StegCore is intentionally absent, it delegates to the explicit
-credential-free aggregate rather than attempting private repository access.
+StegCore-coupled checks remain in ``verify_goal4_full.py`` and require the
+explicit ``stegcore-integration`` dependency path. This script exists so the
+repository-wide source validation lane can remain credential-free without
+weakening or silently substituting the exact StegCore integration contract.
 """
 from __future__ import annotations
 
-import importlib.util
 import subprocess
 import sys
 from pathlib import Path
@@ -36,13 +35,7 @@ COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "tests/test_va_claim_assistant_route_generators.py"),
     (sys.executable, "tests/test_va_claim_assistant_governed_retrieval.py"),
     (sys.executable, "tests/test_va_claim_assistant_governed_dispatch.py"),
-    (sys.executable, "scripts/observe_va_service_connection_execution.py"),
-    (sys.executable, "scripts/validate_va_claim_assistant_governed_retrieval_receipts.py"),
-    (sys.executable, "-m", "pytest", "-q", "tests/test_math_solver_gateway.py"),
-    (sys.executable, "scripts/verify_math_solver_governed_runtime.py"),
     (sys.executable, "scripts/verify_hil_compatibility_full.py"),
-    (sys.executable, "-m", "pytest", "-q", "tests/test_steggate_portable_consumer.py"),
-    (sys.executable, "scripts/verify_steggate_portable_consumer.py"),
     (sys.executable, "scripts/check_workflow_parity.py"),
     (sys.executable, "scripts/check_ai_entry_authority_boundary.py"),
     (sys.executable, "scripts/check_ai_entry_receipt_boundary.py"),
@@ -50,6 +43,15 @@ COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "scripts/check_ai_entry_provider_capture_fixtures.py"),
     (sys.executable, "scripts/check_ai_entry_provider_capture_completion.py"),
     (sys.executable, "scripts/check_ai_entry_recovery_boundary.py"),
+)
+
+STEGCORE_INTEGRATION_COMMANDS: tuple[str, ...] = (
+    "scripts/observe_va_service_connection_execution.py",
+    "scripts/validate_va_claim_assistant_governed_retrieval_receipts.py",
+    "tests/test_math_solver_gateway.py",
+    "scripts/verify_math_solver_governed_runtime.py",
+    "tests/test_steggate_portable_consumer.py",
+    "scripts/verify_steggate_portable_consumer.py",
 )
 
 
@@ -69,18 +71,12 @@ def run(command: Sequence[str]) -> None:
 
 
 def main() -> int:
-    if importlib.util.find_spec("stegcore") is None:
-        print("STEGCORE_INTEGRATION_STATE=NOT_MATERIALIZED")
-        print("STEGCORE_INTEGRATION_EXTRA=stegcore-integration")
-        print("GITHUB_TOKEN_AUTHORITY=NONE")
-        run((sys.executable, "scripts/verify_goal4_credential_free.py"))
-        print("ADAPTER_GOAL4_CREDENTIAL_FREE_DELEGATION_PASS")
-        return 0
-
-    print("STEGCORE_INTEGRATION_STATE=MATERIALIZED")
     for command in COMMANDS:
         run(command)
-    print("ADAPTER_GOAL4_FULL_PASS")
+    print("ADAPTER_GOAL4_CREDENTIAL_FREE_PASS")
+    print("STEGCORE_INTEGRATION_EXTRA=stegcore-integration")
+    print("STEGCORE_INTEGRATION_COMMANDS=" + ",".join(STEGCORE_INTEGRATION_COMMANDS))
+    print("GITHUB_TOKEN_AUTHORITY=NONE")
     return 0
 
 

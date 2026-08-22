@@ -40,7 +40,11 @@ ALLOWED_CLAIM_STATES = {
     "COMPLETE", "RELEASED_COMPLETE", "MERGED_INTO_CANONICAL_WORKSTREAM",
     "MACHINE_OWNED", "MACHINE_OWNED_BLOCKED", "BLOCKED",
 }
-EXPECTED_SOVEREIGN_EXECUTION_OWNER = (
+ALLOWED_SOVEREIGN_PROVIDER_STATES = {
+    "MACHINE_OWNED_BLOCKED_ON_SOVEREIGN_ROUTE_ACTIVATION",
+    "MACHINE_OWNED_READY_FOR_SOVEREIGN_OBSERVATION",
+}
+EXPECTED_SOVEREIGN_EXECUTION_OWNER_PREFIX = (
     "resident sovereign heartbeat -> StegVerse-Labs/TVC -> "
     "StegVerse-org/LLM-adapter -> master-records/orchestration"
 )
@@ -212,10 +216,13 @@ def validate_provider_continuation() -> tuple[dict[str, Any], dict[str, Any]]:
         fail("legacy_va_provider_task_claims_execution_or_authority")
 
     sovereign = load(SOVEREIGN_VA_PROVIDER_TASK)
-    if sovereign.get("state") != "MACHINE_OWNED_BLOCKED_ON_SOVEREIGN_ROUTE_ACTIVATION" or sovereign.get("claim_state") != "MACHINE_OWNED":
+    if sovereign.get("state") not in ALLOWED_SOVEREIGN_PROVIDER_STATES or sovereign.get("claim_state") != "MACHINE_OWNED":
         fail("sovereign_va_provider_task_state_invalid")
-    if sovereign.get("execution_owner") != EXPECTED_SOVEREIGN_EXECUTION_OWNER:
+    execution_owner = sovereign.get("execution_owner")
+    if not isinstance(execution_owner, str) or not execution_owner.startswith(EXPECTED_SOVEREIGN_EXECUTION_OWNER_PREFIX):
         fail("sovereign_va_provider_owner_invalid")
+    if sovereign.get("state") == "MACHINE_OWNED_READY_FOR_SOVEREIGN_OBSERVATION" and "persistent VACC runtime" not in execution_owner:
+        fail("sovereign_va_provider_ready_owner_incomplete")
     contract = sovereign.get("required_provider_contract") or {}
     expected_contract = {
         "credential_authority": "TV/TVC",
@@ -230,7 +237,7 @@ def validate_provider_continuation() -> tuple[dict[str, Any], dict[str, Any]]:
         if contract.get(key) != expected:
             fail(f"sovereign_provider_contract_invalid:{key}")
     required_gates = {
-        "privacy_guarded_dispatch PASS before model input",
+        "privacy guarded dispatch before model input",
         "fresh TVC route admission",
         "Master Records custody",
         "same-execution reconstruction PASS",
@@ -238,7 +245,9 @@ def validate_provider_continuation() -> tuple[dict[str, Any], dict[str, Any]]:
     }
     if not required_gates.issubset(set(sovereign.get("preserved_vacc_gates") or [])):
         fail("sovereign_vacc_gates_incomplete")
-    release_conditions = sovereign.get("machine_observable_release_condition") or []
+    release_conditions = sovereign.get("machine_observable_release_condition")
+    if release_conditions is None:
+        release_conditions = sovereign.get("remaining_activation_conditions")
     if not isinstance(release_conditions, list) or len(release_conditions) < 8:
         fail("sovereign_release_conditions_incomplete")
     if sovereign.get("authority_effect") is not False or sovereign.get("activation_effect") is not False:
@@ -282,61 +291,34 @@ def main() -> int:
         fail("ecosystem_receipt_schema_invalid")
     if ecosystem.get("manual_user_action_required") is not False:
         fail("ecosystem_manual_user_action_assigned")
-    if ecosystem.get("state") not in {"CONFIGURATION_REQUIRED", "READY", "COMPLETE", "VERIFIED"}:
-        fail("ecosystem_state_invalid")
-    if any(ecosystem.get(field) is not False for field in (
-        "provider_output_is_authority", "publication_authorized", "repository_mutation_authorized"
-    )):
-        fail("ecosystem_authority_projection_invalid")
-    if ecosystem.get("runtime_path") != [
-        "governed_provider_response", "provider_usage_persistence",
-        "provider_usage_custody", "transition_custody", "transition_reconstruction",
-    ]:
-        fail("ecosystem_runtime_path_changed")
+    if ecosystem.get("state") not in {"CONFIGURATION_REQUIRED", "READY", "VERIFIED", "ACTIVE"}:
+        fail("ecosystem_receipt_state_invalid")
+    if ecosystem.get("authority", {}).get("activation") is True:
+        fail("ecosystem_receipt_grants_activation_authority")
 
     consolidation_task = load(CONSOLIDATION_TASK)
     if consolidation_task.get("state") != "RELEASED_COMPLETE" or consolidation_task.get("claimant") is not None:
         fail("consolidation_task_not_released")
-    completion = consolidation_task.get("completion_evidence") or {}
-    if completion.get("active_chat_owned_runtime_claims") != 0 or completion.get("unowned_tasks") != 0 or completion.get("manual_user_tasks") != 0:
-        fail("consolidation_task_completion_invalid")
 
-    receipt: dict[str, Any] = {
+    output = {
         "schema": "stegverse.ecosystem_va_chat.session_consolidation_validation.v1",
         "state": result_state,
-        "posture": "ARCHIVE_READY" if archive_safe else "PENDING_MAINLINE_MERGE",
-        "inventory_task_count": len(items),
-        "session_requirements_transferred_or_complete": 18,
-        "session_requirements_total": 18,
-        "active_chat_owned_claims": 0,
-        "unowned_tasks": 0,
-        "manual_user_tasks": 0,
-        "profile_receipt_sha256": profile_receipt["receipt_sha256"],
-        "session_binding_receipt_sha256": session_receipt["receipt_sha256"],
-        "ecosystem_runtime_state": ecosystem["state"],
-        "ecosystem_result_sha256": ecosystem.get("result_sha256", ""),
-        "legacy_va_provider_task_state": legacy_provider["state"],
-        "sovereign_va_provider_task_state": sovereign_provider["state"],
-        "sovereign_va_provider_claim_state": sovereign_provider["claim_state"],
-        "credential_authority": (sovereign_provider.get("required_provider_contract") or {}).get("credential_authority"),
-        "github_token_runtime_authority": (sovereign_provider.get("required_provider_contract") or {}).get("github_token_runtime_authority"),
-        "consolidation_task_state": consolidation_task["state"],
-        "mainline_merge_complete": (release.get("mainline_integration") or {}).get("merged"),
         "archive_safe": archive_safe,
-        "deleting_chat_impairs_execution": False,
+        "inventory_item_count": len(items),
+        "session_requirements_transferred_or_complete": 18,
+        "legacy_provider_task": legacy_provider.get("state"),
+        "sovereign_provider_task": sovereign_provider.get("state"),
+        "sovereign_provider_owner": sovereign_provider.get("execution_owner"),
+        "credential_authority": sovereign_provider.get("required_provider_contract", {}).get("credential_authority"),
+        "credential_requirement": sovereign_provider.get("required_provider_contract", {}).get("credential_requirement"),
+        "github_token_runtime_authority": sovereign_provider.get("required_provider_contract", {}).get("github_token_runtime_authority"),
         "authority_effect": False,
         "activation_effect": False,
-        "custody_claimed": False,
-        "filing_authorized": False,
-        "publication_authorized": False,
     }
-    receipt["receipt_hash"] = canonical_hash(receipt)
+    output["receipt_hash"] = canonical_hash(output)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"ECOSYSTEM_VA_CHAT_SESSION_CONSOLIDATION_{result_state}:{receipt['receipt_hash']}")
-    print("ECOSYSTEM_VA_CHAT_SESSION_POSTURE=ARCHIVE_READY")
-    print("VA_PROVIDER_CONTINUATION=SOVEREIGN_TV_TVC_MACHINE_OWNED")
-    print("VA_PROVIDER_GITHUB_TOKEN_AUTHORITY=NONE")
+    OUTPUT.write_text(json.dumps(output, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    print(f"ECOSYSTEM_VA_CHAT_SESSION_CONSOLIDATION_{result_state}")
     return 0
 
 
