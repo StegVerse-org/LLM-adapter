@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
-"""Run adapter Goal 4 aggregate plus boundary checks."""
+"""Run adapter Goal 4 aggregate plus boundary checks.
+
+When the explicit pinned StegCore integration extra is installed, this executes
+all canonical Goal 4 checks. In a credential-free source-validation environment
+where StegCore is intentionally absent, it delegates to the explicit
+credential-free aggregate rather than attempting private repository access.
+"""
 from __future__ import annotations
 
+import importlib.util
 import subprocess
 import sys
 from pathlib import Path
@@ -62,6 +69,15 @@ def run(command: Sequence[str]) -> None:
 
 
 def main() -> int:
+    if importlib.util.find_spec("stegcore") is None:
+        print("STEGCORE_INTEGRATION_STATE=NOT_MATERIALIZED")
+        print("STEGCORE_INTEGRATION_EXTRA=stegcore-integration")
+        print("GITHUB_TOKEN_AUTHORITY=NONE")
+        run((sys.executable, "scripts/verify_goal4_credential_free.py"))
+        print("ADAPTER_GOAL4_CREDENTIAL_FREE_DELEGATION_PASS")
+        return 0
+
+    print("STEGCORE_INTEGRATION_STATE=MATERIALIZED")
     for command in COMMANDS:
         run(command)
     print("ADAPTER_GOAL4_FULL_PASS")
