@@ -2,8 +2,10 @@
   "schema": "stegverse.llm_adapter.task.v1",
   "task_id": "LLMA-UNIFIED-SPECIALTY-PROFILES-180",
   "issue": 180,
-  "state": "SOURCE_VALIDATED_GLOBAL_CI_DEPENDENCY_BLOCKED",
+  "state": "COMPLETE_RELEASED_SOURCE",
   "goal": "Represent VACC and mathematics as specialty capability profiles consumed by the single canonical ecosystem-chat-llm surface.",
+  "release_commit": "878c5b4c30214da9a74f5bf0a2ca0fe38cb25a12",
+  "pull_request": 181,
   "paths": [
     "contracts/chat-specialty-profile.schema.json",
     "profiles/vacc-specialty.v1.json",
@@ -15,7 +17,7 @@
   ],
   "canonical_base_llm_profile": "ecosystem-chat-llm",
   "runtime_owner": "StegVerse-org/LLM-adapter#18",
-  "vacc_route_owner": "StegVerse-org/LLM-adapter#90",
+  "vacc_route_owner": "StegVerse-org/LLM-adapter#90/#142",
   "site_owner": "StegVerse-Labs/Site#239",
   "math_site_owner": "StegVerse-Labs/Site#240",
   "authority": {
@@ -40,12 +42,17 @@
     "failure_owned_by_specialty_code": false,
     "distribution_repair_owner": "StegVerse SDK + TVC portable artifact publication chain"
   },
-  "completion_requires": [
-    "deterministic specialty validation passes",
-    "VACC and math both bind ecosystem-chat-llm",
-    "math image source and interpreted transcription remain distinct states",
-    "candidate tools retain execution_authority false",
-    "no duplicate provider/runtime/custody path",
-    "merge to canonical main after fresh collision check"
+  "completion": {
+    "source_implementation": true,
+    "focused_validation": true,
+    "merged_to_main": true,
+    "claim_released": true,
+    "provider_runtime_activation": false,
+    "site_activation": false
+  },
+  "next_integration": [
+    "StegVerse-org/LLM-adapter#142 consumes VACC specialty on the sovereign provider path",
+    "StegVerse-Labs/Site#239 consumes the specialty contract after TASK-2026-0007 machine admission",
+    "StegVerse-Labs/Site#240 replaces the independent/hardcoded math runtime with the shared conversation plus governed solver candidate"
   ]
 }
