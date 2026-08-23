@@ -32,6 +32,7 @@ def test_receipt_preserves_exact_response_and_actual_source_data() -> None:
     assert receipt["final_response"] == response
     assert receipt["evidence_sources"][0]["data"] == {"claim": "x", "observed": True}
     assert receipt["erl_relationships"][0]["relationship_id"] == "erl:1"
+    assert receipt["certainty_constraint_applied"] is True
     assert receipt["authority"]["provider_output_is_authority"] is False
     assert receipt["authority"]["erl_relationship_is_authority"] is False
     assert receipt["reconstructable"] is True
@@ -57,6 +58,25 @@ def test_unsupported_posture_cannot_use_strong_certainty_language() -> None:
 
 def test_strong_posture_may_use_weaker_conversational_language() -> None:
     assert certainty_language_allowed("This appears consistent with the available record.", "STRONGLY_SUPPORTED")
+
+
+def test_unassessed_provider_response_can_be_retained_only_as_unknown() -> None:
+    receipt = build_evidence_receipt(
+        query="q",
+        final_response="This is definitely true.",
+        evidence_posture="UNKNOWN",
+        model_observations=[{"model": "provider-a", "candidate": "This is definitely true.", "authority_effect": "NONE"}],
+        certainty_constraint_applied=False,
+    )
+    assert receipt["evidence_posture"] == "UNKNOWN"
+    assert receipt["certainty_constraint_applied"] is False
+    with pytest.raises(ValueError, match="skipped only while evidence posture is UNKNOWN"):
+        build_evidence_receipt(
+            query="q",
+            final_response="This is definitely true.",
+            evidence_posture="SUPPORTED",
+            certainty_constraint_applied=False,
+        )
 
 
 def test_contradictions_and_uncertainty_are_not_collapsed() -> None:
@@ -85,6 +105,7 @@ def test_user_projection_is_minimum_information_not_raw_evidence() -> None:
     projection = user_evidence_projection(receipt)
     assert projection == {
         "evidence_posture": "SUPPORTED",
+        "certainty_constraint_applied": True,
         "receipt_id": receipt["receipt_id"],
         "source_count": 1,
         "erl_relationship_count": 1,
