@@ -109,15 +109,22 @@ def build_evidence_receipt(
     governance_refs: Iterable[str] | None = None,
     transition_id: str | None = None,
     run_id: str | None = None,
+    certainty_constraint_applied: bool = True,
 ) -> dict[str, Any]:
     """Build a deterministic, non-authorizing evidence receipt.
 
-    The receipt retains the exact final response and copies the actual evidence
-    records used by the caller. It performs no retrieval and grants no authority.
+    When a governed evidence posture exists, certainty_constraint_applied MUST be
+    true and the response wording is checked against that posture. Before a governed
+    evidence aggregator has supplied a posture, callers may retain an exact response
+    with UNKNOWN posture and certainty_constraint_applied=false. That state is
+    explicit and cannot be used with a stronger posture to bypass the ceiling.
     """
 
     posture = validate_posture(evidence_posture)
-    assert_certainty_language_allowed(final_response, posture)
+    if certainty_constraint_applied:
+        assert_certainty_language_allowed(final_response, posture)
+    elif posture != "UNKNOWN":
+        raise ValueError("certainty constraint may be skipped only while evidence posture is UNKNOWN")
 
     sources = _copy_records(evidence_sources)
     erl = _copy_records(erl_relationships)
@@ -134,6 +141,7 @@ def build_evidence_receipt(
         "final_response": final_response,
         "evidence_posture": posture,
         "certainty_claim_rank": strongest_certainty_claimed(final_response),
+        "certainty_constraint_applied": certainty_constraint_applied,
         "evidence_sources": sources,
         "erl_relationships": erl,
         "model_observations": models,
@@ -160,6 +168,7 @@ def user_evidence_projection(receipt: Mapping[str, Any]) -> dict[str, Any]:
     posture = validate_posture(str(receipt["evidence_posture"]))
     return {
         "evidence_posture": posture,
+        "certainty_constraint_applied": bool(receipt.get("certainty_constraint_applied", False)),
         "receipt_id": receipt.get("receipt_id"),
         "source_count": len(receipt.get("evidence_sources", [])),
         "erl_relationship_count": len(receipt.get("erl_relationships", [])),
