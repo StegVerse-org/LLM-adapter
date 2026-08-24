@@ -15,12 +15,7 @@ third_party_runtime_required: false
 state: SOURCE_INSTALLED_VALIDATION_PENDING
 ```
 
-The current Site durable-ingress browser predicate requires a successful `HIL-RECEIVER-RECEIPT-v2` to carry both:
-
-```text
-custody_state: EXACT_BYTES_PERSISTED
-registry_state: RECORDED
-```
+The current Site durable-ingress browser predicate requires a successful `HIL-RECEIVER-RECEIPT-v2` to carry both `custody_state: EXACT_BYTES_PERSISTED` and `registry_state: RECORDED`.
 
 The receiver previously persisted the PDF and SQLite submission row but returned the narrower legacy custody label `GATEWAY_EXACT_BYTES_PRESERVED` and omitted `registry_state`. That shape would cause the current Site client to reject an otherwise successful governed submission as `ingress_custody_not_durable`.
 
@@ -43,7 +38,7 @@ custody_state: EXACT_BYTES_PERSISTED
 registry_state: RECORDED
 ```
 
-The public privacy-bounded submission status surface reports the same state, but still exposes no participant identifier, publication consent, review notes, storage paths, provenance content, or PDF bytes.
+The public privacy-bounded submission status surface reports the same durable state, but still exposes no participant identifier, publication consent, review notes, storage paths, provenance content, or PDF bytes.
 
 ## Authority boundary
 
@@ -58,7 +53,7 @@ registry row can be re-read before RECORDED assertion
 receipt custody_state == EXACT_BYTES_PERSISTED
 receipt registry_state == RECORDED
 public status retains privacy boundary
-targeted HIL source validation PASS
+targeted HIL receipt compatibility validation PASS
 full credential-free repository validation PASS
 merge to main
 ```
