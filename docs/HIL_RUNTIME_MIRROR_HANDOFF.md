@@ -2,7 +2,7 @@
 
 ## Source of truth
 
-This document describes the LLM-adapter compatibility/intake surface for HIL v1.1. Production HIL continuation is owned by the StegVerse TVC controlled-cycle backend and its active lifecycle claims.
+This document is the current LLM-adapter HIL v1.1 compatibility/intake continuation record. Production lifecycle authority remains with the existing StegVerse TVC controlled-cycle lane.
 
 ```text
 Primary: v1.1
@@ -19,7 +19,7 @@ production_owner: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
 private_review_owner: StegVerse-Labs/TVC#8
 ```
 
-## Sovereign public receiver lane — SOURCE MERGED / LIVE ACTIVATION SEPARATE
+## Sovereign public receiver source — complete / live activation separate
 
 ```text
 goal: LLMA-HIL-SOVEREIGN-RECEIVER-021
@@ -35,9 +35,7 @@ source_state: COMPLETE_MERGED
 live_activation_state: NOT_PROVEN_HERE
 ```
 
-The existing `HIL-RECEIVER-RECEIPT-v2` intake is bound directly to the resident StegVerse carrier rather than requiring an external participant/developer machine or a separately hosted HIL server. The bounded implementation includes `llm_adapter/hil_sovereign_receiver_profile.py` and a public non-secret carrier projection at `/api/hil/sovereign-receiver-profile`.
-
-On a non-sovereign runtime the profile is inert. On the canonical carrier it requires the carrier-level durable-state contract:
+The `HIL-RECEIVER-RECEIPT-v2` intake is bound to the StegVerse sovereign carrier and does not require a participant/developer machine or separately hosted HIL server. The carrier profile requires only the non-secret sovereign durability contract:
 
 ```text
 STEGVERSE_RUNTIME_PROFILE=sovereign-carrier
@@ -45,106 +43,121 @@ STEGVERSE_SOVEREIGN_STATE_DURABLE=true
 STEGVERSE_SOVEREIGN_STATE_DIR=<non-temporary carrier state root>
 ```
 
-The profile maps that existing carrier state into the compatibility receiver by setting only non-secret runtime configuration for HIL intake and durable state. Missing durability attestation or a temporary state root fails closed. No HIL-specific credential is minted and no GitHub/provider secret becomes production authority.
+Missing durability or a temporary state root fails closed. No GitHub/provider credential becomes runtime authority. Source completion does not establish a current receiver process, public HTTPS route, Site readiness, browser receipt, restart proof, or TVC lifecycle handoff.
 
-The node advertisement exposes the HIL readiness/submission/profile endpoints plus explicit `participant_machine_required=false`, `developer_machine_required=false`, `github_hosted_runtime_required=false`, and `third_party_runtime_required=false` fields.
-
-Source completion does not equal activation. The real receiver still requires current sovereign-runtime observation, READY response, public HTTPS rendezvous, real Site browser upload, durable receiver receipt, exact-byte post-restart verification, and transfer into the existing TVC lifecycle lane.
-
-## Post-submit reconstruction lane — issue #192
+## Post-submit reconstruction source — complete, validated and released
 
 ```text
 task: LLMA-HIL-POST-SUBMIT-RECONSTRUCTION-029
 issue: StegVerse-org/LLM-adapter#192
-branch: feat/hil-post-submit-reconstruction-192
-state: SOURCE_INSTALLED_VALIDATION_PENDING
+pull_request: #193
+validated_head: 1736cc8c2f61a42aba1fb112beeeb2e38987bba0
+merge: f90be5e4cb277c46426b0aa956ee1652f9b60b4a
+targeted_hil_validation_run: 32691608816 SUCCESS
+repository_validation_run: 32691608760 SUCCESS
+state: COMPLETE_MERGED_VALIDATED_RELEASED
 public_status_endpoint: /api/hil/submissions/{submission_id}/status
 exact_bytes_endpoint: /api/hil/submissions/{submission_id}/exact-bytes
 exact_bytes_auth: EXISTING TV/TVC STEGVERSE_HIL_REVIEW_TOKEN
 new_credential_or_token_minted: false
 ```
 
-This lane closes a source-level gap in the restart/replacement proof path without weakening privacy or creating a second authority surface.
+PR #193 closes the source-level reconstruction gap needed by the real restart/replacement evidence lane. The public status endpoint exposes only stable non-sensitive evidence: submission identity, HIL Primary/prompt identities, submitted-file SHA-256, provenance-manifest SHA-256, chain state, size, validation state, active-content state, and explicit non-authority fields. It does not expose participant identifier, publication consent, review notes, filesystem paths, provenance content, or submitted bytes.
 
-The public status endpoint returns only stable evidence fields: submission identity, HIL Primary/prompt identities, submitted-file SHA-256, provenance-manifest SHA-256, chain state, size, validation state, active-content state, and explicit non-authority fields. It does **not** expose participant identifier, publication consent, review notes, filesystem paths, provenance content, or submitted bytes.
-
-The exact-byte endpoint is not public anonymous content. It reuses the existing TV/TVC-owned HIL review authentication boundary; no new capability token, participant secret, GitHub credential, or provider credential is created. After authentication it resolves the persisted artifact only inside the admitted HIL `originals/` root, rereads the bytes, recomputes SHA-256, verifies the stored size, and fails closed on missing bytes, path-boundary mismatch, size mismatch, or digest mismatch. A successful response returns the exact PDF with `Cache-Control: no-store` and an `EXACT_BYTES_HASH_VERIFIED` reconstruction header.
-
-Required tests on this lane prove:
+The exact-byte endpoint is intentionally not anonymous. It reuses the existing TV/TVC-owned HIL review authentication boundary. After authentication it:
 
 ```text
-public status privacy boundary
-unauthenticated exact-byte denial
-authorized exact-byte equality
-recomputed SHA-256 binding
-tamper detection / fail closed
-private review remains separately authenticated
+resolves the persisted artifact only inside the admitted HIL originals root
+-> rereads exact bytes
+-> recomputes SHA-256
+-> compares SHA-256 to the immutable submission row
+-> compares byte length to stored size_bytes
+-> fails closed on path escape, missing file, size mismatch, or digest mismatch
+-> returns application/pdf only after exact verification
 ```
 
-Passing source tests for this lane will mean the receiver has a bounded mechanism capable of performing the post-restart proof. It will **not** mean a restart, receiver replacement, public HTTPS activation, browser submission, TVC admission, publication, or Master Records release actually occurred.
+Successful reconstruction returns `X-SteGVerse-HIL-Reconstruction-State: EXACT_BYTES_HASH_VERIFIED` and `Cache-Control: no-store`. No filesystem path is returned.
 
-## Superseded assumptions
+Exact-head targeted HIL validation proved the public-status privacy boundary, denial without the existing TV/TVC review authentication, authorized exact-byte equality/hash verification, tamper detection, sovereign receiver source invariants, and no participant/developer/third-party runtime dependency. The complete credential-free repository validation also passed on the same PR head.
 
-The former host-neutral deployment instructions, locally generated review/publication secrets, and hosted GitHub restart-cycle proof are no longer production continuation mechanisms. No third-party hosting surface is a production HIL dependency. LLM-adapter does not mint, own, copy, or persist production HIL credentials.
+These runs are source/integration proof only. They do not prove that a receiver restart or replacement actually occurred or that the persisted bytes survived one on the production path.
 
-The legacy `.github/workflows/hil-process-restart-controlled-cycle.yml` and `scripts/run_hil_process_restart_cycle.py` were retired because the workflow executed on GitHub-hosted infrastructure, received GitHub repository credentials for workflow mechanics, and duplicated restart/private-review behavior that is already governed by TVC.
+## Completed compatibility/source capabilities
 
-Historical workflow artifacts remain provenance only and do not establish activation.
+- HIL v1.1 intake with exact Primary/prompt/response/provenance validation.
+- Exact uploaded PDF and provenance persistence beneath the configured HIL data directory.
+- `HIL-RECEIVER-RECEIPT-v2` generation.
+- Sovereign carrier receiver profile/source binding.
+- Privacy-bounded public submission status lookup.
+- TV/TVC-authenticated exact-byte reconstruction with path, hash, size, and tamper checks.
+- Node advertisement of readiness, submission, status, reconstruction, and sovereign-profile routes.
+- Private-review/publication compatibility remains separately authenticated and fail-closed.
+- No compatibility endpoint grants execution, acceptance, publication, custody, Master Record append, or release authority.
 
-## Completed LLM-adapter compatibility work
-
-- HIL v1.1 intake router with exact Primary/prompt/response/provenance validation.
-- Exact uploaded PDF and manifest persistence beneath the configured data directory.
-- Receiver receipt generation.
-- Sovereign receiver profile/source binding merged in `40eaa9af5cb7e3845ddaf4e79e02d299c76b9655`.
-- Private-review/publication protocol compatibility surfaces remain fail-closed when no governed credential is present.
-- No compatibility surface grants execution, acceptance, publication, custody, Master Record, or release authority.
-
-## Canonical production continuation
+## Canonical live continuation
 
 ```text
 StegVerse-Labs/.github#246
+StegVerse-Labs/.github/docs/HIL_SOVEREIGN_RECEIVER_ACTIVATION_MIRROR_HANDOFF.md
 StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
 StegVerse-Labs/TVC/docs/EXPERIMENT_BACKEND_MIRROR_HANDOFF.md
 StegVerse-Labs/TVC#8
-StegVerse-Labs/StegCore/docs/HIL_SESSION_CONSOLIDATION_MIRROR_HANDOFF.md
 StegVerse-Labs/Site#67
 master-records/orchestration#13
 ```
 
-The TVC backend already proves generalized controlled-cycle state, deterministic artifact reconstruction, custody receipt, successor-runtime continuity, stable lookup, and non-authorizing projection. Genuine participant custody for `HIL-20260731-GPT56-001` is retained there. The authenticated private-review decision is still pending under TVC #8.
+The next valid evidence chain is external to this released LLM-adapter source task:
+
+```text
+resident WorkerCoordinator allocates a real HIL claim/fresh fence
+-> hil-sovereign-receiver-worker executes
+-> /api/hil/sovereign-receiver-profile = ACTIVE_SOVEREIGN_RECEIVER
+-> /api/hil/readiness = READY with exact v1.1 identities
+-> public HTTPS StegVerse rendezvous
+-> Site observes readiness and enables controlled upload
+-> real browser submission returns HIL-RECEIVER-RECEIPT-v2
+-> receiver process restart/replacement
+-> authenticated exact-byte reconstruction returns EXACT_BYTES_HASH_VERIFIED with the original SHA-256
+-> existing TVC lifecycle receives the package/receipt
+```
+
+No source merge, GitHub Actions run, repository status, or endpoint declaration may substitute for those observations.
+
+## TVC state retained
+
+The TVC backend already proves generalized controlled-cycle state, deterministic artifact reconstruction, custody receipt, successor-runtime continuity, stable lookup, and non-authorizing projection for its established evidence. Genuine participant custody for `HIL-20260731-GPT56-001` remains retained there. The authenticated private-review decision remains separately governed under TVC #8.
 
 ## Activation denominator
 
 ```text
 1 generalized TVC backend merged/validated: COMPLETE
-2 authentic participant custody/reconstruction: COMPLETE
+2 authentic prior participant custody/reconstruction: COMPLETE
 3 sovereign public receiver source binding: COMPLETE_MERGED
-4 post-submit reconstruction source contract: SOURCE_INSTALLED_VALIDATION_PENDING / #192
-5 real sovereign receiver READY + public HTTPS + browser receipt: PENDING / .github#246 + Site
-6 authenticated private review: PENDING / TVC #8
-7 separately authenticated publication: PENDING
-8 Site projection after authenticated decision: PENDING
-9 Master Record assembly/release: PENDING
-10 downstream verification/publication: PENDING
+4 post-submit reconstruction source contract: COMPLETE_MERGED_VALIDATED_RELEASED
+5 real sovereign receiver execution + READY: PENDING / StegVerse-Labs/.github#246
+6 public HTTPS + controlled Site browser receipt: PENDING
+7 production restart/replacement exact-byte proof: PENDING
+8 TVC lifecycle admission/private review: PENDING / existing TVC lane
+9 separately authenticated publication: PENDING
+10 Site/Master Records/downstream release and verification: PENDING
 ```
 
-The receiver and reconstruction source lanes do not claim product activation from source alone.
-
-## Collision / credential rule
+## Collision and credential rules
 
 - No non-TV/TVC production secret or token may be introduced or consumed.
 - GitHub/GitHub Actions credentials have no HIL runtime authority.
-- Do not create a second private-review or production lifecycle lane here.
-- Do not make host availability, hosted CI, or compatibility workflow success a production release condition.
-- Do not require a participant/developer iMachine, laptop, or local server for the public receiver.
-- Do not expose exact submitted bytes anonymously merely to satisfy reconstruction proof.
+- Do not create a second private-review or lifecycle authority.
+- Do not expose exact submitted bytes anonymously to satisfy reconstruction proof.
+- Do not make hosted CI, a participant/developer iMachine, Render, or another third-party runtime a production dependency.
+- Do not equate source completion with live receiver activation or restart durability.
 
 ## Session consolidation
 
 ```text
-SOURCE RECONSTRUCTION WORK: StegVerse-org/LLM-adapter#192
-SOVEREIGN LIVE RECEIVER: StegVerse-Labs/.github#246
-CANONICAL LIFECYCLE: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
-ACTIVE PRIVATE REVIEW CLAIM: StegVerse-Labs/TVC#8
+LLM-adapter reconstruction source task: COMPLETE_RELEASED
+source task continuation dependency on this chat: false
+sovereign live receiver owner: StegVerse-Labs/.github#246
+canonical lifecycle: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
+private review owner: StegVerse-Labs/TVC#8
+next evidence class: REAL_RUNTIME_AND_RESTART_OBSERVATION
 ```
