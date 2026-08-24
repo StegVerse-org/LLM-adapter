@@ -147,7 +147,7 @@ jobs:
       - name: Install credential-free HIL test dependencies
         shell: bash
         run: |
-          python3 -m pip install --disable-pip-version-check -q -e . pytest
+          python3 -m pip install --disable-pip-version-check -q -e '.[dev]'
 
       - name: Test HIL intake and reconstruction contract
         shell: bash
