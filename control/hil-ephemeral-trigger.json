@@ -1,0 +1,26 @@
+{
+  "schema": "stegverse.hil.ephemeral-trigger-request/v1",
+  "trigger_id": "HIL-EPHEMERAL-CYCLE-20260824-001",
+  "trigger_action": "submit_response_packet",
+  "requested_state": "OPEN_RECEIVER_LEASE",
+  "runtime_mode": "TRIGGER_DRIVEN_EPHEMERAL",
+  "persistent_host_required": false,
+  "participant_machine_required": false,
+  "developer_machine_required": false,
+  "github_token_runtime_authority": "NONE",
+  "credential_authority": "TV/TVC",
+  "transport_authority_effect": false,
+  "review_authority": false,
+  "publication_authority": false,
+  "master_record_authority": false,
+  "expected_sequence": [
+    "TRIGGER_ACCEPTED",
+    "EPHEMERAL_RECEIVER_STARTED",
+    "PUBLIC_HTTPS_TUNNEL_READY",
+    "HIL_READINESS_READY",
+    "ONE_GOVERNED_SUBMISSION_RECEIVED",
+    "RECEIVER_RESTARTED",
+    "POST_RESTART_EXACT_BYTES_VERIFIED",
+    "EPHEMERAL_RUNTIME_RELEASED"
+  ]
+}
