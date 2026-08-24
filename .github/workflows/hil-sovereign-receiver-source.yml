@@ -112,8 +112,8 @@ jobs:
           for marker in [
               '/api/hil/readiness',
               '/api/hil/submissions',
-              '/api/hil/submissions/{submission_id}/status',
-              '/api/hil/submissions/{submission_id}/exact-bytes',
+              '/api/hil/submissions/{{submission_id}}/status',
+              '/api/hil/submissions/{{submission_id}}/exact-bytes',
               '/api/hil/sovereign-receiver-profile',
               'EXISTING_TV_TVC_REVIEW_AUTH_REQUIRED',
               'participant_machine_required',
