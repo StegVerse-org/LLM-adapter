@@ -212,6 +212,14 @@ async def submit_response(
              str(manifest_path), "RECEIVED_PENDING_REVIEW", "ABSENT", json.dumps(authority, sort_keys=True)),
         )
 
+    # Do not advertise durable custody or registry admission until the persisted row
+    # can be independently re-read after the transaction has committed.
+    persisted_submission = _submission_row(submission_id)
+    if persisted_submission["submitted_file_sha256"] != digest:
+        raise HTTPException(status_code=500, detail="hil_submission_registry_hash_mismatch")
+    if Path(persisted_submission["storage_path"]).resolve() != path.resolve() or not path.is_file():
+        raise HTTPException(status_code=500, detail="hil_submission_persistence_verification_failed")
+
     receipt = {
         "schema_version": "HIL-RECEIVER-RECEIPT-v2",
         "receipt_id": f"HIL-RECEIPT-{uuid4().hex[:16].upper()}",
@@ -228,7 +236,8 @@ async def submit_response(
         "producer_signature_state": signature_state,
         "chain_validation_state": chain_state,
         "validation_state": "PENDING_REVIEW",
-        "custody_state": "GATEWAY_EXACT_BYTES_PRESERVED",
+        "custody_state": "EXACT_BYTES_PERSISTED",
+        "registry_state": "RECORDED",
         "publication_state": "NOT_AUTHORIZED",
         "participant_metadata_state": "PROVIDED" if participant_identifier != "not_provided" else "NOT_PROVIDED",
         "participant_declarations": {
@@ -240,7 +249,8 @@ async def submit_response(
         "previous_receipt_sha256": None,
         "authority": authority,
         "notes": [
-            "Exact uploaded PDF bytes and provenance manifest preserved.",
+            "Exact uploaded PDF bytes and provenance manifest persisted before receipt issuance.",
+            "Submission registry row re-read successfully before RECORDED was asserted.",
             "Participant metadata and publication permission are optional at intake.",
             "Missing optional metadata does not imply consent, attribution, or publication authority.",
             "Review, acceptance, publication, and Master Record append remain pending.",
@@ -270,7 +280,8 @@ def get_submission_status(submission_id: str) -> dict:
         "size_bytes": submission["size_bytes"],
         "validation_state": submission["validation_state"],
         "active_content_state": submission["active_content_state"],
-        "custody_state": "GATEWAY_EXACT_BYTES_PRESERVED",
+        "custody_state": "EXACT_BYTES_PERSISTED",
+        "registry_state": "RECORDED",
         "artifact_bytes_exposed": False,
         "participant_metadata_exposed": False,
         "storage_paths_exposed": False,
