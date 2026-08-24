@@ -19,7 +19,8 @@
   "claimed_surfaces": [
     "llm_adapter/hil_intake_v1_1_api.py",
     "tests/test_hil_intake_api.py",
-    "docs/HIL_RUNTIME_MIRROR_HANDOFF.md",
+    "docs/HIL_SITE_RECEIPT_COMPAT_MIRROR_HANDOFF.md",
+    ".github/workflows/hil-site-receipt-compat.yml",
     "tasks/LLMA-HIL-SITE-RECEIPT-COMPAT-030.json"
   ],
   "completion_requires": [
@@ -29,7 +30,7 @@
     "receipt registry_state equals RECORDED",
     "public status reflects the same durable state without private metadata",
     "regression test mirrors Site browser durable-ingress predicate",
-    "targeted HIL validation passes",
+    "targeted HIL receipt compatibility validation passes",
     "full credential-free repository validation passes",
     "merge to main"
   ],
