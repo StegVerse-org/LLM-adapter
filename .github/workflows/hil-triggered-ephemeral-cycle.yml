@@ -136,9 +136,14 @@ jobs:
           r=json.loads(Path('.hil-runtime/evidence/public-readiness.json').read_text())
           if p.get('state') != 'ACTIVE_SOVEREIGN_RECEIVER': raise SystemExit('profile_not_active')
           if r.get('state') != 'READY': raise SystemExit('readiness_not_ready')
+          if p.get('runtime_profile') != 'sovereign-carrier': raise SystemExit('runtime_profile_mismatch')
+          if p.get('credential_authority') != 'TV/TVC': raise SystemExit('credential_authority_mismatch')
+          if p.get('credential_requirement') != 'NONE_FOR_PARTICIPANT_INTAKE': raise SystemExit('participant_intake_credential_mismatch')
           if p.get('participant_machine_required') is not False: raise SystemExit('participant_machine_dependency')
           if p.get('developer_machine_required') is not False: raise SystemExit('developer_machine_dependency')
-          if p.get('github_token_runtime_authority') != 'NONE': raise SystemExit('github_runtime_authority')
+          if p.get('github_hosted_runtime_required') is not False: raise SystemExit('github_hosted_runtime_dependency')
+          if p.get('third_party_runtime_required') is not False: raise SystemExit('third_party_runtime_dependency')
+          if p.get('authority_granted') is not False: raise SystemExit('receiver_authority_granted')
           PY
 
       - name: Publish non-authorizing live lease observation
