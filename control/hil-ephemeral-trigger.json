@@ -1,6 +1,6 @@
 {
   "schema": "stegverse.hil.ephemeral-trigger-request/v1",
-  "trigger_id": "HIL-EPHEMERAL-CYCLE-20260824-002",
+  "trigger_id": "HIL-EPHEMERAL-CYCLE-20260824-003",
   "trigger_action": "submit_response_packet",
   "requested_state": "OPEN_RECEIVER_LEASE",
   "runtime_mode": "TRIGGER_DRIVEN_EPHEMERAL",
