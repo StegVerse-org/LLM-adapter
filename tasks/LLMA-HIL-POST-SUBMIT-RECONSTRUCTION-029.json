@@ -3,7 +3,7 @@
   "task_id": "LLMA-HIL-POST-SUBMIT-RECONSTRUCTION-029",
   "issue": 192,
   "goal": "Provide bounded post-submit status and independently verifiable exact-byte reconstruction for HIL v1.1 without adding participant hardware or credential authority",
-  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "COMPLETE_RELEASED",
   "credential_authority": "TV/TVC",
   "non_tv_tvc_secret_or_token_allowed": false,
   "github_token_runtime_authority": "NONE",
@@ -13,10 +13,25 @@
   "public_status_exposes_private_metadata": false,
   "exact_byte_retrieval_auth": "EXISTING_STEGVERSE_HIL_REVIEW_TOKEN_TV_TVC_ONLY",
   "new_credential_or_token_minted": false,
-  "claimed_surfaces": [
+  "released_at": "2026-08-24T04:55:00Z",
+  "completion_evidence": {
+    "pull_request": 193,
+    "validated_head": "1736cc8c2f61a42aba1fb112beeeb2e38987bba0",
+    "merge_commit": "f90be5e4cb277c46426b0aa956ee1652f9b60b4a",
+    "targeted_hil_validation_run": 32691608816,
+    "targeted_hil_validation_result": "SUCCESS",
+    "repository_validation_run": 32691608760,
+    "repository_validation_result": "SUCCESS",
+    "public_status_privacy_test": "PASS",
+    "unauthenticated_exact_bytes_denial_test": "PASS",
+    "authorized_exact_byte_hash_verification_test": "PASS",
+    "tamper_detection_test": "PASS"
+  },
+  "developed_surfaces": [
     "llm_adapter/hil_intake_v1_1_api.py",
     "llm_adapter/combined_gateway.py",
     "tests/test_hil_intake_api.py",
+    ".github/workflows/hil-sovereign-receiver-source.yml",
     "docs/HIL_RUNTIME_MIRROR_HANDOFF.md",
     "tasks/LLMA-HIL-POST-SUBMIT-RECONSTRUCTION-029.json"
   ],
@@ -37,5 +52,7 @@
     "source completion is not Site browser submission",
     "source completion is not TVC lifecycle completion",
     "source completion is not publication or Master Records release"
-  ]
+  ],
+  "next_owner": "StegVerse-Labs/.github#246 resident HIL receiver runtime plus existing TVC lifecycle",
+  "session_dependency": false
 }
