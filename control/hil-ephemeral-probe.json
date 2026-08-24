@@ -1,6 +1,6 @@
 {
   "schema": "stegverse.hil.controlled-public-probe-request/v1",
-  "probe_id": "HIL-EPHEMERAL-CONTROLLED-PROBE-001",
+  "probe_id": "HIL-EPHEMERAL-CONTROLLED-PROBE-002",
   "target": "CURRENT_VERIFIED_OPEN_LEASE",
   "purpose": "RUNTIME_AND_RESTART_EVIDENCE_ONLY",
   "authentic_participant_submission": false,
