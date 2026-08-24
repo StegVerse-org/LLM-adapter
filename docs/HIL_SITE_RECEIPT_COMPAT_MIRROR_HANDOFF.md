@@ -12,14 +12,20 @@ github_token_runtime_authority: NONE
 participant_machine_required: false
 developer_machine_required: false
 third_party_runtime_required: false
-state: SOURCE_INSTALLED_VALIDATION_PENDING
+state: COMPLETE_MERGED_VALIDATED_RELEASED
+pull_request: #195
+validated_head: 9327370d7db2241535499dfc0fa30aeaba66650f
+merge: 9928284a2abf229dd7c7c19eae75eb9838024e43
+hil_site_receipt_compat_run: 32735122756 SUCCESS
+hil_sovereign_receiver_source_run: 32735122701 SUCCESS
+repository_validation_run: 32735122719 SUCCESS
 ```
 
 The current Site durable-ingress browser predicate requires a successful `HIL-RECEIVER-RECEIPT-v2` to carry both `custody_state: EXACT_BYTES_PERSISTED` and `registry_state: RECORDED`.
 
 The receiver previously persisted the PDF and SQLite submission row but returned the narrower legacy custody label `GATEWAY_EXACT_BYTES_PRESERVED` and omitted `registry_state`. That shape would cause the current Site client to reject an otherwise successful governed submission as `ingress_custody_not_durable`.
 
-## Bounded repair
+## Installed repair
 
 The receiver now asserts durable state only after:
 
@@ -31,31 +37,35 @@ PDF bytes written to the admitted HIL originals path
 + persisted hash/path identity rechecked
 ```
 
-Only after those predicates pass may the receipt report:
+Only after those predicates pass does the receipt report:
 
 ```text
 custody_state: EXACT_BYTES_PERSISTED
 registry_state: RECORDED
 ```
 
-The public privacy-bounded submission status surface reports the same durable state, but still exposes no participant identifier, publication consent, review notes, storage paths, provenance content, or PDF bytes.
+The public privacy-bounded submission status surface reports the same durable state while still exposing no participant identifier, publication consent, review notes, storage paths, provenance content, or PDF bytes.
+
+The regression test mirrors the current Site browser durable-ingress acceptance predicate, including the exact Primary/prompt hashes and the two durable-state fields. The dedicated credential-free HIL compatibility workflow, the sovereign-receiver source workflow, and the full credential-free repository validation all passed on the exact PR head before merge.
 
 ## Authority boundary
 
 This compatibility repair does not grant acceptance, review, publication, Master Records append, lifecycle, route, or execution authority. It mints no new credential/token and does not make GitHub, participant hardware, developer hardware, Render, or another third-party runtime production authority.
 
-## Validation predicate
+## Continuation
+
+This source/interface defect is closed. The next HIL backend evidence remains the real runtime chain:
 
 ```text
-receiver unit/integration tests mirror Site durable-ingress acceptance
-exact bytes and manifest exist before receipt issuance
-registry row can be re-read before RECORDED assertion
-receipt custody_state == EXACT_BYTES_PERSISTED
-receipt registry_state == RECORDED
-public status retains privacy boundary
-targeted HIL receipt compatibility validation PASS
-full credential-free repository validation PASS
-merge to main
+resident WorkerCoordinator HIL invocation
+-> ACTIVE_SOVEREIGN_RECEIVER
+-> READY
+-> public HTTPS rendezvous
+-> controlled Site browser submission
+-> durable HIL-RECEIVER-RECEIPT-v2
+-> receiver restart/replacement
+-> TV/TVC-authenticated exact-byte reconstruction with original SHA-256
+-> existing TVC lifecycle handoff
 ```
 
-Source/CI success is not a live browser submission, public HTTPS activation, receiver restart proof, or TVC lifecycle completion.
+Source/CI compatibility is not itself live browser submission, public HTTPS activation, receiver restart proof, or TVC lifecycle completion.
