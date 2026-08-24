@@ -11,6 +11,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
+from fastapi.responses import Response
 
 router = APIRouter(prefix="/api/hil", tags=["hil-intake-v1.1"])
 PRIMARY_SHA256 = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
@@ -71,6 +72,17 @@ def _review_token_required(token: str | None) -> None:
         raise HTTPException(status_code=503, detail="hil_review_not_configured")
     if not token or not secrets.compare_digest(token, expected):
         raise HTTPException(status_code=403, detail="hil_review_forbidden")
+
+
+def _submission_row(submission_id: str) -> sqlite3.Row:
+    with _connect() as connection:
+        submission = connection.execute(
+            "SELECT submission_id, received_at, participant_identifier, publication_consent, primary_sha256, submitted_file_sha256, provenance_manifest_sha256, chain_validation_state, size_bytes, storage_path, manifest_path, validation_state, active_content_state, authority_json FROM submissions WHERE submission_id = ?",
+            (submission_id,),
+        ).fetchone()
+    if submission is None:
+        raise HTTPException(status_code=404, detail="hil_submission_not_found")
+    return submission
 
 
 def readiness() -> dict:
@@ -236,6 +248,76 @@ async def submit_response(
     }
     receipt["receipt_sha256"] = _canonical_hash(receipt)
     return receipt
+
+
+@router.get("/submissions/{submission_id}/status")
+def get_submission_status(submission_id: str) -> dict:
+    """Expose stable, non-sensitive post-submit evidence without private metadata."""
+    if not _enabled():
+        raise HTTPException(status_code=503, detail="hil_intake_disabled")
+    submission = _submission_row(submission_id)
+    return {
+        "schema_version": "HIL-SUBMISSION-STATUS-v1",
+        "submission_id": submission["submission_id"],
+        "received_at": submission["received_at"],
+        "primary_version": PRIMARY_VERSION,
+        "primary_sha256": submission["primary_sha256"],
+        "prompt_version": PROMPT_VERSION,
+        "prompt_sha256": PROMPT_SHA256,
+        "submitted_file_sha256": submission["submitted_file_sha256"],
+        "provenance_manifest_sha256": submission["provenance_manifest_sha256"],
+        "chain_validation_state": submission["chain_validation_state"],
+        "size_bytes": submission["size_bytes"],
+        "validation_state": submission["validation_state"],
+        "active_content_state": submission["active_content_state"],
+        "custody_state": "GATEWAY_EXACT_BYTES_PRESERVED",
+        "artifact_bytes_exposed": False,
+        "participant_metadata_exposed": False,
+        "storage_paths_exposed": False,
+        "authority": {
+            "execution": False,
+            "acceptance": False,
+            "publication": False,
+            "master_record_append": False,
+        },
+    }
+
+
+@router.get("/submissions/{submission_id}/exact-bytes")
+def get_submission_exact_bytes(
+    submission_id: str,
+    x_stegverse_hil_review_token: str | None = Header(default=None),
+) -> Response:
+    """Reconstruct and verify the exact submitted PDF under existing TV/TVC review auth."""
+    if not _enabled():
+        raise HTTPException(status_code=503, detail="hil_intake_disabled")
+    _review_token_required(x_stegverse_hil_review_token)
+    submission = _submission_row(submission_id)
+
+    originals_root = (_data_dir() / "originals").resolve()
+    storage_path = Path(submission["storage_path"]).resolve()
+    if not storage_path.is_relative_to(originals_root):
+        raise HTTPException(status_code=409, detail="hil_exact_bytes_storage_boundary_mismatch")
+    if not storage_path.is_file():
+        raise HTTPException(status_code=409, detail="hil_exact_bytes_missing")
+
+    data = storage_path.read_bytes()
+    digest = hashlib.sha256(data).hexdigest()
+    if digest != submission["submitted_file_sha256"]:
+        raise HTTPException(status_code=409, detail="hil_exact_bytes_hash_mismatch")
+    if len(data) != submission["size_bytes"]:
+        raise HTTPException(status_code=409, detail="hil_exact_bytes_size_mismatch")
+
+    return Response(
+        content=data,
+        media_type="application/pdf",
+        headers={
+            "X-SteGVerse-HIL-Submission-ID": submission_id,
+            "X-SteGVerse-HIL-Submitted-SHA256": digest,
+            "X-SteGVerse-HIL-Reconstruction-State": "EXACT_BYTES_HASH_VERIFIED",
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.get("/submissions/{submission_id}/review-state")
