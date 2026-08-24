@@ -1,0 +1,41 @@
+{
+  "schema": "stegverse.task.v1",
+  "task_id": "LLMA-HIL-POST-SUBMIT-RECONSTRUCTION-029",
+  "issue": 192,
+  "goal": "Provide bounded post-submit status and independently verifiable exact-byte reconstruction for HIL v1.1 without adding participant hardware or credential authority",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "credential_authority": "TV/TVC",
+  "non_tv_tvc_secret_or_token_allowed": false,
+  "github_token_runtime_authority": "NONE",
+  "participant_machine_required": false,
+  "developer_machine_required": false,
+  "third_party_runtime_required": false,
+  "public_status_exposes_private_metadata": false,
+  "exact_byte_retrieval_auth": "EXISTING_STEGVERSE_HIL_REVIEW_TOKEN_TV_TVC_ONLY",
+  "new_credential_or_token_minted": false,
+  "claimed_surfaces": [
+    "llm_adapter/hil_intake_v1_1_api.py",
+    "llm_adapter/combined_gateway.py",
+    "tests/test_hil_intake_api.py",
+    "docs/HIL_RUNTIME_MIRROR_HANDOFF.md",
+    "tasks/LLMA-HIL-POST-SUBMIT-RECONSTRUCTION-029.json"
+  ],
+  "completion_requires": [
+    "public non-sensitive submission status endpoint",
+    "TV/TVC-authenticated exact-byte reconstruction endpoint",
+    "recomputed SHA-256 equals persisted submitted_file_sha256",
+    "stored size equals persisted size_bytes",
+    "storage path remains within the admitted HIL originals root",
+    "tampered or missing artifacts fail closed",
+    "no participant metadata or storage paths exposed by public status",
+    "hosted tests pass",
+    "merge to main"
+  ],
+  "non_claims": [
+    "source completion is not live restart proof",
+    "source completion is not public HTTPS receiver activation",
+    "source completion is not Site browser submission",
+    "source completion is not TVC lifecycle completion",
+    "source completion is not publication or Master Records release"
+  ]
+}
