@@ -117,6 +117,78 @@ def test_active_content_is_rejected(monkeypatch, tmp_path):
     assert "active_pdf_content_detected" in response.json()["detail"]
 
 
+def test_public_status_exposes_hash_state_without_private_metadata(monkeypatch, tmp_path):
+    _enable(monkeypatch, tmp_path)
+    client = TestClient(app)
+    pdf = b"%PDF-1.7\nstatus proof\n%%EOF\n"
+    receipt = _submit(
+        client,
+        pdf,
+        _manifest(pdf),
+        {"participant_identifier": "private-participant", "publication_consent": "private"},
+    ).json()
+
+    response = client.get(f"/api/hil/submissions/{receipt['submission_id']}/status")
+    assert response.status_code == 200, response.text
+    status = response.json()
+    assert status["schema_version"] == "HIL-SUBMISSION-STATUS-v1"
+    assert status["submission_id"] == receipt["submission_id"]
+    assert status["submitted_file_sha256"] == hashlib.sha256(pdf).hexdigest()
+    assert status["artifact_bytes_exposed"] is False
+    assert status["participant_metadata_exposed"] is False
+    assert status["storage_paths_exposed"] is False
+    assert "participant_identifier" not in status
+    assert "publication_consent" not in status
+    assert "storage_path" not in status
+    assert status["authority"] == {
+        "execution": False,
+        "acceptance": False,
+        "publication": False,
+        "master_record_append": False,
+    }
+
+
+def test_exact_bytes_requires_existing_tvc_review_auth_and_reconstructs_exact_pdf(monkeypatch, tmp_path):
+    _enable(monkeypatch, tmp_path)
+    monkeypatch.setenv("STEGVERSE_HIL_REVIEW_TOKEN", "tvc-controlled-review-token")
+    client = TestClient(app)
+    pdf = b"%PDF-1.7\nexact restart bytes\n%%EOF\n"
+    receipt = _submit(client, pdf, _manifest(pdf, metadata=False)).json()
+    endpoint = f"/api/hil/submissions/{receipt['submission_id']}/exact-bytes"
+
+    denied = client.get(endpoint)
+    assert denied.status_code == 403
+    assert denied.json()["detail"] == "hil_review_forbidden"
+
+    verified = client.get(
+        endpoint,
+        headers={"X-SteGVerse-HIL-Review-Token": "tvc-controlled-review-token"},
+    )
+    assert verified.status_code == 200, verified.text
+    assert verified.content == pdf
+    assert verified.headers["content-type"].startswith("application/pdf")
+    assert verified.headers["x-stegverse-hil-submitted-sha256"] == hashlib.sha256(pdf).hexdigest()
+    assert verified.headers["x-stegverse-hil-reconstruction-state"] == "EXACT_BYTES_HASH_VERIFIED"
+    assert verified.headers["cache-control"] == "no-store"
+
+
+def test_exact_byte_reconstruction_fails_closed_after_artifact_tamper(monkeypatch, tmp_path):
+    _enable(monkeypatch, tmp_path)
+    monkeypatch.setenv("STEGVERSE_HIL_REVIEW_TOKEN", "tvc-controlled-review-token")
+    client = TestClient(app)
+    pdf = b"%PDF-1.7\noriginal bytes\n%%EOF\n"
+    receipt = _submit(client, pdf, _manifest(pdf, metadata=False)).json()
+    stored = next((tmp_path / "originals").glob("*.pdf"))
+    stored.write_bytes(b"%PDF-1.7\ntampered bytes\n%%EOF\n")
+
+    response = client.get(
+        f"/api/hil/submissions/{receipt['submission_id']}/exact-bytes",
+        headers={"X-SteGVerse-HIL-Review-Token": "tvc-controlled-review-token"},
+    )
+    assert response.status_code == 409
+    assert response.json()["detail"] == "hil_exact_bytes_hash_mismatch"
+
+
 def test_private_review_remains_separately_authenticated_and_write_once(monkeypatch, tmp_path):
     _enable(monkeypatch, tmp_path)
     monkeypatch.setenv("STEGVERSE_HIL_REVIEW_TOKEN", "test-review-token")
