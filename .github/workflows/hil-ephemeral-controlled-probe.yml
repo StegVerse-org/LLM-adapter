@@ -1,0 +1,127 @@
+name: HIL Ephemeral Controlled Public Probe
+
+on:
+  push:
+    paths:
+      - control/hil-ephemeral-probe.json
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  submit-controlled-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Resolve current verified HIL lease observation
+        id: lease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BODY="$(gh api repos/StegVerse-org/LLM-adapter/issues/185/comments --jq 'map(select(.body | startswith("HIL ephemeral lease OPEN."))) | last | .body')"
+          test -n "$BODY"
+          ORIGIN="$(printf '%s' "$BODY" | grep -Eo 'https://[-a-z0-9]+\.trycloudflare\.com' | head -1)"
+          RUN_ID="$(printf '%s' "$BODY" | sed -n 's/.*Run: `\([0-9][0-9]*\)`.*/\1/p')"
+          test -n "$ORIGIN"
+          test -n "$RUN_ID"
+          # Fail closed if a later CLOSED observation exists for this exact run.
+          CLOSED="$(gh api repos/StegVerse-org/LLM-adapter/issues/185/comments --jq --arg rid "$RUN_ID" '[.[] | select(.body | contains("HIL ephemeral lease CLOSED for run `" + $rid + "`"))] | length')"
+          test "$CLOSED" = "0"
+          curl --fail --silent --max-time 10 "$ORIGIN/api/hil/readiness" > readiness.json
+          python - <<'PY'
+          import json
+          d=json.load(open('readiness.json'))
+          assert d['state']=='READY'
+          assert d['primary_sha256']=='a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462'
+          assert d['prompt_sha256']=='cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c'
+          PY
+          echo "origin=$ORIGIN" >> "$GITHUB_OUTPUT"
+          echo "runtime_run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Build inert controlled PDF and provenance
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          pdf=b'%PDF-1.7\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n'
+          Path('controlled-response.pdf').write_bytes(pdf)
+          digest=hashlib.sha256(pdf).hexdigest()
+          manifest={
+            'schema_version':'HIL-RESPONSE-PROVENANCE-v1.1',
+            'primary_version':'v1.1',
+            'primary_sha256':'a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462',
+            'protocol_version':'HIL-PROTOCOL-v1.1',
+            'prompt_version':'HIL-PROMPT-v1.1',
+            'prompt_sha256':'cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c',
+            'response_sha256':digest,
+            'model':'controlled-runtime-probe',
+            'provider':'StegVerse controlled probe',
+            'generated_at':'2026-08-24T00:00:00Z',
+            'conversation_reference':'HIL-EPHEMERAL-CONTROLLED-PROBE-001',
+            'producer_signature':{'state':'UNAVAILABLE','scheme':None,'value':None,'key_id':None},
+          }
+          Path('controlled-response.provenance.json').write_text(json.dumps(manifest,sort_keys=True,indent=2)+'\n')
+          Path('expected-sha256.txt').write_text(digest+'\n')
+          PY
+
+      - name: Submit through live public HTTPS lease
+        env:
+          HIL_ORIGIN: ${{ steps.lease.outputs.origin }}
+        run: |
+          curl --fail --silent --show-error \
+            -F 'response_pdf=@controlled-response.pdf;type=application/pdf' \
+            -F 'provenance_manifest=@controlled-response.provenance.json;type=application/json' \
+            -F 'participant_identifier=CONTROLLED_RUNTIME_PROBE' \
+            -F 'publication_consent=not_provided' \
+            -F 'primary_sha256=a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462' \
+            -F 'prompt_sha256=cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c' \
+            -F 'model_response_declared_unedited=false' \
+            -F 'participant_consent_authority_acknowledged=false' \
+            "$HIL_ORIGIN/api/hil/submissions" > receiver-receipt.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.load(open('receiver-receipt.json'))
+          expected=Path('expected-sha256.txt').read_text().strip()
+          assert r['schema_version']=='HIL-RECEIVER-RECEIPT-v2'
+          assert r['submitted_file_sha256']==expected
+          assert r['custody_state']=='EXACT_BYTES_PERSISTED'
+          assert r['registry_state']=='RECORDED'
+          assert r['authority']=={'execution':False,'acceptance':False,'publication':False,'master_record_append':False}
+          Path('submission-id.txt').write_text(r['submission_id']+'\n')
+          PY
+
+      - name: Reobserve public status
+        env:
+          HIL_ORIGIN: ${{ steps.lease.outputs.origin }}
+        run: |
+          SID="$(cat submission-id.txt)"
+          curl --fail --silent "$HIL_ORIGIN/api/hil/submissions/$SID/status" > submission-status.json
+          python - <<'PY'
+          import json
+          r=json.load(open('receiver-receipt.json'))
+          s=json.load(open('submission-status.json'))
+          assert s['submission_id']==r['submission_id']
+          assert s['submitted_file_sha256']==r['submitted_file_sha256']
+          assert s['custody_state']=='EXACT_BYTES_PERSISTED'
+          assert s['registry_state']=='RECORDED'
+          PY
+
+      - name: Preserve controlled public-probe evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: hil-controlled-public-probe-${{ github.run_id }}
+          path: |
+            readiness.json
+            receiver-receipt.json
+            submission-status.json
+            expected-sha256.txt
+            submission-id.txt
+            control/hil-ephemeral-probe.json
+          if-no-files-found: error
+          retention-days: 90
