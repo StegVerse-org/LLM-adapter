@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   ephemeral-hil-cycle:
@@ -41,9 +42,9 @@ jobs:
         run: |
           mkdir -p .hil-runtime/evidence
           python - <<'PY'
-          import json, os
+          import json
           from pathlib import Path
-          trigger = os.environ.get('INPUT_TRIGGER_ID') or '${{ inputs.trigger_id }}' or 'push:control/hil-ephemeral-trigger.json'
+          trigger = '${{ inputs.trigger_id }}' or 'push:control/hil-ephemeral-trigger.json'
           Path('.hil-runtime/evidence/trigger.json').write_text(json.dumps({
             'schema':'stegverse.hil.ephemeral-trigger/v1',
             'trigger_id':trigger,
@@ -125,6 +126,13 @@ jobs:
           if p.get('github_token_runtime_authority') != 'NONE': raise SystemExit('github_runtime_authority')
           PY
 
+      - name: Publish non-authorizing live lease observation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HIL_ORIGIN: ${{ steps.tunnel.outputs.origin }}
+        run: |
+          gh issue comment 185 --repo StegVerse-org/LLM-adapter --body "HIL ephemeral lease OPEN. Trigger: \`submit_response_packet\`. Run: \`${{ github.run_id }}\`. Current verified receiver origin: $HIL_ORIGIN . Public profile/readiness were independently observed as ACTIVE_SOVEREIGN_RECEIVER / READY before this observation was published. This issue comment is discovery evidence only: GitHub token runtime authority NONE; transport authority effect false; credential authority TV/TVC; historical origin must not be reused after lease teardown. Submit to \`$HIL_ORIGIN/api/hil/submissions\` during this lease."
+
       - name: Wait for one governed HIL submission
         id: submission
         env:
@@ -204,6 +212,14 @@ jobs:
           Path('.hil-runtime/evidence/cycle-evidence.json').write_text(json.dumps(evidence,indent=2,sort_keys=True)+'\n')
           PY
 
+      - name: Publish completed cycle observation
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUBMISSION_ID: ${{ steps.submission.outputs.submission_id }}
+        run: |
+          gh issue comment 185 --repo StegVerse-org/LLM-adapter --body "HIL ephemeral controlled cycle COMPLETE for submission \`$SUBMISSION_ID\`, run \`${{ github.run_id }}\`: public HTTPS READY observed; receipt-backed submission state recorded; receiver process restarted; exact persisted bytes re-read and SHA-256 verified unchanged after restart. Runtime/tunnel teardown follows. This is runtime/reconstruction evidence only; private review/publication/Master Records remain separate TV/TVC-governed transitions."
+
       - name: Close ephemeral tunnel and receiver
         if: always()
         run: |
@@ -222,6 +238,13 @@ jobs:
             'authority_effect':False,
           },indent=2,sort_keys=True)+'\n')
           PY
+
+      - name: Publish lease teardown observation
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment 185 --repo StegVerse-org/LLM-adapter --body "HIL ephemeral lease CLOSED for run \`${{ github.run_id }}\`. Any trycloudflare origin published for this run is historical and MUST NOT be treated as currently live. Runtime/tunnel teardown has been requested; authority effect remains false."
 
       - name: Preserve ephemeral-cycle evidence
         if: always()
