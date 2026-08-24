@@ -1,0 +1,44 @@
+{
+  "schema": "stegverse.task.v1",
+  "task_id": "LLMA-HIL-SITE-RECEIPT-COMPAT-030",
+  "issue": 194,
+  "goal": "Make the sovereign HIL receiver receipt wire-compatible with the current Site durable-ingress acceptance predicate without weakening authority or privacy boundaries",
+  "state": "SOURCE_INSTALLED_VALIDATION_PENDING",
+  "credential_authority": "TV/TVC",
+  "github_token_runtime_authority": "NONE",
+  "non_tv_tvc_secret_or_token_allowed": false,
+  "participant_machine_required": false,
+  "developer_machine_required": false,
+  "third_party_runtime_required": false,
+  "required_receipt_contract": {
+    "schema_version": "HIL-RECEIVER-RECEIPT-v2",
+    "custody_state": "EXACT_BYTES_PERSISTED",
+    "registry_state": "RECORDED",
+    "assertion_timing": "ONLY_AFTER_FILE_PERSISTENCE_AND_COMMITTED_REGISTRY_ROW_RE-READ"
+  },
+  "claimed_surfaces": [
+    "llm_adapter/hil_intake_v1_1_api.py",
+    "tests/test_hil_intake_api.py",
+    "docs/HIL_SITE_RECEIPT_COMPAT_MIRROR_HANDOFF.md",
+    ".github/workflows/hil-site-receipt-compat.yml",
+    "tasks/LLMA-HIL-SITE-RECEIPT-COMPAT-030.json"
+  ],
+  "completion_requires": [
+    "exact bytes persisted before receipt issuance",
+    "registry row committed and re-read before RECORDED assertion",
+    "receipt custody_state equals EXACT_BYTES_PERSISTED",
+    "receipt registry_state equals RECORDED",
+    "public status reflects the same durable state without private metadata",
+    "regression test mirrors Site browser durable-ingress predicate",
+    "targeted HIL receipt compatibility validation passes",
+    "full credential-free repository validation passes",
+    "merge to main"
+  ],
+  "non_claims": [
+    "source compatibility is not live browser submission",
+    "source compatibility is not public HTTPS activation",
+    "source compatibility is not production restart proof",
+    "source compatibility is not TVC lifecycle completion",
+    "source compatibility grants no review publication Master Records or execution authority"
+  ]
+}

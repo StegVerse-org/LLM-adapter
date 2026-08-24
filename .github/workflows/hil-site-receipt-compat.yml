@@ -1,0 +1,64 @@
+name: hil-site-receipt-compat
+
+on:
+  pull_request:
+    paths:
+      - 'llm_adapter/hil_intake_v1_1_api.py'
+      - 'tests/test_hil_intake_api.py'
+      - 'tasks/LLMA-HIL-SITE-RECEIPT-COMPAT-030.json'
+      - 'docs/HIL_SITE_RECEIPT_COMPAT_MIRROR_HANDOFF.md'
+      - '.github/workflows/hil-site-receipt-compat.yml'
+
+permissions: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Refuse credential-bearing environment
+        shell: bash
+        run: |
+          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT TVC_EPHEMERAL_GITHUB_TOKEN STEGVERSE_PROVIDER_TOKEN STEGVERSE_MASTER_RECORDS_TOKEN STEGVERSE_HIL_REVIEW_TOKEN STEGVERSE_HIL_PUBLICATION_TOKEN OPENAI_API_KEY ANTHROPIC_API_KEY; do
+            if [ -n "${!key:-}" ]; then
+              echo "credential_exposed:$key"
+              exit 1
+            fi
+          done
+      - name: Fetch exact source anonymously
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git init .
+          git remote add origin https://github.com/StegVerse-org/LLM-adapter.git
+          git -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+      - name: Install credential-free test dependencies
+        shell: bash
+        run: python3 -m pip install --disable-pip-version-check -q -e '.[dev]'
+      - name: Run HIL receipt compatibility tests
+        shell: bash
+        run: |
+          python3 -m pytest -q tests/test_hil_intake_api.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          task = json.loads(Path('tasks/LLMA-HIL-SITE-RECEIPT-COMPAT-030.json').read_text())
+          assert task['credential_authority'] == 'TV/TVC'
+          assert task['github_token_runtime_authority'] == 'NONE'
+          assert task['participant_machine_required'] is False
+          assert task['developer_machine_required'] is False
+          assert task['third_party_runtime_required'] is False
+          contract = task['required_receipt_contract']
+          assert contract['custody_state'] == 'EXACT_BYTES_PERSISTED'
+          assert contract['registry_state'] == 'RECORDED'
+          source = Path('llm_adapter/hil_intake_v1_1_api.py').read_text()
+          assert '"custody_state": "EXACT_BYTES_PERSISTED"' in source
+          assert '"registry_state": "RECORDED"' in source
+          assert 'hil_submission_registry_hash_mismatch' in source
+          assert 'hil_submission_persistence_verification_failed' in source
+          print('HIL_SITE_RECEIPT_COMPAT=PASS')
+          print('CREDENTIAL_AUTHORITY=TV/TVC')
+          print('PRODUCTION_AUTHORITY_EFFECT=NONE')
+          PY

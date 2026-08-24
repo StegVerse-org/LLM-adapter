@@ -70,11 +70,31 @@ def test_minimal_upload_preserves_exact_bytes_and_issues_receipt(monkeypatch, tm
     assert receipt["participant_metadata_state"] == "NOT_PROVIDED"
     assert receipt["validation_state"] == "PENDING_REVIEW"
     assert receipt["submitted_file_sha256"] == hashlib.sha256(pdf).hexdigest()
+    assert receipt["custody_state"] == "EXACT_BYTES_PERSISTED"
+    assert receipt["registry_state"] == "RECORDED"
     assert receipt["authority"]["publication"] is False
     stored = list((tmp_path / "originals").glob("*.pdf"))
     manifests = list((tmp_path / "provenance").glob("*.json"))
     assert len(stored) == 1 and stored[0].read_bytes() == pdf
     assert len(manifests) == 1
+
+
+def test_site_durable_ingress_acceptance_predicate_is_satisfied(monkeypatch, tmp_path):
+    """Mirror the current Site browser's durable-ingress receipt acceptance gate."""
+    _enable(monkeypatch, tmp_path)
+    pdf = b"%PDF-1.7\nsite durable ingress\n%%EOF\n"
+    response = _submit(TestClient(app), pdf, _manifest(pdf, metadata=False))
+    assert response.status_code == 200, response.text
+    result = response.json()
+
+    assert result["schema_version"] == "HIL-RECEIVER-RECEIPT-v2"
+    assert result["submission_id"]
+    assert result["receipt_id"]
+    assert result["submitted_file_sha256"] == hashlib.sha256(pdf).hexdigest()
+    assert result["primary_sha256"] == PRIMARY
+    assert result["prompt_sha256"] == PROMPT
+    assert result["custody_state"] == "EXACT_BYTES_PERSISTED"
+    assert result["registry_state"] == "RECORDED"
 
 
 def test_optional_metadata_is_preserved_without_becoming_authority(monkeypatch, tmp_path):
@@ -134,6 +154,8 @@ def test_public_status_exposes_hash_state_without_private_metadata(monkeypatch, 
     assert status["schema_version"] == "HIL-SUBMISSION-STATUS-v1"
     assert status["submission_id"] == receipt["submission_id"]
     assert status["submitted_file_sha256"] == hashlib.sha256(pdf).hexdigest()
+    assert status["custody_state"] == "EXACT_BYTES_PERSISTED"
+    assert status["registry_state"] == "RECORDED"
     assert status["artifact_bytes_exposed"] is False
     assert status["participant_metadata_exposed"] is False
     assert status["storage_paths_exposed"] is False
