@@ -1,0 +1,13 @@
+{
+  "schema": "stegverse.hil.controlled-public-probe-request/v1",
+  "probe_id": "HIL-EPHEMERAL-CONTROLLED-PROBE-001",
+  "target": "CURRENT_VERIFIED_OPEN_LEASE",
+  "purpose": "RUNTIME_AND_RESTART_EVIDENCE_ONLY",
+  "authentic_participant_submission": false,
+  "publication_consent": "not_provided",
+  "review_authority": false,
+  "publication_authority": false,
+  "master_record_authority": false,
+  "credential_authority": "TV/TVC",
+  "github_token_runtime_authority": "NONE"
+}
