@@ -1,0 +1,233 @@
+name: HIL Triggered Ephemeral Receiver Cycle
+
+on:
+  workflow_dispatch:
+    inputs:
+      trigger_id:
+        description: Bounded HIL trigger identifier
+        required: false
+        type: string
+  push:
+    paths:
+      - control/hil-ephemeral-trigger.json
+
+permissions:
+  contents: read
+
+jobs:
+  ephemeral-hil-cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      STEGVERSE_HIL_INTAKE_ENABLED: "true"
+      STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: "true"
+      STEGVERSE_RUNTIME_PROFILE: sovereign-carrier
+      STEGVERSE_SOVEREIGN_STATE_DURABLE: "true"
+      STEGVERSE_HIL_DATA_DIR: ${{ github.workspace }}/.hil-runtime/state
+      STEGVERSE_SOVEREIGN_STATE_DIR: ${{ github.workspace }}/.hil-runtime/sovereign-state
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install receiver source
+        run: python -m pip install -e .
+
+      - name: Record trigger binding
+        run: |
+          mkdir -p .hil-runtime/evidence
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          trigger = os.environ.get('INPUT_TRIGGER_ID') or '${{ inputs.trigger_id }}' or 'push:control/hil-ephemeral-trigger.json'
+          Path('.hil-runtime/evidence/trigger.json').write_text(json.dumps({
+            'schema':'stegverse.hil.ephemeral-trigger/v1',
+            'trigger_id':trigger,
+            'trigger_event':'${{ github.event_name }}',
+            'runtime_mode':'TRIGGER_DRIVEN_EPHEMERAL',
+            'persistent_host_required':False,
+            'github_token_runtime_authority':'NONE',
+            'transport_authority_effect':False,
+            'credential_authority':'TV/TVC',
+            'participant_machine_required':False,
+            'developer_machine_required':False,
+          }, indent=2, sort_keys=True)+'\n')
+          PY
+
+      - name: Start ephemeral HIL receiver
+        run: |
+          mkdir -p .hil-runtime/state .hil-runtime/sovereign-state .hil-runtime/evidence
+          nohup uvicorn llm_adapter.combined_gateway:app --host 127.0.0.1 --port 8765 > .hil-runtime/evidence/receiver.log 2>&1 &
+          echo $! > .hil-runtime/evidence/receiver.pid
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent http://127.0.0.1:8765/api/hil/readiness > .hil-runtime/evidence/local-readiness.json; then
+              python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('.hil-runtime/evidence/local-readiness.json').read_text())
+          if d.get('state') != 'READY': raise SystemExit(1)
+          PY
+              break
+            fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:8765/api/hil/sovereign-receiver-profile > .hil-runtime/evidence/local-profile.json
+
+      - name: Start zero-credential ephemeral HTTPS tunnel
+        id: tunnel
+        run: |
+          curl --fail --location --silent --show-error https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 --output "$RUNNER_TEMP/cloudflared"
+          chmod +x "$RUNNER_TEMP/cloudflared"
+          nohup "$RUNNER_TEMP/cloudflared" tunnel --no-autoupdate --url http://127.0.0.1:8765 > .hil-runtime/evidence/tunnel.log 2>&1 &
+          echo $! > .hil-runtime/evidence/tunnel.pid
+          ORIGIN=''
+          for attempt in $(seq 1 60); do
+            ORIGIN="$(grep -Eo 'https://[-a-z0-9]+\.trycloudflare\.com' .hil-runtime/evidence/tunnel.log | tail -1 || true)"
+            [ -n "$ORIGIN" ] && break
+            sleep 1
+          done
+          test -n "$ORIGIN"
+          echo "$ORIGIN" > .hil-runtime/evidence/tunnel-origin.txt
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --max-time 10 "$ORIGIN/api/hil/readiness" > .hil-runtime/evidence/public-readiness.json; then
+              python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('.hil-runtime/evidence/public-readiness.json').read_text())
+          if d.get('state') != 'READY': raise SystemExit(1)
+          PY
+              echo "origin=$ORIGIN" >> "$GITHUB_OUTPUT"
+              echo "HIL ephemeral receiver READY at $ORIGIN"
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Verify public sovereign profile
+        env:
+          HIL_ORIGIN: ${{ steps.tunnel.outputs.origin }}
+        run: |
+          curl --fail --silent "$HIL_ORIGIN/api/hil/sovereign-receiver-profile" > .hil-runtime/evidence/public-profile.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('.hil-runtime/evidence/public-profile.json').read_text())
+          r=json.loads(Path('.hil-runtime/evidence/public-readiness.json').read_text())
+          if p.get('state') != 'ACTIVE_SOVEREIGN_RECEIVER': raise SystemExit('profile_not_active')
+          if r.get('state') != 'READY': raise SystemExit('readiness_not_ready')
+          if p.get('participant_machine_required') is not False: raise SystemExit('participant_machine_dependency')
+          if p.get('developer_machine_required') is not False: raise SystemExit('developer_machine_dependency')
+          if p.get('github_token_runtime_authority') != 'NONE': raise SystemExit('github_runtime_authority')
+          PY
+
+      - name: Wait for one governed HIL submission
+        id: submission
+        env:
+          HIL_ORIGIN: ${{ steps.tunnel.outputs.origin }}
+        run: |
+          echo "Waiting for one participant submission at $HIL_ORIGIN/api/hil/submissions"
+          SUBMISSION_ID=''
+          for attempt in $(seq 1 120); do
+            if [ -f "$STEGVERSE_HIL_DATA_DIR/hil-intake.db" ]; then
+              SUBMISSION_ID="$(python - <<'PY'
+          import os, sqlite3
+          from pathlib import Path
+          db=Path(os.environ['STEGVERSE_HIL_DATA_DIR'])/'hil-intake.db'
+          try:
+              with sqlite3.connect(db) as c:
+                  row=c.execute('SELECT submission_id FROM submissions ORDER BY received_at DESC LIMIT 1').fetchone()
+              print(row[0] if row else '')
+          except Exception:
+              print('')
+          PY
+          )"
+            fi
+            if [ -n "$SUBMISSION_ID" ]; then break; fi
+            sleep 10
+          done
+          test -n "$SUBMISSION_ID"
+          echo "submission_id=$SUBMISSION_ID" >> "$GITHUB_OUTPUT"
+          curl --fail --silent "$HIL_ORIGIN/api/hil/submissions/$SUBMISSION_ID/status" > .hil-runtime/evidence/submission-status-before-restart.json
+
+      - name: Restart receiver and prove persisted state survives
+        env:
+          SUBMISSION_ID: ${{ steps.submission.outputs.submission_id }}
+        run: |
+          kill "$(cat .hil-runtime/evidence/receiver.pid)"
+          for attempt in $(seq 1 20); do
+            ! kill -0 "$(cat .hil-runtime/evidence/receiver.pid)" 2>/dev/null && break
+            sleep 1
+          done
+          nohup uvicorn llm_adapter.combined_gateway:app --host 127.0.0.1 --port 8765 > .hil-runtime/evidence/receiver-restart.log 2>&1 &
+          echo $! > .hil-runtime/evidence/receiver-restart.pid
+          for attempt in $(seq 1 40); do
+            curl --fail --silent http://127.0.0.1:8765/api/hil/readiness >/dev/null && break
+            sleep 1
+          done
+          curl --fail --silent "http://127.0.0.1:8765/api/hil/submissions/$SUBMISSION_ID/status" > .hil-runtime/evidence/submission-status-after-restart.json
+          python - <<'PY'
+          import hashlib, json, os, sqlite3
+          from pathlib import Path
+          root=Path(os.environ['STEGVERSE_HIL_DATA_DIR'])
+          sid=os.environ['SUBMISSION_ID']
+          before=json.loads(Path('.hil-runtime/evidence/submission-status-before-restart.json').read_text())
+          after=json.loads(Path('.hil-runtime/evidence/submission-status-after-restart.json').read_text())
+          with sqlite3.connect(root/'hil-intake.db') as c:
+              row=c.execute('SELECT storage_path, submitted_file_sha256, size_bytes FROM submissions WHERE submission_id=?',(sid,)).fetchone()
+          if not row: raise SystemExit('submission_missing_after_restart')
+          path=Path(row[0]); data=path.read_bytes(); digest=hashlib.sha256(data).hexdigest()
+          if digest != row[1] or len(data) != row[2]: raise SystemExit('exact_bytes_mismatch_after_restart')
+          if before.get('submitted_file_sha256') != after.get('submitted_file_sha256') or after.get('submitted_file_sha256') != digest:
+              raise SystemExit('status_hash_changed_after_restart')
+          evidence={
+            'schema':'stegverse.hil.ephemeral-cycle-evidence/v1',
+            'submission_id':sid,
+            'runtime_mode':'TRIGGER_DRIVEN_EPHEMERAL',
+            'public_https_ready':True,
+            'receiver_restart_observed':True,
+            'post_restart_exact_bytes_sha256_verified':True,
+            'submitted_file_sha256':digest,
+            'custody_state':after.get('custody_state'),
+            'registry_state':after.get('registry_state'),
+            'github_token_runtime_authority':'NONE',
+            'transport_authority_effect':False,
+            'credential_authority':'TV/TVC',
+            'private_review_performed':False,
+            'publication_authorized':False,
+            'master_record_release':False,
+          }
+          Path('.hil-runtime/evidence/cycle-evidence.json').write_text(json.dumps(evidence,indent=2,sort_keys=True)+'\n')
+          PY
+
+      - name: Close ephemeral tunnel and receiver
+        if: always()
+        run: |
+          [ -f .hil-runtime/evidence/tunnel.pid ] && kill "$(cat .hil-runtime/evidence/tunnel.pid)" 2>/dev/null || true
+          [ -f .hil-runtime/evidence/receiver-restart.pid ] && kill "$(cat .hil-runtime/evidence/receiver-restart.pid)" 2>/dev/null || true
+          [ -f .hil-runtime/evidence/receiver.pid ] && kill "$(cat .hil-runtime/evidence/receiver.pid)" 2>/dev/null || true
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('.hil-runtime/evidence/teardown.json')
+          p.write_text(json.dumps({
+            'schema':'stegverse.hil.ephemeral-teardown/v1',
+            'runtime_released':True,
+            'tunnel_released':True,
+            'persistent_host_required':False,
+            'authority_effect':False,
+          },indent=2,sort_keys=True)+'\n')
+          PY
+
+      - name: Preserve ephemeral-cycle evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hil-ephemeral-cycle-${{ github.run_id }}
+          path: .hil-runtime/evidence/
+          if-no-files-found: error
+          retention-days: 90
