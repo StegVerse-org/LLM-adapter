@@ -35,8 +35,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install receiver source
-        run: python -m pip install -e .
+      - name: Install receiver source and bounded service runtime
+        run: |
+          python -m pip install -e .
+          python -m pip install "fastapi>=0.115" "uvicorn[standard]>=0.30" "python-multipart>=0.0.9" "pillow>=10.0" "pillow-heif>=0.16"
 
       - name: Record trigger binding
         run: |
@@ -44,11 +46,16 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          trigger = '${{ inputs.trigger_id }}' or 'push:control/hil-ephemeral-trigger.json'
+          event = '${{ github.event_name }}'
+          if event == 'push':
+              value=json.loads(Path('control/hil-ephemeral-trigger.json').read_text())
+              trigger=str(value.get('trigger_id') or 'push:control/hil-ephemeral-trigger.json')
+          else:
+              trigger='${{ inputs.trigger_id }}' or 'workflow_dispatch'
           Path('.hil-runtime/evidence/trigger.json').write_text(json.dumps({
             'schema':'stegverse.hil.ephemeral-trigger/v1',
             'trigger_id':trigger,
-            'trigger_event':'${{ github.event_name }}',
+            'trigger_event':event,
             'runtime_mode':'TRIGGER_DRIVEN_EPHEMERAL',
             'persistent_host_required':False,
             'github_token_runtime_authority':'NONE',
@@ -64,18 +71,23 @@ jobs:
           mkdir -p .hil-runtime/state .hil-runtime/sovereign-state .hil-runtime/evidence
           nohup uvicorn llm_adapter.combined_gateway:app --host 127.0.0.1 --port 8765 > .hil-runtime/evidence/receiver.log 2>&1 &
           echo $! > .hil-runtime/evidence/receiver.pid
+          READY=''
           for attempt in $(seq 1 40); do
             if curl --fail --silent http://127.0.0.1:8765/api/hil/readiness > .hil-runtime/evidence/local-readiness.json; then
-              python - <<'PY'
+              if python - <<'PY'
           import json
           from pathlib import Path
           d=json.loads(Path('.hil-runtime/evidence/local-readiness.json').read_text())
-          if d.get('state') != 'READY': raise SystemExit(1)
+          raise SystemExit(0 if d.get('state') == 'READY' else 1)
           PY
-              break
+              then READY=1; break; fi
             fi
             sleep 1
           done
+          if [ -z "$READY" ]; then
+            cat .hil-runtime/evidence/receiver.log || true
+            exit 1
+          fi
           curl --fail --silent http://127.0.0.1:8765/api/hil/sovereign-receiver-profile > .hil-runtime/evidence/local-profile.json
 
       - name: Start zero-credential ephemeral HTTPS tunnel
@@ -95,18 +107,21 @@ jobs:
           echo "$ORIGIN" > .hil-runtime/evidence/tunnel-origin.txt
           for attempt in $(seq 1 60); do
             if curl --fail --silent --max-time 10 "$ORIGIN/api/hil/readiness" > .hil-runtime/evidence/public-readiness.json; then
-              python - <<'PY'
+              if python - <<'PY'
           import json
           from pathlib import Path
           d=json.loads(Path('.hil-runtime/evidence/public-readiness.json').read_text())
-          if d.get('state') != 'READY': raise SystemExit(1)
+          raise SystemExit(0 if d.get('state') == 'READY' else 1)
           PY
-              echo "origin=$ORIGIN" >> "$GITHUB_OUTPUT"
-              echo "HIL ephemeral receiver READY at $ORIGIN"
-              exit 0
+              then
+                echo "origin=$ORIGIN" >> "$GITHUB_OUTPUT"
+                echo "HIL ephemeral receiver READY at $ORIGIN"
+                exit 0
+              fi
             fi
             sleep 2
           done
+          cat .hil-runtime/evidence/tunnel.log || true
           exit 1
 
       - name: Verify public sovereign profile
