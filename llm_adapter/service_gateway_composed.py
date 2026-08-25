@@ -28,12 +28,16 @@ def coinbase_skap_readiness() -> Dict[str, Any]:
         "adapter": "coinbase-skap-ciphertext-staging",
         "receipt_schema": STAGE_RECEIPT_SCHEMA,
         "durable_storage": True,
+        "transport_protocol": "InTr",
+        "completed_boundary": "DEVICE_TO_KV",
+        "credential_custody_target": "KV_HOSTED_SKAP_VAULT",
         "credential_authority": "TV/TVC",
         "gateway_credential_value_access": False,
         "gateway_decryption_authority": False,
         "gateway_execution_authority": "NONE",
         "tvc_admission_completed": False,
-        "next_required_transition": "TVC_SKAP_CIPHERTEXT_CUSTODY_ADMISSION",
+        "skap_vault_admission_completed": False,
+        "next_required_transition": "KV_SKAP_VAULT_INTERLOCK_ADMISSION",
         "tvc_decision_id": runtime.tvc_decision_id,
     }
 
