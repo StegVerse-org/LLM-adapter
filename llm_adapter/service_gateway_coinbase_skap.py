@@ -188,8 +188,12 @@ def stage_packet(*, raw_body: bytes, packet: Dict[str, Any], runtime: CoinbaseSk
     if not ingress_id or len(ingress_id) > 160 or any(ch not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-" for ch in ingress_id):
         raise CoinbaseSkapStageError("ingress_id_invalid")
 
-    packet_path = runtime.root / "coinbase-skap-staging" / f"{ingress_id}.json"
-    receipt_path = runtime.root / "coinbase-skap-stage-receipts" / f"{ingress_id}.json"
+    staging_dir = runtime.root / "coinbase-skap-staging"
+    receipt_dir = runtime.root / "coinbase-skap-stage-receipts"
+    staging_dir.mkdir(parents=True, exist_ok=True)
+    receipt_dir.mkdir(parents=True, exist_ok=True)
+    packet_path = staging_dir / f"{ingress_id}.json"
+    receipt_path = receipt_dir / f"{ingress_id}.json"
     if packet_path.exists() or receipt_path.exists():
         raise CoinbaseSkapStageError("ingress_replay_denied")
 
