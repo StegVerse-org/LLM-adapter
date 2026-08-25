@@ -5,6 +5,7 @@ import pytest
 
 from llm_adapter.service_gateway_coinbase_skap import (
     BROWSER_SEALED_FORMAT,
+    BOUNDARY_RECEIPT_SCHEMA,
     CoinbaseSkapStageError,
     CoinbaseSkapStageRuntime,
     digest,
@@ -74,7 +75,7 @@ def redigest(packet):
     return packet
 
 
-def test_valid_packet_stages_exact_bytes_without_authority(tmp_path):
+def test_valid_packet_stages_exact_bytes_with_device_kv_interlock_receipt(tmp_path):
     packet = browser_packet()
     body = raw(packet)
     receipt = stage_packet(raw_body=body, packet=packet, runtime=runtime(tmp_path))
@@ -88,9 +89,21 @@ def test_valid_packet_stages_exact_bytes_without_authority(tmp_path):
     assert receipt["decryption_performed"] is False
     assert receipt["rewrap_performed"] is False
     assert receipt["tvc_admission_completed"] is False
-    assert receipt["next_required_transition"] == "TVC_SKAP_CIPHERTEXT_CUSTODY_ADMISSION"
+    assert receipt["next_required_transition"] == "KV_SKAP_VAULT_INTERLOCK_ADMISSION"
     assert receipt["blind_retry_allowed"] is False
     assert "ciphertext_b64" not in json.dumps(receipt)
+
+    boundary = receipt["device_kv_interlock_receipt"]
+    assert boundary["schema"] == BOUNDARY_RECEIPT_SCHEMA
+    assert boundary["connector"] == "InTr"
+    assert boundary["from_boundary"] == "DEVICE"
+    assert boundary["to_boundary"] == "KV"
+    assert boundary["credential_ref"] == packet["credential_ref"]
+    assert boundary["operation_id"] == packet["ingress_id"]
+    assert boundary["prior_boundary_receipt_hash"] is None
+    assert boundary["secret_plaintext_present"] is False
+    assert boundary["authority_transfer"] is False
+    assert boundary["receipt_hash"] == digest({k: v for k, v in boundary.items() if k != "receipt_hash"})
 
 
 def test_replay_is_denied(tmp_path):
