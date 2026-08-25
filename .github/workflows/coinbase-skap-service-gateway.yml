@@ -66,7 +66,7 @@ jobs:
             tests/test_service_gateway_coinbase_skap.py \
             tests/test_service_gateway_coinbase_skap_api.py
 
-      - name: Assert transport-only authority boundary
+      - name: Assert transport-only authority and first interlock boundary
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -76,7 +76,14 @@ jobs:
           assert 'gateway_decryption_authority": False' in source
           assert 'gateway_execution_authority": "NONE"' in source
           assert 'tvc_admission_completed": False' in source
-          assert 'TVC_SKAP_CIPHERTEXT_CUSTODY_ADMISSION' in source
+          assert 'KV_SKAP_VAULT_INTERLOCK_ADMISSION' in source
+          assert 'device_kv_interlock_receipt' in source
+          assert 'from_boundary": "DEVICE"' in source
+          assert 'to_boundary": "KV"' in source
+          assert 'connector": "InTr"' in source
+          assert 'prior_boundary_receipt_hash": None' in source
+          assert 'secret_plaintext_present": False' in source
+          assert 'authority_transfer": False' in source
           assert 'credential_values_available' in source
           assert 'allowed_keys' in source
           assert 'authorization_header_forbidden' in api
@@ -85,5 +92,6 @@ jobs:
           print('COINBASE_SKAP_GATEWAY_VALIDATION_ONLY=true')
           print('COINBASE_SKAP_GATEWAY_CREDENTIAL_AUTHORITY=NONE')
           print('COINBASE_SKAP_GATEWAY_EXECUTION_AUTHORITY=NONE')
-          print('COINBASE_SKAP_NEXT_AUTHORITY=TVC')
+          print('COINBASE_SKAP_DEVICE_KV_INTR_RECEIPT_REQUIRED=true')
+          print('COINBASE_SKAP_NEXT_TRANSITION=KV_SKAP_VAULT_INTERLOCK_ADMISSION')
           PY
