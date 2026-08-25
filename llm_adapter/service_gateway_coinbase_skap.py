@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 STAGE_RECEIPT_SCHEMA = "stegverse.service_gateway.coinbase_skap_stage_receipt/v1"
+BOUNDARY_RECEIPT_SCHEMA = "stegverse.intr.boundary_transition_receipt/v1"
 BROWSER_SCHEMA = "stegverse.tvc.coinbase_iphone_skap_ingress/v1"
 BROWSER_SEALED_FORMAT = "stegverse.skap.browser_ingress/p256-ecdh-hkdf-sha256-aes256gcm/v1"
 ENDPOINT_ORIGIN = "https://api.coinbase.com"
@@ -147,6 +148,23 @@ def validate_browser_packet(packet: Dict[str, Any]) -> list[str]:
     return findings
 
 
+def _device_kv_interlock_receipt(packet: Dict[str, Any], *, raw_body: bytes) -> Dict[str, Any]:
+    body = {
+        "schema": BOUNDARY_RECEIPT_SCHEMA,
+        "connector": "InTr",
+        "from_boundary": "DEVICE",
+        "to_boundary": "KV",
+        "credential_ref": packet["credential_ref"],
+        "operation_id": packet["ingress_id"],
+        "prior_boundary_receipt_hash": None,
+        "browser_ingress_digest": digest(packet),
+        "raw_body_digest": raw_digest(raw_body),
+        "secret_plaintext_present": False,
+        "authority_transfer": False,
+    }
+    return {**body, "receipt_hash": digest(body)}
+
+
 def load_runtime() -> CoinbaseSkapStageRuntime:
     raw = os.getenv("STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT", "").strip()
     path = os.getenv("STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT_FILE", "").strip()
@@ -204,6 +222,7 @@ def stage_packet(*, raw_body: bytes, packet: Dict[str, Any], runtime: CoinbaseSk
         raise CoinbaseSkapStageError("ciphertext_stage_readback_mismatch")
 
     sealed_digest = digest(packet["sealed_material"])
+    device_kv_receipt = _device_kv_interlock_receipt(packet, raw_body=raw_body)
     body = {
         "schema": STAGE_RECEIPT_SCHEMA,
         "decision": "STAGED_FOR_TVC",
@@ -218,6 +237,7 @@ def stage_packet(*, raw_body: bytes, packet: Dict[str, Any], runtime: CoinbaseSk
         "browser_sealed_digest": sealed_digest,
         "raw_body_digest": raw_digest(raw_body),
         "staged_packet_ref": str(packet_path),
+        "device_kv_interlock_receipt": device_kv_receipt,
         "tvc_decision_id": runtime.tvc_decision_id,
         "tvc_policy_hash": runtime.tvc_policy_hash,
         "credential_authority": "TV/TVC",
@@ -231,7 +251,7 @@ def stage_packet(*, raw_body: bytes, packet: Dict[str, Any], runtime: CoinbaseSk
         "device_secret_custody_authority": False,
         "kv_secret_resolution_authority": False,
         "tvc_admission_completed": False,
-        "next_required_transition": "TVC_SKAP_CIPHERTEXT_CUSTODY_ADMISSION",
+        "next_required_transition": "KV_SKAP_VAULT_INTERLOCK_ADMISSION",
         "blind_retry_allowed": False,
     }
     receipt = {**body, "receipt_digest": digest(body)}
