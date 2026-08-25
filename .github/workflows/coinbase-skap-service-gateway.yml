@@ -1,0 +1,89 @@
+name: Coinbase SKAP Service Gateway Validation
+
+on:
+  push:
+    paths:
+      - 'llm_adapter/service_gateway_coinbase_skap.py'
+      - 'llm_adapter/service_gateway_composed.py'
+      - 'llm_adapter/runtime_gateway.py'
+      - 'tests/test_service_gateway_coinbase_skap.py'
+      - 'tests/test_service_gateway_coinbase_skap_api.py'
+      - 'docs/COINBASE_SKAP_SERVICE_GATEWAY_MIRROR_HANDOFF.md'
+      - '.github/workflows/coinbase-skap-service-gateway.yml'
+  pull_request:
+    paths:
+      - 'llm_adapter/service_gateway_coinbase_skap.py'
+      - 'llm_adapter/service_gateway_composed.py'
+      - 'llm_adapter/runtime_gateway.py'
+      - 'tests/test_service_gateway_coinbase_skap.py'
+      - 'tests/test_service_gateway_coinbase_skap_api.py'
+      - 'docs/COINBASE_SKAP_SERVICE_GATEWAY_MIRROR_HANDOFF.md'
+      - '.github/workflows/coinbase-skap-service-gateway.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse credential-bearing validation environment
+        shell: bash
+        run: |
+          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT OPENAI_API_KEY ANTHROPIC_API_KEY COINBASE_API_KEY COINBASE_API_SECRET COINBASE_API_PRIVATE_KEY; do
+            if [ -n "${!key:-}" ]; then
+              echo "credential_exposed:$key"
+              exit 1
+            fi
+          done
+
+      - name: Fetch exact source anonymously
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git init .
+          git remote add origin https://github.com/StegVerse-org/LLM-adapter.git
+          git -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+
+      - name: Install validation dependencies
+        run: |
+          python3 -m pip install -e '.[dev]'
+
+      - name: Compile Coinbase staging source
+        run: |
+          python3 -m py_compile \
+            llm_adapter/service_gateway_coinbase_skap.py \
+            llm_adapter/service_gateway_composed.py \
+            llm_adapter/runtime_gateway.py \
+            tests/test_service_gateway_coinbase_skap.py \
+            tests/test_service_gateway_coinbase_skap_api.py
+
+      - name: Validate staging and mounted HTTP boundary
+        run: |
+          python3 -m pytest -q \
+            tests/test_service_gateway_coinbase_skap.py \
+            tests/test_service_gateway_coinbase_skap_api.py
+
+      - name: Assert transport-only authority boundary
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          source = Path('llm_adapter/service_gateway_coinbase_skap.py').read_text(encoding='utf-8')
+          api = Path('llm_adapter/service_gateway_composed.py').read_text(encoding='utf-8')
+          assert 'gateway_credential_value_access": False' in source
+          assert 'gateway_decryption_authority": False' in source
+          assert 'gateway_execution_authority": "NONE"' in source
+          assert 'tvc_admission_completed": False' in source
+          assert 'TVC_SKAP_CIPHERTEXT_CUSTODY_ADMISSION' in source
+          assert 'credential_values_available' in source
+          assert 'allowed_keys' in source
+          assert 'authorization_header_forbidden' in api
+          assert 'cookie_header_forbidden' in api
+          assert '/api/coinbase/skap/ingress' in api
+          print('COINBASE_SKAP_GATEWAY_VALIDATION_ONLY=true')
+          print('COINBASE_SKAP_GATEWAY_CREDENTIAL_AUTHORITY=NONE')
+          print('COINBASE_SKAP_GATEWAY_EXECUTION_AUTHORITY=NONE')
+          print('COINBASE_SKAP_NEXT_AUTHORITY=TVC')
+          PY
