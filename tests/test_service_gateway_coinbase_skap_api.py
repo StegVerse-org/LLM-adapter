@@ -72,20 +72,25 @@ def _packet(ingress_id="coinbase-http-stage-1"):
     return {**body, "ingress_digest": digest(body)}
 
 
-def test_readiness_proves_no_value_no_authority_scope(monkeypatch, tmp_path):
+def test_readiness_proves_first_interlock_no_value_no_authority_scope(monkeypatch, tmp_path):
     _configure(monkeypatch, tmp_path)
     response = TestClient(app).get("/api/coinbase/skap/readiness")
     assert response.status_code == 200
     body = response.json()
     assert body["state"] == "READY"
     assert body["adapter"] == "coinbase-skap-ciphertext-staging"
+    assert body["transport_protocol"] == "InTr"
+    assert body["completed_boundary"] == "DEVICE_TO_KV"
+    assert body["credential_custody_target"] == "KV_HOSTED_SKAP_VAULT"
     assert body["gateway_credential_value_access"] is False
     assert body["gateway_decryption_authority"] is False
     assert body["gateway_execution_authority"] == "NONE"
     assert body["tvc_admission_completed"] is False
+    assert body["skap_vault_admission_completed"] is False
+    assert body["next_required_transition"] == "KV_SKAP_VAULT_INTERLOCK_ADMISSION"
 
 
-def test_http_stage_persists_exact_body_and_returns_non_authorizing_receipt(monkeypatch, tmp_path):
+def test_http_stage_persists_exact_body_and_returns_device_kv_receipt(monkeypatch, tmp_path):
     _configure(monkeypatch, tmp_path)
     packet = _packet()
     raw = json.dumps(packet, sort_keys=True, separators=(",", ":")).encode()
@@ -100,6 +105,15 @@ def test_http_stage_persists_exact_body_and_returns_non_authorizing_receipt(monk
     assert receipt["gateway_execution_authority"] == "NONE"
     assert receipt["tvc_admission_completed"] is False
     assert receipt["browser_ciphertext_mutated"] is False
+    assert receipt["next_required_transition"] == "KV_SKAP_VAULT_INTERLOCK_ADMISSION"
+    boundary = receipt["device_kv_interlock_receipt"]
+    assert boundary["connector"] == "InTr"
+    assert boundary["from_boundary"] == "DEVICE"
+    assert boundary["to_boundary"] == "KV"
+    assert boundary["credential_ref"] == packet["credential_ref"]
+    assert boundary["operation_id"] == packet["ingress_id"]
+    assert boundary["secret_plaintext_present"] is False
+    assert boundary["authority_transfer"] is False
     assert (tmp_path / "coinbase-skap-staging" / "coinbase-http-stage-1.json").read_bytes() == raw
     assert "ciphertext_b64" not in json.dumps(receipt)
 
