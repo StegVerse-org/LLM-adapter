@@ -83,3 +83,25 @@ It explicitly refuses `GITHUB_TOKEN`, `GH_TOKEN`, `OPENAI_API_KEY`, `ANTHROPIC_A
 Issue #140 owns future public corpus expansion. Add entries only when a canonical public StegVerse repository/path exists. Update changed operational instructions at the canonical source before refreshing the public manifest. Sovereign runtime/provider/model activation remains a separate machine-owned lane; heartbeat/local-model work is not reopened; Site requires its own orchestrator; Master Records remains custody/reconstruction authority.
 
 The originating public-knowledge implementation is complete and released. Workflow consolidation is repository maintenance and does not reopen the product implementation.
+
+## Provider / device / platform / access-surface expansion
+
+Task `LLMA-PROVIDER-SURFACE-KNOWLEDGE-057` extends the released public-knowledge substrate without reopening task 021.
+
+Canonical provider facts remain owned by `StegVerse-Labs/continuity-vault-kit#56` and its merged registry:
+
+```text
+specs/kv-provider-surface-capability-registry.v1.json
+schema: stegverse.kv.provider-surface-capability-registry/v1
+fact state at integration start: INSTALLED_UNVERIFIED
+```
+
+LLM-adapter adds only a fail-closed consumer. It does not copy provider facts into its local public-knowledge manifest. The runtime may receive the canonical registry through `STEGVERSE_KV_PROVIDER_SURFACE_REGISTRY`; if that source is unavailable or no matching tuple is admitted, Ecosystem Chat reports the state as unknown/unverified rather than inferring behavior from model memory.
+
+The diagnostic dimensions remain distinct:
+
+```text
+provider × device × platform × access surface × browser/runtime
+```
+
+This expansion changes no provider, credential, execution, StegGate, Master Records, Site, publication, or activation authority.
