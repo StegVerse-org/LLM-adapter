@@ -44,14 +44,18 @@ class ProviderSurfaceAnswer:
 def _norm(text: str) -> str:
     return " ".join(re.sub(r"[^a-z0-9]+", " ", text.lower()).split())
 
+def _contains_phrase(normalized: str, phrase: str) -> bool:
+    return f" {phrase} " in f" {normalized} "
+
 def looks_like_provider_surface_question(question: str) -> bool:
     n = _norm(question)
-    return any(term in n for term in QUESTION_TERMS) and any(alias in n for alias in PROVIDER_ALIASES)
+    return any(_contains_phrase(n, term) for term in QUESTION_TERMS) and any(_contains_phrase(n, alias) for alias in PROVIDER_ALIASES)
 
 def load_registry(path: str | Path | None = None) -> Mapping[str, Any]:
-    selected = Path(path or os.environ.get(REGISTRY_ENV, ""))
-    if not str(selected):
+    selected_raw = str(path) if path is not None else os.environ.get(REGISTRY_ENV, "")
+    if not selected_raw:
         raise ProviderSurfaceKnowledgeError("canonical_provider_surface_registry_not_mounted")
+    selected = Path(selected_raw)
     try:
         data = json.loads(selected.read_text(encoding="utf-8"))
     except OSError as exc:
@@ -68,9 +72,9 @@ def resolve_provider_surface_question(question: str, *, path: str | Path | None 
     if not looks_like_provider_surface_question(question):
         return None
     n = _norm(question)
-    provider = next((canonical for alias, canonical in PROVIDER_ALIASES.items() if alias in n), None)
-    surface = next((canonical for alias, canonical in SURFACE_ALIASES.items() if alias in n), None)
-    device = next((term for term in DEVICE_TERMS if term in n), None)
+    provider = next((canonical for alias, canonical in PROVIDER_ALIASES.items() if _contains_phrase(n, alias)), None)
+    surface = next((canonical for alias, canonical in SURFACE_ALIASES.items() if _contains_phrase(n, alias)), None)
+    device = next((term for term in DEVICE_TERMS if _contains_phrase(n, term)), None)
     data = load_registry(path)
     matches = []
     for obs in data["observations"]:
