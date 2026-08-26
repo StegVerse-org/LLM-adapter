@@ -109,7 +109,10 @@ def _provider_surface_grounding(message: str) -> tuple[str | None, str]:
     try:
         grounded = resolve_provider_surface_question(message)
     except ProviderSurfaceKnowledgeError as exc:
-        return None, f"Canonical provider-surface registry unavailable: {exc}. No capability fact was invented."
+        return (
+            "StegVerse recognized this as a provider/device/platform/access-surface question, but the canonical KV capability registry is not available in this runtime. No capability fact was inferred.",
+            f"Canonical provider-surface registry unavailable: {exc}. Model memory was not used as the factual source.",
+        )
     if grounded is None:
         return None, ""
     return grounded.answer, f"Grounded provider/device/platform/access-surface source: {grounded.source_ref}. Match state: {grounded.match_state}. Model memory is not the factual source."
