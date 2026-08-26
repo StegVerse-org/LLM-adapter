@@ -4,33 +4,96 @@
   "repository": "StegVerse-org/LLM-adapter",
   "handoff": "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
   "status": "ACTIVE_WITH_DECLARED_BLOCKERS",
-  "task_sequence": 3,
-  "task_sequence_label": "current work task sequence 0003 complete",
+  "task_sequence": 4,
+  "task_sequence_label": "current work task sequence 0004 running",
   "heartbeat_mode": "TRANSITION_DRIVEN_HEALTH_RELATIVE",
   "ecosystem_heartbeat": 9,
   "repository_heartbeat": 9,
   "last_transition": {
-    "event_type": "STALE_ACTIVATION_PR_RECONCILIATION_COMPLETE_AND_CLAIM_RELEASED",
+    "event_type": "PROVIDER_SURFACE_KNOWLEDGE_TASK_CLAIMED",
     "progress_effect": true,
     "authority_effect": false,
-    "observed_at": "2026-08-05T23:24:00-05:00",
+    "observed_at": "2026-08-26T18:31:00-05:00",
     "evidence": [
-      "receipts/llm-adapter-open-pr-consolidation.json",
-      "tasks/LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.json",
-      "data/llm-adapter-open-pr-consolidation.json",
-      "StegVerse-org/LLM-adapter/pull/118",
-      "StegVerse-org/LLM-adapter/actions/runs/31071026576",
-      "StegVerse-org/LLM-adapter#18"
+      "tasks/LLMA-PROVIDER-SURFACE-KNOWLEDGE-057.json",
+      "StegVerse-Labs/continuity-vault-kit#56",
+      "StegVerse-org/LLM-adapter#140"
     ]
   },
-  "active_tasks": [],
+  "active_tasks": [
+    {
+      "task_id": "LLMA-PROVIDER-SURFACE-KNOWLEDGE-057",
+      "owner": "branch/feat/provider-surface-knowledge-140",
+      "canonical_issue": "StegVerse-org/LLM-adapter#140",
+      "execution_class": "PARALLEL_SAFE_SOURCE_INTEGRATION",
+      "state": "RUNNING",
+      "authority_effect": false
+    }
+  ],
   "completed_tasks": [
-    {"task_id":"LLMA-0001-HANDOFF","owner":"issue/54","state":"COMPLETED"},
-    {"task_id":"LLMA-SESSION-PROVIDER-LAYER-2026-08-02","owner":"pull/95","state":"MERGED_INTO_CANONICAL_WORKSTREAM","merge_commit":"1505aac0073bc6466769ca84c6ae28d887abdefd"},
-    {"task_id":"LLMA-0001-IMAGE-PUBLICATION","owner":"issue/18","scheduler_owner":"StegVerse-Labs/StegVerse-Healer","scheduler_workflow":".github/workflows/stegdeploy-publication-relay.yml","task_record":"tasks/LLMA-PUBLICATION-ACTIVATION-013.json","state":"COMPLETE","publication_run":30967973138,"publication_job":92185969448,"publication_receipt_sha256":"d70f19a0a3afd9a34f313b3e0a4959e3343b00194c86fd85e3cdec5b3c0a7d87","image_digest":"sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901","consumer_pull_verified":true,"readiness_state":"READY","evidence_only_changes_rebuild_image":false},
-    {"task_id":"LLMA-0001-HIL-CYCLE","owner":"merged-pull/56","superseded_owner":"closed-pull/44","state":"COMPLETE","merge_commit":"e320c33189c1b6cf9d51a666a4505592b6fb981b","workflow_run":30966031698,"workflow_job":92180065119,"receipt_sha256":"f4d0a8b90b05017b5abf77f3c96c3b8ad3efb99eb57d9c68b90a611b928888da","artifact_id":8914746865,"artifact_digest":"sha256:e9fe894eb2331c9d3792545cbb68d2f0d9762b2b05327732ec4482adf20d1350","persistent_deployment_proven":false},
-    {"task_id":"LLMA-0001-GOAL8","owner":"main/provider-usage-event","state":"COMPLETE","workflow_run":30966031661,"python_versions":["3.9","3.11","3.12"],"canonical_fixture_and_adversarial_tests":true,"authority_effect":false},
-    {"task_id":"LLMA-SEQUENCE-0001-RELEASE-015","owner":"completed-task-record","state":"COMPLETE","service_gateway_run":30967405348,"service_gateway_artifact":8915257517,"service_gateway_artifact_digest":"sha256:3695622d5f8eb67c11cbfe4339fafb52569554142137af76a3a950274d1e7531","publication_trigger_merge":"f7ca640d44a5e7703e9d3f599717375bfae2e183","committed_receipt":"receipts/service-gateway-activation-proof.json","persistent_deployment_proven":false},
+    {
+      "task_id": "LLMA-0001-HANDOFF",
+      "owner": "issue/54",
+      "state": "COMPLETED"
+    },
+    {
+      "task_id": "LLMA-SESSION-PROVIDER-LAYER-2026-08-02",
+      "owner": "pull/95",
+      "state": "MERGED_INTO_CANONICAL_WORKSTREAM",
+      "merge_commit": "1505aac0073bc6466769ca84c6ae28d887abdefd"
+    },
+    {
+      "task_id": "LLMA-0001-IMAGE-PUBLICATION",
+      "owner": "issue/18",
+      "scheduler_owner": "StegVerse-Labs/StegVerse-Healer",
+      "scheduler_workflow": ".github/workflows/stegdeploy-publication-relay.yml",
+      "task_record": "tasks/LLMA-PUBLICATION-ACTIVATION-013.json",
+      "state": "COMPLETE",
+      "publication_run": 30967973138,
+      "publication_job": 92185969448,
+      "publication_receipt_sha256": "d70f19a0a3afd9a34f313b3e0a4959e3343b00194c86fd85e3cdec5b3c0a7d87",
+      "image_digest": "sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901",
+      "consumer_pull_verified": true,
+      "readiness_state": "READY",
+      "evidence_only_changes_rebuild_image": false
+    },
+    {
+      "task_id": "LLMA-0001-HIL-CYCLE",
+      "owner": "merged-pull/56",
+      "superseded_owner": "closed-pull/44",
+      "state": "COMPLETE",
+      "merge_commit": "e320c33189c1b6cf9d51a666a4505592b6fb981b",
+      "workflow_run": 30966031698,
+      "workflow_job": 92180065119,
+      "receipt_sha256": "f4d0a8b90b05017b5abf77f3c96c3b8ad3efb99eb57d9c68b90a611b928888da",
+      "artifact_id": 8914746865,
+      "artifact_digest": "sha256:e9fe894eb2331c9d3792545cbb68d2f0d9762b2b05327732ec4482adf20d1350",
+      "persistent_deployment_proven": false
+    },
+    {
+      "task_id": "LLMA-0001-GOAL8",
+      "owner": "main/provider-usage-event",
+      "state": "COMPLETE",
+      "workflow_run": 30966031661,
+      "python_versions": [
+        "3.9",
+        "3.11",
+        "3.12"
+      ],
+      "canonical_fixture_and_adversarial_tests": true,
+      "authority_effect": false
+    },
+    {
+      "task_id": "LLMA-SEQUENCE-0001-RELEASE-015",
+      "owner": "completed-task-record",
+      "state": "COMPLETE",
+      "service_gateway_run": 30967405348,
+      "service_gateway_artifact": 8915257517,
+      "service_gateway_artifact_digest": "sha256:3695622d5f8eb67c11cbfe4339fafb52569554142137af76a3a950274d1e7531",
+      "publication_trigger_merge": "f7ca640d44a5e7703e9d3f599717375bfae2e183",
+      "committed_receipt": "receipts/service-gateway-activation-proof.json",
+      "persistent_deployment_proven": false
+    },
     {
       "task_id": "LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016",
       "owner": "completed-task-record",
@@ -43,10 +106,23 @@
       "source_receipt_sha256": "07f7f2495d7d9b60a1593edd48c89b31ca516b865e0d153823a7224216255a26",
       "committed_receipt": "receipts/llm-adapter-open-pr-consolidation.json",
       "committed_receipt_sha256": "a04c192cbc89933d02dcb51517fbb56de88c0ab4bb4384df296519516f1dddf2",
-      "closed_superseded_prs": [10, 13, 27, 60],
-      "superseded_draft_controlled_prs": [23],
-      "review_required_unclaimed_prs": [63],
-      "preserved_distinct_unclaimed_prs": [36, 58, 85],
+      "closed_superseded_prs": [
+        10,
+        13,
+        27,
+        60
+      ],
+      "superseded_draft_controlled_prs": [
+        23
+      ],
+      "review_required_unclaimed_prs": [
+        63
+      ],
+      "preserved_distinct_unclaimed_prs": [
+        36,
+        58,
+        85
+      ],
       "authority_effect": false
     }
   ],
@@ -58,7 +134,11 @@
       "execution_class": "EXCLUSIVE",
       "state": "BLOCKED",
       "blocked_until": "all authority-bound blockers are cleared",
-      "external_blockers": ["authorized provider configuration and scoped execution grant","persistent endpoint","authenticated Master Records custody configuration"],
+      "external_blockers": [
+        "authorized provider configuration and scoped execution grant",
+        "persistent endpoint",
+        "authenticated Master Records custody configuration"
+      ],
       "completed_dependency_evidence": [
         "published-package consumer access: READY",
         "stable image digest: sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901",
@@ -73,23 +153,51 @@
     }
   ],
   "machine_owned_observers": [
-    {"observer_id":"LLMA-HEALER-PUBLICATION-RELAY","owner":"StegVerse-Labs/StegVerse-Healer","workflow":".github/workflows/stegdeploy-publication-relay.yml","state":"BLOCKED","observed_result":"HTTP 403","release_condition":"HEALER_GH_TOKEN successfully creates the bounded LLM-adapter workflow-dispatch event without exposing the token.","effect_on_publication_completion":"NONE"},
-    {"observer_id":"LLMA-LIVE-ACTIVATION-MONITOR","owner":"StegVerse-org/LLM-adapter","workflow":".github/workflows/ecosystem-chat-live-activation-monitor.yml","state":"PENDING","observed_result":"live_activation_observation_not_yet_recorded","latest_run":31069429432,"observed_at":"2026-08-06T03:48:06Z","release_condition":"A zero-blocker VERIFIED live activation observation is retained after authorized persistent provider, custody, and reconstruction execution.","authority_effect":false},
-    {"observer_id":"LLMA-OPEN-PR-CONSOLIDATION","owner":"StegVerse-org/LLM-adapter","workflow":".github/workflows/llm-adapter-open-pr-consolidation.yml","state":"COMPLETE","observed_result":"PASS","latest_run":31071026576,"artifact_id":8955632464,"release_condition":"Re-open only if a tracked PR state, draft state, merge state, classification, denominator, owner, blocker, or authority boundary drifts.","authority_effect":false}
+    {
+      "observer_id": "LLMA-HEALER-PUBLICATION-RELAY",
+      "owner": "StegVerse-Labs/StegVerse-Healer",
+      "workflow": ".github/workflows/stegdeploy-publication-relay.yml",
+      "state": "BLOCKED",
+      "observed_result": "HTTP 403",
+      "release_condition": "HEALER_GH_TOKEN successfully creates the bounded LLM-adapter workflow-dispatch event without exposing the token.",
+      "effect_on_publication_completion": "NONE"
+    },
+    {
+      "observer_id": "LLMA-LIVE-ACTIVATION-MONITOR",
+      "owner": "StegVerse-org/LLM-adapter",
+      "workflow": ".github/workflows/ecosystem-chat-live-activation-monitor.yml",
+      "state": "PENDING",
+      "observed_result": "live_activation_observation_not_yet_recorded",
+      "latest_run": 31069429432,
+      "observed_at": "2026-08-06T03:48:06Z",
+      "release_condition": "A zero-blocker VERIFIED live activation observation is retained after authorized persistent provider, custody, and reconstruction execution.",
+      "authority_effect": false
+    },
+    {
+      "observer_id": "LLMA-OPEN-PR-CONSOLIDATION",
+      "owner": "StegVerse-org/LLM-adapter",
+      "workflow": ".github/workflows/llm-adapter-open-pr-consolidation.yml",
+      "state": "COMPLETE",
+      "observed_result": "PASS",
+      "latest_run": 31071026576,
+      "artifact_id": 8955632464,
+      "release_condition": "Re-open only if a tracked PR state, draft state, merge state, classification, denominator, owner, blocker, or authority boundary drifts.",
+      "authority_effect": false
+    }
   ],
   "existing_workload_owners": {
-    "authorized_provider_runtime":"issue/18",
-    "hil_full_cycle_reconciliation":"completed merged-pr/56",
-    "provider_usage_validation":"completed main/provider-usage-event",
-    "service_gateway_activation_proof":"completed receipt/service-gateway-activation-proof.json and issue/72",
-    "service_gateway_secret_governance":"StegVerse-Labs/TVC#6",
-    "image_publication_evidence":"completed task LLMA-0001-IMAGE-PUBLICATION",
-    "image_publication_scheduler":"StegVerse-Labs/StegVerse-Healer/.github/workflows/stegdeploy-publication-relay.yml",
-    "stale_activation_pr_reconciliation":"completed task LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016",
-    "provider_execution_generic_safety_review":"open-pull/63 REVIEW_REQUIRED and unclaimed",
-    "stegwallet_siwe_gateway":"open-pull/36 distinct and unclaimed",
-    "governed_reference_suite":"open-pull/58 distinct and unclaimed",
-    "hil_submission_client":"open-pull/85 distinct and unclaimed"
+    "authorized_provider_runtime": "issue/18",
+    "hil_full_cycle_reconciliation": "completed merged-pr/56",
+    "provider_usage_validation": "completed main/provider-usage-event",
+    "service_gateway_activation_proof": "completed receipt/service-gateway-activation-proof.json and issue/72",
+    "service_gateway_secret_governance": "StegVerse-Labs/TVC#6",
+    "image_publication_evidence": "completed task LLMA-0001-IMAGE-PUBLICATION",
+    "image_publication_scheduler": "StegVerse-Labs/StegVerse-Healer/.github/workflows/stegdeploy-publication-relay.yml",
+    "stale_activation_pr_reconciliation": "completed task LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016",
+    "provider_execution_generic_safety_review": "open-pull/63 REVIEW_REQUIRED and unclaimed",
+    "stegwallet_siwe_gateway": "open-pull/36 distinct and unclaimed",
+    "governed_reference_suite": "open-pull/58 distinct and unclaimed",
+    "hil_submission_client": "open-pull/85 distinct and unclaimed"
   },
   "health_model": {
     "missing_heartbeat_is_failure_only_when_progress_was_expected": true,
@@ -105,8 +213,35 @@
       "Authorized live-provider execution remains blocked and durably owned by issue #18."
     ]
   },
-  "policy": {"handoff_is_source_of_truth":true,"resume_unfinished_before_new_work":true,"one_active_owner_per_workload":true,"duplicate_workloads_fail_closed":true,"parallel_safe_work_may_join_current_sequence":true,"exclusive_work_requires_idle_barrier":true,"time_is_watchdog_only":true,"incoming_request_is_candidate_workload":true,"completed_or_superseded_owners_must_not_remain_running":true,"managed_schedules_are_healer_only":true},
+  "policy": {
+    "handoff_is_source_of_truth": true,
+    "resume_unfinished_before_new_work": true,
+    "one_active_owner_per_workload": true,
+    "duplicate_workloads_fail_closed": true,
+    "parallel_safe_work_may_join_current_sequence": true,
+    "exclusive_work_requires_idle_barrier": true,
+    "time_is_watchdog_only": true,
+    "incoming_request_is_candidate_workload": true,
+    "completed_or_superseded_owners_must_not_remain_running": true,
+    "managed_schedules_are_healer_only": true
+  },
   "idle_terminal_statement": "end of current work task sequence 0003, no tasks running",
-  "session_consolidation": {"state":"COMPLETE","canonical_continuation":["StegVerse-org/LLM-adapter#18","StegVerse-org/LLM-adapter#72","StegVerse-Labs/TVC#6"],"archive_ready":true},
-  "authority": {"provider":false,"deployment":false,"custody":false,"execution":false,"publication":false,"release":false,"heartbeat":false}
+  "session_consolidation": {
+    "state": "COMPLETE",
+    "canonical_continuation": [
+      "StegVerse-org/LLM-adapter#18",
+      "StegVerse-org/LLM-adapter#72",
+      "StegVerse-Labs/TVC#6"
+    ],
+    "archive_ready": true
+  },
+  "authority": {
+    "provider": false,
+    "deployment": false,
+    "custody": false,
+    "execution": false,
+    "publication": false,
+    "release": false,
+    "heartbeat": false
+  }
 }
