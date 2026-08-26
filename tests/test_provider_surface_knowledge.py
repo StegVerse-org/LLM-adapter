@@ -30,6 +30,15 @@ class ProviderSurfaceKnowledgeTests(unittest.TestCase):
             self.assertIn("background sync is weaker",answer.answer)
         finally: td.cleanup()
 
+    def test_onedrive_does_not_alias_to_google_drive(self):
+        obs={"provider":"microsoft_onedrive","device_class":"windows","platform":"windows","access_surface":"browser","knowledge_state":"DOCUMENTED","capabilities":{},"preferred_route":"sync_client","fallback_route":"browser","limitations":[],"evidence":{"source_type":"provider_documentation","source_ref":"evidence:onedrive","observed_at":"2026-08-26","version":"1"}}
+        td,path=self._registry([obs])
+        try:
+            answer=resolve_provider_surface_question("Why is OneDrive different in Edge on Windows?",path=path)
+            self.assertIsNotNone(answer)
+            self.assertIn("sync_client",answer.answer)
+        finally: td.cleanup()
+
     def test_missing_registry_fails_closed(self):
         with self.assertRaises(ProviderSurfaceKnowledgeError):
             resolve_provider_surface_question("Why is Safari with iCloud different?",path="/definitely/missing.json")
