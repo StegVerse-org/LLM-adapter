@@ -3,6 +3,8 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+from llm_adapter.ai_entry_backend_service import build_ai_entry_backend_response
 from llm_adapter.provider_surface_knowledge import ProviderSurfaceKnowledgeError, resolve_provider_surface_question
 
 class ProviderSurfaceKnowledgeTests(unittest.TestCase):
@@ -31,5 +33,16 @@ class ProviderSurfaceKnowledgeTests(unittest.TestCase):
     def test_missing_registry_fails_closed(self):
         with self.assertRaises(ProviderSurfaceKnowledgeError):
             resolve_provider_surface_question("Why is Safari with iCloud different?",path="/definitely/missing.json")
+
+    def test_backend_surfaces_unknown_without_model_memory(self):
+        td,path=self._registry([])
+        try:
+            with patch.dict("os.environ", {"STEGVERSE_KV_PROVIDER_SURFACE_REGISTRY": str(path)}, clear=False):
+                response=build_ai_entry_backend_response("Why is Safari with iCloud different on iPhone?")
+            self.assertEqual(response.primary_route,"provider_surface_knowledge")
+            self.assertIn("no admitted provider/device/platform/access-surface observation", response.stegverse_response)
+            self.assertIn("Model memory is not the factual source", response.route_guidance)
+            self.assertFalse(response.governance["authority_issued"])
+        finally: td.cleanup()
 
 if __name__=="__main__": unittest.main()
