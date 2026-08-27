@@ -16,6 +16,7 @@ from llm_adapter.ai_entry_provider_boundary import build_disabled_provider_bound
 from llm_adapter.free_tier_limits import ReceiptReplayUsage, evaluate_receipt_replay_limits
 from llm_adapter.free_tier_quota import FreeTierUsage, evaluate_free_tier_quota
 from llm_adapter.public_knowledge import PublicKnowledgeError, resolve_public_question
+from llm_adapter.provider_surface_knowledge import ProviderSurfaceKnowledgeError, resolve_provider_surface_question
 
 ROUTE_KEYWORDS = (
     ("restricted_admin", ("secret", "token", "credential", "shell", "delete", "release", "permission", "workflow", "repo write")),
@@ -104,6 +105,19 @@ def build_free_tier_trust_metadata() -> dict[str, Any]:
     }
 
 
+def _provider_surface_grounding(message: str) -> tuple[str | None, str]:
+    try:
+        grounded = resolve_provider_surface_question(message)
+    except ProviderSurfaceKnowledgeError as exc:
+        return (
+            "StegVerse recognized this as a provider/device/platform/access-surface question, but the canonical KV capability registry is not available in this runtime. No capability fact was inferred.",
+            f"Canonical provider-surface registry unavailable: {exc}. Model memory was not used as the factual source.",
+        )
+    if grounded is None:
+        return None, ""
+    return grounded.answer, f"Grounded provider/device/platform/access-surface source: {grounded.source_ref}. Match state: {grounded.match_state}. Model memory is not the factual source."
+
+
 def _public_grounding(message: str) -> tuple[str | None, str]:
     try:
         grounded = resolve_public_question(message)
@@ -120,8 +134,12 @@ def _public_grounding(message: str) -> tuple[str | None, str]:
 def build_ai_entry_backend_response(message: str) -> AIEntryBackendResponse:
     clean = message.strip()
     route_id = classify_route(clean)
-    grounded_answer, grounding_guidance = _public_grounding(clean) if clean else (None, "")
-    if grounded_answer is not None:
+    provider_answer, provider_guidance = _provider_surface_grounding(clean) if clean else (None, "")
+    grounded_answer, grounding_guidance = _public_grounding(clean) if clean and provider_answer is None else (None, "")
+    if provider_answer is not None:
+        grounded_answer, grounding_guidance = provider_answer, provider_guidance
+        route_id = "provider_surface_knowledge"
+    elif grounded_answer is not None:
         route_id = "public_knowledge"
     digest = sha256(f"{route_id}\n{clean}".encode("utf-8")).hexdigest()[:16]
     response_id = "welcome" if not clean else f"preview-{route_id}-{digest}"
@@ -161,7 +179,7 @@ def build_ai_entry_backend_response(message: str) -> AIEntryBackendResponse:
         route_guidance=route_guidance,
         sdk_guidance=(
             "SDK guidance is grounded in the public knowledge corpus when a matching SDK/help entry exists."
-            if route_id in {"sdk_access_guidance", "sdk_intake_candidate", "public_knowledge"}
+            if route_id in {"sdk_access_guidance", "sdk_intake_candidate", "public_knowledge", "provider_surface_knowledge"}
             else "No SDK-specific public knowledge entry selected."
         ),
         comparison_outputs=comparisons,

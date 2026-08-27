@@ -1,0 +1,41 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-PROVIDER-SURFACE-KNOWLEDGE-057",
+  "originating_goal": "Extend Ecosystem Chat public knowledge so cloud/browser/native troubleshooting resolves through the canonical KV provider × device × platform × access-surface registry without model-memory guessing.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "feat/provider-surface-knowledge-140",
+  "canonical_issue": "StegVerse-org/LLM-adapter#140",
+  "upstream_issue": "StegVerse-Labs/continuity-vault-kit#56",
+  "claimant": "chatgpt-session-provider-surface-20260826",
+  "role": "CLAIMED_FOR_IMPLEMENTATION",
+  "state": "RUNNING",
+  "claim_timestamp": "2026-08-26T18:31:00-05:00",
+  "execution_class": "PARALLEL_SAFE_SOURCE_INTEGRATION",
+  "surfaces": [
+    "llm_adapter/provider_surface_knowledge.py",
+    "llm_adapter/ai_entry_backend_service.py",
+    "tests/test_provider_surface_knowledge.py",
+    ".github/workflows/validate.yml",
+    "docs/ECOSYSTEM_PUBLIC_KNOWLEDGE_MIRROR_HANDOFF.md",
+    "tasks/LLMA-PROVIDER-SURFACE-KNOWLEDGE-057.json",
+    "iosnoperiod/github/workflows/validate.yml"
+  ],
+  "acceptance": [
+    "Recognized provider/device/platform/access-surface questions consult only the canonical KV registry.",
+    "Missing registry or missing tuple evidence fails transparently without inventing facts.",
+    "Provider, device, platform, access surface, and browser/runtime remain distinct dimensions.",
+    "Existing public-knowledge and provider/runtime authority boundaries remain unchanged.",
+    "Global deterministic validation passes on the exact PR head."
+  ],
+  "collision_boundaries": [
+    "Do not duplicate provider capability facts inside LLM-adapter.",
+    "Do not modify Site; Site#239 remains separately orchestrated.",
+    "Do not grant provider/model/credential/StegGate/Master Records authority.",
+    "Do not reopen the released LLMA-ECOSYSTEM-PUBLIC-KNOWLEDGE-021 task; this is a bounded corpus-integration expansion."
+  ],
+  "credential_authority": "TV/TVC",
+  "github_token_runtime_authority": "NONE",
+  "non_tv_tvc_secret_or_token_allowed": false,
+  "authority_effect": false,
+  "activation_effect": false
+}
