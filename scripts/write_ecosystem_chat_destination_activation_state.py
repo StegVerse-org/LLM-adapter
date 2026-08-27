@@ -18,7 +18,8 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "reports" / "ecosystem-chat-destination-activation-state.json"
 SOVEREIGN_STATE = ROOT / "data" / "ecosystem-chat-sovereign-orchestration-state.json"
 CARRIER_TASK = ROOT / "tasks" / "LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json"
-LIVE_RECEIPT = ROOT / "receipts" / "ecosystem-chat-live-activation.verified.json"\nSOVEREIGN_RECEIPT = ROOT / "receipts" / "ecosystem-chat-sovereign-activation.verified.json"
+LIVE_RECEIPT = ROOT / "receipts" / "ecosystem-chat-live-activation.verified.json"
+SOVEREIGN_RECEIPT = ROOT / "receipts" / "ecosystem-chat-sovereign-activation.verified.json"
 
 
 def env(name: str) -> str | None:
