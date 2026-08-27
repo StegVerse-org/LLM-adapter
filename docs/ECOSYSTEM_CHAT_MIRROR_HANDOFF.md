@@ -16,7 +16,7 @@ credential_authority: TV/TVC
 third_party_deployment_dependency: NONE_ALLOWED
 third_party_inference_platform_dependency: NONE_ALLOWED
 production_provider_path: STEGVERSE_LOCAL_PRIVATE_ENDPOINT
-production_activation_state: ACTIVE_MACHINE_CONTINUATION_RECOVERY_THEN_SAME_EXECUTION_PROOF
+production_activation_state: ACTIVE_MACHINE_CONTINUATION_PARENT_SAME_EXECUTION_PROOF_PENDING
 session_specific_transport_task: LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019 COMPLETE_RELEASED
 session_consolidation: MERGED_INTO_CANONICAL_WORKSTREAM
 ```
@@ -68,42 +68,40 @@ credential_requirement_for_repository_local_model: NONE
 
 Do not reintroduce cross-private-repository checkout, PATs, GitHub runtime credentials, or hosted control-plane authority as an Ecosystem Chat activation requirement.
 
-## Current execution state — recovery is already HANDOFF_READY
+## Current execution state — recovery completed; parent is independently HANDOFF_READY
 
-The canonical recovery registry in `StegVerse-Labs/.github/control/worker-registry.d/ecosystem-chat-orphan-recovery-hb28.json` records:
+Current `StegVerse-Labs/.github` machine state supersedes the earlier recovery-pending text. The canonical recovery registry now records:
 
 ```text
-state: HANDOFF_READY
-executor_binding: AUTHORIZED
-required_capability: orphan_lifecycle_reconstruction
-fresh_fence_required: true
-minimum_fencing_token_exclusive: 20
-g18_terminalization_required: false
-worker_registry_cleanup_required: false
-github_token_required: false
-human_action_required: false
+RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28
+state: COMPLETED
+transition: ORPHAN_LIFECYCLE_RECONSTRUCTED
+recovery fencing token: 22
+old fencing token: 20
+old authority ended: true
+old authority reused: false
+Master Records custody valid: true
+successor authority granted by recovery: false
 ```
 
-The recovery-only worker cannot execute parent inference authority. Any compliant StegVerse task-control executor advertising `orphan_lifecycle_reconstruction` may atomically acquire the recovery task under a fresh fencing token strictly greater than 20 and execute the bounded reconstruction.
+The parent handoff `StegVerse-Labs/.github/handoffs/SHWP-ECOSYSTEM-CHAT-INFERENCE-001.json` is now independently `HANDOFF_READY`, and `authorizations/SHWP-ECOSYSTEM-CHAT-INFERENCE-001-independent-parent.json` is `AUTHORIZED`. The next legitimate machine transition is a fresh parent fence strictly greater than 22 on an admitted StegVerse task-control execution surface.
 
-Neither G18 terminalization nor a WorkerCoordinator-specific promotion cycle is a prerequisite. HB31 `RELEASE_COMPLETE` is sufficient as the released heartbeat reference for this activation chain; heartbeat reference state does not itself grant execution authority.
+Recovery completion does not grant parent inference authority. Neither G18 terminalization nor a WorkerCoordinator-specific promotion cycle is a prerequisite. Heartbeat remains a noncausal reference for this independently admitted task-control execution.
 
 ## Exact production completion sequence
 
-1. Acquire the already `HANDOFF_READY` recovery task under a fresh authorized fence `>20`.
-2. Execute `ecosystem-chat-orphan-recovery-worker` against the ended HB25/G20 checkpoint and canonical Master Records lifecycle custody.
-3. Persist recovery `PASS`; old G20 claim/fence remain unusable and no parent inference authority is inherited.
-4. Parent `SHWP-ECOSYSTEM-CHAT-INFERENCE-001` independently acquires another fresh authorized fence `>20`.
-5. Launch/observe the released canonical micro-node model as a live private process and keep it alive for the whole same-carrier execution.
-6. TVC evaluates that exact endpoint and emits `ROUTE_ADMITTED` with `credential_requirement=NONE`, `github_token_required=false`, and no third-party execution dependency.
-7. LLM-adapter consumes that exact admitted endpoint through `StegVerseLocalHTTPProviderClient`.
-8. Real governed execution traverses E1 → model worker → E2.
-9. Provider/model usage is measured and persisted for that execution.
-10. `master-records/orchestration` records provider-usage reconstruction `PASS`.
-11. `master-records/orchestration` records transition reconstruction `PASS` for the same execution and binds `same_execution=true`.
-12. LLM-adapter emits immutable `receipts/ecosystem-chat-live-activation.verified.json` with `state=VERIFIED`, `blockers=[]`, valid result hash, and no authority escalation.
-13. `StegVerse-Labs/Site` imports the verified receipt and reaches its Ecosystem Chat activation condition.
-14. Publisher, admissibility-wiki, and stegguardian-wiki consume the verified Site propagation under their existing contracts.
+1. Preserve terminal orphan-recovery evidence; do not reacquire or replay recovery authority.
+2. Parent `SHWP-ECOSYSTEM-CHAT-INFERENCE-001` independently acquires a fresh authorized fence `>22`.
+3. Launch/observe the released canonical micro-node model as a live private process and keep it alive for the whole same-carrier execution.
+4. TVC evaluates that exact endpoint and emits `ROUTE_ADMITTED` with `credential_requirement=NONE`, `github_token_required=false`, and no third-party execution dependency.
+5. LLM-adapter consumes that exact admitted endpoint through `StegVerseLocalHTTPProviderClient`.
+6. Real governed execution traverses E1 → model worker → E2.
+7. Provider/model usage is measured and persisted for that execution.
+8. `master-records/orchestration` records provider-usage reconstruction `PASS`.
+9. `master-records/orchestration` records transition reconstruction `PASS` for the same execution and binds `same_execution=true`.
+10. LLM-adapter emits immutable `receipts/ecosystem-chat-live-activation.verified.json` with `state=VERIFIED`, `blockers=[]`, valid result hash, and no authority escalation.
+11. `StegVerse-Labs/Site` imports the verified receipt and reaches its Ecosystem Chat activation condition.
+12. Publisher, admissibility-wiki, and stegguardian-wiki consume the verified Site propagation under their existing contracts.
 
 No earlier level implies the next.
 
@@ -127,8 +125,8 @@ SOVEREIGN-LOCAL-MODEL-001 | micro-node-runtime #16/#22 | COMPLETE_RELEASED
 LLMA-LOCAL-RUNTIME-MODEL-017 | LLM-adapter | SUPERSEDED
 LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019 | LLM-adapter #18 | COMPLETE_RELEASED
 LLMA-CANONICAL-LOCAL-MODEL-BINDING-018 | MERGED_INTO_CANONICAL_WORKSTREAM | next: recovery then exact sovereign endpoint execution
-RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28 | HANDOFF_READY | next: fresh fence >20 and reconstruction now
-SHWP-ECOSYSTEM-CHAT-INFERENCE-001 | ACTIVE_MACHINE_CONTINUATION | next after recovery: fresh parent fence >20 and same-carrier execution
+RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28 | COMPLETED | fence 22 / old authority not reused
+SHWP-ECOSYSTEM-CHAT-INFERENCE-001 | HANDOFF_READY / AUTHORIZED | next: fresh parent fence >22 and same-carrier execution
 Master Records same-execution reconstruction | WAITING_ON_REAL_EXECUTION | provider-usage + transition PASS required
 Site activation | WAITING_ON_VERIFIED_RECEIPT
 Downstream propagation | WAITING_ON_VERIFIED_SITE_ACTIVATION
@@ -154,11 +152,52 @@ session-specific scaffolding/stubs: 0
 session-specific implementation claim: RELEASED
 canonical local model development/runtime: COMPLETE_RELEASED
 canonical provider/transport evidence seam: COMPLETE_RELEASED
-recovery registry admission: HANDOFF_READY
-fresh recovery execution: PENDING
+recovery registry admission: COMPLETE
+fresh recovery execution: COMPLETE / G22
 fresh parent sovereign execution: PENDING
 same-execution reconstruction: 0/2
 immutable verified activation receipt: 0/1
 Site activation: 0/1
 downstream verified ingestion: 0/3
 ```
+
+
+## Destination activation projection correction — issue #7
+
+Direct inspection found that `scripts/write_ecosystem_chat_destination_activation_state.py` still derived its machine-readable destination topology from `render-production.yaml`, even though Render is explicitly superseded as production authority throughout this handoff.
+
+The bounded issue #7 repair now uses the canonical sovereign source surfaces instead:
+
+```text
+data/ecosystem-chat-sovereign-orchestration-state.json
+tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json
+receipts/ecosystem-chat-live-activation.verified.json
+```
+
+The projection separates:
+
+```text
+released source/runtime contract
+!=
+observed live sovereign execution
+!=
+Master Records custody/reconstruction
+!=
+Site activation
+```
+
+The historical Site compatibility gate names are preserved so existing importers do not fork, but `same_origin_authenticated_deployment` now means a canonical sovereign runtime service was actually observed in verified live evidence. It no longer means a Render topology declaration.
+
+Source completeness alone leaves live gates false. A valid live receipt must be `VERIFIED`, have `blockers=[]`, pass its canonical result hash, preserve all non-authority flags, and contain real provider usage plus provider-usage/transition custody and reconstruction evidence.
+
+Task: `tasks/LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007.json`.
+
+Machine-readable COSV notation is explicit on that task:
+
+```text
+task.v1 = L R U I V G O C M T B E A P
+width = 14
+concrete vector = null until canonical COSV projection emits it
+```
+
+This repair does not execute the sovereign parent task and does not fabricate `ecosystem-chat-live-activation.verified.json`. The actual next product transition remains the independently authorized fresh parent fence `>22` on an admitted StegVerse task-control execution surface.

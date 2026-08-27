@@ -1,0 +1,56 @@
+{
+  "schema_version": "stegverse.work-claim.v1",
+  "task_id": "LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007",
+  "canonical_issue": "StegVerse-org/LLM-adapter#7",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "fix/ecosystem-chat-destination-state-sovereign-007",
+  "state": "CLAIMED_FOR_VALIDATION",
+  "goal": "Remove superseded Render topology from the Ecosystem Chat destination activation projection and bind compatibility gates to canonical sovereign execution evidence without promoting source readiness to activation.",
+  "canonical_handoff": "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
+  "claimed_paths": [
+    "scripts/write_ecosystem_chat_destination_activation_state.py",
+    "tests/test_destination_activation_state_sovereign.py",
+    ".github/workflows/validate.yml",
+    "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
+    "tasks/LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007.json"
+  ],
+  "owner_boundaries": {
+    "canonical_runtime_owner": "StegVerse-org/LLM-adapter#18",
+    "canonical_execution_owner": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+    "route_authority": "TV/TVC",
+    "custody_owner": "master-records/orchestration",
+    "site_activation_owner": "StegVerse-Labs/Site",
+    "duplicate_execution_lane": false
+  },
+  "machine_readable_state": {
+    "cosv": {
+      "profile": "task.v1",
+      "canonical_profile_ref": "StegVerse-Labs/.github/management/COSV_PROFILE_V1.json",
+      "notation": "L R U I V G O C M T B E A P",
+      "width": 14,
+      "vector": null,
+      "vector_state": "NOT_EMITTED_BY_CANONICAL_COSV_PROJECTION",
+      "authority_effect": "NONE"
+    }
+  },
+  "implemented": [
+    "destination projection no longer consults render-production.yaml",
+    "source-contract readiness is separated from activation evidence",
+    "legacy Site compatibility gate names are retained with sovereign semantics",
+    "verified live receipt requires schema/state/blocker/hash/authority validation",
+    "deterministic tests cover missing, valid, and tampered live receipts",
+    "global validation runs the sovereign destination projection tests"
+  ],
+  "remaining": [
+    "exact-head hosted validation",
+    "merge",
+    "post-merge current-main validation evidence",
+    "actual independent parent same-carrier execution on admitted StegVerse task-control surface",
+    "hash-bound activation receipt bridge from independent parent PASS to LLM-adapter verified activation receipt",
+    "Site import and downstream ingestion after true activation"
+  ],
+  "user_action_required_now": false,
+  "authority_effect": false,
+  "activation_effect": false,
+  "archive_eligible": false
+}
