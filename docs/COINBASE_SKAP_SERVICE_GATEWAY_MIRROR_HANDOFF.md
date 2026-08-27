@@ -288,3 +288,18 @@ coinbase_skap_gateway_execution_authority: NONE
 This reuses the existing endpoint-advertisement/discovery plane and creates no new public service, tunnel, credential path, or authority. The advertisement remains health-bound and hash-bound. Route advertisement is not proof that the route is externally reachable; production public HTTPS observation remains a separate runtime predicate.
 
 This source addition is intended to let Site/TVC discover the Coinbase routes from the same sovereign node identity once a real StegDeploy runtime is exposed, rather than relying on an out-of-band hostname or Render-specific descriptor.
+
+
+## Route advertisement merge evidence — 2026-08-27
+
+```text
+PR: #208
+merge: 479b8caad6504317603e60661f2f79d7fd04afcc
+Coinbase SKAP Service Gateway Validation: 33119033321 SUCCESS
+global validate: 33119033403 SUCCESS
+HIL sovereign receiver source: 33119033461 SUCCESS
+```
+
+The shared sovereign node advertisement now carries Coinbase SKAP readiness/ingress route references with TV/TVC credential authority and Gateway execution authority NONE. TVC PR #179 / `f883fa2a9ed01a3bba78510a9216b17eb7dffac0` consumes the advertisement with exact HTTPS same-origin/digest validation.
+
+This completes the source-side route-discovery contract. It does not provide TLS termination or a public runtime by itself. `compose.stegdeploy.yaml` still defaults to `127.0.0.1`; public sovereign HTTPS remains an execution/substrate boundary under the existing Service Gateway owner (#72).
