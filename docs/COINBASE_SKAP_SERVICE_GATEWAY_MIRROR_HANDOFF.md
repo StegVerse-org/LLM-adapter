@@ -4,7 +4,7 @@ Updated: 2026-08-26T14:35:00-05:00
 Repository: `StegVerse-org/LLM-adapter`
 Upstream architecture owner: `StegVerse-org/LLM-adapter#72`
 Downstream credential/custody owner: `StegVerse-Labs/TVC#119`
-Status: SOURCE_VALIDATED_FIRST_INTERLOCK / DEPLOYED_ENTRYPOINT_ROUTE_REPAIR_MERGED_HOSTED_PASS / STEGDEPLOY_PRIMARY_RUNTIME_BINDING_IMPLEMENTED_PENDING_VALIDATION / RENDER_FALLBACK_ONLY / PRODUCTION_ROUTE_NOT_OBSERVED
+Status: SOURCE_VALIDATED_FIRST_INTERLOCK / STEGDEPLOY_PRIMARY_RUNTIME_BINDING_MERGED_HOSTED_PASS / RENDER_FALLBACK_ONLY / PRODUCTION_ROUTE_NOT_OBSERVED
 
 ## Goal
 
@@ -254,3 +254,19 @@ TV/TVC credential authority: unchanged
 ```
 
 The next production gate is therefore to instantiate this StegDeploy image on an authorized StegVerse-owned/sovereign runtime and observe the HTTPS readiness route there. Restoring Render is optional compatibility work, not a prerequisite.
+
+
+## StegDeploy primary-runtime merge evidence
+
+```text
+PR: #205
+head: 078cbe43a2c4168a4facc41b0d2d963257fb6613
+merge: 0ec44419ada49147feb1866abfa6fe4fb4d0bbb2
+Coinbase SKAP Service Gateway Validation:
+  push 33070875928 SUCCESS
+  PR   33070931930 SUCCESS
+global validate:
+  push 33070875926 SUCCESS
+```
+
+Primary runtime is now source-merged and hosted-validated. Render remains optional fallback compatibility only. The remaining production predicate is a real StegVerse-owned/sovereign runtime execution and public HTTPS observation of the readiness route.
