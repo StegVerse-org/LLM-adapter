@@ -6,7 +6,7 @@
   "branch": "feature/kv-onboarding-gateway-001",
   "claimant": "chatgpt:kv-onboarding-gateway-20260827",
   "role": "CLAIMED_FOR_IMPLEMENTATION_AND_VALIDATION",
-  "state": "HOSTED_VALIDATED_PENDING_MERGE",
+  "state": "MERGED_HOSTED_VALIDATED",
   "claim_timestamp": "2026-08-27T01:15:00-05:00",
   "handoff": "docs/KNOWLEDGEVAULT_ONBOARDING_SERVICE_GATEWAY_MIRROR_HANDOFF.md",
   "surfaces": [
@@ -26,7 +26,7 @@
   ],
   "authority_effect": false,
   "activation_effect": false,
-  "next_executable_action": "Open bounded PR, require exact PR-head validate success, merge, then bind Site production adapter to the non-authorizing stage receipt.",
+  "next_executable_action": "Bind Site #491 production onboarding adapter to STAGED_FOR_CANONICAL_KV_AUTHORITY without promoting browser state to ownership.",
   "implementation_evidence": [
     "0d6a3378a190436a79f9aa66a762ffd1873edafa implemented staging-only route and durable replay protection",
     "12aee45ac47965b61c80c89687f835f6aa5eaf05 mounted route on existing runtime_gateway",
@@ -41,5 +41,12 @@
     "onboarding_step": "SUCCESS",
     "workflow_parity": "SUCCESS",
     "validation_only_authority_boundary": "SUCCESS"
+  },
+  "merge_evidence": {
+    "pr": 203,
+    "head": "7fa80b2a63a344c3a2df0f3819e7763d94df349c",
+    "merge_commit": "8720d93b24f9f0b53ab23d91f2fac3bbe9d0a57a",
+    "validate_run": 33047211585,
+    "adjacent_coinbase_gateway_run": 33047211591
   }
 }
