@@ -149,3 +149,16 @@ third-party hosting: fallback only
 This change consumes the already-validated deployed-gateway Coinbase readiness/ingress handlers from LLM-adapter PR #204. It does not grant StegDeploy credential, decryption, provider, trading, governance, publication, or custody authority beyond bounded ciphertext staging already defined by the Service Gateway contract.
 
 A StegVerse-owned runtime still must actually execute this image and expose the resulting HTTPS route before production route observation can be claimed.
+
+
+## Primary-runtime merge evidence — 2026-08-27
+
+```text
+LLM-adapter PR #205
+merge: 0ec44419ada49147feb1866abfa6fe4fb4d0bbb2
+primary runtime: STEGDEPLOY_SOVEREIGN
+render: FALLBACK_ONLY
+production continuity depends on Render: false
+```
+
+Hosted validation for the exact source tree passed in Coinbase SKAP and repository-wide lanes. This establishes source/runtime-contract readiness only; a resident sovereign execution receipt is still required for activation.
