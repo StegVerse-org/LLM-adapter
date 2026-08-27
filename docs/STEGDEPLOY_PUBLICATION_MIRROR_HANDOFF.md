@@ -162,3 +162,24 @@ production continuity depends on Render: false
 ```
 
 Hosted validation for the exact source tree passed in Coinbase SKAP and repository-wide lanes. This establishes source/runtime-contract readiness only; a resident sovereign execution receipt is still required for activation.
+
+
+## Native sovereign TLS runtime closure — 2026-08-27
+
+The sovereign StegDeploy image now has an optional native TLS mode without adding a third-party ingress dependency.
+
+```text
+LLM-adapter PR #209
+merge: 10a6f6247771b2a85b07f5f19810403c3acde513
+TLS termination: UVICORN_NATIVE
+TLS delivery: Docker Compose runtime secrets
+certificate/private-key authority: TV/TVC
+reverse proxy required: false
+Render required: false
+Cloudflare required: false
+public route automatically claimed: false
+```
+
+The existing Healer scheduler target and resident worker can carry the path-only TLS configuration through merges `7aa88c39d5e46402e3368b5ebd81d27a773ce93d` and `583f3277c7eee9f0d12ab63280d31fbbc278aa85`.
+
+This closes the software transport gap. Production still requires a real eligible sovereign node, runtime-materialized TV/TVC TLS files, native runtime execution, and independent public HTTPS/certificate-hostname observation.
