@@ -6,8 +6,10 @@ on:
       - 'llm_adapter/service_gateway_coinbase_skap.py'
       - 'llm_adapter/service_gateway_composed.py'
       - 'llm_adapter/runtime_gateway.py'
+      - 'llm_adapter/deployed_gateway.py'
       - 'tests/test_service_gateway_coinbase_skap.py'
       - 'tests/test_service_gateway_coinbase_skap_api.py'
+      - 'tests/test_deployed_gateway_coinbase_skap.py'
       - 'docs/COINBASE_SKAP_SERVICE_GATEWAY_MIRROR_HANDOFF.md'
       - '.github/workflows/coinbase-skap-service-gateway.yml'
   pull_request:
@@ -15,8 +17,10 @@ on:
       - 'llm_adapter/service_gateway_coinbase_skap.py'
       - 'llm_adapter/service_gateway_composed.py'
       - 'llm_adapter/runtime_gateway.py'
+      - 'llm_adapter/deployed_gateway.py'
       - 'tests/test_service_gateway_coinbase_skap.py'
       - 'tests/test_service_gateway_coinbase_skap_api.py'
+      - 'tests/test_deployed_gateway_coinbase_skap.py'
       - 'docs/COINBASE_SKAP_SERVICE_GATEWAY_MIRROR_HANDOFF.md'
       - '.github/workflows/coinbase-skap-service-gateway.yml'
   workflow_dispatch:
@@ -57,8 +61,11 @@ jobs:
             llm_adapter/service_gateway_coinbase_skap.py \
             llm_adapter/service_gateway_composed.py \
             llm_adapter/runtime_gateway.py \
+            llm_adapter/deployed_gateway.py \
             tests/test_service_gateway_coinbase_skap.py \
-            tests/test_service_gateway_coinbase_skap_api.py
+            tests/test_service_gateway_coinbase_skap_api.py \
+            tests/test_deployed_gateway_coinbase_skap.py \
+            tests/test_deployed_gateway_coinbase_skap.py
 
       - name: Validate staging and mounted HTTP boundary
         run: |
@@ -72,6 +79,7 @@ jobs:
           from pathlib import Path
           source = Path('llm_adapter/service_gateway_coinbase_skap.py').read_text(encoding='utf-8')
           api = Path('llm_adapter/service_gateway_composed.py').read_text(encoding='utf-8')
+          deployed = Path('llm_adapter/deployed_gateway.py').read_text(encoding='utf-8')
           assert 'gateway_credential_value_access": False' in source
           assert 'gateway_decryption_authority": False' in source
           assert 'gateway_execution_authority": "NONE"' in source
@@ -89,6 +97,8 @@ jobs:
           assert 'authorization_header_forbidden' in api
           assert 'cookie_header_forbidden' in api
           assert '/api/coinbase/skap/ingress' in api
+          assert '/api/coinbase/skap/readiness' in deployed
+          assert '/api/coinbase/skap/ingress' in deployed
           print('COINBASE_SKAP_GATEWAY_VALIDATION_ONLY=true')
           print('COINBASE_SKAP_GATEWAY_CREDENTIAL_AUTHORITY=NONE')
           print('COINBASE_SKAP_GATEWAY_EXECUTION_AUTHORITY=NONE')

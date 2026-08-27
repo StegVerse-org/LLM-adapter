@@ -4,7 +4,7 @@ Updated: 2026-08-26T14:35:00-05:00
 Repository: `StegVerse-org/LLM-adapter`
 Upstream architecture owner: `StegVerse-org/LLM-adapter#72`
 Downstream credential/custody owner: `StegVerse-Labs/TVC#119`
-Status: SOURCE_VALIDATED_FIRST_INTERLOCK / PRODUCTION_PUBLIC_ROUTE_NOT_OBSERVED
+Status: SOURCE_VALIDATED_FIRST_INTERLOCK / DEPLOYED_ENTRYPOINT_ROUTE_REPAIR_IMPLEMENTED_PENDING_HOSTED_AND_RUNTIME_VALIDATION
 
 ## Goal
 
@@ -126,3 +126,42 @@ Browser consumer:
 ## Non-claims
 
 Source/hosted validation is not a production route observation. No production recipient private key is claimed here. No real provider credential is stored by this handoff. No SKAP Vault custody is implied by `STAGED_FOR_TVC`. No provider-operation or trading authority is granted to the Gateway.
+
+
+## 2026-08-27 deployed-entrypoint 404 diagnosis
+
+A live TVC/Site compatibility probe reached:
+
+`https://stegverse-ecosystem-chat-gateway.onrender.com/api/coinbase/skap/readiness`
+
+and received HTTP 404 even though `service_gateway_composed.py` and `runtime_gateway.py` already contained the validated Coinbase SKAP route.
+
+Live service inspection established the cause:
+
+```text
+service: stegverse-ecosystem-chat-gateway
+repository: StegVerse-org/LLM-adapter
+branch: main
+auto deploy: enabled
+deployed start command:
+  python -m llm_adapter.custody_worker &&
+  uvicorn llm_adapter.deployed_gateway:app --host 0.0.0.0 --port $PORT
+```
+
+`llm_adapter.deployed_gateway:app` did not mount the Coinbase SKAP readiness/ingress handlers. The 404 was therefore deployed-entrypoint drift, not absence of the canonical SKAP/InTr staging implementation.
+
+Bounded repair on branch `repair/deployed-gateway-coinbase-skap-routes`:
+
+- mounts only the existing validated `coinbase_skap_readiness` and `coinbase_skap_ingress` handlers on the actual deployed app;
+- adds `tests/test_deployed_gateway_coinbase_skap.py`;
+- extends the existing Coinbase SKAP validation workflow to compile/test the deployed entrypoint;
+- grants no new credential, decryption, custody, provider-operation or execution authority;
+- does not create a second public service plane.
+
+This repair must not be called production-observed until:
+1. hosted validation passes;
+2. the repair merges to `main`;
+3. the existing auto-deploy completes;
+4. the live readiness URL returns the canonical readiness contract rather than 404.
+
+The hosting substrate is compatibility execution only and remains replaceable; it is not StegVerse credential or governance authority.
