@@ -3,14 +3,17 @@
   "task_id": "LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007",
   "canonical_issue": "StegVerse-org/LLM-adapter#7",
   "repository": "StegVerse-org/LLM-adapter",
-  "branch": "fix/ecosystem-chat-destination-state-sovereign-007",
+  "branch": "feat/ecosystem-chat-parent-receipt-projection-007",
   "state": "CLAIMED_FOR_VALIDATION",
   "goal": "Remove superseded Render topology from the Ecosystem Chat destination activation projection and bind compatibility gates to canonical sovereign execution evidence without promoting source readiness to activation.",
   "canonical_handoff": "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
   "claimed_paths": [
     "scripts/write_ecosystem_chat_destination_activation_state.py",
+    "scripts/project_independent_parent_activation.py",
     "tests/test_destination_activation_state_sovereign.py",
+    "tests/test_parent_activation_projection.py",
     ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
     "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
     "tasks/LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007.json"
   ],
@@ -39,14 +42,19 @@
     "legacy Site compatibility gate names are retained with sovereign semantics",
     "verified live receipt requires schema/state/blocker/hash/authority validation",
     "deterministic tests cover missing, valid, and tampered live receipts",
-    "global validation runs the sovereign destination projection tests"
+    "global validation runs the sovereign destination projection tests",
+    "independent parent PASS can be projected through exact activation/route/usage/reconstruction hash bindings",
+    "projection requires fresh parent fencing token >22",
+    "projection is immutable and non-authorizing",
+    "destination state accepts sovereign parent projection without fabricating legacy hosted gateway evidence"
   ],
   "remaining": [
-    "exact-head hosted validation",
-    "merge",
-    "post-merge current-main validation evidence",
+    "exact-head hosted validation of parent projection seam",
+    "merge parent projection seam",
+    "post-merge current-main validation",
     "actual independent parent same-carrier execution on admitted StegVerse task-control surface",
-    "hash-bound activation receipt bridge from independent parent PASS to LLM-adapter verified activation receipt",
+    "resident projection of terminal parent PASS into LLM-adapter sovereign activation evidence",
+    "durable evidence publication/transport under TV/TVC without making GitHub runtime authority",
     "Site import and downstream ingestion after true activation"
   ],
   "user_action_required_now": false,

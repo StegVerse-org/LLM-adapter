@@ -19,6 +19,7 @@ OUTPUT = ROOT / "reports" / "ecosystem-chat-destination-activation-state.json"
 SOVEREIGN_STATE = ROOT / "data" / "ecosystem-chat-sovereign-orchestration-state.json"
 CARRIER_TASK = ROOT / "tasks" / "LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json"
 LIVE_RECEIPT = ROOT / "receipts" / "ecosystem-chat-live-activation.verified.json"
+SOVEREIGN_RECEIPT = ROOT / "receipts" / "ecosystem-chat-sovereign-activation.verified.json"
 
 
 def env(name: str) -> str | None:
@@ -84,6 +85,75 @@ def verified_live_receipt(value: dict[str, Any] | None) -> tuple[bool, list[str]
     return not errors, errors
 
 
+def verified_sovereign_receipt(value: dict[str, Any] | None) -> tuple[bool, list[str]]:
+    errors: list[str] = []
+    if not isinstance(value, dict):
+        return False, ["verified_sovereign_receipt_missing"]
+    if value.get("schema") != "stegverse.ecosystem_chat.sovereign_activation_projection.v1":
+        errors.append("verified_sovereign_receipt_schema")
+    if value.get("state") != "VERIFIED":
+        errors.append("verified_sovereign_receipt_state")
+    predicates = value.get("predicates") if isinstance(value.get("predicates"), dict) else {}
+    required = (
+        "real_model_process_observed",
+        "private_endpoint_only",
+        "ephemeral_e1_e2_execution_observed",
+        "measured_usage_persisted",
+        "provider_usage_reconstruction_pass",
+        "transition_reconstruction_pass",
+        "same_execution",
+        "persistent_conversational_runtime_ready",
+    )
+    if any(predicates.get(key) is not True for key in required):
+        errors.append("verified_sovereign_receipt_predicates")
+    credential = value.get("credential_boundary") if isinstance(value.get("credential_boundary"), dict) else {}
+    if credential.get("credential_authority") != "TV/TVC" or credential.get("credential_requirement") != "NONE":
+        errors.append("verified_sovereign_receipt_credential_boundary")
+    if credential.get("github_token_required") is not False or credential.get("github_actions_activation_role") is not False:
+        errors.append("verified_sovereign_receipt_hosted_authority")
+    authority = value.get("authority_boundary") if isinstance(value.get("authority_boundary"), dict) else {}
+    if any(authority.get(flag) is not False for flag in (
+        "projection_grants_activation_authority",
+        "projection_grants_execution_authority",
+        "projection_grants_custody_authority",
+        "projection_grants_release_authority",
+        "projection_grants_publication_authority",
+    )):
+        errors.append("verified_sovereign_receipt_authority")
+    expected = value.get("projection_sha256")
+    if not isinstance(expected, str) or expected != canonical_sha256(value, omit="projection_sha256"):
+        errors.append("verified_sovereign_receipt_hash")
+    return not errors, errors
+
+
+def sovereign_predicates(value: dict[str, Any] | None, verified: bool) -> dict[str, bool]:
+    if not verified or not isinstance(value, dict):
+        return {
+            "runtime_service_observed": False,
+            "real_provider_used": False,
+            "local_usage_receipt_valid": False,
+            "provider_usage_custody_recorded": False,
+            "provider_usage_reconstructability_pass": False,
+            "transition_custody_recorded": False,
+            "transition_reconstructability_pass": False,
+            "provider_usage_authority_false": False,
+        }
+    provider = value.get("provider_usage") if isinstance(value.get("provider_usage"), dict) else {}
+    transition = value.get("transition") if isinstance(value.get("transition"), dict) else {}
+    runtime = value.get("runtime") if isinstance(value.get("runtime"), dict) else {}
+    predicates = value.get("predicates") if isinstance(value.get("predicates"), dict) else {}
+    return {
+        "runtime_service_observed": runtime.get("persistent_conversational_runtime_ready") is True,
+        "real_provider_used": predicates.get("ephemeral_e1_e2_execution_observed") is True,
+        "local_usage_receipt_valid": provider.get("measured") is True and isinstance(provider.get("event_sha256"), str),
+        "provider_usage_custody_recorded": provider.get("custody_recorded") is True and provider.get("authority_granted") is False,
+        "provider_usage_reconstructability_pass": provider.get("reconstructability") == "PASS",
+        "transition_custody_recorded": transition.get("custody_recorded") is True,
+        "transition_reconstructability_pass": transition.get("reconstructability") == "PASS",
+        "provider_usage_authority_false": provider.get("authority_granted") is False,
+    }
+
+
 def live_predicates(live: dict[str, Any] | None, verified: bool) -> dict[str, bool]:
     evidence = live.get("evidence") if verified and isinstance(live, dict) else {}
     evidence = evidence if isinstance(evidence, dict) else {}
@@ -140,7 +210,14 @@ def main() -> int:
     source_contract_ready = all(source_markers.values())
     live = load_json(LIVE_RECEIPT)
     live_verified, live_errors = verified_live_receipt(live)
-    observed = live_predicates(live, live_verified)
+    sovereign = load_json(SOVEREIGN_RECEIPT)
+    sovereign_verified, sovereign_errors = verified_sovereign_receipt(sovereign)
+    if sovereign_verified:
+        observed = sovereign_predicates(sovereign, True)
+        evidence_mode = "SOVEREIGN_PARENT_PROJECTION"
+    else:
+        observed = live_predicates(live, live_verified)
+        evidence_mode = "LEGACY_LIVE_ACTIVATION_RECEIPT" if live_verified else "NONE"
 
     # Compatibility gate names are retained because Site consumes them. Their current
     # semantics are sovereign-runtime evidence, not a hosted/Render topology declaration.
@@ -210,11 +287,18 @@ def main() -> int:
             "source_readiness_is_activation": False,
         },
         "gates": gates,
+        "activation_evidence_mode": evidence_mode,
         "live_receipt": {
             "present": live is not None,
             "verified": live_verified,
             "validation_errors": live_errors,
             "path": str(LIVE_RECEIPT.relative_to(ROOT)),
+        },
+        "sovereign_parent_projection": {
+            "present": sovereign is not None,
+            "verified": sovereign_verified,
+            "validation_errors": sovereign_errors,
+            "path": str(SOVEREIGN_RECEIPT.relative_to(ROOT)),
         },
         "observed_live_predicates": observed,
         "superseded_topology": {
@@ -242,6 +326,7 @@ def main() -> int:
     print(f"ECOSYSTEM CHAT DESTINATION STATE: {state}")
     print(f"SOVEREIGN SOURCE CONTRACT READY: {source_contract_ready}")
     print(f"VERIFIED LIVE RECEIPT: {live_verified}")
+    print(f"VERIFIED SOVEREIGN PARENT PROJECTION: {sovereign_verified}")
     print(f"Receipt: {OUTPUT.relative_to(ROOT)}")
     return 0
 

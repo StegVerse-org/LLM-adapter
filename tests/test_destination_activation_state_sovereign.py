@@ -34,6 +34,7 @@ class DestinationActivationSovereignTests(unittest.TestCase):
         self.m.SOVEREIGN_STATE = self.root / "data" / "ecosystem-chat-sovereign-orchestration-state.json"
         self.m.CARRIER_TASK = self.root / "tasks" / "LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json"
         self.m.LIVE_RECEIPT = self.root / "receipts" / "ecosystem-chat-live-activation.verified.json"
+        self.m.SOVEREIGN_RECEIPT = self.root / "receipts" / "ecosystem-chat-sovereign-activation.verified.json"
         self.m.OUTPUT = self.root / "reports" / "ecosystem-chat-destination-activation-state.json"
         self.write_source_contract()
 
@@ -133,6 +134,68 @@ class DestinationActivationSovereignTests(unittest.TestCase):
             state["gates"]["same_origin_authenticated_deployment"]["current_semantics"],
             "canonical_sovereign_runtime_service_observed",
         )
+
+    def test_sovereign_parent_projection_completes_compatibility_gates_without_legacy_receipt(self):
+        value = {
+            "schema": "stegverse.ecosystem_chat.sovereign_activation_projection.v1",
+            "state": "VERIFIED",
+            "predicates": {
+                "real_model_process_observed": True,
+                "private_endpoint_only": True,
+                "ephemeral_e1_e2_execution_observed": True,
+                "measured_usage_persisted": True,
+                "provider_usage_reconstruction_pass": True,
+                "transition_reconstruction_pass": True,
+                "same_execution": True,
+                "persistent_conversational_runtime_ready": True,
+            },
+            "provider_usage": {
+                "measured": True,
+                "event_sha256": "d" * 64,
+                "custody_recorded": True,
+                "reconstructability": "PASS",
+                "authority_granted": False,
+            },
+            "transition": {
+                "custody_recorded": True,
+                "reconstructability": "PASS",
+                "same_execution": True,
+            },
+            "runtime": {
+                "private_endpoint_only": True,
+                "persistent_conversational_runtime_ready": True,
+                "third_party_inference_required": False,
+            },
+            "credential_boundary": {
+                "credential_authority": "TV/TVC",
+                "credential_requirement": "NONE",
+                "github_token_required": False,
+                "github_actions_activation_role": False,
+            },
+            "authority_boundary": {
+                "projection_grants_activation_authority": False,
+                "projection_grants_execution_authority": False,
+                "projection_grants_custody_authority": False,
+                "projection_grants_release_authority": False,
+                "projection_grants_publication_authority": False,
+            },
+        }
+        value["projection_sha256"] = self.m.canonical_sha256(value)
+        self.m.SOVEREIGN_RECEIPT.write_text(json.dumps(value))
+        with patch.dict(os.environ, {
+            "GITHUB_REPOSITORY": "StegVerse-org/LLM-adapter",
+            "GITHUB_SHA": "e" * 40,
+            "GITHUB_RUN_ID": "789",
+            "GITHUB_REF": "refs/heads/main",
+            "GITHUB_EVENT_NAME": "push",
+            "VALIDATION_JOB_STATUS": "success",
+        }, clear=True):
+            self.assertEqual(self.m.main(), 0)
+        state = json.loads(self.m.OUTPUT.read_text())
+        self.assertEqual(state["activation_evidence_mode"], "SOVEREIGN_PARENT_PROJECTION")
+        self.assertTrue(state["sovereign_parent_projection"]["verified"])
+        self.assertFalse(state["live_receipt"]["verified"])
+        self.assertEqual(state["state"], "DESTINATION_ACTIVATION_EVIDENCE_COMPLETE")
 
     def test_tampered_verified_receipt_fails_closed(self):
         receipt = self.verified_receipt()
