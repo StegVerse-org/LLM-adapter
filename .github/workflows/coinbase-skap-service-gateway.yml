@@ -7,6 +7,10 @@ on:
       - 'llm_adapter/service_gateway_composed.py'
       - 'llm_adapter/runtime_gateway.py'
       - 'llm_adapter/deployed_gateway.py'
+      - 'compose.stegdeploy.tls.yaml'
+      - 'scripts/stegdeploy_bootstrap.py'
+      - 'tests/test_stegdeploy_native_tls.py'
+      - 'docs/STEGDEPLOY_NATIVE_TLS_INGRESS_MIRROR_HANDOFF.md'
       - 'llm_adapter/combined_gateway.py'
       - 'tests/test_node_advertisement.py'
       - 'tests/test_service_gateway_coinbase_skap.py'
@@ -20,6 +24,10 @@ on:
       - 'llm_adapter/service_gateway_composed.py'
       - 'llm_adapter/runtime_gateway.py'
       - 'llm_adapter/deployed_gateway.py'
+      - 'compose.stegdeploy.tls.yaml'
+      - 'scripts/stegdeploy_bootstrap.py'
+      - 'tests/test_stegdeploy_native_tls.py'
+      - 'docs/STEGDEPLOY_NATIVE_TLS_INGRESS_MIRROR_HANDOFF.md'
       - 'llm_adapter/combined_gateway.py'
       - 'tests/test_node_advertisement.py'
       - 'tests/test_service_gateway_coinbase_skap.py'
@@ -67,10 +75,13 @@ jobs:
             llm_adapter/runtime_gateway.py \
             llm_adapter/deployed_gateway.py \
             llm_adapter/combined_gateway.py \
+            scripts/stegdeploy_bootstrap.py \
+            tests/test_stegdeploy_native_tls.py \
             tests/test_service_gateway_coinbase_skap.py \
             tests/test_service_gateway_coinbase_skap_api.py \
             tests/test_deployed_gateway_coinbase_skap.py \
-            tests/test_node_advertisement.py
+            tests/test_node_advertisement.py \
+            tests/test_stegdeploy_native_tls.py
 
       - name: Validate staging and mounted HTTP boundary
         run: |
@@ -88,6 +99,8 @@ jobs:
           api = Path('llm_adapter/service_gateway_composed.py').read_text(encoding='utf-8')
           deployed = Path('llm_adapter/deployed_gateway.py').read_text(encoding='utf-8')
           combined = Path('llm_adapter/combined_gateway.py').read_text(encoding='utf-8')
+          tls_compose = Path('compose.stegdeploy.tls.yaml').read_text(encoding='utf-8')
+          bootstrap = Path('scripts/stegdeploy_bootstrap.py').read_text(encoding='utf-8')
           assert 'gateway_credential_value_access": False' in source
           assert 'gateway_decryption_authority": False' in source
           assert 'gateway_execution_authority": "NONE"' in source
@@ -110,6 +123,13 @@ jobs:
           assert 'coinbase_skap_readiness_endpoint' in combined
           assert 'coinbase_skap_ingress_endpoint' in combined
           assert 'coinbase_skap_gateway_execution_authority' in combined
+          assert 'STEGDEPLOY_TLS_CERT_FILE' in tls_compose
+          assert 'STEGDEPLOY_TLS_KEY_FILE' in tls_compose
+          assert '/run/secrets/stegverse_tls_key' in tls_compose
+          assert '--ssl-keyfile' in tls_compose
+          assert 'deploy-tls' in bootstrap
+          assert 'tls_private_key_material_recorded' in bootstrap
+          assert 'production_public_route_observed' in bootstrap
           print('COINBASE_SKAP_GATEWAY_VALIDATION_ONLY=true')
           print('COINBASE_SKAP_GATEWAY_CREDENTIAL_AUTHORITY=NONE')
           print('COINBASE_SKAP_GATEWAY_EXECUTION_AUTHORITY=NONE')
