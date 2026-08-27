@@ -12,6 +12,9 @@ third_party_registry_required_for_production_continuity: false
 runtime_image_source: LOCAL_BUILD
 historical_ghcr_receipt_retained: true
 canonical_runtime_consumer: StegVerse-org/LLM-adapter#18
+primary_runtime: STEGDEPLOY_SOVEREIGN
+third_party_hosting_policy: FALLBACK_ONLY
+render_required_for_production_continuity: false
 canonical_scheduler: resident sovereign heartbeat + healer-sovereign-scheduler-worker
 healer_handoff: StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md
 ```
@@ -38,6 +41,7 @@ source tree
 -> image stegverse/llm-adapter:local
 -> pull_policy: never
 -> scripts/stegdeploy_bootstrap.py
+-> llm_adapter.deployed_gateway:app
 -> locally running gateway
 -> health proof
 -> stegdeploy.deployment-receipt.v2
@@ -127,3 +131,21 @@ scripts/verify_goal4_full.py
 Local source/runtime readiness is not governed product activation. Live completion still requires the canonical resident carrier, admitted TV/TVC authority where needed, same-execution evidence, Master Records reconstruction where applicable, and downstream activation receipts.
 
 MERGED INTO: `StegVerse-Labs/.github/handoffs/SHWP-HEALER-SOVEREIGN-SCHEDULER-001.json`, `StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md`, and `StegVerse-org/LLM-adapter#18`.
+
+
+## Coinbase SKAP/InTr primary-runtime binding — 2026-08-27
+
+The sovereign StegDeploy path is now the canonical primary runtime carrier for the Coinbase SKAP/InTr public Service Gateway routes.
+
+```text
+container entrypoint: llm_adapter.deployed_gateway:app
+durable staging root: /var/lib/stegverse
+TVC no-value decision input: STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT
+credential authority: TV/TVC
+render dependency: false
+third-party hosting: fallback only
+```
+
+This change consumes the already-validated deployed-gateway Coinbase readiness/ingress handlers from LLM-adapter PR #204. It does not grant StegDeploy credential, decryption, provider, trading, governance, publication, or custody authority beyond bounded ciphertext staging already defined by the Service Gateway contract.
+
+A StegVerse-owned runtime still must actually execute this image and expose the resulting HTTPS route before production route observation can be claimed.
