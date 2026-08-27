@@ -28,6 +28,12 @@ def test_node_advertisement_is_health_bound_and_non_authorizing(monkeypatch) -> 
     assert payload["capability_id"] == "ecosystem-chat-gateway"
     assert payload["endpoint"].endswith("/api/ecosystem-chat")
     assert payload["health_endpoint"].endswith("/health")
+    assert payload["coinbase_skap_readiness_endpoint"].endswith("/api/coinbase/skap/readiness")
+    assert payload["coinbase_skap_ingress_endpoint"].endswith("/api/coinbase/skap/ingress")
+    assert payload["coinbase_skap_completed_boundary"] == "DEVICE_TO_KV"
+    assert payload["coinbase_skap_next_required_transition"] == "KV_SKAP_VAULT_INTERLOCK_ADMISSION"
+    assert payload["coinbase_skap_credential_authority"] == "TV/TVC"
+    assert payload["coinbase_skap_gateway_execution_authority"] == "NONE"
     assert payload["math_solver_readiness_endpoint"].endswith("/api/math-solver/v1/readiness")
     assert payload["math_solver_solve_endpoint"].endswith("/api/math-solver/v1/solve")
     assert payload["health_bound"] is True

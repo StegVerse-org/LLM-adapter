@@ -270,3 +270,21 @@ global validate:
 ```
 
 Primary runtime is now source-merged and hosted-validated. Render remains optional fallback compatibility only. The remaining production predicate is a real StegVerse-owned/sovereign runtime execution and public HTTPS observation of the readiness route.
+
+
+## Sovereign node advertisement binding — 2026-08-27
+
+The existing health-bound `/api/stegverse-node` advertisement now publishes the Coinbase SKAP route references directly from the shared Gateway runtime:
+
+```text
+coinbase_skap_readiness_endpoint: <runtime-origin>/api/coinbase/skap/readiness
+coinbase_skap_ingress_endpoint: <runtime-origin>/api/coinbase/skap/ingress
+coinbase_skap_completed_boundary: DEVICE_TO_KV
+coinbase_skap_next_required_transition: KV_SKAP_VAULT_INTERLOCK_ADMISSION
+coinbase_skap_credential_authority: TV/TVC
+coinbase_skap_gateway_execution_authority: NONE
+```
+
+This reuses the existing endpoint-advertisement/discovery plane and creates no new public service, tunnel, credential path, or authority. The advertisement remains health-bound and hash-bound. Route advertisement is not proof that the route is externally reachable; production public HTTPS observation remains a separate runtime predicate.
+
+This source addition is intended to let Site/TVC discover the Coinbase routes from the same sovereign node identity once a real StegDeploy runtime is exposed, rather than relying on an out-of-band hostname or Render-specific descriptor.
