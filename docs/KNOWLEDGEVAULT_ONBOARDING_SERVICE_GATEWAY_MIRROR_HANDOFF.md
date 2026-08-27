@@ -3,7 +3,7 @@
 Updated: 2026-08-27
 Repository: `StegVerse-org/LLM-adapter`
 Goal ID: `LLMA-KV-ONBOARDING-GATEWAY-001`
-Status: IMPLEMENTED_PENDING_HOSTED_VALIDATION / NON_AUTHORIZING_TRANSPORT
+Status: HOSTED_VALIDATED_PENDING_MERGE / NON_AUTHORIZING_TRANSPORT
 
 ## Goal
 
@@ -111,17 +111,33 @@ Packageable User KV clean-room file install: HOSTED VALIDATED
 production onboarding transport endpoint source: IMPLEMENTED ON feature/kv-onboarding-gateway-001
 shared runtime_gateway mount: IMPLEMENTED
 durable replay-safe staging: IMPLEMENTED
-hosted validation conclusion: PENDING
+hosted validation conclusion: PASS
 canonical ownership backend: NOT IMPLEMENTED
 production owner/device receipts: NOT OBSERVED
 ```
 
+## Hosted validation
+
+Exact source validation:
+
+```text
+repository: StegVerse-org/LLM-adapter
+workflow: validate
+commit: 3f1dea0c64bf5eed1e5f3748053a4f9d82fc531e
+run: 33047049590
+conclusion: SUCCESS
+Test KnowledgeVault onboarding Service Gateway: SUCCESS
+Check workflow parity: SUCCESS
+Confirm validation-only authority boundary: SUCCESS
+```
+
+The first validate attempt on the implementation branch had the onboarding tests green but failed `Check workflow parity` because the canonical workflow had not yet been copied to `iosnoperiod/github/workflows/validate.yml`. Commit `3f1dea0c64bf5eed1e5f3748053a4f9d82fc531e` synchronized the required iOS mirror; the complete replacement lane passed. This was workflow-mirror drift, not an onboarding route failure.
+
 ## Next executable boundary
 
-1. hosted-validate the implemented shared Gateway route;
-2. merge only after the canonical global validate lane passes;
-3. bind Site production adapter to consume only the transport receipt;
-4. keep Site at NO_KV / pending until a separately authoritative canonical admission receipt exists.
+1. merge the hosted-green shared Gateway route through a bounded PR;
+2. bind Site production adapter to consume only the transport receipt;
+3. keep Site at NO_KV / pending until a separately authoritative canonical admission receipt exists.
 
 ## User action
 
