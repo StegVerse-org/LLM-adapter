@@ -17,7 +17,8 @@
     "tests/test_provider_surface_knowledge.py",
     ".github/workflows/validate.yml",
     "docs/ECOSYSTEM_PUBLIC_KNOWLEDGE_MIRROR_HANDOFF.md",
-    "tasks/LLMA-PROVIDER-SURFACE-KNOWLEDGE-057.json"
+    "tasks/LLMA-PROVIDER-SURFACE-KNOWLEDGE-057.json",
+    "iosnoperiod/github/workflows/validate.yml"
   ],
   "acceptance": [
     "Recognized provider/device/platform/access-surface questions consult only the canonical KV registry.",
