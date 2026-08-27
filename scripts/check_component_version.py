@@ -64,7 +64,7 @@ def main() -> None:
     activation = data.get("activation", {})
     if runtime.get("state") != "PENDING":
         fail("runtime state must remain PENDING until same-execution proof exists")
-    if runtime.get("next_required_state") != "RECOVERY_THEN_SAME_EXECUTION_PROOF":
+    if runtime.get("next_required_state") != "PARENT_SAME_EXECUTION_PROOF":
         fail("runtime next-required-state drift")
     if activation.get("state") != "PENDING":
         fail("activation must remain PENDING until verified receipt exists")
@@ -72,7 +72,7 @@ def main() -> None:
         fail("activation receipt contract drift")
 
     required_handoff_markers = [
-        "production_activation_state: ACTIVE_MACHINE_CONTINUATION_RECOVERY_THEN_SAME_EXECUTION_PROOF",
+        "production_activation_state: ACTIVE_MACHINE_CONTINUATION_PARENT_SAME_EXECUTION_PROOF_PENDING",
         "LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019 COMPLETE_RELEASED",
         "github_token_required: false",
         "credential_authority: TV/TVC",
