@@ -10,6 +10,7 @@ os.environ.setdefault("STEGVERSE_VA_SOURCE_REGISTRY_FILE", str(_DEFAULT_VA_REGIS
 from .math_solver_gateway import app  # noqa: E402
 from . import va_claims_runtime_gateway as _va_claims_runtime_gateway  # noqa: E402,F401
 from . import service_gateway_composed as _service_gateway_composed  # noqa: E402,F401
+from . import service_gateway_kv_onboarding as _service_gateway_kv_onboarding  # noqa: E402,F401
 
 
 def main() -> None:
