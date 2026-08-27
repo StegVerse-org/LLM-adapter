@@ -1,0 +1,30 @@
+{
+  "schema_version": "stegverse.llm_adapter.task.v1",
+  "task_id": "LLMA-KV-ONBOARDING-GATEWAY-001",
+  "originating_goal": "Add a non-authorizing InTr KnowledgeVault onboarding staging route to the existing shared Service Gateway for the Site onboarding successor.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "feature/kv-onboarding-gateway-001",
+  "claimant": "chatgpt:kv-onboarding-gateway-20260827",
+  "role": "CLAIMED_FOR_IMPLEMENTATION_AND_VALIDATION",
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claim_timestamp": "2026-08-27T01:15:00-05:00",
+  "handoff": "docs/KNOWLEDGEVAULT_ONBOARDING_SERVICE_GATEWAY_MIRROR_HANDOFF.md",
+  "surfaces": [
+    "llm_adapter/service_gateway_kv_onboarding.py",
+    "llm_adapter/runtime_gateway.py",
+    "tests/test_service_gateway_kv_onboarding.py",
+    ".github/workflows/validate.yml",
+    "docs/KNOWLEDGEVAULT_ONBOARDING_SERVICE_GATEWAY_MIRROR_HANDOFF.md",
+    "tasks/LLMA-KV-ONBOARDING-GATEWAY-001.json"
+  ],
+  "collision_boundaries": [
+    "Do not mint KV_CREATED, OWNER_BOUND, DEVICE_REGISTERED, INSTALLATION_ADMITTED or KV_ACTIVE.",
+    "Do not create a second service plane.",
+    "Do not touch Coinbase SKAP provider execution semantics.",
+    "Do not introduce non-TV/TVC credential authority.",
+    "Do not claim production ownership/custody from hosted validation."
+  ],
+  "authority_effect": false,
+  "activation_effect": false,
+  "next_executable_action": "Implement and hosted-validate staging-only route; then bind Site to stage receipt without promoting ownership."
+}
