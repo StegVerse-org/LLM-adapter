@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "component_id": "STEGVERSE-LLM-ADAPTER-ECOSYSTEM-CHAT-RUNTIME",
   "repository": "StegVerse-org/LLM-adapter",
-  "component_version": "2026.08.21-dev.1",
+  "component_version": "2026.08.27-dev.1",
   "version_stage": "DEVELOPMENT",
   "release": {
     "tag": null,
@@ -22,9 +22,11 @@
     "state": "PENDING",
     "evidence": [
       "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
-      "tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json"
+      "tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json",
+      "StegVerse-Labs/.github:receipts/ecosystem-chat-sovereign-inference/orphan-recovery-HB28.json",
+      "StegVerse-Labs/.github:handoffs/SHWP-ECOSYSTEM-CHAT-INFERENCE-001.json"
     ],
-    "next_required_state": "RECOVERY_THEN_SAME_EXECUTION_PROOF"
+    "next_required_state": "PARENT_SAME_EXECUTION_PROOF"
   },
   "activation": {
     "state": "PENDING",
