@@ -6,9 +6,9 @@
   "branch": "feat/provider-surface-knowledge-140",
   "canonical_issue": "StegVerse-org/LLM-adapter#140",
   "upstream_issue": "StegVerse-Labs/continuity-vault-kit#56",
-  "claimant": "chatgpt-session-provider-surface-20260826",
-  "role": "CLAIMED_FOR_IMPLEMENTATION",
-  "state": "RUNNING",
+  "claimant": null,
+  "role": "RELEASED",
+  "state": "COMPLETE_VALIDATED_MERGED",
   "claim_timestamp": "2026-08-26T18:31:00-05:00",
   "execution_class": "PARALLEL_SAFE_SOURCE_INTEGRATION",
   "surfaces": [
@@ -37,5 +37,18 @@
   "github_token_runtime_authority": "NONE",
   "non_tv_tvc_secret_or_token_allowed": false,
   "authority_effect": false,
-  "activation_effect": false
+  "activation_effect": false,
+  "claim_state": "RELEASED",
+  "release_timestamp": "2026-08-26T19:03:00-05:00",
+  "release_evidence": {
+    "pull_request": 201,
+    "final_head": "6e7a9edbedb2b062a2476cdac776c864543c22d7",
+    "merge_commit": "da2c73497c73f955c4273f5e6a980d00ce454f03",
+    "validate_run": 33025386939,
+    "validate_job": 98365397017,
+    "validate_conclusion": "SUCCESS",
+    "substantive_validation_steps": "67/67 SUCCESS",
+    "workflow_parity": "SUCCESS",
+    "canonical_goal4": "SUCCESS"
+  }
 }

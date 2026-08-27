@@ -93,7 +93,7 @@ Canonical provider facts remain owned by `StegVerse-Labs/continuity-vault-kit#56
 ```text
 specs/kv-provider-surface-capability-registry.v1.json
 schema: stegverse.kv.provider-surface-capability-registry/v1
-fact state at integration start: INSTALLED_UNVERIFIED
+fact state after upstream PR #66: DOCUMENTED_UNVERIFIED
 ```
 
 LLM-adapter adds only a fail-closed consumer. It does not copy provider facts into its local public-knowledge manifest. The runtime may receive the canonical registry through `STEGVERSE_KV_PROVIDER_SURFACE_REGISTRY`; if that source is unavailable or no matching tuple is admitted, Ecosystem Chat reports the state as unknown/unverified rather than inferring behavior from model memory.
@@ -105,3 +105,18 @@ provider × device × platform × access surface × browser/runtime
 ```
 
 This expansion changes no provider, credential, execution, StegGate, Master Records, Site, publication, or activation authority.
+
+## Provider-surface consumer merge evidence
+
+Task `LLMA-PROVIDER-SURFACE-KNOWLEDGE-057` is complete, validated, merged, and released.
+
+- implementation PR: `#201`
+- final head: `6e7a9edbedb2b062a2476cdac776c864543c22d7`
+- merge commit: `da2c73497c73f955c4273f5e6a980d00ce454f03`
+- exact-head validate run: `33025386939`
+- validate job: `98365397017`
+- substantive validation: `67/67 SUCCESS`
+- workflow parity: PASS
+- canonical Goal 4 verification: PASS
+
+The consumer is source-implemented and validated. Runtime availability of a materialized canonical KV registry remains an environment/input condition; absence continues to fail transparently rather than enabling model-memory inference.
