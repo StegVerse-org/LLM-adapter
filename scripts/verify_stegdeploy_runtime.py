@@ -34,7 +34,7 @@ def main() -> int:
         "STEGVERSE_TRANSITION_DB",
         "STEGVERSE_EXTERNAL_REVIEW_DB",
         "python -m llm_adapter.custody_worker",
-        "exec uvicorn llm_adapter.combined_gateway:app",
+        "exec uvicorn llm_adapter.deployed_gateway:app",
     )
     require(
         "compose.stegdeploy.yaml",
@@ -46,6 +46,8 @@ def main() -> int:
         "init: true",
         'STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: "true"',
         "stegverse_gateway_data:/var/lib/stegverse",
+        "STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT: /var/lib/stegverse",
+        "STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT: ${STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT:-}",
         "STEGVERSE_PROVIDER_ENABLED: ${STEGVERSE_PROVIDER_ENABLED:-false}",
         "STEGVERSE_EXTERNAL_MUTATION_ENABLED: ${STEGVERSE_EXTERNAL_MUTATION_ENABLED:-false}",
         "healthcheck:",

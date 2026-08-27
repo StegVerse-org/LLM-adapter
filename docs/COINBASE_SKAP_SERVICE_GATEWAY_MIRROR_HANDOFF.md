@@ -4,7 +4,7 @@ Updated: 2026-08-26T14:35:00-05:00
 Repository: `StegVerse-org/LLM-adapter`
 Upstream architecture owner: `StegVerse-org/LLM-adapter#72`
 Downstream credential/custody owner: `StegVerse-Labs/TVC#119`
-Status: SOURCE_VALIDATED_FIRST_INTERLOCK / DEPLOYED_ENTRYPOINT_ROUTE_REPAIR_MERGED_HOSTED_PASS / COMPATIBILITY_DEPLOY_BLOCKED_RENDER_BUILD_MINUTES / PRODUCTION_ROUTE_NOT_OBSERVED
+Status: SOURCE_VALIDATED_FIRST_INTERLOCK / DEPLOYED_ENTRYPOINT_ROUTE_REPAIR_MERGED_HOSTED_PASS / STEGDEPLOY_PRIMARY_RUNTIME_BINDING_IMPLEMENTED_PENDING_VALIDATION / RENDER_FALLBACK_ONLY / PRODUCTION_ROUTE_NOT_OBSERVED
 
 ## Goal
 
@@ -217,3 +217,40 @@ authority_effect: NONE
 ```
 
 The compatibility Render service remains replaceable and non-authoritative. Restoring its build quota may allow the compatibility route to deploy, but that does not satisfy the separate requirement for a StegVerse-owned/substrate-admissible production primary route.
+
+
+## Primary runtime migration away from Render
+
+Render is explicitly classified as fallback compatibility only and is no longer a production-continuity dependency for this lane.
+
+The canonical primary carrier is the existing StegDeploy sovereign runtime:
+
+```text
+source -> local OCI build -> compose.stegdeploy.yaml
+-> llm_adapter.deployed_gateway:app
+-> durable /var/lib/stegverse state
+-> Coinbase SKAP readiness/ingress
+-> no-value DEVICE -> KV InTr staging
+```
+
+Primary-runtime configuration now carries:
+
+```text
+STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT=/var/lib/stegverse
+STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT=<no-value TVC receipt, injected at runtime>
+```
+
+The TVC decision receipt contains no provider credential values. If it is absent or invalid, the Coinbase SKAP readiness route fails closed.
+
+Current policy:
+
+```text
+StegDeploy / StegVerse-owned substrate: PRIMARY
+Render: FALLBACK_ONLY
+Render billing/build minutes required: false
+Render hostname required: false
+Render authority: NONE
+TV/TVC credential authority: unchanged
+```
+
+The next production gate is therefore to instantiate this StegDeploy image on an authorized StegVerse-owned/sovereign runtime and observe the HTTPS readiness route there. Restoring Render is optional compatibility work, not a prerequisite.
