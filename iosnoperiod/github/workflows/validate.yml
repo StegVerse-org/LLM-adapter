@@ -177,6 +177,8 @@ jobs:
         run: "$PYTHON_BIN -m pytest tests/test_node_advertisement.py -v"
       - name: Check immutable verified activation receipt contract
         run: "$PYTHON_BIN scripts/check_ecosystem_chat_verified_receipt_contract.py"
+      - name: Test sovereign destination activation projection
+        run: "$PYTHON_BIN -m pytest tests/test_destination_activation_state_sovereign.py -v"
       - name: Test authenticated usage session endpoint
         run: "$PYTHON_BIN -m pytest tests/test_usage_session_api.py -v"
       - name: Test system-boundary declaration lifecycle, fixture provenance, and workflow evidence
