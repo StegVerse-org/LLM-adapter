@@ -3,7 +3,7 @@
 Updated: 2026-08-27
 Repository: `StegVerse-org/LLM-adapter`
 Goal ID: `LLMA-KV-ONBOARDING-GATEWAY-001`
-Status: ACTIVE / NON_AUTHORIZING_TRANSPORT_IMPLEMENTATION
+Status: HOSTED_VALIDATED_PENDING_MERGE / NON_AUTHORIZING_TRANSPORT
 
 ## Goal
 
@@ -83,23 +83,61 @@ Adjacent Gateway:
 
 The Coinbase SKAP lane remains separate. This onboarding lane carries no credential material.
 
+## Implemented source
+
+```text
+llm_adapter/service_gateway_kv_onboarding.py
+llm_adapter/runtime_gateway.py
+tests/test_service_gateway_kv_onboarding.py
+.github/workflows/validate.yml
+```
+
+The route provides:
+
+```text
+GET  /api/kv/onboarding/readiness
+POST /api/kv/onboarding/transitions
+```
+
+The POST path requires the stegverse.org Origin, rejects Authorization/Cookie headers, requires JSON, limits body size, rejects secret/credential fields recursively, enforces operation-specific input ordering, persists canonical non-secret request bytes with exclusive creation, denies request-id replay durably, and returns only a transport-stage receipt.
+
+The shared runtime response cannot mint or imply canonical ownership/device/install states.
+
 ## Current state
 
 ```text
 Site TEST_ONLY onboarding state machine: MERGED
 Packageable User KV clean-room file install: HOSTED VALIDATED
-production onboarding transport endpoint: NOT IMPLEMENTED
+production onboarding transport endpoint source: IMPLEMENTED ON feature/kv-onboarding-gateway-001
+shared runtime_gateway mount: IMPLEMENTED
+durable replay-safe staging: IMPLEMENTED
+hosted validation conclusion: PASS
 canonical ownership backend: NOT IMPLEMENTED
 production owner/device receipts: NOT OBSERVED
 ```
 
+## Hosted validation
+
+Exact source validation:
+
+```text
+repository: StegVerse-org/LLM-adapter
+workflow: validate
+commit: 3f1dea0c64bf5eed1e5f3748053a4f9d82fc531e
+run: 33047049590
+conclusion: SUCCESS
+Test KnowledgeVault onboarding Service Gateway: SUCCESS
+Check workflow parity: SUCCESS
+Confirm validation-only authority boundary: SUCCESS
+```
+
+The first validate attempt on the implementation branch had the onboarding tests green but failed `Check workflow parity` because the canonical workflow had not yet been copied to `iosnoperiod/github/workflows/validate.yml`. Commit `3f1dea0c64bf5eed1e5f3748053a4f9d82fc531e` synchronized the required iOS mirror; the complete replacement lane passed. This was workflow-mirror drift, not an onboarding route failure.
+
 ## Next executable boundary
 
-1. implement the staging route in the existing `runtime_gateway`;
-2. add deterministic positive/negative/replay tests;
-3. hosted-validate the shared Gateway route;
-4. bind Site production adapter to consume only the transport receipt;
-5. keep Site at NO_KV / pending until a separately authoritative canonical admission receipt exists.
+1. merge the hosted-green shared Gateway route through a bounded PR;
+2. bind Site production adapter to consume only the transport receipt;
+3. keep Site at NO_KV / pending until a separately authoritative canonical admission receipt exists.
 
 ## User action
 
