@@ -6,7 +6,7 @@
   "branch": "feature/kv-onboarding-gateway-001",
   "claimant": "chatgpt:kv-onboarding-gateway-20260827",
   "role": "CLAIMED_FOR_IMPLEMENTATION_AND_VALIDATION",
-  "state": "IMPLEMENTED_PENDING_HOSTED_VALIDATION",
+  "state": "HOSTED_VALIDATED_PENDING_MERGE",
   "claim_timestamp": "2026-08-27T01:15:00-05:00",
   "handoff": "docs/KNOWLEDGEVAULT_ONBOARDING_SERVICE_GATEWAY_MIRROR_HANDOFF.md",
   "surfaces": [
@@ -26,11 +26,20 @@
   ],
   "authority_effect": false,
   "activation_effect": false,
-  "next_executable_action": "Observe exact hosted validate conclusion for c26c54a0fd7f5f4a765107d7b2afa45b553bbdb1; repair concrete failure or open/merge PR after success.",
+  "next_executable_action": "Open bounded PR, require exact PR-head validate success, merge, then bind Site production adapter to the non-authorizing stage receipt.",
   "implementation_evidence": [
     "0d6a3378a190436a79f9aa66a762ffd1873edafa implemented staging-only route and durable replay protection",
     "12aee45ac47965b61c80c89687f835f6aa5eaf05 mounted route on existing runtime_gateway",
     "1fd24870214afce05febb43457804a5c984a3d31 added deterministic positive/negative/replay/authority tests",
     "c26c54a0fd7f5f4a765107d7b2afa45b553bbdb1 wired tests into canonical token-refusing global validate workflow"
-  ]
+  ],
+  "validation_evidence": {
+    "workflow": "validate",
+    "commit": "3f1dea0c64bf5eed1e5f3748053a4f9d82fc531e",
+    "run_id": 33047049590,
+    "conclusion": "SUCCESS",
+    "onboarding_step": "SUCCESS",
+    "workflow_parity": "SUCCESS",
+    "validation_only_authority_boundary": "SUCCESS"
+  }
 }
