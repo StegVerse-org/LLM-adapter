@@ -325,7 +325,8 @@ def main() -> int:
     OUTPUT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     print(f"ECOSYSTEM CHAT DESTINATION STATE: {state}")
     print(f"SOVEREIGN SOURCE CONTRACT READY: {source_contract_ready}")
-    print(f"VERIFIED LIVE RECEIPT: {live_verified}")\n    print(f"VERIFIED SOVEREIGN PARENT PROJECTION: {sovereign_verified}")
+    print(f"VERIFIED LIVE RECEIPT: {live_verified}")
+    print(f"VERIFIED SOVEREIGN PARENT PROJECTION: {sovereign_verified}")
     print(f"Receipt: {OUTPUT.relative_to(ROOT)}")
     return 0
 
