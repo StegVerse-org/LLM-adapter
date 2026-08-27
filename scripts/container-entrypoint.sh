@@ -17,7 +17,7 @@ if [ "$#" -gt 0 ]; then
   exec "$@"
 fi
 
-exec uvicorn llm_adapter.combined_gateway:app \
+exec uvicorn llm_adapter.deployed_gateway:app \
   --host 0.0.0.0 \
   --port "$PORT" \
   --proxy-headers \
