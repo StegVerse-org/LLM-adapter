@@ -1,0 +1,35 @@
+services:
+  ecosystem-chat-gateway:
+    command:
+      - uvicorn
+      - llm_adapter.deployed_gateway:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --ssl-certfile
+      - /run/secrets/stegverse_tls_cert
+      - --ssl-keyfile
+      - /run/secrets/stegverse_tls_key
+      - --proxy-headers
+      - --forwarded-allow-ips
+      - "*"
+    secrets:
+      - stegverse_tls_cert
+      - stegverse_tls_key
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import ssl,urllib.request; urllib.request.urlopen('https://127.0.0.1:8000/health', context=ssl._create_unverified_context(), timeout=3)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+secrets:
+  stegverse_tls_cert:
+    file: ${STEGDEPLOY_TLS_CERT_FILE:?STEGDEPLOY_TLS_CERT_FILE is required}
+  stegverse_tls_key:
+    file: ${STEGDEPLOY_TLS_KEY_FILE:?STEGDEPLOY_TLS_KEY_FILE is required}
