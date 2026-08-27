@@ -201,3 +201,37 @@ concrete vector = null until canonical COSV projection emits it
 ```
 
 This repair does not execute the sovereign parent task and does not fabricate `ecosystem-chat-live-activation.verified.json`. The actual next product transition remains the independently authorized fresh parent fence `>22` on an admitted StegVerse task-control execution surface.
+
+
+## Independent-parent activation projection seam
+
+A distinct post-parent evidence seam is now implemented under the existing issue #7 lane. It does **not** create a second inference/runtime owner.
+
+`scripts/project_independent_parent_activation.py` consumes only the terminal machine records emitted by the already-authorized `StegVerse-Labs/.github#60` parent execution:
+
+```text
+receipts/ecosystem-chat-sovereign-inference/independent_parent_activation.latest.json
+receipts/ecosystem-chat-sovereign-inference/SHWP-ECOSYSTEM-CHAT-INFERENCE-001.json
+receipts/ecosystem-chat-sovereign-inference/tvc_local_model_route.json
+receipts/ecosystem-chat-sovereign-inference/llm_adapter_sovereign_execution.json
+receipts/ecosystem-chat-sovereign-inference/master_records_same_execution_reconstruction.json
+```
+
+The projection requires all terminal parent predicates, a fresh parent fencing token strictly greater than 22, exact parent activation hash verification, TVC route receipt hash binding, provider-usage event hash binding, Master Records reconstruction hash binding, `same_execution=true`, persistent conversational runtime readiness, `credential_authority=TV/TVC`, `credential_requirement=NONE`, no GitHub activation role, and no third-party inference dependency.
+
+On success it writes the immutable local evidence surface:
+
+```text
+receipts/ecosystem-chat-sovereign-activation.verified.json
+schema: stegverse.ecosystem_chat.sovereign_activation_projection.v1
+state: VERIFIED
+authority_effect: NONE
+```
+
+The destination-state writer accepts this sovereign projection as the preferred current evidence mode. The historical `stegverse.ecosystem_chat.live_activation.v1` receipt remains a compatibility input only; no hosted-gateway evidence is fabricated from the parent receipt.
+
+The projection itself grants no activation, execution, route, custody, publication, release, or repository-mutation authority. Actual parent execution remains owned by `StegVerse-Labs/.github#60`; route authority remains TV/TVC; reconstruction remains Master Records.
+
+### Remaining persistence boundary
+
+A successful local projection is not yet equivalent to durable cross-repository/public evidence propagation. The verified projection still needs an admitted TV/TVC-governed evidence transport/persistence action before Site can consume it without making GitHub Actions or a third-party platform production runtime authority. That boundary remains open and must not be satisfied by inventing a GitHub token requirement or by manually fabricating the immutable receipt.
