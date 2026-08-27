@@ -1,10 +1,10 @@
 # StegDeploy: Render Replacement
 
-This repository now contains a provider-neutral runtime path for the Ecosystem Chat gateway.
+This repository contains the canonical provider-neutral primary runtime path for the Ecosystem Chat / Service Gateway surface. Third-party hosting such as Render is fallback compatibility only.
 
 ## What it replaces
 
-The StegDeploy path removes the Render-specific build pipeline, Blueprint, pipeline-minute accounting, and Render hostname from the runtime contract. The gateway is packaged as a standard OCI container and launched through Docker Compose with persistent storage, generated local secrets, health verification, and a hashed deployment receipt.
+The StegDeploy path removes Render-specific build pipelines, Blueprint state, pipeline-minute accounting, and Render hostnames from the primary runtime contract. The gateway is packaged as a standard OCI container and launched through Docker Compose with persistent storage, generated local secrets, health verification, and a hashed deployment receipt.
 
 ## Autonomous deployment
 
@@ -40,3 +40,32 @@ Provider execution, Master-Records custody, and external mutation remain disable
 - `scripts/container-entrypoint.sh` — startup sequence for custody processing and gateway execution.
 - `compose.stegdeploy.yaml` — provider-neutral service, volume, environment, and health definition.
 - `scripts/stegdeploy_bootstrap.py` — autonomous build, launch, verification, stop, status, secret generation, and receipt creation.
+
+
+## Primary versus fallback runtime policy
+
+```text
+primary runtime: StegDeploy on StegVerse-owned / sovereign OCI-capable substrate
+fallback compatibility: Render or another third-party host
+fallback authority: NONE
+credential authority: TV/TVC
+production continuity dependency on Render: false
+```
+
+The primary StegDeploy container starts `llm_adapter.deployed_gateway:app`, which includes the governed Ecosystem Chat, External Review, HIL, KnowledgeVault onboarding, and Coinbase SKAP/InTr Service Gateway routes.
+
+Coinbase SKAP staging uses the same durable StegDeploy volume through:
+
+```text
+STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT=/var/lib/stegverse
+```
+
+and accepts only the no-value TVC decision receipt injected into:
+
+```text
+STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT
+```
+
+Absence of that TVC receipt keeps Coinbase SKAP readiness fail-closed. StegDeploy does not generate provider credentials, SKAP private keys, or authorization receipts.
+
+Render outages, quotas, billing state, deployment state, or hostname availability therefore must never block primary StegVerse runtime readiness.
