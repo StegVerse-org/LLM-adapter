@@ -3,7 +3,7 @@
 Updated: 2026-08-27
 Repository: `StegVerse-org/LLM-adapter`
 Goal ID: `LLMA-KV-ONBOARDING-GATEWAY-001`
-Status: HOSTED_VALIDATED_PENDING_MERGE / NON_AUTHORIZING_TRANSPORT
+Status: MERGED / HOSTED_VALIDATED / NON_AUTHORIZING_TRANSPORT
 
 ## Goal
 
@@ -133,11 +133,26 @@ Confirm validation-only authority boundary: SUCCESS
 
 The first validate attempt on the implementation branch had the onboarding tests green but failed `Check workflow parity` because the canonical workflow had not yet been copied to `iosnoperiod/github/workflows/validate.yml`. Commit `3f1dea0c64bf5eed1e5f3748053a4f9d82fc531e` synchronized the required iOS mirror; the complete replacement lane passed. This was workflow-mirror drift, not an onboarding route failure.
 
+## Merge evidence
+
+```text
+PR: #203
+head: 7fa80b2a63a344c3a2df0f3819e7763d94df349c
+merge: 8720d93b24f9f0b53ab23d91f2fac3bbe9d0a57a
+Coinbase SKAP Service Gateway Validation: 33047211591 SUCCESS
+global validate: 33047211585 SUCCESS
+KnowledgeVault onboarding test step: SUCCESS
+workflow parity: SUCCESS
+validation-only authority boundary: SUCCESS
+```
+
+Merge establishes source/integration state only. It does not prove a deployed production Gateway route or canonical KV ownership authority.
+
 ## Next executable boundary
 
-1. merge the hosted-green shared Gateway route through a bounded PR;
-2. bind Site production adapter to consume only the transport receipt;
-3. keep Site at NO_KV / pending until a separately authoritative canonical admission receipt exists.
+1. bind Site production adapter to consume only the merged transport receipt;
+2. keep Site at NO_KV / pending until a separately authoritative canonical admission receipt exists;
+3. identify/implement the canonical ownership-admission backend separately from the Gateway transport layer.
 
 ## User action
 
