@@ -103,3 +103,29 @@ This source lane becomes complete when native TLS compose/bootstrap/tests are me
 Production route remains NOT OBSERVED until a real StegVerse-owned/federated runtime executes this mode and TVC independently observes the HTTPS node/readiness surface.
 
 No current iPhone action is due.
+
+
+## Merge / validation evidence
+
+```text
+PR: StegVerse-org/LLM-adapter#209
+merge: 10a6f6247771b2a85b07f5f19810403c3acde513
+Coinbase SKAP Service Gateway Validation: 33121152939 SUCCESS
+global validate: 33121152794 SUCCESS
+source state: MERGED / VALIDATED
+```
+
+Downstream carrier/propagation:
+
+```text
+StegVerse-Labs/StegVerse-Healer#43
+merge: 7aa88c39d5e46402e3368b5ebd81d27a773ce93d
+Test Readiness: 33121314608 SUCCESS
+
+StegVerse-Labs/.github#328
+merge: 583f3277c7eee9f0d12ab63280d31fbbc278aa85
+Heartbeat Worker Project: 33121525095 SUCCESS
+Organization control plane: 33121525130 SUCCESS
+```
+
+The complete source path from resident worker -> Healer -> StegDeploy native TLS is therefore merged and validation-green. No real TLS runtime receipt or public-route observation is claimed.
