@@ -34,6 +34,7 @@ class DestinationActivationSovereignTests(unittest.TestCase):
         self.m.SOVEREIGN_STATE = self.root / "data" / "ecosystem-chat-sovereign-orchestration-state.json"
         self.m.CARRIER_TASK = self.root / "tasks" / "LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json"
         self.m.LIVE_RECEIPT = self.root / "receipts" / "ecosystem-chat-live-activation.verified.json"
+        self.m.SOVEREIGN_RECEIPT = self.root / "receipts" / "ecosystem-chat-sovereign-activation.verified.json"
         self.m.OUTPUT = self.root / "reports" / "ecosystem-chat-destination-activation-state.json"
         self.write_source_contract()
 
