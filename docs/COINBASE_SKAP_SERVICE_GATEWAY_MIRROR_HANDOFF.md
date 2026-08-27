@@ -4,7 +4,7 @@ Updated: 2026-08-26T14:35:00-05:00
 Repository: `StegVerse-org/LLM-adapter`
 Upstream architecture owner: `StegVerse-org/LLM-adapter#72`
 Downstream credential/custody owner: `StegVerse-Labs/TVC#119`
-Status: SOURCE_VALIDATED_FIRST_INTERLOCK / DEPLOYED_ENTRYPOINT_ROUTE_REPAIR_IMPLEMENTED_PENDING_HOSTED_AND_RUNTIME_VALIDATION
+Status: SOURCE_VALIDATED_FIRST_INTERLOCK / DEPLOYED_ENTRYPOINT_ROUTE_REPAIR_MERGED_HOSTED_PASS / COMPATIBILITY_DEPLOY_BLOCKED_RENDER_BUILD_MINUTES / PRODUCTION_ROUTE_NOT_OBSERVED
 
 ## Goal
 
@@ -165,3 +165,55 @@ This repair must not be called production-observed until:
 4. the live readiness URL returns the canonical readiness contract rather than 404.
 
 The hosting substrate is compatibility execution only and remains replaceable; it is not StegVerse credential or governance authority.
+
+
+## 2026-08-27 deployed-entrypoint repair merge and runtime blocker
+
+The deployed-entrypoint repair is now source/hosted complete:
+
+```text
+PR: #204
+head: 90cfe8cd6f4d49aad5d69ea9621bf91857664d92
+merge: 244902d475c12ee6bff7dd67e4dfacb4e2357ca7
+
+Coinbase SKAP Service Gateway Validation:
+  push run 33070210104 SUCCESS
+  PR run 33070270802 SUCCESS
+
+global validate:
+  push run 33070210184 SUCCESS
+```
+
+The repair mounts the existing validated Coinbase SKAP readiness and ingress handlers onto the actual deployed `llm_adapter.deployed_gateway:app` entrypoint and adds a deployed-entrypoint regression test. This closes the source seam that produced the earlier 404.
+
+The existing compatibility service auto-deploy did trigger on the exact merge commit:
+
+```text
+Render service id: srv-d9epkh3rjlhs73csc3qg
+service: stegverse-ecosystem-chat-gateway
+deploy: dep-da82gv4s728c73akg010
+commit: 244902d475c12ee6bff7dd67e4dfacb4e2357ca7
+status: BUILD_FAILED
+```
+
+Render build logs establish the failure class:
+
+```text
+Build canceled: your workspace has run out of build pipeline minutes for the current billing period.
+```
+
+This is an external hosting quota/billing limitation, not a repository build/test failure and not a Coinbase/SKAP contract failure.
+
+Current distinctions:
+
+```text
+deployed-entrypoint source repair: MERGED
+dedicated hosted validation: PASS
+global hosted validation: PASS
+compatibility service auto-deploy: TRIGGERED / BUILD_BLOCKED_BY_RENDER_QUOTA
+live compatibility Coinbase readiness route after repair: NOT OBSERVED
+StegVerse-owned production primary route: NOT OBSERVED
+authority_effect: NONE
+```
+
+The compatibility Render service remains replaceable and non-authoritative. Restoring its build quota may allow the compatibility route to deploy, but that does not satisfy the separate requirement for a StegVerse-owned/substrate-admissible production primary route.
