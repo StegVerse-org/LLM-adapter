@@ -232,6 +232,25 @@ The destination-state writer accepts this sovereign projection as the preferred 
 
 The projection itself grants no activation, execution, route, custody, publication, release, or repository-mutation authority. Actual parent execution remains owned by `StegVerse-Labs/.github#60`; route authority remains TV/TVC; reconstruction remains Master Records.
 
-### Remaining persistence boundary
+### TVC persistence boundary — source merged, runtime observation pending
 
-A successful local projection is not yet equivalent to durable cross-repository/public evidence propagation. The verified projection still needs an admitted TV/TVC-governed evidence transport/persistence action before Site can consume it without making GitHub Actions or a third-party platform production runtime authority. That boundary remains open and must not be satisfied by inventing a GitHub token requirement or by manually fabricating the immutable receipt.
+A successful local projection is still not equivalent to durable cross-repository/public evidence propagation, but the previously missing TV/TVC persistence source seam is now implemented, validated, and merged in `StegVerse-Labs/TVC`.
+
+Canonical TVC continuation:
+
+```text
+task: TVC-ECOSYSTEM-CHAT-ACTIVATION-EVIDENCE-001
+handoff: docs/ECOSYSTEM_CHAT_ACTIVATION_EVIDENCE_TRANSPORT_MIRROR_HANDOFF.md
+adapter: tvc_ecosystem_chat_activation_evidence.py
+validated head: 7af83362d3314105831b50240a23cf8e9079cb47
+validation run: 33135951150 SUCCESS
+merge: 4c8d3440fde168414c700f7e54909e81b2f27e1e
+output: receipts/ecosystem-chat-activation-evidence/transport.latest.json
+output state when genuinely executed: READY_FOR_SITE_IMPORT
+credential authority: TV/TVC
+GitHub runtime authority: NONE
+Site mutation authority: NONE
+publication authority: NONE
+```
+
+The TVC runtime persistence receipt is **not observed yet** because no terminal sovereign parent activation projection exists. After a genuine `ecosystem-chat-sovereign-activation.verified.json` is produced on the resident surface, an admitted TVC execution must verify it and persist the hash-bound packet. Site consumption remains separately owned by its current activation-retention lane (currently Site PR #474 / claim `SITE-ECOSYSTEM-CHAT-ACTIVATION-RETENTION-CREDENTIAL-CLEAN-471-20260823` or its reconciled successor). GitHub Actions and third-party platforms remain non-authorizing validation/transport surfaces only.
