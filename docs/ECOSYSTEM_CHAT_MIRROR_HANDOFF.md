@@ -254,3 +254,23 @@ publication authority: NONE
 ```
 
 The TVC runtime persistence receipt is **not observed yet** because no terminal sovereign parent activation projection exists. After a genuine `ecosystem-chat-sovereign-activation.verified.json` is produced on the resident surface, an admitted TVC execution must verify it and persist the hash-bound packet. Site consumption remains separately owned by its current activation-retention lane (currently Site PR #474 / claim `SITE-ECOSYSTEM-CHAT-ACTIVATION-RETENTION-CREDENTIAL-CLEAN-471-20260823` or its reconciled successor). GitHub Actions and third-party platforms remain non-authorizing validation/transport surfaces only.
+
+
+### Site local import closure — 2026-08-27
+
+The downstream Site activation-retention/import source is no longer an open credential/writeback-only boundary.
+
+```text
+Site issue: #471
+Site PR: #474
+merge: e4586884ff727c77455974bbd26e119b2c808045
+hosted workflow: validation-only / contents:read / persist-credentials:false
+GitHub runtime persistence authority: NONE
+local importer: scripts/import_tvc_ecosystem_chat_activation_evidence.py
+required TVC input: READY_FOR_SITE_IMPORT
+local output: data/ecosystem-chat-tvc-activation-evidence.json
+runtime Site import observed: false
+activation observed: false
+```
+
+The local importer is network-free, credential-free, hash-verifying and non-authorizing. It closes the Site-side source gap after TVC persistence but does not create the missing upstream TVC packet or prove runtime execution.
