@@ -2,17 +2,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from llm_adapter.hil_sovereign_receiver_profile import apply_sovereign_hil_receiver_profile
+from llm_adapter.hil_sovereign_receiver_profile import (
+    SovereignHILProfileError,
+    apply_sovereign_hil_receiver_profile,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
+PRODUCTION_DURABLE_ROOT = Path("/var/lib/stegverse")
 
 
-def test_sovereign_profile_activates_existing_hil_intake_on_durable_state(tmp_path):
-    durable = tmp_path / "durable"
+def test_sovereign_profile_activates_existing_hil_intake_on_production_durable_state():
     env = {
         "STEGVERSE_RUNTIME_PROFILE": "sovereign-carrier",
         "STEGVERSE_SOVEREIGN_STATE_DURABLE": "true",
-        "STEGVERSE_SOVEREIGN_STATE_DIR": str(durable),
+        "STEGVERSE_SOVEREIGN_STATE_DIR": str(PRODUCTION_DURABLE_ROOT),
     }
     profile = apply_sovereign_hil_receiver_profile(env)
     assert profile["state"] == "ACTIVE_SOVEREIGN_RECEIVER"
@@ -23,8 +26,22 @@ def test_sovereign_profile_activates_existing_hil_intake_on_durable_state(tmp_pa
     assert profile["github_hosted_runtime_required"] is False
     assert profile["third_party_runtime_required"] is False
     assert env["STEGVERSE_HIL_INTAKE_ENABLED"] == "true"
-    assert env["STEGVERSE_HIL_DATA_DIR"] == str((durable / "hil-v1.1").resolve())
+    assert env["STEGVERSE_HIL_DATA_DIR"] == "/var/lib/stegverse/hil-v1.1"
     assert env["STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS"] == "true"
+
+
+def test_temporary_state_root_remains_rejected():
+    env = {
+        "STEGVERSE_RUNTIME_PROFILE": "sovereign-carrier",
+        "STEGVERSE_SOVEREIGN_STATE_DURABLE": "true",
+        "STEGVERSE_SOVEREIGN_STATE_DIR": "/tmp/hil-must-fail",
+    }
+    try:
+        apply_sovereign_hil_receiver_profile(env)
+    except SovereignHILProfileError as exc:
+        assert str(exc) == "sovereign_state_dir_must_not_be_temporary"
+    else:
+        raise AssertionError("temporary HIL custody root must fail closed")
 
 
 def test_stegdeploy_compose_declares_sovereign_profile_before_gateway_import():
