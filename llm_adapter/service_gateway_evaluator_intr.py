@@ -47,6 +47,39 @@ def _upstream() -> str:
     return raw
 
 
+
+def _runtime_readiness_url() -> str:
+    parsed = urlsplit(_upstream())
+    host = parsed.hostname or "127.0.0.1"
+    port = f":{parsed.port}" if parsed.port is not None else ""
+    return f"http://{host}{port}/intr/evaluator/readiness"
+
+
+def _probe_runtime_readiness() -> tuple[bool, str | None]:
+    try:
+        req = urlrequest.Request(_runtime_readiness_url(), method="GET")
+        with urlrequest.urlopen(req, timeout=3) as response:
+            if response.status != 200:
+                return False, "runtime_readiness_http_status_invalid"
+            raw = response.read(65537)
+            if len(raw) > 65536:
+                return False, "runtime_readiness_response_too_large"
+        body = json.loads(raw)
+        expected = {
+            "schema": "stegverse.evaluator-intr-runtime-readiness/v1",
+            "state": "READY",
+            "transport": "InTr",
+            "credential_authority": "TV/TVC",
+            "github_token_runtime_authority": "NONE",
+            "authority_effect": "NONE",
+        }
+        failed = [key for key, value in expected.items() if body.get(key) != value]
+        if failed:
+            return False, "runtime_readiness_boundary_invalid:" + ",".join(sorted(failed))
+        return True, None
+    except Exception as exc:
+        return False, "runtime_readiness_unavailable:" + type(exc).__name__
+
 def _hash_body(body: bytes) -> str:
     return hashlib.sha256(body).hexdigest()
 
@@ -104,17 +137,23 @@ def _forward(body: bytes, headers: dict[str, str]) -> tuple[int, bytes, str]:
 @router.get("/intr/evaluator/readiness")
 def evaluator_intr_readiness() -> dict:
     configured = False
+    runtime_ready = False
     reason = None
     try:
         _upstream()
         configured = True
     except ValueError as exc:
         reason = str(exc)
+    if _enabled() and configured:
+        runtime_ready, probe_reason = _probe_runtime_readiness()
+        if not runtime_ready:
+            reason = probe_reason
     return {
         "schema": "stegverse.service-gateway.evaluator-intr-readiness/v1",
         "enabled": _enabled(),
         "loopback_upstream_configured": configured,
-        "state": "READY" if _enabled() and configured else "NOT_READY",
+        "runtime_receiver_ready": runtime_ready,
+        "state": "READY" if _enabled() and configured and runtime_ready else "NOT_READY",
         "reason": reason,
         "transport": "InTr",
         "credential_authority": "TV/TVC",
