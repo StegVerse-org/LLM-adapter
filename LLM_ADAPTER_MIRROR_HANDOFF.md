@@ -275,3 +275,55 @@ repository implementation completeness: 100%
 product activation completeness: not 100%
 session-specific requirements transferred-or-complete: 9/9
 ```
+
+## Execution ownership and collision partition
+
+Standard: `StegVerse-Labs/Continuity/docs/REPOSITORY_HANDOFF_STANDARD.md` / `stegverse.handoff-execution-ownership/v1`.
+
+### MANUAL / SESSION-STARTABLE
+
+```yaml
+- task_id: LLMA-HANDOFF-OWNERSHIP-ADOPTION-214
+  execution_owner: repo-standards #37 integration lane + LLM-adapter repository owner
+  claim_state: CLAIMED_FOR_INTEGRATION
+  worker_registry_ref: StegVerse-Labs/repo-standards#37 + StegVerse-org/LLM-adapter#214 + branch docs/handoff-ownership-adoption-214
+  manual_execution_allowed: true
+  manual_allowed_role: integration
+  collision_scope: execution-ownership metadata in LLM_ADAPTER_MIRROR_HANDOFF.md only; excludes specialized handoffs/tasks, Ecosystem Chat product/runtime work, provider execution, runtime observation, custody/reconstruction, Site activation, credentials, claims/fences/leases, release, and cross-repository propagation
+  release_condition: this textual root-handoff migration is validated, merged, issue #214 is reconciled, and repo-standards adoption state is updated
+  next_executable_action: validate and merge ownership metadata only; do not execute the canonical carrier/runtime/activation chain manually
+```
+
+### WORKER-OWNED / DO NOT COMPETE
+
+```yaml
+- task_id: LLMA-ACTIVE-WORK-AGGREGATE
+  execution_owner: current per-task machine/repository owner named by data/llm-adapter-orchestration-state.json, scoped handoffs/tasks, issues/claims/fences/leases, and canonical upstream/downstream handoffs
+  claim_state: MACHINE_OWNED
+  worker_registry_ref: data/llm-adapter-orchestration-state.json + tasks/LLMA-*.json + current docs/*_MIRROR_HANDOFF.md + StegVerse-org/LLM-adapter#18 + StegVerse-Labs/.github#60 + StegVerse-Labs/TVC route task + master-records/orchestration + StegVerse-Labs/Site#239/#242
+  manual_execution_allowed: false
+  manual_allowed_role: observation
+  collision_scope: real same-carrier provider execution, runtime observation, provider-usage persistence/custody, transition reconstruction, immutable activation receipt, Site activation, downstream ingestion, service gateways, HIL runtime, Ecosystem Chat, public knowledge, VACC/governed retrieval, and any specialized task with a current owner
+  release_condition: newest valid scoped handoff/task/claim/fence/lease/receipt explicitly releases or supersedes the exact collision scope
+  next_executable_action: preserve current machine owners and observe authentic runtime evidence; do not duplicate completed task 019/020 or upstream model/TVC/heartbeat authority
+```
+
+### ESCALATED / AUTHORITY-OWNED
+
+```yaml
+- task_id: LLMA-AUTHORITY-BOUNDARY-AGGREGATE
+  execution_owner: applicable model/route/credential/custody/activation/release authority -> ecosystem governance
+  claim_state: ESCALATED
+  worker_registry_ref: LLM_ADAPTER_MIRROR_HANDOFF.md + current upstream/downstream authority handoffs + TV/TVC credential authority records
+  manual_execution_allowed: false
+  manual_allowed_role: reconciliation
+  collision_scope: model/runtime authority, TV/TVC credential and route authority, provider authorization, custody authority, Site activation, publication/release authority, admissibility/certification authority, deployment authority, and cross-repository mutation authority
+  release_condition: exact bounded authority is explicitly granted through its canonical mechanism
+  next_executable_action: fail closed; repository completion, CI PASS, local-model proof, route validation, transport validation, handoff assignment, or migration metadata do not create activation/release/execution authority
+```
+
+### COMPLETED / SUPERSEDED
+
+- Tasks 019 and 020, local-model/runtime implementation, and public-runtime documentation remain complete/released at their recorded scopes and are not reopened by this migration.
+- Any inference that pending runtime observation, custody/reconstruction, Site activation, or downstream propagation is manually startable is superseded by the machine-owned aggregate above.
+- Any inference that repository implementation completeness or this metadata migration proves product activation, release, provider execution, custody, or downstream activation is superseded/prohibited.
