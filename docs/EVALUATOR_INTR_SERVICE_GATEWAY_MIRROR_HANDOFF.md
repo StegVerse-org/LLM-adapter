@@ -79,3 +79,43 @@ while canonical provenance remains independently bound to the owning repository/
 The equivalent architectural operation must remain transportable through non-web admitted surfaces without requiring an HTTP `Origin` header. Therefore the Gateway adapter is one replaceable carrier boundary and cannot become a platform/OS/device dependency or third-party authority.
 
 This clarification preserves the broader StegVerse requirement that third-party and presentation-layer components remain replaceable.
+
+
+## Native same-host sovereign topology — 2026-08-29
+
+Activation review found a real deployment mismatch in the prior source topology:
+
+```text
+Docker Gateway 127.0.0.1 != sovereign host 127.0.0.1
+```
+
+The evaluator runtime is intentionally loopback-only. Therefore a Gateway inside a separate Docker network namespace cannot reach the host-loopback evaluator listener through the configured canonical upstream.
+
+Issue #224 installs a host-native sovereign Gateway launcher:
+
+```text
+scripts/stegdeploy_native_gateway.py
+```
+
+Canonical evaluator deployment topology becomes:
+
+```text
+public/native Service Gateway process
+  on sovereign host
+-> http://127.0.0.1:8765/intr/evaluator
+-> evaluator runtime on same sovereign host
+```
+
+Properties:
+
+- uses the already-local Python/Uvicorn runtime directly;
+- no Docker requirement for the sovereign primary path;
+- no registry pull;
+- no reverse proxy;
+- no hosted runtime;
+- TV/TVC-file-backed TLS remains supported without recording private-key path or bytes;
+- evaluator enablement and loopback upstream are non-secret runtime configuration;
+- local process/health evidence cannot claim public reachability;
+- Docker Compose remains compatibility/fallback only.
+
+This change both fixes the evaluator loopback topology and narrows a third-party runtime dependency. It does not claim that a native sovereign host has executed the launcher.
