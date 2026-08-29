@@ -69,3 +69,10 @@ resident WorkerCoordinator HIL invocation
 ```
 
 Source/CI compatibility is not itself live browser submission, public HTTPS activation, receiver restart proof, or TVC lifecycle completion.
+
+
+## 2026-08-29 current-contract supersession note
+
+The historical #195 receipt-shape repair remains valid evidence for `EXACT_BYTES_PERSISTED / RECORDED`, but it is no longer the complete current Site submission contract. The current contract is extended by `LLMA-HIL-INTR-DOUBLE-INTERLOCK-031` / issue #212 and `docs/HIL_INTR_DOUBLE_INTERLOCK_MIRROR_HANDOFF.md`.
+
+Current Site compatibility additionally requires the participant-supplied InTr ingress envelope, two chained receiver-issued hop receipts, idempotent same-operation replay, and the persisted TVC-bound egress Interlock envelope. This note does not retroactively claim PR #195 validated those later requirements.
