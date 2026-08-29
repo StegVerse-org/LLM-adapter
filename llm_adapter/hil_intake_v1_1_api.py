@@ -256,7 +256,7 @@ async def submit_response(
         if replay_receipt is None:
             raise HTTPException(status_code=409, detail="hil_intr_operation_replay_receipt_missing")
         chain = replay_receipt.get("intr_receipt_chain") or {}
-        if chain.get("ingress_intent_hash") != ingress_intent["envelope_hash"]:
+        if chain.get("ingress_transport_intent") != ingress_intent:
             raise HTTPException(status_code=409, detail="hil_intr_operation_replay_chain_mismatch")
         return replay_receipt
 
@@ -381,7 +381,7 @@ async def submit_response(
         "next_required_transition": "HIL_CUSTODY_TVC_INTERLOCK_ADMISSION",
         "authority": authority,
         "notes": [
-            "Submit initiated a governed InTr ingress Interlock; the receiver issued the DEVICE->HIL_INGRESS receipt only after validating the transported packet.",
+            "Submit initiated a governed Universal InTr ingress Interlock; the receiver issued the DEVICE_SYSTEM->STEGOS_ECOSYSTEM receipt only after validating the transported packet.",
             "HIL custody is a second chained Interlock receipt whose prior hash binds the ingress receipt.",
             "A TVC-bound Universal InTr Interlock intent is persisted automatically; TVC admission is not claimed until TVC returns its own chained receipt.",
             "Exact uploaded PDF bytes and provenance manifest persisted before receipt issuance.",
