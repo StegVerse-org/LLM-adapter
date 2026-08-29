@@ -1,0 +1,88 @@
+name: HIL InTr Double Interlock
+
+on:
+  pull_request:
+    paths:
+      - 'llm_adapter/hil_intr_interlock.py'
+      - 'llm_adapter/hil_intake_v1_1_api.py'
+      - 'schemas/hil-intr-ingress-v1.schema.json'
+      - 'schemas/hil-intr-egress-v1.schema.json'
+      - 'tests/test_hil_intake_api.py'
+      - 'tasks/LLMA-HIL-INTR-DOUBLE-INTERLOCK-031.json'
+      - 'docs/HIL_INTR_DOUBLE_INTERLOCK_MIRROR_HANDOFF.md'
+      - 'docs/HIL_RUNTIME_MIRROR_HANDOFF.md'
+      - '.github/workflows/hil-intr-double-interlock.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Refuse credential-bearing environment
+        shell: bash
+        run: |
+          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT TVC_EPHEMERAL_GITHUB_TOKEN STEGVERSE_PROVIDER_TOKEN STEGVERSE_MASTER_RECORDS_TOKEN STEGVERSE_HIL_REVIEW_TOKEN STEGVERSE_HIL_PUBLICATION_TOKEN OPENAI_API_KEY ANTHROPIC_API_KEY CLOUDFLARE_API_TOKEN; do
+            if [ -n "${!key:-}" ]; then
+              echo "credential_exposed:${key}"
+              exit 1
+            fi
+          done
+      - name: Fetch exact source anonymously
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git init .
+          git remote add origin https://github.com/StegVerse-org/LLM-adapter.git
+          git -c credential.helper= -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+      - name: Install credential-free test dependencies
+        run: python3 -m pip install --disable-pip-version-check -q -e '.[dev]'
+      - name: Validate HIL InTr Interlock contract
+        run: |
+          python3 -m pytest -q tests/test_hil_intake_api.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          task=json.loads(Path('tasks/LLMA-HIL-INTR-DOUBLE-INTERLOCK-031.json').read_text())
+          assert task['credential_authority']=='TV/TVC'
+          assert task['always_on_receiver_required'] is False
+          assert task['github_token_runtime_authority']=='NONE'
+          contract=task['source_contract']
+          assert contract['transport_protocol']=='InTr'
+          assert contract['first_boundary']=='DEVICE->HIL_INGRESS'
+          assert contract['second_boundary']=='HIL_INGRESS->HIL_CUSTODY'
+          assert contract['egress_boundary']=='HIL_CUSTODY->TVC_HIL_LIFECYCLE'
+          assert contract['receiver_may_claim_tvc_admission'] is False
+          assert task['retry_contract']['same_operation_idempotent'] is True
+
+          ingress=json.loads(Path('schemas/hil-intr-ingress-v1.schema.json').read_text())
+          egress=json.loads(Path('schemas/hil-intr-egress-v1.schema.json').read_text())
+          assert ingress['properties']['protocol']['const']=='InTr'
+          assert ingress['properties']['from_role']['const']=='DEVICE'
+          assert ingress['properties']['to_role']['const']=='HIL_INGRESS'
+          assert egress['properties']['from_role']['const']=='HIL_CUSTODY'
+          assert egress['properties']['to_role']['const']=='TVC_HIL_LIFECYCLE'
+
+          source=Path('llm_adapter/hil_intake_v1_1_api.py').read_text()
+          for marker in (
+              'intr_ingress_envelope: UploadFile = File(...)',
+              'validate_ingress_envelope',
+              'device_ingress_receipt = build_hop_receipt',
+              'custody_receipt = build_hop_receipt',
+              'build_egress_envelope',
+              'HIL_CUSTODY_TVC_INTERLOCK_ADMISSION',
+              '_submission_by_intr_operation',
+              '_persisted_receiver_receipt',
+          ):
+              assert marker in source, marker
+          print('HIL_INTR_DOUBLE_INTERLOCK=PASS')
+          print('TRANSPORT_PROTOCOL=InTr')
+          print('ALWAYS_ON_RECEIVER_REQUIRED=false')
+          print('TVC_ADMISSION_CLAIMED=false')
+          print('AUTHORITY_EFFECT=NONE')
+          PY
