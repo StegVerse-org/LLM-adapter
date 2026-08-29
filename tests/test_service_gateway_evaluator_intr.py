@@ -45,13 +45,44 @@ class EvaluatorInTrServiceGatewayTests(unittest.TestCase):
         }
 
     def test_readiness_is_authority_neutral(self):
-        r=self.client.get("/intr/evaluator/readiness")
+        with patch.object(mod,"_probe_runtime_readiness",return_value=(True,None)):
+            r=self.client.get("/intr/evaluator/readiness")
         self.assertEqual(r.status_code,200)
         body=r.json()
         self.assertEqual(body["state"],"READY")
         self.assertEqual(body["credential_authority"],"TV/TVC")
         self.assertFalse(body["gateway_receipt_authority"])
         self.assertFalse(body["gateway_evaluator_authority"])
+        self.assertTrue(body["runtime_receiver_ready"])
+
+
+    def test_readiness_fails_closed_when_receiver_is_not_live(self):
+        with patch.object(mod,"_probe_runtime_readiness",return_value=(False,"runtime_readiness_unavailable:ConnectionRefusedError")):
+            r=self.client.get("/intr/evaluator/readiness")
+        self.assertEqual(r.status_code,200)
+        body=r.json()
+        self.assertEqual(body["state"],"NOT_READY")
+        self.assertFalse(body["runtime_receiver_ready"])
+        self.assertIn("runtime_readiness_unavailable",body["reason"])
+
+    def test_runtime_readiness_probe_requires_canonical_authority_boundary(self):
+        class FakeHeaders:
+            pass
+        class FakeResponse:
+            status=200
+            def read(self,n): return json.dumps({
+                "schema":"stegverse.evaluator-intr-runtime-readiness/v1",
+                "state":"READY","transport":"InTr",
+                "credential_authority":"TV/TVC",
+                "github_token_runtime_authority":"NONE",
+                "authority_effect":"NONE",
+            }).encode()
+            def __enter__(self): return self
+            def __exit__(self,*args): return False
+        with patch.object(mod.urlrequest,"urlopen",return_value=FakeResponse()):
+            ready,reason=mod._probe_runtime_readiness()
+        self.assertTrue(ready)
+        self.assertIsNone(reason)
 
     def test_exact_bytes_and_intr_headers_are_forwarded(self):
         raw=json.dumps(self.request_body(),separators=(",",":")).encode()
