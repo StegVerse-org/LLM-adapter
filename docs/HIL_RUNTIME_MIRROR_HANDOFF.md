@@ -161,3 +161,76 @@ canonical lifecycle: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
 private review owner: StegVerse-Labs/TVC#8
 next evidence class: REAL_RUNTIME_AND_RESTART_OBSERVATION
 ```
+
+
+## 2026-08-29 Universal Interlock/InTr intake chain
+
+The former live-continuation sequence that treated a continuously READY HIL receiver as a prerequisite to beginning submission is superseded by the canonical StegVerse universal transport invariant.
+
+The HIL intake endpoint now requires a canonical transport intent alongside the PDF and provenance:
+
+```text
+schema: stegverse.universal-intr-transport/v1
+protocol: InTr
+source: DEVICE_SYSTEM / Site:HIL
+destination: STEGOS_ECOSYSTEM / HIL:Ingress
+boundary_path: [DEVICE_SYSTEM, STEGOS_ECOSYSTEM]
+interlock_required: true
+event_triggered: true
+always_on_receiver_required: false
+second_user_device_required: false
+receiver_unavailable_disposition: DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION
+exact_packet_transport_retry_allowed: true
+blind_consequence_retry_allowed: false
+credential_authority: TV/TVC
+authority_transfer: false
+```
+
+The receiver independently recomputes the canonical HIL payload binding from:
+
+```text
+exact response PDF SHA-256
+canonical provenance SHA-256
+Primary SHA-256
+Prompt SHA-256
+```
+
+and rejects any transport intent that does not bind that exact payload or attempts a noncanonical boundary path.
+
+After exact bytes and provenance are durably persisted and re-read, the receiver creates a chained Interlock lineage:
+
+```text
+DEVICE_SYSTEM / Site:HIL
+-> InTr hop receipt
+-> STEGOS_ECOSYSTEM / HIL:Ingress
+-> chained same-boundary Interlock receipt
+-> STEGOS_ECOSYSTEM / HIL:Custody
+-> durable next Interlock intent
+-> STEGOS_ECOSYSTEM / TVC:HIL-Lifecycle
+```
+
+The first two completed transport events emit `stegverse.intr.hop_receipt/v1` receipts. The TVC transition is represented only as a durable next intent under `intr-outbox/tvc-hil-lifecycle/`; TVC admission is not claimed until TVC independently validates the chain and emits its own receipt.
+
+New HIL receipt fields:
+
+```text
+intr_receipt_chain.schema = stegverse.hil.intr_receipt_chain/v2
+intr_tvc_queue_hash
+next_required_transition = HIL_CUSTODY_TVC_INTERLOCK_ADMISSION
+transport_initiated_by_submission = true
+always_on_application_receiver_required = false
+second_user_device_required = false
+```
+
+Lifecycle separation remains exact:
+
+```text
+submission initiated != ingress received
+ingress received != HIL custody
+HIL custody != TVC lifecycle admission
+TVC admission != private review
+private review != publication
+publication != Master Records release
+```
+
+Source implementation on this branch does not itself prove a production transport event.

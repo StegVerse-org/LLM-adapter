@@ -28,25 +28,90 @@ def _manifest(pdf: bytes, *, response_sha256: str | None = None, metadata: bool 
     return payload
 
 
+def _canonical_json(value) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+
+
+def _digest_uri(value) -> str:
+    raw = value if isinstance(value, bytes) else _canonical_json(value)
+    return "sha256:" + hashlib.sha256(raw).hexdigest()
+
+
+def _intr_intent(pdf: bytes, manifest: dict, *, operation_id: str = "HIL-UPLOAD-TEST-001") -> dict:
+    response_sha = hashlib.sha256(pdf).hexdigest()
+    binding = {
+        "schema": "stegverse.hil.intr_payload_binding/v1",
+        "protocol": "HIL-PROTOCOL-v1.1",
+        "response_sha256": "sha256:" + response_sha,
+        "provenance_sha256": _digest_uri(manifest),
+        "primary_sha256": "sha256:" + PRIMARY,
+        "prompt_sha256": "sha256:" + PROMPT,
+    }
+    payload_hash = _digest_uri(binding)
+    path = ["DEVICE_SYSTEM", "STEGOS_ECOSYSTEM"]
+    basis = {
+        "operation_id": operation_id,
+        "payload_hash": payload_hash,
+        "source_boundary": "DEVICE_SYSTEM",
+        "source_subsystem": "Site:HIL",
+        "destination_boundary": "STEGOS_ECOSYSTEM",
+        "destination_subsystem": "HIL:Ingress",
+        "boundary_path": path,
+    }
+    packet_id = "INTR-" + hashlib.sha256(_canonical_json(basis)).hexdigest()[:24]
+    return {
+        "schema": "stegverse.universal-intr-transport/v1",
+        "protocol": "InTr",
+        "operation_id": operation_id,
+        "packet_id": packet_id,
+        "payload_hash": payload_hash,
+        "prior_transport_receipt_hash": None,
+        "source": {"boundary": "DEVICE_SYSTEM", "subsystem": "Site:HIL"},
+        "destination": {"boundary": "STEGOS_ECOSYSTEM", "subsystem": "HIL:Ingress"},
+        "boundary_path": path,
+        "interlock_required": True,
+        "transport_semantics": {
+            "event_triggered": True,
+            "always_on_receiver_required": False,
+            "second_user_device_required": False,
+            "receiver_unavailable_disposition": "DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION",
+            "exact_packet_transport_retry_allowed": True,
+            "blind_consequence_retry_allowed": False,
+        },
+        "authority": {
+            "authority_transfer": False,
+            "transport_grants_execution_authority": False,
+            "credential_authority": "TV/TVC",
+        },
+        "receipt_chain": {
+            "required": True,
+            "receipt_schema": "stegverse.intr.hop_receipt/v1",
+            "payload_plaintext_in_receipts": False,
+            "prior_hash_required_after_first_hop": True,
+        },
+    }
+
+
 def _enable(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("STEGVERSE_HIL_INTAKE_ENABLED", "true")
     monkeypatch.setenv("STEGVERSE_HIL_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "true")
 
 
-def _submit(client: TestClient, pdf: bytes, manifest: dict, data: dict | None = None):
+def _submit(client: TestClient, pdf: bytes, manifest: dict, data: dict | None = None, intent: dict | None = None):
     form = {"primary_sha256": PRIMARY, "prompt_sha256": PROMPT}
     if data:
         form.update(data)
+    transport_intent = intent or _intr_intent(pdf, manifest)
     return client.post(
         "/api/hil/submissions",
         files={
             "response_pdf": ("response.pdf", pdf, "application/pdf"),
             "provenance_manifest": ("response.provenance.json", json.dumps(manifest).encode(), "application/json"),
+            "intr_transport_intent": ("response.intr.json", json.dumps(transport_intent).encode(), "application/json"),
         },
         data=form,
     )
-
 
 def test_hil_readiness_reports_v1_1_and_fails_closed_when_disabled(monkeypatch):
     monkeypatch.setenv("STEGVERSE_HIL_INTAKE_ENABLED", "false")
@@ -73,6 +138,17 @@ def test_minimal_upload_preserves_exact_bytes_and_issues_receipt(monkeypatch, tm
     assert receipt["custody_state"] == "EXACT_BYTES_PERSISTED"
     assert receipt["registry_state"] == "RECORDED"
     assert receipt["authority"]["publication"] is False
+    assert receipt["transport_initiated_by_submission"] is True
+    assert receipt["always_on_application_receiver_required"] is False
+    assert receipt["second_user_device_required"] is False
+    chain = receipt["intr_receipt_chain"]
+    assert chain["schema"] == "stegverse.hil.intr_receipt_chain/v2"
+    assert chain["device_stegos_ingress_receipt"]["from_role"] == "DEVICE_SYSTEM"
+    assert chain["device_stegos_ingress_receipt"]["to_role"] == "STEGOS_ECOSYSTEM"
+    assert chain["hil_custody_interlock_receipt"]["prior_receipt_hash"] == chain["device_stegos_ingress_receipt"]["receipt_hash"]
+    assert chain["next_interlock_intent"]["source"]["subsystem"] == "HIL:Custody"
+    assert chain["next_interlock_intent"]["destination"]["subsystem"] == "TVC:HIL-Lifecycle"
+    assert receipt["next_required_transition"] == "HIL_CUSTODY_TVC_INTERLOCK_ADMISSION"
     stored = list((tmp_path / "originals").glob("*.pdf"))
     manifests = list((tmp_path / "provenance").glob("*.json"))
     assert len(stored) == 1 and stored[0].read_bytes() == pdf
@@ -233,3 +309,28 @@ def test_private_review_remains_separately_authenticated_and_write_once(monkeypa
     assert repeated.status_code == 409
     state = client.get(f"/api/hil/submissions/{submission_id}/review-state", headers=headers).json()
     assert state["submission"]["validation_state"] == "ACCEPT_PRIVATE"
+
+
+def test_hil_submission_rejects_boundary_bypass(monkeypatch, tmp_path):
+    _enable(monkeypatch, tmp_path)
+    pdf = b"%PDF-1.7\ninterlock boundary\n%%EOF\n"
+    manifest = _manifest(pdf, metadata=False)
+    intent = _intr_intent(pdf, manifest)
+    intent["boundary_path"] = ["DEVICE_SYSTEM", "EXTERNAL_SYSTEM"]
+    response = _submit(TestClient(app), pdf, manifest, intent=intent)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "intr_transport_boundary_path_invalid"
+
+
+def test_hil_submission_persists_next_tvc_interlock_queue(monkeypatch, tmp_path):
+    _enable(monkeypatch, tmp_path)
+    pdf = b"%PDF-1.7\nqueue next interlock\n%%EOF\n"
+    receipt = _submit(TestClient(app), pdf, _manifest(pdf, metadata=False)).json()
+    queued = list((tmp_path / "intr-outbox" / "tvc-hil-lifecycle").glob("*.json"))
+    assert len(queued) == 1
+    payload = json.loads(queued[0].read_text())
+    assert payload["schema"] == "stegverse.hil.tvc_interlock_queue/v1"
+    assert payload["state"] == "READY_FOR_INTERLOCK_ADMISSION"
+    assert payload["tvc_admission_completed"] is False
+    assert payload["transport_intent"] == receipt["intr_receipt_chain"]["next_interlock_intent"]
+    assert payload["prior_receipt_hash"] == receipt["intr_receipt_chain"]["hil_custody_interlock_receipt"]["receipt_hash"]

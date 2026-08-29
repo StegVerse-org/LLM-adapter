@@ -7,6 +7,12 @@ import sqlite3
 from fastapi.testclient import TestClient
 
 from llm_adapter.combined_gateway import app
+from llm_adapter.hil_intake_v1_1_api import (
+    _build_transport_intent,
+    _digest_uri,
+    _hil_payload_binding,
+    _validate_manifest,
+)
 
 PRIMARY = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
 PROMPT = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c"
@@ -34,6 +40,22 @@ def _manifest(pdf: bytes) -> dict:
     }
 
 
+def _transport_intent(pdf: bytes, manifest: dict) -> dict:
+    response_sha = hashlib.sha256(pdf).hexdigest()
+    normalized = _validate_manifest(dict(manifest), response_sha)
+    provenance_sha = _digest_uri(normalized)
+    payload_hash = _digest_uri(_hil_payload_binding(response_sha, provenance_sha))
+    return _build_transport_intent(
+        operation_id="HIL-TEST-" + response_sha[:16],
+        payload_hash=payload_hash,
+        source_boundary="DEVICE_SYSTEM",
+        source_subsystem="Site:HIL",
+        destination_boundary="STEGOS_ECOSYSTEM",
+        destination_subsystem="HIL:Ingress",
+        prior_transport_receipt_hash=None,
+    )
+
+
 def test_hil_complete_controlled_cycle_survives_client_restart(monkeypatch, tmp_path):
     monkeypatch.setenv("STEGVERSE_HIL_INTAKE_ENABLED", "true")
     monkeypatch.setenv("STEGVERSE_HIL_DATA_DIR", str(tmp_path))
@@ -51,13 +73,20 @@ def test_hil_complete_controlled_cycle_survives_client_restart(monkeypatch, tmp_
     assert readiness["prompt_sha256"] == PROMPT
     assert readiness["private_review_configured"] is True
 
+    manifest = _manifest(pdf)
+    transport_intent = _transport_intent(pdf, manifest)
     submitted = first_client.post(
         "/api/hil/submissions",
         files={
             "response_pdf": ("response.pdf", pdf, "application/pdf"),
             "provenance_manifest": (
                 "response.provenance.json",
-                json.dumps(_manifest(pdf)).encode("utf-8"),
+                json.dumps(manifest).encode("utf-8"),
+                "application/json",
+            ),
+            "intr_transport_intent": (
+                "response.intr.json",
+                json.dumps(transport_intent).encode("utf-8"),
                 "application/json",
             ),
         },
