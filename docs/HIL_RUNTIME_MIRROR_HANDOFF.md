@@ -161,3 +161,50 @@ canonical lifecycle: StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
 private review owner: StegVerse-Labs/TVC#8
 next evidence class: REAL_RUNTIME_AND_RESTART_OBSERVATION
 ```
+
+
+## 2026-08-29 submission-triggered InTr double-Interlock
+
+Current HIL source no longer treats receiver readiness as a prerequisite for starting a participant upload. The canonical participant action is the transport trigger.
+
+```text
+Submit
+-> stegverse.hil.intr_ingress_envelope/v1
+-> receiving boundary validates exact response/provenance hashes
+-> stegverse.intr.hop_receipt/v1 DEVICE -> HIL_INGRESS
+-> exact persistence + committed registry readback
+-> stegverse.intr.hop_receipt/v1 HIL_INGRESS -> HIL_CUSTODY
+   prior_receipt_hash = ingress receipt hash
+-> stegverse.hil.intr_egress_envelope/v1 HIL_CUSTODY -> TVC_HIL_LIFECYCLE
+   prior_receipt_hash = custody receipt hash
+-> next required transition: HIL_CUSTODY_TVC_INTERLOCK_ADMISSION
+```
+
+The ingress operation is idempotent. Replaying the exact operation id + exact envelope returns the original persisted `HIL-RECEIVER-RECEIPT-v2`; reusing an operation id with a changed envelope fails closed. This permits a participant-device continuation path to retry after an ambiguous transport outcome without duplicating custody.
+
+Persistent receiver state now includes the complete InTr receipt chain and the TVC-bound egress envelope. Public status exposes only the chain hash and next transition, not the artifact bytes or private metadata.
+
+The egress envelope is an initiation object, not a TVC receipt. TVC remains responsible for validating the upstream receipt chain and issuing the next custody/admission receipt. The HIL receiver may not infer TVC admission, private review, publication, Master Records append, or release.
+
+This supersedes the older runtime ordering language:
+
+```text
+receiver READY -> public rendezvous -> participant submission
+```
+
+for participant initiation semantics. A transport implementation may still materialize an event-ephemeral receiver to service the InTr operation, but participant Submit must not depend on a separately maintained always-on receiver or manual bootstrap.
+
+Production invariants:
+
+```text
+always_on_receiver_required: false
+participant_second_machine_required: false
+manual_bootstrap_required: false
+transport_protocol: InTr
+transport_grants_execution_authority: false
+github_token_runtime_authority: NONE
+third_party_runtime_required: false
+credential_authority: TV/TVC
+```
+
+Historical GitHub Actions / temporary-tunnel HIL cycle workflows remain validation/experimental evidence only and cannot satisfy production runtime or transport authority.
