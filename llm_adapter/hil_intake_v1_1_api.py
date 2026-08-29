@@ -64,6 +64,18 @@ def _connect() -> sqlite3.Connection:
         validation_state TEXT NOT NULL, active_content_state TEXT NOT NULL,
         authority_json TEXT NOT NULL)"""
     )
+    columns = {
+        row["name"]
+        for row in connection.execute("PRAGMA table_info(submissions)").fetchall()
+    }
+    if "intr_operation_id" not in columns:
+        connection.execute("ALTER TABLE submissions ADD COLUMN intr_operation_id TEXT")
+    if "intr_envelope_hash" not in columns:
+        connection.execute("ALTER TABLE submissions ADD COLUMN intr_envelope_hash TEXT")
+    connection.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_hil_submissions_intr_operation "
+        "ON submissions(intr_operation_id) WHERE intr_operation_id IS NOT NULL"
+    )
     connection.execute(
         """CREATE TABLE IF NOT EXISTS submission_reviews (
         review_id TEXT PRIMARY KEY, submission_id TEXT NOT NULL UNIQUE,
@@ -73,6 +85,25 @@ def _connect() -> sqlite3.Connection:
         FOREIGN KEY(submission_id) REFERENCES submissions(submission_id))"""
     )
     return connection
+
+
+def _submission_by_intr_operation(operation_id: str) -> sqlite3.Row | None:
+    with _connect() as connection:
+        return connection.execute(
+            "SELECT submission_id, intr_operation_id, intr_envelope_hash FROM submissions WHERE intr_operation_id = ?",
+            (operation_id,),
+        ).fetchone()
+
+
+def _persisted_receiver_receipt(submission_id: str) -> dict | None:
+    path = _data_dir() / "receipts" / f"{submission_id}.json"
+    if not path.is_file():
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return value if isinstance(value, dict) else None
 
 
 def _review_token_required(token: str | None) -> None:
@@ -86,7 +117,7 @@ def _review_token_required(token: str | None) -> None:
 def _submission_row(submission_id: str) -> sqlite3.Row:
     with _connect() as connection:
         submission = connection.execute(
-            "SELECT submission_id, received_at, participant_identifier, publication_consent, primary_sha256, submitted_file_sha256, provenance_manifest_sha256, chain_validation_state, size_bytes, storage_path, manifest_path, validation_state, active_content_state, authority_json FROM submissions WHERE submission_id = ?",
+            "SELECT submission_id, received_at, participant_identifier, publication_consent, primary_sha256, submitted_file_sha256, provenance_manifest_sha256, chain_validation_state, size_bytes, storage_path, manifest_path, validation_state, active_content_state, authority_json, intr_operation_id, intr_envelope_hash FROM submissions WHERE submission_id = ?",
             (submission_id,),
         ).fetchone()
     if submission is None:
@@ -216,6 +247,18 @@ async def submit_response(
     except HILInTrError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
+    existing_intr = _submission_by_intr_operation(str(ingress_envelope["operation_id"]))
+    if existing_intr is not None:
+        if existing_intr["intr_envelope_hash"] != ingress_envelope["envelope_hash"]:
+            raise HTTPException(status_code=409, detail="hil_intr_operation_replay_envelope_mismatch")
+        replay_receipt = _persisted_receiver_receipt(existing_intr["submission_id"])
+        if replay_receipt is None:
+            raise HTTPException(status_code=409, detail="hil_intr_operation_replay_receipt_missing")
+        chain = replay_receipt.get("intr_receipt_chain") or {}
+        if chain.get("ingress_envelope_hash") != ingress_envelope["envelope_hash"]:
+            raise HTTPException(status_code=409, detail="hil_intr_operation_replay_chain_mismatch")
+        return replay_receipt
+
     signature_state = manifest["producer_signature"]["state"]
     chain_state = "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED"
     if signature_state == "VERIFIED":
@@ -235,10 +278,20 @@ async def submit_response(
     participant_identifier = participant_identifier.strip() or "not_provided"
     with _connect() as connection:
         connection.execute(
-            "INSERT INTO submissions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (submission_id, received_at, participant_identifier, publication_consent,
-             primary_sha256, digest, manifest_sha256, chain_state, len(data), str(path),
-             str(manifest_path), "RECEIVED_PENDING_REVIEW", "ABSENT", json.dumps(authority, sort_keys=True)),
+            """INSERT INTO submissions (
+                submission_id, received_at, participant_identifier, publication_consent,
+                primary_sha256, submitted_file_sha256, provenance_manifest_sha256,
+                chain_validation_state, size_bytes, storage_path, manifest_path,
+                validation_state, active_content_state, authority_json,
+                intr_operation_id, intr_envelope_hash
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                submission_id, received_at, participant_identifier, publication_consent,
+                primary_sha256, digest, manifest_sha256, chain_state, len(data), str(path),
+                str(manifest_path), "RECEIVED_PENDING_REVIEW", "ABSENT",
+                json.dumps(authority, sort_keys=True),
+                ingress_envelope["operation_id"], ingress_envelope["envelope_hash"],
+            ),
         )
 
     # Do not advertise durable custody or registry admission until the persisted row
@@ -328,7 +381,14 @@ async def submit_response(
         ],
     }
     receipt["receipt_sha256"] = _canonical_hash(receipt)
-    return receipt
+    receipt_root = root / "receipts"
+    receipt_root.mkdir(parents=True, exist_ok=True)
+    receipt_path = receipt_root / f"{submission_id}.json"
+    receipt_path.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    replay = _persisted_receiver_receipt(submission_id)
+    if replay is None or replay.get("receipt_sha256") != receipt["receipt_sha256"]:
+        raise HTTPException(status_code=500, detail="hil_receiver_receipt_persistence_failed")
+    return replay
 
 
 @router.get("/submissions/{submission_id}/status")
