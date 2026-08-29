@@ -12,11 +12,19 @@ services:
     environment:
       PORT: "8000"
       STEGVERSE_DATA_DIR: /var/lib/stegverse
-      STEGVERSE_ALLOWED_ORIGINS: ${STEGVERSE_ALLOWED_ORIGINS:-https://stegverse-labs.github.io}
+      STEGVERSE_ALLOWED_ORIGINS: ${STEGVERSE_ALLOWED_ORIGINS:-https://stegverse.org,https://www.stegverse.org,https://stegverse-labs.github.io}
       STEGVERSE_CHAT_RATE_LIMIT: ${STEGVERSE_CHAT_RATE_LIMIT:-20}
       STEGVERSE_CHAT_RATE_WINDOW_SECONDS: ${STEGVERSE_CHAT_RATE_WINDOW_SECONDS:-3600}
       STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: "true"
       STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT: /var/lib/stegverse
+      # The deployed gateway already contains the canonical HIL v1.1 intake.
+      # Declaring this runtime as the sovereign carrier activates that existing
+      # receiver against the same durable StegDeploy state volume. No second
+      # HIL web process, public tunnel, participant machine, or GitHub runtime
+      # becomes necessary or authoritative.
+      STEGVERSE_RUNTIME_PROFILE: sovereign-carrier
+      STEGVERSE_SOVEREIGN_STATE_DURABLE: "true"
+      STEGVERSE_SOVEREIGN_STATE_DIR: /var/lib/stegverse
       STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT: ${STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT:-}
       STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN: ${STEGVERSE_EXTERNAL_REVIEW_SUBMIT_TOKEN:-}
       STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY: ${STEGVERSE_EXTERNAL_REVIEW_RECEIPT_KEY:-}
