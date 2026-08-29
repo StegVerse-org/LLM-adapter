@@ -47,12 +47,30 @@ def main() -> int:
         'STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: "true"',
         "stegverse_gateway_data:/var/lib/stegverse",
         "STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT: /var/lib/stegverse",
+        "STEGVERSE_RUNTIME_PROFILE: sovereign-carrier",
+        'STEGVERSE_SOVEREIGN_STATE_DURABLE: "true"',
+        "STEGVERSE_SOVEREIGN_STATE_DIR: /var/lib/stegverse",
         "STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT: ${STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT:-}",
         "STEGVERSE_PROVIDER_ENABLED: ${STEGVERSE_PROVIDER_ENABLED:-false}",
         "STEGVERSE_EXTERNAL_MUTATION_ENABLED: ${STEGVERSE_EXTERNAL_MUTATION_ENABLED:-false}",
         "healthcheck:",
     )
     reject("compose.stegdeploy.yaml", "ghcr.io/stegverse-org/llm-adapter:main", "pull_policy: always")
+    require(
+        "llm_adapter/combined_gateway.py",
+        "apply_sovereign_hil_receiver_profile",
+        "hil_intake_router",
+        'app.include_router(hil_intake_router)',
+    )
+    require(
+        "llm_adapter/hil_sovereign_receiver_profile.py",
+        'env["STEGVERSE_HIL_INTAKE_ENABLED"] = "true"',
+        'env["STEGVERSE_HIL_DATA_DIR"] = str(hil_root)',
+        'env["STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS"] = "true"',
+        '"state": "ACTIVE_SOVEREIGN_RECEIVER"',
+        '"credential_authority": "TV/TVC"',
+        '"third_party_runtime_required": False',
+    )
     require(
         "scripts/stegdeploy_bootstrap.py",
         "stegdeploy.deployment-receipt.v2",
