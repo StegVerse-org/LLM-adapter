@@ -169,13 +169,13 @@ Current HIL source no longer treats receiver readiness as a prerequisite for sta
 
 ```text
 Submit
--> stegverse.hil.intr_ingress_envelope/v1
+-> stegverse.universal-intr-transport/v1
 -> receiving boundary validates exact response/provenance hashes
--> stegverse.intr.hop_receipt/v1 DEVICE -> HIL_INGRESS
+-> stegverse.intr.hop_receipt/v1 DEVICE_SYSTEM -> STEGOS_ECOSYSTEM / HIL:Ingress
 -> exact persistence + committed registry readback
--> stegverse.intr.hop_receipt/v1 HIL_INGRESS -> HIL_CUSTODY
+-> stegverse.intr.hop_receipt/v1 STEGOS_ECOSYSTEM / HIL:Ingress -> HIL:Custody
    prior_receipt_hash = ingress receipt hash
--> stegverse.hil.intr_egress_envelope/v1 HIL_CUSTODY -> TVC_HIL_LIFECYCLE
+-> stegverse.universal-intr-transport/v1 STEGOS_ECOSYSTEM / HIL:Custody -> TVC:HIL-Lifecycle
    prior_receipt_hash = custody receipt hash
 -> next required transition: HIL_CUSTODY_TVC_INTERLOCK_ADMISSION
 ```
