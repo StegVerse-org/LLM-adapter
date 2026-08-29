@@ -62,6 +62,7 @@ class EvaluatorInTrServiceGatewayTests(unittest.TestCase):
         self.assertEqual(r.content,returned)
         sent_body,sent_headers=forward.call_args.args
         self.assertEqual(sent_body,raw)
+        self.assertEqual(sent_headers["origin"],"https://stegverse.org")
         self.assertEqual(sent_headers["x-stegverse-transport"],"InTr")
         self.assertEqual(sent_headers["x-stegverse-authorization-id"],"PUBLIC_READ")
         self.assertEqual(sent_headers["x-stegverse-payload-sha256"],hashlib.sha256(raw).hexdigest())
