@@ -21,6 +21,7 @@ MAX_BODY = 2 * 1024 * 1024
 ALLOWED_ORIGINS = {"https://stegverse.org", "https://www.stegverse.org"}
 FORBIDDEN_REQUEST_HEADERS = ("authorization", "cookie")
 FORWARDED_HEADERS = (
+    "origin",
     "content-type",
     "x-stegverse-transport",
     "x-stegverse-authorization-id",
