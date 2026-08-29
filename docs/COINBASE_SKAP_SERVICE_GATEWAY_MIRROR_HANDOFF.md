@@ -303,3 +303,23 @@ HIL sovereign receiver source: 33119033461 SUCCESS
 The shared sovereign node advertisement now carries Coinbase SKAP readiness/ingress route references with TV/TVC credential authority and Gateway execution authority NONE. TVC PR #179 / `f883fa2a9ed01a3bba78510a9216b17eb7dffac0` consumes the advertisement with exact HTTPS same-origin/digest validation.
 
 This completes the source-side route-discovery contract. It does not provide TLS termination or a public runtime by itself. `compose.stegdeploy.yaml` still defaults to `127.0.0.1`; public sovereign HTTPS remains an execution/substrate boundary under the existing Service Gateway owner (#72).
+
+
+## CMC-029 HTTP-01 public challenge projection source — 2026-08-28
+
+A bounded source lane now adds the exact public challenge serving seam required by TVC CMC-029:
+
+```text
+issue: #210
+handoff: docs/SERVICE_GATEWAY_HTTP01_CHALLENGE_PROJECTION_MIRROR_HANDOFF.md
+route: GET /.well-known/acme-challenge/{token}
+runtime root: STEGVERSE_TVC_HTTP01_CHALLENGE_ROOT or /var/lib/stegverse/tvc/http01
+material: PUBLIC_HTTP01_KEY_AUTHORIZATION only
+credential authority: TV/TVC
+Gateway signing/CA/issuance/provider authority: NONE
+mutation API: NONE
+directory listing: NONE
+production HTTPS observation: NOT CLAIMED
+```
+
+This route consumes only TVC-projected public challenge bytes. The TVC resident lifecycle remains responsible for ACME key custody, signing, CSR generation, challenge projection/removal, issuance and secret-free receipts.
