@@ -15,10 +15,11 @@ from fastapi.responses import Response
 
 from llm_adapter.hil_intr_interlock import (
     HILInTrError,
-    build_egress_envelope,
     build_hop_receipt,
     build_receipt_chain,
-    validate_ingress_envelope,
+    build_universal_intent,
+    transport_intent_hash,
+    validate_ingress_intent,
 )
 
 router = APIRouter(prefix="/api/hil", tags=["hil-intake-v1.1"])
@@ -30,7 +31,7 @@ PROMPT_SHA256 = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912
 PROVENANCE_VERSION = "HIL-RESPONSE-PROVENANCE-v1.1"
 MAX_BYTES = 10 * 1024 * 1024
 MAX_MANIFEST_BYTES = 64 * 1024
-MAX_INTR_ENVELOPE_BYTES = 32 * 1024
+MAX_INTR_INTENT_BYTES = 32 * 1024
 ACTIVE_MARKERS = (b"/JavaScript", b"/JS", b"/Launch", b"/EmbeddedFile", b"/OpenAction")
 REVIEW_DECISIONS = {"ACCEPT_PRIVATE", "QUARANTINE", "REJECT"}
 PUBLICATION_CONSENTS = {"public", "anonymous", "private", "not_provided"}
@@ -70,8 +71,8 @@ def _connect() -> sqlite3.Connection:
     }
     if "intr_operation_id" not in columns:
         connection.execute("ALTER TABLE submissions ADD COLUMN intr_operation_id TEXT")
-    if "intr_envelope_hash" not in columns:
-        connection.execute("ALTER TABLE submissions ADD COLUMN intr_envelope_hash TEXT")
+    if "intr_transport_intent_hash" not in columns:
+        connection.execute("ALTER TABLE submissions ADD COLUMN intr_transport_intent_hash TEXT")
     connection.execute(
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_hil_submissions_intr_operation "
         "ON submissions(intr_operation_id) WHERE intr_operation_id IS NOT NULL"
@@ -90,7 +91,7 @@ def _connect() -> sqlite3.Connection:
 def _submission_by_intr_operation(operation_id: str) -> sqlite3.Row | None:
     with _connect() as connection:
         return connection.execute(
-            "SELECT submission_id, intr_operation_id, intr_envelope_hash FROM submissions WHERE intr_operation_id = ?",
+            "SELECT submission_id, intr_operation_id, intr_transport_intent_hash FROM submissions WHERE intr_operation_id = ?",
             (operation_id,),
         ).fetchone()
 
@@ -117,7 +118,7 @@ def _review_token_required(token: str | None) -> None:
 def _submission_row(submission_id: str) -> sqlite3.Row:
     with _connect() as connection:
         submission = connection.execute(
-            "SELECT submission_id, received_at, participant_identifier, publication_consent, primary_sha256, submitted_file_sha256, provenance_manifest_sha256, chain_validation_state, size_bytes, storage_path, manifest_path, validation_state, active_content_state, authority_json, intr_operation_id, intr_envelope_hash FROM submissions WHERE submission_id = ?",
+            "SELECT submission_id, received_at, participant_identifier, publication_consent, primary_sha256, submitted_file_sha256, provenance_manifest_sha256, chain_validation_state, size_bytes, storage_path, manifest_path, validation_state, active_content_state, authority_json, intr_operation_id, intr_transport_intent_hash FROM submissions WHERE submission_id = ?",
             (submission_id,),
         ).fetchone()
     if submission is None:
@@ -189,7 +190,7 @@ def _validate_manifest(manifest: dict, response_sha256: str) -> dict:
 async def submit_response(
     response_pdf: UploadFile = File(...),
     provenance_manifest: UploadFile = File(...),
-    intr_ingress_envelope: UploadFile = File(...),
+    intr_transport_intent: UploadFile = File(...),
     participant_identifier: str = Form("not_provided"),
     publication_consent: str = Form("not_provided"),
     primary_sha256: str = Form(...),
@@ -229,33 +230,33 @@ async def submit_response(
     manifest = _validate_manifest(manifest, digest)
     manifest_sha256 = _canonical_hash(manifest)
 
-    ingress_bytes = await intr_ingress_envelope.read(MAX_INTR_ENVELOPE_BYTES + 1)
-    if not ingress_bytes or len(ingress_bytes) > MAX_INTR_ENVELOPE_BYTES:
-        raise HTTPException(status_code=413, detail="hil_intr_ingress_envelope_size_invalid")
+    ingress_bytes = await intr_transport_intent.read(MAX_INTR_INTENT_BYTES + 1)
+    if not ingress_bytes or len(ingress_bytes) > MAX_INTR_INTENT_BYTES:
+        raise HTTPException(status_code=413, detail="hil_intr_transport_intent_size_invalid")
     try:
-        ingress_envelope = json.loads(ingress_bytes.decode("utf-8"))
+        ingress_intent = json.loads(ingress_bytes.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise HTTPException(status_code=400, detail="hil_intr_ingress_envelope_json_invalid") from exc
-    if not isinstance(ingress_envelope, dict):
-        raise HTTPException(status_code=400, detail="hil_intr_ingress_envelope_shape_invalid")
+        raise HTTPException(status_code=400, detail="hil_intr_transport_intent_json_invalid") from exc
+    if not isinstance(ingress_intent, dict):
+        raise HTTPException(status_code=400, detail="hil_intr_transport_intent_shape_invalid")
     try:
-        ingress_envelope = validate_ingress_envelope(
-            ingress_envelope,
+        ingress_intent = validate_ingress_intent(
+            ingress_intent,
             response_sha256=digest,
             provenance_sha256=manifest_sha256,
         )
     except HILInTrError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    existing_intr = _submission_by_intr_operation(str(ingress_envelope["operation_id"]))
+    existing_intr = _submission_by_intr_operation(str(ingress_intent["operation_id"]))
     if existing_intr is not None:
-        if existing_intr["intr_envelope_hash"] != ingress_envelope["envelope_hash"]:
-            raise HTTPException(status_code=409, detail="hil_intr_operation_replay_envelope_mismatch")
+        if existing_intr["intr_transport_intent_hash"] != transport_intent_hash(ingress_intent):
+            raise HTTPException(status_code=409, detail="hil_intr_operation_replay_intent_mismatch")
         replay_receipt = _persisted_receiver_receipt(existing_intr["submission_id"])
         if replay_receipt is None:
             raise HTTPException(status_code=409, detail="hil_intr_operation_replay_receipt_missing")
         chain = replay_receipt.get("intr_receipt_chain") or {}
-        if chain.get("ingress_envelope_hash") != ingress_envelope["envelope_hash"]:
+        if chain.get("ingress_intent_hash") != ingress_intent["envelope_hash"]:
             raise HTTPException(status_code=409, detail="hil_intr_operation_replay_chain_mismatch")
         return replay_receipt
 
@@ -283,14 +284,14 @@ async def submit_response(
                 primary_sha256, submitted_file_sha256, provenance_manifest_sha256,
                 chain_validation_state, size_bytes, storage_path, manifest_path,
                 validation_state, active_content_state, authority_json,
-                intr_operation_id, intr_envelope_hash
+                intr_operation_id, intr_transport_intent_hash
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 submission_id, received_at, participant_identifier, publication_consent,
                 primary_sha256, digest, manifest_sha256, chain_state, len(data), str(path),
                 str(manifest_path), "RECEIVED_PENDING_REVIEW", "ABSENT",
                 json.dumps(authority, sort_keys=True),
-                ingress_envelope["operation_id"], ingress_envelope["envelope_hash"],
+                ingress_intent["operation_id"], transport_intent_hash(ingress_intent),
             ),
         )
 
@@ -303,33 +304,43 @@ async def submit_response(
         raise HTTPException(status_code=500, detail="hil_submission_persistence_verification_failed")
 
     device_ingress_receipt = build_hop_receipt(
-        ingress_envelope=ingress_envelope,
+        intent=ingress_intent,
         hop_index=1,
-        from_role="DEVICE",
-        to_role="HIL_INGRESS",
+        from_role="DEVICE_SYSTEM",
+        to_role="STEGOS_ECOSYSTEM",
         boundary_identity_ref=f"stegverse://hil/ingress/{submission_id}",
         prior_receipt_hash=None,
         recorded_at=received_at,
     )
+    custody_intent = build_universal_intent(
+        ingress_intent=ingress_intent,
+        operation_suffix="hil-custody",
+        source_subsystem="HIL:Ingress",
+        destination_subsystem="HIL:Custody",
+        prior_receipt_hash=device_ingress_receipt["receipt_hash"],
+    )
     custody_receipt = build_hop_receipt(
-        ingress_envelope=ingress_envelope,
-        hop_index=2,
-        from_role="HIL_INGRESS",
-        to_role="HIL_CUSTODY",
+        intent=custody_intent,
+        hop_index=1,
+        from_role="STEGOS_ECOSYSTEM",
+        to_role="STEGOS_ECOSYSTEM",
         boundary_identity_ref=f"stegverse://hil/custody/{submission_id}",
         prior_receipt_hash=device_ingress_receipt["receipt_hash"],
         recorded_at=datetime.now(timezone.utc).isoformat(),
     )
-    tvc_egress_envelope = build_egress_envelope(
-        ingress_envelope=ingress_envelope,
-        submission_id=submission_id,
-        custody_receipt_hash=custody_receipt["receipt_hash"],
+    next_intent = build_universal_intent(
+        ingress_intent=ingress_intent,
+        operation_suffix="tvc-hil-lifecycle",
+        source_subsystem="HIL:Custody",
+        destination_subsystem="TVC:HIL-Lifecycle",
+        prior_receipt_hash=custody_receipt["receipt_hash"],
     )
     intr_chain = build_receipt_chain(
-        ingress_envelope=ingress_envelope,
+        ingress_intent=ingress_intent,
         ingress_receipt=device_ingress_receipt,
+        custody_intent=custody_intent,
         custody_receipt=custody_receipt,
-        egress_envelope=tvc_egress_envelope,
+        next_intent=next_intent,
     )
     intr_root = root / "intr-receipts"
     intr_root.mkdir(parents=True, exist_ok=True)
@@ -372,7 +383,7 @@ async def submit_response(
         "notes": [
             "Submit initiated a governed InTr ingress Interlock; the receiver issued the DEVICE->HIL_INGRESS receipt only after validating the transported packet.",
             "HIL custody is a second chained Interlock receipt whose prior hash binds the ingress receipt.",
-            "A TVC-bound egress Interlock envelope is persisted automatically; TVC admission is not claimed until TVC returns its own chained receipt.",
+            "A TVC-bound Universal InTr Interlock intent is persisted automatically; TVC admission is not claimed until TVC returns its own chained receipt.",
             "Exact uploaded PDF bytes and provenance manifest persisted before receipt issuance.",
             "Submission registry row re-read successfully before RECORDED was asserted.",
             "Participant metadata and publication permission are optional at intake.",
