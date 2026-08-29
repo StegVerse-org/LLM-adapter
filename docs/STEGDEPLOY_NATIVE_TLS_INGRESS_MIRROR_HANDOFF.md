@@ -129,3 +129,39 @@ Organization control plane: 33121525130 SUCCESS
 ```
 
 The complete source path from resident worker -> Healer -> StegDeploy native TLS is therefore merged and validation-green. No real TLS runtime receipt or public-route observation is claimed.
+
+
+## Host-native sovereign primary runtime — 2026-08-29
+
+The original native-TLS lane used native Uvicorn TLS *inside* Docker. That remains valid as a compatibility path but is no longer sufficient as the sovereign primary topology for same-host loopback services such as evaluator InTr.
+
+Issue #224 adds:
+
+```text
+scripts/stegdeploy_native_gateway.py
+```
+
+This launcher runs the existing `llm_adapter.deployed_gateway:app` directly in the deployment-local Python runtime and can consume TV/TVC-materialized certificate/key files without serializing their path or bytes into its deployment receipt.
+
+The runtime distinction is now:
+
+```text
+HOST_NATIVE_PYTHON_UVICORN
+  sovereign primary / same-host loopback composition / docker_required=false
+
+DOCKER_COMPOSE + native Uvicorn TLS
+  optional compatibility/fallback method
+  may not become a requirement for StegVerse authority or runtime semantics
+```
+
+The host-native receipt remains local-only:
+
+```text
+state=LOCAL_NATIVE_GATEWAY_READY
+production_public_route_observed=false
+public_certificate_hostname_verified=false
+credential_authority=TV/TVC
+github_token_runtime_authority=NONE
+```
+
+Public reachability and hostname verification remain separately observed runtime predicates.
