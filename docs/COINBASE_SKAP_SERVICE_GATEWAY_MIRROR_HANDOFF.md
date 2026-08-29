@@ -323,3 +323,21 @@ production HTTPS observation: NOT CLAIMED
 ```
 
 This route consumes only TVC-projected public challenge bytes. The TVC resident lifecycle remains responsible for ACME key custody, signing, CSR generation, challenge projection/removal, issuance and secret-free receipts.
+
+
+### CMC-029 HTTP-01 Gateway route merge evidence
+
+```text
+issue #210 / PR #211
+validated head: b6897f060e09600d7d5a05e77d78ce40c918b31a
+merge: cbfb3b2b33931d6867d2e6b58437b57a191d8a67
+dedicated Gateway validation: 33226168732 + 33226178414 SUCCESS
+global validation: 33226178477 SUCCESS
+route: GET /.well-known/acme-challenge/{token}
+credential authority: TV/TVC
+Gateway issuance/signing/CA/provider authority: NONE
+public route observed: false
+live ACME retrieval observed: false
+```
+
+The source dependency for HTTP-01 challenge serving is now merged. Production proof still requires a resident TVC challenge projection and external CA retrieval over the sovereign public route.
