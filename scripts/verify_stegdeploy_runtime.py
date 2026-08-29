@@ -85,6 +85,19 @@ def main() -> int:
         '"render_dependency": False',
         "/health",
     )
+    require(
+        "scripts/stegdeploy_native_gateway.py",
+        "HOST_NATIVE_PYTHON_UVICORN",
+        "STEGVERSE_EVALUATOR_INTR_ENABLED",
+        "http://127.0.0.1:8765/intr/evaluator",
+        "LOCAL_NATIVE_GATEWAY_READY",
+        '"docker_required": False',
+        '"third_party_runtime_required": False',
+        '"production_public_route_observed": False',
+        '"public_certificate_hostname_verified": False',
+        '"credential_authority": "TV/TVC"',
+        '"github_token_runtime_authority": "NONE"',
+    )
     reject(
         "scripts/stegdeploy_bootstrap.py",
         "secrets.token_urlsafe",
