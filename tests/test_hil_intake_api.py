@@ -18,31 +18,55 @@ def _canonical_hash(value: dict) -> str:
     ).hexdigest()
 
 
-def _intr_envelope(pdf: bytes, manifest: dict) -> dict:
+def _intr_transport_intent(pdf: bytes, manifest: dict, *, operation_id: str | None = None) -> dict:
     response_sha256 = hashlib.sha256(pdf).hexdigest()
     provenance_sha256 = _canonical_hash(manifest)
     binding = payload_binding(
         response_sha256=response_sha256,
         provenance_sha256=provenance_sha256,
     )
-    body = {
-        "schema": "stegverse.hil.intr_ingress_envelope/v1",
-        "protocol": "InTr",
-        "packet_id": f"HIL-INTR-TEST-{response_sha256[:16]}",
-        "operation_id": f"HIL-UPLOAD-TEST-{response_sha256[:16]}",
-        "from_role": "DEVICE",
-        "to_role": "HIL_INGRESS",
-        "payload_hash": digest_uri(binding),
-        "response_sha256": f"sha256:{response_sha256}",
-        "provenance_sha256": f"sha256:{provenance_sha256}",
-        "prior_receipt_hash": None,
-        "created_at": "2026-08-29T08:30:00+00:00",
-        "secret_plaintext_present": False,
-        "authority_transfer": False,
-        "transport_grants_execution_authority": False,
+    payload_hash = digest_uri(binding)
+    operation = operation_id or f"HIL-UPLOAD-TEST-{response_sha256[:16]}"
+    basis = {
+        "operation_id": operation,
+        "payload_hash": payload_hash,
+        "source_boundary": "DEVICE_SYSTEM",
+        "source_subsystem": "Site:HIL",
+        "destination_boundary": "STEGOS_ECOSYSTEM",
+        "destination_subsystem": "HIL:Ingress",
+        "boundary_path": ["DEVICE_SYSTEM", "STEGOS_ECOSYSTEM"],
     }
-    return {**body, "envelope_hash": digest_uri(body)}
-
+    return {
+        "schema": "stegverse.universal-intr-transport/v1",
+        "protocol": "InTr",
+        "operation_id": operation,
+        "packet_id": f"INTR-{digest_uri(basis)[7:31]}",
+        "payload_hash": payload_hash,
+        "prior_transport_receipt_hash": None,
+        "source": {"boundary": "DEVICE_SYSTEM", "subsystem": "Site:HIL"},
+        "destination": {"boundary": "STEGOS_ECOSYSTEM", "subsystem": "HIL:Ingress"},
+        "boundary_path": ["DEVICE_SYSTEM", "STEGOS_ECOSYSTEM"],
+        "interlock_required": True,
+        "transport_semantics": {
+            "event_triggered": True,
+            "always_on_receiver_required": False,
+            "second_user_device_required": False,
+            "receiver_unavailable_disposition": "DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION",
+            "exact_packet_transport_retry_allowed": True,
+            "blind_consequence_retry_allowed": False,
+        },
+        "authority": {
+            "authority_transfer": False,
+            "transport_grants_execution_authority": False,
+            "credential_authority": "TV/TVC",
+        },
+        "receipt_chain": {
+            "required": True,
+            "receipt_schema": "stegverse.intr.hop_receipt/v1",
+            "payload_plaintext_in_receipts": False,
+            "prior_hash_required_after_first_hop": True,
+        },
+    }
 
 def _manifest(pdf: bytes, *, response_sha256: str | None = None, metadata: bool = True) -> dict:
     payload = {
@@ -73,18 +97,18 @@ def _submit(
     manifest: dict,
     data: dict | None = None,
     *,
-    ingress_envelope: dict | None = None,
+    transport_intent: dict | None = None,
 ):
     form = {"primary_sha256": PRIMARY, "prompt_sha256": PROMPT}
     if data:
         form.update(data)
-    envelope = ingress_envelope or _intr_envelope(pdf, manifest)
+    intent = transport_intent or _intr_transport_intent(pdf, manifest)
     return client.post(
         "/api/hil/submissions",
         files={
             "response_pdf": ("response.pdf", pdf, "application/pdf"),
             "provenance_manifest": ("response.provenance.json", json.dumps(manifest).encode(), "application/json"),
-            "intr_ingress_envelope": ("response.intr.json", json.dumps(envelope).encode(), "application/json"),
+            "intr_transport_intent": ("response.intr.json", json.dumps(intent).encode(), "application/json"),
         },
         data=form,
     )
@@ -139,37 +163,48 @@ def test_site_durable_ingress_acceptance_predicate_is_satisfied(monkeypatch, tmp
     assert result["registry_state"] == "RECORDED"
 
 
-def test_submission_requires_valid_intr_ingress_and_returns_chained_receipts(monkeypatch, tmp_path):
+def test_submission_requires_universal_intr_and_returns_chained_receipts(monkeypatch, tmp_path):
     _enable(monkeypatch, tmp_path)
     client = TestClient(app)
     pdf = b"%PDF-1.7\nintr receipt chain\n%%EOF\n"
     manifest = _manifest(pdf, metadata=False)
-    response = _submit(client, pdf, manifest)
+    intent = _intr_transport_intent(pdf, manifest)
+    response = _submit(client, pdf, manifest, transport_intent=intent)
     assert response.status_code == 200, response.text
     receipt = response.json()
     chain = receipt["intr_receipt_chain"]
 
-    assert chain["schema"] == "stegverse.hil.intr_receipt_chain/v1"
-    first = chain["device_hil_ingress_receipt"]
+    assert chain["schema"] == "stegverse.hil.intr_receipt_chain/v2"
+    assert chain["ingress_transport_intent"] == intent
+    first = chain["device_stegos_ingress_receipt"]
+    custody_intent = chain["hil_custody_transport_intent"]
     second = chain["hil_custody_interlock_receipt"]
-    egress = chain["tvc_egress_interlock_envelope"]
+    next_intent = chain["next_interlock_intent"]
 
     assert first["schema"] == "stegverse.intr.hop_receipt/v1"
-    assert first["from_role"] == "DEVICE"
-    assert first["to_role"] == "HIL_INGRESS"
+    assert first["from_role"] == "DEVICE_SYSTEM"
+    assert first["to_role"] == "STEGOS_ECOSYSTEM"
+    assert first["hop_index"] == 1
     assert first["prior_receipt_hash"] is None
     assert first["transition_state"] == "RECEIVED"
 
-    assert second["from_role"] == "HIL_INGRESS"
-    assert second["to_role"] == "HIL_CUSTODY"
+    assert custody_intent["schema"] == "stegverse.universal-intr-transport/v1"
+    assert custody_intent["source"] == {"boundary": "STEGOS_ECOSYSTEM", "subsystem": "HIL:Ingress"}
+    assert custody_intent["destination"] == {"boundary": "STEGOS_ECOSYSTEM", "subsystem": "HIL:Custody"}
+    assert custody_intent["prior_transport_receipt_hash"] == first["receipt_hash"]
+
+    assert second["from_role"] == "STEGOS_ECOSYSTEM"
+    assert second["to_role"] == "STEGOS_ECOSYSTEM"
+    assert second["hop_index"] == 1
     assert second["prior_receipt_hash"] == first["receipt_hash"]
     assert second["transition_state"] == "RECEIVED"
 
-    assert egress["schema"] == "stegverse.hil.intr_egress_envelope/v1"
-    assert egress["from_role"] == "HIL_CUSTODY"
-    assert egress["to_role"] == "TVC_HIL_LIFECYCLE"
-    assert egress["prior_receipt_hash"] == second["receipt_hash"]
-    assert egress["state"] == "READY_FOR_INTERLOCK_ADMISSION"
+    assert next_intent["schema"] == "stegverse.universal-intr-transport/v1"
+    assert next_intent["source"] == {"boundary": "STEGOS_ECOSYSTEM", "subsystem": "HIL:Custody"}
+    assert next_intent["destination"] == {"boundary": "STEGOS_ECOSYSTEM", "subsystem": "TVC:HIL-Lifecycle"}
+    assert next_intent["prior_transport_receipt_hash"] == second["receipt_hash"]
+    assert next_intent["transport_semantics"]["always_on_receiver_required"] is False
+    assert next_intent["transport_semantics"]["event_triggered"] is True
     assert receipt["next_required_transition"] == "HIL_CUSTODY_TVC_INTERLOCK_ADMISSION"
 
     persisted = list((tmp_path / "intr-receipts").glob("*.json"))
@@ -182,10 +217,10 @@ def test_same_intr_operation_replays_original_receipt_without_duplicate_custody(
     client = TestClient(app)
     pdf = b"%PDF-1.7\nidempotent intr\n%%EOF\n"
     manifest = _manifest(pdf, metadata=False)
-    envelope = _intr_envelope(pdf, manifest)
+    intent = _intr_transport_intent(pdf, manifest)
 
-    first = _submit(client, pdf, manifest, ingress_envelope=envelope)
-    second = _submit(client, pdf, manifest, ingress_envelope=envelope)
+    first = _submit(client, pdf, manifest, transport_intent=intent)
+    second = _submit(client, pdf, manifest, transport_intent=intent)
 
     assert first.status_code == 200, first.text
     assert second.status_code == 200, second.text
@@ -195,41 +230,33 @@ def test_same_intr_operation_replays_original_receipt_without_duplicate_custody(
     assert len(list((tmp_path / "receipts").glob("*.json"))) == 1
 
 
-def test_same_operation_with_different_envelope_is_rejected(monkeypatch, tmp_path):
+def test_same_operation_with_different_transport_intent_is_rejected(monkeypatch, tmp_path):
     _enable(monkeypatch, tmp_path)
     client = TestClient(app)
     pdf = b"%PDF-1.7\noperation replay mismatch\n%%EOF\n"
     manifest = _manifest(pdf, metadata=False)
-    envelope = _intr_envelope(pdf, manifest)
-    first = _submit(client, pdf, manifest, ingress_envelope=envelope)
+    intent = _intr_transport_intent(pdf, manifest)
+    first = _submit(client, pdf, manifest, transport_intent=intent)
     assert first.status_code == 200, first.text
 
-    altered = dict(envelope)
-    altered["created_at"] = "2026-08-29T08:31:00+00:00"
-    body = dict(altered)
-    body.pop("envelope_hash")
-    altered["envelope_hash"] = digest_uri(body)
-
-    replay = _submit(client, pdf, manifest, ingress_envelope=altered)
+    altered = dict(intent)
+    altered["packet_id"] = altered["packet_id"] + "-CHANGED"
+    replay = _submit(client, pdf, manifest, transport_intent=altered)
     assert replay.status_code == 409
-    assert replay.json()["detail"] == "hil_intr_operation_replay_envelope_mismatch"
+    assert replay.json()["detail"] == "hil_intr_operation_replay_intent_mismatch"
 
 
-def test_tampered_intr_ingress_envelope_is_rejected_before_custody(monkeypatch, tmp_path):
+def test_tampered_universal_intr_payload_is_rejected_before_custody(monkeypatch, tmp_path):
     _enable(monkeypatch, tmp_path)
     client = TestClient(app)
     pdf = b"%PDF-1.7\ntampered intr\n%%EOF\n"
     manifest = _manifest(pdf, metadata=False)
-    envelope = _intr_envelope(pdf, manifest)
-    envelope["payload_hash"] = "sha256:" + ("0" * 64)
-    response = _submit(client, pdf, manifest, ingress_envelope=envelope)
+    intent = _intr_transport_intent(pdf, manifest)
+    intent["payload_hash"] = "sha256:" + ("0" * 64)
+    response = _submit(client, pdf, manifest, transport_intent=intent)
     assert response.status_code == 400
-    assert response.json()["detail"] in {
-        "hil_intr_ingress_payload_hash_mismatch",
-        "hil_intr_ingress_envelope_hash_mismatch",
-    }
+    assert response.json()["detail"] == "universal_intr_ingress_payload_hash_mismatch"
     assert not list((tmp_path / "originals").glob("*.pdf"))
-
 
 def test_optional_metadata_is_preserved_without_becoming_authority(monkeypatch, tmp_path):
     _enable(monkeypatch, tmp_path)
