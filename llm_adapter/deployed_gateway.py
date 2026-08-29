@@ -11,9 +11,11 @@ from llm_adapter.service_gateway_composed import (
     coinbase_skap_readiness,
 )
 from llm_adapter.service_gateway_http01 import http01_challenge_response
+from llm_adapter.service_gateway_evaluator_intr import router as evaluator_intr_router
 
 app.include_router(math_solver_router)
 app.include_router(attachment_router)
+app.include_router(evaluator_intr_router)
 app.mount("/user-llm", create_app())
 
 # Reuse the validated Service Gateway Coinbase SKAP handlers on the actual
