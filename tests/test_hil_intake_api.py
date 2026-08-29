@@ -177,6 +177,44 @@ def test_submission_requires_valid_intr_ingress_and_returns_chained_receipts(mon
     assert json.loads(persisted[0].read_text())["chain_hash"] == chain["chain_hash"]
 
 
+def test_same_intr_operation_replays_original_receipt_without_duplicate_custody(monkeypatch, tmp_path):
+    _enable(monkeypatch, tmp_path)
+    client = TestClient(app)
+    pdf = b"%PDF-1.7\nidempotent intr\n%%EOF\n"
+    manifest = _manifest(pdf, metadata=False)
+    envelope = _intr_envelope(pdf, manifest)
+
+    first = _submit(client, pdf, manifest, ingress_envelope=envelope)
+    second = _submit(client, pdf, manifest, ingress_envelope=envelope)
+
+    assert first.status_code == 200, first.text
+    assert second.status_code == 200, second.text
+    assert first.json()["submission_id"] == second.json()["submission_id"]
+    assert first.json()["receipt_sha256"] == second.json()["receipt_sha256"]
+    assert len(list((tmp_path / "originals").glob("*.pdf"))) == 1
+    assert len(list((tmp_path / "receipts").glob("*.json"))) == 1
+
+
+def test_same_operation_with_different_envelope_is_rejected(monkeypatch, tmp_path):
+    _enable(monkeypatch, tmp_path)
+    client = TestClient(app)
+    pdf = b"%PDF-1.7\noperation replay mismatch\n%%EOF\n"
+    manifest = _manifest(pdf, metadata=False)
+    envelope = _intr_envelope(pdf, manifest)
+    first = _submit(client, pdf, manifest, ingress_envelope=envelope)
+    assert first.status_code == 200, first.text
+
+    altered = dict(envelope)
+    altered["created_at"] = "2026-08-29T08:31:00+00:00"
+    body = dict(altered)
+    body.pop("envelope_hash")
+    altered["envelope_hash"] = digest_uri(body)
+
+    replay = _submit(client, pdf, manifest, ingress_envelope=altered)
+    assert replay.status_code == 409
+    assert replay.json()["detail"] == "hil_intr_operation_replay_envelope_mismatch"
+
+
 def test_tampered_intr_ingress_envelope_is_rejected_before_custody(monkeypatch, tmp_path):
     _enable(monkeypatch, tmp_path)
     client = TestClient(app)
