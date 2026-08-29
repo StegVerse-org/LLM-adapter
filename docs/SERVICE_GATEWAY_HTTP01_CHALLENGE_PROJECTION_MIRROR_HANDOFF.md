@@ -3,9 +3,9 @@
 Updated: 2026-08-28
 Repository: `StegVerse-org/LLM-adapter`
 Issue: #210
-Branch: `feat/tvc-http01-challenge-projection`
+Branch: `main`
 Upstream: `StegVerse-Labs/TVC` CMC-029 / PR #214
-State: IMPLEMENTED_ON_BRANCH_VALIDATION_PENDING
+State: MERGED_VALIDATED_PUBLIC_CHALLENGE_ROUTE_RUNTIME_UNOBSERVED
 
 ## Goal
 
@@ -47,3 +47,22 @@ No live ACME account, leaf key, issuance, public HTTPS reachability, DNS ownersh
 ## Next executable boundary
 
 Run exact-head Coinbase SKAP/Gateway validation for the bounded challenge reader/route. Merge only after green evidence, then bind the TVC resident CMC-029 adapter to project/remove public challenge files beneath the same runtime root.
+
+
+## Merge and validation evidence
+
+```text
+issue: #210
+PR: #211
+validated head: b6897f060e09600d7d5a05e77d78ce40c918b31a
+Coinbase SKAP Service Gateway Validation (push): 33226168732 SUCCESS
+Coinbase SKAP Service Gateway Validation (PR): 33226178414 SUCCESS
+global validate (PR): 33226178477 SUCCESS
+merge: cbfb3b2b33931d6867d2e6b58437b57a191d8a67
+```
+
+The deployed Gateway now contains exactly one GET-only TVC public challenge route. No challenge material, live runtime, external reachability, public certificate, or issuance is claimed by the merge.
+
+## Current next boundary
+
+The TVC resident CMC-029 adapter may project/remove public key-authorization files beneath the shared challenge root. Actual CA retrieval of that route and successful issuance remain non-hosted runtime evidence.
