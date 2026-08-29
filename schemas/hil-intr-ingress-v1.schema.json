@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/hil-intr-ingress-v1.schema.json",
+  "title": "HIL InTr ingress Interlock envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema","protocol","packet_id","operation_id","from_role","to_role",
+    "payload_hash","response_sha256","provenance_sha256","prior_receipt_hash",
+    "created_at","secret_plaintext_present","authority_transfer",
+    "transport_grants_execution_authority","envelope_hash"
+  ],
+  "properties": {
+    "schema": {"const": "stegverse.hil.intr_ingress_envelope/v1"},
+    "protocol": {"const": "InTr"},
+    "packet_id": {"type": "string", "minLength": 1},
+    "operation_id": {"type": "string", "minLength": 1},
+    "from_role": {"const": "DEVICE"},
+    "to_role": {"const": "HIL_INGRESS"},
+    "payload_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "response_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "provenance_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "prior_receipt_hash": {"type": "null"},
+    "created_at": {"type": "string", "minLength": 1},
+    "secret_plaintext_present": {"const": false},
+    "authority_transfer": {"const": false},
+    "transport_grants_execution_authority": {"const": false},
+    "envelope_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}
