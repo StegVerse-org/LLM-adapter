@@ -5,7 +5,7 @@ Repository: `StegVerse-org/LLM-adapter`
 Issue: #210
 Branch: `feat/tvc-http01-challenge-projection`
 Upstream: `StegVerse-Labs/TVC` CMC-029 / PR #214
-State: CLAIMED_FOR_IMPLEMENTATION
+State: IMPLEMENTED_ON_BRANCH_VALIDATION_PENDING
 
 ## Goal
 
@@ -46,4 +46,4 @@ No live ACME account, leaf key, issuance, public HTTPS reachability, DNS ownersh
 
 ## Next executable boundary
 
-Implement the bounded public challenge reader/route, validate exact head, merge only after green evidence, then let the TVC resident CMC-029 adapter project challenge files into the same runtime root.
+Run exact-head Coinbase SKAP/Gateway validation for the bounded challenge reader/route. Merge only after green evidence, then bind the TVC resident CMC-029 adapter to project/remove public challenge files beneath the same runtime root.
