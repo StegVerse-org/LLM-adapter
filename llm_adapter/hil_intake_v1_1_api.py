@@ -13,6 +13,14 @@ from uuid import uuid4
 from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import Response
 
+from llm_adapter.hil_intr_interlock import (
+    HILInTrError,
+    build_egress_envelope,
+    build_hop_receipt,
+    build_receipt_chain,
+    validate_ingress_envelope,
+)
+
 router = APIRouter(prefix="/api/hil", tags=["hil-intake-v1.1"])
 PRIMARY_SHA256 = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
 PRIMARY_VERSION = "v1.1"
@@ -22,6 +30,7 @@ PROMPT_SHA256 = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912
 PROVENANCE_VERSION = "HIL-RESPONSE-PROVENANCE-v1.1"
 MAX_BYTES = 10 * 1024 * 1024
 MAX_MANIFEST_BYTES = 64 * 1024
+MAX_INTR_ENVELOPE_BYTES = 32 * 1024
 ACTIVE_MARKERS = (b"/JavaScript", b"/JS", b"/Launch", b"/EmbeddedFile", b"/OpenAction")
 REVIEW_DECISIONS = {"ACCEPT_PRIVATE", "QUARANTINE", "REJECT"}
 PUBLICATION_CONSENTS = {"public", "anonymous", "private", "not_provided"}
@@ -149,6 +158,7 @@ def _validate_manifest(manifest: dict, response_sha256: str) -> dict:
 async def submit_response(
     response_pdf: UploadFile = File(...),
     provenance_manifest: UploadFile = File(...),
+    intr_ingress_envelope: UploadFile = File(...),
     participant_identifier: str = Form("not_provided"),
     publication_consent: str = Form("not_provided"),
     primary_sha256: str = Form(...),
@@ -187,6 +197,25 @@ async def submit_response(
     digest = hashlib.sha256(data).hexdigest()
     manifest = _validate_manifest(manifest, digest)
     manifest_sha256 = _canonical_hash(manifest)
+
+    ingress_bytes = await intr_ingress_envelope.read(MAX_INTR_ENVELOPE_BYTES + 1)
+    if not ingress_bytes or len(ingress_bytes) > MAX_INTR_ENVELOPE_BYTES:
+        raise HTTPException(status_code=413, detail="hil_intr_ingress_envelope_size_invalid")
+    try:
+        ingress_envelope = json.loads(ingress_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=400, detail="hil_intr_ingress_envelope_json_invalid") from exc
+    if not isinstance(ingress_envelope, dict):
+        raise HTTPException(status_code=400, detail="hil_intr_ingress_envelope_shape_invalid")
+    try:
+        ingress_envelope = validate_ingress_envelope(
+            ingress_envelope,
+            response_sha256=digest,
+            provenance_sha256=manifest_sha256,
+        )
+    except HILInTrError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     signature_state = manifest["producer_signature"]["state"]
     chain_state = "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED"
     if signature_state == "VERIFIED":
@@ -220,6 +249,43 @@ async def submit_response(
     if Path(persisted_submission["storage_path"]).resolve() != path.resolve() or not path.is_file():
         raise HTTPException(status_code=500, detail="hil_submission_persistence_verification_failed")
 
+    device_ingress_receipt = build_hop_receipt(
+        ingress_envelope=ingress_envelope,
+        hop_index=1,
+        from_role="DEVICE",
+        to_role="HIL_INGRESS",
+        boundary_identity_ref=f"stegverse://hil/ingress/{submission_id}",
+        prior_receipt_hash=None,
+        recorded_at=received_at,
+    )
+    custody_receipt = build_hop_receipt(
+        ingress_envelope=ingress_envelope,
+        hop_index=2,
+        from_role="HIL_INGRESS",
+        to_role="HIL_CUSTODY",
+        boundary_identity_ref=f"stegverse://hil/custody/{submission_id}",
+        prior_receipt_hash=device_ingress_receipt["receipt_hash"],
+        recorded_at=datetime.now(timezone.utc).isoformat(),
+    )
+    tvc_egress_envelope = build_egress_envelope(
+        ingress_envelope=ingress_envelope,
+        submission_id=submission_id,
+        custody_receipt_hash=custody_receipt["receipt_hash"],
+    )
+    intr_chain = build_receipt_chain(
+        ingress_envelope=ingress_envelope,
+        ingress_receipt=device_ingress_receipt,
+        custody_receipt=custody_receipt,
+        egress_envelope=tvc_egress_envelope,
+    )
+    intr_root = root / "intr-receipts"
+    intr_root.mkdir(parents=True, exist_ok=True)
+    intr_path = intr_root / f"{submission_id}.json"
+    intr_path.write_text(json.dumps(intr_chain, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    persisted_intr_chain = json.loads(intr_path.read_text(encoding="utf-8"))
+    if persisted_intr_chain.get("chain_hash") != intr_chain["chain_hash"]:
+        raise HTTPException(status_code=500, detail="hil_intr_receipt_chain_persistence_failed")
+
     receipt = {
         "schema_version": "HIL-RECEIVER-RECEIPT-v2",
         "receipt_id": f"HIL-RECEIPT-{uuid4().hex[:16].upper()}",
@@ -247,8 +313,13 @@ async def submit_response(
         "response_id": None,
         "master_record_release": None,
         "previous_receipt_sha256": None,
+        "intr_receipt_chain": intr_chain,
+        "next_required_transition": "HIL_CUSTODY_TVC_INTERLOCK_ADMISSION",
         "authority": authority,
         "notes": [
+            "Submit initiated a governed InTr ingress Interlock; the receiver issued the DEVICE->HIL_INGRESS receipt only after validating the transported packet.",
+            "HIL custody is a second chained Interlock receipt whose prior hash binds the ingress receipt.",
+            "A TVC-bound egress Interlock envelope is persisted automatically; TVC admission is not claimed until TVC returns its own chained receipt.",
             "Exact uploaded PDF bytes and provenance manifest persisted before receipt issuance.",
             "Submission registry row re-read successfully before RECORDED was asserted.",
             "Participant metadata and publication permission are optional at intake.",
@@ -266,6 +337,13 @@ def get_submission_status(submission_id: str) -> dict:
     if not _enabled():
         raise HTTPException(status_code=503, detail="hil_intake_disabled")
     submission = _submission_row(submission_id)
+    intr_path = _data_dir() / "intr-receipts" / f"{submission_id}.json"
+    intr_chain = None
+    if intr_path.is_file():
+        try:
+            intr_chain = json.loads(intr_path.read_text(encoding="utf-8"))
+        except Exception:
+            intr_chain = None
     return {
         "schema_version": "HIL-SUBMISSION-STATUS-v1",
         "submission_id": submission["submission_id"],
@@ -282,6 +360,9 @@ def get_submission_status(submission_id: str) -> dict:
         "active_content_state": submission["active_content_state"],
         "custody_state": "EXACT_BYTES_PERSISTED",
         "registry_state": "RECORDED",
+        "intr_chain_state": "PERSISTED" if isinstance(intr_chain, dict) else "MISSING_FAIL_CLOSED",
+        "intr_chain_hash": intr_chain.get("chain_hash") if isinstance(intr_chain, dict) else None,
+        "next_required_transition": intr_chain.get("next_required_transition") if isinstance(intr_chain, dict) else None,
         "artifact_bytes_exposed": False,
         "participant_metadata_exposed": False,
         "storage_paths_exposed": False,
