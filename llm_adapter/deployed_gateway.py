@@ -10,6 +10,7 @@ from llm_adapter.service_gateway_composed import (
     coinbase_skap_ingress,
     coinbase_skap_readiness,
 )
+from llm_adapter.service_gateway_http01 import http01_challenge_response
 
 app.include_router(math_solver_router)
 app.include_router(attachment_router)
@@ -28,4 +29,13 @@ app.add_api_route(
     coinbase_skap_ingress,
     methods=["POST"],
     status_code=202,
+)
+
+
+# Serve only TVC-projected public ACME HTTP-01 key-authorization bytes.
+# This route has no mutation, signing, CA, credential, or provider authority.
+app.add_api_route(
+    "/.well-known/acme-challenge/{token}",
+    http01_challenge_response,
+    methods=["GET"],
 )
