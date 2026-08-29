@@ -195,6 +195,8 @@ jobs:
           tests/test_system_boundary_workflow_evidence.py -v
       - name: Test KnowledgeVault onboarding Service Gateway
         run: "$PYTHON_BIN -m pytest tests/test_service_gateway_kv_onboarding.py -v"
+      - name: Test HIL Universal InTr shared Service Gateway
+        run: "$PYTHON_BIN -m pytest tests/test_service_gateway_hil_intr.py -v"
       - name: Test External Chat compatibility
         run: "$PYTHON_BIN -m pytest tests/test_external_framework_compatibility.py -v"
       - name: Test External Review package intake
@@ -255,6 +257,7 @@ jobs:
           assert 'tests.test_provider_surface_knowledge' in workflow
           assert 'tests.test_vacc_public_information' in workflow
           assert 'tests/test_service_gateway_kv_onboarding.py' in workflow
+          assert 'tests/test_service_gateway_hil_intr.py' in workflow
           assert 'OPENAI_API_KEY' in workflow and 'ANTHROPIC_API_KEY' in workflow
           assert all(marker not in workflow for marker in forbidden), forbidden
           print('GLOBAL_VALIDATE_CREDENTIAL_AUTHORITY=TV_TVC')
