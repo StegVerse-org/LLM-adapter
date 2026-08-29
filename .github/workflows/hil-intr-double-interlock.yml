@@ -5,8 +5,6 @@ on:
     paths:
       - 'llm_adapter/hil_intr_interlock.py'
       - 'llm_adapter/hil_intake_v1_1_api.py'
-      - 'schemas/hil-intr-ingress-v1.schema.json'
-      - 'schemas/hil-intr-egress-v1.schema.json'
       - 'tests/test_hil_intake_api.py'
       - 'tasks/LLMA-HIL-INTR-DOUBLE-INTERLOCK-031.json'
       - 'docs/HIL_INTR_DOUBLE_INTERLOCK_MIRROR_HANDOFF.md'
@@ -41,7 +39,7 @@ jobs:
           git checkout --detach FETCH_HEAD
       - name: Install credential-free test dependencies
         run: python3 -m pip install --disable-pip-version-check -q -e '.[dev]'
-      - name: Validate HIL InTr Interlock contract
+      - name: Validate HIL Universal InTr Interlock contract
         run: |
           python3 -m pytest -q tests/test_hil_intake_api.py
           python3 - <<'PY'
@@ -53,35 +51,37 @@ jobs:
           assert task['always_on_receiver_required'] is False
           assert task['github_token_runtime_authority']=='NONE'
           contract=task['source_contract']
+          assert contract['universal_transport_schema']=='stegverse.universal-intr-transport/v1'
           assert contract['transport_protocol']=='InTr'
-          assert contract['first_boundary']=='DEVICE->HIL_INGRESS'
-          assert contract['second_boundary']=='HIL_INGRESS->HIL_CUSTODY'
-          assert contract['egress_boundary']=='HIL_CUSTODY->TVC_HIL_LIFECYCLE'
+          assert contract['first_boundary']=='DEVICE_SYSTEM->STEGOS_ECOSYSTEM'
+          assert contract['custody_receipt_prior_hash_binds_first'] is True
+          assert contract['next_intent_prior_hash_binds_custody_receipt'] is True
           assert contract['receiver_may_claim_tvc_admission'] is False
           assert task['retry_contract']['same_operation_idempotent'] is True
 
-          ingress=json.loads(Path('schemas/hil-intr-ingress-v1.schema.json').read_text())
-          egress=json.loads(Path('schemas/hil-intr-egress-v1.schema.json').read_text())
-          assert ingress['properties']['protocol']['const']=='InTr'
-          assert ingress['properties']['from_role']['const']=='DEVICE'
-          assert ingress['properties']['to_role']['const']=='HIL_INGRESS'
-          assert egress['properties']['from_role']['const']=='HIL_CUSTODY'
-          assert egress['properties']['to_role']['const']=='TVC_HIL_LIFECYCLE'
-
           source=Path('llm_adapter/hil_intake_v1_1_api.py').read_text()
+          helper=Path('llm_adapter/hil_intr_interlock.py').read_text()
           for marker in (
-              'intr_ingress_envelope: UploadFile = File(...)',
-              'validate_ingress_envelope',
+              'intr_transport_intent: UploadFile = File(...)',
+              'validate_ingress_intent',
               'device_ingress_receipt = build_hop_receipt',
-              'custody_receipt = build_hop_receipt',
-              'build_egress_envelope',
+              'custody_intent = build_universal_intent',
+              'next_intent = build_universal_intent',
               'HIL_CUSTODY_TVC_INTERLOCK_ADMISSION',
               '_submission_by_intr_operation',
               '_persisted_receiver_receipt',
           ):
               assert marker in source, marker
+          for marker in (
+              'UNIVERSAL_INTR_SCHEMA = "stegverse.universal-intr-transport/v1"',
+              'CHAIN_SCHEMA = "stegverse.hil.intr_receipt_chain/v2"',
+              'prior_transport_receipt_hash',
+              'DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION',
+          ):
+              assert marker in helper, marker
           print('HIL_INTR_DOUBLE_INTERLOCK=PASS')
           print('TRANSPORT_PROTOCOL=InTr')
+          print('UNIVERSAL_TRANSPORT=stegverse.universal-intr-transport/v1')
           print('ALWAYS_ON_RECEIVER_REQUIRED=false')
           print('TVC_ADMISSION_CLAIMED=false')
           print('AUTHORITY_EFFECT=NONE')
