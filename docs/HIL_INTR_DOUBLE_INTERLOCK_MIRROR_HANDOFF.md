@@ -23,17 +23,17 @@ The participant action is the beginning of the transport transaction. Receiver r
 
 ```text
 Submit
--> browser creates stegverse.hil.intr_ingress_envelope/v1
+-> browser creates stegverse.universal-intr-transport/v1
 -> InTr transport attempt begins immediately
 -> receiving boundary validates exact PDF + canonical provenance hashes
 -> receiver issues stegverse.intr.hop_receipt/v1
-     DEVICE -> HIL_INGRESS
+     DEVICE_SYSTEM -> STEGOS_ECOSYSTEM / HIL:Ingress
 -> exact bytes/provenance persist + read back
 -> receiver issues second hop receipt
-     HIL_INGRESS -> HIL_CUSTODY
+     STEGOS_ECOSYSTEM / HIL:Ingress -> HIL:Custody
      prior_receipt_hash = first receipt hash
--> receiver persists stegverse.hil.intr_egress_envelope/v1
-     HIL_CUSTODY -> TVC_HIL_LIFECYCLE
+-> receiver persists stegverse.universal-intr-transport/v1
+     STEGOS_ECOSYSTEM / HIL:Custody -> TVC:HIL-Lifecycle
      prior_receipt_hash = custody receipt hash
 -> TVC validates the upstream chain and issues the next receipt only after actual admission
 ```
@@ -66,3 +66,8 @@ The receiver egress envelope is only `READY_FOR_INTERLOCK_ADMISSION`. Existing T
 ## Non-claims
 
 CI/source merge does not prove a live InTr hop, runtime materialization, public transport, TVC admission, private review, publication, or Master Records release.
+
+
+### Universal transport invariant
+
+Each adjacent boundary crossing is a separate `stegverse.universal-intr-transport/v1` intent. The receiving Interlock emits `stegverse.intr.hop_receipt/v1` only after boundary verification. Every successor intent carries `prior_transport_receipt_hash` equal to the immediately preceding receipt hash. HIL does not define a competing transport protocol.
