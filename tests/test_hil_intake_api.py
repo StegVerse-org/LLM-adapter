@@ -6,9 +6,42 @@ import json
 from fastapi.testclient import TestClient
 
 from llm_adapter.combined_gateway import app
+from llm_adapter.hil_intr_interlock import digest_uri, payload_binding
 
 PRIMARY = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
 PROMPT = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c"
+
+
+def _canonical_hash(value: dict) -> str:
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def _intr_envelope(pdf: bytes, manifest: dict) -> dict:
+    response_sha256 = hashlib.sha256(pdf).hexdigest()
+    provenance_sha256 = _canonical_hash(manifest)
+    binding = payload_binding(
+        response_sha256=response_sha256,
+        provenance_sha256=provenance_sha256,
+    )
+    body = {
+        "schema": "stegverse.hil.intr_ingress_envelope/v1",
+        "protocol": "InTr",
+        "packet_id": f"HIL-INTR-TEST-{response_sha256[:16]}",
+        "operation_id": f"HIL-UPLOAD-TEST-{response_sha256[:16]}",
+        "from_role": "DEVICE",
+        "to_role": "HIL_INGRESS",
+        "payload_hash": digest_uri(binding),
+        "response_sha256": f"sha256:{response_sha256}",
+        "provenance_sha256": f"sha256:{provenance_sha256}",
+        "prior_receipt_hash": None,
+        "created_at": "2026-08-29T08:30:00+00:00",
+        "secret_plaintext_present": False,
+        "authority_transfer": False,
+        "transport_grants_execution_authority": False,
+    }
+    return {**body, "envelope_hash": digest_uri(body)}
 
 
 def _manifest(pdf: bytes, *, response_sha256: str | None = None, metadata: bool = True) -> dict:
@@ -34,15 +67,24 @@ def _enable(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "true")
 
 
-def _submit(client: TestClient, pdf: bytes, manifest: dict, data: dict | None = None):
+def _submit(
+    client: TestClient,
+    pdf: bytes,
+    manifest: dict,
+    data: dict | None = None,
+    *,
+    ingress_envelope: dict | None = None,
+):
     form = {"primary_sha256": PRIMARY, "prompt_sha256": PROMPT}
     if data:
         form.update(data)
+    envelope = ingress_envelope or _intr_envelope(pdf, manifest)
     return client.post(
         "/api/hil/submissions",
         files={
             "response_pdf": ("response.pdf", pdf, "application/pdf"),
             "provenance_manifest": ("response.provenance.json", json.dumps(manifest).encode(), "application/json"),
+            "intr_ingress_envelope": ("response.intr.json", json.dumps(envelope).encode(), "application/json"),
         },
         data=form,
     )
@@ -95,6 +137,60 @@ def test_site_durable_ingress_acceptance_predicate_is_satisfied(monkeypatch, tmp
     assert result["prompt_sha256"] == PROMPT
     assert result["custody_state"] == "EXACT_BYTES_PERSISTED"
     assert result["registry_state"] == "RECORDED"
+
+
+def test_submission_requires_valid_intr_ingress_and_returns_chained_receipts(monkeypatch, tmp_path):
+    _enable(monkeypatch, tmp_path)
+    client = TestClient(app)
+    pdf = b"%PDF-1.7\nintr receipt chain\n%%EOF\n"
+    manifest = _manifest(pdf, metadata=False)
+    response = _submit(client, pdf, manifest)
+    assert response.status_code == 200, response.text
+    receipt = response.json()
+    chain = receipt["intr_receipt_chain"]
+
+    assert chain["schema"] == "stegverse.hil.intr_receipt_chain/v1"
+    first = chain["device_hil_ingress_receipt"]
+    second = chain["hil_custody_interlock_receipt"]
+    egress = chain["tvc_egress_interlock_envelope"]
+
+    assert first["schema"] == "stegverse.intr.hop_receipt/v1"
+    assert first["from_role"] == "DEVICE"
+    assert first["to_role"] == "HIL_INGRESS"
+    assert first["prior_receipt_hash"] is None
+    assert first["transition_state"] == "RECEIVED"
+
+    assert second["from_role"] == "HIL_INGRESS"
+    assert second["to_role"] == "HIL_CUSTODY"
+    assert second["prior_receipt_hash"] == first["receipt_hash"]
+    assert second["transition_state"] == "RECEIVED"
+
+    assert egress["schema"] == "stegverse.hil.intr_egress_envelope/v1"
+    assert egress["from_role"] == "HIL_CUSTODY"
+    assert egress["to_role"] == "TVC_HIL_LIFECYCLE"
+    assert egress["prior_receipt_hash"] == second["receipt_hash"]
+    assert egress["state"] == "READY_FOR_INTERLOCK_ADMISSION"
+    assert receipt["next_required_transition"] == "HIL_CUSTODY_TVC_INTERLOCK_ADMISSION"
+
+    persisted = list((tmp_path / "intr-receipts").glob("*.json"))
+    assert len(persisted) == 1
+    assert json.loads(persisted[0].read_text())["chain_hash"] == chain["chain_hash"]
+
+
+def test_tampered_intr_ingress_envelope_is_rejected_before_custody(monkeypatch, tmp_path):
+    _enable(monkeypatch, tmp_path)
+    client = TestClient(app)
+    pdf = b"%PDF-1.7\ntampered intr\n%%EOF\n"
+    manifest = _manifest(pdf, metadata=False)
+    envelope = _intr_envelope(pdf, manifest)
+    envelope["payload_hash"] = "sha256:" + ("0" * 64)
+    response = _submit(client, pdf, manifest, ingress_envelope=envelope)
+    assert response.status_code == 400
+    assert response.json()["detail"] in {
+        "hil_intr_ingress_payload_hash_mismatch",
+        "hil_intr_ingress_envelope_hash_mismatch",
+    }
+    assert not list((tmp_path / "originals").glob("*.pdf"))
 
 
 def test_optional_metadata_is_preserved_without_becoming_authority(monkeypatch, tmp_path):
