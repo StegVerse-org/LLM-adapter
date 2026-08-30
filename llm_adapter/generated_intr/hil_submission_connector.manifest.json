@@ -1,6 +1,6 @@
 {
   "artifact_path": "generated/connectors/hil_submission_connector.py",
-  "artifact_sha256": "sha256:6463d9609d7d2e790e107348a65219f8f8fdd1db55e521ce9ff7651bf5e18750",
+  "artifact_sha256": "sha256:5ae7d079b2f1b76c4434cbf5164463c657185e13205b379bd98e52ee095523d3",
   "authority_effect": "NONE_SOURCE_PROJECTION",
   "cdn_dependency": false,
   "credential_authority": "TV/TVC",
