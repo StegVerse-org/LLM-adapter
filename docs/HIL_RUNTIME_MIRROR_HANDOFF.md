@@ -234,3 +234,41 @@ publication != Master Records release
 ```
 
 Source implementation on this branch does not itself prove a production transport event.
+
+
+## 2026-08-30 durable receiver-receipt handoff to TVC
+
+Issue: #231.
+
+A source continuity defect was identified after the Universal InTr TVC lifecycle
+adapter was merged: the receiver durably persisted exact bytes, provenance, the
+submission registry, HIL Interlock chain, and TVC outbox, but the complete
+`HIL-RECEIVER-RECEIPT-v2` required by TVC #239 existed only as the HTTP response.
+
+This branch closes that gap:
+
+```text
+exact PDF + provenance persisted
+-> submission row committed and re-read
+-> HIL Interlock chain persisted
+-> private TVC lifecycle queue persisted
+   receiver_receipt_ref = <durable HIL root>/receiver-receipts/<submission_id>.json
+-> final HIL-RECEIVER-RECEIPT-v2 constructed
+-> exact receiver receipt write-once persisted
+-> persisted receipt independently re-read and exact-equality verified
+-> only then HTTP success returns that same receipt
+```
+
+The receiver receipt path is present only inside the private TVC queue; it is not
+exposed in the browser receipt or public status projection.
+
+This creates the authentic durable input pair required by the already-merged
+`StegVerse-Labs/TVC/tools/hil_intr_lifecycle_intake.py`:
+
+```text
+intr-outbox/tvc-hil-lifecycle/<submission_id>.json
+receiver-receipts/<submission_id>.json
+```
+
+No TVC admission, private review, publication, Master Records authority, or live
+runtime observation is claimed by source/CI. TVC #8 remains separate.
