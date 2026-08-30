@@ -14,6 +14,7 @@ from llm_adapter.service_gateway_http01 import http01_challenge_response
 from llm_adapter.service_gateway_evaluator_intr import router as evaluator_intr_router
 from llm_adapter.service_gateway_hil_intr import router as hil_intr_router
 from llm_adapter.service_gateway_sv002_observation import router as sv002_observation_router
+from llm_adapter.service_gateway_personal_origin import personal_origin_middleware
 
 app.include_router(math_solver_router)
 app.include_router(attachment_router)
@@ -45,3 +46,9 @@ app.add_api_route(
     http01_challenge_response,
     methods=["GET"],
 )
+
+
+# Isolate the dedicated stegverse.me virtual origin from the rest of the shared
+# Gateway API surface. The middleware only serves the verified public bundle;
+# all other personal-origin paths fail closed.
+app.middleware("http")(personal_origin_middleware)
