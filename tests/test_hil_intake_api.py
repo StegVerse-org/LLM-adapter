@@ -153,6 +153,9 @@ def test_minimal_upload_preserves_exact_bytes_and_issues_receipt(monkeypatch, tm
     manifests = list((tmp_path / "provenance").glob("*.json"))
     assert len(stored) == 1 and stored[0].read_bytes() == pdf
     assert len(manifests) == 1
+    receiver_receipts = list((tmp_path / "receiver-receipts").glob("*.json"))
+    assert len(receiver_receipts) == 1
+    assert json.loads(receiver_receipts[0].read_text()) == receipt
 
 
 def test_site_durable_ingress_acceptance_predicate_is_satisfied(monkeypatch, tmp_path):
@@ -334,3 +337,9 @@ def test_hil_submission_persists_next_tvc_interlock_queue(monkeypatch, tmp_path)
     assert payload["tvc_admission_completed"] is False
     assert payload["transport_intent"] == receipt["intr_receipt_chain"]["next_interlock_intent"]
     assert payload["prior_receipt_hash"] == receipt["intr_receipt_chain"]["hil_custody_interlock_receipt"]["receipt_hash"]
+    receipt_path = Path(payload["receiver_receipt_ref"])
+    assert receipt_path.is_file()
+    assert receipt_path.resolve().is_relative_to(tmp_path.resolve())
+    persisted = json.loads(receipt_path.read_text())
+    assert persisted == receipt
+    assert persisted["receipt_sha256"] == receipt["receipt_sha256"]
