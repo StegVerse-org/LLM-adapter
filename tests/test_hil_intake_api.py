@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from llm_adapter.combined_gateway import app
+from llm_adapter.generated_intr import hil_submission_connector as canonical_intr
 
 PRIMARY = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
 PROMPT = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c"
@@ -48,49 +49,12 @@ def _intr_intent(pdf: bytes, manifest: dict, *, operation_id: str = "HIL-UPLOAD-
         "primary_sha256": "sha256:" + PRIMARY,
         "prompt_sha256": "sha256:" + PROMPT,
     }
-    payload_hash = _digest_uri(binding)
-    path = ["DEVICE_SYSTEM", "STEGOS_ECOSYSTEM"]
-    basis = {
-        "operation_id": operation_id,
-        "payload_hash": payload_hash,
-        "source_boundary": "DEVICE_SYSTEM",
-        "source_subsystem": "Site:HIL",
-        "destination_boundary": "STEGOS_ECOSYSTEM",
-        "destination_subsystem": "HIL:Ingress",
-        "boundary_path": path,
-    }
-    packet_id = "INTR-" + hashlib.sha256(_canonical_json(basis)).hexdigest()[:24]
-    return {
-        "schema": "stegverse.universal-intr-transport/v1",
-        "protocol": "InTr",
-        "operation_id": operation_id,
-        "packet_id": packet_id,
-        "payload_hash": payload_hash,
-        "prior_transport_receipt_hash": None,
-        "source": {"boundary": "DEVICE_SYSTEM", "subsystem": "Site:HIL"},
-        "destination": {"boundary": "STEGOS_ECOSYSTEM", "subsystem": "HIL:Ingress"},
-        "boundary_path": path,
-        "interlock_required": True,
-        "transport_semantics": {
-            "event_triggered": True,
-            "always_on_receiver_required": False,
-            "second_user_device_required": False,
-            "receiver_unavailable_disposition": "DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION",
-            "exact_packet_transport_retry_allowed": True,
-            "blind_consequence_retry_allowed": False,
-        },
-        "authority": {
-            "authority_transfer": False,
-            "transport_grants_execution_authority": False,
-            "credential_authority": "TV/TVC",
-        },
-        "receipt_chain": {
-            "required": True,
-            "receipt_schema": "stegverse.intr.hop_receipt/v1",
-            "payload_plaintext_in_receipts": False,
-            "prior_hash_required_after_first_hop": True,
-        },
-    }
+    return canonical_intr.build_intent(
+        "hil-submission",
+        _canonical_json(binding),
+        operation="SUBMIT",
+        operation_id=operation_id,
+    )
 
 
 def _enable(monkeypatch, tmp_path) -> None:
