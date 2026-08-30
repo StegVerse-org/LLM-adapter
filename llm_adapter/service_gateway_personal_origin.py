@@ -54,8 +54,11 @@ def bundle_root() -> Path:
     raw = os.getenv("STEGVERSE_PERSONAL_ORIGIN_BUNDLE_ROOT", "").strip()
     if not raw:
         raise PersonalOriginError("personal_origin_bundle_root_not_configured")
-    root = Path(raw).expanduser().resolve()
-    if not root.is_dir() or root.is_symlink():
+    candidate = Path(raw).expanduser()
+    if candidate.is_symlink():
+        raise PersonalOriginError("personal_origin_bundle_root_invalid")
+    root = candidate.resolve()
+    if not root.is_dir():
         raise PersonalOriginError("personal_origin_bundle_root_invalid")
     return root
 
