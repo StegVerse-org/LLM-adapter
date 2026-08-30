@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from llm_adapter.combined_gateway import app
 from llm_adapter.hil_intake_v1_1_api import (
-    _build_transport_intent,
+    _build_profile_intent,
     _digest_uri,
     _hil_payload_binding,
     _validate_manifest,
@@ -42,15 +42,13 @@ def _transport_intent(pdf: bytes, manifest: dict) -> dict:
     response_sha = hashlib.sha256(pdf).hexdigest()
     normalized = _validate_manifest(dict(manifest), response_sha)
     provenance_sha = _digest_uri(normalized)
-    payload_hash = _digest_uri(_hil_payload_binding(response_sha, provenance_sha))
-    return _build_transport_intent(
+    payload_binding = _hil_payload_binding(response_sha, provenance_sha)
+    return _build_profile_intent(
+        "hil-submission",
+        payload_binding,
+        operation="SUBMIT",
         operation_id="HIL-TEST-" + response_sha[:16],
-        payload_hash=payload_hash,
-        source_boundary="DEVICE_SYSTEM",
-        source_subsystem="Site:HIL",
-        destination_boundary="STEGOS_ECOSYSTEM",
-        destination_subsystem="HIL:Ingress",
-        prior_transport_receipt_hash=None,
+        prior_receipt_hash=None,
     )
 
 
@@ -59,14 +57,12 @@ def _post(client: TestClient, pdf: bytes, manifest: bytes):
     try:
         transport_intent = _transport_intent(pdf, manifest_obj)
     except Exception:
-        transport_intent = _build_transport_intent(
+        transport_intent = _build_profile_intent(
+            "hil-submission",
+            _hil_payload_binding("0" * 64, "sha256:" + "0" * 64),
+            operation="SUBMIT",
             operation_id="HIL-TEST-INVALID-MANIFEST",
-            payload_hash="sha256:" + "0" * 64,
-            source_boundary="DEVICE_SYSTEM",
-            source_subsystem="Site:HIL",
-            destination_boundary="STEGOS_ECOSYSTEM",
-            destination_subsystem="HIL:Ingress",
-            prior_transport_receipt_hash=None,
+            prior_receipt_hash=None,
         )
     return client.post(
         "/api/hil/submissions",
