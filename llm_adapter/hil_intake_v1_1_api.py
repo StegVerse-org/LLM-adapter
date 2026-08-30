@@ -311,6 +311,7 @@ def _persist_interlock_lineage(
     queue_path = queue_dir / f"{submission_id}.json"
     chain_path.write_bytes(_canonical_json_bytes(chain) + b"\n")
 
+    receiver_receipt_path = root / "receiver-receipts" / f"{submission_id}.json"
     queue_body = {
         "schema": HIL_TVC_QUEUE_SCHEMA,
         "state": "READY_FOR_INTERLOCK_ADMISSION",
@@ -320,6 +321,7 @@ def _persist_interlock_lineage(
         "transport_intent": next_intent,
         "response_artifact_ref": str(storage_path),
         "provenance_artifact_ref": str(manifest_path),
+        "receiver_receipt_ref": str(receiver_receipt_path),
         "transport_protocol": "InTr",
         "interlock_required": True,
         "authority_transfer": False,
@@ -333,8 +335,35 @@ def _persist_interlock_lineage(
         raise HTTPException(status_code=500, detail="hil_intr_chain_persistence_verification_failed")
     if json.loads(queue_path.read_text(encoding="utf-8")) != queue:
         raise HTTPException(status_code=500, detail="hil_tvc_interlock_queue_persistence_verification_failed")
-    return {"chain": chain, "queue_hash": queue["queue_hash"]}
+    return {
+        "chain": chain,
+        "queue_hash": queue["queue_hash"],
+        "receiver_receipt_path": receiver_receipt_path,
+    }
 
+
+
+
+def _persist_receiver_receipt(path: Path, receipt: Mapping[str, Any]) -> None:
+    """Persist the exact receiver-issued receipt write-once before HTTP success."""
+    path = path.expanduser().resolve()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    serialized = _canonical_json_bytes(dict(receipt)) + b"\n"
+    if path.exists():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise HTTPException(status_code=500, detail="hil_receiver_receipt_existing_unreadable") from exc
+        if existing != dict(receipt):
+            raise HTTPException(status_code=409, detail="hil_receiver_receipt_write_once_collision")
+        return
+    path.write_bytes(serialized)
+    try:
+        reread = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=500, detail="hil_receiver_receipt_persistence_verification_failed") from exc
+    if reread != dict(receipt):
+        raise HTTPException(status_code=500, detail="hil_receiver_receipt_persistence_verification_failed")
 
 
 
@@ -610,6 +639,7 @@ async def submit_response(
         ],
     }
     receipt["receipt_sha256"] = _canonical_hash(receipt)
+    _persist_receiver_receipt(intr_lineage["receiver_receipt_path"], receipt)
     return receipt
 
 
