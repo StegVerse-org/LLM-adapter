@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Mapping
 from uuid import uuid4
 
+from llm_adapter.generated_intr import hil_submission_connector as canonical_intr
 from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import Response
 
@@ -27,17 +28,8 @@ ACTIVE_MARKERS = (b"/JavaScript", b"/JS", b"/Launch", b"/EmbeddedFile", b"/OpenA
 REVIEW_DECISIONS = {"ACCEPT_PRIVATE", "QUARANTINE", "REJECT"}
 PUBLICATION_CONSENTS = {"public", "anonymous", "private", "not_provided"}
 
-UNIVERSAL_INTR_SCHEMA = "stegverse.universal-intr-transport/v1"
-INTR_HOP_RECEIPT_SCHEMA = "stegverse.intr.hop_receipt/v1"
 HIL_INTR_CHAIN_SCHEMA = "stegverse.hil.intr_receipt_chain/v2"
 HIL_TVC_QUEUE_SCHEMA = "stegverse.hil.tvc_interlock_queue/v1"
-CANONICAL_BOUNDARIES = (
-    "SKAP_VAULT",
-    "KV",
-    "DEVICE_SYSTEM",
-    "STEGOS_ECOSYSTEM",
-    "EXTERNAL_SYSTEM",
-)
 
 
 def _canonical_json_bytes(value: Any) -> bytes:
@@ -54,188 +46,55 @@ def _digest_uri(value: Any) -> str:
     return "sha256:" + hashlib.sha256(raw).hexdigest()
 
 
-def _valid_digest_uri(value: Any) -> bool:
-    return (
-        isinstance(value, str)
-        and len(value) == 71
-        and value.startswith("sha256:")
-        and all(ch in "0123456789abcdef" for ch in value[7:])
+def _build_profile_intent(
+    profile_id: str,
+    payload_binding: Mapping[str, Any],
+    *,
+    operation: str,
+    operation_id: str,
+    prior_receipt_hash: str | None,
+) -> dict[str, Any]:
+    return canonical_intr.build_intent(
+        profile_id,
+        _canonical_json_bytes(dict(payload_binding)),
+        operation=operation,
+        operation_id=operation_id,
+        prior_receipt_hash=prior_receipt_hash,
     )
 
 
-def _boundary_path(source: str, destination: str) -> list[str]:
-    if source not in CANONICAL_BOUNDARIES or destination not in CANONICAL_BOUNDARIES:
-        raise HTTPException(status_code=400, detail="intr_boundary_unknown")
-    start = CANONICAL_BOUNDARIES.index(source)
-    stop = CANONICAL_BOUNDARIES.index(destination)
-    step = 1 if stop >= start else -1
-    return list(CANONICAL_BOUNDARIES[start : stop + step : step])
-
-
-def _intent_packet_id(basis: Mapping[str, Any]) -> str:
-    return "INTR-" + hashlib.sha256(_canonical_json_bytes(dict(basis))).hexdigest()[:24]
-
-
-def _build_transport_intent(
-    *,
-    operation_id: str,
-    payload_hash: str,
-    source_boundary: str,
-    source_subsystem: str,
-    destination_boundary: str,
-    destination_subsystem: str,
-    prior_transport_receipt_hash: str | None,
-) -> dict[str, Any]:
-    if not _valid_digest_uri(payload_hash):
-        raise ValueError("payload_hash_invalid")
-    if prior_transport_receipt_hash is not None and not _valid_digest_uri(prior_transport_receipt_hash):
-        raise ValueError("prior_transport_receipt_hash_invalid")
-    path = _boundary_path(source_boundary, destination_boundary)
-    basis = {
-        "operation_id": operation_id,
-        "payload_hash": payload_hash,
-        "source_boundary": source_boundary,
-        "source_subsystem": source_subsystem,
-        "destination_boundary": destination_boundary,
-        "destination_subsystem": destination_subsystem,
-        "boundary_path": path,
-    }
-    return {
-        "schema": UNIVERSAL_INTR_SCHEMA,
-        "protocol": "InTr",
-        "operation_id": operation_id,
-        "packet_id": _intent_packet_id(basis),
-        "payload_hash": payload_hash,
-        "prior_transport_receipt_hash": prior_transport_receipt_hash,
-        "source": {"boundary": source_boundary, "subsystem": source_subsystem},
-        "destination": {"boundary": destination_boundary, "subsystem": destination_subsystem},
-        "boundary_path": path,
-        "interlock_required": True,
-        "transport_semantics": {
-            "event_triggered": True,
-            "always_on_receiver_required": False,
-            "second_user_device_required": False,
-            "receiver_unavailable_disposition": "DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION",
-            "exact_packet_transport_retry_allowed": True,
-            "blind_consequence_retry_allowed": False,
-        },
-        "authority": {
-            "authority_transfer": False,
-            "transport_grants_execution_authority": False,
-            "credential_authority": "TV/TVC",
-        },
-        "receipt_chain": {
-            "required": True,
-            "receipt_schema": INTR_HOP_RECEIPT_SCHEMA,
-            "payload_plaintext_in_receipts": False,
-            "prior_hash_required_after_first_hop": True,
-        },
-    }
-
-
-def _validate_transport_intent(
+def _validate_ingress_transport_intent(
     intent: Mapping[str, Any],
     *,
-    expected_payload_hash: str,
-    expected_source_boundary: str,
-    expected_source_subsystem: str,
-    expected_destination_boundary: str,
-    expected_destination_subsystem: str,
-    expected_prior_receipt_hash: str | None,
+    expected_payload_binding: Mapping[str, Any],
 ) -> None:
-    if intent.get("schema") != UNIVERSAL_INTR_SCHEMA or intent.get("protocol") != "InTr":
-        raise HTTPException(status_code=400, detail="intr_transport_intent_schema_invalid")
-    if intent.get("payload_hash") != expected_payload_hash:
-        raise HTTPException(status_code=400, detail="intr_transport_payload_hash_mismatch")
-    if intent.get("prior_transport_receipt_hash") != expected_prior_receipt_hash:
-        raise HTTPException(status_code=400, detail="intr_transport_prior_receipt_mismatch")
-    source = intent.get("source") or {}
-    destination = intent.get("destination") or {}
-    if source != {"boundary": expected_source_boundary, "subsystem": expected_source_subsystem}:
-        raise HTTPException(status_code=400, detail="intr_transport_source_invalid")
-    if destination != {"boundary": expected_destination_boundary, "subsystem": expected_destination_subsystem}:
-        raise HTTPException(status_code=400, detail="intr_transport_destination_invalid")
-    expected_path = _boundary_path(expected_source_boundary, expected_destination_boundary)
-    if intent.get("boundary_path") != expected_path:
-        raise HTTPException(status_code=400, detail="intr_transport_boundary_path_invalid")
-    if intent.get("interlock_required") is not True:
-        raise HTTPException(status_code=400, detail="intr_interlock_required")
-    semantics = intent.get("transport_semantics") or {}
-    required_semantics = {
-        "event_triggered": True,
-        "always_on_receiver_required": False,
-        "second_user_device_required": False,
-        "receiver_unavailable_disposition": "DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION",
-        "exact_packet_transport_retry_allowed": True,
-        "blind_consequence_retry_allowed": False,
-    }
-    if semantics != required_semantics:
-        raise HTTPException(status_code=400, detail="intr_transport_semantics_invalid")
-    authority = intent.get("authority") or {}
-    if authority != {
-        "authority_transfer": False,
-        "transport_grants_execution_authority": False,
-        "credential_authority": "TV/TVC",
-    }:
-        raise HTTPException(status_code=400, detail="intr_transport_authority_invalid")
-    receipt_chain = intent.get("receipt_chain") or {}
-    if receipt_chain != {
-        "required": True,
-        "receipt_schema": INTR_HOP_RECEIPT_SCHEMA,
-        "payload_plaintext_in_receipts": False,
-        "prior_hash_required_after_first_hop": True,
-    }:
-        raise HTTPException(status_code=400, detail="intr_transport_receipt_policy_invalid")
     operation_id = intent.get("operation_id")
     if not isinstance(operation_id, str) or not operation_id:
         raise HTTPException(status_code=400, detail="intr_transport_operation_id_invalid")
-    basis = {
-        "operation_id": operation_id,
-        "payload_hash": expected_payload_hash,
-        "source_boundary": expected_source_boundary,
-        "source_subsystem": expected_source_subsystem,
-        "destination_boundary": expected_destination_boundary,
-        "destination_subsystem": expected_destination_subsystem,
-        "boundary_path": expected_path,
-    }
-    if intent.get("packet_id") != _intent_packet_id(basis):
-        raise HTTPException(status_code=400, detail="intr_transport_packet_id_invalid")
-
-
-def _build_hop_receipt(
-    intent: Mapping[str, Any],
-    *,
-    receipt_id: str,
-    boundary_identity_ref: str,
-    recorded_at: str,
-) -> dict[str, Any]:
-    path = list(intent["boundary_path"])
-    prior = intent.get("prior_transport_receipt_hash")
-    body = {
-        "schema": INTR_HOP_RECEIPT_SCHEMA,
-        "receipt_id": receipt_id,
-        "packet_id": intent["packet_id"],
-        "hop_index": 1,
-        "direction": "FORWARD",
-        "from_role": path[0],
-        "to_role": path[1] if len(path) > 1 else path[0],
-        "operation_hash": _digest_uri(
-            {
-                "operation_id": intent["operation_id"],
-                "packet_id": intent["packet_id"],
-                "payload_hash": intent["payload_hash"],
-            }
-        ),
-        "payload_hash": intent["payload_hash"],
-        "prior_receipt_hash": prior,
-        "boundary_identity_ref": boundary_identity_ref,
-        "boundary_verification": "VERIFIED",
-        "transition_state": "RECEIVED",
-        "secret_plaintext_present": False,
-        "authority_transfer": False,
-        "recorded_at": recorded_at,
-    }
-    return {**body, "receipt_hash": _digest_uri(body)}
+    expected = _build_profile_intent(
+        "hil-submission",
+        expected_payload_binding,
+        operation="SUBMIT",
+        operation_id=operation_id,
+        prior_receipt_hash=None,
+    )
+    comparisons = (
+        ("schema", "intr_transport_intent_schema_invalid"),
+        ("protocol", "intr_transport_intent_schema_invalid"),
+        ("payload_hash", "intr_transport_payload_hash_mismatch"),
+        ("prior_transport_receipt_hash", "intr_transport_prior_receipt_mismatch"),
+        ("source", "intr_transport_source_invalid"),
+        ("destination", "intr_transport_destination_invalid"),
+        ("boundary_path", "intr_transport_boundary_path_invalid"),
+        ("interlock_required", "intr_interlock_required"),
+        ("transport_semantics", "intr_transport_semantics_invalid"),
+        ("authority", "intr_transport_authority_invalid"),
+        ("receipt_chain", "intr_transport_receipt_policy_invalid"),
+        ("packet_id", "intr_transport_packet_id_invalid"),
+    )
+    for field, detail in comparisons:
+        if intent.get(field) != expected[field]:
+            raise HTTPException(status_code=400, detail=detail)
 
 
 def _hil_payload_binding(response_sha256: str, provenance_sha256_uri: str) -> dict[str, Any]:
@@ -254,40 +113,46 @@ def _persist_interlock_lineage(
     submission_id: str,
     root: Path,
     ingress_intent: Mapping[str, Any],
+    payload_binding: Mapping[str, Any],
     payload_hash: str,
     recorded_at: str,
     storage_path: Path,
     manifest_path: Path,
 ) -> dict[str, Any]:
-    ingress_receipt = _build_hop_receipt(
+    binding_bytes = _canonical_json_bytes(dict(payload_binding))
+    ingress_receipt = canonical_intr.build_receipt(
         ingress_intent,
+        hop_index=1,
         receipt_id=f"HIL-INTR-INGRESS-{uuid4().hex[:16].upper()}",
         boundary_identity_ref="stegverse://StegOS/HIL/Ingress",
         recorded_at=recorded_at,
+        prior_receipt_hash=ingress_intent.get("prior_transport_receipt_hash"),
+        transition_state="RECEIVED",
     )
-    custody_intent = _build_transport_intent(
+    canonical_intr.validate_complete(ingress_intent, [ingress_receipt])
+    custody_intent = canonical_intr.build_intent(
+        "hil-ingress-custody",
+        binding_bytes,
+        operation="ACCEPT_CUSTODY",
         operation_id=f"{ingress_intent['operation_id']}:HIL_CUSTODY",
-        payload_hash=payload_hash,
-        source_boundary="STEGOS_ECOSYSTEM",
-        source_subsystem="HIL:Ingress",
-        destination_boundary="STEGOS_ECOSYSTEM",
-        destination_subsystem="HIL:Custody",
-        prior_transport_receipt_hash=ingress_receipt["receipt_hash"],
+        prior_receipt_hash=ingress_receipt["receipt_hash"],
     )
-    custody_receipt = _build_hop_receipt(
+    custody_receipt = canonical_intr.build_receipt(
         custody_intent,
+        hop_index=1,
         receipt_id=f"HIL-INTR-CUSTODY-{uuid4().hex[:16].upper()}",
         boundary_identity_ref="stegverse://StegOS/HIL/Custody",
         recorded_at=recorded_at,
+        prior_receipt_hash=ingress_receipt["receipt_hash"],
+        transition_state="RECEIVED",
     )
-    next_intent = _build_transport_intent(
+    canonical_intr.validate_complete(custody_intent, [custody_receipt])
+    next_intent = canonical_intr.build_intent(
+        "hil-tvc-lifecycle",
+        binding_bytes,
+        operation="ADMIT_LIFECYCLE",
         operation_id=f"{ingress_intent['operation_id']}:TVC_HIL_LIFECYCLE",
-        payload_hash=payload_hash,
-        source_boundary="STEGOS_ECOSYSTEM",
-        source_subsystem="HIL:Custody",
-        destination_boundary="STEGOS_ECOSYSTEM",
-        destination_subsystem="TVC:HIL-Lifecycle",
-        prior_transport_receipt_hash=custody_receipt["receipt_hash"],
+        prior_receipt_hash=custody_receipt["receipt_hash"],
     )
     chain_body = {
         "schema": HIL_INTR_CHAIN_SCHEMA,
@@ -541,14 +406,9 @@ async def submit_response(
         raise HTTPException(status_code=400, detail="intr_transport_intent_json_invalid") from exc
     if not isinstance(ingress_intent, dict):
         raise HTTPException(status_code=400, detail="intr_transport_intent_shape_invalid")
-    _validate_transport_intent(
+    _validate_ingress_transport_intent(
         ingress_intent,
-        expected_payload_hash=payload_hash,
-        expected_source_boundary="DEVICE_SYSTEM",
-        expected_source_subsystem="Site:HIL",
-        expected_destination_boundary="STEGOS_ECOSYSTEM",
-        expected_destination_subsystem="HIL:Ingress",
-        expected_prior_receipt_hash=None,
+        expected_payload_binding=payload_binding,
     )
 
     signature_state = manifest["producer_signature"]["state"]
@@ -588,6 +448,7 @@ async def submit_response(
         submission_id=submission_id,
         root=root,
         ingress_intent=ingress_intent,
+        payload_binding=payload_binding,
         payload_hash=payload_hash,
         recorded_at=received_at,
         storage_path=path,
