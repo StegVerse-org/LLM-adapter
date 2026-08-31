@@ -19,6 +19,8 @@ services:
       STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT: /var/lib/stegverse
       STEGVERSE_RESIDENT_RENDEZVOUS_ENABLED: "true"
       STEGVERSE_RESIDENT_RENDEZVOUS_ROOT: /var/lib/stegverse/resident-rendezvous
+      STEGVERSE_ORG_FEDERATION_RENDEZVOUS_ENABLED: "true"
+      STEGVERSE_ORG_FEDERATION_RENDEZVOUS_ROOT: /var/lib/stegverse/org-federation-rendezvous
       # The deployed gateway already contains the canonical HIL v1.1 intake.
       # Declaring this runtime as the sovereign carrier activates that existing
       # receiver against the same durable StegDeploy state volume. No second
