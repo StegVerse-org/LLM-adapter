@@ -338,3 +338,18 @@ Canonical handoff: `docs/RESIDENT_RENDEZVOUS_SERVICE_GATEWAY_MIRROR_HANDOFF.md`.
 The Gateway admits only the exact existing `stegos_kv_intr_chain` resident request in v1, stores it durably, serves it to the exact target node via outbound resident fetch, and records a bounded acknowledgement. It cannot transport arbitrary commands, mint WorkerCoordinator claims/fences, grant execution authority, access credentials, or substitute its acknowledgement for authentic resident evidence.
 
 Canonical native/StegDeploy gateway profiles now provision the rendezvous on the existing durable Service Gateway state volume. Runtime deployment/public observation remain separate from source merge.
+
+
+## 2026-08-31 canonical Device-KV request 003 propagation — issue #249
+
+The current Service Gateway resident request identity is:
+```text
+RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-003
+```
+
+The v1 rendezvous remains bounded to the StegOS/KV chain only. Resident request IDs are now explicitly allowlisted rather than accepting arbitrary non-empty values:
+- `...-001` — historical legacy generation; legacy/current exact step vectors only;
+- `...-002` — superseded HB-carrier generation; current three-step vector only;
+- `...-003` — current shared-HB-signal terminal generation; current three-step vector only.
+
+The Gateway does not infer freshness, execution, claim/fence, HB progression, credential, route, transition, receiving, repository, or deployment authority from the request generation. The current fixture and downstream handoff use request 003.
