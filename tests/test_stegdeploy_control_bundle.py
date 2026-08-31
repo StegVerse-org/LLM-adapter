@@ -104,6 +104,14 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     (control / "vendor" / "TVC" / "TVC_MIRROR_HANDOFF.md").write_text("# handoff\n")
     (control / "vendor" / "TVC" / "scripts" / "activate_coinbase_intr_resident.py").write_text("# activate\n")
     (control / "vendor" / "TVC" / "tools" / "hil_intr_lifecycle_intake.py").write_text("# intake\n")
+    (control / "vendor" / "micro-node-runtime" / "tools").mkdir(parents=True)
+    (control / "vendor" / "micro-node-runtime" / "experiments" / "self-characterization-001").mkdir(parents=True)
+    (control / "vendor" / "micro-node-runtime" / "schemas").mkdir(parents=True)
+    (control / "vendor" / "micro-node-runtime" / "tools" / "run_self_characterization_principal.py").write_text("# principal\n")
+    (control / "vendor" / "micro-node-runtime" / "experiments" / "self-characterization-001" / "CONSTRUCTION_PROVENANCE.v0.1.json").write_text("{}\n")
+    (control / "vendor" / "micro-node-runtime" / "schemas" / "self_characterization_runtime_identity.schema.json").write_text("{}\n")
+    (control / "vendor" / "master-records-orchestration" / "scripts").mkdir(parents=True)
+    (control / "vendor" / "master-records-orchestration" / "scripts" / "verify_sv002_self_characterization_reconstruction.py").write_text("# verify\n")
     monkeypatch.setattr(mod, "STATE_DIR", state)
     monkeypatch.setattr(mod, "_resident_control_root", lambda: control)
 
@@ -125,6 +133,8 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert result["healer_source_bound"] is True
     assert result["tv_source_bound"] is True
     assert result["tvc_source_bound"] is True
+    assert result["micro_node_source_bound"] is True
+    assert result["master_records_source_bound"] is True
     assert result["repository_root_map_bound"] is True
     assert result["resident_source_manifest_bound"] is True
     assert result["kv_root_bound"] is True
@@ -133,10 +143,15 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert observed["env"]["STEGVERSE_HEALER_ROOT"] == str(control / "vendor" / "StegVerse-Healer")
     assert observed["env"]["STEGVERSE_TV_ROOT"] == str(control / "vendor" / "TV")
     assert observed["env"]["STEGVERSE_TVC_ROOT"] == str(control / "vendor" / "TVC")
+    assert observed["env"]["STEGVERSE_MICRO_NODE_RUNTIME_ROOT"] == str(control / "vendor" / "micro-node-runtime")
+    assert observed["env"]["STEGVERSE_MASTER_RECORDS_ORCHESTRATION_ROOT"] == str(control / "vendor" / "master-records-orchestration")
+    assert observed["env"]["STEGVERSE_MASTER_RECORDS_ROOT"] == str(control / "vendor" / "master-records-orchestration")
     roots = json.loads(observed["env"]["STEGVERSE_REPO_ROOTS_JSON"])
     assert roots["StegVerse-Labs/StegVerse-Healer"] == str(control / "vendor" / "StegVerse-Healer")
     assert roots["StegVerse-Labs/TV"] == str(control / "vendor" / "TV")
     assert roots["StegVerse-Labs/TVC"] == str(control / "vendor" / "TVC")
+    assert roots["StegVerse-002/micro-node-runtime"] == str(control / "vendor" / "micro-node-runtime")
+    assert roots["master-records/orchestration"] == str(control / "vendor" / "master-records-orchestration")
     assert roots["StegVerse-Labs/StegOS"] == str(control / "vendor" / "StegOS")
     assert observed["env"]["STEGVERSE_KV_ROOT"] == str((state / "resident-kv").resolve())
     assert observed["env"]["STEGVERSE_HEARTBEAT_SOURCE_ROOT"] == str(control)
