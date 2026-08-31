@@ -20,7 +20,7 @@ NOW = datetime(2026, 8, 31, 2, 35, tzinfo=timezone.utc)
 def resident_request():
     return {
         "schema": "stegverse.resident-execution-request/v1",
-        "request_id": "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-002",
+        "request_id": "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-003",
         "state": "REQUESTED",
         "task_id": "SHWP-STEGOS-KV-INTR-CHAIN-001",
         "mode": "STEGOS_KV_INTR_CHAIN",
@@ -96,6 +96,22 @@ def test_legacy_four_step_chain_remains_exactly_allowlisted(tmp_path):
         "SHWP-DEVICE-KV-INTR-OBSERVATION-001",
         "SHWP-ENDPOINT-FANOUT-SOVEREIGN-RUNTIME-001",
     ]
+    request["resident_request_sha256"] = sha256_uri(request["resident_request"])
+    stored = store_request(request, root=tmp_path, now=NOW)
+    assert stored["state"] == "PENDING"
+
+
+def test_unknown_resident_request_id_fails_closed(tmp_path):
+    request = envelope()
+    request["resident_request"]["request_id"] = "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-999"
+    request["resident_request_sha256"] = sha256_uri(request["resident_request"])
+    with pytest.raises(ResidentRendezvousError, match="request_id not admitted"):
+        store_request(request, root=tmp_path, now=NOW)
+
+
+def test_superseded_request_002_remains_boundedly_admitted(tmp_path):
+    request = envelope()
+    request["resident_request"]["request_id"] = "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-002"
     request["resident_request_sha256"] = sha256_uri(request["resident_request"])
     stored = store_request(request, root=tmp_path, now=NOW)
     assert stored["state"] == "PENDING"
