@@ -236,3 +236,21 @@ Validation:
 - `tests/test_stegdeploy_control_bundle.py`
 
 This makes the deployment chain independent of a GitHub runtime, registry pull, or repository adjacency while preserving `.github` as canonical source provenance and WorkerCoordinator as execution-admission authority.
+
+## 2026-08-31 resident control source binding closure
+
+The portable control-plane intake now binds the exact verified materialized control root into the child resident bootstrap as `STEGVERSE_HEARTBEAT_SOURCE_ROOT`. It also binds the already-local LLM-adapter checkout as `STEGVERSE_LLM_ADAPTER_ROOT`.
+
+This closes a machine-execution seam between control-bundle verification and the native worker source-refresh loop: the resident service can now be installed with an explicit distinct canonical local source root and can refresh static WorkerCoordinator/consumer source before visiting resident requests.
+
+```text
+verified control bundle
+-> .stegdeploy/resident-control-plane
+-> STEGVERSE_HEARTBEAT_SOURCE_ROOT=<that exact local root>
+-> bootstrap_sovereign_runtime.py
+-> native WorkerCoordinator service
+-> local source refresh
+-> resident request sweep
+```
+
+No network source fetch, credential acquisition, GitHub runtime authority, heartbeat authority, or new scheduler is introduced. The next required goal remains authentic deployment-local request consumption and task receipts.
