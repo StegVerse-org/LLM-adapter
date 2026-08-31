@@ -296,3 +296,28 @@ StegVerse-Labs/TV -> STEGVERSE_REPO_ROOTS_JSON
 The bundle source manifest independently carries the TV source-identity proof generated from the already-local canonical checkout. The resident proof worker must still validate the exact authorized TV head and TVC ancestor (or the equivalent verified portable proof plus exact current file digests) before execution.
 
 No signing credential, Git metadata, Git remote, network source authority, provider authority, or execution authority is transported with TV source.
+
+## 2026-08-31 portable SV002 + reconstruction + formal-source binding
+
+The verified resident bundle may now materialize the complete source side of the StegVerse-002 self-characterization lane:
+
+```text
+vendor/micro-node-runtime
+  -> STEGVERSE_MICRO_NODE_RUNTIME_ROOT
+
+vendor/master-records-orchestration
+  -> STEGVERSE_MASTER_RECORDS_ORCHESTRATION_ROOT
+  -> STEGVERSE_MASTER_RECORDS_ROOT
+
+vendor/formal/TT
+vendor/formal/RTG
+vendor/formal/GTG
+vendor/formal/AE
+  -> STEGVERSE_TT_ROOT / RTG / GTG / AE
+```
+
+The repository-root map also exposes the same local materializations under their canonical repository identities. The resident source manifest remains the proof surface; the LLM adapter does not infer source trust from path names.
+
+For formal resources, the canonical packager emits exact pinned commit snapshots from already-local Git object databases. No `.git` directory, Git remote, credential, source-network authority, execution authority, or formalism-selection authority is transported.
+
+For StegVerse-002 and Master Records, downstream workers still independently validate the source proof and exact file digests before use. Runtime identity, principal execution, and reconstruction remain separate authentic evidence predicates.
