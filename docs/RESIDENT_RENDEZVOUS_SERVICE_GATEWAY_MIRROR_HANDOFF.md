@@ -130,3 +130,18 @@ hil-sovereign-receiver-source: 33351682636 SUCCESS
 ```
 
 The direct-control dependency is removed at source level: any compatible client may deposit the exact bounded resident intent in the Service Gateway, and a sovereign resident may retrieve it outbound-only. Deployment/public-route observation remains required before claiming live use.
+
+
+## 2026-08-31 canonical Device-KV request 003 propagation — issue #249
+
+The current Service Gateway resident request identity is:
+```text
+RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-003
+```
+
+The v1 rendezvous remains bounded to the StegOS/KV chain only. Resident request IDs are now explicitly allowlisted rather than accepting arbitrary non-empty values:
+- `...-001` — historical legacy generation; legacy/current exact step vectors only;
+- `...-002` — superseded HB-carrier generation; current three-step vector only;
+- `...-003` — current shared-HB-signal terminal generation; current three-step vector only.
+
+The Gateway does not infer freshness, execution, claim/fence, HB progression, credential, route, transition, receiving, repository, or deployment authority from the request generation. The current fixture and downstream handoff use request 003.
