@@ -20,7 +20,7 @@ NOW = datetime(2026, 8, 31, 2, 35, tzinfo=timezone.utc)
 def resident_request():
     return {
         "schema": "stegverse.resident-execution-request/v1",
-        "request_id": "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-001",
+        "request_id": "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-002",
         "state": "REQUESTED",
         "task_id": "SHWP-STEGOS-KV-INTR-CHAIN-001",
         "mode": "STEGOS_KV_INTR_CHAIN",
@@ -29,7 +29,6 @@ def resident_request():
             "SHWP-STEGOS-SOVEREIGN-RELAY-MATERIALIZATION-001",
             "SHWP-STEGOS-RELAY-NODE-KV-CONTINUITY-001",
             "SHWP-DEVICE-KV-INTR-OBSERVATION-001",
-            "SHWP-ENDPOINT-FANOUT-SOVEREIGN-RUNTIME-001",
         ],
         "credential_authority": "TV/TVC",
         "github_token_required": False,
@@ -85,6 +84,32 @@ def test_store_fetch_ack_round_trip(tmp_path):
     assert result["state"] == "ACKNOWLEDGED"
     assert result["canonical_runtime_evidence_verified"] is False
     assert next_request("node:sovereign-primary", root=tmp_path, now=NOW) is None
+
+
+
+def test_legacy_four_step_chain_remains_exactly_allowlisted(tmp_path):
+    request = envelope()
+    request["resident_request"]["request_id"] = "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-001"
+    request["resident_request"]["steps"] = [
+        "SHWP-STEGOS-SOVEREIGN-RELAY-MATERIALIZATION-001",
+        "SHWP-STEGOS-RELAY-NODE-KV-CONTINUITY-001",
+        "SHWP-DEVICE-KV-INTR-OBSERVATION-001",
+        "SHWP-ENDPOINT-FANOUT-SOVEREIGN-RUNTIME-001",
+    ]
+    request["resident_request_sha256"] = sha256_uri(request["resident_request"])
+    stored = store_request(request, root=tmp_path, now=NOW)
+    assert stored["state"] == "PENDING"
+
+
+def test_noncanonical_step_vector_fails_closed(tmp_path):
+    request = envelope()
+    request["resident_request"]["steps"] = [
+        "SHWP-STEGOS-SOVEREIGN-RELAY-MATERIALIZATION-001",
+        "SHWP-DEVICE-KV-INTR-OBSERVATION-001",
+    ]
+    request["resident_request_sha256"] = sha256_uri(request["resident_request"])
+    with pytest.raises(ResidentRendezvousError, match="steps mismatch"):
+        store_request(request, root=tmp_path, now=NOW)
 
 
 def test_duplicate_id_with_different_bytes_fails(tmp_path):
