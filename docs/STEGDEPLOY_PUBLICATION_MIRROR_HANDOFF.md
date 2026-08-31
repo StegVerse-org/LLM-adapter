@@ -183,3 +183,32 @@ public route automatically claimed: false
 The existing Healer scheduler target and resident worker can carry the path-only TLS configuration through merges `7aa88c39d5e46402e3368b5ebd81d27a773ce93d` and `583f3277c7eee9f0d12ab63280d31fbbc278aa85`.
 
 This closes the software transport gap. Production still requires a real eligible sovereign node, runtime-materialized TV/TVC TLS files, native runtime execution, and independent public HTTPS/certificate-hostname observation.
+
+## 2026-08-31 local resident-control bootstrap hook
+
+StegDeploy now closes the post-health resident-runtime trigger seam locally.
+
+After the gateway becomes healthy, `scripts/stegdeploy_bootstrap.py` searches only already-materialized local control-plane roots (explicit `STEGVERSE_ORG_CONTROL_ROOT`, adjacent repository layouts, or canonical local StegVerse roots). When it finds `StegVerse-Labs/.github/scripts/bootstrap_sovereign_runtime.py`, it invokes that bootstrap on the same sovereign substrate with `--skip-post-bootstrap-stegfin`.
+
+Properties:
+- no network source fetch;
+- no GitHub Actions execution;
+- no GitHub token runtime authority;
+- no provider credential generation or forwarding;
+- TV/TVC remains sole credential authority;
+- the hook itself grants no claim/fence/runtime authority;
+- the `.github` WorkerCoordinator remains the admission authority for G18 and all successor tasks;
+- absence of a local control-plane checkout is recorded as `CONTROL_PLANE_NOT_MATERIALIZED` rather than fabricated activation.
+
+The StegDeploy deployment receipt now carries `resident_control_plane_bootstrap`, making the deployment -> resident-bootstrap transition reconstructable.
+
+Combined with the `.github` bootstrap successor binding, the intended live sequence is now:
+
+```text
+StegDeploy local deploy
+-> gateway health
+-> local .github sovereign bootstrap
+-> G18 activation verification
+-> immediate independent TVC/SKAP activation cycle
+-> READY_FOR_OWNER_INGRESS when TVC predicates pass
+```
