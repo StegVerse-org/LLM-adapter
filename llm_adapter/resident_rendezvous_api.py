@@ -19,12 +19,16 @@ ALLOWED_CONSUMER = "stegos_kv_intr_chain"
 ALLOWED_TASK = "SHWP-STEGOS-KV-INTR-CHAIN-001"
 ALLOWED_MODE = "STEGOS_KV_INTR_CHAIN"
 ALLOWED_ENTRYPOINT = "scripts/refresh_and_execute_resident_task.py"
-ALLOWED_STEPS = [
+CURRENT_ALLOWED_STEPS = [
     "SHWP-STEGOS-SOVEREIGN-RELAY-MATERIALIZATION-001",
     "SHWP-STEGOS-RELAY-NODE-KV-CONTINUITY-001",
     "SHWP-DEVICE-KV-INTR-OBSERVATION-001",
+]
+LEGACY_ALLOWED_STEPS = [
+    *CURRENT_ALLOWED_STEPS,
     "SHWP-ENDPOINT-FANOUT-SOVEREIGN-RUNTIME-001",
 ]
+ALLOWED_STEP_SETS = (CURRENT_ALLOWED_STEPS, LEGACY_ALLOWED_STEPS)
 FORBIDDEN_FIELD_NAMES = {
     "password", "secret", "credential", "credential_value", "private_key",
     "private_key_material", "token", "access_token", "refresh_token", "cookie",
@@ -83,7 +87,6 @@ def validate_resident_request(value: Any) -> dict[str, Any]:
         "task_id": ALLOWED_TASK,
         "mode": ALLOWED_MODE,
         "entrypoint": ALLOWED_ENTRYPOINT,
-        "steps": ALLOWED_STEPS,
         "credential_authority": "TV/TVC",
         "github_token_required": False,
         "github_token_runtime_authority": "NONE",
@@ -96,6 +99,8 @@ def validate_resident_request(value: Any) -> dict[str, Any]:
     for key, expected_value in expected.items():
         if value.get(key) != expected_value:
             raise ResidentRendezvousError(f"resident_request {key} mismatch")
+    if value.get("steps") not in ALLOWED_STEP_SETS:
+        raise ResidentRendezvousError("resident_request steps mismatch")
     if not isinstance(value.get("request_id"), str) or not value["request_id"]:
         raise ResidentRendezvousError("resident_request request_id required")
     allowed = set(expected) | {"request_id", "note"}
