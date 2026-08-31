@@ -29,6 +29,7 @@ def resident_request():
             "SHWP-STEGOS-SOVEREIGN-RELAY-MATERIALIZATION-001",
             "SHWP-STEGOS-RELAY-NODE-KV-CONTINUITY-001",
             "SHWP-DEVICE-KV-INTR-OBSERVATION-001",
+            "SHWP-ENDPOINT-FANOUT-SOVEREIGN-RUNTIME-001",
         ],
         "credential_authority": "TV/TVC",
         "github_token_required": False,
