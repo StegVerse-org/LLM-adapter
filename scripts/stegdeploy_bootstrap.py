@@ -91,6 +91,81 @@ def _protected_values_present() -> list[str]:
     return sorted(key for key in PROTECTED_KEYS if os.environ.get(key))
 
 
+def _resident_control_root() -> Path | None:
+    explicit = str(os.environ.get("STEGVERSE_ORG_CONTROL_ROOT") or "").strip()
+    candidates = []
+    if explicit:
+        candidates.append(Path(explicit).expanduser())
+    candidates.extend([
+        ROOT.parent / ".github",
+        ROOT.parent.parent / "StegVerse-Labs" / ".github",
+        Path("/opt/stegverse/StegVerse-Labs/.github"),
+        Path("/srv/stegverse/StegVerse-Labs/.github"),
+    ])
+    for candidate in candidates:
+        try:
+            root = candidate.resolve()
+        except Exception:
+            continue
+        if (root / "scripts" / "bootstrap_sovereign_runtime.py").is_file():
+            return root
+    return None
+
+
+def _activate_resident_control_plane() -> dict[str, object]:
+    control_root = _resident_control_root()
+    if control_root is None:
+        return {
+            "attempted": False,
+            "state": "CONTROL_PLANE_NOT_MATERIALIZED",
+            "authority_effect": "NONE",
+            "network_fetch_performed": False,
+            "github_token_runtime_authority": "NONE",
+            "credential_authority": "TV/TVC",
+        }
+
+    command = [
+        os.environ.get("PYTHON", "python3"),
+        str(control_root / "scripts" / "bootstrap_sovereign_runtime.py"),
+        "--source-root",
+        str(control_root),
+        "--skip-post-bootstrap-stegfin",
+    ]
+    completed = subprocess.run(
+        command,
+        cwd=control_root,
+        check=False,
+        text=True,
+        capture_output=True,
+        timeout=3600,
+        env=os.environ.copy(),
+    )
+    result = None
+    for line in reversed([line.strip() for line in (completed.stdout or "").splitlines() if line.strip()]):
+        try:
+            value = json.loads(line)
+        except Exception:
+            continue
+        if isinstance(value, dict):
+            result = value
+            break
+    return {
+        "attempted": True,
+        "state": (
+            result.get("state")
+            if isinstance(result, dict) and isinstance(result.get("state"), str)
+            else ("COMPLETE" if completed.returncode == 0 else "INCOMPLETE")
+        ),
+        "returncode": completed.returncode,
+        "control_root": str(control_root),
+        "result": result,
+        "network_fetch_performed": False,
+        "github_token_runtime_authority": "NONE",
+        "credential_authority": "TV/TVC",
+        "authority_effect": "NONE_LOCAL_POST_DEPLOY_BOOTSTRAP_TRIGGER",
+    }
+
+
 def _inside_repo(path: Path) -> bool:
     try:
         path.relative_to(ROOT)
@@ -146,6 +221,7 @@ def deploy(url: str) -> None:
     _compose("build")
     _compose("up", "--detach", "--remove-orphans")
     health = _health(url)
+    resident_bootstrap = _activate_resident_control_plane()
     receipt: dict[str, object] = {
         "schema": "stegdeploy.deployment-receipt.v2",
         "runtime": "stegverse-local-docker-compose",
@@ -163,6 +239,7 @@ def deploy(url: str) -> None:
         "generated_credentials": False,
         "protected_values_injected_by_tvc": _protected_values_present(),
         "tls_enabled": False,
+        "resident_control_plane_bootstrap": resident_bootstrap,
         "authority_effect": "RUNTIME_DEPLOYMENT_ONLY",
     }
     _write_receipt(receipt)
@@ -187,6 +264,7 @@ def deploy_tls(*, cert_file: Path, key_file: Path, bind_address: str, port: int)
     _compose("up", "--detach", "--remove-orphans", tls=True, env=compose_env)
     local_health_url = f"https://127.0.0.1:{port}/health"
     health = _health(local_health_url, local_tls_probe=True)
+    resident_bootstrap = _activate_resident_control_plane()
 
     receipt: dict[str, object] = {
         "schema": "stegdeploy.deployment-receipt.v3",
@@ -219,6 +297,7 @@ def deploy_tls(*, cert_file: Path, key_file: Path, bind_address: str, port: int)
         "local_tls_transport_observed": True,
         "public_certificate_hostname_verified": False,
         "production_public_route_observed": False,
+        "resident_control_plane_bootstrap": resident_bootstrap,
         "gateway_execution_authority": "NONE",
         "authority_effect": "LOCAL_TLS_RUNTIME_DEPLOYMENT_ONLY",
     }
