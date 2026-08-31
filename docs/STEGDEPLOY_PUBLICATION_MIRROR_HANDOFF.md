@@ -271,3 +271,13 @@ vendor/continuity-vault-kit -> STEGVERSE_KV_SOURCE_ROOT
 A merged `STEGVERSE_REPO_ROOTS_JSON` is also emitted for downstream workers so the resident Healer scheduler and TVC lifecycle/activation workers can consume the exact packaged trees without a separate checkout or session-supplied locator.
 
 No network source fetch, repository mutation, GitHub token, credential acquisition, new scheduler, heartbeat authority, or provider authority is introduced. The next runtime evidence goal remains authentic resident bootstrap -> source refresh -> request consumption -> scheduler/TVC receipts.
+
+## 2026-08-31 verified portable source-manifest persistence
+
+StegDeploy now persists the already-verified sovereign bundle manifest beside the materialized control plane as `.stegverse-source-manifest.json` and passes its path to the resident bootstrap through `STEGVERSE_RESIDENT_SOURCE_MANIFEST`.
+
+The manifest remains non-authorizing evidence. It binds the exact verified bundle file set and any source-identity proofs emitted by the canonical local packager to the same materialized resident tree.
+
+This allows downstream resident workers that previously required an intact Git checkout only to prove source identity to consume a stronger portable source proof without transporting `.git` metadata, remotes, credentials, or network authority.
+
+No repository trust is inferred from a file name. Downstream workers must independently validate the manifest schema, bundle authority invariants, source proof, expected materialized subpath, and current file digests before accepting it.

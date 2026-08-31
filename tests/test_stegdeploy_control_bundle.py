@@ -52,6 +52,8 @@ def test_materialize_control_bundle_verifies_and_extracts(monkeypatch, tmp_path:
 
     assert root == (state / "resident-control-plane").resolve()
     assert (root / "scripts" / "bootstrap_sovereign_runtime.py").is_file()
+    persisted = json.loads((root / ".stegverse-source-manifest.json").read_text())
+    assert persisted["schema"] == "stegverse.sovereign-control-plane-bundle/v1"
 
 
 def test_materialize_control_bundle_rejects_digest_tamper(monkeypatch, tmp_path: Path) -> None:
@@ -82,6 +84,7 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     control = tmp_path / "control"
     (control / "scripts").mkdir(parents=True)
     (control / "scripts" / "bootstrap_sovereign_runtime.py").write_text("# bootstrap\n")
+    (control / ".stegverse-source-manifest.json").write_text(json.dumps({"schema":"stegverse.sovereign-control-plane-bundle/v1"}) + "\n")
     (control / "vendor" / "StegOS" / "stegos").mkdir(parents=True)
     (control / "vendor" / "StegOS" / "stegos" / "intr_backbone.py").write_text("# intr\n")
     (control / "vendor" / "continuity-vault-kit" / "runtime").mkdir(parents=True)
@@ -118,6 +121,7 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert result["healer_source_bound"] is True
     assert result["tvc_source_bound"] is True
     assert result["repository_root_map_bound"] is True
+    assert result["resident_source_manifest_bound"] is True
     assert result["kv_root_bound"] is True
     assert observed["env"]["STEGVERSE_STEGOS_ROOT"] == str(control / "vendor" / "StegOS")
     assert observed["env"]["STEGVERSE_KV_SOURCE_ROOT"] == str(control / "vendor" / "continuity-vault-kit")
@@ -130,5 +134,6 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert observed["env"]["STEGVERSE_KV_ROOT"] == str((state / "resident-kv").resolve())
     assert observed["env"]["STEGVERSE_HEARTBEAT_SOURCE_ROOT"] == str(control)
     assert observed["env"]["STEGVERSE_LLM_ADAPTER_ROOT"] == str(mod.ROOT)
+    assert observed["env"]["STEGVERSE_RESIDENT_SOURCE_MANIFEST"] == str(control / ".stegverse-source-manifest.json")
     assert result["heartbeat_source_root_bound"] is True
     assert result["llm_adapter_root_bound"] is True
