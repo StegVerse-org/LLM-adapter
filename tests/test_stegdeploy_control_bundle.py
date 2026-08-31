@@ -112,6 +112,10 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     (control / "vendor" / "micro-node-runtime" / "schemas" / "self_characterization_runtime_identity.schema.json").write_text("{}\n")
     (control / "vendor" / "master-records-orchestration" / "scripts").mkdir(parents=True)
     (control / "vendor" / "master-records-orchestration" / "scripts" / "verify_sv002_self_characterization_reconstruction.py").write_text("# verify\n")
+    for formal_name in ("TT", "RTG", "GTG", "AE"):
+        formal = control / "vendor" / "formal" / formal_name
+        formal.mkdir(parents=True)
+        (formal / "FORMAL.txt").write_text("formal\n")
     monkeypatch.setattr(mod, "STATE_DIR", state)
     monkeypatch.setattr(mod, "_resident_control_root", lambda: control)
 
@@ -135,6 +139,7 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert result["tvc_source_bound"] is True
     assert result["micro_node_source_bound"] is True
     assert result["master_records_source_bound"] is True
+    assert result["formal_source_bound"] == {"TT": True, "RTG": True, "GTG": True, "AE": True}
     assert result["repository_root_map_bound"] is True
     assert result["resident_source_manifest_bound"] is True
     assert result["kv_root_bound"] is True
@@ -146,12 +151,16 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert observed["env"]["STEGVERSE_MICRO_NODE_RUNTIME_ROOT"] == str(control / "vendor" / "micro-node-runtime")
     assert observed["env"]["STEGVERSE_MASTER_RECORDS_ORCHESTRATION_ROOT"] == str(control / "vendor" / "master-records-orchestration")
     assert observed["env"]["STEGVERSE_MASTER_RECORDS_ROOT"] == str(control / "vendor" / "master-records-orchestration")
+    for formal_name in ("TT", "RTG", "GTG", "AE"):
+        assert observed["env"][f"STEGVERSE_{formal_name}_ROOT"] == str(control / "vendor" / "formal" / formal_name)
     roots = json.loads(observed["env"]["STEGVERSE_REPO_ROOTS_JSON"])
     assert roots["StegVerse-Labs/StegVerse-Healer"] == str(control / "vendor" / "StegVerse-Healer")
     assert roots["StegVerse-Labs/TV"] == str(control / "vendor" / "TV")
     assert roots["StegVerse-Labs/TVC"] == str(control / "vendor" / "TVC")
     assert roots["StegVerse-002/micro-node-runtime"] == str(control / "vendor" / "micro-node-runtime")
     assert roots["master-records/orchestration"] == str(control / "vendor" / "master-records-orchestration")
+    for formal_name in ("TT", "RTG", "GTG", "AE"):
+        assert roots[f"Admissible-Existence/{formal_name}"] == str(control / "vendor" / "formal" / formal_name)
     assert roots["StegVerse-Labs/StegOS"] == str(control / "vendor" / "StegOS")
     assert observed["env"]["STEGVERSE_KV_ROOT"] == str((state / "resident-kv").resolve())
     assert observed["env"]["STEGVERSE_HEARTBEAT_SOURCE_ROOT"] == str(control)
