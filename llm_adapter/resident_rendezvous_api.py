@@ -1,12 +1,11 @@
 """Non-authorizing Service Gateway rendezvous for sovereign resident requests."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import os
 import re
-import tempfile
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -38,9 +37,6 @@ LEGACY_REQUEST_IDS = {
     "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-001",
     "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-002",
 }
-TARGET_PRESENCE_SCHEMA = "stegverse.resident-rendezvous.target-presence/v1"
-TARGET_DISCOVERY_SCHEMA = "stegverse.resident-rendezvous.target-discovery/v1"
-TARGET_PRESENCE_TTL_SECONDS = 120
 CANONICAL_NODE_REF_RE = re.compile(r"^SV-NODE-[0-9a-f]{24}$")
 SUBMITTER_PROVENANCE_RE = re.compile(r"^node-receipt-1-sha256:[0-9a-f]{64}$")
 MAX_ADVERTISEMENT_LEASE_SECONDS = 300
@@ -232,9 +228,7 @@ def validate_advertisement(value: Any, *, now: datetime | None = None) -> dict[s
     for field, expected_value in expected.items():
         if value.get(field) != expected_value:
             raise ResidentRendezvousError(f"advertisement {field} mismatch")
-    node_ref = value.get("target_node_ref")
-    if not isinstance(node_ref, str) or not node_ref or len(node_ref) > 256:
-        raise ResidentRendezvousError("advertisement target_node_ref invalid")
+    _canonical_node_ref(value.get("target_node_ref"))
     advertised = _parse_time(value.get("advertised_at"))
     expires = _parse_time(value.get("expires_at"))
     current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
@@ -337,89 +331,11 @@ def _paths(root: Path) -> tuple[Path, Path]:
     return pending, acknowledged
 
 
-def _presence_dir(root: Path) -> Path:
-    path = root / "target-presence"
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
-def _atomic_replace(path: Path, value: Mapping[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    raw = json.dumps(dict(value), indent=2, sort_keys=True) + "\n"
-    with tempfile.NamedTemporaryFile(
-        "w", encoding="utf-8", dir=path.parent, delete=False
-    ) as handle:
-        handle.write(raw)
-        temporary = Path(handle.name)
-    os.replace(temporary, path)
-
-
 def _canonical_node_ref(value: Any) -> str:
     text = str(value or "")
     if not CANONICAL_NODE_REF_RE.fullmatch(text):
         raise ResidentRendezvousError("canonical sovereign node ref required")
     return text
-
-
-def record_target_presence(
-    target_node_ref: str,
-    *,
-    root: Path | None = None,
-    now: datetime | None = None,
-) -> dict[str, Any]:
-    node_ref = _canonical_node_ref(target_node_ref)
-    base = root or rendezvous_root()
-    current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    expires = current.timestamp() + TARGET_PRESENCE_TTL_SECONDS
-    value = {
-        "schema": TARGET_PRESENCE_SCHEMA,
-        "state": "ACTIVE_POLLING",
-        "target_node_ref": node_ref,
-        "observed_at": current.isoformat(),
-        "expires_at": datetime.fromtimestamp(expires, tz=timezone.utc).isoformat(),
-        "credential_authority": "TV/TVC",
-        "gateway_execution_authority": "NONE",
-        "route_authority": "NONE",
-        "receiving_authority": "NONE",
-        "authority_effect": "NONE_DISCOVERY_ONLY",
-    }
-    path = _presence_dir(base) / (_safe_id(node_ref) + ".json")
-    _atomic_replace(path, value)
-    return value
-
-
-def active_target_presence(
-    *,
-    root: Path | None = None,
-    now: datetime | None = None,
-) -> list[dict[str, Any]]:
-    base = root or rendezvous_root()
-    current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    rows: list[dict[str, Any]] = []
-    for path in sorted(_presence_dir(base).glob("*.json")):
-        try:
-            value = json.loads(path.read_text(encoding="utf-8"))
-            if value.get("schema") != TARGET_PRESENCE_SCHEMA:
-                continue
-            node_ref = _canonical_node_ref(value.get("target_node_ref"))
-            if value.get("state") != "ACTIVE_POLLING":
-                continue
-            if _parse_time(value.get("expires_at")) <= current:
-                continue
-            if value.get("credential_authority") != "TV/TVC":
-                continue
-            if value.get("gateway_execution_authority") != "NONE":
-                continue
-            if value.get("authority_effect") != "NONE_DISCOVERY_ONLY":
-                continue
-            rows.append({
-                "target_node_ref": node_ref,
-                "observed_at": value["observed_at"],
-                "expires_at": value["expires_at"],
-            })
-        except Exception:
-            continue
-    return rows
 
 
 def _safe_id(value: str) -> str:
@@ -558,8 +474,23 @@ def fetch_resident_request(target_node_ref: str, request: Request) -> dict[str, 
     node_header = request.headers.get("X-StegVerse-Node-Ref", "")
     if not node_header or node_header != target_node_ref:
         raise HTTPException(status_code=403, detail="node reference binding required")
-    if CANONICAL_NODE_REF_RE.fullmatch(target_node_ref):
-        record_target_presence(target_node_ref)
+    try:
+        canonical_ref = _canonical_node_ref(target_node_ref)
+        observed = datetime.now(timezone.utc)
+        store_advertisement({
+            "schema": ADVERTISEMENT_SCHEMA,
+            "target_node_ref": canonical_ref,
+            "consumer": ALLOWED_CONSUMER,
+            "current_resident_request_id": CURRENT_REQUEST_ID,
+            "advertised_at": observed.isoformat(),
+            "expires_at": (observed + timedelta(seconds=120)).isoformat(),
+            "credential_authority": "TV/TVC",
+            "gateway_execution_authority": "NONE",
+            "advertisement_grants_authority": False,
+            "authority_effect": "NONE_DISCOVERY_ONLY",
+        }, now=observed)
+    except ResidentRendezvousError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     value = next_request(target_node_ref)
     if value is None:
         return {
@@ -574,24 +505,6 @@ def fetch_resident_request(target_node_ref: str, request: Request) -> dict[str, 
         "request": value,
         "gateway_execution_authority": "NONE",
         "authority_effect": "NONE_REQUEST_ONLY",
-    }
-
-
-@router.get("/api/resident-rendezvous/v1/targets")
-def discover_resident_targets() -> dict[str, Any]:
-    _require_enabled()
-    targets = active_target_presence()
-    return {
-        "schema": TARGET_DISCOVERY_SCHEMA,
-        "state": "ACTIVE_TARGETS_OBSERVED" if targets else "NO_ACTIVE_TARGETS",
-        "targets": targets,
-        "target_count": len(targets),
-        "credential_required": False,
-        "credential_authority": "TV/TVC",
-        "gateway_execution_authority": "NONE",
-        "route_authority": "NONE",
-        "receiving_authority": "NONE",
-        "authority_effect": "NONE_DISCOVERY_ONLY",
     }
 
 
