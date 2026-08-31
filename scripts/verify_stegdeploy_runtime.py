@@ -97,6 +97,8 @@ def main() -> int:
         '"public_certificate_hostname_verified": False',
         '"credential_authority": "TV/TVC"',
         '"github_token_runtime_authority": "NONE"',
+        '"org_federation_rendezvous_enabled": True',
+        '"org_federation_gateway_execution_authority": "NONE"',
     )
     reject(
         "scripts/stegdeploy_bootstrap.py",
