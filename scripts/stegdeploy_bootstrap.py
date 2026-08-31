@@ -193,6 +193,20 @@ def _activate_resident_control_plane() -> dict[str, object]:
         str(control_root),
         "--skip-post-bootstrap-stegfin",
     ]
+    child_env = os.environ.copy()
+    vendor_stegos = control_root / "vendor" / "StegOS"
+    vendor_kv = control_root / "vendor" / "continuity-vault-kit"
+    stegos_bound = (vendor_stegos / "stegos" / "intr_backbone.py").is_file()
+    kv_source_bound = (vendor_kv / "runtime" / "kv_interlock_endpoint.py").is_file()
+    if stegos_bound:
+        child_env["STEGVERSE_STEGOS_ROOT"] = str(vendor_stegos)
+    if kv_source_bound:
+        child_env["STEGVERSE_KV_SOURCE_ROOT"] = str(vendor_kv)
+    kv_root = str(child_env.get("STEGVERSE_KV_ROOT") or "").strip()
+    if not kv_root:
+        kv_root_path = (STATE_DIR / "resident-kv").resolve()
+        kv_root_path.mkdir(parents=True, exist_ok=True)
+        child_env["STEGVERSE_KV_ROOT"] = str(kv_root_path)
     completed = subprocess.run(
         command,
         cwd=control_root,
@@ -200,7 +214,7 @@ def _activate_resident_control_plane() -> dict[str, object]:
         text=True,
         capture_output=True,
         timeout=3600,
-        env=os.environ.copy(),
+        env=child_env,
     )
     result = None
     for line in reversed([line.strip() for line in (completed.stdout or "").splitlines() if line.strip()]):
@@ -220,6 +234,9 @@ def _activate_resident_control_plane() -> dict[str, object]:
         ),
         "returncode": completed.returncode,
         "control_root": str(control_root),
+        "stegos_source_bound": stegos_bound,
+        "kv_source_bound": kv_source_bound,
+        "kv_root_bound": bool(child_env.get("STEGVERSE_KV_ROOT")),
         "result": result,
         "network_fetch_performed": False,
         "github_token_runtime_authority": "NONE",
