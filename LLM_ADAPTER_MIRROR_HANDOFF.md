@@ -327,3 +327,14 @@ Standard: `StegVerse-Labs/Continuity/docs/REPOSITORY_HANDOFF_STANDARD.md` / `ste
 - Tasks 019 and 020, local-model/runtime implementation, and public-runtime documentation remain complete/released at their recorded scopes and are not reopened by this migration.
 - Any inference that pending runtime observation, custody/reconstruction, Site activation, or downstream propagation is manually startable is superseded by the machine-owned aggregate above.
 - Any inference that repository implementation completeness or this metadata migration proves product activation, release, provider execution, custody, or downstream activation is superseded/prohibited.
+
+
+## Resident execution rendezvous — issue #240
+
+A new non-authorizing StegVerse Service Gateway rendezvous is being added to eliminate the need for coordinating ChatGPT/browser sessions to possess SSH/systemd/server-control access to a sovereign resident.
+
+Canonical handoff: `docs/RESIDENT_RENDEZVOUS_SERVICE_GATEWAY_MIRROR_HANDOFF.md`.
+
+The Gateway admits only the exact existing `stegos_kv_intr_chain` resident request in v1, stores it durably, serves it to the exact target node via outbound resident fetch, and records a bounded acknowledgement. It cannot transport arbitrary commands, mint WorkerCoordinator claims/fences, grant execution authority, access credentials, or substitute its acknowledgement for authentic resident evidence.
+
+Canonical native/StegDeploy gateway profiles now provision the rendezvous on the existing durable Service Gateway state volume. Runtime deployment/public observation remain separate from source merge.
