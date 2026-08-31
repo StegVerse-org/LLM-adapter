@@ -227,6 +227,7 @@ def _activate_resident_control_plane() -> dict[str, object]:
     ))
     micro_node_bound = all((vendor_micro_node / rel).is_file() for rel in (
         Path("tools/run_self_characterization_principal.py"),
+        Path("tools/verify_self_characterization_runtime_identity.py"),
         Path("experiments/self-characterization-001/CONSTRUCTION_PROVENANCE.v0.1.json"),
         Path("schemas/self_characterization_runtime_identity.schema.json"),
     ))
