@@ -254,3 +254,20 @@ verified control bundle
 ```
 
 No network source fetch, credential acquisition, GitHub runtime authority, heartbeat authority, or new scheduler is introduced. The next required goal remains authentic deployment-local request consumption and task receipts.
+
+## 2026-08-31 bundled Healer/TVC resident-source binding
+
+The verified sovereign control bundle may now carry local `StegVerse-Healer` and `TVC` source trees in addition to the canonical control plane, StegOS, and continuity-vault-kit.
+
+After bundle verification/materialization, StegDeploy binds only already-local verified roots:
+
+```text
+vendor/StegVerse-Healer -> STEGVERSE_HEALER_ROOT
+vendor/TVC -> STEGVERSE_TVC_ROOT
+vendor/StegOS -> STEGVERSE_STEGOS_ROOT
+vendor/continuity-vault-kit -> STEGVERSE_KV_SOURCE_ROOT
+```
+
+A merged `STEGVERSE_REPO_ROOTS_JSON` is also emitted for downstream workers so the resident Healer scheduler and TVC lifecycle/activation workers can consume the exact packaged trees without a separate checkout or session-supplied locator.
+
+No network source fetch, repository mutation, GitHub token, credential acquisition, new scheduler, heartbeat authority, or provider authority is introduced. The next runtime evidence goal remains authentic resident bootstrap -> source refresh -> request consumption -> scheduler/TVC receipts.

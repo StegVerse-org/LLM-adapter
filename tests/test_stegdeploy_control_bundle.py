@@ -86,6 +86,17 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     (control / "vendor" / "StegOS" / "stegos" / "intr_backbone.py").write_text("# intr\n")
     (control / "vendor" / "continuity-vault-kit" / "runtime").mkdir(parents=True)
     (control / "vendor" / "continuity-vault-kit" / "runtime" / "kv_interlock_endpoint.py").write_text("# kv\n")
+    (control / "vendor" / "StegVerse-Healer" / "app").mkdir(parents=True)
+    (control / "vendor" / "StegVerse-Healer" / "data").mkdir(parents=True)
+    (control / "vendor" / "StegVerse-Healer" / "docs").mkdir(parents=True)
+    (control / "vendor" / "StegVerse-Healer" / "app" / "dispatch_orchestrators.py").write_text("# dispatch\n")
+    (control / "vendor" / "StegVerse-Healer" / "data" / "orchestrator_targets.json").write_text("{}\n")
+    (control / "vendor" / "StegVerse-Healer" / "docs" / "HEALER_MIRROR_HANDOFF.md").write_text("# handoff\n")
+    (control / "vendor" / "TVC" / "scripts").mkdir(parents=True)
+    (control / "vendor" / "TVC" / "tools").mkdir(parents=True)
+    (control / "vendor" / "TVC" / "TVC_MIRROR_HANDOFF.md").write_text("# handoff\n")
+    (control / "vendor" / "TVC" / "scripts" / "activate_coinbase_intr_resident.py").write_text("# activate\n")
+    (control / "vendor" / "TVC" / "tools" / "hil_intr_lifecycle_intake.py").write_text("# intake\n")
     monkeypatch.setattr(mod, "STATE_DIR", state)
     monkeypatch.setattr(mod, "_resident_control_root", lambda: control)
 
@@ -104,9 +115,18 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert result["state"] == "COMPLETE"
     assert result["stegos_source_bound"] is True
     assert result["kv_source_bound"] is True
+    assert result["healer_source_bound"] is True
+    assert result["tvc_source_bound"] is True
+    assert result["repository_root_map_bound"] is True
     assert result["kv_root_bound"] is True
     assert observed["env"]["STEGVERSE_STEGOS_ROOT"] == str(control / "vendor" / "StegOS")
     assert observed["env"]["STEGVERSE_KV_SOURCE_ROOT"] == str(control / "vendor" / "continuity-vault-kit")
+    assert observed["env"]["STEGVERSE_HEALER_ROOT"] == str(control / "vendor" / "StegVerse-Healer")
+    assert observed["env"]["STEGVERSE_TVC_ROOT"] == str(control / "vendor" / "TVC")
+    roots = json.loads(observed["env"]["STEGVERSE_REPO_ROOTS_JSON"])
+    assert roots["StegVerse-Labs/StegVerse-Healer"] == str(control / "vendor" / "StegVerse-Healer")
+    assert roots["StegVerse-Labs/TVC"] == str(control / "vendor" / "TVC")
+    assert roots["StegVerse-Labs/StegOS"] == str(control / "vendor" / "StegOS")
     assert observed["env"]["STEGVERSE_KV_ROOT"] == str((state / "resident-kv").resolve())
     assert observed["env"]["STEGVERSE_HEARTBEAT_SOURCE_ROOT"] == str(control)
     assert observed["env"]["STEGVERSE_LLM_ADAPTER_ROOT"] == str(mod.ROOT)

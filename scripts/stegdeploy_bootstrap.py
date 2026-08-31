@@ -198,12 +198,49 @@ def _activate_resident_control_plane() -> dict[str, object]:
     child_env["STEGVERSE_LLM_ADAPTER_ROOT"] = str(ROOT)
     vendor_stegos = control_root / "vendor" / "StegOS"
     vendor_kv = control_root / "vendor" / "continuity-vault-kit"
+    vendor_healer = control_root / "vendor" / "StegVerse-Healer"
+    vendor_tvc = control_root / "vendor" / "TVC"
     stegos_bound = (vendor_stegos / "stegos" / "intr_backbone.py").is_file()
     kv_source_bound = (vendor_kv / "runtime" / "kv_interlock_endpoint.py").is_file()
+    healer_bound = all((vendor_healer / rel).is_file() for rel in (
+        Path("app/dispatch_orchestrators.py"),
+        Path("data/orchestrator_targets.json"),
+        Path("docs/HEALER_MIRROR_HANDOFF.md"),
+    ))
+    tvc_bound = all((vendor_tvc / rel).is_file() for rel in (
+        Path("TVC_MIRROR_HANDOFF.md"),
+        Path("scripts/activate_coinbase_intr_resident.py"),
+        Path("tools/hil_intr_lifecycle_intake.py"),
+    ))
     if stegos_bound:
         child_env["STEGVERSE_STEGOS_ROOT"] = str(vendor_stegos)
     if kv_source_bound:
         child_env["STEGVERSE_KV_SOURCE_ROOT"] = str(vendor_kv)
+    if healer_bound:
+        child_env["STEGVERSE_HEALER_ROOT"] = str(vendor_healer)
+    if tvc_bound:
+        child_env["STEGVERSE_TVC_ROOT"] = str(vendor_tvc)
+    repo_roots = {}
+    raw_repo_roots = str(child_env.get("STEGVERSE_REPO_ROOTS_JSON") or "").strip()
+    if raw_repo_roots:
+        try:
+            parsed_repo_roots = json.loads(raw_repo_roots)
+        except Exception:
+            parsed_repo_roots = {}
+        if isinstance(parsed_repo_roots, dict):
+            repo_roots.update({
+                str(key): str(value)
+                for key, value in parsed_repo_roots.items()
+                if isinstance(key, str) and isinstance(value, str) and value
+            })
+    if healer_bound:
+        repo_roots["StegVerse-Labs/StegVerse-Healer"] = str(vendor_healer)
+    if tvc_bound:
+        repo_roots["StegVerse-Labs/TVC"] = str(vendor_tvc)
+    if stegos_bound:
+        repo_roots["StegVerse-Labs/StegOS"] = str(vendor_stegos)
+    if repo_roots:
+        child_env["STEGVERSE_REPO_ROOTS_JSON"] = json.dumps(repo_roots, sort_keys=True, separators=(",", ":"))
     kv_root = str(child_env.get("STEGVERSE_KV_ROOT") or "").strip()
     if not kv_root:
         kv_root_path = (STATE_DIR / "resident-kv").resolve()
@@ -240,6 +277,9 @@ def _activate_resident_control_plane() -> dict[str, object]:
         "llm_adapter_root_bound": child_env.get("STEGVERSE_LLM_ADAPTER_ROOT") == str(ROOT),
         "stegos_source_bound": stegos_bound,
         "kv_source_bound": kv_source_bound,
+        "healer_source_bound": healer_bound,
+        "tvc_source_bound": tvc_bound,
+        "repository_root_map_bound": bool(child_env.get("STEGVERSE_REPO_ROOTS_JSON")),
         "kv_root_bound": bool(child_env.get("STEGVERSE_KV_ROOT")),
         "result": result,
         "network_fetch_performed": False,
