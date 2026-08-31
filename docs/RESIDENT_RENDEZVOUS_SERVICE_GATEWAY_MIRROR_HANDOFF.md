@@ -3,8 +3,8 @@
 Updated: 2026-08-30
 Repository: StegVerse-org/LLM-adapter
 Issue: #240
-Branch: feature/resident-rendezvous-240
-State: SOURCE_IMPLEMENTATION_IN_PROGRESS
+Merged PR: #241\nMerge: e34d52ec83b83992e3b27b8b28c0fa3ca39829b8
+State: SOURCE_MERGED_VALIDATED / RUNTIME_DEPLOYMENT_OPEN
 Authority effect: NONE
 Runtime activation claimed: false
 
@@ -115,3 +115,18 @@ ACTIVATED: false
 OBSERVED: false
 COMPLETE: false
 ```
+
+
+## Merge evidence
+
+```text
+issue: #240 CLOSED_BY_MERGE
+PR: #241 MERGED
+merge: e34d52ec83b83992e3b27b8b28c0fa3ca39829b8
+validated head: c0a14d692fdb8bdd801cd440b71f96e81e809e14
+validate: 33351682618 SUCCESS
+Coinbase SKAP Service Gateway Validation: 33351682616 SUCCESS
+hil-sovereign-receiver-source: 33351682636 SUCCESS
+```
+
+The direct-control dependency is removed at source level: any compatible client may deposit the exact bounded resident intent in the Service Gateway, and a sovereign resident may retrieve it outbound-only. Deployment/public-route observation remains required before claiming live use.
