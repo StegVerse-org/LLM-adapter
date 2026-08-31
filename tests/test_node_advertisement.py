@@ -36,6 +36,13 @@ def test_node_advertisement_is_health_bound_and_non_authorizing(monkeypatch) -> 
     assert payload["coinbase_skap_gateway_execution_authority"] == "NONE"
     assert payload["math_solver_readiness_endpoint"].endswith("/api/math-solver/v1/readiness")
     assert payload["math_solver_solve_endpoint"].endswith("/api/math-solver/v1/solve")
+    assert payload["resident_rendezvous_request_endpoint"].endswith("/api/resident-rendezvous/v1/requests")
+    assert payload["resident_rendezvous_ack_endpoint"].endswith("/api/resident-rendezvous/v1/acknowledgements")
+    assert payload["resident_rendezvous_discovery_endpoint"].endswith("/api/resident-rendezvous/v1/discovery")
+    assert payload["resident_rendezvous_advertisement_endpoint"].endswith("/api/resident-rendezvous/v1/advertisements")
+    assert payload["resident_rendezvous_current_request_id"] == "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-003"
+    assert payload["resident_rendezvous_discovery_grants_authority"] is False
+    assert payload["resident_rendezvous_gateway_execution_authority"] == "NONE"
     assert payload["health_bound"] is True
     assert payload["provider_enabled"] is True
     assert payload["durable_storage"] is True
