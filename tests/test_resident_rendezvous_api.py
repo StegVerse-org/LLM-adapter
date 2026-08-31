@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 import copy
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from llm_adapter.resident_rendezvous_api import (
     ResidentRendezvousError,
@@ -13,6 +15,7 @@ from llm_adapter.resident_rendezvous_api import (
     store_acknowledgement,
     store_advertisement,
     store_request,
+    router,
 )
 
 
@@ -122,6 +125,32 @@ def test_resident_advertisement_lease_and_contract_fail_closed(tmp_path):
     wrong["current_resident_request_id"] = "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-002"
     with pytest.raises(ResidentRendezvousError, match="current_resident_request_id mismatch"):
         store_advertisement(wrong, root=tmp_path, now=NOW)
+
+
+def test_bound_resident_poll_auto_advertises_canonical_target(tmp_path, monkeypatch):
+    monkeypatch.setenv("STEGVERSE_RESIDENT_RENDEZVOUS_ENABLED", "true")
+    monkeypatch.setenv("STEGVERSE_RESIDENT_RENDEZVOUS_ROOT", str(tmp_path))
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    node_ref = "SV-NODE-" + "9" * 24
+
+    fetched = client.get(
+        "/api/resident-rendezvous/v1/requests",
+        params={"target_node_ref": node_ref},
+        headers={"X-StegVerse-Node-Ref": node_ref},
+    )
+    assert fetched.status_code == 200
+    assert fetched.json()["state"] == "NO_REQUEST"
+
+    discovered = client.get("/api/resident-rendezvous/v1/discovery")
+    assert discovered.status_code == 200
+    value = discovered.json()
+    assert value["state"] == "AVAILABLE"
+    assert value["target_node_ref"] == node_ref
+    assert value["current_resident_request_id"] == "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-003"
+    assert value["discovery_grants_authority"] is False
+    assert value["gateway_execution_authority"] == "NONE"
 
 
 def test_store_fetch_ack_round_trip(tmp_path):
