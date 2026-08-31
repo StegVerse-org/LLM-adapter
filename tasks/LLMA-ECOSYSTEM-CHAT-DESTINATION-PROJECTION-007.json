@@ -4,7 +4,7 @@
   "canonical_issue": "StegVerse-org/LLM-adapter#7",
   "repository": "StegVerse-org/LLM-adapter",
   "branch": "feat/ecosystem-chat-parent-receipt-projection-007",
-  "state": "CLAIMED_FOR_VALIDATION",
+  "state": "COMPLETE_VALIDATED_MERGED_SOURCE_PROJECTION",
   "goal": "Remove superseded Render topology from the Ecosystem Chat destination activation projection and bind compatibility gates to canonical sovereign execution evidence without promoting source readiness to activation.",
   "canonical_handoff": "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
   "claimed_paths": [
@@ -31,8 +31,9 @@
       "canonical_profile_ref": "StegVerse-Labs/.github/management/COSV_PROFILE_V1.json",
       "notation": "L R U I V G O C M T B E A P",
       "width": 14,
-      "vector": null,
-      "vector_state": "NOT_EMITTED_BY_CANONICAL_COSV_PROJECTION",
+      "vector": "71000000100100",
+      "vector_state": "EMITTED",
+      "vector_observed_at": "2026-08-31T07:02:00-05:00",
       "authority_effect": "NONE"
     }
   },
@@ -48,17 +49,25 @@
     "projection is immutable and non-authorizing",
     "destination state accepts sovereign parent projection without fabricating legacy hosted gateway evidence"
   ],
-  "remaining": [
-    "exact-head hosted validation of parent projection seam",
-    "merge parent projection seam",
-    "post-merge current-main validation",
-    "actual independent parent same-carrier execution on admitted StegVerse task-control surface",
-    "resident projection of terminal parent PASS into LLM-adapter sovereign activation evidence",
-    "durable evidence publication/transport under TV/TVC without making GitHub runtime authority",
-    "Site import and downstream ingestion after true activation"
-  ],
+  "remaining": [],
   "user_action_required_now": false,
   "authority_effect": false,
   "activation_effect": false,
-  "archive_eligible": false
+  "archive_eligible": true,
+  "integration": {
+    "destination_projection_pr": 206,
+    "destination_projection_merge": "7454019f8e174beaf4d957dab3f9812b7072c70b",
+    "parent_projection_pr": 207,
+    "parent_projection_merge": "00d2a086f98505012fedcb4c7c1b5a33c70a1495",
+    "validation_runs": [
+      33073219876,
+      33073219893,
+      33074301968,
+      33074302079
+    ],
+    "source_state": "COMPLETE_VALIDATED_MERGED",
+    "runtime_activation_effect": false,
+    "authority_effect": "NONE"
+  },
+  "source_state_vector_ref": "data/cosv/task-vectors/LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007.json"
 }

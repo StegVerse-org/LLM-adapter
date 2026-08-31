@@ -1,0 +1,43 @@
+{
+  "identity": "StegVerse-org/LLM-adapter:task:LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007",
+  "profile": "task.v1",
+  "level": "task",
+  "vector": "71000000100100",
+  "evidence_refs": [
+    "tasks/LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007.json",
+    "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter#206",
+    "StegVerse-org/LLM-adapter#207"
+  ],
+  "observed_at": "2026-08-31T07:02:00-05:00",
+  "exact_metrics": {
+    "symbol_order": "LRUIVGOCMTBEAP",
+    "lifecycle": "COMPLETE",
+    "archive_ready": true,
+    "unassigned_work": 0,
+    "chat_owned_implementation": 0,
+    "chat_owned_validation": 0,
+    "chat_owned_integration": 0,
+    "chat_owned_observation": 0,
+    "chat_owned_credentials": 0,
+    "canonical_owner_installed": true,
+    "thread_required": false,
+    "blocker_count": 0,
+    "evidence_complete": true,
+    "activated": false,
+    "propagated": false
+  },
+  "metric_evidence": {
+    "lifecycle": "PR #206 and #207 source seams merged and validated",
+    "archive_ready": "bounded #007 source projection task has no remaining source work",
+    "unassigned_work": "runtime continuation is owned by separate canonical parent/runtime/custody/Site owners",
+    "chat_owned_counts": "no chat-owned source or credential work remains in #007",
+    "canonical_owner_installed": "LLM-adapter destination/parent projection source is installed",
+    "thread_required": "repository task/handoff state is sufficient",
+    "blocker_count": "no blocker remains for this bounded source task; runtime prerequisites belong to separate tasks",
+    "evidence_complete": "exact-head validations and merges exist for both source seams",
+    "activated": "source task completion does not prove product activation",
+    "propagated": "downstream Site/Publisher/wiki ingestion is not yet proven"
+  },
+  "authority_effect": "NONE"
+}
