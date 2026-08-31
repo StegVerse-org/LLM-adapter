@@ -141,6 +141,8 @@ def _materialize_control_bundle(bundle_path: Path) -> Path:
             destination = staging / Path(name)
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(data)
+    source_manifest = staging / ".stegverse-source-manifest.json"
+    source_manifest.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     bootstrap = staging / "scripts" / "bootstrap_sovereign_runtime.py"
     if not bootstrap.is_file():
         raise RuntimeError("resident_control_bundle_bootstrap_missing")
@@ -196,6 +198,9 @@ def _activate_resident_control_plane() -> dict[str, object]:
     child_env = os.environ.copy()
     child_env["STEGVERSE_HEARTBEAT_SOURCE_ROOT"] = str(control_root)
     child_env["STEGVERSE_LLM_ADAPTER_ROOT"] = str(ROOT)
+    source_manifest = control_root / ".stegverse-source-manifest.json"
+    if source_manifest.is_file():
+        child_env["STEGVERSE_RESIDENT_SOURCE_MANIFEST"] = str(source_manifest)
     vendor_stegos = control_root / "vendor" / "StegOS"
     vendor_kv = control_root / "vendor" / "continuity-vault-kit"
     vendor_healer = control_root / "vendor" / "StegVerse-Healer"
@@ -275,6 +280,7 @@ def _activate_resident_control_plane() -> dict[str, object]:
         "control_root": str(control_root),
         "heartbeat_source_root_bound": child_env.get("STEGVERSE_HEARTBEAT_SOURCE_ROOT") == str(control_root),
         "llm_adapter_root_bound": child_env.get("STEGVERSE_LLM_ADAPTER_ROOT") == str(ROOT),
+        "resident_source_manifest_bound": child_env.get("STEGVERSE_RESIDENT_SOURCE_MANIFEST") == str(source_manifest) if source_manifest.is_file() else False,
         "stegos_source_bound": stegos_bound,
         "kv_source_bound": kv_source_bound,
         "healer_source_bound": healer_bound,
