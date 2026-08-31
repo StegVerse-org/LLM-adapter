@@ -7,9 +7,11 @@ import pytest
 
 from llm_adapter.resident_rendezvous_api import (
     ResidentRendezvousError,
+    discover_resident,
     next_request,
     sha256_uri,
     store_acknowledgement,
+    store_advertisement,
     store_request,
 )
 
@@ -56,6 +58,51 @@ def envelope():
         "submitter_authorization_ref": "owner-assertion:opaque",
         "authority_effect": "NONE_REQUEST_ONLY",
     }
+
+
+def advertisement(node_ref="node:sovereign-primary", advertised_at="2026-08-31T02:34:00Z", expires_at="2026-08-31T02:38:00Z"):
+    return {
+        "schema": "stegverse.resident-rendezvous.advertisement/v1",
+        "target_node_ref": node_ref,
+        "consumer": "stegos_kv_intr_chain",
+        "current_resident_request_id": "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-003",
+        "advertised_at": advertised_at,
+        "expires_at": expires_at,
+        "credential_authority": "TV/TVC",
+        "gateway_execution_authority": "NONE",
+        "advertisement_grants_authority": False,
+        "authority_effect": "NONE_DISCOVERY_ONLY",
+    }
+
+
+def test_resident_discovery_requires_exactly_one_fresh_advertisement(tmp_path):
+    empty = discover_resident(root=tmp_path, now=NOW)
+    assert empty["state"] == "UNAVAILABLE"
+    assert empty["target_node_ref"] is None
+
+    stored = store_advertisement(advertisement(), root=tmp_path, now=NOW)
+    assert stored["state"] == "ADVERTISED"
+    one = discover_resident(root=tmp_path, now=NOW)
+    assert one["state"] == "AVAILABLE"
+    assert one["target_node_ref"] == "node:sovereign-primary"
+    assert one["discovery_grants_authority"] is False
+    assert one["gateway_execution_authority"] == "NONE"
+
+    store_advertisement(advertisement("node:second"), root=tmp_path, now=NOW)
+    ambiguous = discover_resident(root=tmp_path, now=NOW)
+    assert ambiguous["state"] == "AMBIGUOUS"
+    assert ambiguous["target_node_ref"] is None
+
+
+def test_resident_advertisement_lease_and_contract_fail_closed(tmp_path):
+    too_long = advertisement(expires_at="2026-08-31T02:40:00Z")
+    with pytest.raises(ResidentRendezvousError, match="five minutes"):
+        store_advertisement(too_long, root=tmp_path, now=NOW)
+
+    wrong = advertisement()
+    wrong["current_resident_request_id"] = "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-002"
+    with pytest.raises(ResidentRendezvousError, match="current_resident_request_id mismatch"):
+        store_advertisement(wrong, root=tmp_path, now=NOW)
 
 
 def test_store_fetch_ack_round_trip(tmp_path):
