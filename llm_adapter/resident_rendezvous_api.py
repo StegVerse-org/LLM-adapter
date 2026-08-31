@@ -29,6 +29,11 @@ LEGACY_ALLOWED_STEPS = [
     "SHWP-ENDPOINT-FANOUT-SOVEREIGN-RUNTIME-001",
 ]
 ALLOWED_STEP_SETS = (CURRENT_ALLOWED_STEPS, LEGACY_ALLOWED_STEPS)
+CURRENT_REQUEST_ID = "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-003"
+LEGACY_REQUEST_IDS = {
+    "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-001",
+    "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-002",
+}
 FORBIDDEN_FIELD_NAMES = {
     "password", "secret", "credential", "credential_value", "private_key",
     "private_key_material", "token", "access_token", "refresh_token", "cookie",
@@ -99,10 +104,15 @@ def validate_resident_request(value: Any) -> dict[str, Any]:
     for key, expected_value in expected.items():
         if value.get(key) != expected_value:
             raise ResidentRendezvousError(f"resident_request {key} mismatch")
-    if value.get("steps") not in ALLOWED_STEP_SETS:
+    request_id = value.get("request_id")
+    if request_id not in LEGACY_REQUEST_IDS | {CURRENT_REQUEST_ID}:
+        raise ResidentRendezvousError("resident_request request_id not admitted")
+    steps = value.get("steps")
+    if request_id == "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-001":
+        if steps not in ALLOWED_STEP_SETS:
+            raise ResidentRendezvousError("resident_request steps mismatch")
+    elif steps != CURRENT_ALLOWED_STEPS:
         raise ResidentRendezvousError("resident_request steps mismatch")
-    if not isinstance(value.get("request_id"), str) or not value["request_id"]:
-        raise ResidentRendezvousError("resident_request request_id required")
     allowed = set(expected) | {"request_id", "note"}
     if set(value) - allowed:
         raise ResidentRendezvousError("resident_request contains unsupported fields")
