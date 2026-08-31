@@ -75,3 +75,36 @@ def test_resident_control_root_prefers_explicit_local_bundle(monkeypatch, tmp_pa
     root = mod._resident_control_root()
 
     assert root == (state / "resident-control-plane").resolve()
+
+
+def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypatch, tmp_path: Path) -> None:
+    state = tmp_path / "state"
+    control = tmp_path / "control"
+    (control / "scripts").mkdir(parents=True)
+    (control / "scripts" / "bootstrap_sovereign_runtime.py").write_text("# bootstrap\n")
+    (control / "vendor" / "StegOS" / "stegos").mkdir(parents=True)
+    (control / "vendor" / "StegOS" / "stegos" / "intr_backbone.py").write_text("# intr\n")
+    (control / "vendor" / "continuity-vault-kit" / "runtime").mkdir(parents=True)
+    (control / "vendor" / "continuity-vault-kit" / "runtime" / "kv_interlock_endpoint.py").write_text("# kv\n")
+    monkeypatch.setattr(mod, "STATE_DIR", state)
+    monkeypatch.setattr(mod, "_resident_control_root", lambda: control)
+
+    observed = {}
+    def fake_run(command, **kwargs):
+        observed["env"] = kwargs["env"]
+        return type("Result", (), {
+            "returncode": 0,
+            "stdout": json.dumps({"state":"COMPLETE"}) + "\n",
+            "stderr": "",
+        })()
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    result = mod._activate_resident_control_plane()
+
+    assert result["state"] == "COMPLETE"
+    assert result["stegos_source_bound"] is True
+    assert result["kv_source_bound"] is True
+    assert result["kv_root_bound"] is True
+    assert observed["env"]["STEGVERSE_STEGOS_ROOT"] == str(control / "vendor" / "StegOS")
+    assert observed["env"]["STEGVERSE_KV_SOURCE_ROOT"] == str(control / "vendor" / "continuity-vault-kit")
+    assert observed["env"]["STEGVERSE_KV_ROOT"] == str((state / "resident-kv").resolve())
