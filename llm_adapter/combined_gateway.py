@@ -26,6 +26,7 @@ from llm_adapter.master_records_usage_submission import (
     submit_provider_usage_to_master_records,
 )
 from llm_adapter.provider_usage_submission import persist_provider_usage
+from llm_adapter.resident_rendezvous_api import router as resident_rendezvous_router
 from llm_adapter.usage_session_api import router as usage_session_router
 
 
@@ -49,6 +50,7 @@ app.include_router(external_mutation_router)
 app.include_router(usage_session_router)
 app.include_router(hil_intake_router)
 app.include_router(hil_publication_router)
+app.include_router(resident_rendezvous_router)
 
 
 def _canonical_hash(payload: dict) -> str:
@@ -95,6 +97,10 @@ def stegverse_node_advertisement(request: Request) -> dict:
         "evaluator_intr_endpoint": f"{base_url}/intr/evaluator",
         "evaluator_intr_transport": "InTr",
         "evaluator_intr_gateway_authority": "NONE",
+        "resident_rendezvous_request_endpoint": f"{base_url}/api/resident-rendezvous/v1/requests",
+        "resident_rendezvous_ack_endpoint": f"{base_url}/api/resident-rendezvous/v1/acknowledgements",
+        "resident_rendezvous_enabled": os.getenv("STEGVERSE_RESIDENT_RENDEZVOUS_ENABLED", "false").lower() == "true",
+        "resident_rendezvous_gateway_execution_authority": "NONE",
         "advertised_at": datetime.now(timezone.utc).isoformat(),
         "health_bound": True,
         "provider_enabled": os.getenv("STEGVERSE_PROVIDER_ENABLED", "false").lower() == "true",
@@ -226,5 +232,6 @@ app.add_middleware(
         "X-StegVerse-Transport",
         "X-StegVerse-Authorization-Id",
         "X-StegVerse-Payload-SHA256",
+        "X-StegVerse-Node-Ref",
     ],
 )
