@@ -235,5 +235,7 @@ app.add_middleware(
         "X-StegVerse-Authorization-Id",
         "X-StegVerse-Payload-SHA256",
         "X-StegVerse-Node-Ref",
+        "X-StegVerse-Origin-Organization",
+        "X-StegVerse-Organization",
     ],
 )
