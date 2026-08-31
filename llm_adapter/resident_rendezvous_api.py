@@ -24,9 +24,10 @@ ALLOWED_STEPS = [
     "SHWP-STEGOS-RELAY-NODE-KV-CONTINUITY-001",
     "SHWP-DEVICE-KV-INTR-OBSERVATION-001",
 ]
-FORBIDDEN_FIELD_TOKENS = {
-    "password", "secret", "credential_value", "private_key", "token",
-    "cookie", "mnemonic", "seed", "raw_biometric", "shell", "command", "argv",
+FORBIDDEN_FIELD_NAMES = {
+    "password", "secret", "credential", "credential_value", "private_key",
+    "private_key_material", "token", "access_token", "refresh_token", "cookie",
+    "mnemonic", "seed", "raw_biometric", "shell", "command", "argv",
 }
 
 
@@ -55,8 +56,7 @@ def _parse_time(value: Any) -> datetime:
 
 
 def _forbidden_key(name: str) -> bool:
-    lowered = name.lower()
-    return any(token in lowered for token in FORBIDDEN_FIELD_TOKENS)
+    return name.lower() in FORBIDDEN_FIELD_NAMES
 
 
 def _reject_secret_or_command_fields(value: Any, path: str = "$") -> None:
