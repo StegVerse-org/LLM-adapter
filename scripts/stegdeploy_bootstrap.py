@@ -194,6 +194,8 @@ def _activate_resident_control_plane() -> dict[str, object]:
         "--skip-post-bootstrap-stegfin",
     ]
     child_env = os.environ.copy()
+    child_env["STEGVERSE_HEARTBEAT_SOURCE_ROOT"] = str(control_root)
+    child_env["STEGVERSE_LLM_ADAPTER_ROOT"] = str(ROOT)
     vendor_stegos = control_root / "vendor" / "StegOS"
     vendor_kv = control_root / "vendor" / "continuity-vault-kit"
     stegos_bound = (vendor_stegos / "stegos" / "intr_backbone.py").is_file()
@@ -234,6 +236,8 @@ def _activate_resident_control_plane() -> dict[str, object]:
         ),
         "returncode": completed.returncode,
         "control_root": str(control_root),
+        "heartbeat_source_root_bound": child_env.get("STEGVERSE_HEARTBEAT_SOURCE_ROOT") == str(control_root),
+        "llm_adapter_root_bound": child_env.get("STEGVERSE_LLM_ADAPTER_ROOT") == str(ROOT),
         "stegos_source_bound": stegos_bound,
         "kv_source_bound": kv_source_bound,
         "kv_root_bound": bool(child_env.get("STEGVERSE_KV_ROOT")),
