@@ -281,3 +281,18 @@ The manifest remains non-authorizing evidence. It binds the exact verified bundl
 This allows downstream resident workers that previously required an intact Git checkout only to prove source identity to consume a stronger portable source proof without transporting `.git` metadata, remotes, credentials, or network authority.
 
 No repository trust is inferred from a file name. Downstream workers must independently validate the manifest schema, bundle authority invariants, source proof, expected materialized subpath, and current file digests before accepting it.
+
+## 2026-08-31 portable TV resident-proof source binding
+
+The complete resident bundle now also carries the exact local TV source needed by `SHWP-TV-TVC-RESIDENT-PROOF-001`.
+
+StegDeploy binds:
+
+```text
+vendor/TV -> STEGVERSE_TV_ROOT
+StegVerse-Labs/TV -> STEGVERSE_REPO_ROOTS_JSON
+```
+
+The bundle source manifest independently carries the TV source-identity proof generated from the already-local canonical checkout. The resident proof worker must still validate the exact authorized TV head and TVC ancestor (or the equivalent verified portable proof plus exact current file digests) before execution.
+
+No signing credential, Git metadata, Git remote, network source authority, provider authority, or execution authority is transported with TV source.
