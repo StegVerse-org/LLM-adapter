@@ -236,27 +236,3 @@ Validation:
 - `tests/test_stegdeploy_control_bundle.py`
 
 This makes the deployment chain independent of a GitHub runtime, registry pull, or repository adjacency while preserving `.github` as canonical source provenance and WorkerCoordinator as execution-admission authority.
-
-## 2026-08-31 portable resident control-plane intake
-
-StegDeploy no longer depends on an adjacent `.github` checkout. A local portable control-plane bundle may be supplied through:
-
-`STEGVERSE_ORG_CONTROL_BUNDLE=/path/to/sovereign-control-plane.zip`
-
-Before any resident bootstrap is attempted, StegDeploy:
-- rejects missing bundles;
-- rejects absolute paths, path traversal, and symlink entries;
-- requires schema `stegverse.sovereign-control-plane-bundle/v1`;
-- requires `network_fetch_required=false`;
-- requires TV/TVC credential authority and GitHub-token runtime authority NONE;
-- requires `bundle_grants_authority=false`;
-- verifies the exact manifest file set, byte sizes, and SHA-256 digest of every bundled source file;
-- materializes the verified source under `.stegdeploy/resident-control-plane`;
-- requires `scripts/bootstrap_sovereign_runtime.py` to exist before returning the control root.
-
-After verification, the already-merged post-health hook invokes the canonical resident bootstrap from that local materialization.
-
-Validation:
-- `tests/test_stegdeploy_control_bundle.py`
-
-This makes the deployment chain independent of a GitHub runtime, registry pull, or repository adjacency while preserving `.github` as canonical source provenance and WorkerCoordinator as execution-admission authority.
