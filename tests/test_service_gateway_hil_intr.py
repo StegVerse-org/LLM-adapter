@@ -34,6 +34,88 @@ def headers(body: bytes, origin: str = "STEGOS_NODE_OUTBOX") -> dict[str, str]:
     return value
 
 
+def test_public_profile_projects_exact_sovereign_capabilities_over_https(monkeypatch):
+    source = {
+        "schema": "stegverse.universal-intr-profiled-ingress/v1",
+        "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+        "protocol": "InTr",
+        "profile_path": "/intr/profile",
+        "materialization_path": "/intr/materialization",
+        "profiles": ["HIL:Ingress", "SV002:PublicObservation"],
+        "supported_origins": ["STEGOS_NODE_OUTBOX", "TVC_RELAY_EGRESS"],
+        "event_triggered": True,
+        "always_on_application_receiver_required": False,
+        "second_user_device_required": False,
+        "g18_required": False,
+        "tls_enabled": False,
+        "credential_authority": "TV/TVC",
+        "github_token_runtime_authority": "NONE",
+        "execution_authority": "NONE",
+        "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+    }
+    monkeypatch.setattr(mod, "_read_profile", lambda: dict(source))
+    client = app_client(monkeypatch)
+    https_client = TestClient(client.app, base_url="https://stegverse.org")
+    response = https_client.get("/intr/profile")
+    assert response.status_code == 200
+    profile = response.json()
+    assert profile["schema"] == source["schema"]
+    assert profile["profiles"] == source["profiles"]
+    assert "SV002:PublicObservation" in profile["profiles"]
+    assert profile["tls_enabled"] is True
+    assert profile["source_loopback_tls_enabled"] is False
+    assert profile["public_tls_terminated_by"] == "STEGVERSE_SHARED_SERVICE_GATEWAY"
+    assert profile["profile_projection"] == "SHARED_GATEWAY_PUBLIC_HTTPS"
+    assert profile["credential_authority"] == "TV/TVC"
+    assert profile["github_token_runtime_authority"] == "NONE"
+    assert profile["execution_authority"] == "NONE"
+
+
+def test_public_profile_refuses_non_https_observation(monkeypatch):
+    source = {
+        "schema": "stegverse.universal-intr-profiled-ingress/v1",
+        "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+        "protocol": "InTr",
+        "profile_path": "/intr/profile",
+        "materialization_path": "/intr/materialization",
+        "profiles": ["SV002:PublicObservation"],
+        "event_triggered": True,
+        "always_on_application_receiver_required": False,
+        "credential_authority": "TV/TVC",
+        "github_token_runtime_authority": "NONE",
+        "execution_authority": "NONE",
+        "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+    }
+    monkeypatch.setattr(mod, "_read_profile", lambda: source)
+    client = app_client(monkeypatch)
+    response = client.get("/intr/profile")
+    assert response.status_code == 400
+    assert response.json()["detail"] == "public_https_required"
+
+
+def test_public_profile_rejects_invented_authority(monkeypatch):
+    source = {
+        "schema": "stegverse.universal-intr-profiled-ingress/v1",
+        "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+        "protocol": "InTr",
+        "profile_path": "/intr/profile",
+        "materialization_path": "/intr/materialization",
+        "profiles": ["SV002:PublicObservation"],
+        "event_triggered": True,
+        "always_on_application_receiver_required": False,
+        "credential_authority": "TV/TVC",
+        "github_token_runtime_authority": "FULL",
+        "execution_authority": "NONE",
+        "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+    }
+    monkeypatch.setattr(mod, "_read_profile", lambda: source)
+    client = app_client(monkeypatch)
+    https_client = TestClient(client.app, base_url="https://stegverse.org")
+    response = https_client.get("/intr/profile")
+    assert response.status_code == 502
+    assert "github_token_runtime_authority_mismatch" in response.json()["detail"]
+
+
 def test_readiness_preserves_non_authority(monkeypatch):
     client = app_client(monkeypatch)
     payload = client.get("/intr/materialization/readiness").json()

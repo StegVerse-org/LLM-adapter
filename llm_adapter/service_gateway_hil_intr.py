@@ -7,10 +7,11 @@ credentials, custody, review, publication, or lifecycle authority.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 from urllib import error as urlerror
 from urllib import request as urlrequest
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
@@ -45,6 +46,72 @@ def _upstream() -> str:
     if parsed.path != "/intr/materialization" or parsed.query or parsed.fragment:
         raise ValueError("HIL InTr upstream path must be /intr/materialization")
     return raw
+
+
+def _profile_upstream() -> str:
+    parsed = urlsplit(_upstream())
+    return urlunsplit((parsed.scheme, parsed.netloc, "/intr/profile", "", ""))
+
+
+def _read_profile() -> dict:
+    req = urlrequest.Request(_profile_upstream(), method="GET")
+    try:
+        with urlrequest.urlopen(req, timeout=15) as response:
+            raw = response.read(MAX_BODY + 1)
+            if len(raw) > MAX_BODY:
+                raise ValueError("Universal InTr profile response too large")
+            if response.status != 200:
+                raise ValueError(f"Universal InTr profile status invalid:{response.status}")
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"universal_intr_profile_unavailable:{type(exc).__name__}",
+        ) from exc
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="universal_intr_profile_invalid_json") from exc
+    if not isinstance(value, dict):
+        raise HTTPException(status_code=502, detail="universal_intr_profile_object_required")
+    return value
+
+
+def _validate_profile(profile: dict) -> None:
+    schema = profile.get("schema")
+    if schema not in {
+        "stegverse.universal-intr-profiled-ingress/v1",
+        "stegverse.hil-intr-materialization-ingress-profile/v1",
+    }:
+        raise HTTPException(status_code=502, detail="universal_intr_profile_schema_invalid")
+    expected = {
+        "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+        "protocol": "InTr",
+        "profile_path": "/intr/profile",
+        "materialization_path": "/intr/materialization",
+        "event_triggered": True,
+        "credential_authority": "TV/TVC",
+        "github_token_runtime_authority": "NONE",
+        "execution_authority": "NONE",
+        "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+    }
+    for field, required in expected.items():
+        if profile.get(field) != required:
+            raise HTTPException(status_code=502, detail=f"universal_intr_profile_{field}_mismatch")
+    if schema == "stegverse.universal-intr-profiled-ingress/v1":
+        if profile.get("always_on_application_receiver_required") is not False:
+            raise HTTPException(status_code=502, detail="universal_intr_profile_always_on_receiver_forbidden")
+        profiles = profile.get("profiles")
+    else:
+        if profile.get("always_on_receiver_required") is not False:
+            raise HTTPException(status_code=502, detail="universal_intr_profile_always_on_receiver_forbidden")
+        profiles = profile.get("additional_materialization_profiles")
+    if not isinstance(profiles, list) or not all(isinstance(value, str) and value for value in profiles):
+        raise HTTPException(status_code=502, detail="universal_intr_profile_profiles_invalid")
+
+
+def _public_https(request: Request) -> bool:
+    forwarded = request.headers.get("x-forwarded-proto", "").split(",", 1)[0].strip().lower()
+    return request.url.scheme == "https" or forwarded == "https"
 
 
 def _hash_body(body: bytes) -> str:
@@ -94,6 +161,22 @@ def _forward(body: bytes, headers: dict[str, str]) -> tuple[int, bytes, str]:
         return exc.code, raw, exc.headers.get_content_type()
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"hil_intr_runtime_unavailable:{type(exc).__name__}") from exc
+
+
+@router.get("/intr/profile")
+def universal_intr_profile(request: Request) -> dict:
+    if not _enabled():
+        raise HTTPException(status_code=503, detail="hil_intr_disabled")
+    if not _public_https(request):
+        raise HTTPException(status_code=400, detail="public_https_required")
+    profile = _read_profile()
+    _validate_profile(profile)
+    projected = dict(profile)
+    projected["tls_enabled"] = True
+    projected["public_tls_terminated_by"] = "STEGVERSE_SHARED_SERVICE_GATEWAY"
+    projected["profile_projection"] = "SHARED_GATEWAY_PUBLIC_HTTPS"
+    projected["source_loopback_tls_enabled"] = profile.get("tls_enabled") is True
+    return projected
 
 
 @router.get("/intr/materialization/readiness")
