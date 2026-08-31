@@ -8,10 +8,13 @@ import ipaddress
 import json
 import os
 from pathlib import Path
+import shutil
 import ssl
+import stat
 import subprocess
 import time
 import urllib.request
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 STATE_DIR = ROOT / ".stegdeploy"
@@ -91,7 +94,66 @@ def _protected_values_present() -> list[str]:
     return sorted(key for key in PROTECTED_KEYS if os.environ.get(key))
 
 
+def _materialize_control_bundle(bundle_path: Path) -> Path:
+    bundle = bundle_path.expanduser().resolve()
+    if not bundle.is_file():
+        raise RuntimeError("resident_control_bundle_missing")
+    target = STATE_DIR / "resident-control-plane"
+    staging = STATE_DIR / "resident-control-plane.staging"
+    if staging.exists():
+        shutil.rmtree(staging)
+    staging.mkdir(parents=True, exist_ok=True)
+    manifest_name = "stegverse-control-plane-manifest.json"
+    with zipfile.ZipFile(bundle) as archive:
+        infos = archive.infolist()
+        names = [info.filename for info in infos]
+        if manifest_name not in names:
+            raise RuntimeError("resident_control_bundle_manifest_missing")
+        for info in infos:
+            path = Path(info.filename)
+            if path.is_absolute() or ".." in path.parts:
+                raise RuntimeError("resident_control_bundle_path_invalid")
+            mode = (info.external_attr >> 16) & 0xFFFF
+            if stat.S_ISLNK(mode):
+                raise RuntimeError("resident_control_bundle_symlink_rejected")
+        manifest = json.loads(archive.read(manifest_name).decode("utf-8"))
+        if manifest.get("schema") != "stegverse.sovereign-control-plane-bundle/v1":
+            raise RuntimeError("resident_control_bundle_schema_invalid")
+        if manifest.get("network_fetch_required") is not False:
+            raise RuntimeError("resident_control_bundle_network_policy_invalid")
+        if manifest.get("credential_authority") != "TV/TVC":
+            raise RuntimeError("resident_control_bundle_credential_authority_invalid")
+        if manifest.get("github_token_runtime_authority") != "NONE":
+            raise RuntimeError("resident_control_bundle_github_authority_invalid")
+        if manifest.get("bundle_grants_authority") is not False:
+            raise RuntimeError("resident_control_bundle_authority_invalid")
+        declared = {entry.get("path"): entry for entry in manifest.get("files", []) if isinstance(entry, dict)}
+        actual = {name for name in names if name != manifest_name and not name.endswith("/")}
+        if set(declared) != actual:
+            raise RuntimeError("resident_control_bundle_file_set_mismatch")
+        for name in sorted(actual):
+            data = archive.read(name)
+            entry = declared[name]
+            if len(data) != entry.get("size"):
+                raise RuntimeError("resident_control_bundle_size_mismatch")
+            if hashlib.sha256(data).hexdigest() != entry.get("sha256"):
+                raise RuntimeError("resident_control_bundle_digest_mismatch")
+            destination = staging / Path(name)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(data)
+    bootstrap = staging / "scripts" / "bootstrap_sovereign_runtime.py"
+    if not bootstrap.is_file():
+        raise RuntimeError("resident_control_bundle_bootstrap_missing")
+    if target.exists():
+        shutil.rmtree(target)
+    staging.replace(target)
+    return target.resolve()
+
+
 def _resident_control_root() -> Path | None:
+    bundle = str(os.environ.get("STEGVERSE_ORG_CONTROL_BUNDLE") or "").strip()
+    if bundle:
+        return _materialize_control_bundle(Path(bundle))
     explicit = str(os.environ.get("STEGVERSE_ORG_CONTROL_ROOT") or "").strip()
     candidates = []
     if explicit:
