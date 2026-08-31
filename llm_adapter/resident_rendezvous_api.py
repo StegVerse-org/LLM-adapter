@@ -149,6 +149,7 @@ def validate_rendezvous_request(value: Any, *, now: datetime | None = None) -> d
         raise ResidentRendezvousError("authority_effect mismatch")
     resident_request = validate_resident_request(value["resident_request"])
     if resident_request.get("request_id") == CURRENT_REQUEST_ID:
+        _canonical_node_ref(value.get("target_node_ref"))
         provenance = value.get("submitter_authorization_ref")
         if not isinstance(provenance, str) or not SUBMITTER_PROVENANCE_RE.fullmatch(provenance):
             raise ResidentRendezvousError("current request submitter Node Receipt #1 provenance invalid")
