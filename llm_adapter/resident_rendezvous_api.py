@@ -1,10 +1,11 @@
 """Non-authorizing Service Gateway rendezvous for sovereign resident requests."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -36,6 +37,8 @@ LEGACY_REQUEST_IDS = {
     "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-001",
     "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-002",
 }
+CANONICAL_NODE_REF_RE = re.compile(r"^SV-NODE-[0-9a-f]{24}$")
+SUBMITTER_PROVENANCE_RE = re.compile(r"^node-receipt-1-sha256:[0-9a-f]{64}$")
 MAX_ADVERTISEMENT_LEASE_SECONDS = 300
 FORBIDDEN_FIELD_NAMES = {
     "password", "secret", "credential", "credential_value", "private_key",
@@ -145,6 +148,11 @@ def validate_rendezvous_request(value: Any, *, now: datetime | None = None) -> d
     if value["authority_effect"] != "NONE_REQUEST_ONLY":
         raise ResidentRendezvousError("authority_effect mismatch")
     resident_request = validate_resident_request(value["resident_request"])
+    if resident_request.get("request_id") == CURRENT_REQUEST_ID:
+        _canonical_node_ref(value.get("target_node_ref"))
+        provenance = value.get("submitter_authorization_ref")
+        if not isinstance(provenance, str) or not SUBMITTER_PROVENANCE_RE.fullmatch(provenance):
+            raise ResidentRendezvousError("current request submitter Node Receipt #1 provenance invalid")
     if value["resident_request_sha256"] != sha256_uri(resident_request):
         raise ResidentRendezvousError("resident request digest mismatch")
     submitted = _parse_time(value["submitted_at"])
@@ -221,9 +229,7 @@ def validate_advertisement(value: Any, *, now: datetime | None = None) -> dict[s
     for field, expected_value in expected.items():
         if value.get(field) != expected_value:
             raise ResidentRendezvousError(f"advertisement {field} mismatch")
-    node_ref = value.get("target_node_ref")
-    if not isinstance(node_ref, str) or not node_ref or len(node_ref) > 256:
-        raise ResidentRendezvousError("advertisement target_node_ref invalid")
+    _canonical_node_ref(value.get("target_node_ref"))
     advertised = _parse_time(value.get("advertised_at"))
     expires = _parse_time(value.get("expires_at"))
     current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
@@ -324,6 +330,13 @@ def _paths(root: Path) -> tuple[Path, Path]:
     pending.mkdir(parents=True, exist_ok=True)
     acknowledged.mkdir(parents=True, exist_ok=True)
     return pending, acknowledged
+
+
+def _canonical_node_ref(value: Any) -> str:
+    text = str(value or "")
+    if not CANONICAL_NODE_REF_RE.fullmatch(text):
+        raise ResidentRendezvousError("canonical sovereign node ref required")
+    return text
 
 
 def _safe_id(value: str) -> str:
@@ -449,7 +462,7 @@ async def submit_resident_request(request: Request) -> dict[str, Any]:
     payload = await request.json()
     auth_header = request.headers.get("X-StegVerse-Authorization-Id", "")
     if not auth_header or auth_header != payload.get("submitter_authorization_ref"):
-        raise HTTPException(status_code=403, detail="authorization reference binding required")
+        raise HTTPException(status_code=403, detail="submitter provenance reference binding required")
     try:
         return store_request(payload)
     except ResidentRendezvousError as exc:
@@ -462,6 +475,23 @@ def fetch_resident_request(target_node_ref: str, request: Request) -> dict[str, 
     node_header = request.headers.get("X-StegVerse-Node-Ref", "")
     if not node_header or node_header != target_node_ref:
         raise HTTPException(status_code=403, detail="node reference binding required")
+    try:
+        canonical_ref = _canonical_node_ref(target_node_ref)
+        observed = datetime.now(timezone.utc)
+        store_advertisement({
+            "schema": ADVERTISEMENT_SCHEMA,
+            "target_node_ref": canonical_ref,
+            "consumer": ALLOWED_CONSUMER,
+            "current_resident_request_id": CURRENT_REQUEST_ID,
+            "advertised_at": observed.isoformat(),
+            "expires_at": (observed + timedelta(seconds=120)).isoformat(),
+            "credential_authority": "TV/TVC",
+            "gateway_execution_authority": "NONE",
+            "advertisement_grants_authority": False,
+            "authority_effect": "NONE_DISCOVERY_ONLY",
+        }, now=observed)
+    except ResidentRendezvousError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     value = next_request(target_node_ref)
     if value is None:
         return {

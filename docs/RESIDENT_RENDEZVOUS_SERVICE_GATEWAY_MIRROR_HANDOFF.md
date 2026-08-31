@@ -152,8 +152,8 @@ The Gateway does not infer freshness, execution, claim/fence, HB progression, cr
 The rendezvous now has a non-authorizing resident advertisement/discovery seam so Site does not hard-code a resident selector.
 
 ```text
-resident -> POST /api/resident-rendezvous/v1/advertisements
-Gateway  -> short-lived target_node_ref advertisement (max 5 minutes)
+resident -> bound GET /api/resident-rendezvous/v1/requests?target_node_ref=SV-NODE-...
+Gateway  -> refresh the existing short-lived advertisement from that genuine poll
 Site     -> GET /api/resident-rendezvous/v1/discovery
 ```
 
@@ -170,3 +170,32 @@ Discovery returns:
 - `AMBIGUOUS` for more than one.
 
 No advertisement or discovery result grants claim, fence, execution, credential, route, transition, receiving, HB progression, KV mutation, deployment, or release authority.
+
+
+## 2026-08-31 canonical target + submitter provenance discovery — issue #253
+
+The existing advertisement/discovery seam is now tied directly to authentic resident polling rather than requiring a separate advertisement action.
+
+A bound resident poll:
+```text
+GET /api/resident-rendezvous/v1/requests?target_node_ref=SV-NODE-<24 hex>
+X-StegVerse-Node-Ref: same exact SV-NODE-<24 hex>
+```
+refreshes the existing short-lived `stegverse.resident-rendezvous.advertisement/v1` record for request 003. Noncanonical selectors are rejected for the current discovery contract.
+
+`GET /api/resident-rendezvous/v1/discovery` remains the single public discovery surface. It returns `AVAILABLE` only for exactly one fresh canonical sovereign resident, `UNAVAILABLE` for none, and `AMBIGUOUS` for more than one.
+
+For current request 003, the wire-compatible fields:
+```text
+submitter_authorization_ref
+X-StegVerse-Authorization-Id
+```
+must contain:
+```text
+node-receipt-1-sha256:<64 lowercase hex>
+```
+which is a non-secret provenance reference to the browser's already-validated Node Receipt #1. The Gateway checks body/header identity and format only. It does **not** interpret that reference as credential, execution, route, transition, receiving, or publication authority.
+
+Legacy 001/002 request generations retain compatibility semantics; the stricter Receipt #1 provenance requirement applies to current request 003.
+
+Source merge does not prove a production resident is polling, that discovery returns AVAILABLE publicly, or that a request is stored/consumed.
