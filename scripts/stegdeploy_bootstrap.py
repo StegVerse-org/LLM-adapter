@@ -208,6 +208,7 @@ def _activate_resident_control_plane() -> dict[str, object]:
     vendor_tvc = control_root / "vendor" / "TVC"
     vendor_micro_node = control_root / "vendor" / "micro-node-runtime"
     vendor_master_records = control_root / "vendor" / "master-records-orchestration"
+    vendor_formal = {name: control_root / "vendor" / "formal" / name for name in ("TT", "RTG", "GTG", "AE")}
     stegos_bound = (vendor_stegos / "stegos" / "intr_backbone.py").is_file()
     kv_source_bound = (vendor_kv / "runtime" / "kv_interlock_endpoint.py").is_file()
     healer_bound = all((vendor_healer / rel).is_file() for rel in (
@@ -230,6 +231,7 @@ def _activate_resident_control_plane() -> dict[str, object]:
         Path("schemas/self_characterization_runtime_identity.schema.json"),
     ))
     master_records_bound = (vendor_master_records / "scripts" / "verify_sv002_self_characterization_reconstruction.py").is_file()
+    formal_bound = {name: root.is_dir() and any(path.is_file() for path in root.rglob("*")) for name, root in vendor_formal.items()}
     if stegos_bound:
         child_env["STEGVERSE_STEGOS_ROOT"] = str(vendor_stegos)
     if kv_source_bound:
@@ -245,6 +247,9 @@ def _activate_resident_control_plane() -> dict[str, object]:
     if master_records_bound:
         child_env["STEGVERSE_MASTER_RECORDS_ORCHESTRATION_ROOT"] = str(vendor_master_records)
         child_env["STEGVERSE_MASTER_RECORDS_ROOT"] = str(vendor_master_records)
+    for formal_name, is_bound in formal_bound.items():
+        if is_bound:
+            child_env[f"STEGVERSE_{formal_name}_ROOT"] = str(vendor_formal[formal_name])
     repo_roots = {}
     raw_repo_roots = str(child_env.get("STEGVERSE_REPO_ROOTS_JSON") or "").strip()
     if raw_repo_roots:
@@ -268,6 +273,9 @@ def _activate_resident_control_plane() -> dict[str, object]:
         repo_roots["StegVerse-002/micro-node-runtime"] = str(vendor_micro_node)
     if master_records_bound:
         repo_roots["master-records/orchestration"] = str(vendor_master_records)
+    for formal_name, is_bound in formal_bound.items():
+        if is_bound:
+            repo_roots[f"Admissible-Existence/{formal_name}"] = str(vendor_formal[formal_name])
     if stegos_bound:
         repo_roots["StegVerse-Labs/StegOS"] = str(vendor_stegos)
     if repo_roots:
@@ -314,6 +322,7 @@ def _activate_resident_control_plane() -> dict[str, object]:
         "tvc_source_bound": tvc_bound,
         "micro_node_source_bound": micro_node_bound,
         "master_records_source_bound": master_records_bound,
+        "formal_source_bound": formal_bound,
         "repository_root_map_bound": bool(child_env.get("STEGVERSE_REPO_ROOTS_JSON")),
         "kv_root_bound": bool(child_env.get("STEGVERSE_KV_ROOT")),
         "result": result,
