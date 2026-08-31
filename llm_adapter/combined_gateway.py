@@ -21,6 +21,7 @@ from llm_adapter.hil_sovereign_receiver_profile import (
     SovereignHILProfileError,
     apply_sovereign_hil_receiver_profile,
 )
+from llm_adapter.org_federation_rendezvous_api import router as org_federation_rendezvous_router
 from llm_adapter.master_records_usage_submission import (
     MasterRecordsUsageError,
     submit_provider_usage_to_master_records,
@@ -51,6 +52,7 @@ app.include_router(usage_session_router)
 app.include_router(hil_intake_router)
 app.include_router(hil_publication_router)
 app.include_router(resident_rendezvous_router)
+app.include_router(org_federation_rendezvous_router)
 
 
 def _canonical_hash(payload: dict) -> str:
