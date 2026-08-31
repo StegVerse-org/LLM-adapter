@@ -108,3 +108,7 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert observed["env"]["STEGVERSE_STEGOS_ROOT"] == str(control / "vendor" / "StegOS")
     assert observed["env"]["STEGVERSE_KV_SOURCE_ROOT"] == str(control / "vendor" / "continuity-vault-kit")
     assert observed["env"]["STEGVERSE_KV_ROOT"] == str((state / "resident-kv").resolve())
+    assert observed["env"]["STEGVERSE_HEARTBEAT_SOURCE_ROOT"] == str(control)
+    assert observed["env"]["STEGVERSE_LLM_ADAPTER_ROOT"] == str(mod.ROOT)
+    assert result["heartbeat_source_root_bound"] is True
+    assert result["llm_adapter_root_bound"] is True
