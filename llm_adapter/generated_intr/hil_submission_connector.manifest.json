@@ -1,6 +1,6 @@
 {
   "artifact_path": "generated/connectors/hil_submission_connector.py",
-  "artifact_sha256": "sha256:6463d9609d7d2e790e107348a65219f8f8fdd1db55e521ce9ff7651bf5e18750",
+  "artifact_sha256": "sha256:1e8a70d18633f084b777b15724bf9fe53892d02e7dcffef990ffa46ea3918a3c",
   "authority_effect": "NONE_SOURCE_PROJECTION",
   "cdn_dependency": false,
   "credential_authority": "TV/TVC",
@@ -19,7 +19,7 @@
   ],
   "pypi_dependency": false,
   "registry_path": "specs/universal-intr-connector-profiles.v1.json",
-  "registry_sha256": "sha256:8f86f37f0ee5ea85577401b929389cdd27041e3e14e4923e49984824f3773a35",
+  "registry_sha256": "sha256:58303accdb97a0944711906d6d73f9c7a375044b4266b75b5e28bb5bfc4b64c9",
   "schema": "stegverse.universal-intr.generated-artifact-manifest/v1",
   "source_repository": "StegVerse-Labs/StegOS",
   "state": "GENERATED_SOURCE_ONLY",
