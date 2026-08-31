@@ -145,3 +145,28 @@ The v1 rendezvous remains bounded to the StegOS/KV chain only. Resident request 
 - `...-003` — current shared-HB-signal terminal generation; current three-step vector only.
 
 The Gateway does not infer freshness, execution, claim/fence, HB progression, credential, route, transition, receiving, repository, or deployment authority from the request generation. The current fixture and downstream handoff use request 003.
+
+
+## 2026-08-31 resident discovery lease — issue #251
+
+The rendezvous now has a non-authorizing resident advertisement/discovery seam so Site does not hard-code a resident selector.
+
+```text
+resident -> POST /api/resident-rendezvous/v1/advertisements
+Gateway  -> short-lived target_node_ref advertisement (max 5 minutes)
+Site     -> GET /api/resident-rendezvous/v1/discovery
+```
+
+Only the exact current lane is admitted:
+- consumer `stegos_kv_intr_chain`;
+- current request `RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-003`;
+- credential authority `TV/TVC`;
+- Gateway execution authority `NONE`;
+- advertisement/discovery authority effect `NONE_DISCOVERY_ONLY`.
+
+Discovery returns:
+- `AVAILABLE` only for exactly one fresh compatible resident;
+- `UNAVAILABLE` for none;
+- `AMBIGUOUS` for more than one.
+
+No advertisement or discovery result grants claim, fence, execution, credential, route, transition, receiving, HB progression, KV mutation, deployment, or release authority.
