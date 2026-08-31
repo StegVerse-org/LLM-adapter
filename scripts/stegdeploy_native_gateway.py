@@ -110,6 +110,8 @@ def child_env(
         "STEGVERSE_SOVEREIGN_STATE_DURABLE": "true",
         "STEGVERSE_SOVEREIGN_STATE_DIR": str(durable_root),
         "STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS": "true",
+        "STEGVERSE_RESIDENT_RENDEZVOUS_ENABLED": "true",
+        "STEGVERSE_RESIDENT_RENDEZVOUS_ROOT": str(durable_root / "resident-rendezvous"),
         "STEGVERSE_EVALUATOR_INTR_ENABLED": "true" if evaluator_enabled else "false",
         "STEGVERSE_EVALUATOR_INTR_UPSTREAM": evaluator_upstream if evaluator_enabled else "",
     })
@@ -224,6 +226,9 @@ def start(
         "health": health,
         "durable_storage": True,
         "durable_root": str(durable_root),
+        "resident_rendezvous_enabled": True,
+        "resident_rendezvous_root": str(durable_root / "resident-rendezvous"),
+        "resident_rendezvous_execution_authority": "NONE",
         "evaluator_intr_enabled": evaluator_enabled,
         "evaluator_intr_upstream": evaluator_upstream if evaluator_enabled else None,
         "same_host_evaluator_loopback": evaluator_enabled and evaluator_upstream.startswith("http://127.0.0.1:"),
