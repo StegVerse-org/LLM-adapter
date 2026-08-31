@@ -170,3 +170,19 @@ Discovery returns:
 - `AMBIGUOUS` for more than one.
 
 No advertisement or discovery result grants claim, fence, execution, credential, route, transition, receiving, HB progression, KV mutation, deployment, or release authority.
+
+
+## 2026-08-31 node capability advertisement propagation — issue #254
+
+`/api/stegverse-node` now advertises the complete resident-rendezvous v1 public capability set:
+```text
+request endpoint
+acknowledgement endpoint
+discovery endpoint
+resident advertisement endpoint
+current request id = RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-003
+discovery_grants_authority = false
+gateway_execution_authority = NONE
+```
+
+This is a health-bound endpoint projection only. It does not prove that a resident advertisement is currently fresh, that discovery returns AVAILABLE, or that any request has been consumed.
