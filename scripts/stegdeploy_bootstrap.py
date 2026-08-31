@@ -204,6 +204,7 @@ def _activate_resident_control_plane() -> dict[str, object]:
     vendor_stegos = control_root / "vendor" / "StegOS"
     vendor_kv = control_root / "vendor" / "continuity-vault-kit"
     vendor_healer = control_root / "vendor" / "StegVerse-Healer"
+    vendor_tv = control_root / "vendor" / "TV"
     vendor_tvc = control_root / "vendor" / "TVC"
     stegos_bound = (vendor_stegos / "stegos" / "intr_backbone.py").is_file()
     kv_source_bound = (vendor_kv / "runtime" / "kv_interlock_endpoint.py").is_file()
@@ -211,6 +212,10 @@ def _activate_resident_control_plane() -> dict[str, object]:
         Path("app/dispatch_orchestrators.py"),
         Path("data/orchestrator_targets.json"),
         Path("docs/HEALER_MIRROR_HANDOFF.md"),
+    ))
+    tv_bound = all((vendor_tv / rel).is_file() for rel in (
+        Path("scripts/tv_run_resident_operational_proof.py"),
+        Path("docs/TV_OPERATIONAL_PROOF_SCHEMA.json"),
     ))
     tvc_bound = all((vendor_tvc / rel).is_file() for rel in (
         Path("TVC_MIRROR_HANDOFF.md"),
@@ -223,6 +228,8 @@ def _activate_resident_control_plane() -> dict[str, object]:
         child_env["STEGVERSE_KV_SOURCE_ROOT"] = str(vendor_kv)
     if healer_bound:
         child_env["STEGVERSE_HEALER_ROOT"] = str(vendor_healer)
+    if tv_bound:
+        child_env["STEGVERSE_TV_ROOT"] = str(vendor_tv)
     if tvc_bound:
         child_env["STEGVERSE_TVC_ROOT"] = str(vendor_tvc)
     repo_roots = {}
@@ -240,6 +247,8 @@ def _activate_resident_control_plane() -> dict[str, object]:
             })
     if healer_bound:
         repo_roots["StegVerse-Labs/StegVerse-Healer"] = str(vendor_healer)
+    if tv_bound:
+        repo_roots["StegVerse-Labs/TV"] = str(vendor_tv)
     if tvc_bound:
         repo_roots["StegVerse-Labs/TVC"] = str(vendor_tvc)
     if stegos_bound:
@@ -284,6 +293,7 @@ def _activate_resident_control_plane() -> dict[str, object]:
         "stegos_source_bound": stegos_bound,
         "kv_source_bound": kv_source_bound,
         "healer_source_bound": healer_bound,
+        "tv_source_bound": tv_bound,
         "tvc_source_bound": tvc_bound,
         "repository_root_map_bound": bool(child_env.get("STEGVERSE_REPO_ROOTS_JSON")),
         "kv_root_bound": bool(child_env.get("STEGVERSE_KV_ROOT")),

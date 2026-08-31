@@ -95,6 +95,10 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     (control / "vendor" / "StegVerse-Healer" / "app" / "dispatch_orchestrators.py").write_text("# dispatch\n")
     (control / "vendor" / "StegVerse-Healer" / "data" / "orchestrator_targets.json").write_text("{}\n")
     (control / "vendor" / "StegVerse-Healer" / "docs" / "HEALER_MIRROR_HANDOFF.md").write_text("# handoff\n")
+    (control / "vendor" / "TV" / "scripts").mkdir(parents=True)
+    (control / "vendor" / "TV" / "docs").mkdir(parents=True)
+    (control / "vendor" / "TV" / "scripts" / "tv_run_resident_operational_proof.py").write_text("# proof\n")
+    (control / "vendor" / "TV" / "docs" / "TV_OPERATIONAL_PROOF_SCHEMA.json").write_text("{}\n")
     (control / "vendor" / "TVC" / "scripts").mkdir(parents=True)
     (control / "vendor" / "TVC" / "tools").mkdir(parents=True)
     (control / "vendor" / "TVC" / "TVC_MIRROR_HANDOFF.md").write_text("# handoff\n")
@@ -119,6 +123,7 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert result["stegos_source_bound"] is True
     assert result["kv_source_bound"] is True
     assert result["healer_source_bound"] is True
+    assert result["tv_source_bound"] is True
     assert result["tvc_source_bound"] is True
     assert result["repository_root_map_bound"] is True
     assert result["resident_source_manifest_bound"] is True
@@ -126,9 +131,11 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert observed["env"]["STEGVERSE_STEGOS_ROOT"] == str(control / "vendor" / "StegOS")
     assert observed["env"]["STEGVERSE_KV_SOURCE_ROOT"] == str(control / "vendor" / "continuity-vault-kit")
     assert observed["env"]["STEGVERSE_HEALER_ROOT"] == str(control / "vendor" / "StegVerse-Healer")
+    assert observed["env"]["STEGVERSE_TV_ROOT"] == str(control / "vendor" / "TV")
     assert observed["env"]["STEGVERSE_TVC_ROOT"] == str(control / "vendor" / "TVC")
     roots = json.loads(observed["env"]["STEGVERSE_REPO_ROOTS_JSON"])
     assert roots["StegVerse-Labs/StegVerse-Healer"] == str(control / "vendor" / "StegVerse-Healer")
+    assert roots["StegVerse-Labs/TV"] == str(control / "vendor" / "TV")
     assert roots["StegVerse-Labs/TVC"] == str(control / "vendor" / "TVC")
     assert roots["StegVerse-Labs/StegOS"] == str(control / "vendor" / "StegOS")
     assert observed["env"]["STEGVERSE_KV_ROOT"] == str((state / "resident-kv").resolve())
