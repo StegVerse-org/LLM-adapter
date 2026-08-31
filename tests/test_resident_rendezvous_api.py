@@ -49,18 +49,18 @@ def envelope():
     return {
         "schema": "stegverse.resident-rendezvous.request/v1",
         "request_id": "rendezvous-kv-001",
-        "target_node_ref": "node:sovereign-primary",
+        "target_node_ref": "SV-NODE-" + "a" * 24,
         "consumer": "stegos_kv_intr_chain",
         "resident_request": inner,
         "resident_request_sha256": sha256_uri(inner),
         "submitted_at": "2026-08-31T02:34:00Z",
         "expires_at": "2026-08-31T03:34:00Z",
-        "submitter_authorization_ref": "owner-assertion:opaque",
+        "submitter_authorization_ref": "node-receipt-1-sha256:" + "c" * 64,
         "authority_effect": "NONE_REQUEST_ONLY",
     }
 
 
-def advertisement(node_ref="node:sovereign-primary", advertised_at="2026-08-31T02:34:00Z", expires_at="2026-08-31T02:38:00Z"):
+def advertisement(node_ref="SV-NODE-" + "a" * 24, advertised_at="2026-08-31T02:34:00Z", expires_at="2026-08-31T02:38:00Z"):
     return {
         "schema": "stegverse.resident-rendezvous.advertisement/v1",
         "target_node_ref": node_ref,
@@ -84,14 +84,33 @@ def test_resident_discovery_requires_exactly_one_fresh_advertisement(tmp_path):
     assert stored["state"] == "ADVERTISED"
     one = discover_resident(root=tmp_path, now=NOW)
     assert one["state"] == "AVAILABLE"
-    assert one["target_node_ref"] == "node:sovereign-primary"
+    assert one["target_node_ref"] == "SV-NODE-" + "a" * 24
     assert one["discovery_grants_authority"] is False
     assert one["gateway_execution_authority"] == "NONE"
 
-    store_advertisement(advertisement("node:second"), root=tmp_path, now=NOW)
+    store_advertisement(advertisement("SV-NODE-" + "b" * 24), root=tmp_path, now=NOW)
     ambiguous = discover_resident(root=tmp_path, now=NOW)
     assert ambiguous["state"] == "AMBIGUOUS"
     assert ambiguous["target_node_ref"] is None
+
+
+def test_resident_advertisement_requires_canonical_sovereign_node_ref(tmp_path):
+    with pytest.raises(ResidentRendezvousError, match="canonical sovereign node ref required"):
+        store_advertisement(
+            advertisement("node:primary"),
+            root=tmp_path,
+            now=NOW,
+        )
+
+
+def test_current_request_requires_node_receipt_1_provenance(tmp_path):
+    request = envelope()
+    request["submitter_authorization_ref"] = "owner-assertion:opaque"
+    with pytest.raises(
+        ResidentRendezvousError,
+        match="Node Receipt #1 provenance invalid",
+    ):
+        store_request(request, root=tmp_path, now=NOW)
 
 
 def test_resident_advertisement_lease_and_contract_fail_closed(tmp_path):
@@ -109,7 +128,7 @@ def test_store_fetch_ack_round_trip(tmp_path):
     request = envelope()
     stored = store_request(request, root=tmp_path, now=NOW)
     assert stored["state"] == "PENDING"
-    fetched = next_request("node:sovereign-primary", root=tmp_path, now=NOW)
+    fetched = next_request("SV-NODE-" + "a" * 24, root=tmp_path, now=NOW)
     assert fetched == request
 
     ack = {
@@ -130,7 +149,7 @@ def test_store_fetch_ack_round_trip(tmp_path):
     result = store_acknowledgement(ack, root=tmp_path)
     assert result["state"] == "ACKNOWLEDGED"
     assert result["canonical_runtime_evidence_verified"] is False
-    assert next_request("node:sovereign-primary", root=tmp_path, now=NOW) is None
+    assert next_request("SV-NODE-" + "a" * 24, root=tmp_path, now=NOW) is None
 
 
 
@@ -179,7 +198,7 @@ def test_duplicate_id_with_different_bytes_fails(tmp_path):
     request = envelope()
     store_request(request, root=tmp_path, now=NOW)
     changed = copy.deepcopy(request)
-    changed["submitter_authorization_ref"] = "owner-assertion:different"
+    changed["submitter_authorization_ref"] = "node-receipt-1-sha256:" + "d" * 64
     with pytest.raises(ResidentRendezvousError, match="collision"):
         store_request(changed, root=tmp_path, now=NOW)
 
@@ -202,7 +221,7 @@ def test_expired_request_not_delivered(tmp_path):
     request = envelope()
     store_request(request, root=tmp_path, now=NOW)
     late = datetime(2026, 8, 31, 3, 35, tzinfo=timezone.utc)
-    assert next_request("node:sovereign-primary", root=tmp_path, now=late) is None
+    assert next_request("SV-NODE-" + "a" * 24, root=tmp_path, now=late) is None
 
 
 def test_ack_digest_mismatch_rejected(tmp_path):
