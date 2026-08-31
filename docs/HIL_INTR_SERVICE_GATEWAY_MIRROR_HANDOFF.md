@@ -97,3 +97,37 @@ Source/CI/merge do not prove the sovereign Gateway is currently running the corr
 6. WorkerCoordinator claim/fence evidence only where the resident activation/control lane requires it.
 
 No lifecycle state is advanced from source validation alone.
+
+
+## Universal InTr public profile projection — issue #243
+
+The runtime integration search found a disconnected discovery seam on the existing shared Gateway.
+
+Already-built components expected:
+
+```text
+.github/workers/universal_intr_profiled_ingress.py
+  GET /intr/profile
+  POST /intr/materialization
+  profiles include SV002:PublicObservation
+
+Site/scripts/project_sv002_intr_sync_target.py
+  requires independent HTTPS GET /intr/profile
+
+StegOS canonical lease / HIL ESRL
+  PUBLIC_VERIFYING requires independent public HTTPS evidence before LEASE_OPEN
+```
+
+The shared Gateway already transported `POST /intr/materialization`, but did not expose `GET /intr/profile`. Issue #243 adds a transport-only public profile projection on that same router.
+
+The route:
+- derives the loopback profile URL from the already-admitted materialization upstream;
+- reads and validates the sovereign profile;
+- rejects non-InTr, non-event-triggered, always-on, non-TV/TVC, GitHub-authorizing, execution-authorizing, or malformed profiles;
+- preserves the advertised domain profiles instead of inventing capabilities;
+- projects `tls_enabled=true` only at the public Gateway boundary and records `public_tls_terminated_by=STEGVERSE_SHARED_SERVICE_GATEWAY`;
+- refuses non-HTTPS public observation.
+
+This creates no claim/fence, receipt, execution, credential, custody, review, publication, or lifecycle authority.
+
+Source integration is not deployment evidence. Site target projection and canonical lease advancement still require an actual HTTPS observation of the deployed route.
