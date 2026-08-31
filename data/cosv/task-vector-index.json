@@ -1,0 +1,26 @@
+{
+  "schema": "stegverse.llm-adapter.cosv-task-vector-index/v1",
+  "repository": "StegVerse-org/LLM-adapter",
+  "profile": "task.v1",
+  "notation": "L R U I V G O C M T B E A P",
+  "width": 14,
+  "canonical_profile_ref": "StegVerse-Labs/.github/management/COSV_PROFILE_V1.json",
+  "observed_at": "2026-08-31T07:04:00-05:00",
+  "authority_effect": "NONE",
+  "tasks": [
+    {
+      "task_id": "LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007",
+      "task_ref": "tasks/LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007.json",
+      "vector_ref": "data/cosv/task-vectors/LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007.json",
+      "vector": "71000000100100",
+      "binding_mode": "SOURCE_BOUND"
+    }
+  ],
+  "coverage": {
+    "explicit_cosv_null_tasks_discovered": 1,
+    "explicit_cosv_tasks_vectorized": 1,
+    "explicit_cosv_gap": 0,
+    "repository_active_task_surface_audit_complete": false,
+    "repository_vector_present_claimed": false
+  }
+}
