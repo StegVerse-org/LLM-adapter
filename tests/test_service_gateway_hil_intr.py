@@ -206,3 +206,73 @@ def test_stegdeploy_gateway_activates_existing_sovereign_hil_receiver():
     deployed = (ROOT / "llm_adapter/deployed_gateway.py").read_text(encoding="utf-8")
     assert "app.include_router(hil_intake_router)" in combined
     assert "from llm_adapter.combined_gateway import app" in deployed
+
+
+def test_device_kv_result_proxy_requires_kv_profile(monkeypatch):
+    source = {
+        "schema": "stegverse.universal-intr-profiled-ingress/v1",
+        "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+        "protocol": "InTr",
+        "profile_path": "/intr/profile",
+        "materialization_path": "/intr/materialization",
+        "device_kv_result_path": "/intr/device-kv/result",
+        "profiles": ["HIL:Ingress", "KV:KnowledgeVaultInterlock"],
+        "supported_origins": ["STEGOS_NODE_OUTBOX"],
+        "event_triggered": True,
+        "always_on_application_receiver_required": False,
+        "second_user_device_required": False,
+        "g18_required": False,
+        "tls_enabled": False,
+        "credential_authority": "TV/TVC",
+        "github_token_runtime_authority": "NONE",
+        "execution_authority": "NONE",
+        "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+    }
+    monkeypatch.setattr(mod, "_read_profile", lambda: dict(source))
+    observed = {}
+    def fake_forward_to(target, raw, forwarded):
+        observed["target"] = target
+        observed["body"] = raw
+        observed["headers"] = forwarded
+        return 200, b'{"schema":"stegverse.device-kv.query-result-delivery/v1","state":"RESULT_AVAILABLE"}', "application/json"
+    monkeypatch.setattr(mod, "_forward_to", fake_forward_to)
+    client = app_client(monkeypatch)
+    https_client = TestClient(client.app, base_url="https://stegverse.org")
+    body = b'{"schema":"stegverse.device-kv.query-result-request/v1"}'
+    response = https_client.post("/intr/device-kv/result", content=body, headers=headers(body))
+    assert response.status_code == 200
+    assert observed["target"] == "http://127.0.0.1:8765/intr/device-kv/result"
+    assert observed["body"] == body
+    assert observed["headers"]["x-stegverse-transport-origin"] == "STEGOS_NODE_OUTBOX"
+
+def test_device_kv_result_proxy_fails_without_kv_profile(monkeypatch):
+    source = {
+        "schema": "stegverse.universal-intr-profiled-ingress/v1",
+        "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+        "protocol": "InTr",
+        "profile_path": "/intr/profile",
+        "materialization_path": "/intr/materialization",
+        "profiles": ["HIL:Ingress"],
+        "event_triggered": True,
+        "always_on_application_receiver_required": False,
+        "credential_authority": "TV/TVC",
+        "github_token_runtime_authority": "NONE",
+        "execution_authority": "NONE",
+        "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+    }
+    monkeypatch.setattr(mod, "_read_profile", lambda: dict(source))
+    client = app_client(monkeypatch)
+    https_client = TestClient(client.app, base_url="https://stegverse.org")
+    body = b"{}"
+    response = https_client.post("/intr/device-kv/result", content=body, headers=headers(body))
+    assert response.status_code == 503
+    assert "KV:KnowledgeVaultInterlock" in response.json()["detail"]
+
+def test_universal_intr_env_supersedes_legacy_hil_env(monkeypatch):
+    monkeypatch.setenv("STEGVERSE_HIL_INTR_ENABLED", "false")
+    monkeypatch.setenv("STEGVERSE_HIL_INTR_UPSTREAM", "http://127.0.0.1:9999/intr/materialization")
+    monkeypatch.setenv("STEGVERSE_UNIVERSAL_INTR_ENABLED", "true")
+    monkeypatch.setenv("STEGVERSE_UNIVERSAL_INTR_UPSTREAM", "http://127.0.0.1:8765/intr/materialization")
+    assert mod._enabled() is True
+    assert mod._upstream() == "http://127.0.0.1:8765/intr/materialization"
+    assert mod._device_kv_result_upstream() == "http://127.0.0.1:8765/intr/device-kv/result"
