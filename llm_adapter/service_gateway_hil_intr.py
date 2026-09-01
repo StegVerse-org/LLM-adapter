@@ -31,13 +31,16 @@ FORWARDED_HEADERS = (
 
 
 def _enabled() -> bool:
+    universal = os.getenv("STEGVERSE_UNIVERSAL_INTR_ENABLED", "").strip().lower()
+    if universal:
+        return universal == "true"
     return os.getenv("STEGVERSE_HIL_INTR_ENABLED", "false").strip().lower() == "true"
 
 
 def _upstream() -> str:
-    raw = os.getenv("STEGVERSE_HIL_INTR_UPSTREAM", "").strip()
+    raw = os.getenv("STEGVERSE_UNIVERSAL_INTR_UPSTREAM", "").strip() or os.getenv("STEGVERSE_HIL_INTR_UPSTREAM", "").strip()
     if not raw:
-        raise ValueError("HIL InTr upstream is not configured")
+        raise ValueError("Universal InTr upstream is not configured")
     parsed = urlsplit(raw)
     if parsed.scheme != "http":
         raise ValueError("HIL InTr upstream must use same-host http")
@@ -51,6 +54,11 @@ def _upstream() -> str:
 def _profile_upstream() -> str:
     parsed = urlsplit(_upstream())
     return urlunsplit((parsed.scheme, parsed.netloc, "/intr/profile", "", ""))
+
+
+def _device_kv_result_upstream() -> str:
+    parsed = urlsplit(_upstream())
+    return urlunsplit((parsed.scheme, parsed.netloc, "/intr/device-kv/result", "", ""))
 
 
 def _read_profile() -> dict:
@@ -109,6 +117,19 @@ def _validate_profile(profile: dict) -> None:
         raise HTTPException(status_code=502, detail="universal_intr_profile_profiles_invalid")
 
 
+def _profiles_from_profile(profile: dict) -> list[str]:
+    if profile.get("schema") == "stegverse.universal-intr-profiled-ingress/v1":
+        values = profile.get("profiles")
+    else:
+        values = profile.get("additional_materialization_profiles")
+    return list(values or [])
+
+
+def _require_profile_capability(profile: dict, capability: str) -> None:
+    if capability not in _profiles_from_profile(profile):
+        raise HTTPException(status_code=503, detail=f"universal_intr_capability_unavailable:{capability}")
+
+
 def _public_https(request: Request) -> bool:
     forwarded = request.headers.get("x-forwarded-proto", "").split(",", 1)[0].strip().lower()
     return request.url.scheme == "https" or forwarded == "https"
@@ -145,8 +166,7 @@ def _validate_request(request: Request, body: bytes) -> dict[str, str]:
     return {name: request.headers[name] for name in FORWARDED_HEADERS if name in request.headers}
 
 
-def _forward(body: bytes, headers: dict[str, str]) -> tuple[int, bytes, str]:
-    target = _upstream()
+def _forward_to(target: str, body: bytes, headers: dict[str, str]) -> tuple[int, bytes, str]:
     req = urlrequest.Request(target, data=body, method="POST")
     for name, value in headers.items():
         req.add_header(name, value)
@@ -160,7 +180,11 @@ def _forward(body: bytes, headers: dict[str, str]) -> tuple[int, bytes, str]:
         raw = exc.read(MAX_BODY + 1)
         return exc.code, raw, exc.headers.get_content_type()
     except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"hil_intr_runtime_unavailable:{type(exc).__name__}") from exc
+        raise HTTPException(status_code=503, detail=f"universal_intr_runtime_unavailable:{type(exc).__name__}") from exc
+
+
+def _forward(body: bytes, headers: dict[str, str]) -> tuple[int, bytes, str]:
+    return _forward_to(_upstream(), body, headers)
 
 
 @router.get("/intr/profile")
@@ -192,6 +216,8 @@ def hil_intr_readiness() -> dict:
         "schema": "stegverse.service-gateway.hil-intr-readiness/v1",
         "enabled": _enabled(),
         "loopback_upstream_configured": configured,
+        "universal_intr_enabled": _enabled(),
+        "device_kv_result_path": "/intr/device-kv/result",
         "state": "READY" if _enabled() and configured else "NOT_READY",
         "transport": "InTr",
         "supported_origins": ["STEGOS_NODE_OUTBOX", "TVC_RELAY_EGRESS"],
@@ -216,6 +242,26 @@ async def hil_intr_proxy(request: Request) -> Response:
     body = await request.body()
     headers = _validate_request(request, body)
     status, raw, content_type = _forward(body, headers)
+    return Response(
+        content=raw,
+        status_code=status,
+        media_type=content_type or "application/json",
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/intr/device-kv/result")
+async def device_kv_result_proxy(request: Request) -> Response:
+    if not _enabled():
+        raise HTTPException(status_code=503, detail="universal_intr_disabled")
+    if not _public_https(request):
+        raise HTTPException(status_code=400, detail="public_https_required")
+    profile = _read_profile()
+    _validate_profile(profile)
+    _require_profile_capability(profile, "KV:KnowledgeVaultInterlock")
+    body = await request.body()
+    headers = _validate_request(request, body)
+    status, raw, content_type = _forward_to(_device_kv_result_upstream(), body, headers)
     return Response(
         content=raw,
         status_code=status,
