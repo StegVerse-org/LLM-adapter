@@ -56,10 +56,38 @@ def _forward(body:bytes,headers:dict[str,str])->tuple[int,bytes,str]:
 
 @router.get("/intr/sv002-observe/readiness")
 def readiness()->dict:
-    configured=False; reason=None
-    try: _upstream(); configured=True
-    except ValueError as exc: reason=str(exc)
-    return {"schema":"stegverse.service-gateway.sv002-observation-readiness/v1","enabled":_enabled(),"loopback_upstream_configured":configured,"state":"READY" if _enabled() and configured else "NOT_READY","reason":reason,"transport":"InTr","credential_authority":"TV/TVC","gateway_receipt_authority":False,"gateway_experiment_authority":False,"authority_effect":"NONE"}
+    configured=False; reason=None; upstream_state="NOT_PROBED"; upstream=None
+    try:
+        base=_upstream(); configured=True
+        if _enabled():
+            req=urlrequest.Request(base+"/readiness",method="GET")
+            try:
+                with urlrequest.urlopen(req,timeout=2) as response:
+                    raw=response.read(MAX_BODY+1)
+                    if len(raw)>MAX_BODY: raise ValueError("SV002 readiness response too large")
+                    value=json.loads(raw.decode("utf-8"))
+                    upstream=value if isinstance(value,dict) else None
+                    upstream_state="READY" if response.status==200 and isinstance(value,dict) and value.get("state")=="READY" else "NOT_READY"
+            except Exception as exc:
+                upstream_state="UNREACHABLE"
+                reason=f"upstream_unreachable:{type(exc).__name__}"
+    except ValueError as exc:
+        reason=str(exc)
+    ready=bool(_enabled() and configured and upstream_state=="READY")
+    return {
+      "schema":"stegverse.service-gateway.sv002-observation-readiness/v2",
+      "enabled":_enabled(),
+      "loopback_upstream_configured":configured,
+      "upstream_runtime_state":upstream_state,
+      "upstream_runtime":upstream,
+      "state":"READY" if ready else "NOT_READY",
+      "reason":reason,
+      "transport":"InTr",
+      "credential_authority":"TV/TVC",
+      "gateway_receipt_authority":False,
+      "gateway_experiment_authority":False,
+      "authority_effect":"NONE"
+    }
 
 @router.post("/intr/sv002-observe")
 async def proxy(request:Request)->Response:
