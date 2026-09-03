@@ -172,6 +172,7 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     for formal_name in ("TT", "RTG", "GTG", "AE"):
         assert observed["env"][f"STEGVERSE_{formal_name}_ROOT"] == str(control / "vendor" / "formal" / formal_name)
     roots = json.loads(observed["env"]["STEGVERSE_REPO_ROOTS_JSON"])
+    assert roots["StegVerse-org/LLM-adapter"] == str(mod.ROOT)
     assert roots["StegVerse-Labs/StegVerse-Healer"] == str(control / "vendor" / "StegVerse-Healer")
     assert roots["StegVerse-Labs/TV"] == str(control / "vendor" / "TV")
     assert roots["StegVerse-Labs/TVC"] == str(control / "vendor" / "TVC")
