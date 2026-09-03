@@ -353,3 +353,17 @@ registry/external-capability-risk-sources.json
 An incomplete vendored StegIndex tree is deliberately omitted from both environment bindings. This is a verified source-locator/materialization seam only: it grants no execution, admission, claim/fence, credential, routing, transition, publication, custody, consequence, lifecycle, or activation authority. TV/TVC remains credential authority; GitHub-token runtime authority remains NONE; no network fetch is introduced.
 
 This source binding does **not** satisfy `StegVerse-Labs/StegIndex#4` predicates `resident_stegindex_materialized` or `resident_resolution_admission_preflight_receipt`. Those remain dependent on authentic resident execution and a retained blocker-derived preflight receipt under `receipts/stegindex-preflight/**`.
+
+
+## 2026-09-03 LLM-adapter repository-root propagation for StegIndex refresh
+
+The already-local LLM-adapter checkout is now exposed through the same non-secret repository-root map used by canonical StegIndex continuous discovery:
+
+```text
+STEGVERSE_LLM_ADAPTER_ROOT=<LLM-adapter ROOT>
+STEGVERSE_REPO_ROOTS_JSON["StegVerse-org/LLM-adapter"]=<same exact ROOT>
+```
+
+This closes the local discovery seam created when StegIndex indexed LLM-adapter provenance for the verified resident StegIndex root-binding capability. Without this mapping, those required local source observations would be present but invisible to `StegIndex/scripts/refresh_sources.py`, producing a fail-closed `PARTIAL` refresh.
+
+The mapping is a locator only. It performs no network fetch and grants no credential, execution, admission, claim/fence, routing, transition, publication, custody, consequence, runtime, or activation authority.
