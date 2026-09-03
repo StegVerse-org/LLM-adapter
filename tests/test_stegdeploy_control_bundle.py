@@ -112,6 +112,22 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     (control / "vendor" / "micro-node-runtime" / "schemas" / "self_characterization_runtime_identity.schema.json").write_text("{}\n")
     (control / "vendor" / "master-records-orchestration" / "scripts").mkdir(parents=True)
     (control / "vendor" / "master-records-orchestration" / "scripts" / "verify_sv002_self_characterization_reconstruction.py").write_text("# verify\n")
+    stegindex_files = (
+        "STEGINDEX_MIRROR_HANDOFF.md",
+        "scripts/preflight.py",
+        "scripts/refresh_sources.py",
+        "scripts/reconcile_truth.py",
+        "registry/capabilities.json",
+        "registry/predicates.json",
+        "registry/source-catalog.json",
+        "registry/discovered-candidates.json",
+        "registry/ecosystem-purpose-contributions.json",
+        "registry/external-capability-risk-sources.json",
+    )
+    for relative in stegindex_files:
+        target = control / "vendor" / "StegIndex" / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("{}\n" if target.suffix == ".json" else "# source\n")
     for formal_name in ("TT", "RTG", "GTG", "AE"):
         formal = control / "vendor" / "formal" / formal_name
         formal.mkdir(parents=True)
@@ -139,6 +155,7 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert result["tvc_source_bound"] is True
     assert result["micro_node_source_bound"] is True
     assert result["master_records_source_bound"] is True
+    assert result["stegindex_source_bound"] is True
     assert result["formal_source_bound"] == {"TT": True, "RTG": True, "GTG": True, "AE": True}
     assert result["repository_root_map_bound"] is True
     assert result["resident_source_manifest_bound"] is True
@@ -151,6 +168,7 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert observed["env"]["STEGVERSE_MICRO_NODE_RUNTIME_ROOT"] == str(control / "vendor" / "micro-node-runtime")
     assert observed["env"]["STEGVERSE_MASTER_RECORDS_ORCHESTRATION_ROOT"] == str(control / "vendor" / "master-records-orchestration")
     assert observed["env"]["STEGVERSE_MASTER_RECORDS_ROOT"] == str(control / "vendor" / "master-records-orchestration")
+    assert observed["env"]["STEGVERSE_STEGINDEX_SOURCE_ROOT"] == str(control / "vendor" / "StegIndex")
     for formal_name in ("TT", "RTG", "GTG", "AE"):
         assert observed["env"][f"STEGVERSE_{formal_name}_ROOT"] == str(control / "vendor" / "formal" / formal_name)
     roots = json.loads(observed["env"]["STEGVERSE_REPO_ROOTS_JSON"])
@@ -159,6 +177,7 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert roots["StegVerse-Labs/TVC"] == str(control / "vendor" / "TVC")
     assert roots["StegVerse-002/micro-node-runtime"] == str(control / "vendor" / "micro-node-runtime")
     assert roots["master-records/orchestration"] == str(control / "vendor" / "master-records-orchestration")
+    assert roots["StegVerse-Labs/StegIndex"] == str(control / "vendor" / "StegIndex")
     for formal_name in ("TT", "RTG", "GTG", "AE"):
         assert roots[f"Admissible-Existence/{formal_name}"] == str(control / "vendor" / "formal" / formal_name)
     assert roots["StegVerse-Labs/StegOS"] == str(control / "vendor" / "StegOS")
@@ -168,3 +187,33 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     assert observed["env"]["STEGVERSE_RESIDENT_SOURCE_MANIFEST"] == str(control / ".stegverse-source-manifest.json")
     assert result["heartbeat_source_root_bound"] is True
     assert result["llm_adapter_root_bound"] is True
+
+
+def test_activate_resident_does_not_bind_incomplete_vendor_stegindex(monkeypatch, tmp_path: Path) -> None:
+    state = tmp_path / "state"
+    control = tmp_path / "control"
+    (control / "scripts").mkdir(parents=True)
+    (control / "scripts" / "bootstrap_sovereign_runtime.py").write_text("# bootstrap\n")
+    incomplete = control / "vendor" / "StegIndex"
+    (incomplete / "scripts").mkdir(parents=True)
+    (incomplete / "scripts" / "preflight.py").write_text("# preflight only\n")
+    monkeypatch.setattr(mod, "STATE_DIR", state)
+    monkeypatch.setattr(mod, "_resident_control_root", lambda: control)
+
+    observed = {}
+    def fake_run(command, **kwargs):
+        observed["env"] = kwargs["env"]
+        return type("Result", (), {
+            "returncode": 0,
+            "stdout": json.dumps({"state":"COMPLETE"}) + "\n",
+            "stderr": "",
+        })()
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    result = mod._activate_resident_control_plane()
+
+    assert result["stegindex_source_bound"] is False
+    assert "STEGVERSE_STEGINDEX_SOURCE_ROOT" not in observed["env"]
+    raw_roots = observed["env"].get("STEGVERSE_REPO_ROOTS_JSON")
+    roots = json.loads(raw_roots) if raw_roots else {}
+    assert "StegVerse-Labs/StegIndex" not in roots

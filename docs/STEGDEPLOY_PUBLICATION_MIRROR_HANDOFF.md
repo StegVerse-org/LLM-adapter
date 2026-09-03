@@ -321,3 +321,35 @@ The repository-root map also exposes the same local materializations under their
 For formal resources, the canonical packager emits exact pinned commit snapshots from already-local Git object databases. No `.git` directory, Git remote, credential, source-network authority, execution authority, or formalism-selection authority is transported.
 
 For StegVerse-002 and Master Records, downstream workers still independently validate the source proof and exact file digests before use. Runtime identity, principal execution, and reconstruction remain separate authentic evidence predicates.
+
+
+## 2026-09-03 verified StegIndex resident-root binding
+
+StegDeploy now recognizes a locally materialized `vendor/StegIndex` tree only when the complete canonical preflight dependency set is present. A directory name or partial tree is insufficient.
+
+When the verified local tree is complete, StegDeploy binds:
+
+```text
+vendor/StegIndex
+  -> STEGVERSE_STEGINDEX_SOURCE_ROOT
+  -> STEGVERSE_REPO_ROOTS_JSON["StegVerse-Labs/StegIndex"]
+```
+
+The required local dependency set is:
+
+```text
+STEGINDEX_MIRROR_HANDOFF.md
+scripts/preflight.py
+scripts/refresh_sources.py
+scripts/reconcile_truth.py
+registry/capabilities.json
+registry/predicates.json
+registry/source-catalog.json
+registry/discovered-candidates.json
+registry/ecosystem-purpose-contributions.json
+registry/external-capability-risk-sources.json
+```
+
+An incomplete vendored StegIndex tree is deliberately omitted from both environment bindings. This is a verified source-locator/materialization seam only: it grants no execution, admission, claim/fence, credential, routing, transition, publication, custody, consequence, lifecycle, or activation authority. TV/TVC remains credential authority; GitHub-token runtime authority remains NONE; no network fetch is introduced.
+
+This source binding does **not** satisfy `StegVerse-Labs/StegIndex#4` predicates `resident_stegindex_materialized` or `resident_resolution_admission_preflight_receipt`. Those remain dependent on authentic resident execution and a retained blocker-derived preflight receipt under `receipts/stegindex-preflight/**`.
