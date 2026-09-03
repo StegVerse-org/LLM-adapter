@@ -407,3 +407,24 @@ which is a non-secret provenance reference to the browser's already-validated No
 Legacy 001/002 request generations retain compatibility semantics; the stricter Receipt #1 provenance requirement applies to current request 003.
 
 Source merge does not prove a production resident is polling, that discovery returns AVAILABLE publicly, or that a request is stored/consumed.
+
+
+## 2026-09-03 StegIndex resident-root binding receipt
+
+Issue #267 source seam is complete.
+
+```text
+PR: #268
+head: 73b677883534fa812b57b2262d6bd57c83472478
+merge: 6ea118da2e6c6890a1787dc09b8a74b70be94446
+validate run: 33765715563 SUCCESS
+Coinbase SKAP validation run: 33765715717 SUCCESS
+```
+
+Installed StegDeploy behavior:
+- a local `vendor/StegIndex` tree is bound only when the complete canonical preflight dependency set is present;
+- `STEGVERSE_STEGINDEX_SOURCE_ROOT` points to that exact verified local root;
+- `STEGVERSE_REPO_ROOTS_JSON["StegVerse-Labs/StegIndex"]` points to the same exact root;
+- incomplete vendored StegIndex source is omitted fail-closed.
+
+This closes only the downstream StegDeploy source-locator/materialization seam. It does not prove authentic resident StegIndex materialization, blocker-derived preflight invocation, runtime activation, or any authority promotion. TV/TVC remains credential authority; GitHub-token runtime authority remains NONE.
