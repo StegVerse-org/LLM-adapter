@@ -279,6 +279,7 @@ def _activate_resident_control_plane() -> dict[str, object]:
                 for key, value in parsed_repo_roots.items()
                 if isinstance(key, str) and isinstance(value, str) and value
             })
+    repo_roots["StegVerse-org/LLM-adapter"] = str(ROOT)
     if healer_bound:
         repo_roots["StegVerse-Labs/StegVerse-Healer"] = str(vendor_healer)
     if tv_bound:
