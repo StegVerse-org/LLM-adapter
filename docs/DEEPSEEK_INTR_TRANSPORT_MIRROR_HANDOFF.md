@@ -4,7 +4,7 @@ Updated: 2026-09-06
 Repository: `StegVerse-org/LLM-adapter`  
 Issue: `#289`  
 Branch: `feat/deepseek-intr-transport-v1`  
-State: `SOURCE_IMPLEMENTED / VALIDATION_AND_MERGE_PENDING`  
+State: `SOURCE_COMPLETE / VALIDATION_AND_MERGE_PENDING`  
 Authority effect: `NONE_TRANSPORT_ONLY`
 
 ## Source of truth
@@ -27,10 +27,11 @@ new credential authority: false
 new custody authority: false
 GitHub token runtime authority: false
 provider output authority: NONE
-README impact: REQUIRED
+README impact: REQUIRED_AND_SATISFIED
+root capability projection: COMPLETE
 ```
 
-README change is required because this lane changes provider-interface, transport, failure, credential-boundary, usage-evidence, and egress-governance semantics.
+README and root capability changes are included in the same branch because this lane changes provider-interface, transport, failure, credential-boundary, usage-evidence, and egress-governance semantics.
 
 ## Protocol
 
@@ -117,11 +118,10 @@ Source tests and repository validation can prove deterministic transport binding
 
 ## Remaining work
 
-1. update root README and machine-readable root capability manifest in this same change set;
-2. exact-head source validation;
-3. merge only on passing validation and preserved authority boundaries;
-4. no live-provider or activation claim from merge;
-5. downstream projection only after the applicable capability/release gate explicitly requires it.
+1. exact-head source validation;
+2. merge only on passing validation and preserved authority boundaries;
+3. no live-provider or activation claim from merge;
+4. downstream projection only after the applicable capability/release gate explicitly requires it.
 
 ## Completion accounting
 
@@ -132,7 +132,7 @@ executor source: COMPLETE
 schema: COMPLETE
 deterministic tests: IMPLEMENTED / EXECUTION PENDING
 scoped capability declaration: COMPLETE
-README/root capability projection: PENDING
+README/root capability projection: COMPLETE
 exact-head validation: PENDING
 merge: PENDING
 live DeepSeek execution: NOT CLAIMED
