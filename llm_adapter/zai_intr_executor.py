@@ -3,7 +3,7 @@
 This module binds the optional Z.ai transport to the existing provider-usage and
 Master Records evidence path. It does not evaluate governance itself. Ingress and
 egress decisions are supplied as already-observed Interlock/InTr evidence and are
-validated fail-closed against the exact request/response hashes.
+validated fail-closed against the exact wire request/response hashes.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
 from .master_records_usage_submission import submit_provider_usage_to_master_records
-from .provider_request import ProviderRequest, stable_hash
+from .provider_request import ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
 from .zai_intr_transport import (
     ZAI_CODING_BASE_URL,
@@ -22,6 +22,7 @@ from .zai_intr_transport import (
     ZAIInTrEnvelope,
     ZAITransportAdmissionError,
     ZAITransportResult,
+    assert_no_secret_material,
     build_zai_intr_envelope,
 )
 
@@ -40,6 +41,7 @@ class ZAIGovernedExecution:
     master_records_usage: Mapping[str, Any]
     session_id: str
     measurement_id: str
+    egress_handoff: Mapping[str, Any]
     authority_effect: str = "NONE"
     egress_intr_required: bool = True
 
@@ -57,6 +59,7 @@ class ZAIGovernedExecution:
             "measurement_id": self.measurement_id,
             "transport_id": self.envelope.transport_id,
             "request_hash": self.envelope.request_hash,
+            "provider_request_hash": self.transport.provider_request_hash,
             "response_hash": transport_evidence["response_hash"],
             "ingress_receipt_hash": self.envelope.ingress_receipt_hash,
             "provider_usage_event_sha256": self.provider_usage_event["event_sha256"],
@@ -98,6 +101,15 @@ def _metric(value: Any, *, source_ref: str) -> ProviderMetric:
     return ProviderMetric(value=None, unit="tokens", evidence_class="UNAVAILABLE", source_ref=source_ref)
 
 
+def _verify_custody_reply(reply: Mapping[str, Any]) -> None:
+    for key in ("authority_granted", "grants_authority", "assumes_governance"):
+        if reply.get(key):
+            raise ZAIExecutionError(f"master_records_usage_authority_escalation:{key}")
+    effect = reply.get("authority_effect")
+    if effect is not None and effect != "NONE":
+        raise ZAIExecutionError("master_records_usage_authority_escalation:authority_effect")
+
+
 def execute_governed_zai(
     request: ProviderRequest,
     *,
@@ -107,21 +119,18 @@ def execute_governed_zai(
     ingress_disposition: str,
     ingress_receipt_hash: str,
     carrier_ref: str,
-    credential: str,
+    credential_resolver: Callable[[], str],
     endpoint_profile: str = "general",
     transport_factory: Callable[..., ZAIHTTPTransport] = ZAIHTTPTransport,
     usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records,
 ) -> ZAIGovernedExecution:
-    """Execute one exact ingress-admitted Z.ai request and preserve evidence.
-
-    The credential is supplied only to the transport constructor and is never
-    copied into any returned artifact. The returned provider output remains
-    non-authoritative and requires a separate egress InTr ALLOW.
-    """
+    """Execute one exact ingress-admitted Z.ai wire request and preserve evidence."""
 
     for label, value in (("session_id", session_id), ("transition_id", transition_id), ("measurement_id", measurement_id)):
         if not value.strip():
             raise ZAIExecutionError(f"{label}_required")
+    if not callable(credential_resolver):
+        raise ZAIExecutionError("credential_resolver_required")
 
     envelope = build_zai_intr_envelope(
         request,
@@ -132,7 +141,7 @@ def execute_governed_zai(
         endpoint_profile=endpoint_profile,
     )
     base_url = ZAI_CODING_BASE_URL if endpoint_profile == "coding" else ZAI_GENERAL_BASE_URL
-    transport = transport_factory(credential=credential, base_url=base_url)
+    transport = transport_factory(credential_resolver=credential_resolver, base_url=base_url)
     transport_result = transport.complete(envelope, request)
 
     usage = transport_result.response.metadata.get("usage")
@@ -154,8 +163,27 @@ def execute_governed_zai(
         receipt_refs=[ingress_receipt_hash, envelope.envelope_hash, transport_result.evidence()["response_hash"]],
     )
     master_records_usage = usage_submitter(event)
-    if master_records_usage.get("authority_granted") not in {False, None}:
-        raise ZAIExecutionError("master_records_usage_authority_escalation")
+    if not isinstance(master_records_usage, Mapping):
+        raise ZAIExecutionError("master_records_usage_reply_malformed")
+    _verify_custody_reply(master_records_usage)
+
+    egress_handoff = {
+        "schema": "stegverse.llm_adapter.zai_egress_handoff/v1",
+        "protocol_version": envelope.protocol_version,
+        "transport_id": envelope.transport_id,
+        "transition_id": envelope.transition_id,
+        "request_hash": envelope.request_hash,
+        "provider_request_hash": transport_result.provider_request_hash,
+        "ingress_receipt_hash": envelope.ingress_receipt_hash,
+        "envelope_hash": envelope.envelope_hash,
+        "response_hash": transport_result.evidence()["response_hash"],
+        "provider_usage_event_sha256": event["event_sha256"],
+        "master_records_usage_status": master_records_usage.get("status"),
+        "requested_disposition": "ALLOW",
+        "egress_intr_required": True,
+        "authority_effect": "NONE",
+        "credential_material_present": False,
+    }
 
     return ZAIGovernedExecution(
         envelope=envelope,
@@ -164,6 +192,7 @@ def execute_governed_zai(
         master_records_usage=master_records_usage,
         session_id=session_id,
         measurement_id=measurement_id,
+        egress_handoff=egress_handoff,
     )
 
 
@@ -174,11 +203,7 @@ def admit_zai_egress(
     egress_receipt_hash: str,
     admitted_response_hash: str,
 ) -> ZAIEgressAdmission:
-    """Validate externally-produced egress InTr admission for the exact response.
-
-    This function does not grant authority; it verifies that the supplied InTr
-    decision is ALLOW and bound to the exact response emitted by this execution.
-    """
+    """Verify externally-produced egress InTr admission for the exact response."""
 
     if egress_disposition != "ALLOW":
         raise ZAITransportAdmissionError("Z.ai provider output requires egress InTr ALLOW")
