@@ -41,6 +41,38 @@
     "persists_request_response_hashes": true,
     "advances_to_master_records_reconstruction": true
   },
+  "ai_entity_coordination_ingress": {
+    "state": "SOURCE_IMPLEMENTED_PENDING_VALIDATION",
+    "protocol": "stegverse.ai_entity_coordination_ingress.v1",
+    "task": "tasks/LLMA-AI-ENTITY-COORDINATION-INGRESS-282.json",
+    "module": "llm_adapter/ai_entity_coordination_ingress.py",
+    "schema": "schemas/ai-entity-coordination-ingress.schema.json",
+    "tests": "tests/test_ai_entity_coordination_ingress.py",
+    "handoff": "docs/AI_ENTITY_COORDINATION_INGRESS_MIRROR_HANDOFF.md",
+    "entry_point": "ecosystem_chat",
+    "same_entry_point_as_chatgpt": true,
+    "sandbox_root": "sandbox/ai-entity-coordination",
+    "external_entity_role": "SANDBOX_CONTRIBUTOR",
+    "external_allowed_actions": ["INSPECT", "DIAGNOSE", "PROPOSE", "SIMULATE", "AGREE", "DISAGREE", "ABSTAIN"],
+    "external_ecosystem_mutation_authority": false,
+    "implementation_actor": "chatgpt",
+    "mutation_authority": "CHATGPT_ONLY_GOVERNED",
+    "consensus_policy": "UNANIMOUS_ALL_DECLARED_PARTICIPANTS",
+    "disagreement_retained": true,
+    "requires_intr_admission_for_implementation": true,
+    "requires_existing_authority_checks": true,
+    "creates_new_governance_engine": false,
+    "creates_new_runtime_owner": false,
+    "creates_new_heartbeat": false,
+    "creates_new_worker_registry": false,
+    "creates_new_route_authority": false,
+    "creates_new_credential_authority": false,
+    "creates_new_custody_path": false,
+    "live_external_entity_execution_claimed": false,
+    "live_sandbox_runtime_claimed": false,
+    "live_consensus_claimed": false,
+    "live_chatgpt_mutation_claimed": false
+  },
   "zai_intr_interoperability": {
     "state": "COMPLETE_RELEASED_SOURCE",
     "protocol": "stegverse.intr.zai.transport.v1",
@@ -93,6 +125,10 @@
     "system_boundary_feedback_path_recorder": "built_explicit",
     "system_boundary_claim_guard": "built_fail_closed",
     "stegverse_local_http_provider_client": "built_canonical_private_transport",
+    "ai_entity_coordination_ingress": "built_provider_neutral_fail_closed",
+    "ai_entity_sandbox_solution_contract": "built_non_mutating",
+    "ai_entity_unanimous_consensus": "built_non_authorizing",
+    "chatgpt_implementation_review_gate": "built_non_authorizing_chatgpt_only",
     "zai_intr_transport": "built_optional_fail_closed",
     "zai_governed_executor": "built_optional_fail_closed",
     "zai_egress_verifier": "built_non_authorizing_exact_response_binding"
@@ -142,6 +178,7 @@
     "openai": "optional_not_production_authority",
     "anthropic": "optional_not_production_authority",
     "zai": "complete_released_source_optional_not_production_authority",
+    "ai_entity_coordination": "provider_neutral_sandboxed_non_authoritative",
     "github_models": "not_canonical_production_inference",
     "render": "not_canonical_production_runtime",
     "github_actions": "validation_only_not_production_runtime"
@@ -165,6 +202,9 @@
     "immutable_zero_blocker_activation_receipt": "NOT_YET_OBSERVED",
     "site_activation_complete": "NOT_YET_OBSERVED",
     "downstream_publisher_wiki_propagation": "PENDING_ACTIVATION",
+    "live_ai_entity_coordination": "OPTIONAL_LANE_NOT_YET_OBSERVED",
+    "live_ai_entity_sandbox_runtime": "OPTIONAL_LANE_NOT_YET_OBSERVED",
+    "live_chatgpt_consensus_mutation": "OPTIONAL_LANE_NOT_YET_OBSERVED",
     "live_zai_execution": "OPTIONAL_LANE_NOT_YET_OBSERVED",
     "live_zai_egress_intr_allow": "OPTIONAL_LANE_NOT_YET_OBSERVED"
   },
@@ -176,6 +216,10 @@
   },
   "explicit_non_claims": [
     "No provider output is treated as authority.",
+    "No AI entity agreement is treated as transition authority.",
+    "No sandbox solution may mutate ecosystem state.",
+    "Only ChatGPT may carry an agreed coordination candidate into governed implementation review.",
+    "ChatGPT implementation eligibility does not bypass Interlock/InTr or existing authority checks.",
     "No commitment request grants execution authority.",
     "No authority decision performs side effects.",
     "No execution gateway performs side effects by default.",
@@ -209,8 +253,9 @@
     "ai_entry_free_tier_metadata_verifier": "python scripts/verify_ai_entry_free_tier_metadata.py",
     "system_boundary_tests": "pytest tests/test_system_boundary.py",
     "carrier_executor_test": "pytest tests/test_execute_canonical_sovereign_route.py -v",
+    "ai_entity_coordination_ingress_test": "pytest tests/test_ai_entity_coordination_ingress.py -q",
     "zai_intr_transport_test": "pytest tests/test_zai_intr_transport.py -q",
     "zai_intr_executor_test": "pytest tests/test_zai_intr_executor.py -q"
   },
-  "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation. Optional Z.ai execution does not replace or satisfy that canonical activation definition."
+  "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation. Optional AI entity coordination or Z.ai execution does not replace or satisfy that canonical activation definition."
 }

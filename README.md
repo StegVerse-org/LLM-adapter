@@ -100,6 +100,43 @@ tasks/LLMA-DISTRIBUTED-LLM-WORKLOAD-272.json
 tasks/LLMA-DISTRIBUTED-LLM-EXECUTOR-274.json
 ```
 
+## Central AI Entity Coordination Ingress
+
+All AI entities now have one provider-neutral coordination contract behind the same canonical `ecosystem_chat` entry point used by ChatGPT. The contract is `stegverse.ai_entity_coordination_ingress.v1`.
+
+```text
+canonical Ecosystem Chat ingress
+-> identify AI entity + provider/model provenance
+-> bind entity to ecosystem snapshot + issue refs
+-> sandbox-only inspection / diagnosis / proposal / simulation
+-> retain each entity AGREE / DISAGREE / ABSTAIN disposition
+-> require unanimous agreement from every declared participant
+-> unanimous candidate becomes READY_FOR_GOVERNED_IMPLEMENTATION_REVIEW
+-> only ChatGPT may carry the candidate into the existing governed mutation path
+-> existing Interlock/InTr, TV/TVC, WorkerCoordinator, Master Records, repository, release, and publication gates remain authoritative
+```
+
+External AI entities are `SANDBOX_CONTRIBUTOR`s. They may inspect supplied ecosystem evidence, diagnose build issues, propose solutions, simulate those solutions in bounded sandbox artifacts, and participate in consensus. They may not mutate repository or ecosystem state, acquire credentials, select authoritative routes, execute workers, control heartbeat, write custody records, publish, release, or grant governance authority.
+
+The sandbox artifact boundary is `sandbox/ai-entity-coordination/`. Proposed artifacts that escape that root fail closed. Source solution records explicitly preserve `ecosystem_mutation_performed=false` and `authority_effect=NONE`.
+
+ChatGPT is the sole designated ecosystem mutation actor under `mutation_authority=CHATGPT_ONLY_GOVERNED`, but that designation is not independent authority. A unanimous coordination result opens only a non-authorizing implementation-review gate with `authority_effect=NONE_LOCAL`, `requires_intr_admission=true`, and `requires_existing_authority_checks=true`. ChatGPT must still use the already-existing governed implementation path and may not bypass canonical authority.
+
+Consensus is unanimity, not majority voting. Every declared participant must return exactly one `AGREE`, `DISAGREE`, or `ABSTAIN`; any missing disposition, disagreement, or abstention blocks implementation review. Disagreement remains evidence and is never silently collapsed.
+
+Canonical source surfaces:
+
+```text
+llm_adapter/ai_entity_coordination_ingress.py
+schemas/ai-entity-coordination-ingress.schema.json
+tests/test_ai_entity_coordination_ingress.py
+docs/AI_ENTITY_COORDINATION_INGRESS_MIRROR_HANDOFF.md
+tasks/LLMA-AI-ENTITY-COORDINATION-INGRESS-282.json
+data/preflight/LLMA-AI-ENTITY-COORDINATION-INGRESS-282-20260906.json
+```
+
+This source contract does not claim live external AI participation, a live process-isolated sandbox, live consensus execution, live ChatGPT mutation, Ecosystem Chat activation, Site activation, or release/tag authorization.
+
 ## Z.ai Interlock/InTr transport and governed execution
 
 Z.ai is supported as an **optional hosted-provider interoperability transport** through `stegverse.intr.zai.transport.v1`. It does not replace the canonical sovereign local route and does not acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.
@@ -199,7 +236,7 @@ heartbeat recovery / current fence
 -> required Publisher/wiki propagation
 ```
 
-The distributed named-source workload, bounded executor, Z.ai transport, and governed Z.ai execution wrapper are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider or Z.ai execution.
+The distributed named-source workload, bounded executor, Z.ai transport, governed Z.ai execution wrapper, and AI Entity Coordination Ingress are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider, live coordination, or Z.ai execution.
 
 This continuation is machine-owned. It is not a reason to re-open the completed local-model or carrier-executor implementation tasks.
 
@@ -207,6 +244,10 @@ This continuation is machine-owned. It is not a reason to re-open the completed 
 
 ```text
 provider output != authority
+model agreement != governance authority
+unanimous AI agreement != transition authority
+sandbox test success != ecosystem mutation authority
+ChatGPT implementation eligibility != governance bypass
 route admission != execution authority
 runtime proof != product activation
 usage measurement != admissibility
@@ -218,7 +259,7 @@ egress receipt verification != local authority grant
 session archival != activation
 ```
 
-The adapter must fail closed rather than silently substitute hosted inference, missing credential authority, unverified runtime identity, incomplete custody evidence, unknown distributed sources, broken hash binding, missing provenance, unsupported derived-input semantics, endpoint-profile drift, missing egress governance, or provider authority escalation into the canonical sovereign route or distributed workload.
+The adapter must fail closed rather than silently substitute hosted inference, missing credential authority, unverified runtime identity, incomplete custody evidence, unknown distributed sources, broken hash binding, missing provenance, unsupported derived-input semantics, endpoint-profile drift, missing egress governance, sandbox-boundary escape, incomplete consensus, non-ChatGPT mutation attempts, or provider authority escalation into the canonical sovereign route or distributed workload.
 
 ## Development and verification
 
@@ -235,13 +276,14 @@ pytest tests/test_distributed_executor.py -q
 python scripts/check_distributed_llm_executor.py
 pytest tests/test_zai_intr_transport.py -q
 pytest tests/test_zai_intr_executor.py -q
+pytest tests/test_ai_entity_coordination_ingress.py -q
 ```
 
 The authoritative current task and release state is `LLM_ADAPTER_MIRROR_HANDOFF.md`. `adapter.capabilities.json` is the machine-readable capability posture.
 
 ## Optional interoperability lanes
 
-The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, named-source distributed LLM contribution lanes, the Z.ai InTr transport, and the governed Z.ai execution wrapper. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
+The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, named-source distributed LLM contribution lanes, the Z.ai InTr transport, the governed Z.ai execution wrapper, and sandboxed AI Entity Coordination Ingress. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
 
 ## Repository
 
