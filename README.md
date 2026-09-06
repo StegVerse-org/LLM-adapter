@@ -100,7 +100,7 @@ tasks/LLMA-DISTRIBUTED-LLM-WORKLOAD-272.json
 tasks/LLMA-DISTRIBUTED-LLM-EXECUTOR-274.json
 ```
 
-## Z.ai Interlock/InTr transport
+## Z.ai Interlock/InTr transport and governed execution
 
 Z.ai is supported as an **optional hosted-provider interoperability transport** through `stegverse.intr.zai.transport.v1`. It does not replace the canonical sovereign local route and does not acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.
 
@@ -112,24 +112,33 @@ exact ProviderRequest
 -> TV/TVC-resolved provider credential supplied only at execution time
 -> approved official Z.ai OpenAI-compatible endpoint
 -> provider response with authority_effect NONE
--> retained transport/request/response evidence with no credential material
+-> provider usage event using the existing adapter schema
+-> existing Master Records provider-usage submission path
+-> retained transport/request/response/custody evidence with no credential material
 -> separate Interlock/InTr egress evaluation
--> only an admitted downstream transition may attach consequence
+-> exact egress ALLOW receipt must bind the provider response hash
+-> only the externally admitted downstream transition may attach consequence
 ```
 
-The implementation allowlists the official global general API base `https://api.z.ai/api/paas/v4` and Coding Plan base `https://api.z.ai/api/coding/paas/v4`. Endpoint profile selection is part of the admitted envelope; a runtime configured for one profile cannot execute an envelope admitted for the other. Credentials remain under TV/TVC authority and are prohibited from serialized transport envelopes, response metadata, evidence, task records, or handoffs.
+The implementation allowlists the official global general API base `https://api.z.ai/api/paas/v4` and Coding Plan base `https://api.z.ai/api/coding/paas/v4`. Endpoint profile selection is part of the admitted envelope; a runtime configured for one profile cannot execute an envelope admitted for the other. Credentials remain under TV/TVC authority and are prohibited from serialized transport envelopes, response metadata, evidence, task records, handoffs, provider-usage events, and egress-admission records.
+
+`execute_governed_zai` binds the merged transport to the existing provider-usage and Master Records submission mechanisms. It accepts the credential only as ephemeral execution input, produces non-authoritative provider output, and emits `egress_intr_required=true`. `admit_zai_egress` does not evaluate or grant governance; it verifies an externally produced Interlock/InTr `ALLOW` receipt, an exact SHA-256 receipt identifier, and an admitted response hash equal to the provider response produced by the execution. Its local authority effect is explicitly `NONE_LOCAL`.
 
 Canonical source surfaces:
 
 ```text
 llm_adapter/zai_intr_transport.py
+llm_adapter/zai_intr_executor.py
 schemas/zai-intr-transport-envelope.schema.json
 tests/test_zai_intr_transport.py
+tests/test_zai_intr_executor.py
 docs/ZAI_INTR_TRANSPORT_MIRROR_HANDOFF.md
+docs/ZAI_INTR_EXECUTOR_MIRROR_HANDOFF.md
 tasks/LLMA-ZAI-INTR-TRANSPORT-276.json
+tasks/LLMA-ZAI-INTR-EXECUTOR-278.json
 ```
 
-Source validation proves fail-closed transport semantics only; it is not live Z.ai execution, route admission, credential materialization, Master Records custody/reconstruction, egress ALLOW, Ecosystem Chat activation, or Site activation evidence.
+Source validation proves fail-closed transport, usage-evidence, custody-submission, and exact-response egress-binding semantics only. It is not live Z.ai execution, route admission, credential materialization, authentic Master Records custody/reconstruction, live egress ALLOW, Ecosystem Chat activation, or Site activation evidence.
 
 ## No GitHub-token production dependency
 
@@ -190,7 +199,7 @@ heartbeat recovery / current fence
 -> required Publisher/wiki propagation
 ```
 
-The distributed named-source workload, bounded executor, and Z.ai transport are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider or Z.ai execution.
+The distributed named-source workload, bounded executor, Z.ai transport, and governed Z.ai execution wrapper are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider or Z.ai execution.
 
 This continuation is machine-owned. It is not a reason to re-open the completed local-model or carrier-executor implementation tasks.
 
@@ -205,6 +214,7 @@ local persistence != custody
 custody receipt != execution authority
 reconstruction PASS != execution authority
 ingress ALLOW != egress ALLOW
+egress receipt verification != local authority grant
 session archival != activation
 ```
 
@@ -224,13 +234,14 @@ python scripts/check_distributed_llm_workload.py
 pytest tests/test_distributed_executor.py -q
 python scripts/check_distributed_llm_executor.py
 pytest tests/test_zai_intr_transport.py -q
+pytest tests/test_zai_intr_executor.py -q
 ```
 
 The authoritative current task and release state is `LLM_ADAPTER_MIRROR_HANDOFF.md`. `adapter.capabilities.json` is the machine-readable capability posture.
 
 ## Optional interoperability lanes
 
-The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, named-source distributed LLM contribution lanes, and the Z.ai InTr transport. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
+The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, named-source distributed LLM contribution lanes, the Z.ai InTr transport, and the governed Z.ai execution wrapper. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
 
 ## Repository
 
