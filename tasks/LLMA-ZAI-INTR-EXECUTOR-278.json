@@ -3,12 +3,22 @@
   "issue": 278,
   "repository": "StegVerse-org/LLM-adapter",
   "goal": "Bind the merged Z.ai Interlock/InTr transport to provider execution, provider-usage evidence, Master Records custody, and exact-response egress verification without creating parallel authority.",
-  "state": "SOURCE_IMPLEMENTED_VALIDATION_PENDING",
+  "state": "COMPLETE_RELEASED_SOURCE",
   "authority_effect": "NONE_EXECUTION_WRAPPER_ONLY",
   "depends_on": {
     "protocol": "stegverse.intr.zai.transport.v1",
-    "merged_pr": 277,
-    "merge_commit": "8a763e1257df17403381f5f4c408273d896c3283"
+    "transport_pr": 277,
+    "transport_merge_commit": "8a763e1257df17403381f5f4c408273d896c3283"
+  },
+  "validated_head": "eee7ef03bc32d5240928c44e8492197103643d52",
+  "merged_pr": 279,
+  "merge_commit": "a982236b24182e77e407a02581b176509ebc367d",
+  "validation": {
+    "dedicated_zai_run": "34054884017 SUCCESS",
+    "transport_tests": "7/7 PASS",
+    "executor_egress_tests": "6/6 PASS",
+    "repository_validation_run": "34054885878 SUCCESS",
+    "repository_validation_steps": "71/71 PASS"
   },
   "canonical_sovereign_route_replaced": false,
   "credential_authority": "TV/TVC",
@@ -22,7 +32,8 @@
     "tests/test_zai_intr_executor.py",
     "docs/ZAI_INTR_EXECUTOR_MIRROR_HANDOFF.md",
     "tasks/LLMA-ZAI-INTR-EXECUTOR-278.json",
-    "README.md"
+    "README.md",
+    ".github/workflows/validate-zai-intr.yml"
   ],
   "completion_predicates": {
     "machine_preflight": "PASS",
@@ -33,8 +44,9 @@
     "egress_exact_response_binding": "COMPLETE",
     "readme_required": true,
     "readme_in_same_change_set": "COMPLETE",
-    "exact_head_validation": "PENDING",
-    "merge": "PENDING",
+    "exact_head_validation": "PASS",
+    "merge": "COMPLETE",
+    "source_claim": "RELEASED",
     "live_zai_execution": "NOT_CLAIMED",
     "live_tvc_credential_materialization": "NOT_CLAIMED",
     "live_egress_intr_allow": "NOT_CLAIMED",
@@ -47,5 +59,7 @@
     "StegVerse-Labs/.github heartbeat and WorkerCoordinator",
     "canonical sovereign local provider execution"
   ],
+  "release_tag_authorized": false,
+  "release_tag_reason": "Root activation/release gate remains unsatisfied by source completion alone.",
   "scaffolding_or_stubs": 0
 }
