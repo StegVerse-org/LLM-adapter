@@ -27,10 +27,10 @@ new credential authority: false
 new custody authority: false
 GitHub token runtime authority: false
 provider output authority: NONE
-README impact: REQUIRED
+README impact: REQUIRED_AND_SATISFIED
 ```
 
-README change is required because this lane adds provider-interface, transport, failure, credential-boundary, and egress-governance semantics.
+README change is required because this lane adds provider-interface, transport, failure, credential-boundary, and egress-governance semantics. That README change is included in this branch.
 
 ## Protocol
 
@@ -121,7 +121,7 @@ Source tests and repository validation can prove deterministic transport binding
 
 ## README completeness
 
-README change is mandatory in this same change set because the new protocol changes optional provider interface semantics and explicitly adds two-stage ingress/egress governance around an external provider call.
+README change is mandatory in this same change set because the new protocol changes optional provider interface semantics and explicitly adds two-stage ingress/egress governance around an external provider call. The branch README contains those semantics and associated validation command.
 
 ## Remaining work
 
@@ -139,7 +139,7 @@ protocol design: COMPLETE
 source implementation: COMPLETE
 schema: COMPLETE
 deterministic tests: IMPLEMENTED / EXECUTION PENDING
-README: PENDING IN BRANCH
+README: COMPLETE IN BRANCH
 PR validation: PENDING
 merge: PENDING
 live Z.ai execution: NOT CLAIMED
