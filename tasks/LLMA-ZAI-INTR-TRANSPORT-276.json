@@ -30,7 +30,7 @@
     "schema": "COMPLETE",
     "tests_implemented": "COMPLETE",
     "readme_required": true,
-    "readme_in_same_change_set": "PENDING",
+    "readme_in_same_change_set": "COMPLETE",
     "exact_head_validation": "PENDING",
     "merge": "PENDING",
     "live_zai_execution": "NOT_CLAIMED",
