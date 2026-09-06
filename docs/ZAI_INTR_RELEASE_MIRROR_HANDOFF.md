@@ -4,7 +4,7 @@ Updated: 2026-09-06
 Repository: `StegVerse-org/LLM-adapter`
 Issue: `#280`
 Branch: `docs/zai-intr-release-reconcile-280`
-State: `RECONCILIATION_ACTIVE`
+State: `RECONCILIATION_IMPLEMENTED / VALIDATION_AND_MERGE_PENDING`
 Authority effect: `NONE_METADATA_ONLY`
 
 ## Source of truth
@@ -42,15 +42,21 @@ new route path: false
 new custody path: false
 README impact: NO_CHANGE_REQUIRED
 README rationale: PR #279 already documented the executable behavior/interface/custody semantics; this task only corrects post-merge evidence and capability state.
+root handoff impact: NO_CHANGE_REQUIRED
+root rationale: LLM_ADAPTER_MIRROR_HANDOFF.md already separates optional hosted-provider interoperability from the canonical route and already denies release/tag while canonical activation evidence remains incomplete.
 ```
 
-## Required reconciliation
+## Reconciled repository truth
 
-1. mark `tasks/LLMA-ZAI-INTR-EXECUTOR-278.json` source scope complete/validated/merged;
-2. mark `docs/ZAI_INTR_EXECUTOR_MIRROR_HANDOFF.md` source claim complete/released;
-3. project the merged transport/executor into `adapter.capabilities.json` without changing the canonical sovereign route;
-4. verify `LLM_ADAPTER_MIRROR_HANDOFF.md` remains semantically compatible with the optional hosted-provider lane; mutate it only if a contradiction is found;
-5. validate the exact reconciliation head and merge only on PASS.
+```text
+tasks/LLMA-ZAI-INTR-EXECUTOR-278.json: COMPLETE_RELEASED_SOURCE
+docs/ZAI_INTR_EXECUTOR_MIRROR_HANDOFF.md: COMPLETE_MERGED_VALIDATED / SOURCE_CLAIM_RELEASED
+adapter.capabilities.json: Z.ai transport/executor projected as optional fail-closed interoperability
+canonical hosted_provider_required: false
+canonical sovereign route replaced: false
+README: already complete from PR #279
+LLM_ADAPTER_MIRROR_HANDOFF.md: reviewed; semantically compatible; no rewrite required
+```
 
 ## Release boundary
 
@@ -68,6 +74,21 @@ It does **not** mean:
 
 The root handoff's activation/release gate remains controlling.
 
+## Next integration goal candidate
+
+The next candidate after source reconciliation is authentic governed runtime use of the merged lane:
+
+```text
+admitted workload
+-> externally produced Interlock/InTr ingress ALLOW
+-> TV/TVC-resolved Z.ai provider credential/route admission
+-> merged Z.ai executor
+-> authentic provider-usage custody/reconstruction in master-records/orchestration
+-> externally produced egress InTr ALLOW bound to exact provider response
+```
+
+This is a runtime/authority-owned goal, not missing source scaffolding. It must not be substituted with GitHub Actions, fabricated receipts, repository secrets, or a session-created monitor.
+
 ## Downstream destinations
 
 No downstream publication mutation is authorized by source reconciliation alone. After immutable verified activation, the established destinations remain:
@@ -80,13 +101,20 @@ StegVerse-Labs/admissibility-wiki
 StegVerse-002/stegguardian-wiki
 ```
 
+## Remaining reconciliation work
+
+1. exact-head validation of this metadata/capability reconciliation;
+2. merge only on PASS;
+3. close issue #280 after the merged state is verified on `main`.
+
 ## Completion accounting
 
 ```text
 transport implementation: COMPLETE_MERGED_VALIDATED
 executor implementation: COMPLETE_MERGED_VALIDATED
-reconciliation files: IN_PROGRESS
+reconciliation files: COMPLETE / VALIDATION_PENDING
 README completeness: SATISFIED / NO NEW CHANGE REQUIRED
+root handoff completeness: SATISFIED / NO CHANGE REQUIRED
 live Z.ai execution: NOT_CLAIMED
 runtime activation: NOT_CLAIMED
 release/tag authorization: NOT_GRANTED
