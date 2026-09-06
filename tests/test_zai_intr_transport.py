@@ -16,7 +16,7 @@ class _FakeResponse:
     def json(self):
         return {
             "id": "zai-test-1",
-            "model": "glm-5.3",
+            "model": "glm-fixture-model",
             "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}],
             "usage": {"prompt_tokens": 3, "completion_tokens": 1, "total_tokens": 4},
         }
@@ -25,7 +25,7 @@ class _FakeResponse:
 def _request():
     return build_provider_request(
         provider="z.ai",
-        model="glm-5.3",
+        model="glm-fixture-model",
         messages=[{"role": "user", "content": "hello"}],
         temperature=0.0,
     )
@@ -76,7 +76,7 @@ def test_request_hash_mismatch_fails_closed():
     envelope = _envelope(admitted)
     different = build_provider_request(
         provider="z.ai",
-        model="glm-5.3",
+        model="glm-fixture-model",
         messages=[{"role": "user", "content": "different"}],
     )
     transport = ZAIHTTPTransport(credential="ephemeral")
