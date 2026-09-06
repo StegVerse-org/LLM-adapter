@@ -41,6 +41,37 @@
     "persists_request_response_hashes": true,
     "advances_to_master_records_reconstruction": true
   },
+  "zai_intr_interoperability": {
+    "state": "COMPLETE_RELEASED_SOURCE",
+    "protocol": "stegverse.intr.zai.transport.v1",
+    "transport_task": "tasks/LLMA-ZAI-INTR-TRANSPORT-276.json",
+    "executor_task": "tasks/LLMA-ZAI-INTR-EXECUTOR-278.json",
+    "transport_module": "llm_adapter/zai_intr_transport.py",
+    "executor_module": "llm_adapter/zai_intr_executor.py",
+    "transport_schema": "schemas/zai-intr-transport-envelope.schema.json",
+    "transport_test": "tests/test_zai_intr_transport.py",
+    "executor_test": "tests/test_zai_intr_executor.py",
+    "validation_workflow": ".github/workflows/validate-zai-intr.yml",
+    "transport_pr": 277,
+    "transport_merge_commit": "8a763e1257df17403381f5f4c408273d896c3283",
+    "executor_pr": 279,
+    "executor_validated_head": "eee7ef03bc32d5240928c44e8492197103643d52",
+    "executor_merge_commit": "a982236b24182e77e407a02581b176509ebc367d",
+    "dedicated_validation_run": "34054884017 SUCCESS",
+    "repository_validation_run": "34054885878 SUCCESS",
+    "transport_tests": "7/7 PASS",
+    "executor_egress_tests": "6/6 PASS",
+    "ingress_intr_required": true,
+    "egress_intr_required": true,
+    "credential_authority": "TV/TVC",
+    "credential_material_serialized": false,
+    "provider_output_authority": "NONE",
+    "master_records_custody_reused": true,
+    "canonical_sovereign_route_replaced": false,
+    "hosted_provider_required_for_canonical_route": false,
+    "live_provider_execution_claimed": false,
+    "product_activation_claimed": false
+  },
   "runtime_surfaces": {
     "provider_request_envelope": "built",
     "fixture_provider": "built",
@@ -61,7 +92,10 @@
     "system_boundary_declaration_builder": "built_deterministic",
     "system_boundary_feedback_path_recorder": "built_explicit",
     "system_boundary_claim_guard": "built_fail_closed",
-    "stegverse_local_http_provider_client": "built_canonical_private_transport"
+    "stegverse_local_http_provider_client": "built_canonical_private_transport",
+    "zai_intr_transport": "built_optional_fail_closed",
+    "zai_governed_executor": "built_optional_fail_closed",
+    "zai_egress_verifier": "built_non_authorizing_exact_response_binding"
   },
   "ai_entry_response_fields": {
     "free_tier_trust": {
@@ -107,6 +141,7 @@
     "hosted_provider_clients": "separate_from_canonical_sovereign_route",
     "openai": "optional_not_production_authority",
     "anthropic": "optional_not_production_authority",
+    "zai": "complete_released_source_optional_not_production_authority",
     "github_models": "not_canonical_production_inference",
     "render": "not_canonical_production_runtime",
     "github_actions": "validation_only_not_production_runtime"
@@ -117,8 +152,9 @@
     "credential_authority": "TC/TVC",
     "github_token_required": false,
     "hosted_provider_credentials": "optional_interoperability_only",
+    "zai_provider_credential": "TV/TVC-resolved at execution time only; never serialized",
     "continuity_search_service": ["STEGVERSE_CONTINUITY_SEARCH_URL", "STEGVERSE_CONTINUITY_SEARCH_KEY optional"],
-    "external_executor": "canonical same-carrier executor is implemented; any additional executor remains separately governed",
+    "external_executor": "canonical same-carrier executor is implemented; optional Z.ai governed executor is separately admitted and non-authoritative",
     "site_display": "StegVerse-Labs/Site consumes bounded metadata only after activation evidence and mirror validation",
     "sdk_ingestion": "StegVerse-org/StegVerse-SDK validates system-boundary declaration and non-authorizing metadata"
   },
@@ -128,7 +164,9 @@
     "same_execution_transition_reconstruction": "NOT_YET_OBSERVED",
     "immutable_zero_blocker_activation_receipt": "NOT_YET_OBSERVED",
     "site_activation_complete": "NOT_YET_OBSERVED",
-    "downstream_publisher_wiki_propagation": "PENDING_ACTIVATION"
+    "downstream_publisher_wiki_propagation": "PENDING_ACTIVATION",
+    "live_zai_execution": "OPTIONAL_LANE_NOT_YET_OBSERVED",
+    "live_zai_egress_intr_allow": "OPTIONAL_LANE_NOT_YET_OBSERVED"
   },
   "machine_owned_continuation": {
     "runtime_carrier": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
@@ -156,7 +194,10 @@
     "Usage measurement is not admissibility.",
     "Local persistence is not Master Records custody.",
     "Workflow success is not live same-carrier runtime observation.",
-    "The repository-local reference model is not a production-scale foundation LLM."
+    "The repository-local reference model is not a production-scale foundation LLM.",
+    "Z.ai ingress ALLOW is not reusable as egress ALLOW.",
+    "Z.ai provider output does not grant transition authority.",
+    "Z.ai source validation is not live provider execution or product activation."
   ],
   "local_verification": {
     "unit_tests": "pytest",
@@ -167,7 +208,9 @@
     "free_tier_limits_verifier": "python scripts/verify_free_tier_limits.py",
     "ai_entry_free_tier_metadata_verifier": "python scripts/verify_ai_entry_free_tier_metadata.py",
     "system_boundary_tests": "pytest tests/test_system_boundary.py",
-    "carrier_executor_test": "pytest tests/test_execute_canonical_sovereign_route.py -v"
+    "carrier_executor_test": "pytest tests/test_execute_canonical_sovereign_route.py -v",
+    "zai_intr_transport_test": "pytest tests/test_zai_intr_transport.py -q",
+    "zai_intr_executor_test": "pytest tests/test_zai_intr_executor.py -q"
   },
-  "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation."
+  "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation. Optional Z.ai execution does not replace or satisfy that canonical activation definition."
 }
