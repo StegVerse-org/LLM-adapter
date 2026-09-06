@@ -1,0 +1,67 @@
+{
+  "admitted_payload_keys": [
+    "max_tokens",
+    "messages",
+    "service_tier",
+    "stop_sequences",
+    "system",
+    "temperature",
+    "thinking",
+    "tool_choice",
+    "tools",
+    "top_k",
+    "top_p"
+  ],
+  "authoritative": false,
+  "authority_claims": {
+    "credential": false,
+    "custody": false,
+    "governance": false,
+    "heartbeat": false,
+    "policy": false,
+    "publication": false,
+    "route": false,
+    "scheduler": false,
+    "transition": false,
+    "worker_coordinator": false
+  },
+  "authority_effect": "NONE",
+  "canonical_sovereign_route_replaced": false,
+  "credential_authority": "TV/TVC",
+  "credential_class": "TV_TVC_PROVIDER_SECRET",
+  "credential_material_present": false,
+  "egress_intr_required": true,
+  "endpoint": {
+    "admitted_api_versions": [
+      "2023-06-01"
+    ],
+    "method": "POST",
+    "profile": "anthropic_messages",
+    "substitution_permitted": false,
+    "url": "https://api.anthropic.com/v1/messages"
+  },
+  "fail_closed": true,
+  "hosted_provider_required": false,
+  "known_content_block_types": [
+    "document",
+    "image",
+    "mcp_tool_result",
+    "mcp_tool_use",
+    "redacted_thinking",
+    "server_tool_use",
+    "text",
+    "thinking",
+    "tool_result",
+    "tool_use",
+    "web_search_tool_result"
+  ],
+  "optional_interoperability": true,
+  "protocol_version": "stegverse.intr.anthropic.transport.v1",
+  "provider": "anthropic",
+  "unsupported": {
+    "batches_api": "separate endpoint profile required",
+    "fallback_providers": "explicitly prohibited; no automatic fallback",
+    "files_api": "separate endpoint profile required",
+    "streaming": "no admitted streaming profile in v1"
+  }
+}
