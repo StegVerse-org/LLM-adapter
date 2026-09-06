@@ -1,0 +1,46 @@
+{
+  "schema_version": "stegverse.work-claim.v1",
+  "task_id": "LLMA-DISTRIBUTED-LLM-EXECUTOR-274",
+  "originating_goal": "Implement bounded single/parallel/fallback execution over the released distributed named-source LLM workload contract using explicitly injected ProviderClient instances.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "feat/distributed-llm-executor-274",
+  "canonical_issue": 274,
+  "state": "CLAIMED_FOR_IMPLEMENTATION",
+  "claimant": "chatgpt:distributed-llm-executor-274",
+  "role": "bounded distributed execution adapter implementer",
+  "claim_created_at": "2026-09-06T01:23:00-05:00",
+  "canonical_runtime_owner": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+  "route_authority_owner": "StegVerse-Labs/TVC",
+  "credential_authority_model": "TC/TVC",
+  "custody_owner": "master-records/orchestration",
+  "surfaces": [
+    "llm_adapter/distributed_executor.py",
+    "schemas/ecosystem-chat-distributed-llm-execution.schema.json",
+    "tests/test_distributed_executor.py",
+    "scripts/check_distributed_llm_executor.py",
+    ".github/workflows/distributed-llm-executor-validate.yml",
+    "docs/DISTRIBUTED_LLM_EXECUTOR_MIRROR_HANDOFF.md",
+    "data/preflight/LLMA-DISTRIBUTED-LLM-EXECUTOR-274-20260906.json",
+    "README.md"
+  ],
+  "authority_contract": {
+    "canonical_local_route_remains_sufficient": true,
+    "optional_external_sources_required_for_canonical_operation": false,
+    "new_provider_broker": false,
+    "new_governance_engine": false,
+    "new_route_authority": false,
+    "new_credential_authority": false,
+    "new_custody_executor": false,
+    "new_worker_or_heartbeat": false
+  },
+  "collision_boundaries": [
+    "reuse ProviderClient and distributed_workload.py",
+    "do not hard-code provider endpoints or credentials",
+    "do not execute sequential/challenge semantics without a governed derived-input contract",
+    "do not replace TVC, TC/TVC, InTr, WorkerCoordinator, heartbeat, canonical local-model, or Master Records owners",
+    "do not infer live named external provider execution from fixture clients",
+    "do not make the unfinished 12-lane analysis a prerequisite"
+  ],
+  "implementation_claim_release_condition": "Bounded executor, summary schema, deterministic fixture tests, checker, README completeness, and repository validation pass; PR merges without claiming live external-provider execution.",
+  "next_task_after_release": "Bind the bounded executor to separately admitted named provider clients in an authentic Ecosystem Chat runtime execution and retain per-source usage/contribution evidence through existing governance and Master Records paths."
+}
