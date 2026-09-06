@@ -26,10 +26,10 @@ new route authority: false
 new custody authority: false
 provider output authority: NONE
 canonical sovereign route replaced: false
-README impact: REQUIRED
+README impact: REQUIRED / SATISFIED
 ```
 
-README must change in the same change set because this adds executable hosted-provider and evidence/custody behavior.
+README changed in the same change set because this adds executable hosted-provider and evidence/custody behavior.
 
 ## Installed execution chain
 
@@ -89,11 +89,10 @@ Source and CI can prove deterministic binding and fail-closed behavior. They do 
 
 ## Remaining work
 
-1. complete README update in this branch;
-2. run exact-head repository validation;
-3. merge only if exact-head validation passes;
-4. after merge, the next runtime goal is authentic governed execution under an admitted workload using a TV/TVC-resolved credential and real Master Records custody;
-5. downstream Site/Publisher/wiki propagation remains gated on verified activation rather than source completion.
+1. run exact-head repository validation;
+2. merge only if exact-head validation passes;
+3. after merge, the next runtime goal is authentic governed execution under an admitted workload using a TV/TVC-resolved credential and real Master Records custody;
+4. downstream Site/Publisher/wiki propagation remains gated on verified activation rather than source completion.
 
 ## Completion accounting
 
@@ -103,7 +102,7 @@ deterministic tests: IMPLEMENTED / EXECUTION PENDING
 provider usage integration: COMPLETE
 Master Records submission reuse: COMPLETE
 egress exact-response binding: COMPLETE
-README: PENDING
+README: COMPLETE
 PR validation: PENDING
 merge: PENDING
 live Z.ai execution: NOT CLAIMED
