@@ -3,19 +3,33 @@
 Updated: 2026-09-06
 Repository: `StegVerse-org/LLM-adapter`
 Issue: `#278`
-Branch: `feat/zai-intr-executor-278`
-State: `SOURCE_IMPLEMENTED / VALIDATION_AND_MERGE_PENDING`
+State: `COMPLETE_MERGED_VALIDATED / SOURCE_CLAIM_RELEASED`
 Authority effect: `NONE_EXECUTION_WRAPPER_ONLY`
 
 ## Source of truth
 
-This is the scoped continuation record for `LLMA-ZAI-INTR-EXECUTOR-278`. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, the merged transport task `LLMA-ZAI-INTR-TRANSPORT-276`, the organization runtime authority in `StegVerse-Labs/.github`, existing Interlock/InTr transition authority, TV/TVC credential/route authority, and Master Records custody authority.
+This is the scoped completion record for `LLMA-ZAI-INTR-EXECUTOR-278`. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, the merged transport task `LLMA-ZAI-INTR-TRANSPORT-276`, the organization runtime authority in `StegVerse-Labs/.github`, existing Interlock/InTr transition authority, TV/TVC credential/route authority, and Master Records custody authority.
 
 The canonical sovereign local route remains independently sufficient and unchanged.
 
+## Validated merge evidence
+
+```text
+transport PR: #277
+transport merge: 8a763e1257df17403381f5f4c408273d896c3283
+executor PR: #279
+validated executor head: eee7ef03bc32d5240928c44e8492197103643d52
+executor merge: a982236b24182e77e407a02581b176509ebc367d
+dedicated Z.ai validation run: 34054884017 SUCCESS
+transport tests: 7/7 PASS
+executor/egress tests: 6/6 PASS
+repository validation run: 34054885878 SUCCESS
+repository validation steps: 71/71 PASS
+```
+
 ## Machine preflight
 
-PASS for bounded execution-wrapper implementation:
+PASS for the bounded execution-wrapper implementation:
 
 ```text
 new heartbeat/oscillator: false
@@ -29,7 +43,7 @@ canonical sovereign route replaced: false
 README impact: REQUIRED / SATISFIED
 ```
 
-README changed in the same change set because this adds executable hosted-provider and evidence/custody behavior.
+README changed in PR #279 because the lane added executable hosted-provider and evidence/custody semantics.
 
 ## Installed execution chain
 
@@ -48,14 +62,20 @@ exact ProviderRequest
 -> downstream consequence may proceed only under the external InTr authority
 ```
 
-The wrapper does not call itself an authority and cannot manufacture either ingress or egress admission.
+The wrapper does not evaluate governance itself and cannot manufacture either ingress or egress admission.
 
-## Implemented surfaces
+## Installed surfaces
 
 ```text
+llm_adapter/zai_intr_transport.py
 llm_adapter/zai_intr_executor.py
+schemas/zai-intr-transport-envelope.schema.json
+tests/test_zai_intr_transport.py
 tests/test_zai_intr_executor.py
+.github/workflows/validate-zai-intr.yml
+tasks/LLMA-ZAI-INTR-TRANSPORT-276.json
 tasks/LLMA-ZAI-INTR-EXECUTOR-278.json
+docs/ZAI_INTR_TRANSPORT_MIRROR_HANDOFF.md
 docs/ZAI_INTR_EXECUTOR_MIRROR_HANDOFF.md
 README.md
 ```
@@ -76,36 +96,52 @@ README.md
 
 ## Evidence semantics
 
-Source and CI can prove deterministic binding and fail-closed behavior. They do not prove:
+Source and CI prove deterministic binding and fail-closed behavior. They do not prove:
 
 - a live Z.ai provider request;
 - current TV/TVC credential materialization;
 - production provider route admission;
-- real Master Records custody receipt;
+- authentic Master Records custody/reconstruction;
 - live egress InTr ALLOW;
 - canonical resident WorkerCoordinator execution;
 - Ecosystem Chat activation;
 - Site/publication activation.
 
-## Remaining work
+## Continuation ownership
 
-1. run exact-head repository validation;
-2. merge only if exact-head validation passes;
-3. after merge, the next runtime goal is authentic governed execution under an admitted workload using a TV/TVC-resolved credential and real Master Records custody;
-4. downstream Site/Publisher/wiki propagation remains gated on verified activation rather than source completion.
+No source implementation claim remains active for this executor lane. The next candidate is authentic governed runtime execution under the existing authorities:
+
+```text
+admitted workload
+-> Interlock/InTr ingress ALLOW
+-> TV/TVC provider credential/route authority
+-> merged Z.ai executor
+-> authentic provider-usage custody/reconstruction in master-records/orchestration
+-> external egress InTr ALLOW bound to exact response
+```
+
+That runtime sequence must not be fabricated or replaced by CI. It remains subject to current machine/authority ownership and credential availability.
+
+## Release boundary
+
+The Z.ai source lane is complete/released at implementation scope. Repository version tagging/release is **not** authorized by this completion because the root handoff still requires directly observed canonical activation evidence before release/tag.
+
+Downstream Site/Publisher/wiki propagation remains gated on immutable verified activation rather than this source merge.
 
 ## Completion accounting
 
 ```text
-executor source: COMPLETE
-deterministic tests: IMPLEMENTED / EXECUTION PENDING
+transport source: COMPLETE_MERGED_VALIDATED
+executor source: COMPLETE_MERGED_VALIDATED
+dedicated Z.ai validation: PASS
+repository validation: PASS
 provider usage integration: COMPLETE
 Master Records submission reuse: COMPLETE
 egress exact-response binding: COMPLETE
 README: COMPLETE
-PR validation: PENDING
-merge: PENDING
+source claim: RELEASED
 live Z.ai execution: NOT CLAIMED
 live egress admission: NOT CLAIMED
+release/tag authorization: NOT_GRANTED
 scaffolding/stubs: 0
 ```
