@@ -45,7 +45,7 @@ GitHub token runtime authority: false
 provider output authority: NONE
 README impact: REQUIRED_AND_SATISFIED
 scoped capability declaration: COMPLETE
-root capability projection: merged at PR head; final post-merge state reconciliation remains a metadata-only follow-up
+root capability projection: COMPLETE_RECONCILED
 ```
 
 ## Protocol
@@ -152,12 +152,13 @@ No repository tag or product release is created by this source integration. The 
 
 ## Remaining work
 
-Source implementation for this lane is complete. Remaining work is separately governed:
+No implementation, schema, test, README, capability-projection, validation, or merge work remains for the DeepSeek source lane.
 
-1. metadata-only reconciliation of the root capability summary to the final merged/validated DeepSeek state;
-2. optional authentic runtime exercise only when a current task admits DeepSeek and TV/TVC resolves the credential;
-3. authentic provider usage must use the existing Master Records custody/reconstruction lane;
-4. downstream Site/Publisher/wiki projection only when an activation/release gate explicitly requires it.
+Separately governed future work may include:
+
+1. optional authentic runtime exercise only when a current task admits DeepSeek and TV/TVC resolves the credential;
+2. authentic provider usage through the existing Master Records custody/reconstruction lane;
+3. downstream Site/Publisher/wiki projection only when an activation/release gate explicitly requires it.
 
 ## Completion accounting
 
@@ -169,6 +170,7 @@ schema: COMPLETE
 deterministic DeepSeek tests: 14/14 PASS
 repository validation: 71/71 PASS
 scoped capability declaration: COMPLETE
+root capability projection: COMPLETE
 README: COMPLETE
 merge: COMPLETE
 source claim: COMPLETE_RELEASED_SOURCE
