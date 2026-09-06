@@ -3,8 +3,9 @@
 Updated: 2026-09-06
 Repository: `StegVerse-org/LLM-adapter`
 Issue: `#272`
+Pull request: `#273`
 Branch: `feat/distributed-llm-workload-272`
-State: `SOURCE_IMPLEMENTED / VALIDATION_PENDING`
+State: `SOURCE_IMPLEMENTED_VALIDATED / EXACT_HEAD_REVALIDATION_PENDING`
 Authority effect: `NONE_CONTRACT_ONLY`
 
 ## Source of truth
@@ -95,6 +96,19 @@ Fail-closed validation covers duplicate or unknown sources, malformed canonical 
 
 First milestone remains deterministic source/fixture validation only. It must not be reported as live OpenAI, Anthropic, DeepSeek, GLM, or any other external-provider execution.
 
+## Validation evidence
+
+PR #273 prior exact head `af57e3a44f81f4a6322a21ed1af9f06f8c71630e` completed both relevant source gates successfully:
+
+```text
+Distributed LLM Workload Validate - No Credential Authority run 34016098823: SUCCESS
+repository validate run 34016098819: SUCCESS
+```
+
+The repository validation run completed all existing adapter checks through its validation-only authority boundary. The dedicated distributed-workload run executed the deterministic fixture suite and source/README/preflight/claim verifier. Neither run is live provider execution, route admission, custody evidence, or activation authority.
+
+This handoff reconciliation advances the PR head, so the exact new head must pass again before merge.
+
 ## Successor runtime milestone
 
 After source merge and after current sovereign activation ownership remains intact:
@@ -115,14 +129,14 @@ The local sovereign source should remain available as a qualifying source/fallba
 
 ## README impact
 
-README update was required in this change set because this task adds a repository interface, new evidence/failure semantics, and changes the meaning of the LLM-adapter's supported Ecosystem Chat capability. README source is updated; hosted validation is pending.
+README update was required in this change set because this task adds a repository interface, new evidence/failure semantics, and changes the meaning of the LLM-adapter's supported Ecosystem Chat capability. README source is updated and was included in the successful prior validation head.
 
 ## Completion predicates
 
 1. Machine preflight PASS. COMPLETE.
 2. Workload/source/contribution/reconciliation/result source contracts implemented. SOURCE COMPLETE.
-3. Deterministic fixture tests cover positive and fail-closed paths. SOURCE IMPLEMENTED; HOSTED RUN PENDING.
-4. README updated. SOURCE COMPLETE.
-5. Dedicated credential-free validation workflow installed. SOURCE COMPLETE.
-6. Repository validation passes. PENDING.
-7. No live-provider or activation claim is inferred. SOURCE VERIFIED; HOSTED VALIDATION PENDING.
+3. Deterministic fixture tests cover positive and fail-closed paths. PASS ON PRIOR EXACT HEAD.
+4. README updated. PASS ON PRIOR EXACT HEAD.
+5. Dedicated credential-free validation workflow installed. PASS ON PRIOR EXACT HEAD.
+6. Repository validation passes. PASS ON PRIOR EXACT HEAD; NEW HEAD REVALIDATION PENDING.
+7. No live-provider or activation claim is inferred. VERIFIED.
