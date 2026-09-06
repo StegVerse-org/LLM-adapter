@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/zai-intr-transport-envelope.schema.json",
+  "title": "StegVerse Z.ai Interlock/InTr Transport Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "transport_id",
+    "transition_id",
+    "request_hash",
+    "provider",
+    "model",
+    "endpoint_profile",
+    "ingress_receipt_hash",
+    "credential_authority",
+    "credential_class",
+    "carrier_ref",
+    "authority_effect",
+    "egress_intr_required",
+    "credential_material_present"
+  ],
+  "properties": {
+    "protocol_version": {"const": "stegverse.intr.zai.transport.v1"},
+    "transport_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "transition_id": {"type": "string", "minLength": 1},
+    "request_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "provider": {"const": "z.ai"},
+    "model": {"type": "string", "minLength": 1},
+    "endpoint_profile": {"enum": ["general", "coding"]},
+    "ingress_receipt_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "credential_authority": {"const": "TV/TVC"},
+    "credential_class": {"const": "TV_TVC_PROVIDER_SECRET"},
+    "carrier_ref": {"type": "string", "minLength": 1},
+    "authority_effect": {"const": "NONE"},
+    "egress_intr_required": {"const": true},
+    "credential_material_present": {"const": false}
+  }
+}
