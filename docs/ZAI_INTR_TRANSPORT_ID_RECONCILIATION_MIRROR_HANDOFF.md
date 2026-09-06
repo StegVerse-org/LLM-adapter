@@ -4,7 +4,8 @@ Updated: 2026-09-06
 Repository: `StegVerse-org/LLM-adapter`
 Issue: `#284`
 Branch: `fix/zai-transport-id-284`
-State: `SOURCE_RECONCILIATION_IN_PROGRESS`
+PR: `#285`
+State: `SOURCE_IMPLEMENTED / EXACT_HEAD_VALIDATION_PENDING`
 Authority effect: `NONE_INTERFACE_CORRECTION_ONLY`
 
 ## Source of truth
@@ -49,11 +50,12 @@ wire-contract behavior change: true
 credential handling change: true
 schema change required: true
 deterministic/adversarial test change required: true
-README impact: REQUIRED
+README impact: REQUIRED_AND_SATISFIED
+aggregate capability impact: REVIEWED_NO_CHANGE_REQUIRED
 root handoff activation/release semantics: unchanged
 ```
 
-README impact is required because the externally visible v1 request-identity, transport-identity, credential-lifecycle, and egress-handoff semantics change. No runtime migration is required because canonical handoffs explicitly state that live Z.ai execution has not been claimed.
+README impact is satisfied in PR #285 because the externally visible v1 request-identity, transport-identity, credential-lifecycle, and egress-handoff semantics are now documented in the same change set. `adapter.capabilities.json` was reviewed and requires no mutation because its Z.ai projection is intentionally aggregate-level and already states optional, TV/TVC-bound, non-authoritative, non-live, non-activating semantics; the exact v1 wire contract now resides in the subordinate `capability/stegverse-intr-zai-transport.capability.json` declaration. No runtime migration is required because canonical handoffs explicitly state that live Z.ai execution has not been claimed.
 
 ## Implemented on branch
 
@@ -94,25 +96,37 @@ tests/test_zai_intr_executor.py
 - exact egress ALLOW + receipt/hash binding
 
 capability/stegverse-intr-zai-transport.capability.json
-- subordinate capability declaration
+- subordinate exact-v1 capability declaration
 - optional/non-authoritative/fail-closed
+- execution-time TV/TVC resolution
 - activation.live=false
+
+.github/workflows/validate-zai-intr.yml
+- exact Z.ai tests
+- subordinate capability/schema invariant validation
+- permissions: {}
+- credential-bearing environment refusal
+- validation authority NONE
+
+README.md
+- exact wire request-hash semantics
+- zait transport identifier format
+- exact-byte send semantics
+- execution-time credential resolver
+- credential echo failure behavior
+- deterministic non-authorizing egress handoff
+- numeric compatibility boundary
 ```
 
-## Known compatibility point still under validation
+## Numeric canonicalization compatibility determination
 
-The supplied reference canonicalizer rejects floating-point values and its fixture represents temperature as an exact string (`"0.2"`). Canonical `ProviderRequest` currently models temperature as a float. This branch does **not** silently alter the repository-wide ProviderRequest API or Z.ai provider typing. The exact canonical bytes actually sent are hash-bound, but numeric canonicalization remains a validation/reconciliation point that must be explicitly resolved or documented before merge if the acceptance contract requires restricted string/scaled-integer numerics.
+The supplied reference implementation rejects floating-point values in its restricted canonicalizer and its fixture represents temperature as an exact string (`"0.2"`). Canonical `ProviderRequest` models temperature as a numeric value and the provider-facing Z.ai API expects a numeric temperature.
 
-## README completeness
+For this repository reconciliation, the controlling invariant is **exact admitted bytes equal exact transmitted bytes**. PR #285 computes the wire hash from the same deterministic payload serialization whose bytes are sent to Z.ai. Therefore no post-admission numeric transformation occurs and no hash/transport ambiguity remains.
 
-`README.md` must be updated in this same change set before the preflight can be considered complete. It must state:
+Changing the repository-wide `ProviderRequest.temperature` type to string/scaled integer would be a broader API change not required to satisfy the Z.ai transport security invariant and is outside #284. The reference package's restricted numeric representation is retained as reference-design evidence, not silently imposed on canonical provider typing.
 
-- `transport_id` uses `zait-<sha256>`;
-- ingress binds the exact outbound Z.ai wire payload hash, while broader ProviderRequest identity can be retained separately as provenance;
-- credential material is resolved at execution time through TV/TVC and is not retained in returned artifacts;
-- provider credential echo fails closed;
-- a deterministic pre-egress handoff requests but never assumes `ALLOW`;
-- source validation is not live activation evidence.
+Determination: `RESOLVED_BY_EXACT_BYTE_BINDING / NO_GLOBAL_PROVIDERREQUEST_TYPE_CHANGE`.
 
 ## Excluded work
 
@@ -122,6 +136,19 @@ The supplied reference canonicalizer rejects floating-point values and its fixtu
 - no route or transition authority changes;
 - no heartbeat/oscillator changes;
 - no Site/Publisher/wiki activation or release claim from source validation alone.
+
+## Validation posture
+
+An earlier exact implementation head passed the dedicated Z.ai validation, but subsequent capability/workflow reconciliation changed the PR head. Only validation against the newest PR head may authorize merge of this bounded source correction.
+
+Current merge gate:
+
+```text
+dedicated Z.ai validation on newest PR head: REQUIRED
+full repository validation on newest PR head: REQUIRED
+mergeability/conflict check: REQUIRED
+runtime activation evidence: NOT A SOURCE-MERGE PREDICATE
+```
 
 ## Completion accounting
 
@@ -133,12 +160,16 @@ canonical executor source correction: IMPLEMENTED_ON_BRANCH
 schema correction: IMPLEMENTED_ON_BRANCH
 adversarial tests: IMPLEMENTED_ON_BRANCH
 subordinate capability declaration: IMPLEMENTED_ON_BRANCH
-README: PENDING
-numeric canonicalization compatibility: PENDING_VALIDATION_OR_EXPLICIT_DECISION
-PR validation: PENDING
-merge: PENDING
+capability validation: IMPLEMENTED_ON_BRANCH
+README: COMPLETE_ON_BRANCH
+aggregate capability review: COMPLETE_NO_CHANGE_REQUIRED
+numeric canonicalization compatibility: RESOLVED_BY_EXACT_BYTE_BINDING
+PR: #285 OPEN
+PR validation: PENDING_EXACT_HEAD
+merge: PENDING_VALIDATION
 live Z.ai execution: NOT CLAIMED
 runtime activation: NOT CLAIMED
+source scaffolding/stubs added by reconciliation: 0
 ```
 
 This handoff is the current scoped source of truth for issue #284 until merged, superseded, or explicitly released.
