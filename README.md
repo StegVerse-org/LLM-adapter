@@ -152,6 +152,45 @@ tasks/LLMA-ZAI-INTR-EXECUTOR-278.json
 
 Source validation proves fail-closed transport identity, exact wire-byte/hash binding, execution-time credential resolution, credential-redaction checks, usage-evidence, custody-submission, deterministic egress-handoff, and exact-response egress-binding semantics only. It is not live Z.ai execution, route admission, credential materialization, authentic Master Records custody/reconstruction, live egress ALLOW, Ecosystem Chat activation, or Site activation evidence.
 
+## DeepSeek Interlock/InTr transport and governed execution
+
+DeepSeek is supported as an **optional hosted-provider interoperability transport** through `stegverse.intr.deepseek.transport.v1`. It is additive only and does not replace the canonical sovereign local route or acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.
+
+```text
+canonical ProviderRequest provenance
+-> exact DeepSeek OpenAI-compatible payload: model + messages + temperature + stream=false
+-> deterministic wire-byte hash
+-> contemporaneous Interlock/InTr ingress evaluation
+-> DENY: no credential resolution and no provider call
+-> ALLOW: bind exact wire hash + transition ID + ingress receipt + carrier ref
+-> resolve TV/TVC credential exactly once at send time
+-> only https://api.deepseek.com/chat/completions
+-> only explicitly supported current model IDs
+-> validate response/usage fail closed and reject credential echo
+-> provider response authority_effect NONE
+-> canonical provider-usage event
+-> existing Master Records provider-usage submission path
+-> deterministic pre-egress handoff that requests, but never assumes, ALLOW
+-> separate Interlock/InTr egress evaluation bound to exact provider response hash
+```
+
+The v1 transport ID is `dsit-<sha256>`. The envelope request hash binds the exact outbound DeepSeek bytes rather than the broader adapter `ProviderRequest`. Current v1 source explicitly supports `deepseek-v4-flash` and `deepseek-v4-pro`; it does not silently substitute retired aliases or alternate endpoints. Credential material remains under TV/TVC authority, is resolved through an external callable at execution time, and is prohibited from serialized envelopes, response metadata, provider-usage events, Master Records evidence, task records, handoffs, and egress records.
+
+`execute_governed_deepseek` reuses the existing provider-usage and Master Records submission mechanisms. `admit_deepseek_egress` verifies an externally produced Interlock/InTr `ALLOW`, an exact SHA-256 receipt identifier, and exact response-hash equality. Local verification has authority effect `NONE_LOCAL`; source success is not live DeepSeek execution or product activation.
+
+Canonical source surfaces:
+
+```text
+llm_adapter/deepseek_intr_transport.py
+llm_adapter/deepseek_intr_executor.py
+schemas/deepseek-intr-transport-envelope.schema.json
+tests/test_deepseek_intr_transport.py
+tests/test_deepseek_intr_executor.py
+capability/stegverse-intr-deepseek-transport.capability.json
+docs/DEEPSEEK_INTR_TRANSPORT_MIRROR_HANDOFF.md
+tasks/LLMA-DEEPSEEK-INTR-TRANSPORT-289.json
+```
+
 ## No GitHub-token production dependency
 
 GitHub repository access is not part of the production inference path.
@@ -163,7 +202,7 @@ credential_authority_model: TC/TVC
 canonical_local_route_credential_requirement: NONE
 ```
 
-GitHub Actions, Render, Cloudflare, Vercel, GitHub Models, OpenAI, Anthropic, and Z.ai are not canonical production heartbeat, inference, route, custody, or availability authorities. Optional hosted-provider interoperability lanes are separate from the canonical sovereign local route.
+GitHub Actions, Render, Cloudflare, Vercel, GitHub Models, OpenAI, Anthropic, Z.ai, and DeepSeek are not canonical production heartbeat, inference, route, custody, or availability authorities. Optional hosted-provider interoperability lanes are separate from the canonical sovereign local route.
 
 ## Local model/runtime
 
@@ -211,7 +250,7 @@ heartbeat recovery / current fence
 -> required Publisher/wiki propagation
 ```
 
-The distributed named-source workload, bounded executor, Z.ai transport, and governed Z.ai execution wrapper are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider or Z.ai execution.
+The distributed named-source workload, bounded executor, Z.ai transport/executor, and DeepSeek transport/executor are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider, Z.ai, or DeepSeek execution.
 
 This continuation is machine-owned. It is not a reason to re-open the completed local-model or carrier-executor implementation tasks.
 
@@ -247,13 +286,15 @@ pytest tests/test_distributed_executor.py -q
 python scripts/check_distributed_llm_executor.py
 pytest tests/test_zai_intr_transport.py -q
 pytest tests/test_zai_intr_executor.py -q
+pytest tests/test_deepseek_intr_transport.py -q
+pytest tests/test_deepseek_intr_executor.py -q
 ```
 
 The authoritative current task and release state is `LLM_ADAPTER_MIRROR_HANDOFF.md`. `adapter.capabilities.json` is the machine-readable capability posture.
 
 ## Optional interoperability lanes
 
-The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, named-source distributed LLM contribution lanes, the Z.ai InTr transport, and the governed Z.ai execution wrapper. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
+The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, named-source distributed LLM contribution lanes, the Z.ai InTr lane, and the DeepSeek InTr lane. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
 
 ## Repository
 
