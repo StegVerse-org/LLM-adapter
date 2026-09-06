@@ -1,0 +1,72 @@
+name: Distributed LLM Workload Validate - No Credential Authority
+
+on:
+  push:
+    paths:
+      - "llm_adapter/distributed_workload.py"
+      - "schemas/ecosystem-chat-distributed-llm-workload.schema.json"
+      - "schemas/ecosystem-chat-llm-contribution.schema.json"
+      - "schemas/ecosystem-chat-llm-reconciliation-request.schema.json"
+      - "schemas/ecosystem-chat-governed-result.schema.json"
+      - "tests/test_distributed_workload.py"
+      - "scripts/check_distributed_llm_workload.py"
+      - "docs/DISTRIBUTED_LLM_WORKLOAD_MIRROR_HANDOFF.md"
+      - "tasks/LLMA-DISTRIBUTED-LLM-WORKLOAD-272.json"
+      - "data/preflight/LLMA-DISTRIBUTED-LLM-WORKLOAD-272-20260906.json"
+      - "README.md"
+      - ".github/workflows/distributed-llm-workload-validate.yml"
+  pull_request:
+    paths:
+      - "llm_adapter/distributed_workload.py"
+      - "schemas/ecosystem-chat-distributed-llm-workload.schema.json"
+      - "schemas/ecosystem-chat-llm-contribution.schema.json"
+      - "schemas/ecosystem-chat-llm-reconciliation-request.schema.json"
+      - "schemas/ecosystem-chat-governed-result.schema.json"
+      - "tests/test_distributed_workload.py"
+      - "scripts/check_distributed_llm_workload.py"
+      - "docs/DISTRIBUTED_LLM_WORKLOAD_MIRROR_HANDOFF.md"
+      - "tasks/LLMA-DISTRIBUTED-LLM-WORKLOAD-272.json"
+      - "data/preflight/LLMA-DISTRIBUTED-LLM-WORKLOAD-272-20260906.json"
+      - "README.md"
+      - ".github/workflows/distributed-llm-workload-validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source without persisted credential
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Refuse credential authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in OPENAI_API_KEY ANTHROPIC_API_KEY GITHUB_TOKEN GH_TOKEN; do
+            value="${!name-}"
+            if [ -n "$value" ]; then
+              echo "Unexpected credential-bearing environment: $name" >&2
+              exit 1
+            fi
+          done
+
+      - name: Install test dependency
+        run: python -m pip install --disable-pip-version-check pytest
+
+      - name: Validate distributed LLM source contract
+        run: python scripts/check_distributed_llm_workload.py
+
+      - name: Confirm non-authorizing validation boundary
+        run: |
+          echo "authority_effect=NONE_SOURCE_VALIDATION_ONLY"
+          echo "live_distributed_provider_execution_observed=false"

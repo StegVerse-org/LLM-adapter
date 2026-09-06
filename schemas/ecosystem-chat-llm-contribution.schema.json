@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/ecosystem-chat-llm-contribution.schema.json",
+  "title": "StegVerse Ecosystem Chat Named LLM Contribution",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "workload_id", "workload_hash", "source_id", "provider", "model", "status", "provider_request_hash", "provider_response_hash", "output", "provenance_refs", "evidence_refs", "usage_refs", "uncertainty_notes", "disagreement_refs", "metadata", "created_at", "authority", "contribution_hash"],
+  "properties": {
+    "schema_version": {"const": "stegverse.ecosystem_chat.llm_contribution.v1"},
+    "workload_id": {"type": "string", "minLength": 1},
+    "workload_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source_id": {"type": "string", "minLength": 1},
+    "provider": {"type": "string", "minLength": 1},
+    "model": {"type": "string", "minLength": 1},
+    "status": {"enum": ["RETURNED", "REFUSED", "FAILED"]},
+    "provider_request_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "provider_response_hash": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "output": {"type": ["string", "null"]},
+    "provenance_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}},
+    "usage_refs": {"type": "array", "items": {"type": "string"}},
+    "uncertainty_notes": {"type": "array", "items": {"type": "string"}},
+    "disagreement_refs": {"type": "array", "items": {"type": "string"}},
+    "metadata": {"type": "object"},
+    "created_at": {"type": "string", "minLength": 1},
+    "contribution_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_output_authority", "grants_admission", "grants_execution", "grants_credentials", "grants_custody", "grants_governance"],
+      "properties": {
+        "model_output_authority": {"const": false},
+        "grants_admission": {"const": false},
+        "grants_execution": {"const": false},
+        "grants_credentials": {"const": false},
+        "grants_custody": {"const": false},
+        "grants_governance": {"const": false}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "RETURNED"}}},
+      "then": {
+        "properties": {
+          "provider_response_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "output": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  ]
+}
