@@ -1,0 +1,50 @@
+name: Distributed LLM Executor Validate - No Credential Authority
+on:
+  push:
+    paths:
+      - "llm_adapter/distributed_executor.py"
+      - "schemas/ecosystem-chat-distributed-llm-execution.schema.json"
+      - "tests/test_distributed_executor.py"
+      - "scripts/check_distributed_llm_executor.py"
+      - "docs/DISTRIBUTED_LLM_EXECUTOR_MIRROR_HANDOFF.md"
+      - "tasks/LLMA-DISTRIBUTED-LLM-EXECUTOR-274.json"
+      - "data/preflight/LLMA-DISTRIBUTED-LLM-EXECUTOR-274-20260906.json"
+      - "README.md"
+      - ".github/workflows/distributed-llm-executor-validate.yml"
+  pull_request:
+    paths:
+      - "llm_adapter/distributed_executor.py"
+      - "schemas/ecosystem-chat-distributed-llm-execution.schema.json"
+      - "tests/test_distributed_executor.py"
+      - "scripts/check_distributed_llm_executor.py"
+      - "docs/DISTRIBUTED_LLM_EXECUTOR_MIRROR_HANDOFF.md"
+      - "tasks/LLMA-DISTRIBUTED-LLM-EXECUTOR-274.json"
+      - "data/preflight/LLMA-DISTRIBUTED-LLM-EXECUTOR-274-20260906.json"
+      - "README.md"
+      - ".github/workflows/distributed-llm-executor-validate.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Refuse credential authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in OPENAI_API_KEY ANTHROPIC_API_KEY GITHUB_TOKEN GH_TOKEN; do
+            value="${!name-}"
+            if [ -n "$value" ]; then echo "Unexpected credential-bearing environment: $name" >&2; exit 1; fi
+          done
+      - run: python -m pip install --disable-pip-version-check pytest
+      - run: python scripts/check_distributed_llm_executor.py
+      - run: |
+          echo "authority_effect=NONE_SOURCE_VALIDATION_ONLY"
+          echo "live_external_named_source_execution_observed=false"
