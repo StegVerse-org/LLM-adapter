@@ -73,7 +73,7 @@
     "product_activation_claimed": false
   },
   "deepseek_intr_interoperability": {
-    "state": "SOURCE_IMPLEMENTED_VALIDATION_PENDING",
+    "state": "COMPLETE_RELEASED_SOURCE",
     "issue": 289,
     "protocol": "stegverse.intr.deepseek.transport.v1",
     "task": "tasks/LLMA-DEEPSEEK-INTR-TRANSPORT-289.json",
@@ -84,8 +84,17 @@
     "executor_test": "tests/test_deepseek_intr_executor.py",
     "capability_declaration": "capability/stegverse-intr-deepseek-transport.capability.json",
     "handoff": "docs/DEEPSEEK_INTR_TRANSPORT_MIRROR_HANDOFF.md",
+    "validation_workflow": ".github/workflows/validate-deepseek-intr.yml",
     "endpoint": "https://api.deepseek.com/chat/completions",
     "supported_models": ["deepseek-v4-flash", "deepseek-v4-pro"],
+    "pull_request": 289,
+    "validated_head": "3811b9d47e8eb90818ca6f5ce32a25473ff1dd5a",
+    "merge_commit": "6eb6603c8a31c0efb46ab58fed47ce304b5733cd",
+    "dedicated_validation_run": "34066526167 SUCCESS",
+    "repository_validation_run": "34066526101 SUCCESS",
+    "transport_tests": "8/8 PASS",
+    "executor_egress_tests": "6/6 PASS",
+    "repository_validation_steps": "71/71 PASS",
     "ingress_intr_required": true,
     "egress_intr_required": true,
     "credential_authority": "TV/TVC",
@@ -121,9 +130,9 @@
     "zai_intr_transport": "built_optional_fail_closed",
     "zai_governed_executor": "built_optional_fail_closed",
     "zai_egress_verifier": "built_non_authorizing_exact_response_binding",
-    "deepseek_intr_transport": "built_optional_fail_closed_validation_pending",
-    "deepseek_governed_executor": "built_optional_fail_closed_validation_pending",
-    "deepseek_egress_verifier": "built_non_authorizing_exact_response_binding_validation_pending"
+    "deepseek_intr_transport": "built_optional_fail_closed",
+    "deepseek_governed_executor": "built_optional_fail_closed",
+    "deepseek_egress_verifier": "built_non_authorizing_exact_response_binding"
   },
   "ai_entry_response_fields": {
     "free_tier_trust": {
@@ -170,7 +179,7 @@
     "openai": "optional_not_production_authority",
     "anthropic": "optional_not_production_authority",
     "zai": "complete_released_source_optional_not_production_authority",
-    "deepseek": "source_implemented_validation_pending_optional_not_production_authority",
+    "deepseek": "complete_released_source_optional_not_production_authority",
     "github_models": "not_canonical_production_inference",
     "render": "not_canonical_production_runtime",
     "github_actions": "validation_only_not_production_runtime"
