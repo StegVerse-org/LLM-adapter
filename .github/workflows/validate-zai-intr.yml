@@ -1,0 +1,98 @@
+# Deterministic validation only. This workflow has no runtime, credential, route, or activation authority.
+name: validate-zai-intr
+
+on:
+  push:
+    paths:
+      - 'llm_adapter/zai_intr_transport.py'
+      - 'llm_adapter/zai_intr_executor.py'
+      - 'tests/test_zai_intr_transport.py'
+      - 'tests/test_zai_intr_executor.py'
+      - 'schemas/zai-intr-transport-envelope.schema.json'
+      - 'docs/ZAI_INTR_*'
+      - 'tasks/LLMA-ZAI-INTR-*'
+      - 'README.md'
+      - '.github/workflows/validate-zai-intr.yml'
+  pull_request:
+    paths:
+      - 'llm_adapter/zai_intr_transport.py'
+      - 'llm_adapter/zai_intr_executor.py'
+      - 'tests/test_zai_intr_transport.py'
+      - 'tests/test_zai_intr_executor.py'
+      - 'schemas/zai-intr-transport-envelope.schema.json'
+      - 'docs/ZAI_INTR_*'
+      - 'tasks/LLMA-ZAI-INTR-*'
+      - 'README.md'
+      - '.github/workflows/validate-zai-intr.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: validate-zai-intr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-zai-intr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Refuse credential-bearing environment
+        shell: bash
+        run: |
+          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT TVC_EPHEMERAL_GITHUB_TOKEN STEGVERSE_PROVIDER_TOKEN STEGVERSE_MASTER_RECORDS_TOKEN ZAI_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY ACTIONS_RUNTIME_TOKEN ACTIONS_ID_TOKEN_REQUEST_TOKEN; do
+            if [ -n "${!key:-}" ]; then
+              echo "credential_exposed:$key"
+              exit 1
+            fi
+          done
+
+      - name: Fetch exact source anonymously
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git init .
+          git remote add origin https://github.com/StegVerse-org/LLM-adapter.git
+          git -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+
+      - name: Resolve Python
+        shell: bash
+        run: |
+          set -euo pipefail
+          selected="$(command -v python3 || command -v python)"
+          echo "PYTHON_BIN=$selected" >> "$GITHUB_ENV"
+          "$selected" --version
+
+      - name: Install validation dependencies
+        run: "$PYTHON_BIN -m pip install -e '.[dev]'"
+
+      - name: Test Z.ai Interlock/InTr transport
+        run: "$PYTHON_BIN -m pytest tests/test_zai_intr_transport.py -q"
+
+      - name: Test governed Z.ai executor and egress binding
+        run: "$PYTHON_BIN -m pytest tests/test_zai_intr_executor.py -q"
+
+      - name: Confirm validation-only authority boundary
+        shell: bash
+        run: |
+          "$PYTHON_BIN" - <<'PY'
+          from pathlib import Path
+          workflow = Path('.github/workflows/validate-zai-intr.yml').read_text(encoding='utf-8')
+          assert 'permissions: {}' in workflow
+          assert 'ZAI_API_KEY' in workflow
+          assert 'STEGVERSE_MASTER_RECORDS_TOKEN' in workflow
+          assert 'tests/test_zai_intr_transport.py' in workflow
+          assert 'tests/test_zai_intr_executor.py' in workflow
+          forbidden = [
+              'actions/' + 'checkout@',
+              'actions/' + 'setup-python@',
+              'git ' + 'push',
+              'schedule' + ':',
+          ]
+          assert all(marker not in workflow for marker in forbidden), forbidden
+          print('ZAI_INTR_VALIDATION_AUTHORITY=NONE')
+          print('ZAI_INTR_CREDENTIAL_AUTHORITY=TV_TVC')
+          print('ZAI_INTR_RUNTIME_EFFECT=NONE')
+          PY

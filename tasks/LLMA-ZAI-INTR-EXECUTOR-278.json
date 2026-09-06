@@ -1,0 +1,51 @@
+{
+  "task_id": "LLMA-ZAI-INTR-EXECUTOR-278",
+  "issue": 278,
+  "repository": "StegVerse-org/LLM-adapter",
+  "goal": "Bind the merged Z.ai Interlock/InTr transport to provider execution, provider-usage evidence, Master Records custody, and exact-response egress verification without creating parallel authority.",
+  "state": "SOURCE_IMPLEMENTED_VALIDATION_PENDING",
+  "authority_effect": "NONE_EXECUTION_WRAPPER_ONLY",
+  "depends_on": {
+    "protocol": "stegverse.intr.zai.transport.v1",
+    "merged_pr": 277,
+    "merge_commit": "8a763e1257df17403381f5f4c408273d896c3283"
+  },
+  "canonical_sovereign_route_replaced": false,
+  "credential_authority": "TV/TVC",
+  "route_authority": "Interlock/InTr + applicable TV/TVC provider route admission",
+  "custody_owner": "master-records/orchestration",
+  "provider_output_authority": "NONE",
+  "ingress_intr_required": true,
+  "egress_intr_required": true,
+  "surfaces": [
+    "llm_adapter/zai_intr_executor.py",
+    "tests/test_zai_intr_executor.py",
+    "docs/ZAI_INTR_EXECUTOR_MIRROR_HANDOFF.md",
+    "tasks/LLMA-ZAI-INTR-EXECUTOR-278.json",
+    "README.md"
+  ],
+  "completion_predicates": {
+    "machine_preflight": "PASS",
+    "executor_source": "COMPLETE",
+    "deterministic_tests_implemented": "COMPLETE",
+    "provider_usage_integration": "COMPLETE",
+    "master_records_submission_reuse": "COMPLETE",
+    "egress_exact_response_binding": "COMPLETE",
+    "readme_required": true,
+    "readme_in_same_change_set": "COMPLETE",
+    "exact_head_validation": "PENDING",
+    "merge": "PENDING",
+    "live_zai_execution": "NOT_CLAIMED",
+    "live_tvc_credential_materialization": "NOT_CLAIMED",
+    "live_egress_intr_allow": "NOT_CLAIMED",
+    "product_activation": "NOT_CLAIMED"
+  },
+  "collision_boundaries": [
+    "existing Interlock/InTr transition authority",
+    "TV/TVC credential and route authority",
+    "master-records/orchestration custody authority",
+    "StegVerse-Labs/.github heartbeat and WorkerCoordinator",
+    "canonical sovereign local provider execution"
+  ],
+  "scaffolding_or_stubs": 0
+}
