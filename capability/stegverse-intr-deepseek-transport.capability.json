@@ -1,0 +1,60 @@
+{
+  "capability_id": "stegverse.intr.deepseek.transport.v1",
+  "declaration_version": "1.0.0",
+  "role": "optional_non_authoritative_stegverse_interoperability_transport",
+  "provider": "deepseek",
+  "canonical_reference_repository": "StegVerse-org/LLM-adapter",
+  "authority": {
+    "authority_effect": "NONE",
+    "synthesizes_allow": false,
+    "claims_no_authority_over": [
+      "transition", "route", "credential", "custody", "heartbeat",
+      "scheduler", "worker", "publication", "stegverse_governance"
+    ],
+    "ingress_decision_point": "external:StegVerse-Interlock/InTr",
+    "egress_decision_point": "external:StegVerse-Interlock/InTr"
+  },
+  "transport": {
+    "endpoint_profiles": {
+      "deepseek_openai_compatible": "https://api.deepseek.com"
+    },
+    "execution_path": "/chat/completions",
+    "supported_models": ["deepseek-v4-flash", "deepseek-v4-pro"],
+    "deterministic_identity": true,
+    "transport_id_prefix": "dsit-",
+    "hash_algorithm": "SHA-256",
+    "canonicalization": "canonical JSON over exact admitted outbound DeepSeek payload",
+    "fail_closed": true,
+    "permissive_fallback": false
+  },
+  "credential": {
+    "credential_authority": "TV/TVC",
+    "credential_class": "TV_TVC_PROVIDER_SECRET",
+    "credential_material_present": false,
+    "resolved": "execution-time only via external resolver callable",
+    "persisted": false,
+    "redaction_guard": true
+  },
+  "evidence": {
+    "provider_usage": "reuse canonical llm_adapter.provider_usage",
+    "master_records_submission": "reuse canonical llm_adapter.master_records_usage_submission",
+    "egress_response_hash_binding": true
+  },
+  "independence": {
+    "canonical_sovereign_route_replaced": false,
+    "hosted_provider_required": false,
+    "optional": true
+  },
+  "activation": {
+    "live": false,
+    "basis": "source implementation only until exact-head validation completes",
+    "requires": [
+      "exact-head repository validation",
+      "authentic ingress InTr receipt",
+      "TV/TVC credential resolution",
+      "authentic DeepSeek provider execution",
+      "Master Records custody/reconstruction",
+      "authentic egress InTr receipt"
+    ]
+  }
+}

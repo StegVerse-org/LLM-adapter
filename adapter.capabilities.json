@@ -72,6 +72,31 @@
     "live_provider_execution_claimed": false,
     "product_activation_claimed": false
   },
+  "deepseek_intr_interoperability": {
+    "state": "SOURCE_IMPLEMENTED_VALIDATION_PENDING",
+    "issue": 289,
+    "protocol": "stegverse.intr.deepseek.transport.v1",
+    "task": "tasks/LLMA-DEEPSEEK-INTR-TRANSPORT-289.json",
+    "transport_module": "llm_adapter/deepseek_intr_transport.py",
+    "executor_module": "llm_adapter/deepseek_intr_executor.py",
+    "transport_schema": "schemas/deepseek-intr-transport-envelope.schema.json",
+    "transport_test": "tests/test_deepseek_intr_transport.py",
+    "executor_test": "tests/test_deepseek_intr_executor.py",
+    "capability_declaration": "capability/stegverse-intr-deepseek-transport.capability.json",
+    "handoff": "docs/DEEPSEEK_INTR_TRANSPORT_MIRROR_HANDOFF.md",
+    "endpoint": "https://api.deepseek.com/chat/completions",
+    "supported_models": ["deepseek-v4-flash", "deepseek-v4-pro"],
+    "ingress_intr_required": true,
+    "egress_intr_required": true,
+    "credential_authority": "TV/TVC",
+    "credential_material_serialized": false,
+    "provider_output_authority": "NONE",
+    "master_records_custody_reused": true,
+    "canonical_sovereign_route_replaced": false,
+    "hosted_provider_required_for_canonical_route": false,
+    "live_provider_execution_claimed": false,
+    "product_activation_claimed": false
+  },
   "runtime_surfaces": {
     "provider_request_envelope": "built",
     "fixture_provider": "built",
@@ -95,7 +120,10 @@
     "stegverse_local_http_provider_client": "built_canonical_private_transport",
     "zai_intr_transport": "built_optional_fail_closed",
     "zai_governed_executor": "built_optional_fail_closed",
-    "zai_egress_verifier": "built_non_authorizing_exact_response_binding"
+    "zai_egress_verifier": "built_non_authorizing_exact_response_binding",
+    "deepseek_intr_transport": "built_optional_fail_closed_validation_pending",
+    "deepseek_governed_executor": "built_optional_fail_closed_validation_pending",
+    "deepseek_egress_verifier": "built_non_authorizing_exact_response_binding_validation_pending"
   },
   "ai_entry_response_fields": {
     "free_tier_trust": {
@@ -142,6 +170,7 @@
     "openai": "optional_not_production_authority",
     "anthropic": "optional_not_production_authority",
     "zai": "complete_released_source_optional_not_production_authority",
+    "deepseek": "source_implemented_validation_pending_optional_not_production_authority",
     "github_models": "not_canonical_production_inference",
     "render": "not_canonical_production_runtime",
     "github_actions": "validation_only_not_production_runtime"
@@ -153,8 +182,9 @@
     "github_token_required": false,
     "hosted_provider_credentials": "optional_interoperability_only",
     "zai_provider_credential": "TV/TVC-resolved at execution time only; never serialized",
+    "deepseek_provider_credential": "TV/TVC-resolved at execution time only; never serialized",
     "continuity_search_service": ["STEGVERSE_CONTINUITY_SEARCH_URL", "STEGVERSE_CONTINUITY_SEARCH_KEY optional"],
-    "external_executor": "canonical same-carrier executor is implemented; optional Z.ai governed executor is separately admitted and non-authoritative",
+    "external_executor": "canonical same-carrier executor is implemented; optional Z.ai and DeepSeek governed executors are separately admitted and non-authoritative",
     "site_display": "StegVerse-Labs/Site consumes bounded metadata only after activation evidence and mirror validation",
     "sdk_ingestion": "StegVerse-org/StegVerse-SDK validates system-boundary declaration and non-authorizing metadata"
   },
@@ -166,7 +196,9 @@
     "site_activation_complete": "NOT_YET_OBSERVED",
     "downstream_publisher_wiki_propagation": "PENDING_ACTIVATION",
     "live_zai_execution": "OPTIONAL_LANE_NOT_YET_OBSERVED",
-    "live_zai_egress_intr_allow": "OPTIONAL_LANE_NOT_YET_OBSERVED"
+    "live_zai_egress_intr_allow": "OPTIONAL_LANE_NOT_YET_OBSERVED",
+    "live_deepseek_execution": "OPTIONAL_LANE_NOT_YET_OBSERVED",
+    "live_deepseek_egress_intr_allow": "OPTIONAL_LANE_NOT_YET_OBSERVED"
   },
   "machine_owned_continuation": {
     "runtime_carrier": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
@@ -197,7 +229,10 @@
     "The repository-local reference model is not a production-scale foundation LLM.",
     "Z.ai ingress ALLOW is not reusable as egress ALLOW.",
     "Z.ai provider output does not grant transition authority.",
-    "Z.ai source validation is not live provider execution or product activation."
+    "Z.ai source validation is not live provider execution or product activation.",
+    "DeepSeek ingress ALLOW is not reusable as egress ALLOW.",
+    "DeepSeek provider output does not grant transition authority.",
+    "DeepSeek source validation is not live provider execution or product activation."
   ],
   "local_verification": {
     "unit_tests": "pytest",
@@ -210,7 +245,9 @@
     "system_boundary_tests": "pytest tests/test_system_boundary.py",
     "carrier_executor_test": "pytest tests/test_execute_canonical_sovereign_route.py -v",
     "zai_intr_transport_test": "pytest tests/test_zai_intr_transport.py -q",
-    "zai_intr_executor_test": "pytest tests/test_zai_intr_executor.py -q"
+    "zai_intr_executor_test": "pytest tests/test_zai_intr_executor.py -q",
+    "deepseek_intr_transport_test": "pytest tests/test_deepseek_intr_transport.py -q",
+    "deepseek_intr_executor_test": "pytest tests/test_deepseek_intr_executor.py -q"
   },
-  "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation. Optional Z.ai execution does not replace or satisfy that canonical activation definition."
+  "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation. Optional Z.ai or DeepSeek execution does not replace or satisfy that canonical activation definition."
 }

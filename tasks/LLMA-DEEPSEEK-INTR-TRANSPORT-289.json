@@ -1,0 +1,55 @@
+{
+  "task_id": "LLMA-DEEPSEEK-INTR-TRANSPORT-289",
+  "issue": 289,
+  "repository": "StegVerse-org/LLM-adapter",
+  "goal": "Integrate optional DeepSeek InTr transport and governed execution without creating parallel authority or custody machinery.",
+  "state": "SOURCE_COMPLETE_VALIDATION_PENDING",
+  "authority_effect": "NONE_TRANSPORT_ONLY",
+  "canonical_sovereign_route_replaced": false,
+  "credential_authority": "TV/TVC",
+  "credential_class": "TV_TVC_PROVIDER_SECRET",
+  "github_token_runtime_authority": false,
+  "provider_output_authority": "NONE",
+  "ingress_intr_required": true,
+  "egress_intr_required": true,
+  "protocol_version": "stegverse.intr.deepseek.transport.v1",
+  "endpoint_profiles": {
+    "deepseek_openai_compatible": "https://api.deepseek.com"
+  },
+  "supported_models": ["deepseek-v4-flash", "deepseek-v4-pro"],
+  "source_surfaces": [
+    "llm_adapter/deepseek_intr_transport.py",
+    "llm_adapter/deepseek_intr_executor.py",
+    "schemas/deepseek-intr-transport-envelope.schema.json",
+    "tests/test_deepseek_intr_transport.py",
+    "tests/test_deepseek_intr_executor.py",
+    "capability/stegverse-intr-deepseek-transport.capability.json",
+    "docs/DEEPSEEK_INTR_TRANSPORT_MIRROR_HANDOFF.md",
+    "README.md",
+    "adapter.capabilities.json"
+  ],
+  "completion_predicates": {
+    "machine_preflight": "PASS",
+    "protocol_source": "COMPLETE",
+    "executor_source": "COMPLETE",
+    "schema": "COMPLETE",
+    "tests_implemented": "COMPLETE",
+    "readme_required": true,
+    "readme_in_same_change_set": "COMPLETE",
+    "capability_projection": "COMPLETE",
+    "exact_head_validation": "PENDING",
+    "merge": "PENDING",
+    "live_deepseek_execution": "NOT_CLAIMED",
+    "runtime_activation": "NOT_CLAIMED"
+  },
+  "collision_boundaries": [
+    "StegVerse-Labs/.github canonical heartbeat and WorkerCoordinator",
+    "Interlock/InTr transition authority",
+    "StegVerse-Labs/TVC route and credential authority",
+    "master-records/orchestration custody and reconstruction",
+    "canonical sovereign local provider execution",
+    "existing Z.ai optional interoperability lane"
+  ],
+  "release_condition": "Exact-head source validation passes, README/capability completeness passes, and merge occurs without authority escalation. Live provider execution remains separately governed.",
+  "scaffolding_or_stubs": 0
+}
