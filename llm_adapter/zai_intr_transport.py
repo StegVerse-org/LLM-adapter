@@ -3,22 +3,23 @@
 This module is an interoperability transport only. It never grants transition,
 route, credential, custody, heartbeat, scheduler, worker, or publication
 authority. A Z.ai request may leave StegVerse only after a contemporaneous
-Interlock/InTr ALLOW receipt has been bound to the exact ProviderRequest hash.
-The returned provider response has authority effect NONE and requires a separate
-egress Interlock/InTr evaluation before any state-changing consequence.
+Interlock/InTr ALLOW receipt has been bound to the exact canonical outbound
+request bytes. The returned provider response has authority effect NONE and
+requires a separate egress Interlock/InTr evaluation before any state-changing
+consequence.
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional
+from typing import Any, Callable, Mapping
 from urllib.parse import urljoin
 
 import requests
 
 from .provider_client import ProviderResponse
-from .provider_request import ProviderRequest, stable_hash
+from .provider_request import ProviderRequest, stable_hash, stable_json
 
 
 PROTOCOL_VERSION = "stegverse.intr.zai.transport.v1"
@@ -38,6 +39,30 @@ class ZAITransportAdmissionError(ZAITransportError):
 
 class ZAITransportConfigurationError(ZAITransportError):
     """Raised when transport configuration would escape the bounded Z.ai lane."""
+
+
+def zai_wire_payload(request: ProviderRequest) -> dict[str, Any]:
+    return {
+        "model": request.model,
+        "messages": [message.to_dict() for message in request.messages],
+        "temperature": request.temperature,
+    }
+
+
+def zai_wire_bytes(request: ProviderRequest) -> bytes:
+    return stable_json(zai_wire_payload(request)).encode("utf-8")
+
+
+def zai_wire_request_hash(request: ProviderRequest) -> str:
+    return stable_hash(zai_wire_payload(request))
+
+
+def assert_no_secret_material(secret: str, /, **structures: Any) -> None:
+    if not isinstance(secret, str) or not secret:
+        raise ZAITransportConfigurationError("TV/TVC-resolved Z.ai credential is required")
+    for name, value in structures.items():
+        if secret in stable_json(value):
+            raise ZAITransportError(f"credential material detected in {name}")
 
 
 @dataclass(frozen=True)
@@ -84,6 +109,7 @@ class ZAIInTrEnvelope:
 class ZAITransportResult:
     envelope: ZAIInTrEnvelope
     response: ProviderResponse
+    provider_request_hash: str
     egress_intr_required: bool = True
     authority_effect: str = "NONE"
 
@@ -93,6 +119,7 @@ class ZAITransportResult:
             "transport_id": self.envelope.transport_id,
             "transition_id": self.envelope.transition_id,
             "request_hash": self.envelope.request_hash,
+            "provider_request_hash": self.provider_request_hash,
             "envelope_hash": self.envelope.envelope_hash,
             "ingress_receipt_hash": self.envelope.ingress_receipt_hash,
             "provider": self.response.provider,
@@ -122,8 +149,6 @@ def build_zai_intr_envelope(
     endpoint_profile: str = "general",
     credential_class: str = "TV_TVC_PROVIDER_SECRET",
 ) -> ZAIInTrEnvelope:
-    """Bind an exact provider request to already-observed ingress ALLOW evidence."""
-
     if ingress_disposition != "ALLOW":
         raise ZAITransportAdmissionError("Z.ai transport requires contemporaneous ingress InTr ALLOW")
     if not transition_id.strip():
@@ -139,11 +164,12 @@ def build_zai_intr_envelope(
     if credential_class != "TV_TVC_PROVIDER_SECRET":
         raise ZAITransportAdmissionError("hosted Z.ai credentials must remain under TV/TVC authority")
 
-    transport_id = stable_hash(
+    wire_hash = zai_wire_request_hash(request)
+    transport_id = "zait-" + stable_hash(
         {
             "protocol_version": PROTOCOL_VERSION,
             "transition_id": transition_id,
-            "request_hash": request.request_hash,
+            "request_hash": wire_hash,
             "ingress_receipt_hash": ingress_receipt_hash,
             "carrier_ref": carrier_ref,
             "endpoint_profile": endpoint_profile,
@@ -153,7 +179,7 @@ def build_zai_intr_envelope(
         protocol_version=PROTOCOL_VERSION,
         transport_id=transport_id,
         transition_id=transition_id,
-        request_hash=request.request_hash,
+        request_hash=wire_hash,
         provider="z.ai",
         model=request.model,
         endpoint_profile=endpoint_profile,
@@ -168,12 +194,11 @@ def build_zai_intr_envelope(
 class ZAIHTTPTransport:
     """OpenAI-compatible Z.ai transport executed only after ingress admission.
 
-    `credential` is intentionally supplied per execution and is never serialized
-    into the envelope, response metadata, or evidence. Production callers are
-    responsible for obtaining it through the existing TV/TVC authority path.
+    Credential material is resolved exactly once at send time through the
+    supplied TV/TVC resolver and never serialized into returned artifacts.
     """
 
-    credential: str
+    credential_resolver: Callable[[], str]
     base_url: str = ZAI_GENERAL_BASE_URL
     timeout_seconds: int = 120
 
@@ -181,8 +206,8 @@ class ZAIHTTPTransport:
         normalized = self.base_url.rstrip("/")
         if normalized not in _ALLOWED_BASE_URLS:
             raise ZAITransportConfigurationError("Z.ai transport base_url is not an approved official endpoint")
-        if not self.credential:
-            raise ZAITransportConfigurationError("TV/TVC-resolved Z.ai credential is required")
+        if not callable(self.credential_resolver):
+            raise ZAITransportConfigurationError("TV/TVC credential resolver is required")
         object.__setattr__(self, "base_url", normalized)
 
     def complete(self, envelope: ZAIInTrEnvelope, request: ProviderRequest) -> ZAITransportResult:
@@ -190,53 +215,88 @@ class ZAIHTTPTransport:
             raise ZAITransportAdmissionError("unsupported Z.ai InTr transport protocol version")
         if envelope.authority_effect != "NONE" or not envelope.egress_intr_required:
             raise ZAITransportAdmissionError("transport envelope attempts authority escalation")
-        if envelope.request_hash != request.request_hash:
-            raise ZAITransportAdmissionError("ProviderRequest hash does not match admitted transport envelope")
+        wire_hash = zai_wire_request_hash(request)
+        if envelope.request_hash != wire_hash:
+            raise ZAITransportAdmissionError("exact outbound Z.ai request hash does not match admitted transport envelope")
         expected_profile = "coding" if self.base_url == ZAI_CODING_BASE_URL else "general"
         if envelope.endpoint_profile != expected_profile:
             raise ZAITransportConfigurationError("transport endpoint profile does not match admitted envelope")
 
-        payload = {
-            "model": request.model,
-            "messages": [message.to_dict() for message in request.messages],
-            "temperature": request.temperature,
-        }
+        credential = self.credential_resolver()
+        assert_no_secret_material(credential, envelope=envelope.to_dict(), outbound_payload=zai_wire_payload(request))
         response = requests.post(
             urljoin(self.base_url + "/", "chat/completions"),
-            headers={"Authorization": f"Bearer {self.credential}", "Content-Type": "application/json"},
-            json=payload,
+            headers={"Authorization": f"Bearer {credential}", "Content-Type": "application/json", "Accept": "application/json"},
+            data=zai_wire_bytes(request),
             timeout=self.timeout_seconds,
         )
         response.raise_for_status()
         body = response.json()
+        if not isinstance(body, Mapping):
+            raise ZAITransportError("Z.ai response body must be an object")
         choices = body.get("choices") or []
         if not choices or not isinstance(choices[0], Mapping):
             raise ZAITransportError("Z.ai response missing choices[0]")
         message = choices[0].get("message") or {}
-        output = message.get("content")
-        if not isinstance(output, str):
-            raise ZAITransportError("Z.ai response missing text content")
-        usage = body.get("usage") if isinstance(body.get("usage"), Mapping) else {}
+        output = message.get("content") if isinstance(message, Mapping) else None
+        if not isinstance(output, str) or not output.strip():
+            raise ZAITransportError("Z.ai response missing usable text content")
+        response_id = body.get("id")
+        runtime_model = body.get("model")
+        finish_reason = choices[0].get("finish_reason")
+        if not isinstance(response_id, str) or not response_id:
+            raise ZAITransportError("Z.ai response missing id")
+        if not isinstance(runtime_model, str) or not runtime_model:
+            raise ZAITransportError("Z.ai response missing model")
+        if not isinstance(finish_reason, str):
+            raise ZAITransportError("Z.ai response missing finish_reason")
+        usage = body.get("usage")
+        if usage is not None:
+            if not isinstance(usage, Mapping):
+                raise ZAITransportError("Z.ai usage must be an object")
+            for key in ("prompt_tokens", "completion_tokens", "total_tokens"):
+                if not isinstance(usage.get(key), int) or isinstance(usage.get(key), bool):
+                    raise ZAITransportError("Z.ai usage token counts must be integers")
+
+        metadata = {
+            "provider_mode": "zai_openai_compatible_intr_transport",
+            "response_id": response_id,
+            "finish_reason": finish_reason,
+            "runtime_model": runtime_model,
+            "usage": dict(usage) if usage is not None else None,
+            "transport_id": envelope.transport_id,
+            "ingress_receipt_hash": envelope.ingress_receipt_hash,
+            "credential_authority": "TV/TVC",
+            "credential_material_present": False,
+            "egress_intr_required": True,
+            "authority_effect": "NONE",
+        }
         provider_response = ProviderResponse(
             provider="z.ai",
             model=request.model,
             output=output,
-            request_hash=request.request_hash,
-            metadata={
-                "provider_mode": "zai_openai_compatible_intr_transport",
-                "response_id": body.get("id", "unresolved"),
-                "finish_reason": choices[0].get("finish_reason", "unresolved"),
-                "runtime_model": body.get("model", request.model),
-                "usage": dict(usage),
-                "transport_id": envelope.transport_id,
-                "ingress_receipt_hash": envelope.ingress_receipt_hash,
-                "credential_authority": "TV/TVC",
-                "credential_material_present": False,
-                "egress_intr_required": True,
-                "authority_effect": "NONE",
-            },
+            request_hash=envelope.request_hash,
+            metadata=metadata,
         )
-        return ZAITransportResult(envelope=envelope, response=provider_response)
+        result = ZAITransportResult(
+            envelope=envelope,
+            response=provider_response,
+            provider_request_hash=request.request_hash,
+        )
+        assert_no_secret_material(
+            credential,
+            raw_provider_body=body,
+            provider_response={
+                "provider": provider_response.provider,
+                "model": provider_response.model,
+                "output": provider_response.output,
+                "request_hash": provider_response.request_hash,
+                "metadata": dict(provider_response.metadata),
+            },
+            transport_evidence=result.evidence(),
+        )
+        del credential
+        return result
 
 
 __all__ = [
@@ -250,4 +310,8 @@ __all__ = [
     "ZAITransportResult",
     "ZAIHTTPTransport",
     "build_zai_intr_envelope",
+    "zai_wire_payload",
+    "zai_wire_bytes",
+    "zai_wire_request_hash",
+    "assert_no_secret_material",
 ]
