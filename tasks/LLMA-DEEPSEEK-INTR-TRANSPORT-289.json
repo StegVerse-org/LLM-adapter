@@ -51,7 +51,7 @@
     "tests_implemented": "COMPLETE",
     "readme_required": true,
     "readme_in_same_change_set": "COMPLETE",
-    "capability_projection": "COMPLETE_AT_MERGED_HEAD_RECONCILIATION_PENDING",
+    "capability_projection": "COMPLETE",
     "exact_head_validation": "PASS",
     "merge": "COMPLETE",
     "live_deepseek_execution": "NOT_CLAIMED",
