@@ -8,6 +8,7 @@ from llm_adapter.zai_intr_executor import (
 from llm_adapter.zai_intr_transport import (
     ZAITransportAdmissionError,
     ZAITransportResult,
+    zai_wire_request_hash,
 )
 
 
@@ -21,16 +22,21 @@ def _request():
 
 
 class _FakeTransport:
-    def __init__(self, *, credential, base_url):
-        self.credential = credential
+    resolver_calls = 0
+
+    def __init__(self, *, credential_resolver, base_url):
+        self.credential_resolver = credential_resolver
         self.base_url = base_url
 
     def complete(self, envelope, request):
+        credential = self.credential_resolver()
+        type(self).resolver_calls += 1
+        assert credential == "tv-tvc-ephemeral-secret"
         response = ProviderResponse(
             provider="z.ai",
             model=request.model,
             output="fixture-output",
-            request_hash=request.request_hash,
+            request_hash=envelope.request_hash,
             metadata={
                 "usage": {"prompt_tokens": 3, "completion_tokens": 2, "total_tokens": 5},
                 "transport_id": envelope.transport_id,
@@ -41,7 +47,11 @@ class _FakeTransport:
                 "authority_effect": "NONE",
             },
         )
-        return ZAITransportResult(envelope=envelope, response=response)
+        return ZAITransportResult(
+            envelope=envelope,
+            response=response,
+            provider_request_hash=request.request_hash,
+        )
 
 
 def _usage_submitter(event):
@@ -54,6 +64,7 @@ def _usage_submitter(event):
         "event_sha256": event["event_sha256"],
         "authority_granted": False,
         "custody_recorded": True,
+        "authority_effect": "NONE",
     }
 
 
@@ -65,7 +76,7 @@ def _execute(**overrides):
         "ingress_disposition": "ALLOW",
         "ingress_receipt_hash": "a" * 64,
         "carrier_ref": "hb:carrier:fixture",
-        "credential": "tv-tvc-ephemeral-secret",
+        "credential_resolver": lambda: "tv-tvc-ephemeral-secret",
         "transport_factory": _FakeTransport,
         "usage_submitter": _usage_submitter,
     }
@@ -81,10 +92,22 @@ def test_executor_requires_ingress_allow():
         pass
 
 
-def test_executor_emits_usage_and_custody_evidence_without_credential_material():
+def test_executor_requires_credential_resolver():
+    try:
+        _execute(credential_resolver=None)
+        assert False, "credential resolver must be callable"
+    except ZAIExecutionError:
+        pass
+
+
+def test_executor_emits_usage_custody_and_egress_handoff_without_credential_material():
+    _FakeTransport.resolver_calls = 0
     result = _execute()
     evidence = result.evidence()
+    assert _FakeTransport.resolver_calls == 1
     assert result.transport.response.output == "fixture-output"
+    assert result.envelope.request_hash == zai_wire_request_hash(_request())
+    assert result.transport.provider_request_hash != result.envelope.request_hash
     assert result.provider_usage_event["provider"] == "z.ai"
     assert result.provider_usage_event["metrics"]["total_tokens"]["value"] == "5"
     assert result.master_records_usage["custody_recorded"] is True
@@ -92,33 +115,44 @@ def test_executor_emits_usage_and_custody_evidence_without_credential_material()
     assert evidence["egress_intr_required"] is True
     assert evidence["authority_effect"] == "NONE"
     assert evidence["credential_material_present"] is False
+    assert result.egress_handoff["requested_disposition"] == "ALLOW"
+    assert result.egress_handoff["response_hash"] == result.response_hash
+    assert result.egress_handoff["request_hash"] == result.envelope.request_hash
+    assert result.egress_handoff["provider_request_hash"] == result.transport.provider_request_hash
+    assert result.egress_handoff["egress_intr_required"] is True
+    assert result.egress_handoff["authority_effect"] == "NONE"
     assert "tv-tvc-ephemeral-secret" not in str(evidence)
     assert "tv-tvc-ephemeral-secret" not in str(result.provider_usage_event)
+    assert "tv-tvc-ephemeral-secret" not in str(result.egress_handoff)
 
 
 def test_master_records_cannot_escalate_authority():
-    def bad_submitter(event):
-        return {"status": "CUSTODY_RECORDED", "authority_granted": True, "custody_recorded": True}
+    bad_replies = [
+        {"status": "CUSTODY_RECORDED", "authority_granted": True, "custody_recorded": True},
+        {"status": "CUSTODY_RECORDED", "grants_authority": True, "custody_recorded": True},
+        {"status": "CUSTODY_RECORDED", "authority_effect": "GOVERNANCE", "custody_recorded": True},
+    ]
+    for reply in bad_replies:
+        try:
+            _execute(usage_submitter=lambda event, reply=reply: reply)
+            assert False, "custody response must not grant authority"
+        except ZAIExecutionError:
+            pass
 
-    try:
-        _execute(usage_submitter=bad_submitter)
-        assert False, "custody response must not grant authority"
-    except ZAIExecutionError:
-        pass
 
-
-def test_egress_deny_fails_closed():
+def test_egress_requires_exact_allow():
     execution = _execute()
-    try:
-        admit_zai_egress(
-            execution,
-            egress_disposition="DENY",
-            egress_receipt_hash="b" * 64,
-            admitted_response_hash=execution.response_hash,
-        )
-        assert False, "egress DENY must fail closed"
-    except ZAITransportAdmissionError:
-        pass
+    for disposition in ("DENY", "allow", "ALLOW ", "ALLOWED"):
+        try:
+            admit_zai_egress(
+                execution,
+                egress_disposition=disposition,
+                egress_receipt_hash="b" * 64,
+                admitted_response_hash=execution.response_hash,
+            )
+            assert False, f"{disposition!r} must fail closed"
+        except ZAITransportAdmissionError:
+            pass
 
 
 def test_egress_response_hash_mismatch_fails_closed():
@@ -131,6 +165,20 @@ def test_egress_response_hash_mismatch_fails_closed():
             admitted_response_hash="c" * 64,
         )
         assert False, "egress admission must bind the exact provider response"
+    except ZAITransportAdmissionError:
+        pass
+
+
+def test_malformed_egress_receipt_fails_closed():
+    execution = _execute()
+    try:
+        admit_zai_egress(
+            execution,
+            egress_disposition="ALLOW",
+            egress_receipt_hash="not-a-hash",
+            admitted_response_hash=execution.response_hash,
+        )
+        assert False, "malformed egress receipt must fail closed"
     except ZAITransportAdmissionError:
         pass
 

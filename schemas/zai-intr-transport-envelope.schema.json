@@ -22,7 +22,7 @@
   ],
   "properties": {
     "protocol_version": {"const": "stegverse.intr.zai.transport.v1"},
-    "transport_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "transport_id": {"type": "string", "pattern": "^zait-[0-9a-f]{64}$"},
     "transition_id": {"type": "string", "minLength": 1},
     "request_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "provider": {"const": "z.ai"},
