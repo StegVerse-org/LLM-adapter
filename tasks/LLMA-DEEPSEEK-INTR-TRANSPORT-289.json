@@ -3,7 +3,7 @@
   "issue": 289,
   "repository": "StegVerse-org/LLM-adapter",
   "goal": "Integrate optional DeepSeek InTr transport and governed execution without creating parallel authority or custody machinery.",
-  "state": "SOURCE_COMPLETE_VALIDATION_PENDING",
+  "state": "COMPLETE_RELEASED_SOURCE",
   "authority_effect": "NONE_TRANSPORT_ONLY",
   "canonical_sovereign_route_replaced": false,
   "credential_authority": "TV/TVC",
@@ -24,10 +24,25 @@
     "tests/test_deepseek_intr_transport.py",
     "tests/test_deepseek_intr_executor.py",
     "capability/stegverse-intr-deepseek-transport.capability.json",
+    ".github/workflows/validate-deepseek-intr.yml",
     "docs/DEEPSEEK_INTR_TRANSPORT_MIRROR_HANDOFF.md",
     "README.md",
     "adapter.capabilities.json"
   ],
+  "validation": {
+    "validated_head": "3811b9d47e8eb90818ca6f5ce32a25473ff1dd5a",
+    "dedicated_validation_run": "34066526167 SUCCESS",
+    "repository_validation_run": "34066526101 SUCCESS",
+    "deepseek_transport_tests": "8/8 PASS",
+    "deepseek_executor_egress_tests": "6/6 PASS",
+    "repository_validation_steps": "71/71 PASS"
+  },
+  "integration": {
+    "pull_request": 289,
+    "merge_commit": "6eb6603c8a31c0efb46ab58fed47ce304b5733cd",
+    "merged_to": "main",
+    "merged": true
+  },
   "completion_predicates": {
     "machine_preflight": "PASS",
     "protocol_source": "COMPLETE",
@@ -36,9 +51,9 @@
     "tests_implemented": "COMPLETE",
     "readme_required": true,
     "readme_in_same_change_set": "COMPLETE",
-    "capability_projection": "COMPLETE",
-    "exact_head_validation": "PENDING",
-    "merge": "PENDING",
+    "capability_projection": "COMPLETE_AT_MERGED_HEAD_RECONCILIATION_PENDING",
+    "exact_head_validation": "PASS",
+    "merge": "COMPLETE",
     "live_deepseek_execution": "NOT_CLAIMED",
     "runtime_activation": "NOT_CLAIMED"
   },
@@ -50,6 +65,6 @@
     "canonical sovereign local provider execution",
     "existing Z.ai optional interoperability lane"
   ],
-  "release_condition": "Exact-head source validation passes, README/capability completeness passes, and merge occurs without authority escalation. Live provider execution remains separately governed.",
+  "release_condition": "SATISFIED_FOR_SOURCE_IMPLEMENTATION_ONLY. Live provider execution, runtime activation, product activation, repository tag, and product release remain separately governed.",
   "scaffolding_or_stubs": 0
 }
