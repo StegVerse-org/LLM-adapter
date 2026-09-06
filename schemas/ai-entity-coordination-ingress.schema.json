@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/ai-entity-coordination-ingress.schema.json",
+  "title": "StegVerse AI Entity Coordination Ingress",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "coordination_id",
+    "session_id",
+    "transition_id",
+    "entry_point",
+    "entity",
+    "requested_actions",
+    "ecosystem_snapshot_hash",
+    "issue_refs",
+    "sandbox_root",
+    "mutation_authority",
+    "authority_effect",
+    "credential_material_present"
+  ],
+  "properties": {
+    "protocol_version": {"const": "stegverse.ai_entity_coordination_ingress.v1"},
+    "coordination_id": {"type": "string", "minLength": 1},
+    "session_id": {"type": "string", "minLength": 1},
+    "transition_id": {"type": "string", "minLength": 1},
+    "entry_point": {"const": "ecosystem_chat"},
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity_id", "provider", "model", "role"],
+      "properties": {
+        "entity_id": {"type": "string", "minLength": 1},
+        "provider": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "role": {"enum": ["SANDBOX_CONTRIBUTOR", "COORDINATOR_MUTATION_ACTOR"]}
+      }
+    },
+    "requested_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"enum": ["INSPECT", "DIAGNOSE", "PROPOSE", "SIMULATE", "AGREE", "DISAGREE", "ABSTAIN"]}
+    },
+    "ecosystem_snapshot_hash": {"type": "string", "minLength": 1},
+    "issue_refs": {"type": "array", "items": {"type": "string"}},
+    "sandbox_root": {"const": "sandbox/ai-entity-coordination"},
+    "mutation_authority": {"const": "CHATGPT_ONLY_GOVERNED"},
+    "authority_effect": {"const": "NONE"},
+    "credential_material_present": {"const": false}
+  }
+}
