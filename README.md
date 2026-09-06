@@ -105,24 +105,34 @@ tasks/LLMA-DISTRIBUTED-LLM-EXECUTOR-274.json
 Z.ai is supported as an **optional hosted-provider interoperability transport** through `stegverse.intr.zai.transport.v1`. It does not replace the canonical sovereign local route and does not acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.
 
 ```text
-exact ProviderRequest
+canonical ProviderRequest provenance
+-> derive exact outbound Z.ai wire payload: model + messages + temperature
+-> canonicalize exact outbound payload and compute request_hash
 -> contemporaneous Interlock/InTr ingress evaluation
--> DENY: no provider call
--> ALLOW: bind exact request hash + transition ID + ingress receipt hash + carrier ref
--> TV/TVC-resolved provider credential supplied only at execution time
--> approved official Z.ai OpenAI-compatible endpoint
+-> DENY: no credential resolution / no provider call
+-> ALLOW: bind exact wire request_hash + transition ID + ingress receipt hash + carrier ref
+-> derive transport_id as zait-<sha256(canonical transport basis)>
+-> resolve TV/TVC provider credential exactly once at execution/send time
+-> approved official Z.ai OpenAI-compatible endpoint selected only from admitted endpoint_profile
+-> send the exact canonical bytes whose hash was admitted
+-> validate provider response and usage fail-closed
+-> reject credential material echoed by provider or present in outgoing evidence
 -> provider response with authority_effect NONE
 -> provider usage event using the existing adapter schema
--> existing Master Records provider-usage submission path
--> retained transport/request/response/custody evidence with no credential material
+-> existing Master Records provider-usage submission path, without authority escalation
+-> deterministic pre-egress handoff requests ALLOW but never assumes it
 -> separate Interlock/InTr egress evaluation
 -> exact egress ALLOW receipt must bind the provider response hash
 -> only the externally admitted downstream transition may attach consequence
 ```
 
-The implementation allowlists the official global general API base `https://api.z.ai/api/paas/v4` and Coding Plan base `https://api.z.ai/api/coding/paas/v4`. Endpoint profile selection is part of the admitted envelope; a runtime configured for one profile cannot execute an envelope admitted for the other. Credentials remain under TV/TVC authority and are prohibited from serialized transport envelopes, response metadata, evidence, task records, handoffs, provider-usage events, and egress-admission records.
+The v1 `transport_id` format is `zait-` followed by a lowercase SHA-256 digest. Its digest basis is the protocol version, transition ID, exact wire request hash, ingress receipt hash, carrier reference, and endpoint profile. The envelope `request_hash` binds the exact outbound Z.ai payload rather than the broader adapter `ProviderRequest` object; the broader `ProviderRequest.request_hash` may be retained separately as provenance but is not substituted for the admitted wire hash.
 
-`execute_governed_zai` binds the merged transport to the existing provider-usage and Master Records submission mechanisms. It accepts the credential only as ephemeral execution input, produces non-authoritative provider output, and emits `egress_intr_required=true`. `admit_zai_egress` does not evaluate or grant governance; it verifies an externally produced Interlock/InTr `ALLOW` receipt, an exact SHA-256 receipt identifier, and an admitted response hash equal to the provider response produced by the execution. Its local authority effect is explicitly `NONE_LOCAL`.
+The implementation allowlists the official global general API base `https://api.z.ai/api/paas/v4` and Coding Plan base `https://api.z.ai/api/coding/paas/v4`. Endpoint profile selection is part of the admitted envelope; a runtime configured for one profile cannot execute an envelope admitted for the other. Credentials remain under TV/TVC authority, are resolved through an external callable at send time, and are prohibited from serialized transport envelopes, response metadata, evidence, task records, handoffs, provider-usage events, and egress-admission records. A provider response that echoes the resolved credential is rejected fail-closed before returned evidence is emitted.
+
+`execute_governed_zai` binds the transport to the existing provider-usage and Master Records submission mechanisms. It accepts a TV/TVC credential resolver rather than persisted credential material, produces non-authoritative provider output, and emits an explicit deterministic pre-egress handoff with `requested_disposition=ALLOW`, `egress_intr_required=true`, and `authority_effect=NONE`; this is a request for external evaluation, not an assumed decision. `admit_zai_egress` does not evaluate or grant governance; it verifies an externally produced Interlock/InTr `ALLOW` receipt, an exact SHA-256 receipt identifier, and an admitted response hash equal to the provider response produced by the execution. Its local authority effect is explicitly `NONE_LOCAL`.
+
+The exact outbound bytes are deterministically serialized from the canonical adapter request fields used by the Z.ai payload. Canonical `ProviderRequest` currently represents `temperature` as a numeric value; source validation therefore binds the bytes actually sent, while any future restricted-string/scaled-integer numeric canonicalization contract must be explicitly reconciled rather than silently changing provider typing.
 
 Canonical source surfaces:
 
@@ -132,13 +142,15 @@ llm_adapter/zai_intr_executor.py
 schemas/zai-intr-transport-envelope.schema.json
 tests/test_zai_intr_transport.py
 tests/test_zai_intr_executor.py
+capability/stegverse-intr-zai-transport.capability.json
 docs/ZAI_INTR_TRANSPORT_MIRROR_HANDOFF.md
 docs/ZAI_INTR_EXECUTOR_MIRROR_HANDOFF.md
+docs/ZAI_INTR_TRANSPORT_ID_RECONCILIATION_MIRROR_HANDOFF.md
 tasks/LLMA-ZAI-INTR-TRANSPORT-276.json
 tasks/LLMA-ZAI-INTR-EXECUTOR-278.json
 ```
 
-Source validation proves fail-closed transport, usage-evidence, custody-submission, and exact-response egress-binding semantics only. It is not live Z.ai execution, route admission, credential materialization, authentic Master Records custody/reconstruction, live egress ALLOW, Ecosystem Chat activation, or Site activation evidence.
+Source validation proves fail-closed transport identity, exact wire-byte/hash binding, execution-time credential resolution, credential-redaction checks, usage-evidence, custody-submission, deterministic egress-handoff, and exact-response egress-binding semantics only. It is not live Z.ai execution, route admission, credential materialization, authentic Master Records custody/reconstruction, live egress ALLOW, Ecosystem Chat activation, or Site activation evidence.
 
 ## No GitHub-token production dependency
 
