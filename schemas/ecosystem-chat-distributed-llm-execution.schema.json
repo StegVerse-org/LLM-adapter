@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/ecosystem-chat-distributed-llm-execution.schema.json",
+  "title": "StegVerse Ecosystem Chat Distributed LLM Execution Summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "workload_id", "workload_hash", "routing_mode", "attempted_source_ids", "returned_source_ids", "refused_source_ids", "failed_source_ids", "skipped_source_ids", "contribution_hashes", "created_at", "authority", "execution_hash"],
+  "properties": {
+    "schema_version": {"const": "stegverse.ecosystem_chat.distributed_llm_execution.v1"},
+    "workload_id": {"type": "string", "minLength": 1},
+    "workload_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "routing_mode": {"enum": ["single", "parallel", "fallback"]},
+    "attempted_source_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "returned_source_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "refused_source_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "failed_source_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "skipped_source_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "contribution_hashes": {"type": "array", "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+    "created_at": {"type": "string", "minLength": 1},
+    "execution_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider_broker_authority", "governance_authority", "route_authority", "credential_authority", "custody_authority", "execution_admission_authority"],
+      "properties": {
+        "provider_broker_authority": {"const": false},
+        "governance_authority": {"const": false},
+        "route_authority": {"const": false},
+        "credential_authority": {"const": false},
+        "custody_authority": {"const": false},
+        "execution_admission_authority": {"const": false}
+      }
+    }
+  }
+}

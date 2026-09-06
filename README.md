@@ -55,7 +55,9 @@ canonical Ecosystem Chat request
 
 Supported source-level routing declarations are `single`, `parallel`, `sequential`, `challenge`, and `fallback`. These declarations describe workload execution intent only. They do not create truth by voting, grant admission, or make any model the governance authority.
 
-The canonical sovereign local/private route remains independently sufficient for Ecosystem Chat operation. Optional named external sources may expand capability, comparison, specialization, or fallback behavior, but they must not become mandatory third-party production dependencies. Provider credentials are deployment/runtime configuration and are prohibited from workload, contribution, reconciliation, and governed-result artifacts.
+Bounded executor support is layered separately. `single`, `parallel`, and `fallback` can be executed over explicitly injected `ProviderClient` instances. `parallel` means independent fan-out over the same canonical input with deterministic retained result ordering; it does not grant scheduler or concurrency authority. Missing or failing optional sources produce explicit `FAILED` contribution evidence, provider refusal remains `REFUSED`, and fallback proceeds in declared workload order until a source returns. `sequential` and `challenge` fail closed until a separately governed derived-input/prompt-construction contract exists. Fixture-provider execution validates this execution mechanism only; it is not evidence of live external named-source execution.
+
+The canonical sovereign local/private route remains independently sufficient for Ecosystem Chat operation. Optional named external sources may expand capability, comparison, specialization, or fallback behavior, but they must not become mandatory third-party production dependencies. Provider credentials are deployment/runtime configuration and are prohibited from workload, contribution, reconciliation, governed-result, and execution-summary artifacts.
 
 The distributed contract preserves the following distinctions:
 
@@ -66,6 +68,8 @@ model majority != governance authority
 provider availability != canonical availability authority
 provider credentials != artifact content
 source validation != live distributed execution
+fixture execution != live external provider execution
+parallel fan-out semantics != scheduler authority
 ```
 
 The unfinished 12-lane analysis may later populate source capability profiles and supply evidence for routing, cost, independence, or comparative behavior. It is useful evidence, not an implementation prerequisite.
@@ -74,20 +78,26 @@ The future native Ecosystem Chat LLM is a separate model-development target dist
 
 > **No reactive guardrails. Native governance instead.**
 
-The distributed workload contract does not claim that native model exists, and it does not create a second governance engine.
+The distributed workload and bounded executor do not claim that native model exists, and they do not create a second governance engine.
 
-Canonical distributed-workload source surfaces:
+Canonical distributed-workload and executor source surfaces:
 
 ```text
 llm_adapter/distributed_workload.py
+llm_adapter/distributed_executor.py
 schemas/ecosystem-chat-distributed-llm-workload.schema.json
 schemas/ecosystem-chat-llm-contribution.schema.json
 schemas/ecosystem-chat-llm-reconciliation-request.schema.json
 schemas/ecosystem-chat-governed-result.schema.json
+schemas/ecosystem-chat-distributed-llm-execution.schema.json
 tests/test_distributed_workload.py
+tests/test_distributed_executor.py
 scripts/check_distributed_llm_workload.py
+scripts/check_distributed_llm_executor.py
 docs/DISTRIBUTED_LLM_WORKLOAD_MIRROR_HANDOFF.md
+docs/DISTRIBUTED_LLM_EXECUTOR_MIRROR_HANDOFF.md
 tasks/LLMA-DISTRIBUTED-LLM-WORKLOAD-272.json
+tasks/LLMA-DISTRIBUTED-LLM-EXECUTOR-274.json
 ```
 
 ## No GitHub-token production dependency
@@ -149,7 +159,7 @@ heartbeat recovery / current fence
 -> required Publisher/wiki propagation
 ```
 
-The distributed named-source workload is an additive capability contract. Its source validation does not satisfy this sovereign activation sequence and does not prove live multi-provider fan-out.
+The distributed named-source workload and bounded executor are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider fan-out.
 
 This continuation is machine-owned. It is not a reason to re-open the completed local-model or carrier-executor implementation tasks.
 
@@ -166,7 +176,7 @@ reconstruction PASS != execution authority
 session archival != activation
 ```
 
-The adapter must fail closed rather than silently substitute hosted inference, missing credential authority, unverified runtime identity, incomplete custody evidence, unknown distributed sources, broken hash binding, missing provenance, or provider authority escalation into the canonical sovereign route or distributed workload.
+The adapter must fail closed rather than silently substitute hosted inference, missing credential authority, unverified runtime identity, incomplete custody evidence, unknown distributed sources, broken hash binding, missing provenance, unsupported derived-input semantics, or provider authority escalation into the canonical sovereign route or distributed workload.
 
 ## Development and verification
 
@@ -179,6 +189,8 @@ python scripts/verify_goal4.py
 pytest tests/test_execute_canonical_sovereign_route.py -v
 pytest tests/test_distributed_workload.py -q
 python scripts/check_distributed_llm_workload.py
+pytest tests/test_distributed_executor.py -q
+python scripts/check_distributed_llm_executor.py
 ```
 
 The authoritative current task and release state is `LLM_ADAPTER_MIRROR_HANDOFF.md`. `adapter.capabilities.json` is the machine-readable capability posture.
