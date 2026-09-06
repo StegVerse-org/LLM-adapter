@@ -100,6 +100,37 @@ tasks/LLMA-DISTRIBUTED-LLM-WORKLOAD-272.json
 tasks/LLMA-DISTRIBUTED-LLM-EXECUTOR-274.json
 ```
 
+## Z.ai Interlock/InTr transport
+
+Z.ai is supported as an **optional hosted-provider interoperability transport** through `stegverse.intr.zai.transport.v1`. It does not replace the canonical sovereign local route and does not acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.
+
+```text
+exact ProviderRequest
+-> contemporaneous Interlock/InTr ingress evaluation
+-> DENY: no provider call
+-> ALLOW: bind exact request hash + transition ID + ingress receipt hash + carrier ref
+-> TV/TVC-resolved provider credential supplied only at execution time
+-> approved official Z.ai OpenAI-compatible endpoint
+-> provider response with authority_effect NONE
+-> retained transport/request/response evidence with no credential material
+-> separate Interlock/InTr egress evaluation
+-> only an admitted downstream transition may attach consequence
+```
+
+The implementation allowlists the official global general API base `https://api.z.ai/api/paas/v4` and Coding Plan base `https://api.z.ai/api/coding/paas/v4`. Endpoint profile selection is part of the admitted envelope; a runtime configured for one profile cannot execute an envelope admitted for the other. Credentials remain under TV/TVC authority and are prohibited from serialized transport envelopes, response metadata, evidence, task records, or handoffs.
+
+Canonical source surfaces:
+
+```text
+llm_adapter/zai_intr_transport.py
+schemas/zai-intr-transport-envelope.schema.json
+tests/test_zai_intr_transport.py
+docs/ZAI_INTR_TRANSPORT_MIRROR_HANDOFF.md
+tasks/LLMA-ZAI-INTR-TRANSPORT-276.json
+```
+
+Source validation proves fail-closed transport semantics only; it is not live Z.ai execution, route admission, credential materialization, Master Records custody/reconstruction, egress ALLOW, Ecosystem Chat activation, or Site activation evidence.
+
 ## No GitHub-token production dependency
 
 GitHub repository access is not part of the production inference path.
@@ -111,7 +142,7 @@ credential_authority_model: TC/TVC
 canonical_local_route_credential_requirement: NONE
 ```
 
-GitHub Actions, Render, Cloudflare, Vercel, GitHub Models, OpenAI, and Anthropic are not canonical production heartbeat, inference, route, custody, or availability authorities. Optional hosted-provider interoperability lanes are separate from the canonical sovereign local route.
+GitHub Actions, Render, Cloudflare, Vercel, GitHub Models, OpenAI, Anthropic, and Z.ai are not canonical production heartbeat, inference, route, custody, or availability authorities. Optional hosted-provider interoperability lanes are separate from the canonical sovereign local route.
 
 ## Local model/runtime
 
@@ -159,7 +190,7 @@ heartbeat recovery / current fence
 -> required Publisher/wiki propagation
 ```
 
-The distributed named-source workload and bounded executor are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider fan-out.
+The distributed named-source workload, bounded executor, and Z.ai transport are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider or Z.ai execution.
 
 This continuation is machine-owned. It is not a reason to re-open the completed local-model or carrier-executor implementation tasks.
 
@@ -173,10 +204,11 @@ usage measurement != admissibility
 local persistence != custody
 custody receipt != execution authority
 reconstruction PASS != execution authority
+ingress ALLOW != egress ALLOW
 session archival != activation
 ```
 
-The adapter must fail closed rather than silently substitute hosted inference, missing credential authority, unverified runtime identity, incomplete custody evidence, unknown distributed sources, broken hash binding, missing provenance, unsupported derived-input semantics, or provider authority escalation into the canonical sovereign route or distributed workload.
+The adapter must fail closed rather than silently substitute hosted inference, missing credential authority, unverified runtime identity, incomplete custody evidence, unknown distributed sources, broken hash binding, missing provenance, unsupported derived-input semantics, endpoint-profile drift, missing egress governance, or provider authority escalation into the canonical sovereign route or distributed workload.
 
 ## Development and verification
 
@@ -191,13 +223,14 @@ pytest tests/test_distributed_workload.py -q
 python scripts/check_distributed_llm_workload.py
 pytest tests/test_distributed_executor.py -q
 python scripts/check_distributed_llm_executor.py
+pytest tests/test_zai_intr_transport.py -q
 ```
 
 The authoritative current task and release state is `LLM_ADAPTER_MIRROR_HANDOFF.md`. `adapter.capabilities.json` is the machine-readable capability posture.
 
 ## Optional interoperability lanes
 
-The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, and named-source distributed LLM contribution lanes. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
+The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, named-source distributed LLM contribution lanes, and the Z.ai InTr transport. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
 
 ## Repository
 

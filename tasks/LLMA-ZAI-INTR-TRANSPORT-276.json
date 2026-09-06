@@ -1,0 +1,48 @@
+{
+  "task_id": "LLMA-ZAI-INTR-TRANSPORT-276",
+  "issue": 276,
+  "repository": "StegVerse-org/LLM-adapter",
+  "goal": "Implement an optional Z.ai data transport protocol bound to existing Interlock/InTr governance without creating parallel authority.",
+  "state": "SOURCE_IMPLEMENTED_VALIDATION_PENDING",
+  "authority_effect": "NONE_TRANSPORT_ONLY",
+  "canonical_sovereign_route_replaced": false,
+  "credential_authority": "TV/TVC",
+  "credential_class": "TV_TVC_PROVIDER_SECRET",
+  "github_token_runtime_authority": false,
+  "provider_output_authority": "NONE",
+  "ingress_intr_required": true,
+  "egress_intr_required": true,
+  "protocol_version": "stegverse.intr.zai.transport.v1",
+  "endpoint_profiles": {
+    "general": "https://api.z.ai/api/paas/v4",
+    "coding": "https://api.z.ai/api/coding/paas/v4"
+  },
+  "source_surfaces": [
+    "llm_adapter/zai_intr_transport.py",
+    "schemas/zai-intr-transport-envelope.schema.json",
+    "tests/test_zai_intr_transport.py",
+    "docs/ZAI_INTR_TRANSPORT_MIRROR_HANDOFF.md",
+    "README.md"
+  ],
+  "completion_predicates": {
+    "machine_preflight": "PASS",
+    "protocol_source": "COMPLETE",
+    "schema": "COMPLETE",
+    "tests_implemented": "COMPLETE",
+    "readme_required": true,
+    "readme_in_same_change_set": "COMPLETE",
+    "exact_head_validation": "PENDING",
+    "merge": "PENDING",
+    "live_zai_execution": "NOT_CLAIMED",
+    "runtime_activation": "NOT_CLAIMED"
+  },
+  "collision_boundaries": [
+    "StegVerse-Labs/.github canonical heartbeat and WorkerCoordinator",
+    "Interlock/InTr transition authority",
+    "StegVerse-Labs/TVC route and credential authority",
+    "master-records/orchestration custody and reconstruction",
+    "canonical sovereign local provider execution"
+  ],
+  "release_condition": "Exact-head source validation passes, README completeness passes, and merge occurs without authority escalation. Live provider execution remains separately governed.",
+  "scaffolding_or_stubs": 0
+}
