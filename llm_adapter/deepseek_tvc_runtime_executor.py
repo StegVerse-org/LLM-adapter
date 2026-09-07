@@ -7,7 +7,7 @@ from typing import Any, Callable, Mapping
 
 from .deepseek_intr_transport import DeepSeekInTrEnvelope, build_deepseek_intr_envelope
 from .deepseek_tvc_broker import RUNTIME_PROFILE_ID, DeepSeekTVCBrokerResult, execute_deepseek_via_tvc_broker
-from .master_records_usage_submission import submit_provider_usage_to_master_records
+from .master_records_local_usage_submission import submit_provider_usage_to_local_master_records
 from .provider_request import ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
 
@@ -78,7 +78,7 @@ def execute_governed_deepseek_via_tvc_runtime(
     carrier_ref: str,
     lease_receipt: Mapping[str, Any],
     broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]],
-    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records,
+    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_local_master_records,
     max_output_tokens: int = 2048,
     response_format: str = "text",
 ) -> DeepSeekTVCRuntimeExecution:
@@ -122,6 +122,10 @@ def execute_governed_deepseek_via_tvc_runtime(
     custody = usage_submitter(event)
     if not isinstance(custody, Mapping):
         raise DeepSeekTVCRuntimeExecutionError("master_records_usage_reply_malformed")
+    if custody.get("status") != "CUSTODY_RECORDED" or custody.get("custody_recorded") is not True:
+        raise DeepSeekTVCRuntimeExecutionError("master_records_usage_custody_not_recorded")
+    if custody.get("reconstructability") != "PASS":
+        raise DeepSeekTVCRuntimeExecutionError("master_records_usage_reconstruction_not_pass")
     if custody.get("authority_effect") not in (None, "NONE"):
         raise DeepSeekTVCRuntimeExecutionError("master_records_usage_authority_escalation")
     for key in ("authority_granted", "grants_authority", "assumes_governance"):
@@ -141,6 +145,7 @@ def execute_governed_deepseek_via_tvc_runtime(
         "tvc_use_receipt_hash": broker.response.metadata["tvc_use_receipt_hash"],
         "provider_usage_event_sha256": event["event_sha256"],
         "master_records_usage_status": custody.get("status"),
+        "master_records_reconstructability": custody.get("reconstructability"),
         "requested_disposition": "ALLOW",
         "egress_intr_required": True,
         "credential_material_present": False,
@@ -164,7 +169,6 @@ def admit_deepseek_tvc_runtime_egress(
     egress_receipt_hash: str,
     admitted_response_hash: str,
 ) -> DeepSeekTVCRuntimeEgressAdmission:
-    """Verify an external Interlock/InTr egress decision for the exact TVC-runtime response."""
     if egress_disposition != "ALLOW":
         raise DeepSeekTVCRuntimeExecutionError("DeepSeek provider output requires egress InTr ALLOW")
     if not _SHA256_RE.fullmatch(egress_receipt_hash):
