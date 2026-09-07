@@ -28,7 +28,21 @@ class KimiTVCBrokerError(RuntimeError):
 
 
 def _prompt(request: ProviderRequest) -> str:
-    return "\n".join(f"{message.role}: {message.content}" for message in request.messages)
+    """Return only a prompt that the current TVC contract can execute exactly.
+
+    TVC's `openai_chat_completions` operation currently accepts one prompt and
+    materializes it as exactly one user message. Re-serializing a multi-message
+    chat into role-prefixed text would execute semantics different from the
+    InTr-admitted Kimi wire payload, so v1 fails closed instead.
+    """
+    if len(request.messages) != 1:
+        raise KimiTVCBrokerError("Kimi TVC v1 requires exactly one user message for exact request binding")
+    message = request.messages[0]
+    if message.role != "user":
+        raise KimiTVCBrokerError("Kimi TVC v1 requires user role for exact request binding")
+    if not isinstance(message.content, str) or not message.content:
+        raise KimiTVCBrokerError("Kimi TVC v1 requires non-empty user content")
+    return message.content
 
 
 def build_tvc_kimi_operation_request(
