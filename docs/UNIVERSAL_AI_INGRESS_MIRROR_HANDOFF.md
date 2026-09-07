@@ -3,9 +3,10 @@
 Updated: 2026-09-07
 Repository: `StegVerse-org/LLM-adapter`
 Issue: `#324`
+Pull request: `#325` (draft)
 Task: `LLMA-UNIVERSAL-AI-INGRESS-324`
 Branch: `feat/universal-ai-ingress-324`
-State: `ACTIVE_UNIQUE_WORK`
+State: `SOURCE_IMPLEMENTED_VALIDATION_IN_PROGRESS`
 
 ## Canonical purpose
 
@@ -22,7 +23,7 @@ AI entity
 -> thin provider / transport adapter
 ```
 
-This task does not create a second transport, runtime, credential broker, identity authority, governance engine, receipt system, sandbox runtime, or scheduler.
+This task creates no second transport, runtime, credential broker, identity authority, governance engine, receipt system, sandbox runtime, scheduler, provider-operation registry, or browser-session system.
 
 ## Canonical owners
 
@@ -40,11 +41,17 @@ AI request/response normalization + provider translation + provider evidence:
   llm_adapter/provider_client.py
   llm_adapter/external_llm_connection.py
 
+Provider-neutral Chat/session binding:
+  StegVerse-org/LLM-adapter
+  LLMA-CHAT-SESSION-BINDING-010
+  llm_adapter/chat_session_binding.py
+
 Transition authority:
   Interlock/InTr
 
 Credential and provider-operation authority:
   TV/TVC
+  config/provider_operation_profiles.json
 
 Runtime scheduling/carrier:
   StegVerse-Labs/.github WorkerCoordinator
@@ -65,14 +72,17 @@ Custody/reconstruction:
 
 Potential duplicates discovered and resolved:
 
-1. Provider-specific InTr envelope schemas already exist for Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic. They survive only as provider-edge wire-binding schemas; they must not become independent governance or identity contracts.
-2. `LLMA-EXTERNAL-LLM-CONVERGENCE-306` already provides one provider-neutral external LLM connection primitive. Reuse and extend it; do not create another external-provider orchestrator.
-3. `STEGOS-UNIVERSAL-INTR-BACKBONE-104` already owns canonical transport construction and one connector registry. LLM-adapter must consume it and must not create a second transport registry.
-4. StegOS #222 / PR #223 already added the provider-generic `external-provider-operation` profile. Reuse it for provider operations.
-5. `ProviderRequest`, `ProviderResponse`, and `ProviderClient` already normalize provider-facing inference. Extend these seams rather than creating a parallel normalized request/response stack.
-6. Existing `entity_sandbox_runner` routing represents the current bounded sandbox responsibility. This task will define shared confinement requirements at the ingress contract and route them to that owner; it will not create a new execution runtime merely because complete OS-level sandbox proof is not yet observed.
+1. Provider-specific InTr envelope schemas already exist for Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic. They survive only as provider-edge wire-binding schemas; they are not independent governance, identity, capability, confinement, route, credential, or evidence contracts.
+2. `LLMA-EXTERNAL-LLM-CONVERGENCE-306` already provides one provider-neutral external LLM connection primitive. It is reused and refactored rather than replaced.
+3. `STEGOS-UNIVERSAL-INTR-BACKBONE-104` already owns canonical transport construction and one Universal InTr connector-profile registry. LLM-adapter consumes that layer and does not create a second transport registry.
+4. StegOS #222 / PR #223 already added the provider-generic `external-provider-operation` profile. It remains the shared transport profile for provider operations.
+5. `ProviderRequest`, `ProviderResponse`, and `ProviderClient` already normalize provider-facing inference. `ProviderRequest` is extended with optional `AIIngressContext`; no parallel normalized request/response stack is created.
+6. Existing `entity_sandbox_runner` routing represents the current bounded sandbox responsibility. This task records shared confinement requirements and routes to that owner; it does not interpret missing runtime observation as a missing sandbox implementation.
+7. `LLMA-CHAT-SESSION-BINDING-010` already owns provider-neutral chat/session binding. Browser/session-mediated access reuses that system and is not modeled as a provider or principal identity.
+8. TVC already contains the canonical OpenAI `chat_completion_with_usage` provider-operation profile and vault reference. No new OpenAI route/profile/credential store is admissible in LLM-adapter. The remaining OpenAI predicate is only a thin LLM-adapter exact-request/response bridge into that existing TVC operation and the shared InTr path.
+9. Direct hosted OpenAI/Anthropic API-key clients represented a stale alternate production credential path. They are demoted to explicit legacy test-only compatibility shims; production hosted execution remains TV/TVC-owned. Their convergence condition is removal once all test/compatibility consumers can use broker fixtures or canonical TVC paths.
 
-## Reuse decision
+## Reuse decisions
 
 ```text
 PROPOSED RESPONSIBILITY: universal AI transport ingress
@@ -85,15 +95,19 @@ DECISION: EXTEND
 
 PROPOSED RESPONSIBILITY: normalized AI response
 NEAREST EXISTING IMPLEMENTATION: llm_adapter/provider_client.py::ProviderResponse
-DECISION: REUSE / EXTEND ONLY IF REQUIRED
+DECISION: REUSE
 
-PROPOSED RESPONSIBILITY: provider adapter registry
-NEAREST EXISTING IMPLEMENTATION: llm_adapter/external_llm_connection.py provider aliases + dispatch
+PROPOSED RESPONSIBILITY: provider adapter compatibility registry
+NEAREST EXISTING IMPLEMENTATION: llm_adapter/external_llm_connection.py aliases + provider-neutral dispatch
 DECISION: REFACTOR IN PLACE INTO DECLARATIVE DESCRIPTORS
 
 PROPOSED RESPONSIBILITY: confinement / sandbox
 NEAREST EXISTING IMPLEMENTATION: bounded entity_sandbox_runner route + governed session routing
 DECISION: REUSE; NO NEW RUNTIME
+
+PROPOSED RESPONSIBILITY: browser/session-mediated transport binding
+NEAREST EXISTING IMPLEMENTATION: LLMA-CHAT-SESSION-BINDING-010 / chat_session_binding.py
+DECISION: REUSE; NOT A PROVIDER ADAPTER
 
 PROPOSED RESPONSIBILITY: identity
 NEAREST EXISTING IMPLEMENTATION: provider/model/request/session/transition identities already carried across adapter/runtime paths
@@ -102,11 +116,19 @@ DECISION: EXTEND REQUEST CONTEXT; UNKNOWN REMAINS UNKNOWN
 PROPOSED RESPONSIBILITY: evidence
 NEAREST EXISTING IMPLEMENTATION: request/response hashes + InTr receipts + provider usage + Master Records
 DECISION: REUSE
+
+PROPOSED RESPONSIBILITY: hosted credentials
+NEAREST EXISTING IMPLEMENTATION: TV/TVC provider_operation_profiles + non-exportable operation broker
+DECISION: REUSE; RETIRE DIRECT-KEY PRODUCTION PATHS
+
+PROPOSED RESPONSIBILITY: OpenAI hosted operation
+NEAREST EXISTING IMPLEMENTATION: TVC openai/chat_completion_with_usage provider profile
+DECISION: REUSE; THIN LLM-ADAPTER BRIDGE REMAINS
 ```
 
-## Canonical AI ingress context
+## Implemented shared contract
 
-The existing `ProviderRequest` remains the normalized inference request. A provider-independent ingress context may be attached without changing provider wire semantics. It distinguishes:
+`ProviderRequest` remains the normalized inference request. Optional `AIIngressContext` carries provider-independent ingress facts without changing historical serialization/hashing when the context is absent. It distinguishes:
 
 - StegVerse entity identity;
 - provider identity;
@@ -122,19 +144,33 @@ The existing `ProviderRequest` remains the normalized inference request. A provi
 - failure mode;
 - correlation identifiers.
 
-Unknown principal identity must remain `UNKNOWN`. Provider name, API key, browser session, transport ID, or model name are not promoted into StegVerse principal identity.
+Unknown principal identity remains `UNKNOWN`. Provider name, API key, browser session, transport ID, or model name is never promoted into StegVerse principal identity.
+
+The existing `external_llm_connection.py` now owns one declarative provider compatibility registry. It is not a replacement for the StegOS connector-profile registry: StegOS owns Universal InTr transport profiles, while LLM-adapter records provider-edge compatibility and dispatch. Registry discovery has `authority_effect = NONE` and grants no admission.
+
+Current registry posture:
+
+```text
+Z.ai              -> existing shared external TVC connection; credential TV/TVC
+DeepSeek          -> existing shared external TVC connection; credential TV/TVC
+Kimi/Moonshot     -> existing shared external TVC connection; credential TV/TVC
+Anthropic/Claude  -> existing shared external TVC connection; TVC-only production
+OpenAI hosted     -> TVC profile exists; LLM-adapter thin exact-request/egress bridge remains
+StegVerse local   -> existing sovereign OpenAI-compatible ProviderClient; credential_requirement NONE
+browser/session   -> existing provider-neutral session binding; not a provider registry entry
+```
 
 ## Capability rule
 
-Capabilities are semantic operations, not provider brands. Canonical examples include conversational inference, structured inference, retrieval, tool invocation, sandboxed code execution, multimodal input/output, artifact generation, local-model inference, agent delegation, governed persistence, repository read/mutation, workflow dispatch, evaluation, simulation, and transport.
+Capabilities are semantic operations, not provider brands. Shared vocabulary includes conversational inference, structured inference, retrieval, tool invocation, sandboxed code execution, multimodal input/output, artifact generation, local-model inference, agent delegation, governed persistence, repository read/mutation, workflow dispatch, evaluation, simulation, and transport.
 
-Provider compatibility belongs in adapter descriptors and runtime profiles. A provider-specific capability is admissible only when its semantics are genuinely distinct.
+Provider compatibility belongs in adapter descriptors and runtime profiles. A provider-specific capability is admissible only where the semantic operation itself is genuinely distinct.
 
 ## Adapter rule
 
-One descriptor registry is maintained at the existing provider-neutral dispatch seam. A provider adapter may own authentication mechanics, endpoint formatting, serialization, parsing, streaming/tool/multimodal translation, provider error mapping, usage extraction, rate-limit metadata, retry behavior, and model discovery.
+A thin provider adapter may own authentication mechanics at the provider edge, endpoint formatting, request serialization, response parsing, streaming/tool/multimodal translation, provider error mapping, usage extraction, rate-limit metadata, retry behavior, and model discovery.
 
-A provider adapter may not own governance, transition authority, identity authority, credential authority, route authority, sandbox policy, evidence authority, semantic capability definitions, runtime scheduling, or custody.
+It may not own governance, transition authority, StegVerse identity authority, credential authority, route authority, sandbox policy, evidence authority, semantic capability definitions, runtime scheduling, or custody.
 
 ## Failure vocabulary
 
@@ -163,7 +199,9 @@ TRANSPORT_FAILURE
 
 Provider-native errors are translated into these classes at the edge.
 
-## Runtime proof boundary
+## Validation and runtime proof boundary
+
+On PR #325 exact-head validation before the mutation-safety manifest correction, the shared external convergence suite, general validation, Z.ai, DeepSeek, Kimi, distributed-workload, and distributed-executor workflows passed. Work Mutation Safety correctly failed because a fresh manifest was initially absent, then again because the first manifest marked Master Records applicable without explicit refs. Both are repository safety-gate findings, not provider-runtime evidence. A corrected manifest now reuses the existing safety schema and includes explicit Master Records refs; its latest exact-head result remains a release predicate until observed PASS.
 
 Implementation states remain evidence-sensitive:
 
@@ -176,22 +214,46 @@ BLOCKED
 COMPLETE_RELEASED
 ```
 
-Existing canonical vocabulary may be retained where stronger/more specific. Source, fixtures, mocks, documentation, constructed payloads, and CI are never converted into authentic runtime proof.
+Source, fixtures, mocks, documentation, constructed payloads, and CI are never converted into authentic runtime proof. A connector is runtime-working only after one correlated authentic execution proves governed request emission, real provider/model processing, response return, governed re-ingress, confinement application, Interlock/InTr evaluation, authorized consumer delivery, and evidence custody/reconstruction.
 
-A connector is only runtime-working after the same execution proves governed request emission, authentic provider/model processing, real response return, governed re-ingress, confinement application, Interlock/InTr evaluation, authorized consumer delivery, and correlated evidence.
+## Post-build one-owner audit
+
+Current surviving owners:
+
+```text
+ingress transport: StegOS Universal InTr
+AI normalized request/response: LLM-adapter ProviderRequest / ProviderResponse
+provider compatibility/translation: LLM-adapter external_llm_connection + thin edge modules
+browser/session binding: LLM-adapter chat_session_binding
+identity authority: existing StegVerse identity owners; AI ingress only records asserted/resolved IDs
+sandbox/confinement execution: existing entity_sandbox_runner/governed session route
+transition authority: Interlock/InTr
+credential/provider-operation authority: TV/TVC
+runtime scheduling: WorkerCoordinator
+local-model runtime: micro-node-runtime
+evidence/custody: existing hashes/InTr receipts/provider usage + Master Records
+HB/oscillator: observability/timing/liveness only
+```
+
+No intentional second owner was introduced. The StegOS connector-profile registry and LLM-adapter provider compatibility registry coexist because they own different semantic layers: transport profile materialization versus provider-edge compatibility/dispatch.
 
 ## README determination
 
-`README_CHANGE_REQUIRED = YES` because this task materially formalizes the public adapter interface, provider-independent identity/confinement/capability vocabulary, adapter registry semantics, failure semantics, and provider onboarding model.
+`README_CHANGE_REQUIRED = YES` and `README_UPDATED = YES`.
+
+README now documents the universal architecture, singular owners, `AIIngressContext`, identity distinctions, one LLM-adapter compatibility registry, semantic capabilities, shared failures, confinement routing, TV/TVC-only hosted credential production path, local `credential_requirement = NONE`, and authentic-runtime proof boundary.
 
 ## Release condition
 
 Do not tag/release until:
 
-- common adapter contract tests pass;
-- post-build semantic duplication audit identifies one canonical owner per responsibility;
-- README is updated;
-- task/handoff are current;
-- provider-specific modules are demonstrably edge-only or explicitly marked migration debt;
+- latest Work Mutation Safety exact-head check passes;
+- latest general and universal convergence validation passes;
+- the task/handoff remain current;
+- post-build semantic duplication audit remains one-owner clean;
+- the OpenAI thin bridge is either implemented using the existing TVC/OpenAI profile and shared InTr contract or explicitly split into a bounded unresolved predicate without misrepresenting OpenAI as connected;
+- provider-specific modules remain edge-only or explicitly marked migration debt;
 - evidence claims remain source/runtime accurate;
-- any superseded duplicate owner is deprecated/redirected rather than left authoritative.
+- no obsolete implementation remains production-authoritative.
+
+Authentic provider runtime proof is required before any provider is promoted to `TWO_WAY_RUNTIME_VALIDATED` or `GOVERNED_RUNTIME_VALIDATED`, and release notes must not claim such proof from CI.
