@@ -40,7 +40,7 @@ def git(*args: str) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--branch", default="feat/anthropic-intr-transport-288")
+    ap.add_argument("--branch", default="feat/anthropic-intr-runtime-fix-288")
     ap.add_argument("--json", action="store_true")
     ns = ap.parse_args()
 
