@@ -1,0 +1,38 @@
+{
+  "schema": "stegverse.machine-preflight.v1",
+  "task_id": "LLMA-ANTHROPIC-INTR-TRANSPORT-288",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "feat/anthropic-intr-transport-288",
+  "date": "2026-09-06",
+  "canonical_handoff": "LLM_ADAPTER_MIRROR_HANDOFF.md",
+  "scoped_handoff": "docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md",
+  "collision_check": {
+    "existing_anthropic_intr_source_on_main": false,
+    "canonical_sovereign_route_changed": false,
+    "new_heartbeat_or_oscillator": false,
+    "new_scheduler_or_worker_coordinator": false,
+    "new_transition_authority": false,
+    "new_route_authority": false,
+    "new_credential_authority": false,
+    "new_custody_authority": false
+  },
+  "readme": {
+    "impact": "REQUIRED",
+    "reason": "Adds optional provider interface, endpoint, model compatibility, credential-boundary, evidence, failure, and two-stage ingress/egress semantics.",
+    "same_change_set_required": true
+  },
+  "source_package_validation": {
+    "unit_tests": "90/90 PASS",
+    "compileall": "PASS",
+    "json_schemas": "PASS",
+    "reference_transaction": "PASS_NOT_LIVE"
+  },
+  "time_sensitive_provider_reconciliation": {
+    "performed": true,
+    "retired_model_removed": "claude-opus-4-1-20250805",
+    "current_models_added": ["claude-opus-5", "claude-sonnet-5"],
+    "model_id_semantics_reconciled": true,
+    "model_specific_fail_closed_restrictions_added": true
+  },
+  "result": "PASS_FOR_BOUNDED_REPOSITORY_INTEGRATION"
+}
