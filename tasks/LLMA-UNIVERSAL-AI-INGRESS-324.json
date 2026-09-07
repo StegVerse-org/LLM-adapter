@@ -3,9 +3,10 @@
   "task_id": "LLMA-UNIVERSAL-AI-INGRESS-324",
   "repository": "StegVerse-org/LLM-adapter",
   "issue": 324,
+  "pull_request": 327,
   "source_branch": "llma-universal-ai-ingress-324",
   "goal": "Define one provider-independent AI ingress contract for hosted, local, resident, API, browser-mediated, and future AI entities while reusing existing provider, Interlock/InTr, TV/TVC, WorkerCoordinator, and Master Records ownership.",
-  "state": "SOURCE_IMPLEMENTATION_IN_PROGRESS_README_COMPLETENESS_PENDING",
+  "state": "DRAFT_PR_OPEN_README_COMPLETENESS_PENDING_VALIDATION_UNPOSTED",
   "authority": {
     "transition_admission": "Interlock/InTr",
     "credential_provider_operation": "TV/TVC",
@@ -30,7 +31,8 @@
     "registered hosted, OpenAI-family, sovereign/local/resident, and browser/session ingress families",
     "fail-closed route directives for registered paths not executable through the existing external provider seam",
     "reuse of execute_governed_external_llm and admit_external_llm_egress for already-supported external providers",
-    "shared contract tests covering aliases, confinement, duplicate ownership, fail-closed execution, and existing seam reuse"
+    "shared contract tests covering aliases, confinement, duplicate ownership, fail-closed execution, and existing seam reuse",
+    "machine duplicate-owner validator"
   ],
   "provider_reconciliation": {
     "zai": "REUSES_EXISTING_EXTERNAL_CONNECTION",
@@ -46,6 +48,11 @@
     "required": true,
     "state": "PENDING_IN_BRANCH",
     "reason": "Public interface, capability, confinement, failure, and ownership semantics changed."
+  },
+  "validation": {
+    "head_observed_before_registry_update": "ff3bbb09282b9602e3d00114870c87e085d0e3d9",
+    "commit_statuses_observed": 0,
+    "state": "UNPOSTED"
   },
   "claims": {
     "source_complete": false,
