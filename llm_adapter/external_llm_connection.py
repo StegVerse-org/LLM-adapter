@@ -7,6 +7,8 @@ Records -> InTr sequence.
 
 Provider differences are declared through one adapter registry. Registry entries
 describe compatibility only; discovery never grants admission or capability.
+The registry also records non-external execution owners and blocked providers so
+unsupported paths fail closed instead of growing parallel orchestration.
 """
 from __future__ import annotations
 
@@ -31,10 +33,20 @@ class ExternalLLMConnectionError(RuntimeError):
 SEMANTIC_CAPABILITIES = (
     "conversational_inference",
     "structured_inference",
+    "retrieval",
     "tool_invocation",
+    "sandboxed_code_execution",
     "multimodal_input",
     "multimodal_output",
+    "artifact_generation",
     "local_model_inference",
+    "agent_delegation",
+    "governed_persistence",
+    "repository_read",
+    "repository_mutation",
+    "workflow_dispatch",
+    "evaluation",
+    "simulation",
     "transport",
 )
 
@@ -84,6 +96,8 @@ class ProviderAdapterDescriptor:
     confinement_compatible: bool = True
     authority_effect: str = "NONE"
     status: str = "IMPLEMENTED_UNVALIDATED"
+    execution_owner: str = "EXTERNAL_TVC_CONNECTION"
+    blocker: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -102,6 +116,8 @@ class ProviderAdapterDescriptor:
             "confinement_compatible": self.confinement_compatible,
             "authority_effect": self.authority_effect,
             "status": self.status,
+            "execution_owner": self.execution_owner,
+            "blocker": self.blocker,
         }
 
 
@@ -119,7 +135,6 @@ _ADAPTER_REGISTRY: dict[str, ProviderAdapterDescriptor] = {
         direct_executor="execute_governed_zai",
         direct_egress="admit_zai_egress",
         direct_compatibility_allowed=True,
-        status="IMPLEMENTED_UNVALIDATED",
     ),
     "deepseek": ProviderAdapterDescriptor(
         provider="deepseek",
@@ -134,7 +149,6 @@ _ADAPTER_REGISTRY: dict[str, ProviderAdapterDescriptor] = {
         direct_executor="execute_governed_deepseek",
         direct_egress="admit_deepseek_egress",
         direct_compatibility_allowed=True,
-        status="IMPLEMENTED_UNVALIDATED",
     ),
     "kimi": ProviderAdapterDescriptor(
         provider="kimi",
@@ -149,7 +163,6 @@ _ADAPTER_REGISTRY: dict[str, ProviderAdapterDescriptor] = {
         direct_executor="execute_governed_kimi",
         direct_egress="admit_kimi_egress",
         direct_compatibility_allowed=True,
-        status="IMPLEMENTED_UNVALIDATED",
     ),
     "anthropic": ProviderAdapterDescriptor(
         provider="anthropic",
@@ -162,7 +175,35 @@ _ADAPTER_REGISTRY: dict[str, ProviderAdapterDescriptor] = {
         tvc_executor="execute_governed_anthropic_via_tvc_runtime",
         tvc_egress="admit_anthropic_tvc_runtime_egress",
         direct_compatibility_allowed=False,
+    ),
+    "openai": ProviderAdapterDescriptor(
+        provider="openai",
+        aliases=("openai", "chatgpt", "openai_http"),
+        adapter="OpenAIHTTPProviderClient",
+        adapter_version="legacy-direct-key-test-shim",
+        transport_type="openai_http",
+        credential_requirement="TV_TVC_NON_EXPORTABLE",
+        semantic_capabilities=("conversational_inference", "structured_inference", "transport"),
+        tvc_executor=None,
+        tvc_egress=None,
+        direct_compatibility_allowed=False,
+        status="BLOCKED",
+        execution_owner="TVC_PROVIDER_OPERATION_REQUIRED",
+        blocker="canonical OpenAI TVC non-exportable provider-operation route not yet reconciled",
+    ),
+    "stegverse-local": ProviderAdapterDescriptor(
+        provider="stegverse-local",
+        aliases=("stegverse", "stegverse-local", "stegverse_local", "local-sovereign"),
+        adapter="StegVerseLocalHTTPProviderClient",
+        adapter_version="existing-provider-client",
+        transport_type="local_openai_compatible_http",
+        credential_requirement="NONE",
+        semantic_capabilities=("conversational_inference", "local_model_inference", "transport"),
+        tvc_executor=None,
+        tvc_egress=None,
+        direct_compatibility_allowed=False,
         status="IMPLEMENTED_UNVALIDATED",
+        execution_owner="CANONICAL_SOVEREIGN_PROVIDER_CLIENT",
     ),
 }
 
@@ -259,6 +300,13 @@ def execute_governed_external_llm(
 ) -> GovernedConnectionResult:
     descriptor = adapter_descriptor(request.provider)
     provider = descriptor.provider
+
+    if descriptor.execution_owner != "EXTERNAL_TVC_CONNECTION":
+        blocker = f"; blocker={descriptor.blocker}" if descriptor.blocker else ""
+        raise ExternalLLMConnectionError(
+            f"{provider} is owned by {descriptor.execution_owner}, not the external TVC connection primitive{blocker}"
+        )
+
     base = dict(
         request=request,
         session_id=session_id,
@@ -304,7 +352,7 @@ def admit_external_llm_egress(
     admitted_response_hash: str,
 ) -> Any:
     descriptor = _ADAPTER_REGISTRY.get(result.provider)
-    if descriptor is None:
+    if descriptor is None or descriptor.execution_owner != "EXTERNAL_TVC_CONNECTION":
         raise ExternalLLMConnectionError("provider egress dispatch invariant violated")
 
     kwargs = dict(
