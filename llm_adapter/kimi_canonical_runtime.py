@@ -63,12 +63,22 @@ def execute_canonical_kimi_via_tvc_runtime(
     )
     if execution.envelope.request_hash != admission.envelope.request_hash or execution.envelope.transport_id != admission.envelope.transport_id:
         raise RuntimeError("canonical Kimi admission/execution envelope mismatch")
+    custody = execution.master_records_usage
+    if (
+        not isinstance(custody, Mapping)
+        or custody.get("status") != "CUSTODY_RECORDED"
+        or custody.get("custody_recorded") is not True
+        or custody.get("authority_granted") is not False
+    ):
+        raise RuntimeError("canonical Kimi egress requires authentic Master Records custody")
     handoff = {
         **dict(execution.egress_handoff),
         "schema": "stegverse.llm_adapter.kimi_canonical_runtime_egress_handoff/v1",
         "ingress_transport_state": ingress_transport_state,
         "governance_disposition": governance_disposition,
         "governance_receipt_hash": governance_receipt_hash,
+        "master_records_usage_status": "CUSTODY_RECORDED",
+        "master_records_custody_recorded": True,
         "transport_grants_execution_authority": False,
         "governance_grants_execution_authority": False,
         "governance_grants_credential_authority": False,
