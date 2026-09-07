@@ -1,0 +1,88 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-WORK-MUTATION-SAFETY-320",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/WORK_MUTATION_SAFETY_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/LLM-adapter:tasks/LLMA-WORK-MUTATION-SAFETY-320.json",
+    "StegVerse-org/LLM-adapter:#320",
+    "StegVerse-Labs/.github:data/canonical-task-registry.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This change installs a repository validation-only safety gate and produces no provider execution, custody, reconstruction, runtime, or production evidence requiring Master Records mutation."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github:docs/CROSS_TASK_COORDINATION_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:control/cross-task-coordination.json",
+      "StegVerse-Labs/.github:management/session-build-preflight-contract.json"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:scripts/session_build_preflight.py",
+      "StegVerse-Labs/.github:heartbeat_runtime/worker_task_admission.py",
+      "StegVerse-Labs/.github:management/session-build-preflight-contract.json",
+      "StegVerse-org/LLM-adapter:#320"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Canonical organization preflight and worker admission already own pre-work/execution admission. This change does not replace either; it adds a repository-local PR mutation enforcement projection for LLM-adapter."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "The change affects development-time pull-request validation only and does not change LLM-adapter runtime behavior, provider interfaces, governance/authority semantics, production prerequisites, evidence meaning, or externally meaningful capability behavior. The scoped handoff documents the validation control.",
+    "evidence_refs": [
+      "docs/WORK_MUTATION_SAFETY_MIRROR_HANDOFF.md",
+      "scripts/validate_work_mutation_safety.py",
+      ".github/workflows/work-mutation-safety.yml"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/work-mutation-safety.yml",
+    "scripts/validate_work_mutation_safety.py",
+    "tests/test_work_mutation_safety.py",
+    "tasks/LLMA-WORK-MUTATION-SAFETY-320.json"
+  ],
+  "new_files": [
+    {
+      "path": "scripts/validate_work_mutation_safety.py",
+      "semantic_responsibility": "Repository-local structural enforcement of canonical pre-work semantic reuse, collision, handoff/task, and README completeness requirements on pull-request diffs.",
+      "closest_existing_implementation": "StegVerse-Labs/.github:scripts/session_build_preflight.py",
+      "decision": "EXTEND"
+    },
+    {
+      "path": ".github/workflows/work-mutation-safety.yml",
+      "semantic_responsibility": "Credential-free validation invocation at the LLM-adapter pull-request mutation boundary.",
+      "closest_existing_implementation": "StegVerse-Labs/.github:.github/workflows/cross-task-coordination-validation.yml",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "tests/test_work_mutation_safety.py",
+      "semantic_responsibility": "Fail-closed tests for semantic-duplication, active-owner collision, handoff, and README mutation-safety predicates.",
+      "closest_existing_implementation": "StegVerse-Labs/.github:tests/test_session_build_preflight.py",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "tasks/LLMA-WORK-MUTATION-SAFETY-320.json",
+      "semantic_responsibility": "Repository-local bounded work claim for the safety-gate implementation and release lifecycle.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter:tasks/LLMA-DISTRIBUTED-LLM-EXECUTOR-274.json",
+      "decision": "EXTEND"
+    }
+  ]
+}
