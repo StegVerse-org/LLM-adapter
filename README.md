@@ -156,40 +156,52 @@ Source validation proves fail-closed transport identity, exact wire-byte/hash bi
 
 DeepSeek is supported as an **optional hosted-provider interoperability transport** through `stegverse.intr.deepseek.transport.v1`. It is additive only and does not replace the canonical sovereign local route or acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.
 
+The production DeepSeek connection now binds the existing DeepSeek InTr envelope to the canonical runtime profile `stegverse:runtime-profile:hb-intr-resident:v1` and the existing TVC non-exportable provider-operation broker. The runtime profile is carrier/materialization metadata only and grants no execution, admission, route, credential, or transition authority. Another physical machine, Linux-specific runtime, systemd service, or Unix socket path is not a declared DeepSeek runtime requirement.
+
 ```text
-canonical ProviderRequest provenance
--> exact DeepSeek OpenAI-compatible payload: model + messages + temperature + stream=false
--> deterministic wire-byte hash
--> contemporaneous Interlock/InTr ingress evaluation
--> DENY: no credential resolution and no provider call
--> ALLOW: bind exact wire hash + transition ID + ingress receipt + carrier ref
--> resolve TV/TVC credential exactly once at send time
--> only https://api.deepseek.com/chat/completions
--> only explicitly supported current model IDs
--> validate response/usage fail closed and reject credential echo
--> provider response authority_effect NONE
+current device
+-> Universal InTr ingress
+-> DeepSeek InTr envelope / exact request binding
+-> stegverse:runtime-profile:llm-adapter-deepseek:v1
+-> base profile stegverse:runtime-profile:hb-intr-resident:v1
+-> existing WorkerCoordinator resident execution
+-> TVC single-use non-exportable provider operation
+-> TVC profile deepseek / chat_completion_with_usage
+-> vault://tvc/providers/deepseek/api-key remains inside TV/TVC authority
+-> DeepSeek provider result with no credential material returned
 -> canonical provider-usage event
 -> existing Master Records provider-usage submission path
 -> deterministic pre-egress handoff that requests, but never assumes, ALLOW
 -> separate Interlock/InTr egress evaluation bound to exact provider response hash
+-> current device
 ```
 
-The v1 transport ID is `dsit-<sha256>`. The envelope request hash binds the exact outbound DeepSeek bytes rather than the broader adapter `ProviderRequest`. Current v1 source explicitly supports `deepseek-v4-flash` and `deepseek-v4-pro`; it does not silently substitute retired aliases or alternate endpoints. Credential material remains under TV/TVC authority, is resolved through an external callable at execution time, and is prohibited from serialized envelopes, response metadata, provider-usage events, Master Records evidence, task records, handoffs, and egress records.
+The v1 transport ID remains `dsit-<sha256>`. The envelope request hash binds the exact admitted DeepSeek transport bytes rather than the broader adapter `ProviderRequest`. Current v1 source explicitly supports `deepseek-v4-flash` and `deepseek-v4-pro`; it does not silently substitute alternate endpoints or models.
 
-`execute_governed_deepseek` reuses the existing provider-usage and Master Records submission mechanisms. `admit_deepseek_egress` verifies an externally produced Interlock/InTr `ALLOW`, an exact SHA-256 receipt identifier, and exact response-hash equality. Local verification has authority effect `NONE_LOCAL`; source success is not live DeepSeek execution or product activation.
+For production runtime-profile execution, LLM-adapter does **not** accept or resolve DeepSeek credential plaintext. `llm_adapter.deepseek_tvc_broker` constructs the already-existing TVC non-exportable operation request using only the canonical vault reference, a separately admitted single-use TVC capability lease, the admitted model/prompt bounds, and the InTr transport binding. TVC remains the credential and provider-operation authority. The sanitized TVC result is normalized into the existing `ProviderResponse` shape, provider usage continues through the canonical Master Records path, and the result still requires a separate exact-response InTr egress ALLOW before consequence.
+
+The older `execute_governed_deepseek` direct credential-resolver path remains source-compatible for deterministic validation and compatibility only; it is not the production connection contract after the runtime-profile/TVC-broker binding. Credential material remains prohibited from LLM-adapter artifacts, envelopes, response metadata, provider-usage evidence, Master Records evidence, task records, handoffs, and egress records.
 
 Canonical source surfaces:
 
 ```text
 llm_adapter/deepseek_intr_transport.py
 llm_adapter/deepseek_intr_executor.py
+llm_adapter/deepseek_tvc_broker.py
+llm_adapter/deepseek_tvc_runtime_executor.py
+config/deepseek-runtime-profile.json
 schemas/deepseek-intr-transport-envelope.schema.json
 tests/test_deepseek_intr_transport.py
 tests/test_deepseek_intr_executor.py
+tests/test_deepseek_tvc_runtime.py
 capability/stegverse-intr-deepseek-transport.capability.json
 docs/DEEPSEEK_INTR_TRANSPORT_MIRROR_HANDOFF.md
+docs/DEEPSEEK_RUNTIME_PROFILE_TVC_BROKER_MIRROR_HANDOFF.md
 tasks/LLMA-DEEPSEEK-INTR-TRANSPORT-289.json
+tasks/LLMA-DEEPSEEK-RUNTIME-PROFILE-TVC-BROKER-290.json
 ```
+
+Source validation of this bridge proves runtime-profile binding, TVC non-exportable operation construction, credential non-export semantics, provider-usage continuation, Master Records integration, and egress-handoff construction only. It does not by itself prove authentic live DeepSeek execution, TVC vault readiness, authentic Master Records reconstruction, or live InTr egress ALLOW.
 
 ## No GitHub-token production dependency
 
@@ -250,7 +262,7 @@ heartbeat recovery / current fence
 -> required Publisher/wiki propagation
 ```
 
-The distributed named-source workload, bounded executor, Z.ai transport/executor, and DeepSeek transport/executor are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider, Z.ai, or DeepSeek execution.
+The distributed named-source workload, bounded executor, Z.ai transport/executor, and DeepSeek transport/runtime-profile executor are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider, Z.ai, or DeepSeek execution.
 
 This continuation is machine-owned. It is not a reason to re-open the completed local-model or carrier-executor implementation tasks.
 
@@ -288,6 +300,7 @@ pytest tests/test_zai_intr_transport.py -q
 pytest tests/test_zai_intr_executor.py -q
 pytest tests/test_deepseek_intr_transport.py -q
 pytest tests/test_deepseek_intr_executor.py -q
+pytest tests/test_deepseek_tvc_runtime.py -q
 ```
 
 The authoritative current task and release state is `LLM_ADAPTER_MIRROR_HANDOFF.md`. `adapter.capabilities.json` is the machine-readable capability posture.

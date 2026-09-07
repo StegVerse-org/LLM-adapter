@@ -6,12 +6,18 @@ on:
     paths:
       - 'llm_adapter/deepseek_intr_transport.py'
       - 'llm_adapter/deepseek_intr_executor.py'
+      - 'llm_adapter/deepseek_tvc_broker.py'
+      - 'llm_adapter/deepseek_tvc_runtime_executor.py'
+      - 'config/deepseek-runtime-profile.json'
       - 'tests/test_deepseek_intr_transport.py'
       - 'tests/test_deepseek_intr_executor.py'
+      - 'tests/test_deepseek_tvc_runtime.py'
       - 'schemas/deepseek-intr-transport-envelope.schema.json'
       - 'capability/stegverse-intr-deepseek-transport.capability.json'
       - 'docs/DEEPSEEK_INTR_*'
+      - 'docs/DEEPSEEK_RUNTIME_PROFILE_*'
       - 'tasks/LLMA-DEEPSEEK-INTR-*'
+      - 'tasks/LLMA-DEEPSEEK-RUNTIME-PROFILE-*'
       - 'README.md'
       - 'adapter.capabilities.json'
       - '.github/workflows/validate-deepseek-intr.yml'
@@ -19,12 +25,18 @@ on:
     paths:
       - 'llm_adapter/deepseek_intr_transport.py'
       - 'llm_adapter/deepseek_intr_executor.py'
+      - 'llm_adapter/deepseek_tvc_broker.py'
+      - 'llm_adapter/deepseek_tvc_runtime_executor.py'
+      - 'config/deepseek-runtime-profile.json'
       - 'tests/test_deepseek_intr_transport.py'
       - 'tests/test_deepseek_intr_executor.py'
+      - 'tests/test_deepseek_tvc_runtime.py'
       - 'schemas/deepseek-intr-transport-envelope.schema.json'
       - 'capability/stegverse-intr-deepseek-transport.capability.json'
       - 'docs/DEEPSEEK_INTR_*'
+      - 'docs/DEEPSEEK_RUNTIME_PROFILE_*'
       - 'tasks/LLMA-DEEPSEEK-INTR-*'
+      - 'tasks/LLMA-DEEPSEEK-RUNTIME-PROFILE-*'
       - 'README.md'
       - 'adapter.capabilities.json'
       - '.github/workflows/validate-deepseek-intr.yml'
@@ -78,6 +90,9 @@ jobs:
       - name: Test governed DeepSeek executor and egress binding
         run: "$PYTHON_BIN -m pytest tests/test_deepseek_intr_executor.py -q"
 
+      - name: Test DeepSeek runtime-profile TVC broker bridge
+        run: "$PYTHON_BIN -m pytest tests/test_deepseek_tvc_runtime.py -q"
+
       - name: Validate capability declaration and envelope schema
         shell: bash
         run: |
@@ -88,6 +103,7 @@ jobs:
           capability = json.loads(Path('capability/stegverse-intr-deepseek-transport.capability.json').read_text(encoding='utf-8'))
           schema = json.loads(Path('schemas/deepseek-intr-transport-envelope.schema.json').read_text(encoding='utf-8'))
           root = json.loads(Path('adapter.capabilities.json').read_text(encoding='utf-8'))
+          runtime = json.loads(Path('config/deepseek-runtime-profile.json').read_text(encoding='utf-8'))
 
           assert capability['capability_id'] == 'stegverse.intr.deepseek.transport.v1'
           assert capability['provider'] == 'deepseek'
@@ -109,7 +125,15 @@ jobs:
           assert schema['properties']['credential_material_present']['const'] is False
           assert root['deepseek_intr_interoperability']['protocol'] == 'stegverse.intr.deepseek.transport.v1'
           assert root['deepseek_intr_interoperability']['canonical_sovereign_route_replaced'] is False
+          assert runtime['profile_id'] == 'stegverse:runtime-profile:llm-adapter-deepseek:v1'
+          assert runtime['base_profile'] == 'stegverse:runtime-profile:hb-intr-resident:v1'
+          assert runtime['provider_execution']['credential_authority'] == 'TV/TVC'
+          assert runtime['provider_execution']['credential_material_in_llm_adapter'] is False
+          assert runtime['provider_execution']['direct_credential_resolver_production_allowed'] is False
+          assert runtime['physical_runtime']['another_physical_machine_required'] is False
+          assert runtime['physical_runtime']['linux_specific_runtime_required'] is False
           print('DEEPSEEK_INTR_CAPABILITY_DECLARATION=VALID')
+          print('DEEPSEEK_RUNTIME_PROFILE_BINDING=VALID')
           print('DEEPSEEK_INTR_ACTIVATION_LIVE=false')
           PY
 
@@ -124,6 +148,7 @@ jobs:
           assert 'STEGVERSE_MASTER_RECORDS_TOKEN' in workflow
           assert 'tests/test_deepseek_intr_transport.py' in workflow
           assert 'tests/test_deepseek_intr_executor.py' in workflow
+          assert 'tests/test_deepseek_tvc_runtime.py' in workflow
           forbidden = [
               'actions/' + 'checkout@',
               'actions/' + 'setup-python@',
