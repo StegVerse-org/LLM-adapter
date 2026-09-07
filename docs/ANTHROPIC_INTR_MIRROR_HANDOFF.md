@@ -35,7 +35,7 @@ exact ProviderRequest
 
 ## Canonical runtime binding
 
-The task is now explicitly bound to the existing canonical resident runtime-profile system rather than waiting for an undefined provider-specific runtime.
+The task is explicitly bound to the existing canonical resident runtime-profile system rather than waiting for an undefined provider-specific runtime.
 
 ```text
 runtime_profile_map: StegVerse-Labs/.github/control/runtime-profile-map.json
@@ -49,14 +49,17 @@ environment: SOVEREIGN_RESIDENT
 task routing direction: INTERNAL
 mutation_required: true
 deployment_required: false
-current_observation_required_for_live_execution: true
+current_observation_required_for_candidate_discovery: false
+live_runtime_observation_required_before_provider_call: true
 ```
 
 `INTERNAL` is the canonical task-routing direction. It does not waive egress governance: the external Anthropic request remains separately bound to the exact InTr ingress ALLOW and the response remains unusable for consequence until a separate exact egress ALLOW is verified.
 
+Candidate discovery intentionally does not require current observation. The canonical matcher otherwise removes a valid declared profile and recreates a false `runtime missing` failure. Live execution remains separately gated by WorkerCoordinator admission/claim/fence and authentic current runtime evidence.
+
 No new runtime, heartbeat, oscillator, scheduler, worker registry, route authority, transition authority, credential authority, custody authority, or third-party availability authority is created. Runtime-profile matching is selection/projection only. WorkerCoordinator admission, a current claim/fence, TV/TVC credential materialization, InTr ingress/egress decisions, and Master Records evidence remain independently required.
 
-Runtime-profile remediation is tracked in `StegVerse-Labs/.github#1121`; it exists to make the cross-repository task/profile binding explicit and durable, not to create a parallel provider runtime.
+Runtime-profile reconciliation is tracked in `StegVerse-Labs/.github#1121`; it records that `sovereign-runtime-worker-v1` is the correct existing profile rather than creating a parallel provider runtime.
 
 ## Machine preflight
 
@@ -113,9 +116,9 @@ network calls during tests: NONE
 
 ## Live evidence boundary
 
-Source/tests and runtime-profile binding do not prove live Anthropic execution, valid/current TV/TVC credential materialization, a currently observed resident WorkerCoordinator, authentic Master Records custody/reconstruction, egress Interlock/InTr ALLOW, Ecosystem Chat activation, Site activation, or downstream publication.
+Source/tests and runtime-profile binding do not prove live Anthropic execution, valid/current TV/TVC credential materialization, a currently task-executing resident WorkerCoordinator, authentic Master Records custody/reconstruction, egress Interlock/InTr ALLOW, Ecosystem Chat activation, Site activation, or downstream publication.
 
-The current canonical runtime-profile map reports declared runtime capabilities but does not itself prove a current observed worker. Because #288 requires `current_observation_required=true` for live execution, it must fail closed until authentic runtime observation is available.
+Current canonical repository state records `control/heartbeat-carrier-runtime-state.json` as `ACTIVE` at epoch/generation 31, but `control/worker-runtime-state.json` last cycled at `2026-08-18T19:47:00Z` in `CARRIER_REFERENCE_ONLY_NO_TASK_EXECUTION` mode. The remaining runtime predicate is therefore authentic current task-executing WorkerCoordinator observation, not a missing runtime profile.
 
 ## Remaining repository work
 
@@ -124,9 +127,10 @@ The current canonical runtime-profile map reports declared runtime capabilities 
 3. run exact-branch repository validation;
 4. obtain Z.ai regression/no-diff evidence required by the #288 runbook;
 5. merge only on green validation and preserved authority boundaries;
-6. project the #288 runtime requirements into the canonical task-registry/runtime-resolution cycle under `.github#1121`;
-7. do not tag/release or propagate to Site/Publisher/wikis unless an explicit release/capability gate authorizes it;
-8. any later live provider use must enter existing WorkerCoordinator, TV/TVC, InTr, usage-evidence and Master Records paths.
+6. project the #288 runtime requirements into the canonical task-registry/runtime-resolution cycle under `.github#1121` through the existing Canonical Work coordination path;
+7. obtain authentic current WorkerCoordinator task-execution observation before any provider call;
+8. do not tag/release or propagate to Site/Publisher/wikis unless an explicit release/capability gate authorizes it;
+9. any later live provider use must enter existing WorkerCoordinator, TV/TVC, InTr, usage-evidence and Master Records paths.
 
 ## Completion accounting
 
@@ -137,7 +141,8 @@ provider-contract reconciliation: COMPLETE
 local deterministic validation: 90/90 PASS
 canonical runtime requirements: BOUND
 runtime profile source: EXISTING / sovereign-runtime-worker-v1
-current runtime observation: REQUIRED / NOT CLAIMED
+runtime profile discovery blocker: RESOLVED
+current task-executing runtime observation: REQUIRED / NOT YET OBSERVED
 repository install: IN_PROGRESS
 README reconciliation: PENDING_REPOSITORY_BRANCH
 branch validation: PENDING
