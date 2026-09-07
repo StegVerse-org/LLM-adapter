@@ -20,6 +20,11 @@
   ],
   "master_records_review": {
     "applicable": true,
+    "refs": [
+      "master-records/orchestration",
+      "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+      "StegVerse-org/LLM-adapter:docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md"
+    ],
     "reason": "Master Records remains the existing custody/reconstruction owner for authentic provider execution evidence. This source change creates no new runtime receipt or custody authority and therefore does not mutate Master Records during source reconciliation."
   },
   "cross_task_coordination": {
@@ -51,11 +56,11 @@
       "StegVerse-org/LLM-adapter:llm_adapter/external_llm_connection.py",
       "StegVerse-org/LLM-adapter:llm_adapter/user_llm_router.py",
       "StegVerse-org/LLM-adapter:docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
-      "StegVerse-Labs/TVC",
+      "StegVerse-Labs/TVC:config/provider_operation_profiles.json",
       "StegVerse-002/micro-node-runtime"
     ]
   },
-  "reuse_decision": "EXTEND_AND_REFACTOR",
+  "reuse_decision": "REFACTOR",
   "existing_equivalent_found": true,
   "active_owner_collision": {
     "checked": true,
@@ -101,13 +106,13 @@
       "path": "llm_adapter/external_llm_connection.py",
       "semantic_responsibility": "Existing provider-neutral external LLM dispatch seam and declarative provider compatibility registry.",
       "closest_existing_implementation": "llm_adapter/external_llm_connection.py",
-      "decision": "REFACTOR_IN_PLACE"
+      "decision": "REFACTOR"
     },
     {
       "path": "llm_adapter/http_provider_clients.py",
       "semantic_responsibility": "Existing sovereign local OpenAI-compatible provider client and legacy hosted HTTP compatibility clients.",
       "closest_existing_implementation": "llm_adapter/http_provider_clients.py",
-      "decision": "REFACTOR_IN_PLACE",
+      "decision": "REFACTOR",
       "retirement": "Hosted direct-key production behavior is retired; explicit test-only compatibility remains until canonical TVC provider-operation integrations cover all consumers."
     },
     {
