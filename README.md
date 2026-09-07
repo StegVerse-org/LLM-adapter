@@ -203,6 +203,53 @@ tasks/LLMA-DEEPSEEK-RUNTIME-PROFILE-TVC-BROKER-290.json
 
 Source validation of this bridge proves runtime-profile binding, TVC non-exportable operation construction, credential non-export semantics, provider-usage continuation, Master Records integration, and egress-handoff construction only. It does not by itself prove authentic live DeepSeek execution, TVC vault readiness, authentic Master Records reconstruction, or live InTr egress ALLOW.
 
+## Kimi/Moonshot Interlock/InTr transport and governed execution
+
+Kimi/Moonshot is supported as an **optional hosted-provider interoperability transport** through `stegverse.intr.kimi.transport.v1`. It is additive only and does not replace the canonical sovereign local route or acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.
+
+The production Kimi connection binds an exact Kimi InTr envelope to `stegverse:runtime-profile:llm-adapter-kimi:v1`, derived from the existing resident `stegverse:runtime-profile:hb-intr-resident:v1`, and to the existing TVC Kimi non-exportable provider-operation profile. The admitted provider/model endpoint is `kimi` / `kimi-k3` at the TVC-governed Moonshot endpoint. LLM-adapter does not receive Kimi credential plaintext in this production path.
+
+```text
+current device
+-> Universal InTr ingress
+-> Kimi InTr envelope / exact request binding
+-> stegverse:runtime-profile:llm-adapter-kimi:v1
+-> base profile stegverse:runtime-profile:hb-intr-resident:v1
+-> existing WorkerCoordinator resident execution
+-> separately admitted TVC single-use non-exportable provider operation
+-> TVC profile kimi / chat_completion_with_usage
+-> vault://tvc/providers/kimi/api-key remains inside TV/TVC authority
+-> Moonshot/Kimi provider result with no credential material returned
+-> canonical provider-usage event
+-> existing Master Records provider-usage submission path
+-> deterministic pre-egress handoff that requests, but never assumes, ALLOW
+-> separate Interlock/InTr egress evaluation bound to exact provider response hash
+-> current device
+```
+
+The v1 Kimi transport ID is `kmit-<sha256>`. The envelope request hash binds the exact admitted Kimi transport bytes rather than the broader adapter `ProviderRequest`. Current source explicitly admits `kimi-k3` and the existing TVC provider endpoint/profile; alternate endpoints or model aliases are not silently substituted.
+
+`llm_adapter.kimi_tvc_broker` builds the existing TVC non-exportable operation request from a separately admitted single-use TVC lease, canonical vault reference, model/prompt bounds, and exact InTr binding. The returned sanitized TVC result is normalized into `ProviderResponse`; usage continues through the existing Master Records path; and response consequence remains blocked until a separate exact-response InTr egress ALLOW exists. The direct credential-resolver Kimi transport remains compatibility/test-only and is explicitly not the production connection contract.
+
+Canonical source surfaces:
+
+```text
+llm_adapter/kimi_intr_transport.py
+llm_adapter/kimi_intr_executor.py
+llm_adapter/kimi_tvc_broker.py
+llm_adapter/kimi_tvc_runtime_executor.py
+config/kimi-runtime-profile.json
+schemas/kimi-intr-transport-envelope.schema.json
+tests/test_kimi_intr_transport.py
+tests/test_kimi_intr_executor.py
+tests/test_kimi_tvc_runtime.py
+capability/stegverse-intr-kimi-transport.capability.json
+docs/KIMI_INTR_TRANSPORT_MIRROR_HANDOFF.md
+tasks/LLMA-KIMI-INTR-RUNTIME-292.json
+```
+
+Source/CI validation proves the implementation and authority boundaries only. A working Kimi connector is claimed only after authentic same-execution evidence proves InTr ingress, TVC Kimi lease/non-exportable provider execution, an authentic Moonshot response, Master Records custody/reconstruction, and exact-response InTr egress.
+
 ## No GitHub-token production dependency
 
 GitHub repository access is not part of the production inference path.
@@ -214,7 +261,7 @@ credential_authority_model: TC/TVC
 canonical_local_route_credential_requirement: NONE
 ```
 
-GitHub Actions, Render, Cloudflare, Vercel, GitHub Models, OpenAI, Anthropic, Z.ai, and DeepSeek are not canonical production heartbeat, inference, route, custody, or availability authorities. Optional hosted-provider interoperability lanes are separate from the canonical sovereign local route.
+GitHub Actions, Render, Cloudflare, Vercel, GitHub Models, OpenAI, Anthropic, Z.ai, DeepSeek, and Kimi/Moonshot are not canonical production heartbeat, inference, route, custody, or availability authorities. Optional hosted-provider interoperability lanes are separate from the canonical sovereign local route.
 
 ## Local model/runtime
 
@@ -262,7 +309,7 @@ heartbeat recovery / current fence
 -> required Publisher/wiki propagation
 ```
 
-The distributed named-source workload, bounded executor, Z.ai transport/executor, and DeepSeek transport/runtime-profile executor are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider, Z.ai, or DeepSeek execution.
+The distributed named-source workload, bounded executor, Z.ai transport/executor, DeepSeek transport/runtime-profile executor, and Kimi transport/runtime-profile executor are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider execution.
 
 This continuation is machine-owned. It is not a reason to re-open the completed local-model or carrier-executor implementation tasks.
 
@@ -301,13 +348,16 @@ pytest tests/test_zai_intr_executor.py -q
 pytest tests/test_deepseek_intr_transport.py -q
 pytest tests/test_deepseek_intr_executor.py -q
 pytest tests/test_deepseek_tvc_runtime.py -q
+pytest tests/test_kimi_intr_transport.py -q
+pytest tests/test_kimi_intr_executor.py -q
+pytest tests/test_kimi_tvc_runtime.py -q
 ```
 
 The authoritative current task and release state is `LLM_ADAPTER_MIRROR_HANDOFF.md`. `adapter.capabilities.json` is the machine-readable capability posture.
 
 ## Optional interoperability lanes
 
-The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, named-source distributed LLM contribution lanes, the Z.ai InTr lane, and the DeepSeek InTr lane. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
+The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, named-source distributed LLM contribution lanes, the Z.ai InTr lane, the DeepSeek InTr lane, and the Kimi/Moonshot InTr lane. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
 
 ## Repository
 
