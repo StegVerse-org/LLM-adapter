@@ -34,7 +34,10 @@ def test_compatibility_execution_dispatch(monkeypatch, provider, target_name):
     assert seen["credential_resolver"]() == "secret"
 
 @pytest.mark.parametrize("provider,target_name", [
-    ("deepseek","execute_governed_deepseek_via_tvc_runtime"),("kimi","execute_governed_kimi_via_tvc_runtime")
+    ("z.ai","execute_governed_zai_via_tvc_runtime"),
+    ("deepseek","execute_governed_deepseek_via_tvc_runtime"),
+    ("kimi","execute_governed_kimi_via_tvc_runtime"),
+    ("anthropic","execute_governed_anthropic_via_tvc_runtime"),
 ])
 def test_tvc_runtime_execution_dispatch(monkeypatch, provider, target_name):
     seen = {}
@@ -62,10 +65,15 @@ def test_compatibility_egress_dispatch(monkeypatch):
     monkeypatch.setattr(mod, "admit_kimi_egress", lambda **kwargs: sentinel)
     assert mod.admit_external_llm_egress(result, egress_disposition="ALLOW", egress_receipt_hash="c"*64, admitted_response_hash="a"*64) is sentinel
 
-
-def test_tvc_egress_dispatch(monkeypatch):
+@pytest.mark.parametrize("provider,target_name", [
+    ("zai","admit_zai_tvc_runtime_egress"),
+    ("deepseek","admit_deepseek_tvc_runtime_egress"),
+    ("kimi","admit_kimi_tvc_runtime_egress"),
+    ("anthropic","admit_anthropic_tvc_runtime_egress"),
+])
+def test_tvc_egress_dispatch(monkeypatch, provider, target_name):
     execution = DummyExecution()
-    result = mod.GovernedConnectionResult("kimi", execution, "TVC_NON_EXPORTABLE_RUNTIME")
+    result = mod.GovernedConnectionResult(provider, execution, "TVC_NON_EXPORTABLE_RUNTIME")
     sentinel = object()
-    monkeypatch.setattr(mod, "admit_kimi_tvc_runtime_egress", lambda **kwargs: sentinel)
+    monkeypatch.setattr(mod, target_name, lambda **kwargs: sentinel)
     assert mod.admit_external_llm_egress(result, egress_disposition="ALLOW", egress_receipt_hash="c"*64, admitted_response_hash="a"*64) is sentinel
