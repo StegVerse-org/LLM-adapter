@@ -4,7 +4,7 @@ Updated: 2026-09-07
 Repository: `StegVerse-org/LLM-adapter`
 Issue: #306
 Task: `LLMA-EXTERNAL-LLM-CONVERGENCE-306`
-State: `SOURCE_IMPLEMENTATION_IN_PROGRESS_RUNTIME_PROOF_REQUIRED`
+State: `SOURCE_IMPLEMENTATION_STAGED_PREFLIGHT_RESOLVED_VALIDATION_REQUIRED`
 
 ## Goal
 
@@ -38,9 +38,28 @@ ProviderRequest
 
 Provider aliases and dispatch are centralized in `llm_adapter/external_llm_connection.py`. `llm_adapter/governed_external_provider_client.py` exposes that complete sequence through the existing ProviderClient seam used by Ecosystem Chat distributed execution, and returns a provider response only after both exact ingress and exact-response egress admission validate.
 
+## Canonical task and coordination resolution
+
+```text
+root handoff: LLM_ADAPTER_MIRROR_HANDOFF.md
+provider handoffs:
+  docs/ZAI_INTR_TRANSPORT_MIRROR_HANDOFF.md
+  docs/DEEPSEEK_INTR_TRANSPORT_MIRROR_HANDOFF.md
+  docs/KIMI_INTR_TRANSPORT_MIRROR_HANDOFF.md
+  docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md (or current Anthropic scoped handoff where renamed)
+task registry: tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json
+Master Records custody/reconstruction authority: master-records/orchestration
+runtime owner: StegVerse-Labs/.github WorkerCoordinator resident lane
+credential/provider-operation authority: StegVerse-Labs/TVC
+cross-repo dependency: StegVerse-Labs/TVC#345 / PR #346
+cross-repo dependency state: MERGED as 8faa70644dcb711aee73c976a50dd7a47f4ddf82
+```
+
+No duplicate Interlock/InTr, TV/TVC, WorkerCoordinator, heartbeat/oscillator, runtime-profile authority, custody path, or provider-secret architecture is created by this task.
+
 ## Provider state
 
-- Z.ai: existing governed InTr transport/executor is reused. This change set adds `stegverse:runtime-profile:llm-adapter-zai:v1`, a TVC non-exportable broker binding, provider-usage/Master Records continuation, and exact-response egress verification. TVC issue #345 / PR #346 stages the corresponding `zai` provider-operation profile under the existing broker.
+- Z.ai: existing governed InTr transport/executor is reused. This change set adds `stegverse:runtime-profile:llm-adapter-zai:v1`, a TVC non-exportable broker binding, provider-usage/Master Records continuation, and exact-response egress verification. TVC PR #346 is merged and supplies the corresponding `zai` provider-operation profile under the existing broker.
 - DeepSeek: existing InTr transport and existing TVC runtime-profile broker path remain the canonical production path and are dispatched through the shared connection primitive.
 - Kimi/Moonshot: existing InTr transport and existing TVC runtime-profile broker path remain the canonical production path. Missing exact-response TVC runtime egress admission is repaired in this change set.
 - Anthropic: the legacy direct HTTP client is compatibility-only for this purpose. This change set adds `stegverse.intr.anthropic.transport.v1`, `stegverse:runtime-profile:llm-adapter-anthropic:v1`, a TVC non-exportable broker binding using the already-existing Anthropic provider-operation profile, provider-usage/Master Records continuation, and exact-response egress verification.
@@ -63,8 +82,10 @@ Z.ai TVC runtime binding: STAGED
 DeepSeek TVC runtime binding: EXISTING / REUSED
 Kimi TVC runtime binding: EXISTING / REUSED; egress verification repaired
 Anthropic TVC runtime binding: STAGED
-TVC Z.ai provider profile: CROSS-REPO PR #346 / NOT MERGED
-source validation: RUNNING
+TVC Z.ai provider profile: MERGED / 8faa70644dcb711aee73c976a50dd7a47f4ddf82
+README completeness: SATISFIED_ON_BRANCH
+machine preflight canonical resolution: PASS
+exact-head source validation: REQUIRED
 live Z.ai execution: NOT CLAIMED
 live DeepSeek execution: NOT CLAIMED
 live Kimi execution: NOT CLAIMED
@@ -73,4 +94,8 @@ live Anthropic execution: NOT CLAIMED
 
 ## README completeness
 
-This change materially affects provider/runtime semantics. Repository README update is mandatory before merge. Until that update, TVC #346 resolution, and validation pass, the preflight remains incomplete and this branch is not admissible for merge.
+This change materially affects provider/runtime semantics, interfaces, credential boundaries, evidence semantics, and failure behavior. The repository README has been updated in this same branch with the provider-neutral governed connection sequence, source surfaces, authority boundaries, runtime-profile semantics, and source-vs-live-evidence distinction. README completeness is therefore satisfied for this change set.
+
+## Remaining admissibility gate
+
+The preflight has resolved canonical handoffs, task registry, Master Records authority, cross-task coordination, duplicate-creation constraints, and README impact. No additional functional mutation is admissible until exact-head validation passes. After validation, merge readiness may be evaluated without inferring live provider execution, activation, custody, or downstream publication.

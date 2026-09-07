@@ -1,0 +1,49 @@
+{
+  "schema": "stegverse.machine-preflight/v1",
+  "task": "LLMA-EXTERNAL-LLM-CONVERGENCE-306",
+  "issue": 306,
+  "pull_request": 309,
+  "state": "PASS_EXACT_HEAD_VALIDATION_REQUIRED",
+  "canonical_resolution": {
+    "root_handoff": "LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "scoped_handoff": "docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+    "provider_handoffs_resolved": ["zai", "deepseek", "kimi", "anthropic"],
+    "task_registry": "tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+    "master_records_authority": "master-records/orchestration",
+    "cross_task_coordination": "RESOLVED_REUSE_EXISTING",
+    "duplicate_creation_forbidden": true
+  },
+  "reuse": {
+    "interlock_intr": "RESOLVED_EXISTING",
+    "tv_tvc": "RESOLVED_EXISTING",
+    "worker_coordinator": "RESOLVED_EXISTING",
+    "master_records": "RESOLVED_EXISTING",
+    "heartbeat_oscillator": "REFERENCE_ONLY_EXISTING"
+  },
+  "cross_repo_dependencies": {
+    "StegVerse-Labs/TVC#345": "RESOLVED",
+    "StegVerse-Labs/TVC#346": "MERGED",
+    "merge_commit": "8faa70644dcb711aee73c976a50dd7a47f4ddf82"
+  },
+  "ephemeral_first": true,
+  "demo_test_production_ownership_forbidden": true,
+  "readme_impact": {
+    "material_change": true,
+    "required": true,
+    "satisfied_on_same_branch": true,
+    "evidence": "README documents provider-neutral connection sequence, TV/TVC non-exportable credential boundary, runtime-profile semantics, exact ingress/egress evidence, source-vs-live distinction, and no demo/test production ownership."
+  },
+  "functional_mutation_gate": {
+    "preflight_passed": true,
+    "additional_functional_mutation_allowed": false,
+    "reason": "Exact-head validation is the next admissibility predicate; only bounded defects found by validation/review justify further functional mutation."
+  },
+  "claims": {
+    "live_connection": false,
+    "runtime_execution": false,
+    "provider_operation": false,
+    "master_records_custody": false,
+    "activation": false,
+    "release_authority": false
+  }
+}
