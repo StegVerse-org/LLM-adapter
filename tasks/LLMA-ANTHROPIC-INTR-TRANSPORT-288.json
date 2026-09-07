@@ -12,6 +12,33 @@
   "credential_authority": "TV/TVC",
   "transition_authority": "Interlock/InTr",
   "readme_impact": "REQUIRED",
+  "runtime_binding": {
+    "runtime_profile_map": "StegVerse-Labs/.github/control/runtime-profile-map.json",
+    "profile_id": "sovereign-runtime-worker-v1",
+    "runtime_substrate": "canonical-resident-substrate-v1",
+    "executor": "WorkerCoordinator",
+    "hb_protocol": "HB32",
+    "oscillator": "INDEPENDENT_PHASE_OSCILLATOR",
+    "new_runtime_created": false,
+    "new_heartbeat_created": false,
+    "new_oscillator_created": false,
+    "new_scheduler_created": false,
+    "profile_match_grants_execution_authority": false,
+    "workercoordinator_admission_still_required": true,
+    "interlock_intr_ingress_egress_still_required": true,
+    "tvtvc_credential_materialization_still_required": true,
+    "master_records_reconstruction_still_required": true
+  },
+  "runtime_requirements": {
+    "capabilities": [
+      "bounded_process_execution"
+    ],
+    "environment": "SOVEREIGN_RESIDENT",
+    "direction": "INTERNAL",
+    "mutation_required": true,
+    "deployment_required": false,
+    "current_observation_required": true
+  },
   "source_validation": {
     "stdlib_unittest": "90/90 PASS",
     "compileall": "PASS",
