@@ -1,1 +1,52 @@
-cat: data/preflight/LLMA-EXTERNAL-LLM-CONVERGENCE-306-20260907-postmerge.json: No such file or directory
+{
+  "schema": "stegverse.machine-preflight/v1",
+  "task": "LLMA-EXTERNAL-LLM-CONVERGENCE-306",
+  "issue": 306,
+  "pull_request": 309,
+  "phase": "POST_MERGE_RECONCILIATION",
+  "state": "PASS_SOURCE_MERGED_RUNTIME_PROOF_REQUIRED",
+  "canonical_resolution": {
+    "root_handoff": "LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "scoped_handoff": "docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+    "task_registry": "tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+    "master_records_authority": "master-records/orchestration",
+    "runtime_owner": "StegVerse-Labs/.github::WorkerCoordinator",
+    "credential_provider_operation_authority": "TV/TVC",
+    "transition_admission_authority": "Interlock/InTr",
+    "duplicate_creation_forbidden": true
+  },
+  "merge_evidence": {
+    "tvc_zai_dependency_merge": "8faa70644dcb711aee73c976a50dd7a47f4ddf82",
+    "anthropic_288_mainline_merge": "cde350e41d16a9932932b96d77c0dbd37b950284",
+    "reconciled_exact_head": "c1353d4ded19a4673d58049fc7c6214d9d1d7265",
+    "reconciled_repository_validation": "34073941667 SUCCESS",
+    "pr_309_merge_commit": "fd6b887a046bc6016f4891d2f595679b6564da36",
+    "mainline_confirmed": true
+  },
+  "readme_impact": {
+    "implementation_phase_material_change": true,
+    "implementation_phase_readme_updated": true,
+    "postmerge_reconciliation": "NO_CHANGE_REQUIRED",
+    "evidence_supported_reason": "Post-merge work records only merge, validation, task, and handoff state. It does not modify repository behavior, runtime semantics, interfaces, governance or authority boundaries, evidence semantics, prerequisites, dependencies, failure behavior, or capability meaning."
+  },
+  "functional_mutation_gate": {
+    "additional_source_mutation_allowed": false,
+    "reason": "Source convergence is merged and validated. Further source mutation requires a bounded defect discovered by authentic runtime proof."
+  },
+  "runtime_proof_required": [
+    "exact_request_intr_ingress_allow",
+    "tvc_single_use_non_exportable_provider_operation",
+    "authentic_provider_response",
+    "master_records_custody_and_reconstruction",
+    "exact_response_intr_egress_allow"
+  ],
+  "claims": {
+    "source_complete": true,
+    "source_merged": true,
+    "live_provider_execution": false,
+    "connected": false,
+    "runtime_custody_proven": false,
+    "activation": false,
+    "release_authority": false
+  }
+}
