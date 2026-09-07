@@ -1,0 +1,19 @@
+{
+  "schema": "stegverse.task/v1",
+  "task_id": "LLMA-EXTERNAL-LLM-CONVERGENCE-306",
+  "goal_id": "EXTERNAL-LLM-GOVERNED-CONNECTION",
+  "repository": "StegVerse-org/LLM-adapter",
+  "issue": 306,
+  "state": "ACTIVE",
+  "objective": "Converge Z.ai, Kimi, DeepSeek, and Anthropic onto one existing-authority governed external-LLM connection path, with provider-specific transport/executor variation only.",
+  "constraints": [
+    "Reuse existing Interlock/InTr",
+    "Reuse existing TV/TVC",
+    "Reuse existing WorkerCoordinator",
+    "Reuse existing Master Records",
+    "HB/oscillator remains non-authorizing reference",
+    "No duplicate handoff/runtime profile/worker/scheduler/credential/custody systems",
+    "No demo/test repository may own production connection semantics",
+    "No activation claim without authentic end-to-end runtime evidence"
+  ]
+}
