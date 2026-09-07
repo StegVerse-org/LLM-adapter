@@ -100,6 +100,59 @@ tasks/LLMA-DISTRIBUTED-LLM-WORKLOAD-272.json
 tasks/LLMA-DISTRIBUTED-LLM-EXECUTOR-274.json
 ```
 
+## Governed external LLM connection convergence
+
+Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic now share one provider-neutral connection primitive instead of separate orchestration semantics. `llm_adapter/external_llm_connection.py` selects only provider-specific transport/runtime adapters. `llm_adapter/governed_external_provider_client.py` implements the existing `ProviderClient` seam used by distributed Ecosystem Chat execution and does not return a provider response until both the exact request and exact response have passed the existing external Interlock/InTr evaluations.
+
+```text
+ProviderRequest
+-> exact provider wire request hash
+-> external Interlock/InTr ingress ALLOW bound to exact request
+-> TVC short-lived single-use capability lease
+-> TVC non-exportable provider operation
+-> provider-specific transport/runtime adapter
+-> provider response / authority_effect NONE
+-> provider-usage event
+-> Master Records provider-usage custody/reconstruction
+-> exact provider response hash
+-> external Interlock/InTr egress ALLOW bound to exact response
+-> ProviderResponse becomes available to the existing distributed executor
+```
+
+Production external-provider execution uses TVC non-exportable operations for all four providers. Provider plaintext is not supplied to LLM-adapter in this path. Direct credential-resolver executors remain compatibility/test surfaces and are not the converged production contract. The shared connection module creates no Interlock/InTr, TVC, WorkerCoordinator, heartbeat, route, custody, or governance authority and does not turn provider success into an admissibility decision.
+
+Canonical convergence source surfaces:
+
+```text
+llm_adapter/external_llm_connection.py
+llm_adapter/governed_external_provider_client.py
+llm_adapter/zai_tvc_broker.py
+llm_adapter/zai_tvc_runtime_executor.py
+llm_adapter/deepseek_tvc_broker.py
+llm_adapter/deepseek_tvc_runtime_executor.py
+llm_adapter/kimi_tvc_broker.py
+llm_adapter/kimi_tvc_runtime_executor.py
+llm_adapter/anthropic_intr_transport.py
+llm_adapter/anthropic_intr_executor.py
+llm_adapter/anthropic_tvc_broker.py
+llm_adapter/anthropic_tvc_runtime_executor.py
+config/zai-runtime-profile.json
+config/deepseek-runtime-profile.json
+config/kimi-runtime-profile.json
+config/anthropic-runtime-profile.json
+tests/test_external_llm_connection.py
+tests/test_governed_external_provider_client.py
+tests/test_zai_tvc_runtime.py
+tests/test_deepseek_tvc_runtime.py
+tests/test_kimi_tvc_runtime.py
+tests/test_anthropic_tvc_runtime.py
+docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md
+```
+
+`StegVerse-org/stegverse-demo-suite` has no production ownership, runtime, credential, custody, or connection role in this path. Demo/test surfaces may consume a governed connection but cannot become its canonical owner.
+
+Source/CI/merge are not connection evidence. `CONNECTED` requires authentic same-execution ingress ALLOW, TVC provider operation, provider response, Master Records reconstruction, and exact-response egress ALLOW.
+
 ## Z.ai Interlock/InTr transport and governed execution
 
 Z.ai is supported as an **optional hosted-provider interoperability transport** through `stegverse.intr.zai.transport.v1`. It does not replace the canonical sovereign local route and does not acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.
@@ -109,17 +162,17 @@ canonical ProviderRequest provenance
 -> derive exact outbound Z.ai wire payload: model + messages + temperature
 -> canonicalize exact outbound payload and compute request_hash
 -> contemporaneous Interlock/InTr ingress evaluation
--> DENY: no credential resolution / no provider call
+-> DENY: no TVC lease / no provider operation
 -> ALLOW: bind exact wire request_hash + transition ID + ingress receipt hash + carrier ref
 -> derive transport_id as zait-<sha256(canonical transport basis)>
--> resolve TV/TVC provider credential exactly once at execution/send time
--> approved official Z.ai OpenAI-compatible endpoint selected only from admitted endpoint_profile
--> send the exact canonical bytes whose hash was admitted
--> validate provider response and usage fail-closed
--> reject credential material echoed by provider or present in outgoing evidence
--> provider response with authority_effect NONE
+-> bind stegverse:runtime-profile:llm-adapter-zai:v1
+-> TVC single-use non-exportable provider operation
+-> TVC profile zai / chat_completion_with_usage
+-> vault://tvc/providers/zai/api-key remains inside TV/TVC authority
+-> approved official Z.ai OpenAI-compatible endpoint selected from admitted endpoint_profile
+-> provider response with credential material absent and authority_effect NONE
 -> provider usage event using the existing adapter schema
--> existing Master Records provider-usage submission path, without authority escalation
+-> existing Master Records provider-usage submission path
 -> deterministic pre-egress handoff requests ALLOW but never assumes it
 -> separate Interlock/InTr egress evaluation
 -> exact egress ALLOW receipt must bind the provider response hash
@@ -128,9 +181,9 @@ canonical ProviderRequest provenance
 
 The v1 `transport_id` format is `zait-` followed by a lowercase SHA-256 digest. Its digest basis is the protocol version, transition ID, exact wire request hash, ingress receipt hash, carrier reference, and endpoint profile. The envelope `request_hash` binds the exact outbound Z.ai payload rather than the broader adapter `ProviderRequest` object; the broader `ProviderRequest.request_hash` may be retained separately as provenance but is not substituted for the admitted wire hash.
 
-The implementation allowlists the official global general API base `https://api.z.ai/api/paas/v4` and Coding Plan base `https://api.z.ai/api/coding/paas/v4`. Endpoint profile selection is part of the admitted envelope; a runtime configured for one profile cannot execute an envelope admitted for the other. Credentials remain under TV/TVC authority, are resolved through an external callable at send time, and are prohibited from serialized transport envelopes, response metadata, evidence, task records, handoffs, provider-usage events, and egress-admission records. A provider response that echoes the resolved credential is rejected fail-closed before returned evidence is emitted.
+The implementation allowlists the official global general API base `https://api.z.ai/api/paas/v4` and Coding Plan base `https://api.z.ai/api/coding/paas/v4`. Endpoint profile selection is part of the admitted envelope; a runtime configured for one profile cannot execute an envelope admitted for the other. The production connection uses the TVC non-exportable provider-operation profile `zai` and runtime profile `stegverse:runtime-profile:llm-adapter-zai:v1`; credential plaintext remains inside TV/TVC and is prohibited from serialized transport envelopes, response metadata, evidence, task records, handoffs, provider-usage events, and egress-admission records.
 
-`execute_governed_zai` binds the transport to the existing provider-usage and Master Records submission mechanisms. It accepts a TV/TVC credential resolver rather than persisted credential material, produces non-authoritative provider output, and emits an explicit deterministic pre-egress handoff with `requested_disposition=ALLOW`, `egress_intr_required=true`, and `authority_effect=NONE`; this is a request for external evaluation, not an assumed decision. `admit_zai_egress` does not evaluate or grant governance; it verifies an externally produced Interlock/InTr `ALLOW` receipt, an exact SHA-256 receipt identifier, and an admitted response hash equal to the provider response produced by the execution. Its local authority effect is explicitly `NONE_LOCAL`.
+`execute_governed_zai_via_tvc_runtime` binds the admitted transport to the existing TVC provider-operation broker, provider-usage event, Master Records submission path, and exact-response egress handoff. The older `execute_governed_zai` credential-resolver path remains compatibility/test-only. Neither executor evaluates or grants governance; `admit_zai_tvc_runtime_egress` verifies a separately produced Interlock/InTr `ALLOW` receipt and exact provider response hash, with local authority effect `NONE_LOCAL`.
 
 The exact outbound bytes are deterministically serialized from the canonical adapter request fields used by the Z.ai payload. Canonical `ProviderRequest` currently represents `temperature` as a numeric value; source validation therefore binds the bytes actually sent, while any future restricted-string/scaled-integer numeric canonicalization contract must be explicitly reconciled rather than silently changing provider typing.
 
@@ -139,9 +192,13 @@ Canonical source surfaces:
 ```text
 llm_adapter/zai_intr_transport.py
 llm_adapter/zai_intr_executor.py
+llm_adapter/zai_tvc_broker.py
+llm_adapter/zai_tvc_runtime_executor.py
+config/zai-runtime-profile.json
 schemas/zai-intr-transport-envelope.schema.json
 tests/test_zai_intr_transport.py
 tests/test_zai_intr_executor.py
+tests/test_zai_tvc_runtime.py
 capability/stegverse-intr-zai-transport.capability.json
 docs/ZAI_INTR_TRANSPORT_MIRROR_HANDOFF.md
 docs/ZAI_INTR_EXECUTOR_MIRROR_HANDOFF.md
@@ -150,7 +207,7 @@ tasks/LLMA-ZAI-INTR-TRANSPORT-276.json
 tasks/LLMA-ZAI-INTR-EXECUTOR-278.json
 ```
 
-Source validation proves fail-closed transport identity, exact wire-byte/hash binding, execution-time credential resolution, credential-redaction checks, usage-evidence, custody-submission, deterministic egress-handoff, and exact-response egress-binding semantics only. It is not live Z.ai execution, route admission, credential materialization, authentic Master Records custody/reconstruction, live egress ALLOW, Ecosystem Chat activation, or Site activation evidence.
+Source validation proves fail-closed transport identity, exact wire-byte/hash binding, TVC non-exportable operation construction, credential non-export semantics, usage evidence, custody submission, deterministic egress handoff, and exact-response egress binding only. It is not live Z.ai execution, authentic TVC provider use, authentic Master Records custody/reconstruction, live egress ALLOW, Ecosystem Chat activation, or Site activation evidence.
 
 ## DeepSeek Interlock/InTr transport and governed execution
 
@@ -229,7 +286,7 @@ current device
 
 The v1 Kimi transport ID is `kmit-<sha256>`. The envelope request hash binds the exact admitted Kimi transport bytes rather than the broader adapter `ProviderRequest`. Current source explicitly admits `kimi-k3` and the existing TVC provider endpoint/profile; alternate endpoints or model aliases are not silently substituted.
 
-`llm_adapter.kimi_tvc_broker` builds the existing TVC non-exportable operation request from a separately admitted single-use TVC lease, canonical vault reference, model/prompt bounds, and exact InTr binding. The returned sanitized TVC result is normalized into `ProviderResponse`; usage continues through the existing Master Records path; and response consequence remains blocked until a separate exact-response InTr egress ALLOW exists. The direct credential-resolver Kimi transport remains compatibility/test-only and is explicitly not the production connection contract.
+`llm_adapter.kimi_tvc_broker` builds the existing TVC non-exportable operation request from a separately admitted single-use TVC lease, canonical vault reference, model/prompt bounds, and exact InTr binding. The returned sanitized TVC result is normalized into `ProviderResponse`; usage continues through the existing Master Records path; and response consequence remains blocked until a separate exact-response InTr egress ALLOW exists. The direct credential-resolver Kimi transport remains compatibility/test-only and is explicitly not the production connection contract. `admit_kimi_tvc_runtime_egress` now enforces the same exact-response egress binding as the other external providers.
 
 Canonical source surfaces:
 
@@ -250,48 +307,38 @@ tasks/LLMA-KIMI-INTR-RUNTIME-292.json
 
 Source/CI validation proves the implementation and authority boundaries only. A working Kimi connector is claimed only after authentic same-execution evidence proves InTr ingress, TVC Kimi lease/non-exportable provider execution, an authentic Moonshot response, Master Records custody/reconstruction, and exact-response InTr egress.
 
-## Anthropic/Claude Interlock/InTr transport and governed execution
+## Anthropic Interlock/InTr transport and governed execution
 
-Anthropic is supported as an **optional, non-authoritative hosted-provider interoperability transport** through `stegverse.intr.anthropic.transport.v1`. It uses the native Messages API at `POST https://api.anthropic.com/v1/messages` and does not replace the canonical sovereign local route or acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.
-
-The #288 transport is bound to the existing canonical resident runtime rather than a provider-specific runtime:
+Anthropic is supported as an optional hosted-provider interoperability transport through `stegverse.intr.anthropic.transport.v1`. The production path uses runtime profile `stegverse:runtime-profile:llm-adapter-anthropic:v1` and the existing TVC `anthropic` provider-operation profile. The legacy direct `AnthropicHTTPProviderClient` remains compatibility-only for this governed connection purpose.
 
 ```text
-runtime profile: sovereign-runtime-worker-v1
-resident substrate: canonical-resident-substrate-v1
-executor: WorkerCoordinator
-HB protocol: HB32
-runtime capability: bounded_process_execution
-task routing direction: INTERNAL
-credential authority: TV/TVC
-ingress/egress authority: Interlock/InTr
-custody/reconstruction: Master Records
+current device / governed caller
+-> Universal InTr ingress bound to exact Anthropic wire request
+-> Anthropic InTr envelope
+-> stegverse:runtime-profile:llm-adapter-anthropic:v1
+-> existing WorkerCoordinator resident execution
+-> TVC single-use non-exportable message_with_usage operation
+-> vault://tvc/providers/anthropic/api-key remains inside TV/TVC authority
+-> Anthropic result with credential material absent and authority_effect NONE
+-> canonical provider-usage event
+-> existing Master Records provider-usage submission path
+-> exact-response Interlock/InTr egress ALLOW
+-> downstream consequence only after that ALLOW
 ```
 
-The task-routing direction `INTERNAL` does not waive provider egress governance. The exact outbound request remains bound to an external Interlock/InTr ingress ALLOW; TV/TVC credential material is resolved only for the admitted execution and must not enter any transport envelope, evidence, usage record, custody handoff, or log; the normalized provider result has `authority_effect = "NONE"` and `egress_intr_required = true`; and consequence remains blocked until a separate external Interlock/InTr egress ALLOW binds the exact response hash.
-
-`canonical_sovereign_route_replaced = false` and `hosted_provider_required = false`. Streaming, Batches, and Files are unsupported in v1 and require separate admitted endpoint profiles. Hashing and lossless content-block normalization are specified in `docs/CANONICALIZATION.md`. Source validation is `python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-runtime-fix-288`.
-
-Canonical Anthropic surfaces:
+Canonical source surfaces:
 
 ```text
 llm_adapter/anthropic_intr_transport.py
 llm_adapter/anthropic_intr_executor.py
-schemas/stegverse-intr-anthropic-transport-envelope.schema.json
-schemas/stegverse-intr-anthropic-evidence.schema.json
-schemas/stegverse-intr-anthropic-capability.json
-docs/CANONICALIZATION.md
-docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md
-examples/reference_transaction.py
-scripts/validate_anthropic_intr.py
+llm_adapter/anthropic_tvc_broker.py
+llm_adapter/anthropic_tvc_runtime_executor.py
+config/anthropic-runtime-profile.json
 tests/test_anthropic_intr_transport.py
-tests/test_anthropic_content_blocks.py
-tests/test_anthropic_intr_executor.py
-tests/test_anthropic_adversarial.py
-tasks/LLMA-ANTHROPIC-INTR-TRANSPORT-288.json
+tests/test_anthropic_tvc_runtime.py
 ```
 
-Source/CI validation proves implementation and authority boundaries only. It does not prove a current task-executing WorkerCoordinator, live Claude execution, TV/TVC credential readiness, authentic Master Records custody/reconstruction, exact-response live egress ALLOW, or product activation.
+Source/CI validates exact request binding, TVC non-exportable operation construction, usage/custody continuation, and exact-response egress semantics only. It does not prove an authentic Anthropic provider call or live governed connection.
 
 ## No GitHub-token production dependency
 
@@ -352,7 +399,7 @@ heartbeat recovery / current fence
 -> required Publisher/wiki propagation
 ```
 
-The distributed named-source workload, bounded executor, Z.ai transport/executor, DeepSeek transport/runtime-profile executor, Kimi transport/runtime-profile executor, and Anthropic transport/executor are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider execution.
+The distributed named-source workload, bounded executor, shared external-LLM connection primitive, Z.ai transport/runtime-profile executor, DeepSeek transport/runtime-profile executor, Kimi transport/runtime-profile executor, and Anthropic transport/runtime-profile executor are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider execution.
 
 This continuation is machine-owned. It is not a reason to re-open the completed local-model or carrier-executor implementation tasks.
 
@@ -388,20 +435,24 @@ pytest tests/test_distributed_executor.py -q
 python scripts/check_distributed_llm_executor.py
 pytest tests/test_zai_intr_transport.py -q
 pytest tests/test_zai_intr_executor.py -q
+pytest tests/test_zai_tvc_runtime.py -q
 pytest tests/test_deepseek_intr_transport.py -q
 pytest tests/test_deepseek_intr_executor.py -q
 pytest tests/test_deepseek_tvc_runtime.py -q
 pytest tests/test_kimi_intr_transport.py -q
 pytest tests/test_kimi_intr_executor.py -q
 pytest tests/test_kimi_tvc_runtime.py -q
-python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-runtime-fix-288
+pytest tests/test_anthropic_intr_transport.py -q
+pytest tests/test_anthropic_tvc_runtime.py -q
+pytest tests/test_external_llm_connection.py -q
+pytest tests/test_governed_external_provider_client.py -q
 ```
 
 The authoritative current task and release state is `LLM_ADAPTER_MIRROR_HANDOFF.md`. `adapter.capabilities.json` is the machine-readable capability posture.
 
 ## Optional interoperability lanes
 
-The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, named-source distributed LLM contribution lanes, the Z.ai InTr lane, the DeepSeek InTr lane, the Kimi/Moonshot InTr lane, and the Anthropic InTr lane. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
+The repository can still contain hosted-provider clients, fixture providers, Demo/conformance paths, SDK-adjacent integration, free-tier metadata, system-boundary tooling, named-source distributed LLM contribution lanes, and the Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic InTr lanes. Those are optional or bounded interoperability surfaces and must not be mistaken for the canonical production local-model authority path.
 
 ## Repository
 

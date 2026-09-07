@@ -1,0 +1,61 @@
+{
+  "schema": "stegverse.machine-preflight/v1",
+  "task": "LLMA-EXTERNAL-LLM-CONVERGENCE-306",
+  "issue": 306,
+  "pull_request": 309,
+  "state": "PASS_EXACT_HEAD_VALIDATED",
+  "canonical_resolution": {
+    "root_handoff": "LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "scoped_handoff": "docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+    "provider_handoffs_resolved": ["zai", "deepseek", "kimi", "anthropic"],
+    "task_registry": "tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+    "master_records_authority": "master-records/orchestration",
+    "cross_task_coordination": "RESOLVED_REUSE_EXISTING",
+    "duplicate_creation_forbidden": true
+  },
+  "reuse": {
+    "interlock_intr": "RESOLVED_EXISTING",
+    "tv_tvc": "RESOLVED_EXISTING",
+    "worker_coordinator": "RESOLVED_EXISTING",
+    "master_records": "RESOLVED_EXISTING",
+    "heartbeat_oscillator": "REFERENCE_ONLY_EXISTING"
+  },
+  "cross_repo_dependencies": {
+    "StegVerse-Labs/TVC#345": "RESOLVED",
+    "StegVerse-Labs/TVC#346": "MERGED",
+    "merge_commit": "8faa70644dcb711aee73c976a50dd7a47f4ddf82"
+  },
+  "ephemeral_first": true,
+  "demo_test_production_ownership_forbidden": true,
+  "readme_impact": {
+    "material_change": true,
+    "required": true,
+    "satisfied_on_same_branch": true,
+    "evidence": "README documents provider-neutral connection sequence, TV/TVC non-exportable credential boundary, runtime-profile semantics, exact ingress/egress evidence, source-vs-live distinction, and no demo/test production ownership."
+  },
+  "validation": {
+    "integrated_head": "46bd44149902a171074446a6c0fe7a219e4dceca",
+    "canonical_main_integrated": "852718d0a1287953ea408511c47b3764e3410b77",
+    "local_task_and_main_dependency_tests": "68/68 PASS",
+    "hosted_external_llm_convergence": "34073656131 SUCCESS",
+    "hosted_zai": "34073656134 SUCCESS",
+    "hosted_kimi": "34073656133 SUCCESS",
+    "hosted_deepseek": "34073656136 SUCCESS",
+    "hosted_distributed_workload": "34073656156 SUCCESS",
+    "hosted_distributed_executor": "34073656129 SUCCESS",
+    "hosted_repository_validation": "34073656180 SUCCESS"
+  },
+  "functional_mutation_gate": {
+    "preflight_passed": true,
+    "additional_functional_mutation_allowed": false,
+    "reason": "Exact-head validation passed; only merge/reconciliation is admissible unless review identifies a bounded defect."
+  },
+  "claims": {
+    "live_connection": false,
+    "runtime_execution": false,
+    "provider_operation": false,
+    "master_records_custody": false,
+    "activation": false,
+    "release_authority": false
+  }
+}

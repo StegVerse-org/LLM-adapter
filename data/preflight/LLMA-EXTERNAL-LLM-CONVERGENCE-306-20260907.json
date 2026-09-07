@@ -1,0 +1,32 @@
+{
+  "schema": "stegverse.machine-preflight/v1",
+  "task": "LLMA-EXTERNAL-LLM-CONVERGENCE-306",
+  "issue": 306,
+  "state": "PREFLIGHT_STARTED_CANONICAL_RESOLUTION_REQUIRED",
+  "canonical_resolution": {
+    "provider_handoffs_required": ["zai", "kimi", "deepseek", "anthropic"],
+    "task_registry_required": true,
+    "master_records_required": true,
+    "cross_task_coordination_required": true,
+    "duplicate_creation_forbidden": true
+  },
+  "reuse": {
+    "interlock_intr": "REQUIRED_EXISTING",
+    "tv_tvc": "REQUIRED_EXISTING",
+    "worker_coordinator": "REQUIRED_EXISTING",
+    "master_records": "REQUIRED_EXISTING",
+    "heartbeat_oscillator": "REFERENCE_ONLY_EXISTING"
+  },
+  "ephemeral_first": true,
+  "demo_test_production_ownership_forbidden": true,
+  "readme_impact": {
+    "material_change_expected": true,
+    "readme_update_required_if_implementation_changes_runtime_semantics": true
+  },
+  "claims": {
+    "live_connection": false,
+    "runtime_execution": false,
+    "provider_operation": false,
+    "activation": false
+  }
+}

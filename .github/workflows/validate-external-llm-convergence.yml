@@ -1,0 +1,73 @@
+name: validate-external-llm-convergence
+
+on:
+  pull_request:
+    paths:
+      - 'llm_adapter/*intr*'
+      - 'llm_adapter/*tvc*'
+      - 'llm_adapter/external_llm_connection.py'
+      - 'llm_adapter/governed_external_provider_client.py'
+      - 'config/*runtime-profile.json'
+      - 'tests/test_*intr*'
+      - 'tests/test_*tvc*'
+      - 'tests/test_external_llm_connection.py'
+      - 'tests/test_governed_external_provider_client.py'
+      - 'docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Refuse credential-bearing environment
+        shell: bash
+        run: |
+          for key in GITHUB_TOKEN GH_TOKEN OPENAI_API_KEY ANTHROPIC_API_KEY; do
+            if [ -n "${!key:-}" ]; then echo "credential_exposed:$key"; exit 1; fi
+          done
+      - name: Fetch exact source anonymously
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git init .
+          git remote add origin https://github.com/StegVerse-org/LLM-adapter.git
+          git -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+      - name: Install source validation dependencies
+        run: python3 -m pip install -e '.[dev]'
+      - name: Compile convergence modules
+        run: >-
+          python3 -m py_compile
+          llm_adapter/anthropic_intr_transport.py
+          llm_adapter/anthropic_intr_executor.py
+          llm_adapter/anthropic_tvc_broker.py
+          llm_adapter/anthropic_tvc_runtime_executor.py
+          llm_adapter/zai_tvc_broker.py
+          llm_adapter/zai_tvc_runtime_executor.py
+          llm_adapter/external_llm_connection.py
+          llm_adapter/governed_external_provider_client.py
+      - name: Run governed connection tests
+        run: >-
+          python3 -m pytest -q
+          tests/test_anthropic_intr_transport.py
+          tests/test_anthropic_tvc_runtime.py
+          tests/test_zai_tvc_runtime.py
+          tests/test_deepseek_tvc_runtime.py
+          tests/test_kimi_tvc_runtime.py
+          tests/test_external_llm_connection.py
+          tests/test_governed_external_provider_client.py
+      - name: Confirm validation-only posture
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/validate-external-llm-convergence.yml').read_text()
+          forbidden = ['git ' + 'push', 'persist-' + 'credentials', 'actions/' + 'checkout@']
+          assert 'permissions: {}' in p
+          assert all(marker not in p for marker in forbidden)
+          assert 'OPENAI_API_KEY' in p and 'ANTHROPIC_API_KEY' in p
+          print('EXTERNAL_LLM_CONVERGENCE_VALIDATION_ONLY=PASS')
+          PY
