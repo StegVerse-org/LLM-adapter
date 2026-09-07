@@ -1,0 +1,55 @@
+name: validate-anthropic-288-exact
+
+on:
+  pull_request:
+    paths:
+      - 'llm_adapter/anthropic_intr_*.py'
+      - 'schemas/stegverse-intr-anthropic-*'
+      - 'docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md'
+      - 'docs/BRANCH_288_INSTALL.md'
+      - 'docs/CANONICALIZATION.md'
+      - 'examples/reference_transaction.py'
+      - 'tests/test_anthropic_*.py'
+      - 'scripts/validate_anthropic_intr.py'
+      - 'tasks/LLMA-ANTHROPIC-INTR-TRANSPORT-288.json'
+      - '.github/workflows/validate-anthropic-288-exact.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  exact-branch-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Refuse credential-bearing environment
+        shell: bash
+        run: |
+          for key in GITHUB_TOKEN GH_TOKEN ANTHROPIC_API_KEY OPENAI_API_KEY; do
+            if [ -n "${!key:-}" ]; then echo "credential_exposed:$key"; exit 1; fi
+          done
+      - name: Fetch exact PR head anonymously as canonical branch name
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git init .
+          git remote add origin https://github.com/StegVerse-org/LLM-adapter.git
+          git -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
+          git checkout -b feat/anthropic-intr-runtime-fix-288 FETCH_HEAD
+      - name: Run exact branch validator
+        shell: bash
+        run: |
+          python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-runtime-fix-288 --json > /tmp/validation-288.json
+          cat /tmp/validation-288.json
+          python3 - <<'PY'
+          import json
+          report=json.load(open('/tmp/validation-288.json'))
+          assert report['check_count']==43
+          assert report['outcome']=='PASS'
+          assert report['merge_permitted'] is True
+          assert report['attests_live_claude_execution'] is False
+          assert report['attests_custody_acceptance'] is False
+          assert report['attests_egress_allow'] is False
+          print('ANTHROPIC_288_EXACT_BRANCH_VALIDATION=PASS')
+          PY
