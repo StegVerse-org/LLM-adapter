@@ -7,6 +7,14 @@
   "source_branch": "feat/external-llm-convergence-306",
   "goal": "Converge Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic on one provider-neutral governed external-LLM connection primitive while preserving provider-specific wire adapters and existing authority boundaries.",
   "state": "SOURCE_COMPLETE_MERGED_RUNTIME_PROOF_REQUIRED",
+  "cosv": {
+    "profile": "task.v1",
+    "notation": "L R U I V G O C M T B E A P",
+    "vector": "50000000100000",
+    "universal_task_id": "LLMA-EXTERNAL-LLM-CONVERGENCE-306::COSV-task.v1-50000000100000",
+    "vector_ref": "data/cosv/task-vectors/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+    "canonical_profile_ref": "StegVerse-Labs/.github/management/COSV_PROFILE_V1.json"
+  },
   "repair_branch": "fix/external-llm-anthropic-canonical-306",
   "repair_pull_request": 318,
   "reconciliation_pull_request": 319,
@@ -54,7 +62,8 @@
     "implementation_change_required_readme": true,
     "implementation_readme_satisfied": true,
     "repair_readme_satisfied": true,
-    "evidence_reconciliation": "NO_CHANGE_REQUIRED"
+    "evidence_reconciliation": "NO_CHANGE_REQUIRED",
+    "cosv_binding": "NO_CHANGE_REQUIRED"
   },
   "validation": {
     "merged_pr_309_head": "fd6b887a046bc6016f4891d2f595679b6564da36",
