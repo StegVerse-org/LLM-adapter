@@ -53,6 +53,10 @@ runtime owner: StegVerse-Labs/.github WorkerCoordinator resident lane
 credential/provider-operation authority: StegVerse-Labs/TVC
 cross-repo dependency: StegVerse-Labs/TVC#345 / PR #346
 cross-repo dependency state: MERGED as 8faa70644dcb711aee73c976a50dd7a47f4ddf82
+Anthropic #288 canonical mainline: MERGED / cde350e41d16a9932932b96d77c0dbd37b950284
+#309 merge commit: fd6b887a046bc6016f4891d2f595679b6564da36
+postmerge main reconciliation: 02346f925c232a47f9df4b11d336e7c36c0e9b62
+bounded canonical repair: PR #318
 ```
 
 No duplicate Interlock/InTr, TV/TVC, WorkerCoordinator, heartbeat/oscillator, runtime-profile authority, custody path, or provider-secret architecture is created by this task.
@@ -77,17 +81,19 @@ Source, CI, merge, public pages, and provider self-description are not live conn
 ## Current evidence
 
 ```text
-shared ProviderClient connection implementation: STAGED
-Z.ai TVC runtime binding: STAGED
+shared ProviderClient connection implementation: MERGED / REPAIR PENDING
+Z.ai TVC runtime binding: MERGED
 DeepSeek TVC runtime binding: EXISTING / REUSED
 Kimi TVC runtime binding: EXISTING / REUSED; egress verification repaired
-Anthropic TVC runtime binding: STAGED
+Anthropic TVC runtime binding: MERGED / CANONICAL #288 REPAIR PENDING
 TVC Z.ai provider profile: MERGED / 8faa70644dcb711aee73c976a50dd7a47f4ddf82
 README completeness: SATISFIED_ON_BRANCH
 machine preflight canonical resolution: PASS
 canonical main integrated: cde350e41d16a9932932b96d77c0dbd37b950284
 PR #309 merge: fd6b887a046bc6016f4891d2f595679b6564da36
-validated bounded-repair tree: ef3f051dcc3c80192fcbce6deafde8afc0132dc7
+validated bounded-repair functional tree: ef3f051dcc3c80192fcbce6deafde8afc0132dc7
+published repair head: b7cfe5a0b99842dbe2e2ff08281fc853e37d6fb2
+repair PR: #318
 canonical Anthropic #288 source validator: 43/43 PASS
 local convergence + integrated dependency tests: 127/127 PASS
 hosted convergence validation: 34073656131 SUCCESS

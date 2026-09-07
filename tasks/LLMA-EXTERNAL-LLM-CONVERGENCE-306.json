@@ -4,10 +4,11 @@
   "repository": "StegVerse-org/LLM-adapter",
   "issue": 306,
   "pull_request": 309,
-  "branch": "feat/external-llm-convergence-306",
+  "source_branch": "feat/external-llm-convergence-306",
   "goal": "Converge Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic on one provider-neutral governed external-LLM connection primitive while preserving provider-specific wire adapters and existing authority boundaries.",
   "state": "POST_MERGE_CANONICAL_REPAIR_VALIDATED",
   "repair_branch": "fix/external-llm-anthropic-canonical-306",
+  "repair_pull_request": 318,
   "authority": {
     "transition_admission": "Interlock/InTr",
     "credential_provider_operation": "TV/TVC",
@@ -34,13 +35,22 @@
     "state": "MERGED",
     "merge_commit": "8faa70644dcb711aee73c976a50dd7a47f4ddf82"
   },
+  "merge_reconciliation": {
+    "anthropic_mainline_merge": "cde350e41d16a9932932b96d77c0dbd37b950284",
+    "pull_request_merge_commit": "fd6b887a046bc6016f4891d2f595679b6564da36",
+    "postmerge_main_reconciliation": "02346f925c232a47f9df4b11d336e7c36c0e9b62",
+    "canonical_conflict_side_repair_required": true,
+    "repair_pull_request": 318
+  },
   "readme_impact": {
-    "required": true,
-    "satisfied_on_branch": true
+    "implementation_change_required_readme": true,
+    "implementation_readme_satisfied": true,
+    "repair_readme_satisfied": true
   },
   "validation": {
     "merged_pr_309_head": "fd6b887a046bc6016f4891d2f595679b6564da36",
-    "validated_repair_tree": "ef3f051dcc3c80192fcbce6deafde8afc0132dc7",
+    "validated_functional_tree": "ef3f051dcc3c80192fcbce6deafde8afc0132dc7",
+    "published_repair_head": "b7cfe5a0b99842dbe2e2ff08281fc853e37d6fb2",
     "canonical_main_integrated": "cde350e41d16a9932932b96d77c0dbd37b950284",
     "anthropic_288_source_validator": "43/43 PASS",
     "local_tests": "127/127 PASS",
@@ -61,5 +71,5 @@
     "activation": false,
     "release_authority": false
   },
-  "next_executable_action": "Publish and merge the bounded post-#309 canonical Anthropic repair, then reconcile mainline evidence; do not infer live provider execution, custody, connection, activation, or release authority."
+  "next_executable_action": "Validate and merge repair PR #318, then reconcile mainline evidence; do not infer live provider execution, custody, connection, activation, or release authority."
 }

@@ -3,6 +3,7 @@
   "task": "LLMA-EXTERNAL-LLM-CONVERGENCE-306",
   "issue": 306,
   "pull_request": 309,
+  "repair_pull_request": 318,
   "state": "PASS_BOUNDED_POST_MERGE_REPAIR_VALIDATED",
   "canonical_resolution": {
     "root_handoff": "LLM_ADAPTER_MIRROR_HANDOFF.md",
@@ -35,7 +36,9 @@
   },
   "validation": {
     "merged_pr_309_head": "fd6b887a046bc6016f4891d2f595679b6564da36",
-    "validated_repair_tree": "ef3f051dcc3c80192fcbce6deafde8afc0132dc7",
+    "validated_functional_tree": "ef3f051dcc3c80192fcbce6deafde8afc0132dc7",
+    "published_repair_head": "b7cfe5a0b99842dbe2e2ff08281fc853e37d6fb2",
+    "postmerge_main_reconciliation": "02346f925c232a47f9df4b11d336e7c36c0e9b62",
     "canonical_main_integrated": "cde350e41d16a9932932b96d77c0dbd37b950284",
     "anthropic_288_source_validator": "43/43 PASS",
     "local_task_and_main_dependency_tests": "127/127 PASS",
