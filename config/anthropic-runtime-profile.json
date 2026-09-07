@@ -1,0 +1,45 @@
+{
+  "schema": "stegverse.llm_adapter.anthropic_runtime_profile/v1",
+  "profile_id": "stegverse:runtime-profile:llm-adapter-anthropic:v1",
+  "base_profile": "stegverse:runtime-profile:hb-intr-resident:v1",
+  "repository": "StegVerse-org/LLM-adapter",
+  "protocol": "stegverse.intr.anthropic.transport.v1",
+  "runtime_owner": "StegVerse-Labs/.github::heartbeat_runtime.worker_runtime.WorkerCoordinator",
+  "transport": {
+    "protocol": "Universal InTr",
+    "transport_is_authority": false,
+    "ingress_required": true,
+    "egress_required": true
+  },
+  "provider_execution": {
+    "provider": "anthropic",
+    "operation": "message_with_usage",
+    "tvc_profile": "anthropic",
+    "secret_ref": "vault://tvc/providers/anthropic/api-key",
+    "credential_authority": "TV/TVC",
+    "credential_delivery": "NON_EXPORTABLE_TVC_PROVIDER_OPERATION",
+    "credential_material_in_llm_adapter": false,
+    "direct_credential_resolver_production_allowed": false,
+    "broker_request_schema": "stegverse.vault.non_exportable_operation_request.v1"
+  },
+  "authority": {
+    "provider_authority_effect": "NONE",
+    "runtime_profile_grants_execution": false,
+    "heartbeat_grants_execution": false,
+    "github_token_runtime_authority": "NONE"
+  },
+  "physical_runtime": {
+    "another_physical_machine_required": false,
+    "linux_specific_runtime_required": false,
+    "systemd_required": false,
+    "unix_socket_required_by_profile": false
+  },
+  "evidence_sequence": [
+    "intr_ingress_allow",
+    "runtime_profile_materialization",
+    "tvc_single_use_provider_operation_allow",
+    "anthropic_provider_result",
+    "master_records_provider_usage_reconstruction",
+    "intr_egress_allow"
+  ]
+}
