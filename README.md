@@ -307,38 +307,58 @@ tasks/LLMA-KIMI-INTR-RUNTIME-292.json
 
 Source/CI validation proves the implementation and authority boundaries only. A working Kimi connector is claimed only after authentic same-execution evidence proves InTr ingress, TVC Kimi lease/non-exportable provider execution, an authentic Moonshot response, Master Records custody/reconstruction, and exact-response InTr egress.
 
-## Anthropic Interlock/InTr transport and governed execution
+## Anthropic/Claude Interlock/InTr transport and governed execution
 
-Anthropic is supported as an optional hosted-provider interoperability transport through `stegverse.intr.anthropic.transport.v1`. The production path uses runtime profile `stegverse:runtime-profile:llm-adapter-anthropic:v1` and the existing TVC `anthropic` provider-operation profile. The legacy direct `AnthropicHTTPProviderClient` remains compatibility-only for this governed connection purpose.
+Anthropic is supported as an **optional, non-authoritative hosted-provider interoperability transport** through `stegverse.intr.anthropic.transport.v1`. It uses the native Messages API at `POST https://api.anthropic.com/v1/messages` and does not replace the canonical sovereign local route or acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.
+
+The #288 transport is bound to the existing canonical resident runtime rather than a provider-specific runtime:
 
 ```text
-current device / governed caller
--> Universal InTr ingress bound to exact Anthropic wire request
--> Anthropic InTr envelope
--> stegverse:runtime-profile:llm-adapter-anthropic:v1
--> existing WorkerCoordinator resident execution
--> TVC single-use non-exportable message_with_usage operation
--> vault://tvc/providers/anthropic/api-key remains inside TV/TVC authority
--> Anthropic result with credential material absent and authority_effect NONE
--> canonical provider-usage event
--> existing Master Records provider-usage submission path
--> exact-response Interlock/InTr egress ALLOW
--> downstream consequence only after that ALLOW
+runtime profile: sovereign-runtime-worker-v1
+resident substrate: canonical-resident-substrate-v1
+executor: WorkerCoordinator
+HB protocol: HB32
+runtime capability: bounded_process_execution
+task routing direction: INTERNAL
+credential authority: TV/TVC
+ingress/egress authority: Interlock/InTr
+custody/reconstruction: Master Records
 ```
 
-Canonical source surfaces:
+The task-routing direction `INTERNAL` does not waive provider egress governance. The exact outbound request remains bound to an external Interlock/InTr ingress ALLOW; TV/TVC credential material is resolved only for the admitted execution and must not enter any transport envelope, evidence, usage record, custody handoff, or log; the normalized provider result has `authority_effect = "NONE"` and `egress_intr_required = true`; and consequence remains blocked until a separate external Interlock/InTr egress ALLOW binds the exact response hash.
+
+`canonical_sovereign_route_replaced = false` and `hosted_provider_required = false`. Streaming, Batches, and Files are unsupported in v1 and require separate admitted endpoint profiles. Hashing and lossless content-block normalization are specified in `docs/CANONICALIZATION.md`. Source validation is `python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-runtime-fix-288`.
+
+The provider-neutral convergence path reuses that contract through
+`anthropic_convergence_bridge.py` and the existing TVC single-use,
+non-exportable `message_with_usage` operation. It does not retain a second
+direct-credential Anthropic compatibility path.
+
+Canonical Anthropic surfaces:
 
 ```text
 llm_adapter/anthropic_intr_transport.py
 llm_adapter/anthropic_intr_executor.py
+llm_adapter/anthropic_convergence_bridge.py
 llm_adapter/anthropic_tvc_broker.py
 llm_adapter/anthropic_tvc_runtime_executor.py
 config/anthropic-runtime-profile.json
-tests/test_anthropic_intr_transport.py
 tests/test_anthropic_tvc_runtime.py
+schemas/stegverse-intr-anthropic-transport-envelope.schema.json
+schemas/stegverse-intr-anthropic-evidence.schema.json
+schemas/stegverse-intr-anthropic-capability.json
+docs/CANONICALIZATION.md
+docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md
+examples/reference_transaction.py
+scripts/validate_anthropic_intr.py
+tests/test_anthropic_intr_transport.py
+tests/test_anthropic_content_blocks.py
+tests/test_anthropic_intr_executor.py
+tests/test_anthropic_adversarial.py
+tasks/LLMA-ANTHROPIC-INTR-TRANSPORT-288.json
 ```
 
-Source/CI validates exact request binding, TVC non-exportable operation construction, usage/custody continuation, and exact-response egress semantics only. It does not prove an authentic Anthropic provider call or live governed connection.
+Source/CI validation proves implementation and authority boundaries only. It does not prove a current task-executing WorkerCoordinator, live Claude execution, TV/TVC credential readiness, authentic Master Records custody/reconstruction, exact-response live egress ALLOW, or product activation.
 
 ## No GitHub-token production dependency
 
@@ -446,6 +466,7 @@ pytest tests/test_anthropic_intr_transport.py -q
 pytest tests/test_anthropic_tvc_runtime.py -q
 pytest tests/test_external_llm_connection.py -q
 pytest tests/test_governed_external_provider_client.py -q
+python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-runtime-fix-288
 ```
 
 The authoritative current task and release state is `LLM_ADAPTER_MIRROR_HANDOFF.md`. `adapter.capabilities.json` is the machine-readable capability posture.

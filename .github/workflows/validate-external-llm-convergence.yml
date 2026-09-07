@@ -7,6 +7,7 @@ on:
       - 'llm_adapter/*tvc*'
       - 'llm_adapter/external_llm_connection.py'
       - 'llm_adapter/governed_external_provider_client.py'
+      - 'llm_adapter/anthropic_convergence_bridge.py'
       - 'config/*runtime-profile.json'
       - 'tests/test_*intr*'
       - 'tests/test_*tvc*'
@@ -44,6 +45,7 @@ jobs:
           python3 -m py_compile
           llm_adapter/anthropic_intr_transport.py
           llm_adapter/anthropic_intr_executor.py
+          llm_adapter/anthropic_convergence_bridge.py
           llm_adapter/anthropic_tvc_broker.py
           llm_adapter/anthropic_tvc_runtime_executor.py
           llm_adapter/zai_tvc_broker.py

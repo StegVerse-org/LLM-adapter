@@ -13,7 +13,6 @@ from .provider_request import ProviderRequest
 from .zai_intr_executor import execute_governed_zai, admit_zai_egress
 from .deepseek_intr_executor import execute_governed_deepseek, admit_deepseek_egress
 from .kimi_intr_executor import execute_governed_kimi, admit_kimi_egress
-from .anthropic_intr_executor import execute_governed_anthropic, admit_anthropic_egress
 from .zai_tvc_runtime_executor import execute_governed_zai_via_tvc_runtime, admit_zai_tvc_runtime_egress
 from .deepseek_tvc_runtime_executor import execute_governed_deepseek_via_tvc_runtime, admit_deepseek_tvc_runtime_egress
 from .kimi_tvc_runtime_executor import execute_governed_kimi_via_tvc_runtime, admit_kimi_tvc_runtime_egress
@@ -82,7 +81,10 @@ def execute_governed_external_llm(request: ProviderRequest, *, session_id: str, 
     if provider == "zai": execution = execute_governed_zai(**direct, endpoint_profile=provider_options.get("endpoint_profile", "general"))
     elif provider == "deepseek": execution = execute_governed_deepseek(**direct)
     elif provider == "kimi": execution = execute_governed_kimi(**direct)
-    elif provider == "anthropic": execution = execute_governed_anthropic(**direct, max_tokens=int(provider_options.get("max_tokens", 1024)))
+    elif provider == "anthropic":
+        raise ExternalLLMConnectionError(
+            "Anthropic requires the canonical TVC non-exportable runtime path"
+        )
     else: raise ExternalLLMConnectionError("provider compatibility dispatch invariant violated")
     return GovernedConnectionResult(provider, execution, "TV_TVC_RESOLVER_COMPATIBILITY")
 
@@ -97,7 +99,10 @@ def admit_external_llm_egress(result: GovernedConnectionResult, *, egress_dispos
     if result.provider == "zai": return admit_zai_egress(**kwargs)
     if result.provider == "deepseek": return admit_deepseek_egress(**kwargs)
     if result.provider == "kimi": return admit_kimi_egress(**kwargs)
-    if result.provider == "anthropic": return admit_anthropic_egress(**kwargs)
+    if result.provider == "anthropic":
+        raise ExternalLLMConnectionError(
+            "Anthropic compatibility egress is not an admitted execution path"
+        )
     raise ExternalLLMConnectionError("provider egress dispatch invariant violated")
 
 __all__ = ["ExternalLLMConnectionError","GovernedConnectionResult","normalize_provider","execute_governed_external_llm","admit_external_llm_egress"]

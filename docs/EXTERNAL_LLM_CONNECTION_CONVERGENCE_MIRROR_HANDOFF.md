@@ -4,7 +4,7 @@ Updated: 2026-09-07
 Repository: `StegVerse-org/LLM-adapter`
 Issue: #306
 Task: `LLMA-EXTERNAL-LLM-CONVERGENCE-306`
-State: `SOURCE_COMPLETE_VALIDATED_MERGE_READY_RUNTIME_PROOF_REQUIRED`
+State: `POST_MERGE_CANONICAL_ANTHROPIC_REPAIR_VALIDATED_RUNTIME_PROOF_REQUIRED`
 
 ## Goal
 
@@ -62,9 +62,9 @@ No duplicate Interlock/InTr, TV/TVC, WorkerCoordinator, heartbeat/oscillator, ru
 - Z.ai: existing governed InTr transport/executor is reused. This change set adds `stegverse:runtime-profile:llm-adapter-zai:v1`, a TVC non-exportable broker binding, provider-usage/Master Records continuation, and exact-response egress verification. TVC PR #346 is merged and supplies the corresponding `zai` provider-operation profile under the existing broker.
 - DeepSeek: existing InTr transport and existing TVC runtime-profile broker path remain the canonical production path and are dispatched through the shared connection primitive.
 - Kimi/Moonshot: existing InTr transport and existing TVC runtime-profile broker path remain the canonical production path. Missing exact-response TVC runtime egress admission is repaired in this change set.
-- Anthropic: the legacy direct HTTP client is compatibility-only for this purpose. This change set adds `stegverse.intr.anthropic.transport.v1`, `stegverse:runtime-profile:llm-adapter-anthropic:v1`, a TVC non-exportable broker binding using the already-existing Anthropic provider-operation profile, provider-usage/Master Records continuation, and exact-response egress verification.
+- Anthropic: canonical task #288 now owns `stegverse.intr.anthropic.transport.v1`. This change set reuses that implementation through a provider-request bridge and the TVC non-exportable broker binding using the already-existing Anthropic provider-operation profile, provider-usage/Master Records continuation, and exact-response egress verification. The superseded direct-credential compatibility route fails closed.
 
-The direct credential-resolver executors remain compatibility/test surfaces. The convergence target is TVC non-exportable provider execution for all four providers.
+Direct credential-resolver executors remain compatibility/test surfaces for Z.ai, DeepSeek, and Kimi. Anthropic requires its canonical TVC non-exportable path. The convergence target is TVC non-exportable provider execution for all four providers.
 
 ## Demo/test boundary
 
@@ -85,9 +85,11 @@ Anthropic TVC runtime binding: STAGED
 TVC Z.ai provider profile: MERGED / 8faa70644dcb711aee73c976a50dd7a47f4ddf82
 README completeness: SATISFIED_ON_BRANCH
 machine preflight canonical resolution: PASS
-canonical main integrated: 852718d0a1287953ea408511c47b3764e3410b77
-validated integrated head: 46bd44149902a171074446a6c0fe7a219e4dceca
-local convergence + integrated dependency tests: 68/68 PASS
+canonical main integrated: cde350e41d16a9932932b96d77c0dbd37b950284
+PR #309 merge: fd6b887a046bc6016f4891d2f595679b6564da36
+validated bounded-repair tree: ef3f051dcc3c80192fcbce6deafde8afc0132dc7
+canonical Anthropic #288 source validator: 43/43 PASS
+local convergence + integrated dependency tests: 127/127 PASS
 hosted convergence validation: 34073656131 SUCCESS
 hosted repository validation: 34073656180 SUCCESS
 hosted Z.ai/Kimi/DeepSeek/distributed validations: ALL SUCCESS
@@ -103,4 +105,4 @@ This change materially affects provider/runtime semantics, interfaces, credentia
 
 ## Remaining admissibility gate
 
-The preflight has resolved canonical handoffs, task registry, Master Records authority, cross-task coordination, duplicate-creation constraints, and README impact. Exact-head validation passed after integrating current canonical `main`. PR #309 is source-merge ready. Merge and post-merge reconciliation cannot infer live provider execution, activation, custody, or downstream publication.
+The preflight resolved canonical handoffs, task registry, Master Records authority, cross-task coordination, duplicate-creation constraints, and README impact before functional mutation. PR #309 then merged with the superseded Anthropic conflict side. The bounded repair restores canonical #288 and has passed exact functional-tree validation. Repair merge and reconciliation cannot infer live provider execution, activation, custody, or downstream publication.

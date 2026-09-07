@@ -16,7 +16,7 @@ from .external_llm_connection import execute_governed_external_llm, admit_extern
 from .zai_intr_transport import zai_wire_request_hash
 from .deepseek_intr_transport import deepseek_wire_request_hash
 from .kimi_intr_transport import kimi_wire_request_hash
-from .anthropic_intr_transport import anthropic_wire_request_hash
+from .anthropic_convergence_bridge import anthropic_wire_request_hash
 
 class GovernedExternalProviderClientError(RuntimeError): pass
 

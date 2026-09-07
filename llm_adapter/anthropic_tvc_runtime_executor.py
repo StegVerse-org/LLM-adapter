@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
-from .anthropic_intr_transport import AnthropicInTrEnvelope, build_anthropic_intr_envelope
+from .anthropic_convergence_bridge import AnthropicConvergenceEnvelope, build_anthropic_convergence_envelope
 from .anthropic_tvc_broker import RUNTIME_PROFILE_ID, AnthropicTVCBrokerResult, execute_anthropic_via_tvc_broker
 from .master_records_usage_submission import submit_provider_usage_to_master_records
 from .provider_request import ProviderRequest
@@ -23,7 +23,7 @@ def _metric(value: Any, source_ref: str) -> ProviderMetric:
 
 @dataclass(frozen=True)
 class AnthropicTVCRuntimeExecution:
-    envelope: AnthropicInTrEnvelope
+    envelope: AnthropicConvergenceEnvelope
     broker: AnthropicTVCBrokerResult
     provider_usage_event: Mapping[str, Any]
     master_records_usage: Mapping[str, Any]
@@ -51,7 +51,7 @@ class AnthropicTVCRuntimeEgressAdmission:
 def execute_governed_anthropic_via_tvc_runtime(request: ProviderRequest, *, session_id: str, transition_id: str, measurement_id: str, ingress_disposition: str, ingress_receipt_hash: str, carrier_ref: str, lease_receipt: Mapping[str, Any], broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]], usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records, max_output_tokens: int = 2048, response_format: str = "text") -> AnthropicTVCRuntimeExecution:
     for label, value in (("session_id",session_id),("transition_id",transition_id),("measurement_id",measurement_id)):
         if not isinstance(value, str) or not value.strip(): raise AnthropicTVCRuntimeExecutionError(f"{label}_required")
-    envelope = build_anthropic_intr_envelope(request, transition_id=transition_id, ingress_disposition=ingress_disposition, ingress_receipt_hash=ingress_receipt_hash, carrier_ref=carrier_ref, max_tokens=max_output_tokens)
+    envelope = build_anthropic_convergence_envelope(request, session_id=session_id, transition_id=transition_id, ingress_disposition=ingress_disposition, ingress_receipt_hash=ingress_receipt_hash, carrier_ref=carrier_ref, max_tokens=max_output_tokens)
     broker = execute_anthropic_via_tvc_broker(envelope, request, lease_receipt=lease_receipt, broker_submitter=broker_submitter, max_output_tokens=max_output_tokens, response_format=response_format)
     usage = broker.response.metadata.get("usage"); usage_map = usage if isinstance(usage, Mapping) else {}
     input_tokens = usage_map.get("input_tokens"); output_tokens = usage_map.get("output_tokens")

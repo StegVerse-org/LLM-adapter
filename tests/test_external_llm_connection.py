@@ -18,7 +18,7 @@ def test_unknown_provider_fails_closed():
     with pytest.raises(mod.ExternalLLMConnectionError): mod.normalize_provider("unknown")
 
 @pytest.mark.parametrize("provider,target_name", [
-    ("z.ai","execute_governed_zai"),("deepseek","execute_governed_deepseek"),("kimi","execute_governed_kimi"),("anthropic","execute_governed_anthropic")
+    ("z.ai","execute_governed_zai"),("deepseek","execute_governed_deepseek"),("kimi","execute_governed_kimi")
 ])
 def test_compatibility_execution_dispatch(monkeypatch, provider, target_name):
     seen = {}
@@ -56,6 +56,12 @@ def test_missing_tvc_material_fails_closed():
     request = SimpleNamespace(provider="z.ai")
     with pytest.raises(mod.ExternalLLMConnectionError):
         mod.execute_governed_external_llm(request, session_id="s", transition_id="t", measurement_id="m", ingress_disposition="ALLOW", ingress_receipt_hash="b"*64, carrier_ref="hb32:x")
+
+
+def test_anthropic_rejects_direct_credential_compatibility_path():
+    request = SimpleNamespace(provider="anthropic")
+    with pytest.raises(mod.ExternalLLMConnectionError, match="canonical TVC non-exportable"):
+        mod.execute_governed_external_llm(request, session_id="s", transition_id="t", measurement_id="m", ingress_disposition="ALLOW", ingress_receipt_hash="b"*64, carrier_ref="hb32:x", credential_resolver=lambda:"secret")
 
 
 def test_compatibility_egress_dispatch(monkeypatch):

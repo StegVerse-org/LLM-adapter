@@ -6,7 +6,8 @@
   "pull_request": 309,
   "branch": "feat/external-llm-convergence-306",
   "goal": "Converge Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic on one provider-neutral governed external-LLM connection primitive while preserving provider-specific wire adapters and existing authority boundaries.",
-  "state": "SOURCE_COMPLETE_VALIDATED_MERGE_READY",
+  "state": "POST_MERGE_CANONICAL_REPAIR_VALIDATED",
+  "repair_branch": "fix/external-llm-anthropic-canonical-306",
   "authority": {
     "transition_admission": "Interlock/InTr",
     "credential_provider_operation": "TV/TVC",
@@ -38,9 +39,11 @@
     "satisfied_on_branch": true
   },
   "validation": {
-    "integrated_head": "46bd44149902a171074446a6c0fe7a219e4dceca",
-    "canonical_main_integrated": "852718d0a1287953ea408511c47b3764e3410b77",
-    "local_tests": "68/68 PASS",
+    "merged_pr_309_head": "fd6b887a046bc6016f4891d2f595679b6564da36",
+    "validated_repair_tree": "ef3f051dcc3c80192fcbce6deafde8afc0132dc7",
+    "canonical_main_integrated": "cde350e41d16a9932932b96d77c0dbd37b950284",
+    "anthropic_288_source_validator": "43/43 PASS",
+    "local_tests": "127/127 PASS",
     "hosted_runs": {
       "external_llm_convergence": "34073656131 SUCCESS",
       "zai": "34073656134 SUCCESS",
@@ -52,11 +55,11 @@
     }
   },
   "claims": {
-    "source_complete": true,
+    "source_complete": false,
     "live_provider_execution": false,
     "connected": false,
     "activation": false,
     "release_authority": false
   },
-  "next_executable_action": "Merge PR #309 and reconcile mainline evidence; do not infer live provider execution, custody, connection, activation, or release authority."
+  "next_executable_action": "Publish and merge the bounded post-#309 canonical Anthropic repair, then reconcile mainline evidence; do not infer live provider execution, custody, connection, activation, or release authority."
 }

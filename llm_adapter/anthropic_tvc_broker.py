@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
-from .anthropic_intr_transport import AnthropicInTrEnvelope, AnthropicTransportAdmissionError
+from .anthropic_convergence_bridge import AnthropicConvergenceEnvelope
 from .provider_client import ProviderResponse
 from .provider_request import ProviderRequest, stable_hash
 
@@ -21,7 +21,7 @@ def _prompt(request: ProviderRequest) -> str:
     return "\n".join(f"{m.role}: {m.content}" for m in request.messages)
 
 
-def _verify_lease(envelope: AnthropicInTrEnvelope, lease: Mapping[str, Any]) -> None:
+def _verify_lease(envelope: AnthropicConvergenceEnvelope, lease: Mapping[str, Any]) -> None:
     expected = {"provider":"anthropic","operation":TVC_OPERATION,"model":envelope.model,"transition_id":envelope.transition_id,"request_hash":envelope.request_hash,"ingress_receipt_hash":envelope.ingress_receipt_hash,"carrier_ref":envelope.carrier_ref,"runtime_profile_id":RUNTIME_PROFILE_ID}
     for key, value in expected.items():
         if lease.get(key) != value: raise AnthropicTVCBrokerError(f"TVC lease exact binding mismatch: {key}")
@@ -30,10 +30,10 @@ def _verify_lease(envelope: AnthropicInTrEnvelope, lease: Mapping[str, Any]) -> 
     if lease.get("second_machine_required") is not False: raise AnthropicTVCBrokerError("TVC lease introduced second-machine requirement")
 
 
-def build_tvc_anthropic_operation_request(envelope: AnthropicInTrEnvelope, request: ProviderRequest, *, lease_receipt: Mapping[str, Any], max_output_tokens: int = 2048, response_format: str = "text") -> dict[str, Any]:
+def build_tvc_anthropic_operation_request(envelope: AnthropicConvergenceEnvelope, request: ProviderRequest, *, lease_receipt: Mapping[str, Any], max_output_tokens: int = 2048, response_format: str = "text") -> dict[str, Any]:
     if envelope.provider != "anthropic" or request.provider.lower().strip() not in {"anthropic","claude","anthropic_http"}: raise AnthropicTVCBrokerError("Anthropic provider binding required")
     if envelope.model != request.model: raise AnthropicTVCBrokerError("Anthropic model binding mismatch")
-    if envelope.authority_effect != "NONE" or not envelope.egress_intr_required: raise AnthropicTransportAdmissionError("Anthropic envelope authority boundary invalid")
+    if envelope.authority_effect != "NONE" or not envelope.egress_intr_required: raise AnthropicTVCBrokerError("Anthropic envelope authority boundary invalid")
     if not isinstance(lease_receipt, Mapping) or lease_receipt.get("decision") != "ALLOW_CAPABILITY_LEASE": raise AnthropicTVCBrokerError("TVC single-use capability lease required")
     if lease_receipt.get("single_use") is not True: raise AnthropicTVCBrokerError("TVC lease must be single-use")
     for key in ("secret_values_exported","protected_values_exposed","authority_granted"):
@@ -53,7 +53,7 @@ class AnthropicTVCBrokerResult:
     credential_material_present: bool = False
 
 
-def execute_anthropic_via_tvc_broker(envelope: AnthropicInTrEnvelope, request: ProviderRequest, *, lease_receipt: Mapping[str, Any], broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]], max_output_tokens: int = 2048, response_format: str = "text") -> AnthropicTVCBrokerResult:
+def execute_anthropic_via_tvc_broker(envelope: AnthropicConvergenceEnvelope, request: ProviderRequest, *, lease_receipt: Mapping[str, Any], broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]], max_output_tokens: int = 2048, response_format: str = "text") -> AnthropicTVCBrokerResult:
     if not callable(broker_submitter): raise AnthropicTVCBrokerError("TVC broker submitter required")
     reply = broker_submitter(build_tvc_anthropic_operation_request(envelope, request, lease_receipt=lease_receipt, max_output_tokens=max_output_tokens, response_format=response_format))
     if not isinstance(reply, Mapping) or reply.get("decision") != "ALLOW_OPERATION_RESULT": raise AnthropicTVCBrokerError("TVC broker did not admit provider result")
