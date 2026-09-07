@@ -1,12 +1,11 @@
 """Explicit canonical admission boundary for hosted Kimi provider operations.
 
-Universal InTr proves exact-packet transport only.  StegCore/Governance provides
-ALLOW/DENY/FAIL-CLOSED separately.  Neither grants provider-operation or
+Universal InTr proves exact-packet transport only. StegCore/Governance provides
+ALLOW/DENY/FAIL-CLOSED separately. Neither grants provider-operation or
 credential authority; a valid TVC lease remains mandatory for the consequence.
 
-The older ``build_kimi_intr_envelope(..., ingress_disposition=...)`` API is kept
-as a compatibility surface.  Production composition should use this module so
-TRANSPORT_COMPLETE cannot be confused with Governance ALLOW.
+Canonical production request identity is the exact non-secret JSON payload the
+TVC vault broker will serialize to Moonshot, not the legacy direct-client wire.
 """
 from __future__ import annotations
 
@@ -14,8 +13,9 @@ from dataclasses import dataclass
 import re
 from typing import Any, Mapping
 
-from .kimi_intr_transport import KimiInTrEnvelope, KimiTransportAdmissionError, build_kimi_intr_envelope
-from .provider_request import ProviderRequest
+from .kimi_intr_transport import KimiInTrEnvelope, KimiTransportAdmissionError, KimiTransportConfigurationError, PROTOCOL_VERSION
+from .kimi_tvc_provider_wire import canonical_kimi_tvc_provider_request_hash
+from .provider_request import ProviderRequest, stable_hash
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
@@ -27,6 +27,7 @@ class GovernedKimiAdmission:
     ingress_receipt_hash: str
     governance_disposition: str
     governance_receipt_hash: str
+    provider_wire_profile: str = "tvc_openai_chat_completions_v1"
     governance_authority: str = "StegCore"
     provider_operation_authority: str = "TV/TVC"
     authority_effect: str = "NONE"
@@ -37,6 +38,7 @@ class GovernedKimiAdmission:
             "transport_id": self.envelope.transport_id,
             "transition_id": self.envelope.transition_id,
             "request_hash": self.envelope.request_hash,
+            "provider_wire_profile": self.provider_wire_profile,
             "ingress_transport_state": self.ingress_transport_state,
             "ingress_receipt_hash": self.ingress_receipt_hash,
             "governance_disposition": self.governance_disposition,
@@ -67,6 +69,10 @@ def build_governed_kimi_admission(
     governance_disposition: str,
     governance_receipt_hash: str,
     carrier_ref: str,
+    max_output_tokens: int = 2048,
+    response_format: str = "text",
+    endpoint_profile: str = "moonshot_openai_compatible",
+    credential_class: str = "TV_TVC_PROVIDER_SECRET",
 ) -> GovernedKimiAdmission:
     if ingress_transport_state != "TRANSPORT_COMPLETE":
         raise KimiTransportAdmissionError("Kimi provider operation requires canonical InTr TRANSPORT_COMPLETE evidence")
@@ -74,16 +80,38 @@ def build_governed_kimi_admission(
     if governance_disposition != "ALLOW":
         raise KimiTransportAdmissionError("Kimi provider operation requires a separate contemporaneous Governance ALLOW")
     _exact_sha256(governance_receipt_hash, "governance_receipt_hash")
+    if not transition_id.strip() or not carrier_ref.strip():
+        raise KimiTransportAdmissionError("transition_id and carrier_ref are required")
+    if endpoint_profile != "moonshot_openai_compatible":
+        raise KimiTransportConfigurationError("unsupported Kimi endpoint profile")
+    if credential_class != "TV_TVC_PROVIDER_SECRET":
+        raise KimiTransportAdmissionError("hosted Kimi credentials must remain under TV/TVC authority")
 
-    # The legacy envelope builder's `ingress_disposition` field predates the
-    # canonical transport/governance separation.  Here the supplied ALLOW is
-    # explicitly the already-validated Governance disposition, while
-    # ingress_receipt_hash remains the exact Universal InTr transport receipt.
-    envelope = build_kimi_intr_envelope(
+    wire_hash = canonical_kimi_tvc_provider_request_hash(
         request,
+        max_output_tokens=max_output_tokens,
+        response_format=response_format,
+    )
+    transport_id = "kmit-" + stable_hash({
+        "protocol_version": PROTOCOL_VERSION,
+        "transition_id": transition_id,
+        "request_hash": wire_hash,
+        "ingress_receipt_hash": ingress_receipt_hash,
+        "carrier_ref": carrier_ref,
+        "endpoint_profile": endpoint_profile,
+        "provider_wire_profile": "tvc_openai_chat_completions_v1",
+    })
+    envelope = KimiInTrEnvelope(
+        protocol_version=PROTOCOL_VERSION,
+        transport_id=transport_id,
         transition_id=transition_id,
-        ingress_disposition=governance_disposition,
+        request_hash=wire_hash,
+        provider="kimi",
+        model=request.model,
+        endpoint_profile=endpoint_profile,
         ingress_receipt_hash=ingress_receipt_hash,
+        credential_authority="TV/TVC",
+        credential_class=credential_class,
         carrier_ref=carrier_ref,
     )
     return GovernedKimiAdmission(
@@ -98,6 +126,7 @@ def build_governed_kimi_admission(
 def validate_governed_kimi_admission(value: GovernedKimiAdmission | Mapping[str, Any]) -> None:
     evidence = value.evidence() if isinstance(value, GovernedKimiAdmission) else dict(value)
     required = {
+        "provider_wire_profile": "tvc_openai_chat_completions_v1",
         "ingress_transport_state": "TRANSPORT_COMPLETE",
         "governance_disposition": "ALLOW",
         "governance_authority": "StegCore",
