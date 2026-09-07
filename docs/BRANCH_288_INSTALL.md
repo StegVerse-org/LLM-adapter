@@ -1,137 +1,112 @@
 # Issue 288 — install, validate, merge, reconcile
 
-Branch: `feat/anthropic-intr-transport-288`
+Branch: `feat/anthropic-intr-runtime-fix-288`
 Protocol: `stegverse.intr.anthropic.transport.v1`
 
-This runbook is executed **by the repo operator**. Nothing in this package
-performs a checkout, a merge, a tag, a release, or a provider call.
+This branch is the current-main integration branch. The historical `feat/anthropic-intr-transport-288` branch is retained as provenance only and is superseded for merge purposes because it diverged behind current `main`.
 
----
+## Installed source surfaces
 
-## 1. Install onto the branch
-
-```
-git checkout -b feat/anthropic-intr-transport-288 origin/main
-# copy from the package:
-#   llm_adapter/anthropic_intr_transport.py
-#   llm_adapter/anthropic_intr_executor.py
-#   schemas/stegverse-intr-anthropic-transport-envelope.schema.json
-#   schemas/stegverse-intr-anthropic-evidence.schema.json
-#   schemas/stegverse-intr-anthropic-capability.json
-#   docs/CANONICALIZATION.md
-#   docs/BRANCH_288_INSTALL.md
-#   examples/reference_transaction.py
-#   scripts/validate_anthropic_intr.py
-#   tests/test_anthropic_intr_transport.py
-#   tests/test_anthropic_content_blocks.py
-#   tests/test_anthropic_intr_executor.py
-#   tests/test_anthropic_adversarial.py
+```text
+llm_adapter/anthropic_intr_transport.py
+llm_adapter/anthropic_intr_executor.py
+schemas/stegverse-intr-anthropic-transport-envelope.schema.json
+schemas/stegverse-intr-anthropic-evidence.schema.json
+schemas/stegverse-intr-anthropic-capability.json
+docs/CANONICALIZATION.md
+docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md
+examples/reference_transaction.py
+scripts/validate_anthropic_intr.py
+tests/test_anthropic_intr_transport.py
+tests/test_anthropic_content_blocks.py
+tests/test_anthropic_intr_executor.py
+tests/test_anthropic_adversarial.py
+tasks/LLMA-ANTHROPIC-INTR-TRANSPORT-288.json
 ```
 
-`llm_adapter/__init__.py` in this package exports only the Anthropic surface.
-If the repo's `__init__.py` already exports the Z.ai surface, **merge the export
-lists** rather than overwriting the file.
+`llm_adapter/__init__.py` intentionally remains lightweight on current main; direct implementation-module imports are canonical. No Anthropic-only export list replaces existing package semantics.
 
-Core-Lite constraint: validation is a script invoked by the existing stable
-dispatcher. Do **not** add a workflow file for it.
+Core-Lite constraint: validation is a script invoked by the existing stable validation surface. Do **not** add a dedicated workflow file merely for Anthropic.
 
-## 2. Exact-branch validation
+## Exact-branch validation
 
-```
-python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-transport-288
-python3 scripts/validate_anthropic_intr.py --json > validation-288.json
+```bash
+python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-runtime-fix-288
+python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-runtime-fix-288 --json > validation-288.json
 ```
 
-43 checks across eight groups: exact-branch identity and clean worktree,
-install completeness, authority-boundary preservation, schema/code agreement,
-hash determinism (including stability across `PYTHONHASHSEED`), fail-closed
-spot checks independent of the test suite, credential hygiene of the installed
-source, and the full test suite.
+The gate retains the exact 43-check contract and sets `merge_permitted: true` only on PASS. Its scope is installed-source integrity only and explicitly does not attest live Claude execution, Master Records custody acceptance, egress ALLOW, or product activation.
 
-Exit 0 sets `merge_permitted: true`. Exit 1 blocks the merge.
+## README completeness
 
-**Gate scope.** The report explicitly carries:
+README must describe Anthropic as optional, non-authoritative interoperability over the native Messages API. It must preserve:
 
-```
-attests_live_claude_execution: false
-attests_custody_acceptance:    false
-attests_egress_allow:          false
-attests_product_activation:    false
-scope: "installed-source integrity only"
+```text
+credential_authority: TV/TVC
+authority_effect: NONE
+egress_intr_required: true
+canonical_sovereign_route_replaced: false
+hosted_provider_required: false
+streaming/batches/files: unsupported in v1
 ```
 
-A green gate authorizes a merge of source. It authorizes nothing downstream.
+Do not add availability or activation language.
 
-## 3. README changes required on the branch
+## Merge condition
 
-Add to the adapter README, under the provider list:
+Merge only when all are evidenced on the exact current integration head:
 
-> **Anthropic (`stegverse.intr.anthropic.transport.v1`)** — optional,
-> non-authoritative provider transport over the native Messages API
-> (`POST https://api.anthropic.com/v1/messages`). Credential authority remains
-> TV/TVC; no credential material enters any envelope, evidence, usage record,
-> custody handoff or log. Every result carries `authority_effect = "NONE"` and
-> `egress_intr_required = true`. Ingress and egress dispositions remain external
-> Interlock/InTr decisions; the adapter verifies them and never generates one.
-> `canonical_sovereign_route_replaced = false`,
-> `hosted_provider_required = false`. Streaming, Batches and Files are
-> UNSUPPORTED in v1 and require separately admitted endpoint profiles.
-> Hashing and normalization are specified in `docs/CANONICALIZATION.md`.
-> Validation: `python3 scripts/validate_anthropic_intr.py`.
-
-Do not add release, availability, or activation language.
-
-## 4. Merge condition
-
-Merge **only** if all of the following hold, each with an artifact:
-
-| Condition | Evidence artifact |
+| Condition | Evidence |
 |---|---|
-| Gate outcome `PASS`, `merge_permitted: true` | `validation-288.json` |
-| Branch observed == branch expected | same file, `branch_observed` |
-| Worktree clean at validated commit | same file, `head_commit` |
-| Z.ai transport tests still green | existing suite run on the branch |
-| No change to Z.ai modules in the diff | `git diff --stat origin/main` |
-| README carries no activation claim | review |
+| Anthropic source gate PASS / `merge_permitted=true` | validation output |
+| branch observed == `feat/anthropic-intr-runtime-fix-288` | same validation output |
+| worktree clean at validated commit | same validation output |
+| existing repository validation green, including Z.ai regression coverage | GitHub validation run |
+| no existing Z.ai/DeepSeek/Kimi source modules modified by the Anthropic diff | main-to-head diff |
+| README updated without activation claim | branch diff/review |
 
-If any row lacks its artifact, the merge does not proceed. A merge is a merge of
-source only; it is not a tag, a release, or an activation.
+A merge is source integration only. It is not a tag, release, live-provider proof, or product activation.
 
-## 5. Handoff / task-state reconciliation
+## Runtime binding
 
-Reconcile `docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md` and the #288 task state to
-exactly these statuses, and no stronger:
+The task reuses the existing canonical runtime:
+
+```text
+runtime profile: sovereign-runtime-worker-v1
+resident substrate: canonical-resident-substrate-v1
+executor: WorkerCoordinator
+HB: HB32
+oscillator: existing independent oscillator
+runtime capability: bounded_process_execution
+task-routing direction: INTERNAL
+credential authority: TV/TVC
+provider ingress/egress: external Interlock/InTr
+custody/reconstruction: Master Records
+```
+
+Runtime-profile discovery must not manufacture a new provider runtime. A current authentic task-executing WorkerCoordinator remains required for a live call even though candidate discovery does not require current observation.
+
+## Handoff / task-state reconciliation
+
+After source validation, record no stronger than:
 
 | Item | Status |
 |---|---|
-| Transport source, schemas, canonicalization spec, capability declaration | INSTALLED (commit-referenced) |
-| Test suite + validation gate | PASSING on the validated commit |
-| Requirement classification | per README table |
-| Live Claude execution | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
+| transport/source/schema/canonicalization | INSTALLED, commit-referenced |
+| source gate | PASSING on validated commit |
+| live Claude execution | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
 | Master Records custody acceptance | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
-| Egress ALLOW against a real response hash | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
-| Product activation / tag / release | NOT CLAIMED |
+| exact-response egress ALLOW | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
+| product activation / tag / release | NOT CLAIMED |
 
-Every status line should cite the validated commit SHA. A status without a
-commit SHA or a receipt hash is not evidence.
+## Downstream propagation
 
-## 6. Downstream propagation determination
+Source merge permits capability documentation only. Site/Publisher availability claims remain blocked until one authentic governed transaction produces and reconstructs the exact triple:
 
-**NOT AUTHORIZED at merge.** A source merge is not an activation event, and
-StegIndex / Site / Publisher / wiki surfaces are public-facing: propagating on a
-green gate would publish an availability claim the evidence does not support.
+```text
+ingress_receipt_hash
+response_hash
+egress_receipt_hash
+```
 
-Propagation becomes authorized per surface when its own predicate is met:
-
-| Surface | Predicate |
-|---|---|
-| StegIndex | Merge commit SHA + `validation-288.json` recorded; index entry states capability, not availability, and mirrors `optional_interoperability: true` / `authoritative: false` |
-| Site | Requires at least one authentic governed transaction: real ingress receipt hash, real `response_hash`, real egress ALLOW receipt hash. Absent that, site copy may describe the interop capability only, with no execution claim |
-| Publisher | Same predicate as Site, plus a reconstruction check (`docs/CANONICALIZATION.md` §9) reproducing `envelope_hash` and `response_hash` from the archived bundle |
-| Wiki | Authorized at merge for protocol documentation (envelope fields, hash bases, normalization, fail-closed list). Not authorized for any activation, availability, or endorsement statement |
-
-Blocking gap for Site and Publisher: no authentic runtime evidence exists yet.
-The smallest step that closes it is one real transaction through the external
-Interlock/InTr path producing a triple of `{ingress_receipt_hash,
-response_hash, egress_receipt_hash}` that survives the §9 reconstruction check.
-Until that triple exists and reconstructs, those two surfaces stay blocked.
+StegIndex may index the merged capability as optional/non-authoritative after merge evidence exists. Wiki protocol documentation may describe the protocol after merge, but must not claim activation or availability.
