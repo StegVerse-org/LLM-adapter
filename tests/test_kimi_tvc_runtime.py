@@ -1,6 +1,7 @@
 from llm_adapter.kimi_intr_transport import build_kimi_intr_envelope
 from llm_adapter.kimi_tvc_broker import (
     RUNTIME_PROFILE_ID,
+    TVC_MEASUREMENT_EVIDENCE_SCHEMA,
     TVC_SECRET_REF,
     KimiTVCBrokerError,
     build_tvc_kimi_operation_request,
@@ -42,11 +43,14 @@ def _envelope(req):
 
 
 def _broker(_request):
+    raw_usage = {"prompt_tokens": 5, "completion_tokens": 1, "total_tokens": 6}
     return {
         "decision": "ALLOW_OPERATION_RESULT",
         "result": {
-            "output": "Paris",
-            "usage": {"prompt_tokens": 5, "completion_tokens": 1, "total_tokens": 6},
+            "id": "kimi-response-1",
+            "model": "kimi-k3",
+            "choices": [{"message": {"content": "Paris"}, "finish_reason": "stop"}],
+            "usage": raw_usage,
         },
         "use_receipt": {
             "provider": "kimi",
@@ -54,6 +58,25 @@ def _broker(_request):
             "secret_material_logged": False,
             "secret_material_retained": False,
             "single_use_consumed": True,
+        },
+        "measurement_evidence": {
+            "schema": TVC_MEASUREMENT_EVIDENCE_SCHEMA,
+            "provider": "kimi",
+            "provider_response_id": "kimi-response-1",
+            "model": "kimi-k3",
+            "candidate_output": "Paris",
+            "provider_usage": raw_usage,
+            "normalized_usage": {
+                "prompt_tokens": 5,
+                "prompt_cache_hit_tokens": 0,
+                "prompt_cache_miss_tokens": 0,
+                "completion_tokens": 1,
+                "reasoning_tokens": 0,
+                "total_tokens": 6,
+            },
+            "provider_api_key_transferred_to_consumer": False,
+            "secret_material_returned": False,
+            "cost_status": "RATE_CARD_BINDING_REQUIRED",
         },
     }
 
@@ -89,13 +112,50 @@ def test_rejects_lease_for_wrong_provider_or_model():
         pass
 
 
-def test_tvc_broker_result_is_non_authoritative_and_requires_egress():
+def test_tvc_broker_consumes_canonical_measurement_evidence():
     req = _request()
     result = execute_kimi_via_tvc_broker(_envelope(req), req, lease_receipt=_lease(), broker_submitter=_broker)
     assert result.response.output == "Paris"
+    assert result.response.metadata["provider_response_id"] == "kimi-response-1"
+    assert result.response.metadata["usage"]["total_tokens"] == 6
+    assert result.response.metadata["normalized_usage"]["total_tokens"] == 6
+    assert result.measurement_evidence["schema"] == TVC_MEASUREMENT_EVIDENCE_SCHEMA
     assert result.response.metadata["credential_material_present"] is False
     assert result.response.metadata["egress_intr_required"] is True
     assert result.response.metadata["authority_effect"] == "NONE"
+
+
+def test_raw_result_without_canonical_measurement_evidence_fails_closed():
+    req = _request()
+    raw_only = _broker({})
+    raw_only.pop("measurement_evidence")
+    try:
+        execute_kimi_via_tvc_broker(
+            _envelope(req),
+            req,
+            lease_receipt=_lease(),
+            broker_submitter=lambda request: raw_only,
+        )
+        assert False, "raw provider result must not bypass canonical TVC normalization"
+    except KimiTVCBrokerError:
+        pass
+
+
+def test_measurement_evidence_provider_or_model_drift_fails_closed():
+    req = _request()
+    for key, value in (("provider", "deepseek"), ("model", "other")):
+        reply = _broker({})
+        reply["measurement_evidence"] = dict(reply["measurement_evidence"], **{key: value})
+        try:
+            execute_kimi_via_tvc_broker(
+                _envelope(req),
+                req,
+                lease_receipt=_lease(),
+                broker_submitter=lambda request, reply=reply: reply,
+            )
+            assert False, f"measurement evidence {key} drift must fail closed"
+        except KimiTVCBrokerError:
+            pass
 
 
 def test_governed_runtime_continues_to_master_records_and_egress_handoff():
@@ -115,6 +175,7 @@ def test_governed_runtime_continues_to_master_records_and_egress_handoff():
     assert execution.runtime_profile_id == RUNTIME_PROFILE_ID
     assert execution.broker.response.output == "Paris"
     assert execution.provider_usage_event["provider"] == "kimi"
+    assert execution.provider_usage_event["metrics"]["total_tokens"]["value"] == "6"
     assert execution.egress_handoff["requested_disposition"] == "ALLOW"
     assert execution.egress_handoff["egress_intr_required"] is True
     assert execution.egress_handoff["credential_material_present"] is False
