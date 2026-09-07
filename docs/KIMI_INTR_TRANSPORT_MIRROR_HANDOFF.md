@@ -4,6 +4,7 @@ Updated: 2026-09-06
 Repository: `StegVerse-org/LLM-adapter`
 Primary issue: `#292`
 Boundary-correction issue: `#302`
+Exact-provider-wire issue: `#307`
 
 ## Authority and scope
 
@@ -47,8 +48,9 @@ TVC's credential-model consistency boundary prohibits inventing a second provide
 llm_adapter/kimi_intr_transport.py                    legacy/compat transport primitive
 llm_adapter/kimi_intr_executor.py                     compatibility executor
 llm_adapter/kimi_governed_admission.py                canonical transport/governance separation
-llm_adapter/kimi_tvc_broker.py                        TVC non-exportable provider bridge
-llm_adapter/kimi_tvc_runtime_executor.py               compatibility runtime composition
+llm_adapter/kimi_tvc_provider_wire.py                  exact TVC->Moonshot provider payload identity
+llm_adapter/kimi_tvc_broker.py                         TVC non-exportable provider bridge
+llm_adapter/kimi_tvc_runtime_executor.py               compatibility runtime + admitted-envelope execution
 llm_adapter/kimi_canonical_runtime.py                  canonical production composition
 config/kimi-runtime-profile.json
 schemas/kimi-intr-transport-envelope.schema.json
@@ -57,14 +59,16 @@ tests/test_kimi_intr_transport.py
 tests/test_kimi_intr_executor.py
 tests/test_kimi_tvc_runtime.py
 tests/test_kimi_canonical_runtime.py
+tests/test_kimi_tvc_provider_wire.py
 ```
 
-The older `build_kimi_intr_envelope(... ingress_disposition=...)` interface is retained only for source compatibility. Canonical production composition must use `build_governed_kimi_admission` / `execute_canonical_kimi_via_tvc_runtime`, which require distinct transport and Governance evidence.
+The older `build_kimi_intr_envelope(... ingress_disposition=...)` and `kimi_wire_*` interfaces are retained only for source compatibility/direct-client tests. Canonical production composition must use `build_governed_kimi_admission` / `execute_canonical_kimi_via_tvc_runtime`, which bind distinct transport and Governance evidence to the exact non-secret JSON payload TVC will serialize to Moonshot.
 
 ## Canonical production sequence
 
 ```text
-exact Kimi wire bytes
+exact TVC/Moonshot provider payload bytes
+  {model,messages,max_tokens,stream[,response_format]}
 -> StegOS Universal InTr external-provider-operation
 -> TRANSPORT_COMPLETE + exact terminal transport receipt
 -> Governance hosted-llm-provider-operation.v1
@@ -85,23 +89,28 @@ Neither `TRANSPORT_COMPLETE` nor Governance `ALLOW` is provider execution author
 
 ## Exact request constraint
 
-The current TVC Kimi operation accepts a single prompt string. To preserve exact admitted semantics, Kimi v1 production execution accepts exactly one `user` message and sends that message content unchanged. Multi-message or non-user-role chat requests fail closed until TVC exposes a message-preserving chat operation contract.
+The current TVC Kimi operation accepts a single prompt string and materializes it as exactly one user message. To preserve exact admitted semantics, Kimi v1 production execution accepts exactly one `user` message and sends that content unchanged. Multi-message or non-user-role chat requests fail closed until TVC exposes a message-preserving chat operation contract. `max_output_tokens` and `response_format` are part of the admitted provider-wire hash; legacy request temperature is not, because TVC does not put temperature on the Moonshot wire.
 
 ## Validation predicates
 
 Source integration is not live activation. Merge readiness requires exact-head CI validating:
 
-- Kimi wire canonicalization and deterministic transport identity;
+- legacy Kimi wire compatibility remains isolated from canonical provider-wire identity;
+- canonical provider-wire bytes exactly match TVC's `openai_chat_completions` Moonshot payload shape;
+- `max_tokens` and JSON response mode change the admitted request hash;
+- legacy temperature cannot change the canonical TVC provider-wire hash;
+- unsupported message shapes fail closed;
 - Universal InTr `TRANSPORT_COMPLETE` required separately from Governance ALLOW;
 - Governance DENY/FAIL-CLOSED cannot be replaced by transport success;
 - Governance ALLOW cannot replace missing transport completion;
+- canonical admission envelope is preserved unchanged through TVC execution;
 - exact terminal InTr receipt and Governance decision receipt hashes;
 - official endpoint/model locking;
-- exact one-user-message TVC binding;
 - TVC non-exportable Kimi operation construction;
 - lease provider/model/authority boundary validation;
 - sanitized TVC result normalization;
 - canonical provider-usage/Master Records continuation;
+- Master Records custody required before canonical egress;
 - exact egress response-hash binding;
 - validation-only GitHub Actions authority.
 
@@ -109,7 +118,7 @@ Source integration is not live activation. Merge readiness requires exact-head C
 
 Status remains `IMPLEMENTED_PENDING_RUNTIME_PROOF` until one authentic same-execution chain proves all of:
 
-1. authentic Universal InTr ingress `TRANSPORT_COMPLETE` receipt bound to exact Kimi wire bytes;
+1. authentic Universal InTr ingress `TRANSPORT_COMPLETE` receipt bound to exact TVC/Moonshot provider payload bytes;
 2. authentic StegCore Governance decision receipt with `decision=ALLOW`;
 3. authentic TV/TVC Kimi capability lease and non-exportable operation;
 4. authentic Moonshot/Kimi provider response for the bound request;
@@ -126,6 +135,7 @@ Mocks, fixtures, CI success, source merge, runtime-profile presence, transport c
 StegVerse-Labs/.github:
   existing WorkerCoordinator resident lane
   current claim/fence observation
+  consume llm_adapter.kimi_tvc_provider_wire exact bytes/hash
   compose exact InTr -> Governance -> TVC -> Master Records -> InTr execution
   retain authentic same-execution receipts
 
@@ -147,7 +157,7 @@ Post-activation projections:
 ## Current state
 
 ```text
-source implementation: CANONICAL_BOUNDARY_CORRECTION_IN_PROGRESS
+source implementation: EXACT_PROVIDER_WIRE_CORRECTION_COMPLETE_PENDING_CI_MERGE
 credential architecture duplication: NONE
 production credential plaintext in LLM-adapter: PROHIBITED
 transport grants execution authority: FALSE
