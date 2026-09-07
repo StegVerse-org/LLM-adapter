@@ -43,6 +43,8 @@ def execute_canonical_kimi_via_tvc_runtime(
         governance_disposition=governance_disposition,
         governance_receipt_hash=governance_receipt_hash,
         carrier_ref=carrier_ref,
+        max_output_tokens=max_output_tokens,
+        response_format=response_format,
     )
     validate_governed_kimi_admission(admission)
     execution = execute_governed_kimi_via_tvc_runtime(
@@ -50,8 +52,8 @@ def execute_canonical_kimi_via_tvc_runtime(
         session_id=session_id,
         transition_id=transition_id,
         measurement_id=measurement_id,
-        # Compatibility API: this value is the validated Governance decision,
-        # never a claim that Universal InTr itself granted ALLOW.
+        # Compatibility API value is the already-validated Governance decision.
+        # The canonical exact TVC provider-wire identity is carried by admitted_envelope.
         ingress_disposition=governance_disposition,
         ingress_receipt_hash=ingress_receipt_hash,
         carrier_ref=carrier_ref,
@@ -60,8 +62,9 @@ def execute_canonical_kimi_via_tvc_runtime(
         usage_submitter=usage_submitter,
         max_output_tokens=max_output_tokens,
         response_format=response_format,
+        admitted_envelope=admission.envelope,
     )
-    if execution.envelope.request_hash != admission.envelope.request_hash or execution.envelope.transport_id != admission.envelope.transport_id:
+    if execution.envelope != admission.envelope:
         raise RuntimeError("canonical Kimi admission/execution envelope mismatch")
     custody = execution.master_records_usage
     if (
@@ -74,6 +77,7 @@ def execute_canonical_kimi_via_tvc_runtime(
     handoff = {
         **dict(execution.egress_handoff),
         "schema": "stegverse.llm_adapter.kimi_canonical_runtime_egress_handoff/v1",
+        "provider_wire_profile": admission.provider_wire_profile,
         "ingress_transport_state": ingress_transport_state,
         "governance_disposition": governance_disposition,
         "governance_receipt_hash": governance_receipt_hash,
