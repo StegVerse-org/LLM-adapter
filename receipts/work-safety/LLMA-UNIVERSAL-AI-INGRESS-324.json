@@ -1,0 +1,139 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-UNIVERSAL-AI-INGRESS-324",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/UNIVERSAL_AI_INGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/StegOS:docs/UNIVERSAL_INTR_BACKBONE_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/StegOS:docs/EXTERNAL_PROVIDER_OPERATION_INTR_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/LLM-adapter:tasks/LLMA-UNIVERSAL-AI-INGRESS-324.json",
+    "StegVerse-org/LLM-adapter:#324",
+    "StegVerse-org/LLM-adapter:tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+    "StegVerse-Labs/StegOS:STEGOS-UNIVERSAL-INTR-BACKBONE-104",
+    "StegVerse-Labs/StegOS:#222",
+    "StegVerse-Labs/StegOS:#223",
+    "StegVerse-Labs/.github:data/canonical-task-registry.json"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "master-records/orchestration",
+      "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+      "StegVerse-org/LLM-adapter:docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md"
+    ],
+    "reason": "Master Records remains the existing custody/reconstruction owner for authentic provider execution evidence. This source change creates no new runtime receipt or custody authority and therefore does not mutate Master Records during source reconciliation."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github:docs/CROSS_TASK_COORDINATION_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:control/cross-task-coordination.json",
+      "StegVerse-Labs/.github:management/session-build-preflight-contract.json",
+      "StegVerse-org/LLM-adapter:tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+      "StegVerse-Labs/StegOS:#222/#223"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/StegOS",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/TVC",
+      "StegVerse-002/micro-node-runtime",
+      "master-records/orchestration"
+    ],
+    "evidence_refs": [
+      "StegVerse-Labs/StegOS:stegos/universal_intr_transport.py",
+      "StegVerse-Labs/StegOS:stegos/intr_backbone.py",
+      "StegVerse-Labs/StegOS:specs/universal-intr-connector-profiles.v1.json",
+      "StegVerse-org/LLM-adapter:llm_adapter/provider_request.py",
+      "StegVerse-org/LLM-adapter:llm_adapter/provider_client.py",
+      "StegVerse-org/LLM-adapter:llm_adapter/external_llm_connection.py",
+      "StegVerse-org/LLM-adapter:llm_adapter/user_llm_router.py",
+      "StegVerse-org/LLM-adapter:docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/TVC:config/provider_operation_profiles.json",
+      "StegVerse-002/micro-node-runtime"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": true,
+    "reason": "Equivalent responsibilities already existed for Universal InTr transport, external-provider operation, normalized request/response, provider dispatch, credential/route authority, sandbox routing, runtime, and evidence custody. The change resolves the collision by reusing those owners and extending/refactoring only the LLM-adapter normalization and compatibility seam. No parallel authority is introduced.",
+    "reconciliation_ref": "docs/UNIVERSAL_AI_INGRESS_MIRROR_HANDOFF.md"
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "reason": "The change materially formalizes provider-independent ingress context, identity/confinement/capability/failure semantics, adapter registry behavior, hosted credential failure behavior, and provider onboarding expectations.",
+    "evidence_refs": [
+      "README.md",
+      "docs/UNIVERSAL_AI_INGRESS_MIRROR_HANDOFF.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/validate-external-llm-convergence.yml",
+    "README.md",
+    "llm_adapter/external_llm_connection.py",
+    "llm_adapter/http_provider_clients.py",
+    "llm_adapter/provider_request.py",
+    "tasks/LLMA-UNIVERSAL-AI-INGRESS-324.json",
+    "tests/test_external_llm_connection.py",
+    "tests/test_http_provider_clients.py"
+  ],
+  "new_files": [
+    {
+      "path": "tasks/LLMA-UNIVERSAL-AI-INGRESS-324.json",
+      "semantic_responsibility": "Bounded task-registry claim for the genuinely unresolved universal AI ingress reconciliation predicate.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter:tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+      "decision": "EXTEND",
+      "why_not_reuse_only": "Task 306 is source-complete for four external providers; #324 owns the distinct provider-independent identity/confinement/capability/registry convergence across hosted, local, resident, and browser-mediated AI without reopening task 306."
+    }
+  ],
+  "modified_functional_files": [
+    {
+      "path": "llm_adapter/provider_request.py",
+      "semantic_responsibility": "Canonical normalized provider request plus optional provider-independent AI ingress context.",
+      "closest_existing_implementation": "llm_adapter/provider_request.py::ProviderRequest",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "llm_adapter/external_llm_connection.py",
+      "semantic_responsibility": "Existing provider-neutral external LLM dispatch seam and declarative provider compatibility registry.",
+      "closest_existing_implementation": "llm_adapter/external_llm_connection.py",
+      "decision": "REFACTOR"
+    },
+    {
+      "path": "llm_adapter/http_provider_clients.py",
+      "semantic_responsibility": "Existing sovereign local OpenAI-compatible provider client and legacy hosted HTTP compatibility clients.",
+      "closest_existing_implementation": "llm_adapter/http_provider_clients.py",
+      "decision": "REFACTOR",
+      "retirement": "Hosted direct-key production behavior is retired; explicit test-only compatibility remains until canonical TVC provider-operation integrations cover all consumers."
+    },
+    {
+      "path": ".github/workflows/validate-external-llm-convergence.yml",
+      "semantic_responsibility": "Existing validation-only external LLM convergence workflow extended to universal ingress changed surfaces.",
+      "closest_existing_implementation": ".github/workflows/validate-external-llm-convergence.yml",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "tests/test_external_llm_connection.py",
+      "semantic_responsibility": "Existing provider-neutral external connection contract tests extended to universal registry and identity/confinement context semantics.",
+      "closest_existing_implementation": "tests/test_external_llm_connection.py",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "tests/test_http_provider_clients.py",
+      "semantic_responsibility": "Existing provider-client tests extended to enforce TV/TVC-only production hosted credential boundary.",
+      "closest_existing_implementation": "tests/test_http_provider_clients.py",
+      "decision": "EXTEND"
+    }
+  ]
+}

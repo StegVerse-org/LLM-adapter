@@ -1,0 +1,81 @@
+{
+  "schema": "stegverse.task-registry/v1",
+  "task_id": "LLMA-UNIVERSAL-AI-INGRESS-324",
+  "repository": "StegVerse-org/LLM-adapter",
+  "issue": 324,
+  "pull_request": 325,
+  "source_branch": "feat/universal-ai-ingress-324",
+  "goal": "Converge every AI entity/provider transport on one provider-independent StegVerse AI ingress, normalized request/response seam, adapter contract/registry, confinement vocabulary, capability vocabulary, identity vocabulary, and evidence semantics while reusing canonical Universal InTr, Interlock, TV/TVC, WorkerCoordinator, sandbox routing, and Master Records owners.",
+  "state": "SOURCE_IMPLEMENTED_VALIDATION_IN_PROGRESS",
+  "parent_reused_tasks": [
+    "LLMA-EXTERNAL-LLM-CONVERGENCE-306",
+    "LLMA-CHAT-SESSION-BINDING-010",
+    "STEGOS-UNIVERSAL-INTR-BACKBONE-104",
+    "STEGOS external-provider-operation #222/#223"
+  ],
+  "authority": {
+    "universal_transport": "StegVerse-Labs/StegOS::Universal InTr backbone",
+    "transition_admission": "Interlock/InTr",
+    "credential_provider_operation": "TV/TVC",
+    "runtime_work_owner": "StegVerse-Labs/.github::WorkerCoordinator",
+    "local_model_runtime": "StegVerse-002/micro-node-runtime",
+    "custody_reconstruction": "master-records/orchestration",
+    "llm_translation_evidence": "StegVerse-org/LLM-adapter",
+    "heartbeat_oscillator": "OBSERVABILITY_REFERENCE_ONLY"
+  },
+  "reuse_decisions": {
+    "ingress_transport": "REUSE StegOS universal_intr_transport + intr_backbone + connector registry",
+    "normalized_request": "EXTEND llm_adapter/provider_request.py with AIIngressContext; preserve historical shape/hash when absent",
+    "normalized_response": "REUSE llm_adapter/provider_client.py ProviderResponse",
+    "adapter_dispatch": "REFACTOR llm_adapter/external_llm_connection.py into one declarative compatibility registry",
+    "sandbox": "REUSE existing entity_sandbox_runner route; no new sandbox runtime",
+    "browser_session": "REUSE released provider-neutral LLMA-CHAT-SESSION-BINDING-010; browser/session transport is not a provider identity",
+    "identity": "EXTEND request ingress context; UNKNOWN remains UNKNOWN; provider/model/key/session do not become StegVerse principal",
+    "capabilities": "ADD provider-independent semantic declarations to adapter descriptors; no provider-named governance capabilities",
+    "evidence": "REUSE existing request/response hashes, InTr receipts, provider usage, Master Records custody",
+    "provider_runtime": "REUSE existing provider-specific transports/executors and sovereign local runtime",
+    "hosted_credentials": "REFACTOR direct OpenAI/Anthropic key clients to explicit legacy test-only shims; production authority remains TV/TVC",
+    "openai_tvc": "REUSE existing StegVerse-Labs/TVC openai chat_completion_with_usage profile; no second route/profile"
+  },
+  "provider_reconciliation": {
+    "zai": "SHARED_EXTERNAL_CONNECTION_IMPLEMENTED; AUTHENTIC_RUNTIME_PROOF_REQUIRED",
+    "deepseek": "SHARED_EXTERNAL_CONNECTION_IMPLEMENTED; AUTHENTIC_RUNTIME_PROOF_REQUIRED",
+    "kimi_moonshot": "SHARED_EXTERNAL_CONNECTION_IMPLEMENTED; AUTHENTIC_RUNTIME_PROOF_REQUIRED",
+    "anthropic": "SHARED_EXTERNAL_CONNECTION_IMPLEMENTED; TVC_ONLY_PRODUCTION; AUTHENTIC_RUNTIME_PROOF_REQUIRED",
+    "openai_hosted": "TVC_PROFILE_EXISTS; THIN_LLM_ADAPTER_EXACT_REQUEST_EGRESS_BRIDGE_NOT_YET_RECONCILED",
+    "stegverse_local_openai_compatible": "EXISTING_CANONICAL_PROVIDER_CLIENT; CREDENTIAL_REQUIREMENT_NONE; RUNTIME_OWNER_REUSED",
+    "browser_session_mediated": "EXISTING_PROVIDER_NEUTRAL_SESSION_BINDING_REUSED; NOT_A_PROVIDER_REGISTRY_ENTRY"
+  },
+  "readme_impact": {
+    "required": true,
+    "updated": true,
+    "reason": "Changes adapter interface, provider support semantics, identity/confinement/capability vocabulary, hosted credential failure behavior, and provider onboarding model."
+  },
+  "validation": {
+    "exact_head_prior_to_safety_manifest_fix": {
+      "validate_external_llm_convergence": "SUCCESS",
+      "validate_zai_intr": "SUCCESS",
+      "validate_deepseek_intr": "SUCCESS",
+      "validate_kimi_intr": "SUCCESS",
+      "distributed_workload": "SUCCESS",
+      "distributed_executor": "SUCCESS",
+      "general_validate": "SUCCESS"
+    },
+    "work_mutation_safety": "RECHECK_REQUIRED_AFTER_MANIFEST_SCHEMA_FIX"
+  },
+  "runtime_claims": {
+    "source_complete": false,
+    "live_provider_execution": false,
+    "two_way_runtime_validated": false,
+    "governed_runtime_validated": false,
+    "release_authority": false
+  },
+  "remaining_predicates": [
+    "Work Mutation Safety exact-head PASS after fresh manifest correction",
+    "general exact-head validation completion after latest manifest/task mutations",
+    "thin OpenAI LLM-adapter exact-request/response bridge to existing TVC provider-operation profile, unless a later semantic scan finds an equivalent",
+    "authentic same-execution provider/runtime evidence before any TWO_WAY_RUNTIME_VALIDATED or GOVERNED_RUNTIME_VALIDATED claim",
+    "post-build final one-owner duplication audit and PR release gate"
+  ],
+  "next_executable_action": "Finish exact-head safety/validation checks; then resolve the OpenAI thin bridge at the LLM-adapter edge by reusing the existing TVC OpenAI provider profile and Universal InTr external-provider-operation contract rather than creating new route, credential, runtime, evidence, or governance systems."
+}

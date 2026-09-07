@@ -10,24 +10,35 @@ from llm_adapter.http_provider_clients import (
 from llm_adapter.provider_request import build_provider_request
 
 
-def test_openai_http_provider_fails_closed_without_key(monkeypatch):
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+def test_openai_http_provider_fails_closed_outside_explicit_legacy_test_mode():
     request = build_provider_request(provider="openai", model="test-model", messages=[{"role": "user", "content": "Hello"}])
-    with pytest.raises(ProviderConfigurationError):
-        OpenAIHTTPProviderClient().complete(request)
+    with pytest.raises(ProviderConfigurationError, match="legacy test-only"):
+        OpenAIHTTPProviderClient(api_key="test-key").complete(request)
 
 
-def test_anthropic_http_provider_fails_closed_without_key(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+def test_anthropic_http_provider_fails_closed_outside_explicit_legacy_test_mode():
     request = build_provider_request(provider="anthropic", model="test-model", messages=[{"role": "user", "content": "Hello"}])
-    with pytest.raises(ProviderConfigurationError):
-        AnthropicHTTPProviderClient().complete(request)
+    with pytest.raises(ProviderConfigurationError, match="legacy test-only"):
+        AnthropicHTTPProviderClient(api_key="test-key").complete(request)
 
 
-def test_build_http_provider_client_routes_names():
-    assert isinstance(build_http_provider_client("openai", api_key="test"), OpenAIHTTPProviderClient)
-    assert isinstance(build_http_provider_client("claude", api_key="test"), AnthropicHTTPProviderClient)
+def test_build_http_provider_client_routes_local_and_blocks_hosted_direct_credentials():
     assert isinstance(build_http_provider_client("stegverse-local"), StegVerseLocalHTTPProviderClient)
+    with pytest.raises(ProviderConfigurationError, match="legacy test-only"):
+        build_http_provider_client("openai", api_key="test")
+    with pytest.raises(ProviderConfigurationError, match="legacy test-only"):
+        build_http_provider_client("claude", api_key="test")
+
+
+def test_legacy_direct_clients_require_explicit_test_opt_in():
+    assert isinstance(
+        build_http_provider_client("openai", api_key="test", allow_legacy_direct_credentials=True),
+        OpenAIHTTPProviderClient,
+    )
+    assert isinstance(
+        build_http_provider_client("claude", api_key="test", allow_legacy_direct_credentials=True),
+        AnthropicHTTPProviderClient,
+    )
 
 
 def test_sovereign_provider_rejects_public_host():
@@ -65,25 +76,29 @@ def test_sovereign_provider_accepts_private_federated_address():
     assert client.base_url.startswith("http://10.23.4.5")
 
 
-def test_openai_http_provider_response_is_request_bound(monkeypatch):
+def test_openai_legacy_test_response_is_request_bound(monkeypatch):
     class FakeResponse:
         def raise_for_status(self): return None
         def json(self): return {"id":"openai-response-id","choices":[{"message":{"content":"fixture output"},"finish_reason":"stop"}]}
+
     monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", lambda *args, **kwargs: FakeResponse())
     request = build_provider_request(provider="openai", model="test-model", messages=[{"role":"user","content":"Hello"}])
-    response = OpenAIHTTPProviderClient(api_key="test-key").complete(request)
+    response = OpenAIHTTPProviderClient(api_key="test-key", compatibility_test_mode=True).complete(request)
     assert response.request_hash == request.request_hash
     assert response.output == "fixture output"
-    assert response.metadata["provider_mode"] == "openai_http"
+    assert response.metadata["provider_mode"] == "openai_http_legacy_test_only"
+    assert response.metadata["production_path"] == "TVC_NON_EXPORTABLE_REQUIRED"
 
 
-def test_anthropic_http_provider_response_is_request_bound(monkeypatch):
+def test_anthropic_legacy_test_response_is_request_bound(monkeypatch):
     class FakeResponse:
         def raise_for_status(self): return None
         def json(self): return {"id":"anthropic-response-id","content":[{"type":"text","text":"fixture output"}],"stop_reason":"end_turn"}
+
     monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", lambda *args, **kwargs: FakeResponse())
     request = build_provider_request(provider="anthropic", model="test-model", messages=[{"role":"user","content":"Hello"}])
-    response = AnthropicHTTPProviderClient(api_key="test-key").complete(request)
+    response = AnthropicHTTPProviderClient(api_key="test-key", compatibility_test_mode=True).complete(request)
     assert response.request_hash == request.request_hash
     assert response.output == "fixture output"
-    assert response.metadata["provider_mode"] == "anthropic_http"
+    assert response.metadata["provider_mode"] == "anthropic_http_legacy_test_only"
+    assert response.metadata["production_path"] == "TVC_NON_EXPORTABLE_REQUIRED"
