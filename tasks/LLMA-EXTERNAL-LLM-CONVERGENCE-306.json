@@ -6,7 +6,7 @@
   "pull_request": 309,
   "source_branch": "feat/external-llm-convergence-306",
   "goal": "Converge Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic on one provider-neutral governed external-LLM connection primitive while preserving provider-specific wire adapters and existing authority boundaries.",
-  "state": "POST_MERGE_CANONICAL_REPAIR_VALIDATED",
+  "state": "SOURCE_COMPLETE_MERGED_RUNTIME_PROOF_REQUIRED",
   "repair_branch": "fix/external-llm-anthropic-canonical-306",
   "repair_pull_request": 318,
   "authority": {
@@ -41,6 +41,9 @@
     "postmerge_main_reconciliation": "02346f925c232a47f9df4b11d336e7c36c0e9b62",
     "canonical_conflict_side_repair_required": true,
     "repair_pull_request": 318
+    ,"repair_pull_request_head": "26164ad40209e1ad5302f740236c0ba56678e604"
+    ,"repair_merge_commit": "f1deee785736075bb5d89a2678fd92d34b3dad1e"
+    ,"canonical_conflict_side_repaired": true
   },
   "readme_impact": {
     "implementation_change_required_readme": true,
@@ -65,11 +68,12 @@
     }
   },
   "claims": {
-    "source_complete": false,
+    "source_complete": true,
+    "merged": true,
     "live_provider_execution": false,
     "connected": false,
     "activation": false,
     "release_authority": false
   },
-  "next_executable_action": "Validate and merge repair PR #318, then reconcile mainline evidence; do not infer live provider execution, custody, connection, activation, or release authority."
+  "next_executable_action": "Reuse the existing WorkerCoordinator + Interlock/InTr + TV/TVC + Master Records lane for authentic same-execution provider proof; do not claim CONNECTED before exact ingress, provider execution, custody/reconstruction, and exact-response egress are all proven."
 }
