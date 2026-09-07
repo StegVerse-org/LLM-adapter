@@ -1,0 +1,42 @@
+name: Work Mutation Safety - Non-Authorizing
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '**/*.rst'
+      - '**/*.png'
+      - '**/*.jpg'
+      - '**/*.jpeg'
+      - '**/*.gif'
+      - '**/*.svg'
+      - '**/*.pdf'
+
+permissions: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Anonymous public checkout without GitHub token
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test -z "${GITHUB_TOKEN:-}"
+          test -z "${GH_TOKEN:-}"
+          git init .
+          git remote add origin https://github.com/StegVerse-org/LLM-adapter.git
+          env -u GITHUB_TOKEN -u GH_TOKEN git fetch --depth=1 origin "${BASE_SHA}" "${HEAD_SHA}"
+          git checkout --detach "${HEAD_SHA}"
+      - name: Validate fresh Work mutation safety manifest
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/validate_work_mutation_safety.py \
+            --base "${BASE_SHA}" \
+            --head "${HEAD_SHA}" \
+            --repository StegVerse-org/LLM-adapter

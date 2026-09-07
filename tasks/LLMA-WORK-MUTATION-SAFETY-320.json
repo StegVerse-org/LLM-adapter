@@ -1,0 +1,40 @@
+{
+  "schema_version": "stegverse.work-claim.v1",
+  "task_id": "LLMA-WORK-MUTATION-SAFETY-320",
+  "originating_goal": "Install a fail-closed semantic-duplication and README-completeness safety gate at the LLM-adapter pull-request mutation boundary used by Work.",
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "work-safety-net-semantic-collision",
+  "canonical_issue": 320,
+  "state": "ACTIVE_IMPLEMENTATION",
+  "claimant": "chatgpt:work-mutation-safety-320",
+  "role": "non-authorizing repository mutation safety implementer",
+  "canonical_runtime_owner": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+  "route_authority_owner": "StegVerse-Labs/TVC",
+  "credential_authority_model": "TV/TVC",
+  "custody_owner": "master-records/orchestration",
+  "surfaces": [
+    "scripts/validate_work_mutation_safety.py",
+    ".github/workflows/work-mutation-safety.yml",
+    "tests/test_work_mutation_safety.py",
+    "receipts/work-safety/LLMA-WORK-MUTATION-SAFETY-320.json",
+    "docs/WORK_MUTATION_SAFETY_MIRROR_HANDOFF.md"
+  ],
+  "authority_contract": {
+    "new_governance_engine": false,
+    "new_route_authority": false,
+    "new_credential_authority": false,
+    "new_runtime_or_worker": false,
+    "new_ingress_or_adapter": false,
+    "new_custody_executor": false,
+    "validation_grants_execution_authority": false
+  },
+  "collision_boundaries": [
+    "reuse the repository's canonical LLM_ADAPTER_MIRROR_HANDOFF.md as repository authority",
+    "do not reimplement InTr, TV/TVC, WorkerCoordinator, heartbeat, local runtime, provider transport, or Master Records semantics",
+    "block CREATE_NEW when an equivalent semantic implementation has been found",
+    "require active-owner collision reconciliation before intentional parallel versioning",
+    "require every new functional file to declare its semantic responsibility and nearest existing implementation/search result",
+    "require README-impact completeness for every functional mutation manifest"
+  ],
+  "release_condition": "PR merge after Work Mutation Safety and repository validation pass; then mark COMPLETE_RELEASED and retain the gate as validation-only, authority_effect NONE."
+}
