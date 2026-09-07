@@ -26,8 +26,29 @@ class DeepSeekTVCBrokerError(RuntimeError):
 
 
 def _prompt(request: ProviderRequest) -> str:
-    # Preserve role/content deterministically without asking TVC to reconstruct chat state.
     return "\n".join(f"{message.role}: {message.content}" for message in request.messages)
+
+
+def _verify_exact_lease_binding(envelope: DeepSeekInTrEnvelope, lease_receipt: Mapping[str, Any]) -> None:
+    expected = {
+        "provider": "deepseek",
+        "operation": TVC_OPERATION,
+        "model": envelope.model,
+        "transition_id": envelope.transition_id,
+        "request_hash": envelope.request_hash,
+        "ingress_receipt_hash": envelope.ingress_receipt_hash,
+        "carrier_ref": envelope.carrier_ref,
+        "runtime_profile_id": RUNTIME_PROFILE_ID,
+    }
+    for key, wanted in expected.items():
+        if lease_receipt.get(key) != wanted:
+            raise DeepSeekTVCBrokerError(f"TVC lease exact binding mismatch: {key}")
+    if lease_receipt.get("credential_authority") != "TV/TVC":
+        raise DeepSeekTVCBrokerError("TVC lease credential authority mismatch")
+    if lease_receipt.get("credential_material_present") is not False:
+        raise DeepSeekTVCBrokerError("TVC lease contains credential material")
+    if lease_receipt.get("second_machine_required") is not False:
+        raise DeepSeekTVCBrokerError("TVC lease introduced second-machine requirement")
 
 
 def build_tvc_deepseek_operation_request(
@@ -46,13 +67,12 @@ def build_tvc_deepseek_operation_request(
         raise DeepSeekTransportAdmissionError("DeepSeek envelope authority boundary invalid")
     if not isinstance(lease_receipt, Mapping) or lease_receipt.get("decision") != "ALLOW_CAPABILITY_LEASE":
         raise DeepSeekTVCBrokerError("TVC single-use capability lease required")
-    if lease_receipt.get("provider") != "deepseek" or lease_receipt.get("operation") != TVC_OPERATION:
-        raise DeepSeekTVCBrokerError("TVC lease outside DeepSeek provider-operation boundary")
     if lease_receipt.get("single_use") is not True:
         raise DeepSeekTVCBrokerError("TVC lease must be single-use")
     for key in ("secret_values_exported", "protected_values_exposed", "authority_granted"):
         if lease_receipt.get(key) is not False:
             raise DeepSeekTVCBrokerError(f"TVC lease authority/secret boundary invalid: {key}")
+    _verify_exact_lease_binding(envelope, lease_receipt)
     if not isinstance(max_output_tokens, int) or max_output_tokens < 1 or max_output_tokens > 16384:
         raise DeepSeekTVCBrokerError("max_output_tokens outside TVC boundary")
     if response_format not in {"text", "json"}:
@@ -138,7 +158,6 @@ def execute_deepseek_via_tvc_broker(
 
     output = result.get("output")
     if not isinstance(output, str) or not output.strip():
-        # Canonical TVC normalization may expose text under a provider-neutral content field.
         output = result.get("content")
     if not isinstance(output, str) or not output.strip():
         raise DeepSeekTVCBrokerError("TVC DeepSeek result missing text output")
