@@ -6,7 +6,7 @@
   "pull_request": 309,
   "branch": "feat/external-llm-convergence-306",
   "goal": "Converge Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic on one provider-neutral governed external-LLM connection primitive while preserving provider-specific wire adapters and existing authority boundaries.",
-  "state": "PREFLIGHT_RESOLVED_EXACT_HEAD_VALIDATION_REQUIRED",
+  "state": "SOURCE_COMPLETE_VALIDATED_MERGE_READY",
   "authority": {
     "transition_admission": "Interlock/InTr",
     "credential_provider_operation": "TV/TVC",
@@ -37,12 +37,26 @@
     "required": true,
     "satisfied_on_branch": true
   },
+  "validation": {
+    "integrated_head": "46bd44149902a171074446a6c0fe7a219e4dceca",
+    "canonical_main_integrated": "852718d0a1287953ea408511c47b3764e3410b77",
+    "local_tests": "68/68 PASS",
+    "hosted_runs": {
+      "external_llm_convergence": "34073656131 SUCCESS",
+      "zai": "34073656134 SUCCESS",
+      "kimi": "34073656133 SUCCESS",
+      "deepseek": "34073656136 SUCCESS",
+      "distributed_workload": "34073656156 SUCCESS",
+      "distributed_executor": "34073656129 SUCCESS",
+      "repository_validation": "34073656180 SUCCESS"
+    }
+  },
   "claims": {
-    "source_complete": false,
+    "source_complete": true,
     "live_provider_execution": false,
     "connected": false,
     "activation": false,
     "release_authority": false
   },
-  "next_executable_action": "Run exact-head validation for PR #309; do not perform additional functional mutation unless validation or review identifies a bounded defect."
+  "next_executable_action": "Merge PR #309 and reconcile mainline evidence; do not infer live provider execution, custody, connection, activation, or release authority."
 }

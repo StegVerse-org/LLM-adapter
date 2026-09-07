@@ -4,7 +4,7 @@ Updated: 2026-09-07
 Repository: `StegVerse-org/LLM-adapter`
 Issue: #306
 Task: `LLMA-EXTERNAL-LLM-CONVERGENCE-306`
-State: `SOURCE_IMPLEMENTATION_STAGED_PREFLIGHT_RESOLVED_VALIDATION_REQUIRED`
+State: `SOURCE_COMPLETE_VALIDATED_MERGE_READY_RUNTIME_PROOF_REQUIRED`
 
 ## Goal
 
@@ -85,7 +85,12 @@ Anthropic TVC runtime binding: STAGED
 TVC Z.ai provider profile: MERGED / 8faa70644dcb711aee73c976a50dd7a47f4ddf82
 README completeness: SATISFIED_ON_BRANCH
 machine preflight canonical resolution: PASS
-exact-head source validation: REQUIRED
+canonical main integrated: 852718d0a1287953ea408511c47b3764e3410b77
+validated integrated head: 46bd44149902a171074446a6c0fe7a219e4dceca
+local convergence + integrated dependency tests: 68/68 PASS
+hosted convergence validation: 34073656131 SUCCESS
+hosted repository validation: 34073656180 SUCCESS
+hosted Z.ai/Kimi/DeepSeek/distributed validations: ALL SUCCESS
 live Z.ai execution: NOT CLAIMED
 live DeepSeek execution: NOT CLAIMED
 live Kimi execution: NOT CLAIMED
@@ -98,4 +103,4 @@ This change materially affects provider/runtime semantics, interfaces, credentia
 
 ## Remaining admissibility gate
 
-The preflight has resolved canonical handoffs, task registry, Master Records authority, cross-task coordination, duplicate-creation constraints, and README impact. No additional functional mutation is admissible until exact-head validation passes. After validation, merge readiness may be evaluated without inferring live provider execution, activation, custody, or downstream publication.
+The preflight has resolved canonical handoffs, task registry, Master Records authority, cross-task coordination, duplicate-creation constraints, and README impact. Exact-head validation passed after integrating current canonical `main`. PR #309 is source-merge ready. Merge and post-merge reconciliation cannot infer live provider execution, activation, custody, or downstream publication.
