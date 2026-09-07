@@ -20,21 +20,52 @@ def test_unknown_provider_fails_closed():
 @pytest.mark.parametrize("provider,target_name", [
     ("z.ai","execute_governed_zai"),("deepseek","execute_governed_deepseek"),("kimi","execute_governed_kimi"),("anthropic","execute_governed_anthropic")
 ])
-def test_common_execution_dispatch(monkeypatch, provider, target_name):
+def test_compatibility_execution_dispatch(monkeypatch, provider, target_name):
     seen = {}
     def fake(**kwargs): seen.update(kwargs); return DummyExecution()
     monkeypatch.setattr(mod, target_name, fake)
     request = SimpleNamespace(provider=provider)
     result = mod.execute_governed_external_llm(request, session_id="s", transition_id="t", measurement_id="m", ingress_disposition="ALLOW", ingress_receipt_hash="b"*64, carrier_ref="hb32:x", credential_resolver=lambda:"secret")
     assert result.provider == mod.normalize_provider(provider)
+    assert result.execution_path == "TV_TVC_RESOLVER_COMPATIBILITY"
     assert result.authority_effect == "NONE"
     assert result.egress_intr_required is True
     assert seen["ingress_disposition"] == "ALLOW"
     assert seen["credential_resolver"]() == "secret"
 
-def test_egress_dispatch(monkeypatch):
+@pytest.mark.parametrize("provider,target_name", [
+    ("deepseek","execute_governed_deepseek_via_tvc_runtime"),("kimi","execute_governed_kimi_via_tvc_runtime")
+])
+def test_tvc_runtime_execution_dispatch(monkeypatch, provider, target_name):
+    seen = {}
+    def fake(**kwargs): seen.update(kwargs); return DummyExecution()
+    monkeypatch.setattr(mod, target_name, fake)
+    request = SimpleNamespace(provider=provider)
+    lease = {"decision":"ALLOW_CAPABILITY_LEASE"}
+    broker = lambda operation: {"decision":"ALLOW_OPERATION_RESULT"}
+    result = mod.execute_governed_external_llm(request, session_id="s", transition_id="t", measurement_id="m", ingress_disposition="ALLOW", ingress_receipt_hash="b"*64, carrier_ref="hb32:x", lease_receipt=lease, broker_submitter=broker)
+    assert result.execution_path == "TVC_NON_EXPORTABLE_RUNTIME"
+    assert seen["lease_receipt"] is lease
+    assert seen["broker_submitter"] is broker
+
+
+def test_missing_tvc_material_fails_closed():
+    request = SimpleNamespace(provider="z.ai")
+    with pytest.raises(mod.ExternalLLMConnectionError):
+        mod.execute_governed_external_llm(request, session_id="s", transition_id="t", measurement_id="m", ingress_disposition="ALLOW", ingress_receipt_hash="b"*64, carrier_ref="hb32:x")
+
+
+def test_compatibility_egress_dispatch(monkeypatch):
     execution = DummyExecution()
-    result = mod.GovernedConnectionResult("kimi", execution)
+    result = mod.GovernedConnectionResult("kimi", execution, "TV_TVC_RESOLVER_COMPATIBILITY")
     sentinel = object()
     monkeypatch.setattr(mod, "admit_kimi_egress", lambda **kwargs: sentinel)
+    assert mod.admit_external_llm_egress(result, egress_disposition="ALLOW", egress_receipt_hash="c"*64, admitted_response_hash="a"*64) is sentinel
+
+
+def test_tvc_egress_dispatch(monkeypatch):
+    execution = DummyExecution()
+    result = mod.GovernedConnectionResult("kimi", execution, "TVC_NON_EXPORTABLE_RUNTIME")
+    sentinel = object()
+    monkeypatch.setattr(mod, "admit_kimi_tvc_runtime_egress", lambda **kwargs: sentinel)
     assert mod.admit_external_llm_egress(result, egress_disposition="ALLOW", egress_receipt_hash="c"*64, admitted_response_hash="a"*64) is sentinel
