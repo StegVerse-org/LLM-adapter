@@ -2,139 +2,136 @@
 
 Updated: 2026-09-06
 Repository: `StegVerse-org/LLM-adapter`
-Issue: `#292`
-Branch: `feat/kimi-intr-runtime-292`
+Primary issue: `#292`
+Boundary-correction issue: `#302`
 
 ## Authority and scope
 
-This scoped handoff is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md` and the canonical StegVerse Interlock/InTr, TV/TVC, heartbeat/runtime, and Master Records authority boundaries.
+This scoped handoff is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md` and the canonical StegVerse Universal InTr, Governance/StegCore, TV/TVC, heartbeat/runtime, and Master Records authority boundaries.
 
 ```text
 provider: kimi / Moonshot AI
 protocol: stegverse.intr.kimi.transport.v1
 role: OPTIONAL_NON_AUTHORITATIVE_INTEROPERABILITY_TRANSPORT
 provider authority effect: NONE
-transition authority: external Interlock/InTr
+exact-packet transport evidence: Universal InTr / TRANSPORT_COMPLETE
+governance disposition: StegCore / ALLOW | DENY | FAIL-CLOSED
 credential/provider-operation authority: TV/TVC
 custody/reconstruction authority: Master Records
 heartbeat/scheduler/worker authority: NONE
 canonical sovereign local route replaced: false
 ```
 
-## Preflight and collision resolution
+Universal InTr transport completion is not an ALLOW decision. Governance ALLOW is a separate decision and grants neither execution nor credential authority. A separately valid TVC lease remains required before the provider consequence.
 
-The repository already contains the canonical optional-provider pattern implemented for DeepSeek:
-
-```text
-llm_adapter/deepseek_intr_transport.py
-llm_adapter/deepseek_intr_executor.py
-llm_adapter/deepseek_tvc_broker.py
-llm_adapter/deepseek_tvc_runtime_executor.py
-config/deepseek-runtime-profile.json
-```
-
-The Kimi implementation reuses that established pattern and existing shared surfaces rather than installing the standalone-package `shared/` abstraction layer.
-
-Existing shared components reused:
+## Existing shared components reused
 
 ```text
 llm_adapter.provider_request.ProviderRequest
 llm_adapter.provider_client.ProviderResponse
 llm_adapter.provider_usage.build_provider_usage_event
 llm_adapter.master_records_usage_submission.submit_provider_usage_to_master_records
+StegVerse-Labs/StegOS external-provider-operation Universal InTr profile
+StegVerse-Labs/Governance hosted-llm-provider-operation.v1 profile
+StegCore canonical three-layer evaluator
 StegVerse-Labs/TVC provider profile `kimi`
 StegVerse-Labs/TVC secret ref `vault://tvc/providers/kimi/api-key`
 StegVerse-Labs/TVC non-exportable provider-operation broker
 ```
 
-TVC's active credential-model consistency freeze prohibits inventing a new credential wrapper/provider-secret architecture. This lane therefore consumes only the already-existing Kimi provider-operation semantics and never transfers the Kimi credential into LLM-adapter in the production runtime profile.
+TVC's credential-model consistency boundary prohibits inventing a second provider-secret architecture. The production lane consumes only the existing Kimi provider-operation semantics and never transfers the Kimi credential into LLM-adapter.
 
 ## Installed source surfaces
 
 ```text
-llm_adapter/kimi_intr_transport.py
-llm_adapter/kimi_intr_executor.py
-llm_adapter/kimi_tvc_broker.py
-llm_adapter/kimi_tvc_runtime_executor.py
+llm_adapter/kimi_intr_transport.py                    legacy/compat transport primitive
+llm_adapter/kimi_intr_executor.py                     compatibility executor
+llm_adapter/kimi_governed_admission.py                canonical transport/governance separation
+llm_adapter/kimi_tvc_broker.py                        TVC non-exportable provider bridge
+llm_adapter/kimi_tvc_runtime_executor.py               compatibility runtime composition
+llm_adapter/kimi_canonical_runtime.py                  canonical production composition
 config/kimi-runtime-profile.json
 schemas/kimi-intr-transport-envelope.schema.json
 capability/stegverse-intr-kimi-transport.capability.json
 tests/test_kimi_intr_transport.py
 tests/test_kimi_intr_executor.py
 tests/test_kimi_tvc_runtime.py
+tests/test_kimi_canonical_runtime.py
 ```
 
-The direct credential-resolver transport/executor exists only for compatibility and deterministic isolated testing. It is not the production runtime contract.
+The older `build_kimi_intr_envelope(... ingress_disposition=...)` interface is retained only for source compatibility. Canonical production composition must use `build_governed_kimi_admission` / `execute_canonical_kimi_via_tvc_runtime`, which require distinct transport and Governance evidence.
 
-## Production runtime composition
+## Canonical production sequence
 
 ```text
-external InTr ingress ALLOW bound to exact Kimi request
--> Kimi runtime-profile materialization
--> separately admitted TVC single-use capability lease
+exact Kimi wire bytes
+-> StegOS Universal InTr external-provider-operation
+-> TRANSPORT_COMPLETE + exact terminal transport receipt
+-> Governance hosted-llm-provider-operation.v1
+-> canonical StegCore ALLOW / DENY / FAIL-CLOSED decision receipt
+-> only ALLOW is eligible to continue
+-> separately issued TVC single-use capability lease
 -> TVC non-exportable provider-operation request
--> TVC vault broker resolves Kimi credential only at provider-use boundary
+-> TVC vault broker resolves Kimi credential only inside provider-use boundary
 -> https://api.moonshot.ai/v1/chat/completions / kimi-k3
 -> sanitized provider result + TVC use receipt
 -> canonical LLM-adapter provider usage event
--> canonical Master Records provider-usage submission/reconstruction
--> exact response hash handed to external InTr egress
--> external InTr egress ALLOW
--> response may return to StegVerse
+-> canonical Master Records provider-usage custody/reconstruction
+-> exact response bytes through Universal InTr response transport
+-> response may return only after the complete retained evidence chain
 ```
 
-No ingress ALLOW is synthesized by this transport. No TVC lease is synthesized by this transport. No provider credential is read or persisted by the production LLM-adapter path. No provider output is authoritative.
+Neither `TRANSPORT_COMPLETE` nor Governance `ALLOW` is provider execution authority. TV/TVC remains the separate consequence/credential authority.
 
-## README impact
+## Exact request constraint
 
-README update is REQUIRED because this change adds an optional hosted-provider runtime profile, endpoint/model semantics, credential-delivery semantics, evidence sequence, and failure behavior. The current README must be patched, not replaced.
+The current TVC Kimi operation accepts a single prompt string. To preserve exact admitted semantics, Kimi v1 production execution accepts exactly one `user` message and sends that message content unchanged. Multi-message or non-user-role chat requests fail closed until TVC exposes a message-preserving chat operation contract.
 
 ## Validation predicates
 
 Source integration is not live activation. Merge readiness requires exact-head CI validating:
 
 - Kimi wire canonicalization and deterministic transport identity;
-- exact ingress ALLOW and request-hash binding;
+- Universal InTr `TRANSPORT_COMPLETE` required separately from Governance ALLOW;
+- Governance DENY/FAIL-CLOSED cannot be replaced by transport success;
+- Governance ALLOW cannot replace missing transport completion;
+- exact terminal InTr receipt and Governance decision receipt hashes;
 - official endpoint/model locking;
-- compatibility-path credential leak guard;
+- exact one-user-message TVC binding;
 - TVC non-exportable Kimi operation construction;
 - lease provider/model/authority boundary validation;
 - sanitized TVC result normalization;
 - canonical provider-usage/Master Records continuation;
 - exact egress response-hash binding;
-- capability/schema/runtime-profile consistency;
 - validation-only GitHub Actions authority.
 
 ## Activation predicates
 
 Status remains `IMPLEMENTED_PENDING_RUNTIME_PROOF` until one authentic same-execution chain proves all of:
 
-1. authentic external InTr ingress receipt;
-2. authentic TV/TVC Kimi capability lease and non-exportable operation;
-3. authentic Moonshot/Kimi provider response for the bound request;
-4. Kimi request/response deterministic hash bindings;
-5. authentic TVC use receipt with no credential export;
-6. authentic Master Records provider-usage custody/reconstruction;
-7. authentic external InTr egress receipt bound to the exact response;
-8. common session/transition/transport identifiers across the retained evidence.
+1. authentic Universal InTr ingress `TRANSPORT_COMPLETE` receipt bound to exact Kimi wire bytes;
+2. authentic StegCore Governance decision receipt with `decision=ALLOW`;
+3. authentic TV/TVC Kimi capability lease and non-exportable operation;
+4. authentic Moonshot/Kimi provider response for the bound request;
+5. authentic TVC use receipt with no credential export/log/retention;
+6. authentic Master Records provider-usage custody and reconstruction PASS;
+7. authentic Universal InTr egress transport completion bound to the exact response;
+8. common session/transition/request identifiers across retained evidence.
 
-Mocks, fixtures, CI success, source merge, runtime-profile presence, and TVC source readiness do not satisfy these predicates.
+Mocks, fixtures, CI success, source merge, runtime-profile presence, transport completion alone, Governance ALLOW alone, and TVC source readiness do not satisfy these predicates.
 
-## Remaining installation / execution ownership
+## Remaining execution ownership
 
 ```text
-StegVerse-org/LLM-adapter:
-  README + adapter capability projection
-  exact-head validation / PR integration
-
-StegVerse-Labs/.github runtime owner:
-  materialize existing hb-intr-resident runtime profile
-  invoke the already-authorized TVC provider-operation path when a valid Kimi lease exists
-  retain authentic same-execution runtime receipts
+StegVerse-Labs/.github:
+  existing WorkerCoordinator resident lane
+  current claim/fence observation
+  compose exact InTr -> Governance -> TVC -> Master Records -> InTr execution
+  retain authentic same-execution receipts
 
 StegVerse-Labs/TVC:
-  existing Kimi profile / capsule / lease / non-exportable provider operation only
-  no new credential semantics authorized by this task
+  existing Kimi capsule/lease/non-exportable provider operation only
+  no new credential semantics
 
 master-records/orchestration:
   authentic provider-usage custody/reconstruction
@@ -143,17 +140,19 @@ Post-activation projections:
   StegIndex
   StegVerse-Labs/Site
   GCAT-BCAT-Engine/Publisher
-  StegVerse-Labs/admissibility-wiki
-  StegVerse-002/stegguardian-wiki
+  admissibility-wiki
+  stegguardian-wiki
 ```
 
 ## Current state
 
 ```text
-issue: OPEN (#292)
-source implementation: IN_PROGRESS_BRANCH
+source implementation: CANONICAL_BOUNDARY_CORRECTION_IN_PROGRESS
 credential architecture duplication: NONE
 production credential plaintext in LLM-adapter: PROHIBITED
+transport grants execution authority: FALSE
+governance grants execution authority: FALSE
+governance grants credential authority: FALSE
 canonical sovereign route replacement: FALSE
 live Kimi connector: NOT_YET_PROVEN
 release/tag authority: NOT_INFERRED
