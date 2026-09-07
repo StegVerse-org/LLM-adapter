@@ -106,6 +106,39 @@
     "live_provider_execution_claimed": false,
     "product_activation_claimed": false
   },
+  "kimi_intr_interoperability": {
+    "state": "SOURCE_IMPLEMENTED_VALIDATION_PENDING",
+    "issue": 292,
+    "protocol": "stegverse.intr.kimi.transport.v1",
+    "task": "tasks/LLMA-KIMI-INTR-RUNTIME-292.json",
+    "transport_module": "llm_adapter/kimi_intr_transport.py",
+    "executor_module": "llm_adapter/kimi_intr_executor.py",
+    "tvc_broker_module": "llm_adapter/kimi_tvc_broker.py",
+    "runtime_executor_module": "llm_adapter/kimi_tvc_runtime_executor.py",
+    "runtime_profile": "config/kimi-runtime-profile.json",
+    "transport_schema": "schemas/kimi-intr-transport-envelope.schema.json",
+    "transport_test": "tests/test_kimi_intr_transport.py",
+    "executor_test": "tests/test_kimi_intr_executor.py",
+    "tvc_runtime_test": "tests/test_kimi_tvc_runtime.py",
+    "capability_declaration": "capability/stegverse-intr-kimi-transport.capability.json",
+    "handoff": "docs/KIMI_INTR_TRANSPORT_MIRROR_HANDOFF.md",
+    "validation_workflow": ".github/workflows/validate-kimi-intr.yml",
+    "endpoint": "https://api.moonshot.ai/v1/chat/completions",
+    "supported_models": ["kimi-k3"],
+    "pull_request": 293,
+    "ingress_intr_required": true,
+    "egress_intr_required": true,
+    "credential_authority": "TV/TVC",
+    "credential_delivery": "NON_EXPORTABLE_TVC_PROVIDER_OPERATION",
+    "credential_material_serialized": false,
+    "direct_credential_resolver_production_allowed": false,
+    "provider_output_authority": "NONE",
+    "master_records_custody_reused": true,
+    "canonical_sovereign_route_replaced": false,
+    "hosted_provider_required_for_canonical_route": false,
+    "live_provider_execution_claimed": false,
+    "product_activation_claimed": false
+  },
   "runtime_surfaces": {
     "provider_request_envelope": "built",
     "fixture_provider": "built",
@@ -132,7 +165,11 @@
     "zai_egress_verifier": "built_non_authorizing_exact_response_binding",
     "deepseek_intr_transport": "built_optional_fail_closed",
     "deepseek_governed_executor": "built_optional_fail_closed",
-    "deepseek_egress_verifier": "built_non_authorizing_exact_response_binding"
+    "deepseek_egress_verifier": "built_non_authorizing_exact_response_binding",
+    "kimi_intr_transport": "built_optional_fail_closed",
+    "kimi_governed_executor": "built_optional_fail_closed",
+    "kimi_tvc_non_exportable_bridge": "built_optional_fail_closed",
+    "kimi_egress_verifier": "built_non_authorizing_exact_response_binding"
   },
   "ai_entry_response_fields": {
     "free_tier_trust": {
@@ -180,6 +217,7 @@
     "anthropic": "optional_not_production_authority",
     "zai": "complete_released_source_optional_not_production_authority",
     "deepseek": "complete_released_source_optional_not_production_authority",
+    "kimi": "source_implemented_validation_pending_optional_not_production_authority",
     "github_models": "not_canonical_production_inference",
     "render": "not_canonical_production_runtime",
     "github_actions": "validation_only_not_production_runtime"
@@ -192,8 +230,9 @@
     "hosted_provider_credentials": "optional_interoperability_only",
     "zai_provider_credential": "TV/TVC-resolved at execution time only; never serialized",
     "deepseek_provider_credential": "TV/TVC-resolved at execution time only; never serialized",
+    "kimi_provider_credential": "TVC non-exportable provider operation; plaintext never delivered to production LLM-adapter",
     "continuity_search_service": ["STEGVERSE_CONTINUITY_SEARCH_URL", "STEGVERSE_CONTINUITY_SEARCH_KEY optional"],
-    "external_executor": "canonical same-carrier executor is implemented; optional Z.ai and DeepSeek governed executors are separately admitted and non-authoritative",
+    "external_executor": "canonical same-carrier executor is implemented; optional Z.ai, DeepSeek and Kimi governed executors are separately admitted and non-authoritative",
     "site_display": "StegVerse-Labs/Site consumes bounded metadata only after activation evidence and mirror validation",
     "sdk_ingestion": "StegVerse-org/StegVerse-SDK validates system-boundary declaration and non-authorizing metadata"
   },
@@ -207,7 +246,9 @@
     "live_zai_execution": "OPTIONAL_LANE_NOT_YET_OBSERVED",
     "live_zai_egress_intr_allow": "OPTIONAL_LANE_NOT_YET_OBSERVED",
     "live_deepseek_execution": "OPTIONAL_LANE_NOT_YET_OBSERVED",
-    "live_deepseek_egress_intr_allow": "OPTIONAL_LANE_NOT_YET_OBSERVED"
+    "live_deepseek_egress_intr_allow": "OPTIONAL_LANE_NOT_YET_OBSERVED",
+    "live_kimi_execution": "OPTIONAL_LANE_NOT_YET_OBSERVED",
+    "live_kimi_egress_intr_allow": "OPTIONAL_LANE_NOT_YET_OBSERVED"
   },
   "machine_owned_continuation": {
     "runtime_carrier": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
@@ -241,7 +282,10 @@
     "Z.ai source validation is not live provider execution or product activation.",
     "DeepSeek ingress ALLOW is not reusable as egress ALLOW.",
     "DeepSeek provider output does not grant transition authority.",
-    "DeepSeek source validation is not live provider execution or product activation."
+    "DeepSeek source validation is not live provider execution or product activation.",
+    "Kimi ingress ALLOW is not reusable as egress ALLOW.",
+    "Kimi provider output does not grant transition authority.",
+    "Kimi source validation is not live provider execution or product activation."
   ],
   "local_verification": {
     "unit_tests": "pytest",
@@ -256,7 +300,10 @@
     "zai_intr_transport_test": "pytest tests/test_zai_intr_transport.py -q",
     "zai_intr_executor_test": "pytest tests/test_zai_intr_executor.py -q",
     "deepseek_intr_transport_test": "pytest tests/test_deepseek_intr_transport.py -q",
-    "deepseek_intr_executor_test": "pytest tests/test_deepseek_intr_executor.py -q"
+    "deepseek_intr_executor_test": "pytest tests/test_deepseek_intr_executor.py -q",
+    "kimi_intr_transport_test": "pytest tests/test_kimi_intr_transport.py -q",
+    "kimi_intr_executor_test": "pytest tests/test_kimi_intr_executor.py -q",
+    "kimi_tvc_runtime_test": "pytest tests/test_kimi_tvc_runtime.py -q"
   },
-  "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation. Optional Z.ai or DeepSeek execution does not replace or satisfy that canonical activation definition."
+  "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation. Optional Z.ai, DeepSeek or Kimi execution does not replace or satisfy that canonical activation definition."
 }
