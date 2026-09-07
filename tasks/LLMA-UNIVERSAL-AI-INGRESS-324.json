@@ -1,0 +1,46 @@
+{
+  "schema": "stegverse.task-registry/v1",
+  "task_id": "LLMA-UNIVERSAL-AI-INGRESS-324",
+  "repository": "StegVerse-org/LLM-adapter",
+  "issue": 324,
+  "source_branch": "feat/universal-ai-ingress-324",
+  "goal": "Converge every AI entity/provider transport on one provider-independent StegVerse AI ingress, normalized request/response seam, adapter contract/registry, confinement vocabulary, capability vocabulary, identity vocabulary, and evidence semantics while reusing canonical Universal InTr, Interlock, TV/TVC, WorkerCoordinator, sandbox routing, and Master Records owners.",
+  "state": "ACTIVE_UNIQUE_WORK",
+  "parent_reused_tasks": [
+    "LLMA-EXTERNAL-LLM-CONVERGENCE-306",
+    "STEGOS-UNIVERSAL-INTR-BACKBONE-104",
+    "STEGOS external-provider-operation #222/#223"
+  ],
+  "authority": {
+    "universal_transport": "StegVerse-Labs/StegOS::Universal InTr backbone",
+    "transition_admission": "Interlock/InTr",
+    "credential_provider_operation": "TV/TVC",
+    "runtime_work_owner": "StegVerse-Labs/.github::WorkerCoordinator",
+    "local_model_runtime": "StegVerse-002/micro-node-runtime",
+    "custody_reconstruction": "master-records/orchestration",
+    "llm_translation_evidence": "StegVerse-org/LLM-adapter",
+    "heartbeat_oscillator": "OBSERVABILITY_REFERENCE_ONLY"
+  },
+  "reuse_decisions": {
+    "ingress_transport": "REUSE StegOS universal_intr_transport + intr_backbone + connector registry",
+    "normalized_request": "EXTEND llm_adapter/provider_request.py without changing provider-specific wire contracts",
+    "normalized_response": "REUSE llm_adapter/provider_client.py ProviderResponse",
+    "adapter_dispatch": "EXTEND llm_adapter/external_llm_connection.py",
+    "sandbox": "REUSE existing entity_sandbox_runner route; no new sandbox runtime",
+    "identity": "EXTEND request ingress context; do not create provider identity authority",
+    "capabilities": "ADD provider-independent semantic declarations to adapter descriptors; no provider-named governance capabilities",
+    "evidence": "REUSE existing request/response hashes, InTr receipts, provider usage, Master Records custody",
+    "provider_runtime": "REUSE existing provider-specific transports/executors and sovereign local runtime"
+  },
+  "readme_impact": {
+    "required": true,
+    "reason": "Changes adapter interface, provider support semantics, identity/confinement/capability vocabulary, and failure behavior."
+  },
+  "runtime_claims": {
+    "source_complete": false,
+    "live_provider_execution": false,
+    "governed_runtime_validated": false,
+    "release_authority": false
+  },
+  "next_executable_action": "Extend existing ProviderRequest and external_llm_connection seams with provider-independent ingress context and adapter descriptors; update common tests and README; do not create new transport/runtime/credential/sandbox/evidence authorities."
+}
