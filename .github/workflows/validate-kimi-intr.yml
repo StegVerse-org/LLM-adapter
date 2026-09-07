@@ -1,0 +1,140 @@
+# Deterministic validation only. This workflow has no runtime, credential, route, or activation authority.
+name: validate-kimi-intr
+
+on:
+  push:
+    paths:
+      - 'llm_adapter/kimi_intr_transport.py'
+      - 'llm_adapter/kimi_intr_executor.py'
+      - 'llm_adapter/kimi_tvc_broker.py'
+      - 'llm_adapter/kimi_tvc_runtime_executor.py'
+      - 'config/kimi-runtime-profile.json'
+      - 'tests/test_kimi_intr_transport.py'
+      - 'tests/test_kimi_intr_executor.py'
+      - 'tests/test_kimi_tvc_runtime.py'
+      - 'schemas/kimi-intr-transport-envelope.schema.json'
+      - 'capability/stegverse-intr-kimi-transport.capability.json'
+      - 'docs/KIMI_INTR_*'
+      - 'tasks/LLMA-KIMI-INTR-*'
+      - 'README.md'
+      - 'adapter.capabilities.json'
+      - '.github/workflows/validate-kimi-intr.yml'
+  pull_request:
+    paths:
+      - 'llm_adapter/kimi_intr_transport.py'
+      - 'llm_adapter/kimi_intr_executor.py'
+      - 'llm_adapter/kimi_tvc_broker.py'
+      - 'llm_adapter/kimi_tvc_runtime_executor.py'
+      - 'config/kimi-runtime-profile.json'
+      - 'tests/test_kimi_intr_transport.py'
+      - 'tests/test_kimi_intr_executor.py'
+      - 'tests/test_kimi_tvc_runtime.py'
+      - 'schemas/kimi-intr-transport-envelope.schema.json'
+      - 'capability/stegverse-intr-kimi-transport.capability.json'
+      - 'docs/KIMI_INTR_*'
+      - 'tasks/LLMA-KIMI-INTR-*'
+      - 'README.md'
+      - 'adapter.capabilities.json'
+      - '.github/workflows/validate-kimi-intr.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: validate-kimi-intr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-kimi-intr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Refuse credential-bearing environment
+        shell: bash
+        run: |
+          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT TVC_EPHEMERAL_GITHUB_TOKEN STEGVERSE_PROVIDER_TOKEN STEGVERSE_MASTER_RECORDS_TOKEN KIMI_API_KEY MOONSHOT_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY ACTIONS_RUNTIME_TOKEN ACTIONS_ID_TOKEN_REQUEST_TOKEN; do
+            if [ -n "${!key:-}" ]; then
+              echo "credential_exposed:$key"
+              exit 1
+            fi
+          done
+
+      - name: Fetch exact source anonymously
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git init .
+          git remote add origin https://github.com/StegVerse-org/LLM-adapter.git
+          git -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+
+      - name: Resolve Python
+        shell: bash
+        run: |
+          set -euo pipefail
+          selected="$(command -v python3 || command -v python)"
+          echo "PYTHON_BIN=$selected" >> "$GITHUB_ENV"
+          "$selected" --version
+
+      - name: Install validation dependencies
+        run: "$PYTHON_BIN -m pip install -e '.[dev]'"
+
+      - name: Test Kimi Interlock/InTr transport
+        run: "$PYTHON_BIN -m pytest tests/test_kimi_intr_transport.py -q"
+
+      - name: Test governed Kimi executor and egress binding
+        run: "$PYTHON_BIN -m pytest tests/test_kimi_intr_executor.py -q"
+
+      - name: Test Kimi runtime-profile TVC broker bridge
+        run: "$PYTHON_BIN -m pytest tests/test_kimi_tvc_runtime.py -q"
+
+      - name: Validate Kimi capability, schema and runtime profile
+        shell: bash
+        run: |
+          "$PYTHON_BIN" - <<'PY'
+          import json
+          from pathlib import Path
+          capability = json.loads(Path('capability/stegverse-intr-kimi-transport.capability.json').read_text(encoding='utf-8'))
+          schema = json.loads(Path('schemas/kimi-intr-transport-envelope.schema.json').read_text(encoding='utf-8'))
+          runtime = json.loads(Path('config/kimi-runtime-profile.json').read_text(encoding='utf-8'))
+          assert capability['capability_id'] == 'stegverse.intr.kimi.transport.v1'
+          assert capability['provider'] == 'kimi'
+          assert capability['authority']['authority_effect'] == 'NONE'
+          assert capability['authority']['synthesizes_allow'] is False
+          assert capability['credential']['credential_authority'] == 'TV/TVC'
+          assert capability['credential']['credential_material_present'] is False
+          assert capability['credential']['direct_credential_resolver_production_allowed'] is False
+          assert capability['activation']['live'] is False
+          assert capability['transport']['endpoint_profiles']['moonshot_openai_compatible'] == 'https://api.moonshot.ai/v1'
+          assert capability['transport']['supported_models'] == ['kimi-k3']
+          assert schema['properties']['transport_id']['pattern'] == '^kmit-[0-9a-f]{64}$'
+          assert schema['properties']['authority_effect']['const'] == 'NONE'
+          assert schema['properties']['egress_intr_required']['const'] is True
+          assert runtime['profile_id'] == 'stegverse:runtime-profile:llm-adapter-kimi:v1'
+          assert runtime['base_profile'] == 'stegverse:runtime-profile:hb-intr-resident:v1'
+          assert runtime['provider_execution']['tvc_profile'] == 'kimi'
+          assert runtime['provider_execution']['credential_material_in_llm_adapter'] is False
+          assert runtime['provider_execution']['direct_credential_resolver_production_allowed'] is False
+          assert runtime['physical_runtime']['another_physical_machine_required'] is False
+          print('KIMI_INTR_CAPABILITY_DECLARATION=VALID')
+          print('KIMI_RUNTIME_PROFILE_BINDING=VALID')
+          print('KIMI_INTR_ACTIVATION_LIVE=false')
+          PY
+
+      - name: Confirm validation-only authority boundary
+        shell: bash
+        run: |
+          "$PYTHON_BIN" - <<'PY'
+          from pathlib import Path
+          workflow = Path('.github/workflows/validate-kimi-intr.yml').read_text(encoding='utf-8')
+          assert 'permissions: {}' in workflow
+          assert 'KIMI_API_KEY' in workflow
+          assert 'MOONSHOT_API_KEY' in workflow
+          assert 'STEGVERSE_MASTER_RECORDS_TOKEN' in workflow
+          forbidden = ['actions/' + 'checkout@', 'actions/' + 'setup-python@', 'git ' + 'push', 'schedule' + ':']
+          assert all(marker not in workflow for marker in forbidden), forbidden
+          print('KIMI_INTR_VALIDATION_AUTHORITY=NONE')
+          print('KIMI_INTR_CREDENTIAL_AUTHORITY=TV_TVC')
+          print('KIMI_INTR_RUNTIME_EFFECT=NONE')
+          PY

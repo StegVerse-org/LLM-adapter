@@ -1,0 +1,64 @@
+{
+  "capability_id": "stegverse.intr.kimi.transport.v1",
+  "declaration_version": "1.0.0",
+  "role": "optional_non_authoritative_stegverse_interoperability_transport",
+  "provider": "kimi",
+  "provider_service": "Moonshot AI",
+  "canonical_reference_repository": "StegVerse-org/LLM-adapter",
+  "authority": {
+    "authority_effect": "NONE",
+    "synthesizes_allow": false,
+    "claims_no_authority_over": [
+      "transition", "route", "credential", "custody", "heartbeat",
+      "scheduler", "worker", "publication", "stegverse_governance"
+    ],
+    "ingress_decision_point": "external:StegVerse-Interlock/InTr",
+    "egress_decision_point": "external:StegVerse-Interlock/InTr"
+  },
+  "transport": {
+    "endpoint_profiles": {
+      "moonshot_openai_compatible": "https://api.moonshot.ai/v1"
+    },
+    "execution_path": "/chat/completions",
+    "supported_models": ["kimi-k3"],
+    "deterministic_identity": true,
+    "transport_id_prefix": "kmit-",
+    "hash_algorithm": "SHA-256",
+    "canonicalization": "canonical JSON over exact admitted outbound Kimi payload",
+    "fail_closed": true,
+    "permissive_fallback": false
+  },
+  "credential": {
+    "credential_authority": "TV/TVC",
+    "credential_class": "TV_TVC_PROVIDER_SECRET",
+    "credential_material_present": false,
+    "production_resolution": "TVC non-exportable provider operation",
+    "secret_ref": "vault://tvc/providers/kimi/api-key",
+    "direct_credential_resolver_production_allowed": false,
+    "persisted_in_llm_adapter": false,
+    "redaction_guard": true
+  },
+  "evidence": {
+    "provider_usage": "reuse canonical llm_adapter.provider_usage",
+    "master_records_submission": "reuse canonical llm_adapter.master_records_usage_submission",
+    "tvc_use_receipt_hash_binding": true,
+    "egress_response_hash_binding": true
+  },
+  "independence": {
+    "canonical_sovereign_route_replaced": false,
+    "hosted_provider_required": false,
+    "optional": true
+  },
+  "activation": {
+    "live": false,
+    "basis": "source integration pending exact-head validation and authentic runtime evidence",
+    "requires": [
+      "exact-head repository validation",
+      "authentic ingress InTr receipt",
+      "authentic TV/TVC single-use Kimi provider operation",
+      "authentic Kimi/Moonshot provider execution",
+      "Master Records custody/reconstruction",
+      "authentic egress InTr receipt"
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "task_id": "LLMA-KIMI-INTR-RUNTIME-292",
+  "issue": 292,
+  "repository": "StegVerse-org/LLM-adapter",
+  "branch": "feat/kimi-intr-runtime-292",
+  "goal": "Install the optional non-authoritative Kimi/Moonshot InTr transport on the canonical LLM-adapter runtime-profile/TVC-broker path and retain authentic activation evidence without creating parallel authority.",
+  "state": "SOURCE_IMPLEMENTED_VALIDATION_PENDING",
+  "authority_effect": "NONE",
+  "canonical_sovereign_route_replaced": false,
+  "provider_role": "CONTROL_OR_FALLBACK_ONLY",
+  "credential_authority": "TV/TVC",
+  "transition_authority": "external Interlock/InTr",
+  "custody_authority": "master-records/orchestration",
+  "runtime_owner": "StegVerse-Labs/.github::heartbeat_runtime.worker_runtime.WorkerCoordinator",
+  "reused_surfaces": [
+    "llm_adapter.provider_request",
+    "llm_adapter.provider_client",
+    "llm_adapter.provider_usage",
+    "llm_adapter.master_records_usage_submission",
+    "StegVerse-Labs/TVC::provider_operation_profiles[kimi]",
+    "StegVerse-Labs/TVC::non-exportable-provider-operation-broker",
+    "stegverse:runtime-profile:hb-intr-resident:v1"
+  ],
+  "source_predicates": {
+    "kimi_intr_transport": true,
+    "kimi_governed_executor": true,
+    "kimi_tvc_non_exportable_bridge": true,
+    "kimi_runtime_profile": true,
+    "master_records_reuse": true,
+    "separate_egress_intr_required": true,
+    "credential_plaintext_in_production_llm_adapter": false,
+    "new_tvc_credential_semantics_created": false,
+    "readme_update_required": true
+  },
+  "activation_predicates": {
+    "exact_head_validation": false,
+    "authentic_intr_ingress": false,
+    "authentic_tvc_kimi_lease": false,
+    "authentic_tvc_non_exportable_kimi_operation": false,
+    "authentic_kimi_provider_response": false,
+    "authentic_master_records_reconstruction": false,
+    "authentic_intr_egress": false,
+    "same_execution_correlation": false
+  },
+  "activation_claimed": false,
+  "release_authority_inferred": false,
+  "handoff": "docs/KIMI_INTR_TRANSPORT_MIRROR_HANDOFF.md"
+}
