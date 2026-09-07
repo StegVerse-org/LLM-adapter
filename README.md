@@ -145,7 +145,7 @@ tests/test_governed_external_provider_client.py
 tests/test_zai_tvc_runtime.py
 tests/test_deepseek_tvc_runtime.py
 tests/test_kimi_tvc_runtime.py
-tests/test_anthropic_tvc_runtime.py
+tests/test_external_anthropic_tvc_runtime.py
 docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md
 ```
 
@@ -463,7 +463,7 @@ pytest tests/test_kimi_intr_transport.py -q
 pytest tests/test_kimi_intr_executor.py -q
 pytest tests/test_kimi_tvc_runtime.py -q
 pytest tests/test_anthropic_intr_transport.py -q
-pytest tests/test_anthropic_tvc_runtime.py -q
+pytest tests/test_external_anthropic_tvc_runtime.py -q
 pytest tests/test_external_llm_connection.py -q
 pytest tests/test_governed_external_provider_client.py -q
 python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-runtime-fix-288
