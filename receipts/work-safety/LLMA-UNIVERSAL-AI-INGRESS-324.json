@@ -70,7 +70,8 @@
   },
   "readme_impact": {
     "material_function_change": true,
-    "readme_updated": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
     "reason": "The change materially formalizes provider-independent ingress context, identity/confinement/capability/failure semantics, adapter registry behavior, hosted credential failure behavior, and provider onboarding expectations.",
     "evidence_refs": [
       "README.md",
@@ -79,6 +80,7 @@
   },
   "covered_paths": [
     ".github/workflows/validate-external-llm-convergence.yml",
+    "README.md",
     "llm_adapter/external_llm_connection.py",
     "llm_adapter/http_provider_clients.py",
     "llm_adapter/provider_request.py",
