@@ -59,6 +59,15 @@ def test_canonical_runtime_binds_both_evidence_classes_before_tvc():
     assert result.egress_handoff["ingress_transport_state"]=="TRANSPORT_COMPLETE"
     assert result.egress_handoff["governance_disposition"]=="ALLOW"
     assert result.egress_handoff["governance_receipt_hash"]=="b"*64
+    assert result.egress_handoff["master_records_custody_recorded"] is True
     assert result.egress_handoff["provider_operation_authority"]=="TV/TVC"
     assert result.egress_handoff["transport_grants_execution_authority"] is False
     assert result.egress_handoff["governance_grants_credential_authority"] is False
+
+
+def test_canonical_runtime_refuses_egress_without_master_records_custody():
+    try:
+        execute_canonical_kimi_via_tvc_runtime(request(),session_id="s",transition_id="tx",measurement_id="m",ingress_transport_state="TRANSPORT_COMPLETE",ingress_receipt_hash="a"*64,governance_disposition="ALLOW",governance_receipt_hash="b"*64,carrier_ref="hb:1",lease_receipt=lease(),broker_submitter=broker,usage_submitter=lambda event:{"status":"NOT_CONFIGURED","custody_recorded":False,"authority_granted":False})
+        assert False, "canonical egress must fail closed without custody"
+    except RuntimeError as exc:
+        assert "Master Records custody" in str(exc)
