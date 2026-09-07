@@ -1,0 +1,44 @@
+{
+  "identity": "StegVerse-org/LLM-adapter:task:LLMA-EXTERNAL-LLM-CONVERGENCE-306",
+  "profile": "task.v1",
+  "level": "task",
+  "vector": "50000000100000",
+  "evidence_refs": [
+    "tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+    "docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+    "data/preflight/LLMA-EXTERNAL-LLM-CONVERGENCE-306-20260907-postmerge.json",
+    "StegVerse-org/LLM-adapter#319",
+    "StegVerse-Labs/.github:handoffs/SHWP-ECOSYSTEM-CHAT-INFERENCE-001.json"
+  ],
+  "observed_at": "2026-09-07T09:20:00-05:00",
+  "exact_metrics": {
+    "symbol_order": "LRUIVGOCMTBEAP",
+    "lifecycle": "MACHINE_OWNED",
+    "archive_ready": false,
+    "unassigned_work": 0,
+    "chat_owned_implementation": 0,
+    "chat_owned_validation": 0,
+    "chat_owned_integration": 0,
+    "chat_owned_observation": 0,
+    "chat_owned_credentials": 0,
+    "canonical_owner_installed": true,
+    "thread_required": false,
+    "blocker_count": 0,
+    "evidence_complete": false,
+    "activated": false,
+    "propagated": false
+  },
+  "metric_evidence": {
+    "lifecycle": "Source convergence and reconciliation are merged; authentic runtime proof is assigned to the existing machine-owned continuation lane.",
+    "archive_ready": "The universal task remains nonterminal until authentic same-execution runtime proof is produced.",
+    "unassigned_work": "Runtime continuation is assigned to SHWP-ECOSYSTEM-CHAT-INFERENCE-001 and its canonical owners.",
+    "chat_owned_counts": "No chat-owned implementation, validation, integration, observation, or credential action is required.",
+    "canonical_owner_installed": "WorkerCoordinator/independent task control, Interlock/InTr, TV/TVC, LLM-adapter, and Master Records ownership surfaces are installed.",
+    "thread_required": "Canonical task, handoff, COSV vector, and successor state are durable in repository state.",
+    "blocker_count": "Runtime proof is remaining machine work, not an unowned blocker.",
+    "evidence_complete": "Live provider execution, custody/reconstruction, and exact-response egress evidence are not yet proven.",
+    "activated": "CONNECTED/activation is not yet proven.",
+    "propagated": "Downstream activation propagation is not yet proven."
+  },
+  "authority_effect": "NONE"
+}
