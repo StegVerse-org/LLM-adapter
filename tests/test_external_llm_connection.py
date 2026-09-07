@@ -14,7 +14,7 @@ class DummyExecution:
 
 
 @pytest.mark.parametrize("name,canonical", [
-    ("z.ai","zai"),("zai","zai"),("deepseek","deepseek"),("kimi","kimi"),("moonshot","kimi"),("anthropic","anthropic"),("claude","anthropic")
+    ("z.ai","zai"),("zai","zai"),("deepseek","deepseek"),("kimi","kimi"),("moonshot","kimi"),("anthropic","anthropic"),("claude","anthropic"),("openai","openai"),("chatgpt","openai"),("stegverse-local","stegverse-local"),("local-sovereign","stegverse-local")
 ])
 def test_normalize_provider(name, canonical):
     assert mod.normalize_provider(name) == canonical
@@ -25,23 +25,55 @@ def test_unknown_provider_fails_closed():
         mod.normalize_provider("unknown")
 
 
-def test_single_adapter_registry_is_provider_compatibility_not_authority():
+def test_single_adapter_registry_is_compatibility_not_authority():
     registry = mod.adapter_registry()
-    assert set(registry) == {"zai", "deepseek", "kimi", "anthropic"}
+    assert set(registry) == {"zai", "deepseek", "kimi", "anthropic", "openai", "stegverse-local"}
     for provider, descriptor in registry.items():
         assert descriptor.provider == provider
         assert descriptor.authority_effect == "NONE"
-        assert descriptor.credential_requirement == "TV_TVC_NON_EXPORTABLE"
         assert descriptor.confinement_compatible is True
         assert "transport" in descriptor.semantic_capabilities
+        assert not any(provider in capability for capability in descriptor.semantic_capabilities)
+
+    for provider in ("zai", "deepseek", "kimi", "anthropic"):
+        descriptor = registry[provider]
+        assert descriptor.credential_requirement == "TV_TVC_NON_EXPORTABLE"
         assert descriptor.tvc_executor
         assert descriptor.tvc_egress
-        assert not any(provider in capability for capability in descriptor.semantic_capabilities)
+        assert descriptor.execution_owner == "EXTERNAL_TVC_CONNECTION"
+
+    assert registry["openai"].credential_requirement == "TV_TVC_NON_EXPORTABLE"
+    assert registry["openai"].status == "BLOCKED"
+    assert registry["openai"].tvc_executor is None
+    assert registry["openai"].execution_owner == "TVC_PROVIDER_OPERATION_REQUIRED"
+
+    assert registry["stegverse-local"].credential_requirement == "NONE"
+    assert registry["stegverse-local"].execution_owner == "CANONICAL_SOVEREIGN_PROVIDER_CLIENT"
+    assert "local_model_inference" in registry["stegverse-local"].semantic_capabilities
 
 
 def test_adapter_descriptor_aliases_resolve_to_same_record():
     assert mod.adapter_descriptor("moonshot") is mod.adapter_descriptor("kimi")
     assert mod.adapter_descriptor("claude") is mod.adapter_descriptor("anthropic")
+    assert mod.adapter_descriptor("chatgpt") is mod.adapter_descriptor("openai")
+    assert mod.adapter_descriptor("local-sovereign") is mod.adapter_descriptor("stegverse-local")
+
+
+def test_blocked_or_non_external_adapter_cannot_enter_external_tvc_dispatch():
+    common = dict(
+        session_id="s",
+        transition_id="t",
+        measurement_id="m",
+        ingress_disposition="ALLOW",
+        ingress_receipt_hash="b" * 64,
+        carrier_ref="hb32:x",
+        lease_receipt={"decision":"ALLOW_CAPABILITY_LEASE"},
+        broker_submitter=lambda operation: {"decision":"ALLOW_OPERATION_RESULT"},
+    )
+    with pytest.raises(mod.ExternalLLMConnectionError, match="TVC_PROVIDER_OPERATION_REQUIRED"):
+        mod.execute_governed_external_llm(SimpleNamespace(provider="openai"), **common)
+    with pytest.raises(mod.ExternalLLMConnectionError, match="CANONICAL_SOVEREIGN_PROVIDER_CLIENT"):
+        mod.execute_governed_external_llm(SimpleNamespace(provider="stegverse-local"), **common)
 
 
 def test_universal_ai_ingress_context_keeps_identity_classes_distinct():
