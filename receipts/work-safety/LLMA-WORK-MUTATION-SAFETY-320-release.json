@@ -1,0 +1,57 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-WORK-MUTATION-SAFETY-320",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/WORK_MUTATION_SAFETY_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/LLM-adapter:tasks/LLMA-WORK-MUTATION-SAFETY-320.json",
+    "StegVerse-org/LLM-adapter:#320",
+    "StegVerse-Labs/.github:data/canonical-task-registry.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Post-merge lifecycle reconciliation only; no runtime, provider, custody, reconstruction, or production evidence is being created."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github:docs/CROSS_TASK_COORDINATION_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:control/cross-task-coordination.json"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+      "StegVerse-org/LLM-adapter:docs/WORK_MUTATION_SAFETY_MIRROR_HANDOFF.md",
+      "StegVerse-org/LLM-adapter:#321",
+      "StegVerse-org/LLM-adapter:#322"
+    ]
+  },
+  "reuse_decision": "REUSE",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "This change only reconciles the already-released task lifecycle and handoff evidence; it introduces no new implementation owner."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Only lifecycle/evidence state for the already-released validation control changes; runtime behavior, interfaces, authority, evidence semantics, prerequisites, and capability meaning remain unchanged.",
+    "evidence_refs": [
+      "tasks/LLMA-WORK-MUTATION-SAFETY-320.json",
+      "docs/WORK_MUTATION_SAFETY_MIRROR_HANDOFF.md"
+    ]
+  },
+  "covered_paths": [
+    "tasks/LLMA-WORK-MUTATION-SAFETY-320.json"
+  ],
+  "new_files": []
+}
