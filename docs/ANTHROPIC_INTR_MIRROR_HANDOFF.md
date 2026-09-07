@@ -4,12 +4,12 @@ Updated: 2026-09-06
 Repository: `StegVerse-org/LLM-adapter`
 Issue: `#288`
 Branch: `feat/anthropic-intr-transport-288`
-State: `SOURCE_IMPLEMENTED_LOCAL_VALIDATED / REPOSITORY_INTEGRATION_IN_PROGRESS`
+State: `SOURCE_IMPLEMENTED_LOCAL_VALIDATED / RUNTIME_PROFILE_BOUND / REPOSITORY_INTEGRATION_IN_PROGRESS`
 Authority effect: `NONE_TRANSPORT_ONLY`
 
 ## Source of truth
 
-This scoped handoff is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md` and the organization runtime authority. It adds optional hosted-provider interoperability only. The canonical sovereign local model/runtime route remains independently sufficient and unchanged.
+This scoped handoff is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, `StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md`, and `StegVerse-Labs/.github/docs/CANONICAL_RUNTIME_PROFILE_MAP_MIRROR_HANDOFF.md`. It adds optional hosted-provider interoperability only. The canonical sovereign local model/runtime route remains independently sufficient and unchanged.
 
 ## Protocol
 
@@ -32,6 +32,31 @@ exact ProviderRequest
 -> exact admitted response-hash verification
 -> local EGRESS_ADMITTED report with authority_effect NONE_LOCAL
 ```
+
+## Canonical runtime binding
+
+The task is now explicitly bound to the existing canonical resident runtime-profile system rather than waiting for an undefined provider-specific runtime.
+
+```text
+runtime_profile_map: StegVerse-Labs/.github/control/runtime-profile-map.json
+selected declared worker profile: sovereign-runtime-worker-v1
+resident substrate: canonical-resident-substrate-v1
+executor: WorkerCoordinator
+HB protocol: HB32
+oscillator: INDEPENDENT_PHASE_OSCILLATOR
+runtime requirement: bounded_process_execution
+environment: SOVEREIGN_RESIDENT
+task routing direction: INTERNAL
+mutation_required: true
+deployment_required: false
+current_observation_required_for_live_execution: true
+```
+
+`INTERNAL` is the canonical task-routing direction. It does not waive egress governance: the external Anthropic request remains separately bound to the exact InTr ingress ALLOW and the response remains unusable for consequence until a separate exact egress ALLOW is verified.
+
+No new runtime, heartbeat, oscillator, scheduler, worker registry, route authority, transition authority, credential authority, custody authority, or third-party availability authority is created. Runtime-profile matching is selection/projection only. WorkerCoordinator admission, a current claim/fence, TV/TVC credential materialization, InTr ingress/egress decisions, and Master Records evidence remain independently required.
+
+Runtime-profile remediation is tracked in `StegVerse-Labs/.github#1121`; it exists to make the cross-repository task/profile binding explicit and durable, not to create a parallel provider runtime.
 
 ## Machine preflight
 
@@ -88,16 +113,20 @@ network calls during tests: NONE
 
 ## Live evidence boundary
 
-Source/tests do not prove live Anthropic execution, valid/current TV/TVC credential materialization, resident WorkerCoordinator consumption, authentic Master Records custody/reconstruction, egress Interlock/InTr ALLOW, Ecosystem Chat activation, Site activation, or downstream publication.
+Source/tests and runtime-profile binding do not prove live Anthropic execution, valid/current TV/TVC credential materialization, a currently observed resident WorkerCoordinator, authentic Master Records custody/reconstruction, egress Interlock/InTr ALLOW, Ecosystem Chat activation, Site activation, or downstream publication.
+
+The current canonical runtime-profile map reports declared runtime capabilities but does not itself prove a current observed worker. Because #288 requires `current_observation_required=true` for live execution, it must fail closed until authentic runtime observation is available.
 
 ## Remaining repository work
 
-1. install the validated source/tests/schemas/capability/docs into the issue #288 branch;
+1. complete installation of validated source/tests/validator/reference surfaces into the issue #288 branch;
 2. update repository README in the same change set;
 3. run exact-branch repository validation;
-4. merge only on green validation and preserved authority boundaries;
-5. do not tag/release or propagate to Site/Publisher/wikis unless an explicit release/capability gate authorizes it;
-6. any later live provider use must enter existing TV/TVC, InTr, usage-evidence and Master Records paths.
+4. obtain Z.ai regression/no-diff evidence required by the #288 runbook;
+5. merge only on green validation and preserved authority boundaries;
+6. project the #288 runtime requirements into the canonical task-registry/runtime-resolution cycle under `.github#1121`;
+7. do not tag/release or propagate to Site/Publisher/wikis unless an explicit release/capability gate authorizes it;
+8. any later live provider use must enter existing WorkerCoordinator, TV/TVC, InTr, usage-evidence and Master Records paths.
 
 ## Completion accounting
 
@@ -106,6 +135,9 @@ protocol design: COMPLETE
 local source implementation: COMPLETE
 provider-contract reconciliation: COMPLETE
 local deterministic validation: 90/90 PASS
+canonical runtime requirements: BOUND
+runtime profile source: EXISTING / sovereign-runtime-worker-v1
+current runtime observation: REQUIRED / NOT CLAIMED
 repository install: IN_PROGRESS
 README reconciliation: PENDING_REPOSITORY_BRANCH
 branch validation: PENDING
