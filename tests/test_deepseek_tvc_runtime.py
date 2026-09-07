@@ -2,6 +2,7 @@ import pytest
 
 from llm_adapter.deepseek_intr_transport import build_deepseek_intr_envelope
 from llm_adapter.deepseek_tvc_broker import (
+    DeepSeekTVCBrokerError,
     RUNTIME_PROFILE_ID,
     TVC_SECRET_REF,
     build_tvc_deepseek_operation_request,
@@ -23,18 +24,6 @@ def _request():
     )
 
 
-def _lease():
-    return {
-        "decision": "ALLOW_CAPABILITY_LEASE",
-        "provider": "deepseek",
-        "operation": "chat_completion_with_usage",
-        "single_use": True,
-        "secret_values_exported": False,
-        "protected_values_exposed": False,
-        "authority_granted": False,
-    }
-
-
 def _envelope(req):
     return build_deepseek_intr_envelope(
         req,
@@ -43,6 +32,28 @@ def _envelope(req):
         ingress_receipt_hash="a" * 64,
         carrier_ref="carrier-1",
     )
+
+
+def _lease(envelope=None):
+    env = envelope or _envelope(_request())
+    return {
+        "decision": "ALLOW_CAPABILITY_LEASE",
+        "provider": "deepseek",
+        "operation": "chat_completion_with_usage",
+        "model": env.model,
+        "transition_id": env.transition_id,
+        "request_hash": env.request_hash,
+        "ingress_receipt_hash": env.ingress_receipt_hash,
+        "carrier_ref": env.carrier_ref,
+        "runtime_profile_id": RUNTIME_PROFILE_ID,
+        "credential_authority": "TV/TVC",
+        "credential_material_present": False,
+        "second_machine_required": False,
+        "single_use": True,
+        "secret_values_exported": False,
+        "protected_values_exposed": False,
+        "authority_granted": False,
+    }
 
 
 def _broker(_request):
@@ -63,15 +74,17 @@ def _broker(_request):
 
 
 def _execution():
+    req = _request()
+    env = _envelope(req)
     return execute_governed_deepseek_via_tvc_runtime(
-        _request(),
+        req,
         session_id="session-1",
         transition_id="tx-1",
         measurement_id="measurement-1",
         ingress_disposition="ALLOW",
         ingress_receipt_hash="a" * 64,
         carrier_ref="carrier-1",
-        lease_receipt=_lease(),
+        lease_receipt=_lease(env),
         broker_submitter=_broker,
         usage_submitter=lambda event: {"status": "custodied", "authority_effect": "NONE", "event_sha256": event["event_sha256"]},
     )
@@ -79,7 +92,8 @@ def _execution():
 
 def test_builds_non_exportable_tvc_operation_without_secret_material():
     req = _request()
-    operation = build_tvc_deepseek_operation_request(_envelope(req), req, lease_receipt=_lease())
+    env = _envelope(req)
+    operation = build_tvc_deepseek_operation_request(env, req, lease_receipt=_lease(env))
     assert operation["secret_ref"] == TVC_SECRET_REF
     assert operation["runtime_profile_id"] == RUNTIME_PROFILE_ID
     assert operation["credential_material_present"] is False
@@ -91,9 +105,36 @@ def test_builds_non_exportable_tvc_operation_without_secret_material():
     assert "api_key" not in text
 
 
-def test_tvc_broker_result_is_non_authoritative_and_requires_egress():
+def test_tvc_lease_is_bound_to_exact_envelope_and_cannot_be_replayed_or_detached():
     req = _request()
-    result = execute_deepseek_via_tvc_broker(_envelope(req), req, lease_receipt=_lease(), broker_submitter=_broker)
+    env = _envelope(req)
+    for field, value in {
+        "model": "deepseek-v4-pro",
+        "transition_id": "tx-other",
+        "request_hash": "f" * 64,
+        "ingress_receipt_hash": "e" * 64,
+        "carrier_ref": "carrier-other",
+        "runtime_profile_id": "other-profile",
+    }.items():
+        lease = _lease(env)
+        lease[field] = value
+        with pytest.raises(DeepSeekTVCBrokerError, match=f"exact binding mismatch: {field}"):
+            build_tvc_deepseek_operation_request(env, req, lease_receipt=lease)
+
+
+def test_tvc_lease_rejects_credential_authority_or_second_machine_drift():
+    req = _request(); env = _envelope(req)
+    lease = _lease(env); lease["credential_authority"] = "OTHER"
+    with pytest.raises(DeepSeekTVCBrokerError, match="credential authority mismatch"):
+        build_tvc_deepseek_operation_request(env, req, lease_receipt=lease)
+    lease = _lease(env); lease["second_machine_required"] = True
+    with pytest.raises(DeepSeekTVCBrokerError, match="second-machine requirement"):
+        build_tvc_deepseek_operation_request(env, req, lease_receipt=lease)
+
+
+def test_tvc_broker_result_is_non_authoritative_and_requires_egress():
+    req = _request(); env = _envelope(req)
+    result = execute_deepseek_via_tvc_broker(env, req, lease_receipt=_lease(env), broker_submitter=_broker)
     assert result.response.output == "Paris"
     assert result.response.metadata["credential_material_present"] is False
     assert result.response.metadata["egress_intr_required"] is True
