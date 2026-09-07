@@ -81,12 +81,13 @@ def _broker(_request):
     }
 
 
-def test_builds_non_exportable_tvc_operation_without_secret_material():
+def test_builds_non_exportable_tvc_operation_without_secret_material_and_preserves_prompt():
     req = _request()
     operation = build_tvc_kimi_operation_request(_envelope(req), req, lease_receipt=_lease())
     assert operation["secret_ref"] == TVC_SECRET_REF
     assert operation["runtime_profile_id"] == RUNTIME_PROFILE_ID
     assert operation["intr_binding"]["transition_id"] == "tx-1"
+    assert operation["operation"]["prompt"] == "What is the capital of France?"
     assert operation["credential_material_present"] is False
     assert operation["export_allowed"] is False
     assert operation["return_secret_material"] is False
@@ -94,6 +95,30 @@ def test_builds_non_exportable_tvc_operation_without_secret_material():
     assert "authorization" not in text
     assert "bearer " not in text
     assert "api_key" not in text
+
+
+def test_tvc_v1_rejects_unrepresentable_multi_message_or_non_user_chat():
+    invalid_requests = [
+        build_provider_request(
+            provider="kimi",
+            model="kimi-k3",
+            messages=[
+                {"role": "system", "content": "Be concise."},
+                {"role": "user", "content": "Hello"},
+            ],
+        ),
+        build_provider_request(
+            provider="kimi",
+            model="kimi-k3",
+            messages=[{"role": "system", "content": "Hello"}],
+        ),
+    ]
+    for req in invalid_requests:
+        try:
+            build_tvc_kimi_operation_request(_envelope(req), req, lease_receipt=_lease())
+            assert False, "TVC v1 must not execute a transformed chat request"
+        except KimiTVCBrokerError:
+            pass
 
 
 def test_rejects_lease_for_wrong_provider_or_model():
