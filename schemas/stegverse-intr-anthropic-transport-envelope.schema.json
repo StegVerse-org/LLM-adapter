@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.stegverse.org/intr/stegverse-intr-anthropic-transport-envelope.schema.json",
+  "title": "StegVerse InTr Anthropic Transport Envelope",
+  "description": "Hash-bound transport envelope for stegverse.intr.anthropic.transport.v1. Carries no credential material and confers no authority. Adapted from the Z.ai InTr envelope governance semantics; the wire representation is Anthropic-native and is not a duplicate of the Z.ai representation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "transport_id",
+    "transition_id",
+    "request_hash",
+    "provider",
+    "model",
+    "endpoint_profile",
+    "ingress_receipt_hash",
+    "credential_authority",
+    "credential_class",
+    "carrier_ref",
+    "authority_effect",
+    "egress_intr_required",
+    "credential_material_present"
+  ],
+  "properties": {
+    "protocol_version": {
+      "const": "stegverse.intr.anthropic.transport.v1"
+    },
+    "transport_id": {
+      "type": "string",
+      "pattern": "^svintr-anth-[0-9a-f]{64}$",
+      "description": "Deterministic identity: 'svintr-anth-' + SHA-256 over the domain-separated canonical JSON of {protocol_version, transition_id, request_hash, ingress_receipt_hash, carrier_ref, endpoint_profile}."
+    },
+    "transition_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Mandatory. Owned by StegVerse Interlock/InTr."
+    },
+    "request_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Exact hash of the normalized admitted StegVerse ProviderRequest. Recomputed locally and compared exactly."
+    },
+    "provider": { "const": "anthropic" },
+    "model": { "type": "string", "minLength": 1 },
+    "endpoint_profile": { "const": "anthropic_messages" },
+    "ingress_receipt_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Exact lowercase SHA-256 of the external ingress ALLOW receipt."
+    },
+    "credential_authority": { "const": "TV/TVC" },
+    "credential_class": { "const": "TV_TVC_PROVIDER_SECRET" },
+    "carrier_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Mandatory TV/TVC carrier reference. A reference only — never credential material."
+    },
+    "authority_effect": { "const": "NONE" },
+    "egress_intr_required": { "const": true },
+    "credential_material_present": { "const": false }
+  }
+}
