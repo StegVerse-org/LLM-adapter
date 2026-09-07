@@ -3,7 +3,7 @@
   "issue": 290,
   "repository": "StegVerse-org/LLM-adapter",
   "goal": "Bind released DeepSeek InTr execution to the canonical runtime profile and existing TVC non-exportable provider operation without requiring another physical machine or exporting credential material.",
-  "state": "SOURCE_COMPLETE_VALIDATION_PENDING",
+  "state": "COMPLETE_RELEASED_SOURCE",
   "authority_effect": "NONE_EXECUTION_BRIDGE_ONLY",
   "protocol": "stegverse.intr.deepseek.transport.v1",
   "runtime_profile_id": "stegverse:runtime-profile:llm-adapter-deepseek:v1",
@@ -19,13 +19,22 @@
   "new_runtime_created": false,
   "new_broker_created": false,
   "new_credential_semantics_created": false,
+  "integration": {
+    "pull_request": 291,
+    "validated_head": "ba4c673d3eda9769b122503425efd6ab66c7545f",
+    "merge_commit": "ca4bc8a2da706c59f91fb6480d5190561cda0473",
+    "deepseek_validation_run": "34069735573 SUCCESS",
+    "repository_validation_run": "34069735593 SUCCESS",
+    "repository_validation_steps": "71/71 PASS"
+  },
   "source_surfaces": [
     "config/deepseek-runtime-profile.json",
     "llm_adapter/deepseek_tvc_broker.py",
     "llm_adapter/deepseek_tvc_runtime_executor.py",
     "tests/test_deepseek_tvc_runtime.py",
     "README.md",
-    "docs/DEEPSEEK_RUNTIME_PROFILE_TVC_BROKER_MIRROR_HANDOFF.md"
+    "docs/DEEPSEEK_RUNTIME_PROFILE_TVC_BROKER_MIRROR_HANDOFF.md",
+    ".github/workflows/validate-deepseek-intr.yml"
   ],
   "readme_impact": "REQUIRED_AND_SATISFIED",
   "completion_predicates": {
@@ -33,9 +42,9 @@
     "tvc_non_exportable_operation_bridge": "COMPLETE",
     "master_records_continuation": "COMPLETE",
     "egress_handoff": "COMPLETE",
-    "tests": "IMPLEMENTED_EXECUTION_PENDING",
+    "tests": "PASS",
     "readme": "COMPLETE",
-    "merge": "PENDING",
+    "merge": "COMPLETE",
     "live_deepseek_execution": "NOT_CLAIMED"
   }
 }
