@@ -1,0 +1,4 @@
+{
+  "probe": "work-mutation-safety-negative",
+  "expected": "BLOCK_NO_FRESH_MANIFEST"
+}
