@@ -1,6 +1,7 @@
 """Governed DeepSeek execution through the canonical runtime-profile/TVC broker path."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
@@ -9,6 +10,8 @@ from .deepseek_tvc_broker import RUNTIME_PROFILE_ID, DeepSeekTVCBrokerResult, ex
 from .master_records_usage_submission import submit_provider_usage_to_master_records
 from .provider_request import ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
+
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 class DeepSeekTVCRuntimeExecutionError(RuntimeError):
@@ -39,6 +42,29 @@ class DeepSeekTVCRuntimeExecution:
     @property
     def response_hash(self) -> str:
         return self.broker.response.response_hash
+
+
+@dataclass(frozen=True)
+class DeepSeekTVCRuntimeEgressAdmission:
+    transition_id: str
+    response_hash: str
+    egress_receipt_hash: str
+    runtime_profile_id: str = RUNTIME_PROFILE_ID
+    state: str = "EGRESS_ADMITTED"
+    transition_authority: str = "Interlock/InTr"
+    authority_effect: str = "NONE_LOCAL"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema": "stegverse.llm_adapter.deepseek_tvc_runtime_egress_admission/v1",
+            "transition_id": self.transition_id,
+            "response_hash": self.response_hash,
+            "egress_receipt_hash": self.egress_receipt_hash,
+            "runtime_profile_id": self.runtime_profile_id,
+            "state": self.state,
+            "transition_authority": self.transition_authority,
+            "authority_effect": self.authority_effect,
+        }
 
 
 def execute_governed_deepseek_via_tvc_runtime(
@@ -131,7 +157,35 @@ def execute_governed_deepseek_via_tvc_runtime(
     )
 
 
+def admit_deepseek_tvc_runtime_egress(
+    execution: DeepSeekTVCRuntimeExecution,
+    *,
+    egress_disposition: str,
+    egress_receipt_hash: str,
+    admitted_response_hash: str,
+) -> DeepSeekTVCRuntimeEgressAdmission:
+    """Verify an external Interlock/InTr egress decision for the exact TVC-runtime response."""
+    if egress_disposition != "ALLOW":
+        raise DeepSeekTVCRuntimeExecutionError("DeepSeek provider output requires egress InTr ALLOW")
+    if not _SHA256_RE.fullmatch(egress_receipt_hash):
+        raise DeepSeekTVCRuntimeExecutionError("egress_receipt_hash must be an exact lowercase sha256")
+    if admitted_response_hash != execution.response_hash:
+        raise DeepSeekTVCRuntimeExecutionError("egress InTr response hash does not match exact provider response")
+    if execution.egress_handoff.get("response_hash") != execution.response_hash:
+        raise DeepSeekTVCRuntimeExecutionError("egress handoff response binding mismatch")
+    if execution.egress_handoff.get("egress_intr_required") is not True:
+        raise DeepSeekTVCRuntimeExecutionError("egress handoff weakened InTr requirement")
+    if execution.egress_handoff.get("authority_effect") != "NONE":
+        raise DeepSeekTVCRuntimeExecutionError("egress handoff authority escalation")
+    return DeepSeekTVCRuntimeEgressAdmission(
+        transition_id=execution.envelope.transition_id,
+        response_hash=execution.response_hash,
+        egress_receipt_hash=egress_receipt_hash,
+    )
+
+
 __all__ = [
     "DeepSeekTVCRuntimeExecutionError", "DeepSeekTVCRuntimeExecution",
-    "execute_governed_deepseek_via_tvc_runtime",
+    "DeepSeekTVCRuntimeEgressAdmission",
+    "execute_governed_deepseek_via_tvc_runtime", "admit_deepseek_tvc_runtime_egress",
 ]
