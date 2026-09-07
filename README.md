@@ -2,7 +2,7 @@
 
 The StegVerse LLM Adapter is the machine-readable translation and provider-boundary component between governed StegVerse requests and model/runtime execution.
 
-Its canonical production path is sovereign and credential-neutral at the route boundary: TC/TVC owns credential semantics and route authority, and the canonical local route requires credential class `NONE`.
+Its canonical production path is sovereign and credential-neutral at the route boundary: TV/TVC owns credential semantics and route authority, and the canonical local route requires credential class `NONE`.
 
 ## Canonical production path
 
@@ -30,10 +30,67 @@ Canonical ownership:
 ```text
 local model/runtime: StegVerse-002/micro-node-runtime#16/#22
 heartbeat/carrier lifecycle: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
-credential semantics: TC/TVC
+credential semantics: TV/TVC
 route authority: StegVerse-Labs/TVC
 provider transport/usage evidence: StegVerse-org/LLM-adapter
 custody/reconstruction: master-records/orchestration
+```
+
+## Universal StegVerse AI ingress
+
+Every internal or external AI entity enters through the same provider-independent architecture. Provider/model/runtime differences stay at the translation edge; they do not create alternate governance, identity, confinement, evidence, route, credential, or execution-authority systems.
+
+```text
+AI entity / model / agent / resident / hosted provider / browser-mediated model
+-> thin provider or transport adapter
+-> StegOS Universal InTr transport/backbone
+-> normalized ProviderRequest + optional AIIngressContext
+-> existing bounded entity_sandbox_runner / confinement route
+-> canonical Interlock / InTr transition evaluation
+-> authorized semantic StegVerse capability
+-> model/runtime execution under its existing owner
+-> normalized ProviderResponse + existing evidence/custody path
+-> governed InTr egress
+-> thin provider or transport adapter
+```
+
+Canonical owners are intentionally singular:
+
+```text
+Universal InTr transport/backbone/connector registry: StegVerse-Labs/StegOS
+normalized AI request/response + provider translation/evidence: StegVerse-org/LLM-adapter
+transition authority: Interlock/InTr
+credential + hosted provider-operation authority: TV/TVC
+runtime scheduling/carrier: StegVerse-Labs/.github WorkerCoordinator
+sovereign/local model runtime: StegVerse-002/micro-node-runtime
+confinement route: existing bounded entity_sandbox_runner / governed session path
+custody/reconstruction: master-records/orchestration
+HB/oscillator authority: observability/timing/liveness only
+```
+
+`ProviderRequest` remains the canonical normalized inference request and `ProviderResponse` remains the canonical normalized provider response. `AIIngressContext` extends the request seam with provider-independent identity, capability, confinement, provenance, resource, permission, evidence, failure-mode, and correlation facts. It does not grant any authority. Provider identity, model identity, transport identity, session identity, execution identity, and StegVerse entity identity remain distinct. An unresolved StegVerse principal remains `UNKNOWN`; an API key, provider string, model name, browser session, or transport identifier is never promoted into principal identity.
+
+The single adapter compatibility registry lives at the existing provider-neutral dispatch seam in `llm_adapter/external_llm_connection.py`. Registry discovery is descriptive only and never grants admission. Provider-specific transport envelopes remain edge wire-binding formats for exact request/response serialization and hashing; they are not independent ingress, governance, identity, capability, confinement, credential, or evidence contracts.
+
+Semantic capabilities are provider-independent operations such as conversational inference, structured inference, retrieval, tool invocation, sandboxed code execution, multimodal I/O, artifact generation, local-model inference, agent delegation, governed persistence, repository access, workflow dispatch, evaluation, simulation, and transport. Provider support belongs in adapter compatibility metadata rather than provider-branded governance capabilities.
+
+Hosted direct-key HTTP clients are legacy test-only compatibility shims. Production hosted-provider execution must use TV/TVC non-exportable provider operations. The sovereign/local OpenAI-compatible client remains credential-free at this seam with `credential_requirement = NONE`. OpenAI hosted execution is not declared production-connected until a canonical TVC provider-operation route and authentic governed runtime evidence exist.
+
+Common failure semantics are provider-independent and fail closed, including provider/model unavailability, missing/invalid credentials, route unavailable, sandbox unavailable, runtime inactive/unobserved, missing dispatch, rate limiting, timeout, malformed response, unsupported capability, InTr DENY, confinement violation, unresolved identity, incomplete evidence, and transport failure.
+
+Source, CI, fixtures, constructed payloads, documentation, and mocks are not runtime connection proof. A connector reaches governed runtime validation only when one authentic correlated execution proves governed request emission, real model/provider processing, response return, governed re-ingress, confinement application, Interlock/InTr evaluation, authorized consumer delivery, and evidence custody/reconstruction.
+
+Canonical universal-ingress task surfaces:
+
+```text
+llm_adapter/provider_request.py
+llm_adapter/provider_client.py
+llm_adapter/external_llm_connection.py
+llm_adapter/http_provider_clients.py
+tests/test_external_llm_connection.py
+tests/test_http_provider_clients.py
+docs/UNIVERSAL_AI_INGRESS_MIRROR_HANDOFF.md
+tasks/LLMA-UNIVERSAL-AI-INGRESS-324.json
 ```
 
 ## Ecosystem Chat distributed LLM service
@@ -367,7 +424,7 @@ GitHub repository access is not part of the production inference path.
 ```text
 github_token_required_for_production: false
 github_actions_production_role: false
-credential_authority_model: TC/TVC
+credential_authority_model: TV/TVC
 canonical_local_route_credential_requirement: NONE
 ```
 
@@ -453,6 +510,7 @@ pytest tests/test_distributed_workload.py -q
 python scripts/check_distributed_llm_workload.py
 pytest tests/test_distributed_executor.py -q
 python scripts/check_distributed_llm_executor.py
+pytest tests/test_http_provider_clients.py -q
 pytest tests/test_zai_intr_transport.py -q
 pytest tests/test_zai_intr_executor.py -q
 pytest tests/test_zai_tvc_runtime.py -q
