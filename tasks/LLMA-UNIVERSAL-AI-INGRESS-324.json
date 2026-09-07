@@ -5,6 +5,12 @@
   "issue": 324,
   "pull_request": 327,
   "source_branch": "llma-universal-ai-ingress-324",
+  "cosv": {
+    "profile": "task.v1",
+    "vector": "20010000110000",
+    "canonical_record": "StegVerse-Labs/.github:control/task-vectors/LLMA-UNIVERSAL-AI-INGRESS-324.json",
+    "authority_effect": "NONE"
+  },
   "goal": "Define one provider-independent AI ingress contract for hosted, local, resident, API, browser-mediated, and future AI entities while reusing existing provider, Interlock/InTr, TV/TVC, WorkerCoordinator, and Master Records ownership.",
   "state": "DRAFT_PR_OPEN_README_COMPLETENESS_PENDING_VALIDATION_UNPOSTED",
   "authority": {
