@@ -55,18 +55,31 @@ def execute_governed_kimi_via_tvc_runtime(
     usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records,
     max_output_tokens: int = 2048,
     response_format: str = "text",
+    admitted_envelope: KimiInTrEnvelope | None = None,
 ) -> KimiTVCRuntimeExecution:
     for label, value in (("session_id", session_id), ("transition_id", transition_id), ("measurement_id", measurement_id)):
         if not isinstance(value, str) or not value.strip():
             raise KimiTVCRuntimeExecutionError(f"{label}_required")
 
-    envelope = build_kimi_intr_envelope(
+    envelope = admitted_envelope or build_kimi_intr_envelope(
         request,
         transition_id=transition_id,
         ingress_disposition=ingress_disposition,
         ingress_receipt_hash=ingress_receipt_hash,
         carrier_ref=carrier_ref,
     )
+    if admitted_envelope is not None:
+        if (
+            envelope.transition_id != transition_id
+            or envelope.ingress_receipt_hash != ingress_receipt_hash
+            or envelope.carrier_ref != carrier_ref
+            or envelope.provider != "kimi"
+            or envelope.model != request.model
+            or envelope.authority_effect != "NONE"
+            or envelope.egress_intr_required is not True
+            or envelope.credential_material_present is not False
+        ):
+            raise KimiTVCRuntimeExecutionError("admitted Kimi envelope binding mismatch")
     broker = execute_kimi_via_tvc_broker(
         envelope,
         request,
