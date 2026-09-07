@@ -4,7 +4,7 @@
   "issue": 288,
   "repository": "StegVerse-org/LLM-adapter",
   "originating_goal": "Integrate the supplied Anthropic/Claude native Messages API transport as optional Interlock/InTr-governed interoperability without creating parallel authority or replacing the sovereign local route.",
-  "state": "SOURCE_IMPLEMENTED_LOCAL_VALIDATED / REPOSITORY_INTEGRATION_IN_PROGRESS",
+  "state": "SOURCE_IMPLEMENTED_LOCAL_VALIDATED / RUNTIME_PROFILE_BOUND / REPOSITORY_INTEGRATION_IN_PROGRESS",
   "authority_effect": "NONE_TRANSPORT_ONLY",
   "protocol_version": "stegverse.intr.anthropic.transport.v1",
   "canonical_sovereign_route_replaced": false,
@@ -25,6 +25,7 @@
     "new_scheduler_created": false,
     "profile_match_grants_execution_authority": false,
     "workercoordinator_admission_still_required": true,
+    "live_runtime_observation_still_required_before_provider_call": true,
     "interlock_intr_ingress_egress_still_required": true,
     "tvtvc_credential_materialization_still_required": true,
     "master_records_reconstruction_still_required": true
@@ -37,7 +38,7 @@
     "direction": "INTERNAL",
     "mutation_required": true,
     "deployment_required": false,
-    "current_observation_required": true
+    "current_observation_required": false
   },
   "source_validation": {
     "stdlib_unittest": "90/90 PASS",
