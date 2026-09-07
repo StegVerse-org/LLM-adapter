@@ -9,6 +9,9 @@
   "state": "SOURCE_COMPLETE_MERGED_RUNTIME_PROOF_REQUIRED",
   "repair_branch": "fix/external-llm-anthropic-canonical-306",
   "repair_pull_request": 318,
+  "reconciliation_pull_request": 319,
+  "reconciliation_merge_commit": "3a8d9336ff2791b8dc428950ce8a50282a8722f7",
+  "next_integration_task": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
   "authority": {
     "transition_admission": "Interlock/InTr",
     "credential_provider_operation": "TV/TVC",
@@ -40,15 +43,18 @@
     "pull_request_merge_commit": "fd6b887a046bc6016f4891d2f595679b6564da36",
     "postmerge_main_reconciliation": "02346f925c232a47f9df4b11d336e7c36c0e9b62",
     "canonical_conflict_side_repair_required": true,
-    "repair_pull_request": 318
-    ,"repair_pull_request_head": "26164ad40209e1ad5302f740236c0ba56678e604"
-    ,"repair_merge_commit": "f1deee785736075bb5d89a2678fd92d34b3dad1e"
-    ,"canonical_conflict_side_repaired": true
+    "repair_pull_request": 318,
+    "repair_pull_request_head": "26164ad40209e1ad5302f740236c0ba56678e604",
+    "repair_merge_commit": "f1deee785736075bb5d89a2678fd92d34b3dad1e",
+    "canonical_conflict_side_repaired": true,
+    "evidence_reconciliation_pull_request": 319,
+    "evidence_reconciliation_merge_commit": "3a8d9336ff2791b8dc428950ce8a50282a8722f7"
   },
   "readme_impact": {
     "implementation_change_required_readme": true,
     "implementation_readme_satisfied": true,
-    "repair_readme_satisfied": true
+    "repair_readme_satisfied": true,
+    "evidence_reconciliation": "NO_CHANGE_REQUIRED"
   },
   "validation": {
     "merged_pr_309_head": "fd6b887a046bc6016f4891d2f595679b6564da36",
@@ -75,5 +81,5 @@
     "activation": false,
     "release_authority": false
   },
-  "next_executable_action": "Reuse the existing WorkerCoordinator + Interlock/InTr + TV/TVC + Master Records lane for authentic same-execution provider proof; do not claim CONNECTED before exact ingress, provider execution, custody/reconstruction, and exact-response egress are all proven."
+  "next_executable_action": "Continue through SHWP-ECOSYSTEM-CHAT-INFERENCE-001 on the existing WorkerCoordinator + Interlock/InTr + TV/TVC + Master Records lane for authentic same-execution provider proof; do not claim CONNECTED before exact ingress, provider execution, custody/reconstruction, and exact-response egress are all proven."
 }
