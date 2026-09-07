@@ -4,7 +4,7 @@
   "issue": 306,
   "pull_request": 309,
   "repair_pull_request": 318,
-  "state": "PASS_BOUNDED_POST_MERGE_REPAIR_VALIDATED",
+  "state": "PASS_BOUNDED_POST_MERGE_REPAIR_MERGED",
   "canonical_resolution": {
     "root_handoff": "LLM_ADAPTER_MIRROR_HANDOFF.md",
     "scoped_handoff": "docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
@@ -34,11 +34,20 @@
     "satisfied_on_same_branch": true,
     "evidence": "README documents provider-neutral connection sequence, TV/TVC non-exportable credential boundary, runtime-profile semantics, exact ingress/egress evidence, source-vs-live distinction, and no demo/test production ownership."
   },
+  "reconciliation_readme_impact": {
+    "material_change": false,
+    "required": false,
+    "determination": "NO_CHANGE_REQUIRED",
+    "evidence": "This reconciliation records PR #318 validation and merge state only; it does not change behavior, runtime semantics, interfaces, governance or authority boundaries, evidence semantics, prerequisites, dependencies, failure behavior, or capability meaning."
+  },
   "validation": {
     "merged_pr_309_head": "fd6b887a046bc6016f4891d2f595679b6564da36",
     "validated_functional_tree": "ef3f051dcc3c80192fcbce6deafde8afc0132dc7",
     "published_repair_head": "b7cfe5a0b99842dbe2e2ff08281fc853e37d6fb2",
     "postmerge_main_reconciliation": "02346f925c232a47f9df4b11d336e7c36c0e9b62",
+    "repair_pull_request_head": "26164ad40209e1ad5302f740236c0ba56678e604",
+    "repair_merge_commit": "f1deee785736075bb5d89a2678fd92d34b3dad1e",
+    "repair_hosted_workflows": "8/8 SUCCESS",
     "canonical_main_integrated": "cde350e41d16a9932932b96d77c0dbd37b950284",
     "anthropic_288_source_validator": "43/43 PASS",
     "local_task_and_main_dependency_tests": "127/127 PASS",
@@ -53,7 +62,7 @@
   "functional_mutation_gate": {
     "preflight_passed": true,
     "additional_functional_mutation_allowed": false,
-    "reason": "PR #309 merged with the superseded Anthropic conflict side. The bounded repair reuses canonical #288, removes the duplicate direct-credential meaning, and passed exact functional-tree validation; only repair publication, hosted validation, merge, and reconciliation are admissible."
+    "reason": "The bounded canonical #288 repair is merged and validated. Further source mutation requires a newly evidenced bounded defect; the next admissible work is authentic runtime proof through existing authorities."
   },
   "claims": {
     "live_connection": false,

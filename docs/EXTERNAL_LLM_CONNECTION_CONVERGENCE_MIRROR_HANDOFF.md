@@ -4,7 +4,7 @@ Updated: 2026-09-07
 Repository: `StegVerse-org/LLM-adapter`
 Issue: #306
 Task: `LLMA-EXTERNAL-LLM-CONVERGENCE-306`
-State: `POST_MERGE_CANONICAL_ANTHROPIC_REPAIR_VALIDATED_RUNTIME_PROOF_REQUIRED`
+State: `SOURCE_COMPLETE_MERGED_RUNTIME_PROOF_REQUIRED`
 
 ## Goal
 
@@ -57,6 +57,7 @@ Anthropic #288 canonical mainline: MERGED / cde350e41d16a9932932b96d77c0dbd37b95
 #309 merge commit: fd6b887a046bc6016f4891d2f595679b6564da36
 postmerge main reconciliation: 02346f925c232a47f9df4b11d336e7c36c0e9b62
 bounded canonical repair: PR #318
+repair merge: f1deee785736075bb5d89a2678fd92d34b3dad1e
 ```
 
 No duplicate Interlock/InTr, TV/TVC, WorkerCoordinator, heartbeat/oscillator, runtime-profile authority, custody path, or provider-secret architecture is created by this task.
@@ -81,11 +82,11 @@ Source, CI, merge, public pages, and provider self-description are not live conn
 ## Current evidence
 
 ```text
-shared ProviderClient connection implementation: MERGED / REPAIR PENDING
+shared ProviderClient connection implementation: MERGED
 Z.ai TVC runtime binding: MERGED
 DeepSeek TVC runtime binding: EXISTING / REUSED
 Kimi TVC runtime binding: EXISTING / REUSED; egress verification repaired
-Anthropic TVC runtime binding: MERGED / CANONICAL #288 REPAIR PENDING
+Anthropic TVC runtime binding: MERGED / CANONICAL #288 REUSED
 TVC Z.ai provider profile: MERGED / 8faa70644dcb711aee73c976a50dd7a47f4ddf82
 README completeness: SATISFIED_ON_BRANCH
 machine preflight canonical resolution: PASS
@@ -94,6 +95,9 @@ PR #309 merge: fd6b887a046bc6016f4891d2f595679b6564da36
 validated bounded-repair functional tree: ef3f051dcc3c80192fcbce6deafde8afc0132dc7
 published repair head: b7cfe5a0b99842dbe2e2ff08281fc853e37d6fb2
 repair PR: #318
+repair PR head: 26164ad40209e1ad5302f740236c0ba56678e604
+repair merge: f1deee785736075bb5d89a2678fd92d34b3dad1e
+repair hosted workflows: 8/8 SUCCESS
 canonical Anthropic #288 source validator: 43/43 PASS
 local convergence + integrated dependency tests: 127/127 PASS
 hosted convergence validation: 34073656131 SUCCESS
@@ -111,4 +115,4 @@ This change materially affects provider/runtime semantics, interfaces, credentia
 
 ## Remaining admissibility gate
 
-The preflight resolved canonical handoffs, task registry, Master Records authority, cross-task coordination, duplicate-creation constraints, and README impact before functional mutation. PR #309 then merged with the superseded Anthropic conflict side. The bounded repair restores canonical #288 and has passed exact functional-tree validation. Repair merge and reconciliation cannot infer live provider execution, activation, custody, or downstream publication.
+The preflight resolved canonical handoffs, task registry, Master Records authority, cross-task coordination, duplicate-creation constraints, and README impact before functional mutation. PR #309 merged with the superseded Anthropic conflict side; bounded repair PR #318 restored canonical #288 and merged after all eight hosted workflows passed. This evidence-only reconciliation requires no README change because it alters no behavior, interface, authority boundary, evidence meaning, prerequisite, dependency, failure behavior, or capability meaning. No merge or validation evidence implies live provider execution, activation, custody, or downstream publication.
