@@ -3,17 +3,23 @@ name: validate-external-llm-convergence
 on:
   pull_request:
     paths:
+      - 'llm_adapter/provider_request.py'
+      - 'llm_adapter/http_provider_clients.py'
       - 'llm_adapter/*intr*'
       - 'llm_adapter/*tvc*'
       - 'llm_adapter/external_llm_connection.py'
       - 'llm_adapter/governed_external_provider_client.py'
       - 'llm_adapter/anthropic_convergence_bridge.py'
       - 'config/*runtime-profile.json'
+      - 'tests/test_http_provider_clients.py'
       - 'tests/test_*intr*'
       - 'tests/test_*tvc*'
       - 'tests/test_external_llm_connection.py'
       - 'tests/test_governed_external_provider_client.py'
       - 'docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md'
+      - 'docs/UNIVERSAL_AI_INGRESS_MIRROR_HANDOFF.md'
+      - 'tasks/LLMA-UNIVERSAL-AI-INGRESS-324.json'
+      - 'README.md'
   workflow_dispatch:
 
 permissions: {}
@@ -40,9 +46,11 @@ jobs:
           git checkout --detach FETCH_HEAD
       - name: Install source validation dependencies
         run: python3 -m pip install -e '.[dev]'
-      - name: Compile convergence modules
+      - name: Compile universal ingress and convergence modules
         run: >-
           python3 -m py_compile
+          llm_adapter/provider_request.py
+          llm_adapter/http_provider_clients.py
           llm_adapter/anthropic_intr_transport.py
           llm_adapter/anthropic_intr_executor.py
           llm_adapter/anthropic_convergence_bridge.py
@@ -52,9 +60,10 @@ jobs:
           llm_adapter/zai_tvc_runtime_executor.py
           llm_adapter/external_llm_connection.py
           llm_adapter/governed_external_provider_client.py
-      - name: Run governed connection tests
+      - name: Run governed connection and universal ingress tests
         run: >-
           python3 -m pytest -q
+          tests/test_http_provider_clients.py
           tests/test_anthropic_intr_transport.py
           tests/test_external_anthropic_tvc_runtime.py
           tests/test_zai_tvc_runtime.py
