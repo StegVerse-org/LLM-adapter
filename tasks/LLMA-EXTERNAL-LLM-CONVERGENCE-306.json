@@ -6,7 +6,9 @@
   "pull_request": 309,
   "source_branch": "feat/external-llm-convergence-306",
   "goal": "Converge Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic on one provider-neutral governed external-LLM connection primitive while preserving provider-specific wire adapters and existing authority boundaries.",
-  "state": "SOURCE_COMPLETE_MERGED_RUNTIME_PROOF_REQUIRED",
+  "state": "POST_MERGE_CANONICAL_REPAIR_VALIDATED",
+  "repair_branch": "fix/external-llm-anthropic-canonical-306",
+  "repair_pull_request": 318,
   "authority": {
     "transition_admission": "Interlock/InTr",
     "credential_provider_operation": "TV/TVC",
@@ -35,19 +37,23 @@
   },
   "merge_reconciliation": {
     "anthropic_mainline_merge": "cde350e41d16a9932932b96d77c0dbd37b950284",
-    "reconciled_exact_head": "c1353d4ded19a4673d58049fc7c6214d9d1d7265",
-    "reconciled_repository_validation": "34073941667 SUCCESS",
     "pull_request_merge_commit": "fd6b887a046bc6016f4891d2f595679b6564da36",
-    "mainline_confirmed": true
+    "postmerge_main_reconciliation": "02346f925c232a47f9df4b11d336e7c36c0e9b62",
+    "canonical_conflict_side_repair_required": true,
+    "repair_pull_request": 318
   },
   "readme_impact": {
     "implementation_change_required_readme": true,
     "implementation_readme_satisfied": true,
-    "postmerge_reconciliation": "NO_CHANGE_REQUIRED",
-    "postmerge_reason": "This reconciliation changes merge/task evidence only. It does not change repository behavior, runtime semantics, interfaces, governance or authority boundaries, evidence semantics, prerequisites, dependencies, failure behavior, or capability meaning."
+    "repair_readme_satisfied": true
   },
   "validation": {
-    "pre_merge_local_tests": "68/68 PASS",
+    "merged_pr_309_head": "fd6b887a046bc6016f4891d2f595679b6564da36",
+    "validated_functional_tree": "ef3f051dcc3c80192fcbce6deafde8afc0132dc7",
+    "published_repair_head": "b7cfe5a0b99842dbe2e2ff08281fc853e37d6fb2",
+    "canonical_main_integrated": "cde350e41d16a9932932b96d77c0dbd37b950284",
+    "anthropic_288_source_validator": "43/43 PASS",
+    "local_tests": "127/127 PASS",
     "hosted_runs": {
       "external_llm_convergence": "34073656131 SUCCESS",
       "zai": "34073656134 SUCCESS",
@@ -55,18 +61,15 @@
       "deepseek": "34073656136 SUCCESS",
       "distributed_workload": "34073656156 SUCCESS",
       "distributed_executor": "34073656129 SUCCESS",
-      "repository_validation": "34073656180 SUCCESS",
-      "post_anthropic_reconciliation_repository_validation": "34073941667 SUCCESS"
+      "repository_validation": "34073656180 SUCCESS"
     }
   },
   "claims": {
-    "source_complete": true,
-    "merged": true,
+    "source_complete": false,
     "live_provider_execution": false,
     "connected": false,
-    "master_records_runtime_custody": false,
     "activation": false,
     "release_authority": false
   },
-  "next_executable_action": "Reuse the existing WorkerCoordinator + Interlock/InTr + TV/TVC + Master Records runtime-proof lane to obtain authentic same-execution provider evidence. Do not create another provider architecture or claim CONNECTED until ingress ALLOW, TV/TVC provider operation, authentic provider response, Master Records custody/reconstruction, and exact-response egress ALLOW are all proven."
+  "next_executable_action": "Validate and merge repair PR #318, then reconcile mainline evidence; do not infer live provider execution, custody, connection, activation, or release authority."
 }

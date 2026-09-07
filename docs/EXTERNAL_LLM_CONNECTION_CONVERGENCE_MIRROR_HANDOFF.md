@@ -4,7 +4,7 @@ Updated: 2026-09-07
 Repository: `StegVerse-org/LLM-adapter`
 Issue: #306
 Task: `LLMA-EXTERNAL-LLM-CONVERGENCE-306`
-State: `SOURCE_COMPLETE_MERGED_RUNTIME_PROOF_REQUIRED`
+State: `POST_MERGE_CANONICAL_ANTHROPIC_REPAIR_VALIDATED_RUNTIME_PROOF_REQUIRED`
 
 ## Goal
 
@@ -42,71 +42,73 @@ Provider aliases and dispatch are centralized in `llm_adapter/external_llm_conne
 
 ```text
 root handoff: LLM_ADAPTER_MIRROR_HANDOFF.md
-scoped handoff: docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md
+provider handoffs:
+  docs/ZAI_INTR_TRANSPORT_MIRROR_HANDOFF.md
+  docs/DEEPSEEK_INTR_TRANSPORT_MIRROR_HANDOFF.md
+  docs/KIMI_INTR_TRANSPORT_MIRROR_HANDOFF.md
+  docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md (or current Anthropic scoped handoff where renamed)
 task registry: tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json
 Master Records custody/reconstruction authority: master-records/orchestration
 runtime owner: StegVerse-Labs/.github WorkerCoordinator resident lane
 credential/provider-operation authority: StegVerse-Labs/TVC
-TVC dependency #346: MERGED / 8faa70644dcb711aee73c976a50dd7a47f4ddf82
+cross-repo dependency: StegVerse-Labs/TVC#345 / PR #346
+cross-repo dependency state: MERGED as 8faa70644dcb711aee73c976a50dd7a47f4ddf82
 Anthropic #288 canonical mainline: MERGED / cde350e41d16a9932932b96d77c0dbd37b950284
-#309 reconciled exact head: c1353d4ded19a4673d58049fc7c6214d9d1d7265
 #309 merge commit: fd6b887a046bc6016f4891d2f595679b6564da36
+postmerge main reconciliation: 02346f925c232a47f9df4b11d336e7c36c0e9b62
+bounded canonical repair: PR #318
 ```
 
 No duplicate Interlock/InTr, TV/TVC, WorkerCoordinator, heartbeat/oscillator, runtime-profile authority, custody path, or provider-secret architecture is created by this task.
 
-## Provider source state
+## Provider state
 
-- Z.ai: governed InTr transport/executor plus TVC non-exportable runtime binding are merged through the shared connection primitive.
-- DeepSeek: existing InTr transport and TVC runtime-profile broker path are reused through the shared connection primitive.
-- Kimi/Moonshot: existing InTr transport and TVC runtime-profile broker path are reused; exact-response TVC runtime egress verification is included.
-- Anthropic: canonical #288 transport artifacts were reconciled with the convergence path; the TVC non-exportable broker/runtime binding and exact-response egress verification are merged.
+- Z.ai: existing governed InTr transport/executor is reused. This change set adds `stegverse:runtime-profile:llm-adapter-zai:v1`, a TVC non-exportable broker binding, provider-usage/Master Records continuation, and exact-response egress verification. TVC PR #346 is merged and supplies the corresponding `zai` provider-operation profile under the existing broker.
+- DeepSeek: existing InTr transport and existing TVC runtime-profile broker path remain the canonical production path and are dispatched through the shared connection primitive.
+- Kimi/Moonshot: existing InTr transport and existing TVC runtime-profile broker path remain the canonical production path. Missing exact-response TVC runtime egress admission is repaired in this change set.
+- Anthropic: canonical task #288 now owns `stegverse.intr.anthropic.transport.v1`. This change set reuses that implementation through a provider-request bridge and the TVC non-exportable broker binding using the already-existing Anthropic provider-operation profile, provider-usage/Master Records continuation, and exact-response egress verification. The superseded direct-credential compatibility route fails closed.
 
-Direct credential-resolver executors remain compatibility/test surfaces. Production convergence targets TVC non-exportable provider execution for all four providers.
+Direct credential-resolver executors remain compatibility/test surfaces for Z.ai, DeepSeek, and Kimi. Anthropic requires its canonical TVC non-exportable path. The convergence target is TVC non-exportable provider execution for all four providers.
 
-## Validation and merge evidence
+## Demo/test boundary
 
-```text
-local convergence + integrated dependency tests: 68/68 PASS
-hosted convergence validation: 34073656131 SUCCESS
-hosted repository validation: 34073656180 SUCCESS
-hosted Z.ai/Kimi/DeepSeek/distributed validations: ALL SUCCESS
-canonical Anthropic #288 mainline reconciled: cde350e41d16a9932932b96d77c0dbd37b950284
-reconciled exact head: c1353d4ded19a4673d58049fc7c6214d9d1d7265
-reconciled repository validation: 34073941667 SUCCESS
-PR #309: MERGED
-merge commit: fd6b887a046bc6016f4891d2f595679b6564da36
-mainline confirmation: PASS
-```
-
-## README completeness
-
-The functional convergence change materially affected provider/runtime semantics, interfaces, credential boundaries, evidence semantics, and failure behavior, so the repository README was updated in the implementation change set. That completeness predicate remains satisfied.
-
-This post-merge reconciliation is evidence/task-state only. `README: NO_CHANGE_REQUIRED` is supported because this reconciliation changes no repository behavior, runtime semantics, interface, governance or authority boundary, evidence meaning, prerequisite, dependency, failure behavior, or capability meaning.
+`StegVerse-org/stegverse-demo-suite` has no ownership, runtime, credential, custody, or production connection role in this lane.
 
 ## Runtime proof boundary
 
-Source, validation, merge, tags, releases, public pages, and provider self-description are not live connection evidence. A provider is `CONNECTED` only after authentic same-execution evidence proves all of:
+Source, CI, merge, public pages, and provider self-description are not live connection evidence. A provider is `CONNECTED` only after authentic same-execution evidence proves ingress ALLOW, TV/TVC single-use provider operation, provider response, Master Records custody/reconstruction, and exact-response egress ALLOW.
 
-1. exact-request Interlock/InTr ingress ALLOW;
-2. TV/TVC single-use non-exportable provider operation;
-3. authentic provider response;
-4. Master Records custody/reconstruction;
-5. exact-response Interlock/InTr egress ALLOW.
-
-Current live claims remain:
+## Current evidence
 
 ```text
+shared ProviderClient connection implementation: MERGED / REPAIR PENDING
+Z.ai TVC runtime binding: MERGED
+DeepSeek TVC runtime binding: EXISTING / REUSED
+Kimi TVC runtime binding: EXISTING / REUSED; egress verification repaired
+Anthropic TVC runtime binding: MERGED / CANONICAL #288 REPAIR PENDING
+TVC Z.ai provider profile: MERGED / 8faa70644dcb711aee73c976a50dd7a47f4ddf82
+README completeness: SATISFIED_ON_BRANCH
+machine preflight canonical resolution: PASS
+canonical main integrated: cde350e41d16a9932932b96d77c0dbd37b950284
+PR #309 merge: fd6b887a046bc6016f4891d2f595679b6564da36
+validated bounded-repair functional tree: ef3f051dcc3c80192fcbce6deafde8afc0132dc7
+published repair head: b7cfe5a0b99842dbe2e2ff08281fc853e37d6fb2
+repair PR: #318
+canonical Anthropic #288 source validator: 43/43 PASS
+local convergence + integrated dependency tests: 127/127 PASS
+hosted convergence validation: 34073656131 SUCCESS
+hosted repository validation: 34073656180 SUCCESS
+hosted Z.ai/Kimi/DeepSeek/distributed validations: ALL SUCCESS
 live Z.ai execution: NOT CLAIMED
 live DeepSeek execution: NOT CLAIMED
 live Kimi execution: NOT CLAIMED
 live Anthropic execution: NOT CLAIMED
-CONNECTED: NOT CLAIMED
-activation: NOT CLAIMED
-release authority: NOT CLAIMED
 ```
 
-## Next admissible work
+## README completeness
 
-Reuse the existing WorkerCoordinator + Interlock/InTr + TV/TVC + Master Records runtime-proof chain. Do not create another provider connector architecture, credential path, custody implementation, heartbeat authority, or runtime-profile authority. Source mutation is admissible only if authentic runtime proof exposes a bounded implementation defect.
+This change materially affects provider/runtime semantics, interfaces, credential boundaries, evidence semantics, and failure behavior. The repository README has been updated in this same branch with the provider-neutral governed connection sequence, source surfaces, authority boundaries, runtime-profile semantics, and source-vs-live-evidence distinction. README completeness is therefore satisfied for this change set.
+
+## Remaining admissibility gate
+
+The preflight resolved canonical handoffs, task registry, Master Records authority, cross-task coordination, duplicate-creation constraints, and README impact before functional mutation. PR #309 then merged with the superseded Anthropic conflict side. The bounded repair restores canonical #288 and has passed exact functional-tree validation. Repair merge and reconciliation cannot infer live provider execution, activation, custody, or downstream publication.

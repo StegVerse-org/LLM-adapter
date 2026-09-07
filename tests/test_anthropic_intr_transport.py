@@ -1,30 +1,48 @@
-from types import SimpleNamespace
-import pytest
+import unittest
 
-from llm_adapter.provider_request import ProviderRequest, ProviderMessage
-import llm_adapter.anthropic_intr_transport as mod
-
-
-def request():
-    return ProviderRequest(provider="anthropic", model="claude-opus-5", messages=(ProviderMessage(role="user", content="hello"),), temperature=0.2)
+from llm_adapter.anthropic_intr_transport import (
+    ProviderRequest, IngressDecision, TransportConfig, HashBindingMismatch,
+    PayloadRejected, build_transport_envelope, compute_request_hash,
+    compute_transport_id, map_request_to_anthropic,
+)
 
 
-def test_envelope_requires_ingress_allow():
-    with pytest.raises(mod.AnthropicTransportAdmissionError):
-        mod.build_anthropic_intr_envelope(request(), transition_id="t", ingress_disposition="DENY", ingress_receipt_hash="a"*64, carrier_ref="hb32:x")
+def request(model="claude-sonnet-5", payload=None):
+    payload = payload or {"messages": [{"role": "user", "content": "ping"}], "max_tokens": 32}
+    draft = ProviderRequest("anthropic", model, "anthropic_messages", payload, "0" * 64, "tx-1", "session-1")
+    return ProviderRequest(draft.provider, draft.model, draft.endpoint_profile, draft.payload, compute_request_hash(draft), draft.transition_id, draft.session_id)
 
 
-def test_envelope_binds_exact_wire_hash():
-    env = mod.build_anthropic_intr_envelope(request(), transition_id="t", ingress_disposition="ALLOW", ingress_receipt_hash="a"*64, carrier_ref="hb32:x")
-    assert env.protocol_version == "stegverse.intr.anthropic.transport.v1"
-    assert env.request_hash == mod.anthropic_wire_request_hash(request())
-    assert env.credential_authority == "TV/TVC"
-    assert env.authority_effect == "NONE"
-    assert env.egress_intr_required is True
+class AnthropicTransportTests(unittest.TestCase):
+    def test_request_hash_and_transport_id_are_deterministic(self):
+        r = request()
+        ingress = IngressDecision("ALLOW", r.request_hash, r.transition_id, "a" * 64, "carrier://test")
+        e1 = build_transport_envelope(r, ingress, TransportConfig())
+        e2 = build_transport_envelope(r, ingress, TransportConfig())
+        self.assertEqual(e1, e2)
+        self.assertEqual(e1["transport_id"], compute_transport_id(transition_id="tx-1", request_hash=r.request_hash, ingress_receipt_hash="a" * 64, carrier_ref="carrier://test", endpoint_profile="anthropic_messages"))
+        self.assertEqual(e1["authority_effect"], "NONE")
+        self.assertTrue(e1["egress_intr_required"])
+
+    def test_ingress_hash_mismatch_fails_closed(self):
+        r = request()
+        ingress = IngressDecision("ALLOW", "b" * 64, r.transition_id, "a" * 64, "carrier://test")
+        with self.assertRaises(HashBindingMismatch):
+            build_transport_envelope(r, ingress, TransportConfig())
+
+    def test_claude5_manual_thinking_and_sampling_fail_closed(self):
+        p = {"messages": [{"role": "user", "content": "ping"}], "max_tokens": 32, "thinking": {"type": "enabled", "budget_tokens": 10}}
+        with self.assertRaises(PayloadRejected):
+            map_request_to_anthropic(request(payload=p), TransportConfig())
+        p2 = {"messages": [{"role": "user", "content": "ping"}], "max_tokens": 32, "temperature": 0.2}
+        with self.assertRaises(PayloadRejected):
+            map_request_to_anthropic(request(payload=p2), TransportConfig())
+
+    def test_claude5_assistant_prefill_rejected(self):
+        p = {"messages": [{"role": "user", "content": "ping"}, {"role": "assistant", "content": "prefill"}], "max_tokens": 32}
+        with self.assertRaises(PayloadRejected):
+            map_request_to_anthropic(request(payload=p), TransportConfig())
 
 
-def test_system_message_is_separated_from_conversation():
-    req = ProviderRequest(provider="anthropic", model="claude-opus-5", messages=(ProviderMessage(role="system", content="sys"), ProviderMessage(role="user", content="hello")), temperature=0.1)
-    payload = mod.anthropic_wire_payload(req)
-    assert payload["system"] == "sys"
-    assert payload["messages"] == [{"role":"user","content":"hello"}]
+if __name__ == "__main__":
+    unittest.main()
