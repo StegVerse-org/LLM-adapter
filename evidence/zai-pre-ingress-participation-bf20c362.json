@@ -1,0 +1,15 @@
+{
+  "record_type": "STEGVERSE_AI_ENTITY_PRE_INGRESS_PARTICIPATION",
+  "protocol_version": "stegverse.intr.zai.transport.v1",
+  "state": "PRE_INGRESS",
+  "canonical_parent": "docs/ZAI_INTR_TRANSPORT_MIRROR_HANDOFF.md",
+  "provider_surface": "Z.ai",
+  "ui_selected_model": "GLM-5.3-Flash",
+  "conversation_reference": "bf20c362-5975-43ca-9005-9c3c88aec5be",
+  "requested_actions": ["INSPECT", "DIAGNOSE", "PROPOSE", "SIMULATE", "AGREE", "DISAGREE", "ABSTAIN"],
+  "sandbox_admission_claimed": false,
+  "runtime_execution_claimed": false,
+  "activation_claimed": false,
+  "authority_effect": "NONE",
+  "receipt": null
+}
