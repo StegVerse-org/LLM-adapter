@@ -1,0 +1,30 @@
+{
+  "schema": "stegverse.machine-preflight/v1",
+  "task": "LLMA-UNIVERSAL-AI-INGRESS-324",
+  "issue": 324,
+  "repository": "StegVerse-org/LLM-adapter",
+  "state": "PREFLIGHT_PASS",
+  "canonical_resolution": {
+    "root_handoff": "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "predecessor_handoff": "docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+    "predecessor_task": "tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+    "master_records_authority": "master-records/orchestration",
+    "transition_authority": "Interlock/InTr",
+    "credential_provider_operation_authority": "TV/TVC",
+    "runtime_work_owner": "StegVerse-Labs/.github::WorkerCoordinator"
+  },
+  "reuse": [
+    "llm_adapter/provider_request.py::ProviderRequest",
+    "llm_adapter/provider_client.py::ProviderResponse",
+    "llm_adapter/provider_client.py::ProviderClient",
+    "llm_adapter/external_llm_connection.py::execute_governed_external_llm",
+    "llm_adapter/external_llm_connection.py::admit_external_llm_egress"
+  ],
+  "duplicate_owner_rule": "No provider transport, transition authority, credential authority, worker authority, custody authority, or runtime implementation may be recreated by this task.",
+  "readme_impact": {
+    "required": true,
+    "reason": "The task materially changes the public interface vocabulary, provider capability semantics, confinement/failure behavior, and supported ingress architecture. README must be updated in the same change set."
+  },
+  "runtime_claim_boundary": "Source/CI may establish contract correctness only; CONNECTED or governed live execution requires authentic same-execution ingress, provider/runtime execution, custody/reconstruction, and exact-response egress proof.",
+  "admissible_next_action": "Implement the canonical provider-independent ingress envelope, adapter registry, shared validation and contract tests, README documentation, task registry, and scoped mirror handoff on a bounded branch."
+}
