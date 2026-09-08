@@ -27,6 +27,7 @@ from llm_adapter.master_records_usage_submission import (
     submit_provider_usage_to_master_records,
 )
 from llm_adapter.provider_usage_submission import persist_provider_usage
+from llm_adapter.resident_evidence_api import router as resident_evidence_router
 from llm_adapter.resident_rendezvous_api import router as resident_rendezvous_router
 from llm_adapter.usage_session_api import router as usage_session_router
 
@@ -52,6 +53,7 @@ app.include_router(usage_session_router)
 app.include_router(hil_intake_router)
 app.include_router(hil_publication_router)
 app.include_router(resident_rendezvous_router)
+app.include_router(resident_evidence_router)
 app.include_router(org_federation_rendezvous_router)
 
 
@@ -101,8 +103,10 @@ def stegverse_node_advertisement(request: Request) -> dict:
         "evaluator_intr_gateway_authority": "NONE",
         "resident_rendezvous_request_endpoint": f"{base_url}/api/resident-rendezvous/v1/requests",
         "resident_rendezvous_ack_endpoint": f"{base_url}/api/resident-rendezvous/v1/acknowledgements",
+        "resident_rendezvous_site_custody_evidence_endpoint": f"{base_url}/api/resident-rendezvous/v1/evidence/site-governed-custody",
         "resident_rendezvous_enabled": os.getenv("STEGVERSE_RESIDENT_RENDEZVOUS_ENABLED", "false").lower() == "true",
         "resident_rendezvous_gateway_execution_authority": "NONE",
+        "resident_rendezvous_evidence_authority_effect": "NONE_EVIDENCE_ONLY",
         "org_federation_frame_endpoint": f"{base_url}/api/org-federation/v1/frames",
         "org_federation_ack_endpoint": f"{base_url}/api/org-federation/v1/acknowledgements",
         "org_federation_enabled": os.getenv("STEGVERSE_ORG_FEDERATION_RENDEZVOUS_ENABLED", "false").lower() == "true",
