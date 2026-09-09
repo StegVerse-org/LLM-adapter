@@ -2,8 +2,9 @@
 """Verify the External Chat publication/mutation staging boundary.
 
 Default mode validates the repository-local mutation health contract without
-network access or mutation. Live health verification is explicit. A real
-staging mutation requires live mode, every required environment value, and
+network access or mutation. Live health verification is explicit and requires an
+explicit STEGVERSE_GATEWAY_BASE_URL. No third-party gateway is selected by default.
+A real staging mutation requires live mode, every required environment value, and
 STEGVERSE_STAGING_MUTATION_EXECUTE=true.
 """
 from __future__ import annotations
@@ -73,10 +74,9 @@ def main() -> int:
     if execute and not live_verify:
         raise RuntimeError("staging mutation execution requires STEGVERSE_STAGING_VERIFY_LIVE=true")
 
-    gateway = os.getenv(
-        "STEGVERSE_GATEWAY_BASE_URL",
-        "https://stegverse-ecosystem-chat-gateway.onrender.com",
-    ).rstrip("/")
+    gateway = os.getenv("STEGVERSE_GATEWAY_BASE_URL", "").strip().rstrip("/")
+    if live_verify and not gateway:
+        raise RuntimeError("live staging verification requires explicit STEGVERSE_GATEWAY_BASE_URL")
 
     if live_verify:
         status, health = request_json("GET", f"{gateway}/api/external-review/repository-mutation/health")
@@ -92,7 +92,7 @@ def main() -> int:
         if health.get("mutation_enabled") is not False:
             print("STAGING MUTATION VERIFY: FAIL - non-mutating verification requires mutation disabled")
             return 1
-        mode = "live" if live_verify else "repository-local"
+        mode = "live-explicit-gateway" if live_verify else "repository-local"
         print(f"STAGING MUTATION VERIFY: PASS ({mode} health contract verified; mutation disabled; no write attempted)")
         return 0
 
