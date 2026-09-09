@@ -65,10 +65,17 @@ def test_arbitrary_query_bytes_do_not_change_logged_request_identity():
     assert one == two
 
 
-def test_runtime_disables_uvicorn_request_target_access_log():
+def test_runtime_entrypoint_disables_uvicorn_request_target_access_log():
     source = (Path(__file__).resolve().parents[1] / "llm_adapter" / "runtime_gateway.py").read_text(encoding="utf-8")
     assert "access_log=False" in source
     assert "QuerySecretSafeAccessLogMiddleware(_base_app)" in source
+
+
+def test_render_deployed_entrypoint_suppresses_uvicorn_access_logger_and_wraps_app():
+    source = (Path(__file__).resolve().parents[1] / "llm_adapter" / "deployed_gateway.py").read_text(encoding="utf-8")
+    assert 'logging.getLogger("uvicorn.access").disabled = True' in source
+    assert "app = QuerySecretSafeAccessLogMiddleware(app)" in source
+    assert source.index('logging.getLogger("uvicorn.access").disabled = True') < source.index("app = QuerySecretSafeAccessLogMiddleware(app)")
 
 
 def test_safe_middleware_never_reads_query_or_sensitive_request_surfaces():
