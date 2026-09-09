@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from llm_adapter.attachment_intake import router as attachment_router
 from llm_adapter.combined_gateway import app
 from llm_adapter.math_solver_gateway import router as math_solver_router
@@ -16,6 +18,13 @@ from llm_adapter.service_gateway_hil_intr import router as hil_intr_router
 from llm_adapter.service_gateway_sv002_observation import router as sv002_observation_router
 from llm_adapter.service_gateway_personal_origin import personal_origin_middleware
 from llm_adapter.query_safe_access_log import QuerySecretSafeAccessLogMiddleware
+
+# Render launches this module with Uvicorn directly rather than through
+# runtime_gateway.main(). Uvicorn configures its loggers before importing the app,
+# so disabling the request-target access logger here prevents its default
+# `"GET /path?query HTTP/1.1"` record from persisting callback query material.
+# The Gateway-owned path-only logger below remains enabled separately.
+logging.getLogger("uvicorn.access").disabled = True
 
 app.include_router(math_solver_router)
 app.include_router(attachment_router)
@@ -52,9 +61,8 @@ app.add_api_route(
 # all other personal-origin paths fail closed.
 app.middleware("http")(personal_origin_middleware)
 
-# Render's production Service Gateway starts `uvicorn llm_adapter.deployed_gateway:app`.
 # Wrap the fully composed production entrypoint after all routers/middleware are
-# installed so request-target query material is never serialized by the Gateway-
-# owned access logger. Uvicorn's own request-target access logging must remain
-# disabled at the process boundary; deployed observation is still required.
+# installed. This logger records only method + canonical path + status and never
+# reads query_string/raw_path/headers/body. Deployed observation is still required
+# before the public callback can be represented as query-safe at runtime.
 app = QuerySecretSafeAccessLogMiddleware(app)
