@@ -6,8 +6,23 @@ submission when the endpoint is disabled and never invents custody state.
 from __future__ import annotations
 
 import json
+import os
 
 from llm_adapter.master_records_client import enabled, process_pending
+
+
+def configured_limit(default: int = 20) -> int:
+    """Resolve an explicit bounded worker limit without inferring authority."""
+    raw = os.getenv("STEGVERSE_CUSTODY_WORKER_LIMIT", "").strip()
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise ValueError("STEGVERSE_CUSTODY_WORKER_LIMIT must be a non-negative integer") from exc
+    if value < 0 or value > 100:
+        raise ValueError("STEGVERSE_CUSTODY_WORKER_LIMIT must be between 0 and 100")
+    return value
 
 
 def run(limit: int = 20) -> dict[str, object]:
@@ -32,7 +47,7 @@ def run(limit: int = 20) -> dict[str, object]:
 
 
 def main() -> int:
-    result = run()
+    result = run(limit=configured_limit())
     print(json.dumps(result, sort_keys=True))
     return 0
 
