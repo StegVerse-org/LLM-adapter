@@ -48,7 +48,6 @@ service = [
     "python-multipart>=0.0.9",
     "pillow>=10.0",
     "pillow-heif>=0.16",
-    "stegcore @ git+https://github.com/StegVerse-Labs/StegCore.git@8c484e584d60a3bd2763d6948d0eb3f4afd67e0c",
 ]
 
 [project.scripts]
