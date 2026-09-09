@@ -15,6 +15,7 @@ from llm_adapter.service_gateway_evaluator_intr import router as evaluator_intr_
 from llm_adapter.service_gateway_hil_intr import router as hil_intr_router
 from llm_adapter.service_gateway_sv002_observation import router as sv002_observation_router
 from llm_adapter.service_gateway_personal_origin import personal_origin_middleware
+from llm_adapter.query_safe_access_log import QuerySecretSafeAccessLogMiddleware
 
 app.include_router(math_solver_router)
 app.include_router(attachment_router)
@@ -38,7 +39,6 @@ app.add_api_route(
     status_code=202,
 )
 
-
 # Serve only TVC-projected public ACME HTTP-01 key-authorization bytes.
 # This route has no mutation, signing, CA, credential, or provider authority.
 app.add_api_route(
@@ -47,8 +47,14 @@ app.add_api_route(
     methods=["GET"],
 )
 
-
 # Isolate the dedicated stegverse.me virtual origin from the rest of the shared
 # Gateway API surface. The middleware only serves the verified public bundle;
 # all other personal-origin paths fail closed.
 app.middleware("http")(personal_origin_middleware)
+
+# Render's production Service Gateway starts `uvicorn llm_adapter.deployed_gateway:app`.
+# Wrap the fully composed production entrypoint after all routers/middleware are
+# installed so request-target query material is never serialized by the Gateway-
+# owned access logger. Uvicorn's own request-target access logging must remain
+# disabled at the process boundary; deployed observation is still required.
+app = QuerySecretSafeAccessLogMiddleware(app)
