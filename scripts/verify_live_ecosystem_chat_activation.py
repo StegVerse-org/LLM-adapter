@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Verify the deployed Ecosystem Chat, provider usage, and custody path.
+"""Verify an explicitly selected Ecosystem Chat runtime, provider usage, and custody path.
 
 The verifier requires no browser credential and never mutates a repository. It writes
-one machine-readable result suitable for workflow retention. A non-ready deployment
-is reported as PENDING rather than hidden behind a transport exception. Transient
-network and cold-start failures are retried within a bounded window.
+one machine-readable result suitable for evidence retention. A non-ready runtime is
+reported as PENDING rather than hidden behind a transport exception. No hosted or
+third-party gateway is selected implicitly; live verification requires an explicit
+STEGVERSE_GATEWAY_BASE_URL supplied by the invoking resident/runtime lane.
 """
 from __future__ import annotations
 
@@ -17,10 +18,7 @@ from hashlib import sha256
 from pathlib import Path
 from urllib import error, request
 
-BASE_URL = os.getenv(
-    "STEGVERSE_GATEWAY_BASE_URL",
-    "https://stegverse-ecosystem-chat-gateway.onrender.com",
-).rstrip("/")
+BASE_URL = os.getenv("STEGVERSE_GATEWAY_BASE_URL", "").strip().rstrip("/")
 OUTPUT = Path(os.getenv("STEGVERSE_LIVE_ACTIVATION_OUTPUT", "receipts/ecosystem-chat-live-activation.latest.json"))
 TIMEOUT = float(os.getenv("STEGVERSE_LIVE_ACTIVATION_TIMEOUT_SECONDS", "35"))
 ATTEMPTS = max(1, int(os.getenv("STEGVERSE_LIVE_ACTIVATION_ATTEMPTS", "5")))
@@ -31,8 +29,6 @@ RETAINED_RESPONSE_HEADERS = {
     "date",
     "server",
     "via",
-    "x-render-origin-server",
-    "x-render-routing",
     "x-request-id",
 }
 
@@ -74,7 +70,7 @@ def fetch_json(
             headers={
                 "Accept": "application/json",
                 "Content-Type": "application/json",
-                "User-Agent": "StegVerse-Ecosystem-Chat-Live-Activation/2.0",
+                "User-Agent": "StegVerse-Ecosystem-Chat-Live-Activation/2.1",
                 **(headers or {}),
             },
         )
@@ -116,7 +112,9 @@ def result(state: str, blockers: list[str], evidence: dict) -> dict:
         "schema": "stegverse.ecosystem_chat.live_activation.v1",
         "state": state,
         "observed_at": datetime.now(timezone.utc).isoformat(),
-        "gateway_base_url": BASE_URL,
+        "gateway_base_url": BASE_URL or None,
+        "gateway_selection": "EXPLICIT_RUNTIME_INPUT_ONLY",
+        "implicit_third_party_gateway": False,
         "verification_policy": {
             "attempts_per_request": ATTEMPTS,
             "retry_delay_seconds": RETRY_DELAY,
@@ -133,6 +131,21 @@ def result(state: str, blockers: list[str], evidence: dict) -> dict:
 
 
 def main() -> int:
+    if not BASE_URL:
+        payload = result(
+            "PENDING",
+            ["explicit_gateway_base_url_required"],
+            {
+                "gateway_selection": "NONE",
+                "third_party_fallback_selected": False,
+                "resident_runtime_discovery_required": True,
+            },
+        )
+        OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+        OUTPUT.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print(json.dumps({"state": payload["state"], "blockers": payload["blockers"], "output": str(OUTPUT)}))
+        return 2
+
     blockers: list[str] = []
     evidence: dict = {}
     try:

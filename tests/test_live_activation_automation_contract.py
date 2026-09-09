@@ -25,10 +25,16 @@ def test_live_activation_verifier_preserves_required_boundaries() -> None:
         "transport_retry_exhausted",
         "RETRYABLE_HTTP",
         '"verification_policy"',
+        "explicit_gateway_base_url_required",
+        '"implicit_third_party_gateway": False',
+        '"gateway_selection": "EXPLICIT_RUNTIME_INPUT_ONLY"',
     ):
         assert required in source
     assert "STEGVERSE_PROVIDER_TOKEN" not in source
     assert "STEGVERSE_MASTER_RECORDS_TOKEN" not in source
+    assert "onrender.com" not in source
+    assert "vercel.app" not in source
+    assert "netlify.app" not in source
 
 
 def test_validate_workflow_is_validation_only_and_credential_clean() -> None:
@@ -133,9 +139,24 @@ def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing
         '"status_is_deployment_authority": False',
         '"status_is_custody": False',
         '"status_is_release_authority": False',
+        '"gateway_selection": "OBSERVATION_EXPLICIT_ONLY"',
+        '"implicit_third_party_gateway": False',
         "sorted(set(blockers))",
         "status_sha256",
     ):
         assert required in source
+    assert "DEFAULT_GATEWAY" not in source
+    assert "onrender.com" not in source
+    assert "vercel.app" not in source
+    assert "netlify.app" not in source
     assert "observed_at" not in source
     assert "generated_at" not in source
+
+
+def test_external_staging_live_check_has_no_implicit_hosted_gateway() -> None:
+    source = (ROOT / "scripts/verify_external_publication_staging.py").read_text()
+    assert 'os.getenv("STEGVERSE_GATEWAY_BASE_URL", "")' in source
+    assert "live staging verification requires explicit STEGVERSE_GATEWAY_BASE_URL" in source
+    assert "onrender.com" not in source
+    assert "vercel.app" not in source
+    assert "netlify.app" not in source

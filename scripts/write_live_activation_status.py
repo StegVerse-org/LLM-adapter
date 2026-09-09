@@ -4,7 +4,7 @@
 The output intentionally omits timestamps and volatile request evidence. It changes only
 when the semantic blocker or gate posture changes. Missing or malformed observations are
 converted into durable fail-closed blockers rather than causing the status writer itself
-to fail.
+to fail. No third-party gateway is implied when an observation does not name one.
 """
 from __future__ import annotations
 
@@ -16,7 +16,6 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "receipts" / "ecosystem-chat-live-activation.latest.json"
 OUTPUT = ROOT / "reports" / "ecosystem-chat-live-activation-status.json"
-DEFAULT_GATEWAY = "https://stegverse-ecosystem-chat-gateway.onrender.com"
 
 
 def canonical_sha(value: dict[str, Any]) -> str:
@@ -46,19 +45,13 @@ def main() -> int:
     chat = evidence.get("chat") if isinstance(evidence.get("chat"), dict) else {}
     transition = evidence.get("transition") if isinstance(evidence.get("transition"), dict) else {}
     provider = chat.get("provider") if isinstance(chat.get("provider"), dict) else {}
-    provider_usage = (
-        chat.get("master_records_usage_submission")
-        if isinstance(chat.get("master_records_usage_submission"), dict)
-        else {}
-    )
+    provider_usage = chat.get("master_records_usage_submission") if isinstance(chat.get("master_records_usage_submission"), dict) else {}
 
     observation_blockers = observation.get("blockers", [])
     if not isinstance(observation_blockers, list):
         structural_blockers.append("live_activation_blockers_not_list")
         observation_blockers = []
-    blockers = sorted(
-        {str(item) for item in [*structural_blockers, *observation_blockers] if str(item)}
-    )
+    blockers = sorted({str(item) for item in [*structural_blockers, *observation_blockers] if str(item)})
 
     requested_state = str(observation.get("state") or "PENDING")
     if requested_state not in {"PENDING", "VERIFIED"}:
@@ -69,12 +62,21 @@ def main() -> int:
         requested_state = "PENDING"
     blockers = sorted(set(blockers))
 
+    gateway_base_url = observation.get("gateway_base_url")
+    if gateway_base_url is not None and not isinstance(gateway_base_url, str):
+        blockers.append("live_activation_gateway_base_url_invalid")
+        gateway_base_url = None
+        requested_state = "PENDING"
+    blockers = sorted(set(blockers))
+
     payload: dict[str, Any] = {
         "schema": "stegverse.ecosystem_chat.live_activation_status.v1",
         "repository": "StegVerse-org/LLM-adapter",
         "state": requested_state,
         "blockers": blockers,
-        "gateway_base_url": observation.get("gateway_base_url") or DEFAULT_GATEWAY,
+        "gateway_base_url": gateway_base_url,
+        "gateway_selection": "OBSERVATION_EXPLICIT_ONLY",
+        "implicit_third_party_gateway": False,
         "gates": {
             "gateway_health_ok": health.get("status") == "ok",
             "durable_storage": health.get("storage_durable_across_restarts") is True,
@@ -87,7 +89,7 @@ def main() -> int:
             "transition_reconstructability_pass": transition.get("reconstruction_status") == "PASS",
         },
         "manual_user_action_required": False,
-        "continuation_mode": "scheduled_workflow_managed",
+        "continuation_mode": "resident_worker_managed",
         "authority_boundary": {
             "status_is_activation_authority": False,
             "status_is_deployment_authority": False,
