@@ -79,7 +79,7 @@ jobs:
 
       - name: Compile Coinbase staging source
         run: |
-n          python3 -m py_compile \
+          python3 -m py_compile \
             llm_adapter/service_gateway_coinbase_skap.py \
             llm_adapter/service_gateway_composed.py \
             llm_adapter/runtime_gateway.py \
