@@ -478,3 +478,21 @@ The repository can still contain hosted-provider clients, fixture providers, Dem
 ## Repository
 
 https://github.com/StegVerse-org/LLM-adapter
+
+## Service Gateway query-secret-safe access logging
+
+The sovereign Service Gateway runtime disables Uvicorn's built-in request-target access log and wraps the fully composed Gateway application in `QuerySecretSafeAccessLogMiddleware`. The Gateway-owned logger records only the HTTP method, canonical ASGI path, and response status. It does not read or serialize the ASGI query string, raw request target, headers, cookies, or request body.
+
+This boundary exists so secret-bearing callback ingress such as `/tvc/google-drive/callback` can be transported without the Service Gateway application persisting OAuth authorization-code or state query material in its access log. TVC remains the callback, provider-session, credential, and provider-operation owner; this logging change transfers none of those responsibilities or authorities to LLM-adapter.
+
+Source tests and CI can prove the logging implementation and fail-closed source boundary only. A source merge is **not** evidence that the active `stegverse.org -> TVC` public path is running this implementation. The Personal-KV Google Drive callback must remain runtime-pending until authentic deployed-ingress observation confirms the active Service Gateway path preserves the same query-safe behavior.
+
+Canonical source surfaces:
+
+```text
+llm_adapter/query_safe_access_log.py
+llm_adapter/runtime_gateway.py
+tests/test_service_gateway_query_safe_logging.py
+docs/SERVICE_GATEWAY_QUERY_SECRET_SAFE_INGRESS_MIRROR_HANDOFF.md
+tasks/LLMA-SERVICE-GATEWAY-QUERY-SECRET-SAFE-271.json
+```
