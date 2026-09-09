@@ -1,0 +1,61 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-NO-IMPLICIT-THIRD-PARTY-GATEWAY-20260908",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/Site:SITE_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-registry.json",
+    "StegVerse-Labs/Site:data/session-work-claims.d/site-third-party-dependency-eradication-497-20260826.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This change removes implicit gateway selection from validation/status tools and creates no custody, canonical-state mutation, or provider execution result."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/Site#497",
+      "StegVerse-Labs/Site#1137",
+      "StegVerse-org/LLM-adapter:docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/Site",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/TVC"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/LLM-adapter:scripts/verify_live_ecosystem_chat_activation.py",
+      "StegVerse-org/LLM-adapter:scripts/write_live_activation_status.py",
+      "StegVerse-org/LLM-adapter:scripts/verify_external_publication_staging.py",
+      "StegVerse-Labs/Site:data/render-gateway-replacement-plan.json"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "The README already declares the sovereign/local route independently sufficient and hosted providers optional rather than mandatory. This mutation removes stale executable defaults to conform implementation to that existing documented contract; it does not introduce a new public capability or contract.",
+    "evidence_refs": [
+      "StegVerse-org/LLM-adapter:README.md#ecosystem-chat-distributed-llm-service",
+      "StegVerse-org/LLM-adapter:README.md#no-github-token-production-dependency"
+    ]
+  },
+  "covered_paths": [
+    "scripts/write_live_activation_status.py",
+    "scripts/verify_live_ecosystem_chat_activation.py",
+    "scripts/verify_external_publication_staging.py",
+    "tests/test_live_activation_automation_contract.py"
+  ],
+  "new_files": []
+}
