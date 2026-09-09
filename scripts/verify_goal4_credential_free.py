@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "-m", "pytest", "tests/test_service_packaging_credential_free.py", "-v"),
+    (sys.executable, "-m", "pytest", "tests/test_custody_worker_startup_limit.py", "-v"),
     (sys.executable, "scripts/verify_goal4.py"),
     (sys.executable, "scripts/check_architecture_guard.py"),
     (sys.executable, "-m", "pytest", "tests/test_local_node_vertical_slice.py", "-v"),
