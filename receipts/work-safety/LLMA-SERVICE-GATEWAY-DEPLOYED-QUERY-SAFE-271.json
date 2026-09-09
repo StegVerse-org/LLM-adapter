@@ -1,0 +1,61 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-SERVICE-GATEWAY-QUERY-SECRET-SAFE-271",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/SERVICE_GATEWAY_QUERY_SECRET_SAFE_INGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/TVC:docs/GOOGLE_DRIVE_PERSONAL_KV_OWNER_CONSENT_CALLBACK_INGRESS_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/LLM-adapter:tasks/LLMA-SERVICE-GATEWAY-QUERY-SECRET-SAFE-271.json",
+    "StegVerse-org/LLM-adapter:#271",
+    "StegVerse-Labs/TVC:#328"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This change corrects the deployed Service Gateway logging entrypoint only and creates no provider execution, custody, reconstruction, credential, or runtime evidence artifact."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/LLM-adapter:#271",
+      "StegVerse-Labs/TVC:#328",
+      "StegVerse-Labs/TVC:#317"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/TVC"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/LLM-adapter:llm_adapter/deployed_gateway.py",
+      "StegVerse-org/LLM-adapter:llm_adapter/runtime_gateway.py",
+      "StegVerse-org/LLM-adapter:README.md",
+      "StegVerse-org/LLM-adapter:#271",
+      "StegVerse-Labs/TVC:docs/GOOGLE_DRIVE_PERSONAL_KV_OWNER_CONSENT_CALLBACK_INGRESS_MIRROR_HANDOFF.md"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "This remains the same issue #271 Service Gateway logging owner. It extends the already-merged query-safe middleware to the exact Render production entrypoint without touching TVC callback/provider authority."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "readme_updated_in_change_set": false,
+    "evidence_refs": [
+      "README.md#service-gateway-query-secret-safe-access-logging",
+      "The existing README already states that the fully composed Service Gateway disables Uvicorn request-target access logging and uses the path-only middleware; this correction makes deployed_gateway.py conform to that already-published contract."
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/deployed_gateway.py",
+    "tests/test_service_gateway_query_safe_logging.py"
+  ],
+  "new_files": []
+}
