@@ -6,6 +6,7 @@ from typing import Any, Dict
 from fastapi import HTTPException, Request
 
 from llm_adapter.service_gateway import app
+from llm_adapter.canonical_device_kv_stage import build_device_kv_stage_transport
 from llm_adapter.service_gateway_coinbase_skap import (
     ALLOWED_ORIGINS,
     CoinbaseSkapStageError,
@@ -27,6 +28,7 @@ def coinbase_skap_readiness() -> Dict[str, Any]:
         "service_id": "stegverse-service-gateway",
         "adapter": "coinbase-skap-ciphertext-staging",
         "receipt_schema": STAGE_RECEIPT_SCHEMA,
+        "canonical_device_kv_transport_schema": "stegverse.service-gateway.device-kv-canonical-stage/v1",
         "durable_storage": True,
         "transport_protocol": "InTr",
         "completed_boundary": "DEVICE_TO_KV",
@@ -74,9 +76,17 @@ async def coinbase_skap_ingress(request: Request) -> Dict[str, Any]:
 
     try:
         runtime = load_runtime()
-        return stage_packet(raw_body=raw_body, packet=packet, runtime=runtime)
+        legacy_stage = stage_packet(raw_body=raw_body, packet=packet, runtime=runtime)
+        canonical_device_kv = build_device_kv_stage_transport(packet, raw_body=raw_body)
+        return {
+            **legacy_stage,
+            "canonical_device_kv_transport": canonical_device_kv,
+            "canonical_device_kv_transport_grants_authority": False,
+        }
     except CoinbaseSkapStageError as exc:
         reason = str(exc)
         if reason == "ingress_replay_denied":
             raise HTTPException(status_code=409, detail=reason) from exc
         raise HTTPException(status_code=422, detail=reason) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="canonical_device_kv_transport_invalid:" + str(exc)) from exc
