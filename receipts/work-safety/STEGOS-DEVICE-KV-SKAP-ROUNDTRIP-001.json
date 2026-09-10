@@ -1,0 +1,78 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "STEGOS-DEVICE-KV-SKAP-ROUNDTRIP-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/DEVICE_KV_SKAP_ROUNDTRIP_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/COINBASE_SKAP_SERVICE_GATEWAY_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/STEGOS-DEVICE-KV-SKAP-ROUNDTRIP-001.json",
+    "StegVerse-Labs/.github:docs/DEVICE_KV_SKAP_ROUNDTRIP_MIRROR_HANDOFF.md"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This mutation emits and persists non-secret first-hop transport evidence at the existing Service Gateway; it does not create or change Master Records custody semantics."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github#1332",
+      "StegVerse-Labs/StegOS#326",
+      "StegVerse-Labs/TVC:tools/coinbase_gateway_stage_consumer.py",
+      "StegVerse-org/LLM-adapter:docs/COINBASE_SKAP_SERVICE_GATEWAY_MIRROR_HANDOFF.md"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/StegOS",
+      "StegVerse-Labs/TVC",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/Site"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/LLM-adapter:llm_adapter/service_gateway_coinbase_skap.py",
+      "StegVerse-org/LLM-adapter:llm_adapter/service_gateway_composed.py",
+      "StegVerse-Labs/StegOS:stegos/intr_backbone.py",
+      "StegVerse-Labs/StegOS:stegos/device_kv_skap_roundtrip.py",
+      "StegVerse-Labs/TVC:tools/coinbase_gateway_stage_consumer.py",
+      "StegVerse-Labs/Site:assets/stegfin-phone/coinbase-skap-submission.js"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "llm_adapter/README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "llm_adapter/README.md",
+      "docs/DEVICE_KV_SKAP_ROUNDTRIP_MIRROR_HANDOFF.md"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/canonical_device_kv_stage.py",
+    "llm_adapter/service_gateway_composed.py",
+    "tests/test_canonical_device_kv_stage.py"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/canonical_device_kv_stage.py",
+      "semantic_responsibility": "Build the additive non-secret canonical Universal-InTr DEVICE_SYSTEM to KV first-hop projection at the existing Coinbase SKAP Gateway boundary.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "llm_adapter/service_gateway_coinbase_skap.py plus StegVerse-Labs/StegOS/stegos/intr_backbone.py"
+    },
+    {
+      "path": "tests/test_canonical_device_kv_stage.py",
+      "semantic_responsibility": "Regression coverage for the canonical Device to KV gateway projection and its exact hash/no-secret properties.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "tests/test_service_gateway_coinbase_skap.py"
+    }
+  ]
+}
