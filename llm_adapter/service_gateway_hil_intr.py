@@ -1,9 +1,4 @@
-"""Transport-only shared Service Gateway adapter for HIL Universal InTr.
-
-The public Gateway forwards exact admitted HIL trigger bytes to the same-host
-loopback sovereign HIL ingress. It never mints receipts, claims/fences,
-credentials, custody, review, publication, or lifecycle authority.
-"""
+"""Transport-only shared Service Gateway adapter for HIL Universal InTr."""
 from __future__ import annotations
 
 import hashlib
@@ -18,6 +13,7 @@ from fastapi.responses import Response
 
 router = APIRouter()
 MAX_BODY = 512 * 1024
+SOURCE_PACKAGE_MAX_BODY = 8 * 1024 * 1024
 ALLOWED_ORIGINS = {"https://stegverse.org", "https://www.stegverse.org"}
 FORBIDDEN_REQUEST_HEADERS = ("authorization", "cookie")
 FORWARDED_HEADERS = (
@@ -61,6 +57,11 @@ def _device_kv_result_upstream() -> str:
     return urlunsplit((parsed.scheme, parsed.netloc, "/intr/device-kv/result", "", ""))
 
 
+def _source_package_upstream() -> str:
+    parsed = urlsplit(_upstream())
+    return urlunsplit((parsed.scheme, parsed.netloc, "/intr/source-package", "", ""))
+
+
 def _read_profile() -> dict:
     req = urlrequest.Request(_profile_upstream(), method="GET")
     try:
@@ -71,10 +72,7 @@ def _read_profile() -> dict:
             if response.status != 200:
                 raise ValueError(f"Universal InTr profile status invalid:{response.status}")
     except Exception as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=f"universal_intr_profile_unavailable:{type(exc).__name__}",
-        ) from exc
+        raise HTTPException(status_code=503, detail=f"universal_intr_profile_unavailable:{type(exc).__name__}") from exc
     try:
         value = json.loads(raw.decode("utf-8"))
     except Exception as exc:
@@ -86,10 +84,7 @@ def _read_profile() -> dict:
 
 def _validate_profile(profile: dict) -> None:
     schema = profile.get("schema")
-    if schema not in {
-        "stegverse.universal-intr-profiled-ingress/v1",
-        "stegverse.hil-intr-materialization-ingress-profile/v1",
-    }:
+    if schema not in {"stegverse.universal-intr-profiled-ingress/v1", "stegverse.hil-intr-materialization-ingress-profile/v1"}:
         raise HTTPException(status_code=502, detail="universal_intr_profile_schema_invalid")
     expected = {
         "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
@@ -118,10 +113,7 @@ def _validate_profile(profile: dict) -> None:
 
 
 def _profiles_from_profile(profile: dict) -> list[str]:
-    if profile.get("schema") == "stegverse.universal-intr-profiled-ingress/v1":
-        values = profile.get("profiles")
-    else:
-        values = profile.get("additional_materialization_profiles")
+    values = profile.get("profiles") if profile.get("schema") == "stegverse.universal-intr-profiled-ingress/v1" else profile.get("additional_materialization_profiles")
     return list(values or [])
 
 
@@ -139,13 +131,13 @@ def _hash_body(body: bytes) -> str:
     return hashlib.sha256(body).hexdigest()
 
 
-def _validate_request(request: Request, body: bytes) -> dict[str, str]:
+def _validate_request(request: Request, body: bytes, *, max_body: int = MAX_BODY, relay_only: bool = False) -> dict[str, str]:
     origin = request.headers.get("origin")
     if origin not in ALLOWED_ORIGINS:
         raise HTTPException(status_code=403, detail="origin_not_admitted")
     if any(request.headers.get(name) for name in FORBIDDEN_REQUEST_HEADERS):
         raise HTTPException(status_code=400, detail="credential_header_rejected")
-    if not body or len(body) > MAX_BODY:
+    if not body or len(body) > max_body:
         raise HTTPException(status_code=413, detail="request_size_invalid")
     content_type = request.headers.get("content-type", "").split(";")[0].strip().lower()
     if content_type not in {"application/json", "application/octet-stream"}:
@@ -155,6 +147,8 @@ def _validate_request(request: Request, body: bytes) -> dict[str, str]:
     transport_origin = request.headers.get("x-stegverse-transport-origin", "")
     if transport_origin not in {"STEGOS_NODE_OUTBOX", "TVC_RELAY_EGRESS"}:
         raise HTTPException(status_code=400, detail="transport_origin_header_invalid")
+    if relay_only and transport_origin != "TVC_RELAY_EGRESS":
+        raise HTTPException(status_code=400, detail="tvc_relay_egress_required")
     authorization_id = request.headers.get("x-stegverse-authorization-id", "").strip()
     if transport_origin == "STEGOS_NODE_OUTBOX" and authorization_id:
         raise HTTPException(status_code=400, detail="node_outbox_cannot_claim_tvc_authorization")
@@ -166,18 +160,18 @@ def _validate_request(request: Request, body: bytes) -> dict[str, str]:
     return {name: request.headers[name] for name in FORWARDED_HEADERS if name in request.headers}
 
 
-def _forward_to(target: str, body: bytes, headers: dict[str, str]) -> tuple[int, bytes, str]:
+def _forward_to(target: str, body: bytes, headers: dict[str, str], *, response_limit: int = MAX_BODY) -> tuple[int, bytes, str]:
     req = urlrequest.Request(target, data=body, method="POST")
     for name, value in headers.items():
         req.add_header(name, value)
     try:
         with urlrequest.urlopen(req, timeout=15) as response:
-            raw = response.read(MAX_BODY + 1)
-            if len(raw) > MAX_BODY:
+            raw = response.read(response_limit + 1)
+            if len(raw) > response_limit:
                 raise ValueError("HIL ingress response too large")
             return response.status, raw, response.headers.get_content_type()
     except urlerror.HTTPError as exc:
-        raw = exc.read(MAX_BODY + 1)
+        raw = exc.read(response_limit + 1)
         return exc.code, raw, exc.headers.get_content_type()
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"universal_intr_runtime_unavailable:{type(exc).__name__}") from exc
@@ -208,8 +202,7 @@ def hil_intr_readiness() -> dict:
     configured = False
     reason = None
     try:
-        _upstream()
-        configured = True
+        _upstream(); configured = True
     except ValueError as exc:
         reason = str(exc)
     return {
@@ -218,6 +211,7 @@ def hil_intr_readiness() -> dict:
         "loopback_upstream_configured": configured,
         "universal_intr_enabled": _enabled(),
         "device_kv_result_path": "/intr/device-kv/result",
+        "control_plane_source_package_path": "/intr/source-package",
         "state": "READY" if _enabled() and configured else "NOT_READY",
         "transport": "InTr",
         "supported_origins": ["STEGOS_NODE_OUTBOX", "TVC_RELAY_EGRESS"],
@@ -242,12 +236,24 @@ async def hil_intr_proxy(request: Request) -> Response:
     body = await request.body()
     headers = _validate_request(request, body)
     status, raw, content_type = _forward(body, headers)
-    return Response(
-        content=raw,
-        status_code=status,
-        media_type=content_type or "application/json",
-        headers={"Cache-Control": "no-store"},
-    )
+    return Response(content=raw, status_code=status, media_type=content_type or "application/json", headers={"Cache-Control": "no-store"})
+
+
+@router.post("/intr/source-package")
+async def control_plane_source_package_proxy(request: Request) -> Response:
+    if not _enabled():
+        raise HTTPException(status_code=503, detail="universal_intr_disabled")
+    if not _public_https(request):
+        raise HTTPException(status_code=400, detail="public_https_required")
+    profile = _read_profile()
+    _validate_profile(profile)
+    _require_profile_capability(profile, "stegverse.control-plane")
+    if profile.get("control_plane_source_package_path") != "/intr/source-package":
+        raise HTTPException(status_code=503, detail="control_plane_source_package_path_unavailable")
+    body = await request.body()
+    headers = _validate_request(request, body, max_body=SOURCE_PACKAGE_MAX_BODY, relay_only=True)
+    status, raw, content_type = _forward_to(_source_package_upstream(), body, headers)
+    return Response(content=raw, status_code=status, media_type=content_type or "application/json", headers={"Cache-Control": "no-store"})
 
 
 @router.post("/intr/device-kv/result")
@@ -262,9 +268,4 @@ async def device_kv_result_proxy(request: Request) -> Response:
     body = await request.body()
     headers = _validate_request(request, body)
     status, raw, content_type = _forward_to(_device_kv_result_upstream(), body, headers)
-    return Response(
-        content=raw,
-        status_code=status,
-        media_type=content_type or "application/json",
-        headers={"Cache-Control": "no-store"},
-    )
+    return Response(content=raw, status_code=status, media_type=content_type or "application/json", headers={"Cache-Control": "no-store"})

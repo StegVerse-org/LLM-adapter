@@ -1,0 +1,72 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "STEGOS-SOVEREIGN-RELAY-RETURN-PATH-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/HIL_INTR_SERVICE_GATEWAY_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/STEGOS_SOVEREIGN_RELAY_RETURN_PATH_RUNTIME_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:control/task-vectors/STEGOS-SOVEREIGN-RELAY-RETURN-PATH-001.json",
+    "StegVerse-Labs/.github:handoffs/SHWP-STEGOS-SOVEREIGN-RELAY-RETURN-PATH-001.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This mutation only projects already-admitted InTr bytes to a same-host sovereign receiver; it does not create canonical evidence custody or reconstruction."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github:docs/STEGOS_SOVEREIGN_RELAY_RETURN_PATH_RUNTIME_MIRROR_HANDOFF.md",
+      "StegVerse-org/LLM-adapter:docs/HIL_INTR_SERVICE_GATEWAY_MIRROR_HANDOFF.md"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/Site"
+    ],
+    "evidence_refs": [
+      "existing llm_adapter/service_gateway_hil_intr.py transport-only Universal InTr projection",
+      "existing StegVerse-Labs/.github workers/hil_intr_profiled_ingress.py sovereign ingress",
+      "no existing control-plane source-package public projection found in LLM-adapter or Site"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "intentional_parallel_versioning": false,
+    "reconciliation_ref": "docs/HIL_INTR_SERVICE_GATEWAY_MIRROR_HANDOFF.md"
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.control-plane-source-package.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.control-plane-source-package.md documents the new /intr/source-package transport surface and authority ceiling",
+      "docs/HIL_INTR_SERVICE_GATEWAY_MIRROR_HANDOFF.md reconciles the canonical Gateway topology"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/service_gateway_hil_intr.py",
+    "tests/test_service_gateway_control_plane_source_package.py"
+  ],
+  "new_files": [
+    {
+      "path": "tests/test_service_gateway_control_plane_source_package.py",
+      "semantic_responsibility": "Regression coverage for the existing shared Service Gateway control-plane source-package projection.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "tests/test_service_gateway_hil_intr.py",
+      "justification": "Separate focused tests exercise the new route without widening the existing HIL materialization cases.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "llm_adapter/service_gateway_hil_intr.py",
+        "tests/test_service_gateway_hil_intr.py"
+      ]
+    }
+  ]
+}
