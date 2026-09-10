@@ -6,7 +6,7 @@ from typing import Any, Dict
 from fastapi import HTTPException, Request
 
 from llm_adapter.service_gateway import app
-from llm_adapter.canonical_device_kv_stage import build_device_kv_stage_transport
+from llm_adapter.canonical_device_kv_stage import build_device_kv_stage_transport, canonical_json
 from llm_adapter.service_gateway_coinbase_skap import (
     ALLOWED_ORIGINS,
     CoinbaseSkapStageError,
@@ -15,6 +15,21 @@ from llm_adapter.service_gateway_coinbase_skap import (
     load_runtime,
     stage_packet,
 )
+
+
+def _persist_canonical_device_kv_sidecar(*, runtime, ingress_id: str, value: Dict[str, Any]) -> str:
+    directory = runtime.root / "coinbase-skap-stage-canonical"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{ingress_id}.json"
+    raw = (canonical_json(value) + "\n").encode("utf-8")
+    if path.exists():
+        if path.read_bytes() != raw:
+            raise ValueError("canonical_device_kv_sidecar_collision")
+        return str(path)
+    path.write_bytes(raw)
+    if path.read_bytes() != raw:
+        raise ValueError("canonical_device_kv_sidecar_readback_mismatch")
+    return str(path)
 
 
 @app.get("/api/coinbase/skap/readiness")
@@ -78,9 +93,11 @@ async def coinbase_skap_ingress(request: Request) -> Dict[str, Any]:
         runtime = load_runtime()
         legacy_stage = stage_packet(raw_body=raw_body, packet=packet, runtime=runtime)
         canonical_device_kv = build_device_kv_stage_transport(packet, raw_body=raw_body)
+        sidecar = _persist_canonical_device_kv_sidecar(runtime=runtime, ingress_id=str(packet["ingress_id"]), value=canonical_device_kv)
         return {
             **legacy_stage,
             "canonical_device_kv_transport": canonical_device_kv,
+            "canonical_device_kv_transport_ref": sidecar,
             "canonical_device_kv_transport_grants_authority": False,
         }
     except CoinbaseSkapStageError as exc:
