@@ -1,9 +1,11 @@
 # Work Mutation Safety Mirror Handoff
 
-Status: ACTIVE_IMPLEMENTATION
+Status: COMPLETE_RELEASED
 Repository: `StegVerse-org/LLM-adapter`
 Task: `LLMA-WORK-MUTATION-SAFETY-320`
 Issue: `#320`
+Implementation PR: `#321`
+Merge: `e0aa69706abdb236bf0485b02c038ce8e7d0d495`
 
 ## Authority
 
@@ -11,7 +13,7 @@ This scoped handoff is subordinate to `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`, the 
 
 The safety gate is validation-only. It grants no execution, transition, admission, route, credential, claim/fence, runtime, provider, publication, or custody authority.
 
-## Installed safety boundary
+## Released safety boundary
 
 Work-authored functional pull-request mutations are guarded at the repository mutation boundary by:
 
@@ -25,7 +27,29 @@ A functional pull request must carry a fresh `stegverse.work-mutation-safety/v1`
 
 Every newly added functional file must declare its semantic responsibility, nearest existing implementation or search result, and an explicit reuse decision. `CREATE_NEW` fails closed when an equivalent implementation is already known. `CREATE_NEW` also fails closed on an active-owner collision unless the manifest explicitly records intentional governed parallel versioning and a reconciliation reference.
 
-The gate does not assert that the supplied semantic evidence is runtime truth. It structurally prevents Work from silently creating uncovered functional files or bypassing the required reuse/collision/README decisions.
+The gate does not assert that supplied semantic evidence is runtime truth. It structurally prevents Work from silently creating uncovered functional files or bypassing required reuse/collision/README decisions.
+
+## Validation evidence
+
+Positive implementation validation:
+
+```text
+PR: #321
+merge: e0aa69706abdb236bf0485b02c038ce8e7d0d495
+Work Mutation Safety run: 34076007695 SUCCESS
+repository validate run: 34076007662 SUCCESS
+```
+
+Independent negative verification:
+
+```text
+probe PR: #322
+probe merged: false
+Work Mutation Safety run: 34076046758 FAILURE (EXPECTED)
+exact failure: functional mutation requires a fresh receipts/work-safety/*.json manifest in the same change set
+```
+
+The negative probe was closed without merge after demonstrating the fail-closed boundary.
 
 ## Existing responsibilities preserved
 
@@ -43,16 +67,14 @@ Those remain owned by their canonical components. This gate only blocks reposito
 
 ## README determination
 
-`README_CHANGE_REQUIRED = NO` for this bounded change.
+`README_CHANGE_REQUIRED = NO` for this bounded control.
 
-Reason: the installed gate changes repository development validation only. It does not change LLM-adapter runtime behavior, provider interfaces, ingress/egress semantics, governance or authority ownership, evidence meaning, runtime prerequisites, external capability meaning, or production failure behavior. This scoped handoff documents the development-control behavior itself.
+Reason: the released gate changes repository development validation only. It does not change LLM-adapter runtime behavior, provider interfaces, ingress/egress semantics, governance or authority ownership, production evidence meaning, runtime prerequisites, external capability meaning, or production failure behavior. This scoped handoff documents the development-control behavior itself.
 
-## Release condition
+## Propagation determination
 
-Release only after the branch pull request passes:
+No Site, Publisher, admissibility-wiki, or stegguardian-wiki propagation is required for this release because it is a validation-only repository safety control and does not add or change an externally meaningful StegVerse capability. If this control later becomes part of a public capability contract, propagation must be reconsidered under a new bounded task.
 
-1. the new Work Mutation Safety workflow;
-2. unit tests for fail-closed semantic collision behavior;
-3. existing repository validation applicable to the changed surfaces.
+## Completion
 
-After merge, update `tasks/LLMA-WORK-MUTATION-SAFETY-320.json` to `COMPLETE_RELEASED` with merge and validation evidence. No Site, Publisher, admissibility-wiki, or stegguardian-wiki propagation is required unless this validation-only control is later promoted into externally meaningful capability semantics.
+`LLMA-WORK-MUTATION-SAFETY-320` is complete and released. Future functional Work mutations in this repository are expected to pass the released gate; no duplicate safety implementation is authorized by this handoff.
