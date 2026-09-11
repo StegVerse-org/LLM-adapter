@@ -21,7 +21,7 @@ def test_begin_forbids_query_without_contacting_listener(monkeypatch):
     def unexpected(*args, **kwargs):
         raise AssertionError("upstream must not be called")
 
-    monkeypatch.setattr(consent_routes.requests, "get", unexpected)
+    monkeypatch.setattr(consent_routes, "_direct_loopback_get", unexpected)
     response = TestClient(runtime_gateway.app).get(
         "/tvc/external-collaboration/google-drive/consent/begin?unexpected=1"
     )
@@ -33,7 +33,7 @@ def test_health_forbids_query_without_contacting_listener(monkeypatch):
     def unexpected(*args, **kwargs):
         raise AssertionError("upstream must not be called")
 
-    monkeypatch.setattr(consent_routes.requests, "get", unexpected)
+    monkeypatch.setattr(consent_routes, "_direct_loopback_get", unexpected)
     response = TestClient(runtime_gateway.app).get(
         "/tvc/external-collaboration/google-drive/consent/health?state=x"
     )
@@ -41,11 +41,11 @@ def test_health_forbids_query_without_contacting_listener(monkeypatch):
     assert response.json()["detail"] == "query_string_forbidden"
 
 
-def test_callback_preserves_exact_allowed_query_and_does_not_follow_redirect(monkeypatch):
+def test_callback_preserves_exact_allowed_query(monkeypatch):
     observed = {}
 
-    def fake_get(url, *, allow_redirects, timeout):
-        observed.update(url=url, allow_redirects=allow_redirects, timeout=timeout)
+    def fake_get(url):
+        observed["url"] = url
         return _response(
             status_code=302,
             content=b"",
@@ -57,7 +57,7 @@ def test_callback_preserves_exact_allowed_query_and_does_not_follow_redirect(mon
             },
         )
 
-    monkeypatch.setattr(consent_routes.requests, "get", fake_get)
+    monkeypatch.setattr(consent_routes, "_direct_loopback_get", fake_get)
     client = TestClient(runtime_gateway.app, follow_redirects=False)
     raw_query = "state=extcollab.a%2Bb&code=abc%2F123&error_description="
     response = client.get(
@@ -65,11 +65,9 @@ def test_callback_preserves_exact_allowed_query_and_does_not_follow_redirect(mon
     )
 
     assert response.status_code == 302
-    assert observed == {
-        "url": "http://127.0.0.1:8786/tvc/google-drive/external-collaboration/callback?" + raw_query,
-        "allow_redirects": False,
-        "timeout": consent_routes.UPSTREAM_TIMEOUT_SECONDS,
-    }
+    assert observed["url"] == (
+        "http://127.0.0.1:8786/tvc/google-drive/external-collaboration/callback?" + raw_query
+    )
     assert response.headers["location"] == "https://stegverse.org/workspace/complete"
     assert response.headers["cache-control"] == "no-store"
     assert "set-cookie" not in response.headers
@@ -80,7 +78,7 @@ def test_callback_rejects_uncontracted_query_key(monkeypatch):
     def unexpected(*args, **kwargs):
         raise AssertionError("upstream must not be called")
 
-    monkeypatch.setattr(consent_routes.requests, "get", unexpected)
+    monkeypatch.setattr(consent_routes, "_direct_loopback_get", unexpected)
     response = TestClient(runtime_gateway.app).get(
         "/tvc/google-drive/external-collaboration/callback?state=s&code=c&token=forbidden"
     )
@@ -92,7 +90,7 @@ def test_listener_unreachable_fails_closed(monkeypatch):
     def unavailable(*args, **kwargs):
         raise requests.ConnectionError("loopback unavailable")
 
-    monkeypatch.setattr(consent_routes.requests, "get", unavailable)
+    monkeypatch.setattr(consent_routes, "_direct_loopback_get", unavailable)
     response = TestClient(runtime_gateway.app).get(
         "/tvc/external-collaboration/google-drive/consent/health"
     )
@@ -103,7 +101,7 @@ def test_listener_unreachable_fails_closed(monkeypatch):
 def test_begin_forwards_only_response_allowlist(monkeypatch):
     observed = {}
 
-    def fake_get(url, *, allow_redirects, timeout):
+    def fake_get(url):
         observed["url"] = url
         return _response(
             status_code=302,
@@ -116,7 +114,7 @@ def test_begin_forwards_only_response_allowlist(monkeypatch):
             },
         )
 
-    monkeypatch.setattr(consent_routes.requests, "get", fake_get)
+    monkeypatch.setattr(consent_routes, "_direct_loopback_get", fake_get)
     response = TestClient(runtime_gateway.app, follow_redirects=False).get(
         "/tvc/external-collaboration/google-drive/consent/begin"
     )
@@ -127,3 +125,34 @@ def test_begin_forwards_only_response_allowlist(monkeypatch):
     assert response.headers["location"].startswith("https://accounts.google.com/")
     assert response.headers["pragma"] == "no-cache"
     assert "x-upstream-debug" not in response.headers
+
+
+def test_direct_loopback_transport_ignores_environment_proxy(monkeypatch):
+    observed = {}
+
+    class FakeSession:
+        def __init__(self):
+            self.trust_env = True
+            observed["session"] = self
+
+        def get(self, url, *, allow_redirects, timeout):
+            observed.update(
+                url=url,
+                allow_redirects=allow_redirects,
+                timeout=timeout,
+                trust_env=self.trust_env,
+            )
+            return _response()
+
+        def close(self):
+            observed["closed"] = True
+
+    monkeypatch.setattr(consent_routes.requests, "Session", FakeSession)
+    result = consent_routes._direct_loopback_get(
+        "http://127.0.0.1:8786/tvc/external-collaboration/google-drive/consent/health"
+    )
+    assert result.status_code == 200
+    assert observed["trust_env"] is False
+    assert observed["allow_redirects"] is False
+    assert observed["timeout"] == consent_routes.UPSTREAM_TIMEOUT_SECONDS
+    assert observed["closed"] is True
