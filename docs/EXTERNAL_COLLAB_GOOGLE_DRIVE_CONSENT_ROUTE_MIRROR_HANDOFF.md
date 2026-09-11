@@ -4,7 +4,7 @@ Updated: 2026-09-10
 Repository: `StegVerse-org/LLM-adapter`
 Parent Service Gateway owner: issue #72
 Goal Task ID: `SDK-GENERIC-MANIFEST-DOWNSTREAM-PROPAGATION-003`
-Status: `SOURCE IMPLEMENTED + EXACT-HEAD VALIDATED / MERGE PENDING / NO PUBLIC RUNTIME CLAIM`
+Status: `SOURCE IMPLEMENTED + VALIDATED + MERGED / AUTHENTIC RUNTIME PROOF NEXT`
 
 ## Purpose
 
@@ -21,7 +21,9 @@ GET /tvc/external-collaboration/google-drive/consent/health
 same-host upstream: http://127.0.0.1:8786
 ```
 
-## Implemented source
+## Merged source
+
+PR `#332` merged at `9ab7e019eaf694f20c978ce65ad7a2d5c886010a` from exact validated head `5d199cfc11be410f03c884cd70278d81d956c9f5`.
 
 ```text
 llm_adapter/service_gateway_external_collab_consent.py
@@ -31,7 +33,7 @@ llm_adapter/runtime_gateway.py
 receipts/work-safety/SDK-GENERIC-MANIFEST-DOWNSTREAM-PROPAGATION-003-external-collab-routes.json
 ```
 
-`runtime_gateway.py` composes the new route module before wrapping the complete FastAPI application in the existing `QuerySecretSafeAccessLogMiddleware`. Built-in Uvicorn access logging remains disabled by the existing runtime entrypoint.
+`runtime_gateway.py` composes the route module before wrapping the complete FastAPI application in the existing `QuerySecretSafeAccessLogMiddleware`. Built-in Uvicorn access logging remains disabled by the existing runtime entrypoint.
 
 Implemented rules:
 
@@ -47,15 +49,17 @@ Implemented rules:
 - `Set-Cookie`, debug headers, and other upstream headers are not propagated;
 - upstream connection failure returns `503 external_collaboration_listener_unreachable` and grants no readiness claim.
 
-## Exact-head validation
+## Validation evidence
 
-Validated source head before this documentation-only reconciliation: `c8dc804ebf07281e01ca30590a993a581568c3ac`.
+Final PR head `5d199cfc11be410f03c884cd70278d81d956c9f5`:
 
-- Work Mutation Safety - Non-Authorizing run `34563415968` — PASS.
-- Coinbase SKAP Service Gateway Validation run `34563415971` — PASS; this existing Gateway lane compiles the new module, executes `tests/test_service_gateway_external_collab_consent.py`, executes the mounted HTTP-boundary regression set, and checks exact source authority/loopback invariants.
-- Repository `validate` run `34563415965` — PASS through all 72 observed job steps, including final canonical Goal 4 verification and validation-only authority-boundary confirmation.
+- Work Mutation Safety - Non-Authorizing run `34563524752` — PASS.
+- Coinbase SKAP Service Gateway Validation run `34563524745` — PASS, including compilation and execution of `tests/test_service_gateway_external_collab_consent.py`, mounted HTTP-boundary regressions, and exact source authority/loopback assertions.
+- Repository `validate` run `34563524742` — PASS through all 72 observed steps, including canonical Goal 4 verification and validation-only authority-boundary confirmation.
 
-The final handoff-only commit must still receive its exact-head workflow disposition before merge. These validation results prove source/test consistency only; they do not establish authentic resident listener health or public route reachability.
+Earlier head `c8dc804ebf07281e01ca30590a993a581568c3ac` also passed Work Mutation Safety `34563415968`, focused Gateway validation `34563415971`, and repository validation `34563415965`; final-head evidence above is authoritative for merge.
+
+These results prove source/test consistency and merge only. They do not establish authentic resident listener health or public route reachability.
 
 ## Authority boundary
 
