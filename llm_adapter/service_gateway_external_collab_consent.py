@@ -59,17 +59,26 @@ def _forward_headers(headers: requests.structures.CaseInsensitiveDict) -> Dict[s
     }
 
 
+def _direct_loopback_get(url: str) -> requests.Response:
+    session = requests.Session()
+    session.trust_env = False
+    try:
+        return session.get(
+            url,
+            allow_redirects=False,
+            timeout=UPSTREAM_TIMEOUT_SECONDS,
+        )
+    finally:
+        session.close()
+
+
 def _forward_get(*, request: Request, path: str) -> Response:
     raw_query = _raw_query(request)
     _validate_query(path=path, raw_query=raw_query)
     upstream_url = UPSTREAM_ORIGIN + path + (("?" + raw_query) if raw_query else "")
 
     try:
-        upstream = requests.get(
-            upstream_url,
-            allow_redirects=False,
-            timeout=UPSTREAM_TIMEOUT_SECONDS,
-        )
+        upstream = _direct_loopback_get(upstream_url)
     except requests.RequestException as exc:
         raise HTTPException(status_code=503, detail="external_collaboration_listener_unreachable") from exc
 
