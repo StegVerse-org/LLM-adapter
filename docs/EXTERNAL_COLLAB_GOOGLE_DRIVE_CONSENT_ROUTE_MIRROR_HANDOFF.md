@@ -4,7 +4,7 @@ Updated: 2026-09-10
 Repository: `StegVerse-org/LLM-adapter`
 Parent Service Gateway owner: issue #72
 Goal Task ID: `SDK-GENERIC-MANIFEST-DOWNSTREAM-PROPAGATION-003`
-Status: `SOURCE IMPLEMENTED / VALIDATION PENDING / NO PUBLIC RUNTIME CLAIM`
+Status: `SOURCE IMPLEMENTED + EXACT-HEAD VALIDATED / MERGE PENDING / NO PUBLIC RUNTIME CLAIM`
 
 ## Purpose
 
@@ -27,6 +27,8 @@ same-host upstream: http://127.0.0.1:8786
 llm_adapter/service_gateway_external_collab_consent.py
 tests/test_service_gateway_external_collab_consent.py
 llm_adapter/runtime_gateway.py
+.github/workflows/coinbase-skap-service-gateway.yml
+receipts/work-safety/SDK-GENERIC-MANIFEST-DOWNSTREAM-PROPAGATION-003-external-collab-routes.json
 ```
 
 `runtime_gateway.py` composes the new route module before wrapping the complete FastAPI application in the existing `QuerySecretSafeAccessLogMiddleware`. Built-in Uvicorn access logging remains disabled by the existing runtime entrypoint.
@@ -45,6 +47,16 @@ Implemented rules:
 - `Set-Cookie`, debug headers, and other upstream headers are not propagated;
 - upstream connection failure returns `503 external_collaboration_listener_unreachable` and grants no readiness claim.
 
+## Exact-head validation
+
+Validated source head before this documentation-only reconciliation: `c8dc804ebf07281e01ca30590a993a581568c3ac`.
+
+- Work Mutation Safety - Non-Authorizing run `34563415968` — PASS.
+- Coinbase SKAP Service Gateway Validation run `34563415971` — PASS; this existing Gateway lane compiles the new module, executes `tests/test_service_gateway_external_collab_consent.py`, executes the mounted HTTP-boundary regression set, and checks exact source authority/loopback invariants.
+- Repository `validate` run `34563415965` — PASS through all 72 observed job steps, including final canonical Goal 4 verification and validation-only authority-boundary confirmation.
+
+The final handoff-only commit must still receive its exact-head workflow disposition before merge. These validation results prove source/test consistency only; they do not establish authentic resident listener health or public route reachability.
+
 ## Authority boundary
 
 The Gateway owns only bounded same-host forwarding. TV/TVC remains credential/provider-operation authority. The resident listener owns Google consent semantics. CMC-029/native TLS owns sovereign WebPKI. Source/CI/merge do not prove resident listener health, public HTTPS reachability, owner-present consent, provider execution, or WorkSpace readiness.
@@ -52,19 +64,6 @@ The Gateway owns only bounded same-host forwarding. TV/TVC remains credential/pr
 ## README review
 
 Root `README.md` was reviewed for this source change. No public runtime claim is added because the route remains incomplete until authentic resident listener health and sovereign public HTTPS are independently observed. Existing README authority semantics remain accurate, so no root README wording change is required at this source-only stage.
-
-## Validation boundary
-
-Deterministic tests cover:
-
-- forbidden query handling for begin/health;
-- exact callback raw-query preservation;
-- callback query-key allowlisting;
-- fail-closed unreachable-listener behavior;
-- redirect/status/header forwarding without `Set-Cookie` or debug leakage;
-- direct loopback transport with environment proxy use disabled.
-
-Validation and merge evidence must be added here after the PR exact-head checks complete. Passing source validation will not establish authentic resident listener health or public route reachability.
 
 ## Runtime continuation
 
