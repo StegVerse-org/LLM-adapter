@@ -14,7 +14,7 @@
   ],
   "master_records_review": {
     "applicable": false,
-    "reason": "This change implements source-only bounded same-host Service Gateway forwarding. It emits no authentic resident, public-route, consent, provider, custody, or reconstruction evidence; Master Records intake remains a later authentic-runtime predicate."
+    "reason": "This change implements source-only bounded same-host Service Gateway forwarding and extends its existing validation lane. It emits no authentic resident, public-route, consent, provider, custody, or reconstruction evidence; Master Records intake remains a later authentic-runtime predicate."
   },
   "cross_task_coordination": {
     "checked": true,
@@ -36,6 +36,7 @@
     "evidence_refs": [
       "StegVerse-org/LLM-adapter:llm_adapter/runtime_gateway.py",
       "StegVerse-org/LLM-adapter:llm_adapter/service_gateway_composed.py",
+      "StegVerse-org/LLM-adapter:.github/workflows/coinbase-skap-service-gateway.yml",
       "StegVerse-org/LLM-adapter:tests/test_service_gateway.py",
       "StegVerse-org/LLM-adapter:#72",
       "StegVerse-Labs/TVC:contracts/external-collab-google-drive-consent-public-route.v1.json",
@@ -47,7 +48,7 @@
   "active_owner_collision": {
     "checked": true,
     "collision_found": false,
-    "reason": "Service Gateway issue #72 is the existing machine-owned implementation lane and this PR extends that same runtime. The resident listener remains owned by the existing .github/TVC lane and CMC-029 remains the sovereign TLS owner; no competing gateway or runtime is created."
+    "reason": "Service Gateway issue #72 is the existing machine-owned implementation lane and this PR extends that same runtime and its existing validation workflow. The resident listener remains owned by the existing .github/TVC lane and CMC-029 remains the sovereign TLS owner; no competing gateway, workflow authority, or runtime is created."
   },
   "readme_impact": {
     "material_function_change": false,
@@ -60,6 +61,7 @@
     ]
   },
   "covered_paths": [
+    ".github/workflows/coinbase-skap-service-gateway.yml",
     "llm_adapter/runtime_gateway.py",
     "llm_adapter/service_gateway_external_collab_consent.py",
     "tests/test_service_gateway_external_collab_consent.py"
