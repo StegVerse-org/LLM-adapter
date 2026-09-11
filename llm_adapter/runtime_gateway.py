@@ -11,6 +11,7 @@ from .math_solver_gateway import app as _base_app  # noqa: E402
 from . import va_claims_runtime_gateway as _va_claims_runtime_gateway  # noqa: E402,F401
 from . import service_gateway_composed as _service_gateway_composed  # noqa: E402,F401
 from . import service_gateway_kv_onboarding as _service_gateway_kv_onboarding  # noqa: E402,F401
+from . import service_gateway_external_collab_consent as _service_gateway_external_collab_consent  # noqa: E402,F401
 from .query_safe_access_log import QuerySecretSafeAccessLogMiddleware  # noqa: E402
 
 # Compose all existing routes first, then wrap the complete Gateway application in
