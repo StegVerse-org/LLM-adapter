@@ -1,0 +1,72 @@
+{
+  "schema": "stegverse.task-registry/v1",
+  "task_id": "LLMA-UNIVERSAL-AI-INGRESS-324",
+  "repository": "StegVerse-org/LLM-adapter",
+  "issue": 324,
+  "pull_request": 327,
+  "source_branch": "llma-universal-ai-ingress-324",
+  "cosv": {
+    "profile": "task.v1",
+    "vector": "20010000110000",
+    "canonical_record": "StegVerse-Labs/.github:control/task-vectors/LLMA-UNIVERSAL-AI-INGRESS-324.json",
+    "authority_effect": "NONE"
+  },
+  "goal": "Define one provider-independent AI ingress contract for hosted, local, resident, API, browser-mediated, and future AI entities while reusing existing provider, Interlock/InTr, TV/TVC, WorkerCoordinator, and Master Records ownership.",
+  "state": "DRAFT_PR_OPEN_README_COMPLETENESS_PENDING_VALIDATION_UNPOSTED",
+  "authority": {
+    "transition_admission": "Interlock/InTr",
+    "credential_provider_operation": "TV/TVC",
+    "runtime_work_owner": "StegVerse-Labs/.github::WorkerCoordinator",
+    "custody_reconstruction": "master-records/orchestration",
+    "heartbeat_oscillator": "REFERENCE_CARRIER_ONLY",
+    "universal_ingress_authority_effect": "NONE"
+  },
+  "canonical_handoff": "docs/UNIVERSAL_AI_INGRESS_MIRROR_HANDOFF.md",
+  "root_handoff": "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+  "predecessor": "LLMA-EXTERNAL-LLM-CONVERGENCE-306",
+  "reuse": [
+    "llm_adapter/provider_request.py",
+    "llm_adapter/provider_client.py",
+    "llm_adapter/external_llm_connection.py",
+    "docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md"
+  ],
+  "implemented": [
+    "provider-independent AIIngressEnvelope layered on ProviderRequest",
+    "provider-independent capability and confinement vocabulary",
+    "canonical AI adapter registry with one-owner duplicate audit",
+    "registered hosted, OpenAI-family, sovereign/local/resident, and browser/session ingress families",
+    "fail-closed route directives for registered paths not executable through the existing external provider seam",
+    "reuse of execute_governed_external_llm and admit_external_llm_egress for already-supported external providers",
+    "shared contract tests covering aliases, confinement, duplicate ownership, fail-closed execution, and existing seam reuse",
+    "machine duplicate-owner validator"
+  ],
+  "provider_reconciliation": {
+    "zai": "REUSES_EXISTING_EXTERNAL_CONNECTION",
+    "deepseek": "REUSES_EXISTING_EXTERNAL_CONNECTION",
+    "kimi_moonshot": "REUSES_EXISTING_EXTERNAL_CONNECTION",
+    "anthropic": "REUSES_EXISTING_EXTERNAL_CONNECTION",
+    "openai": "REGISTERED_EXISTING_OWNER_REQUIRED_FAIL_CLOSED_HERE",
+    "openai_compatible": "REGISTERED_EXISTING_OWNER_REQUIRED_FAIL_CLOSED_HERE",
+    "sovereign_local_resident": "REGISTERED_TO_STEGVERSE_002_MICRO_NODE_RUNTIME_FAIL_CLOSED_HERE",
+    "browser_session_mediated": "REGISTERED_TO_BOUNDED_ENTITY_SESSION_PATH_FAIL_CLOSED_HERE"
+  },
+  "readme_impact": {
+    "required": true,
+    "state": "PENDING_IN_BRANCH",
+    "reason": "Public interface, capability, confinement, failure, and ownership semantics changed."
+  },
+  "validation": {
+    "head_observed_before_registry_update": "ff3bbb09282b9602e3d00114870c87e085d0e3d9",
+    "commit_statuses_observed": 0,
+    "state": "UNPOSTED"
+  },
+  "claims": {
+    "source_complete": false,
+    "merged": false,
+    "live_provider_execution": false,
+    "connected": false,
+    "activation": false,
+    "new_authority_created": false
+  },
+  "next_executable_action": "Complete the required repository README update, run/observe branch validation, correct any contract failures, perform a duplicate-owner audit against current main, then merge only if exact-head validation is green. Runtime CONNECTED proof remains a separate continuation through the existing WorkerCoordinator + Interlock/InTr + TV/TVC + Master Records chain."
+}
