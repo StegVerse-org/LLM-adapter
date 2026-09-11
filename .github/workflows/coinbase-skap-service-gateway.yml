@@ -5,17 +5,19 @@ on:
     paths:
       - 'llm_adapter/service_gateway_coinbase_skap.py'
       - 'llm_adapter/service_gateway_composed.py'
+      - 'llm_adapter/service_gateway_external_collab_consent.py'
       - 'llm_adapter/runtime_gateway.py'
       - 'llm_adapter/query_safe_access_log.py'
       - 'llm_adapter/deployed_gateway.py'
       - 'llm_adapter/service_gateway_http01.py'
       - 'tests/test_service_gateway_http01.py'
       - 'tests/test_service_gateway_query_safe_logging.py'
+      - 'tests/test_service_gateway_external_collab_consent.py'
       - 'docs/SERVICE_GATEWAY_QUERY_SECRET_SAFE_INGRESS_MIRROR_HANDOFF.md'
+      - 'docs/EXTERNAL_COLLAB_GOOGLE_DRIVE_CONSENT_ROUTE_MIRROR_HANDOFF.md'
       - 'compose.stegdeploy.tls.yaml'
       - 'scripts/stegdeploy_bootstrap.py'
       - 'tests/test_stegdeploy_native_tls.py'
-      - 'docs/STEGDEPLOY_NATIVE_TLS_INGRESS_MIRROR_HANDOFF.md'
       - 'llm_adapter/combined_gateway.py'
       - 'tests/test_node_advertisement.py'
       - 'tests/test_service_gateway_coinbase_skap.py'
@@ -27,17 +29,19 @@ on:
     paths:
       - 'llm_adapter/service_gateway_coinbase_skap.py'
       - 'llm_adapter/service_gateway_composed.py'
+      - 'llm_adapter/service_gateway_external_collab_consent.py'
       - 'llm_adapter/runtime_gateway.py'
       - 'llm_adapter/query_safe_access_log.py'
       - 'llm_adapter/deployed_gateway.py'
       - 'llm_adapter/service_gateway_http01.py'
       - 'tests/test_service_gateway_http01.py'
       - 'tests/test_service_gateway_query_safe_logging.py'
+      - 'tests/test_service_gateway_external_collab_consent.py'
       - 'docs/SERVICE_GATEWAY_QUERY_SECRET_SAFE_INGRESS_MIRROR_HANDOFF.md'
+      - 'docs/EXTERNAL_COLLAB_GOOGLE_DRIVE_CONSENT_ROUTE_MIRROR_HANDOFF.md'
       - 'compose.stegdeploy.tls.yaml'
       - 'scripts/stegdeploy_bootstrap.py'
       - 'tests/test_stegdeploy_native_tls.py'
-      - 'docs/STEGDEPLOY_NATIVE_TLS_INGRESS_MIRROR_HANDOFF.md'
       - 'llm_adapter/combined_gateway.py'
       - 'tests/test_node_advertisement.py'
       - 'tests/test_service_gateway_coinbase_skap.py'
@@ -82,6 +86,7 @@ jobs:
           python3 -m py_compile \
             llm_adapter/service_gateway_coinbase_skap.py \
             llm_adapter/service_gateway_composed.py \
+            llm_adapter/service_gateway_external_collab_consent.py \
             llm_adapter/runtime_gateway.py \
             llm_adapter/query_safe_access_log.py \
             llm_adapter/deployed_gateway.py \
@@ -94,6 +99,7 @@ jobs:
             tests/test_deployed_gateway_coinbase_skap.py \
             tests/test_service_gateway_http01.py \
             tests/test_service_gateway_query_safe_logging.py \
+            tests/test_service_gateway_external_collab_consent.py \
             tests/test_node_advertisement.py \
             tests/test_stegdeploy_native_tls.py
 
@@ -105,6 +111,7 @@ jobs:
             tests/test_deployed_gateway_coinbase_skap.py \
             tests/test_service_gateway_http01.py \
             tests/test_service_gateway_query_safe_logging.py \
+            tests/test_service_gateway_external_collab_consent.py \
             tests/test_node_advertisement.py
 
       - name: Assert transport-only authority and first interlock boundary
@@ -119,6 +126,7 @@ jobs:
           bootstrap = Path('scripts/stegdeploy_bootstrap.py').read_text(encoding='utf-8')
           runtime = Path('llm_adapter/runtime_gateway.py').read_text(encoding='utf-8')
           safe_log = Path('llm_adapter/query_safe_access_log.py').read_text(encoding='utf-8')
+          extcollab = Path('llm_adapter/service_gateway_external_collab_consent.py').read_text(encoding='utf-8')
           assert 'gateway_credential_value_access": False' in source
           assert 'gateway_decryption_authority": False' in source
           assert 'gateway_execution_authority": "NONE"' in source
@@ -157,6 +165,17 @@ jobs:
           assert 'production_public_route_observed' in bootstrap
           assert 'access_log=False' in runtime
           assert 'QuerySecretSafeAccessLogMiddleware(_base_app)' in runtime
+          assert 'service_gateway_external_collab_consent' in runtime
+          assert 'UPSTREAM_ORIGIN = "http://127.0.0.1:8786"' in extcollab
+          assert 'session.trust_env = False' in extcollab
+          assert 'CALLBACK_ALLOWED_QUERY_KEYS' in extcollab
+          assert 'allow_redirects=False' in extcollab
+          for route in (
+              '/tvc/external-collaboration/google-drive/consent/begin',
+              '/tvc/google-drive/external-collaboration/callback',
+              '/tvc/external-collaboration/google-drive/consent/health',
+          ):
+              assert route in extcollab
           for forbidden in ('scope.get("query_string")', "scope['query_string']", 'scope.get("raw_path")', "scope['raw_path']", 'scope.get("headers")', "scope['headers']"):
               assert forbidden not in safe_log
           print('COINBASE_SKAP_GATEWAY_VALIDATION_ONLY=true')
@@ -165,4 +184,5 @@ jobs:
           print('COINBASE_SKAP_DEVICE_KV_INTR_RECEIPT_REQUIRED=true')
           print('COINBASE_SKAP_NEXT_TRANSITION=KV_SKAP_VAULT_INTERLOCK_ADMISSION')
           print('SERVICE_GATEWAY_QUERY_SAFE_ACCESS_LOGGING=PASS')
+          print('EXTERNAL_COLLAB_CONSENT_ROUTE_SOURCE=PASS')
           PY
