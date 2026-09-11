@@ -1,0 +1,81 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SDK-GENERIC-MANIFEST-DOWNSTREAM-PROPAGATION-003",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/EXTERNAL_COLLAB_GOOGLE_DRIVE_CONSENT_ROUTE_MIRROR_HANDOFF.md",
+    "StegVerse-org/StegVerse-SDK:docs/SHARED_DOCS_EPHEMERAL_MANIFEST_WORKSPACE_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/SDK_WORKSPACE_EXTERNAL_COLLAB_CONSENT_LISTENER_RESIDENT_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:control/task-vectors/SDK-GENERIC-MANIFEST-DOWNSTREAM-PROPAGATION-003.json",
+    "StegVerse-org/StegVerse-SDK:tasks/SDK-GENERIC-MANIFEST-DOWNSTREAM-PROPAGATION-003.json",
+    "StegVerse-org/LLM-adapter:#72"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This change implements source-only bounded same-host Service Gateway forwarding. It emits no authentic resident, public-route, consent, provider, custody, or reconstruction evidence; Master Records intake remains a later authentic-runtime predicate."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/LLM-adapter:#72",
+      "StegVerse-org/StegVerse-SDK:docs/SHARED_DOCS_EPHEMERAL_MANIFEST_WORKSPACE_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:docs/SDK_WORKSPACE_EXTERNAL_COLLAB_CONSENT_LISTENER_RESIDENT_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/TVC:contracts/external-collab-google-drive-consent-public-route.v1.json"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-Labs/TVC",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/LLM-adapter:llm_adapter/runtime_gateway.py",
+      "StegVerse-org/LLM-adapter:llm_adapter/service_gateway_composed.py",
+      "StegVerse-org/LLM-adapter:tests/test_service_gateway.py",
+      "StegVerse-org/LLM-adapter:#72",
+      "StegVerse-Labs/TVC:contracts/external-collab-google-drive-consent-public-route.v1.json",
+      "StegVerse-Labs/.github:docs/SDK_WORKSPACE_EXTERNAL_COLLAB_CONSENT_LISTENER_RESIDENT_MIRROR_HANDOFF.md"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Service Gateway issue #72 is the existing machine-owned implementation lane and this PR extends that same runtime. The resident listener remains owned by the existing .github/TVC lane and CMC-029 remains the sovereign TLS owner; no competing gateway or runtime is created."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "The root README already defines the Service Gateway as a credential-neutral governed boundary and source/CI as distinct from authentic runtime. This source-only extension adds no public capability claim; the repository-specific mirror handoff records the exact route contract and runtime proof boundary.",
+    "evidence_refs": [
+      "README.md",
+      "docs/EXTERNAL_COLLAB_GOOGLE_DRIVE_CONSENT_ROUTE_MIRROR_HANDOFF.md",
+      "llm_adapter/runtime_gateway.py",
+      "StegVerse-Labs/TVC:contracts/external-collab-google-drive-consent-public-route.v1.json"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/runtime_gateway.py",
+    "llm_adapter/service_gateway_external_collab_consent.py",
+    "tests/test_service_gateway_external_collab_consent.py"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/service_gateway_external_collab_consent.py",
+      "semantic_responsibility": "Extend the existing Service Gateway with the exact TVC external-collaboration Google Drive consent GET routes using a fixed direct same-host loopback upstream and query-secret-safe forwarding semantics.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter:llm_adapter/service_gateway_composed.py and llm_adapter/runtime_gateway.py",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "tests/test_service_gateway_external_collab_consent.py",
+      "semantic_responsibility": "Deterministically validate exact route/query preservation, loopback-only transport, response-header filtering, environment-proxy refusal, and fail-closed listener-unreachable behavior for the existing Service Gateway.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter:tests/test_service_gateway.py and tests/test_service_gateway_query_safe_logging.py",
+      "decision": "EXTEND"
+    }
+  ]
+}
