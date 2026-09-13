@@ -88,6 +88,18 @@
       "evidence_refs": [
         "llm_adapter/southbound_sdk_return.py"
       ]
+    },
+    {
+      "path": ".github/workflows/southbound-sdk-return-validation.yml",
+      "semantic_responsibility": "Non-authorizing exact-head source validation for the generic framework-return transition and fail-closed boundaries.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": ".github/workflows work-mutation/source-validation patterns",
+      "justification": "A dedicated path-filtered workflow proves the new contract tests actually execute rather than borrowing unrelated repository CI results.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "tests/test_southbound_sdk_return.py",
+        "scripts/validate_work_mutation_safety.py"
+      ]
     }
   ]
 }
