@@ -1,0 +1,45 @@
+name: Southbound SDK Return Validation
+
+on:
+  pull_request:
+    paths:
+      - 'llm_adapter/southbound_sdk_return.py'
+      - 'tests/test_southbound_sdk_return.py'
+      - '.github/workflows/southbound-sdk-return-validation.yml'
+      - 'README.md'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert validation-only authority boundary
+        run: |
+          set -eu
+          test -z "${GITHUB_TOKEN:-}"
+          test -z "${GH_TOKEN:-}"
+          echo 'SOUTHBOUND_SDK_RETURN_GITHUB_AUTHORITY=NONE'
+          echo 'SOUTHBOUND_SDK_RETURN_RUNTIME_AUTHORITY=NONE'
+
+      - name: Materialize exact source anonymously
+        env:
+          SOURCE_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -eu
+          curl -fsSL "https://github.com/${SOURCE_REPO}/archive/${SOURCE_SHA}.tar.gz" -o /tmp/source.tgz
+          mkdir /tmp/source
+          tar -xzf /tmp/source.tgz -C /tmp/source --strip-components=1
+
+      - name: Validate generic final StegVerse-side transition
+        run: |
+          set -eu
+          cd /tmp/source
+          python -m pip install --disable-pip-version-check --no-input pytest
+          pytest -q tests/test_southbound_sdk_return.py
+          echo 'SOUTHBOUND_SDK_RETURN_SOURCE_VALIDATION=PASS'
+          echo 'INTERLOCK_INTR_RUNTIME_EGRESS_OBSERVED=false'
+          echo 'FAR_SIDE_TRANSITION_OBSERVED=false'
+          echo 'COMMUNICATION_COMPLETE=false'
