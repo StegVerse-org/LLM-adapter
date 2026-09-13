@@ -1,0 +1,57 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "ENTERPRISE-RENDER-ERADICATION-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/ENTERPRISE_RENDER_ERADICATION_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github#1703"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This change updates repository coordination source only and creates no custody or reconstruction behavior."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github#1703",
+      "docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md",
+      "data/hil-layer-workboard.json"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/Site"
+    ],
+    "evidence_refs": [
+      "The active HIL workboard contained retired hosted-service deployment/readiness targets.",
+      "Canonical enterprise cleanup requires current workboards to use StegVerse runtime composition instead of a retired hosted target.",
+      "No new runtime implementation is introduced by this mutation."
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "intentional_parallel_versioning": false,
+    "reconciliation_ref": "docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "The mutation updates an internal coordination workboard and does not change public runtime behavior or package interfaces.",
+    "evidence_refs": [
+      "data/hil-layer-workboard.json is a coordination/status surface.",
+      "Runtime implementation files are unchanged."
+    ]
+  },
+  "covered_paths": [
+    "data/hil-layer-workboard.json"
+  ],
+  "new_files": []
+}
