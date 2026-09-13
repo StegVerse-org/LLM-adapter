@@ -1,0 +1,122 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "MIR-CONNECTION-ROUNDTRIP-TECHNICAL-GUIDE-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "docs/SOUTHBOUND_SDK_RETURN_EGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/Site:docs/MIR_CONNECTION_ROUNDTRIP_TECHNICAL_GUIDE_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/CANONICAL_SOUTHBOUND_COMMUNICATION_LIFECYCLE.md",
+    "StegVerse-Labs/.github:docs/REUSABLE_TASK_COMPONENT_MODEL_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:data/reusable-transport-component-contract.json",
+    "StegVerse-Labs/.github:data/goal-task-transport-profiles/MIR-CONNECTION-ROUNDTRIP-TECHNICAL-GUIDE-001.json",
+    "StegVerse-org/StegVerse-SDK:docs/PUBLISHER_SDK_RETURN_BINDING.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/MIR-CONNECTION-ROUNDTRIP-TECHNICAL-GUIDE-001.json"
+  ],
+  "reusable_component_binding": {
+    "model_merge": "b9f8e5153aa1651f2d7f043fb902eacb7c113ed9",
+    "component_id": "RTC-STEGVERSE-EGRESS-007",
+    "companion_transport_component": "RTC-INTERLOCK-INTR-TRANSPORT-008",
+    "capability": "final StegVerse-side framework egress transition before canonical Interlock/InTr transport",
+    "originating_goal_task_remains_owner": true,
+    "new_goal_task_created": false,
+    "authority_effect": "NONE"
+  },
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This mutation prepares the manifest-declared final StegVerse-side LLM Adapter transition and exact InTr handoff only; it does not create Master Records custody or reconstruction authority."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "docs/SOUTHBOUND_SDK_RETURN_EGRESS_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:docs/CANONICAL_SOUTHBOUND_COMMUNICATION_LIFECYCLE.md",
+      "StegVerse-Labs/.github:data/reusable-task-component-model.json",
+      "StegVerse-Labs/.github:data/reusable-transport-component-contract.json",
+      "StegVerse-org/StegVerse-SDK:docs/PUBLISHER_SDK_RETURN_BINDING.md",
+      "llm_adapter/external_llm_connection.py"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "GCAT-BCAT-Engine/Publisher",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/Site"
+    ],
+    "evidence_refs": [
+      "Provider-specific LLM Adapter egress functions are scoped to provider execution results and require exact response-hash InTr admission.",
+      "No generic external-framework SDK-result return transition existed in LLM-adapter main.",
+      "SDK PR #224 merged the canonical Publisher-return binding and stops at READY_FOR_FINAL_STEGVERSE_EGRESS_TRANSITION.",
+      "Reusable Task Component Model maps this capability to RTC-STEGVERSE-EGRESS-007 and requires canonical Interlock/InTr transport to remain separate.",
+      "Canonical SOUTH lifecycle requires LLM Adapter as the final StegVerse-side transition for framework paths and far-side InTr as terminal communication."
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "intentional_parallel_versioning": false,
+    "reconciliation_ref": "docs/SOUTHBOUND_SDK_RETURN_EGRESS_MIRROR_HANDOFF.md"
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.southbound-sdk-return.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.southbound-sdk-return.md documents the generic final StegVerse-side transition and authority ceiling.",
+      "docs/SOUTHBOUND_SDK_RETURN_EGRESS.md documents the exact binding and runtime completion boundary.",
+      "docs/SOUTHBOUND_SDK_RETURN_EGRESS_MIRROR_HANDOFF.md binds the implementation to RTC-STEGVERSE-EGRESS-007."
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/southbound_sdk_return.py",
+    "tests/test_southbound_sdk_return.py",
+    "docs/SOUTHBOUND_SDK_RETURN_EGRESS.md",
+    "docs/SOUTHBOUND_SDK_RETURN_EGRESS_MIRROR_HANDOFF.md",
+    "README.southbound-sdk-return.md",
+    ".github/workflows/southbound-sdk-return-validation.yml"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/southbound_sdk_return.py",
+      "semantic_responsibility": "Reusable RTC-STEGVERSE-EGRESS-007 implementation for the final StegVerse-side LLM Adapter transition of an exact SDK Publisher-return binding before canonical Interlock/InTr egress.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "llm_adapter/external_llm_connection.py provider-specific exact-response egress pattern",
+      "justification": "Generic framework-return traffic is not a provider execution result and must not be forced through provider-specific egress functions; this layer reuses their exact-hash/fail-closed pattern without duplicating provider execution or Interlock/InTr authority.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "StegVerse-org/StegVerse-SDK:stegverse/publisher_return_binding.py",
+        "llm_adapter/external_llm_connection.py",
+        "StegVerse-Labs/.github:data/reusable-transport-component-contract.json"
+      ]
+    },
+    {
+      "path": "tests/test_southbound_sdk_return.py",
+      "semantic_responsibility": "Regression coverage for exact SDK binding preservation, LLM Adapter surface enforcement, InTr admission binding, and no premature communication completion.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "tests/test_external_llm_connection.py",
+      "justification": "Dedicated tests isolate the reusable generic framework-return contract from provider-response egress tests.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "llm_adapter/southbound_sdk_return.py"
+      ]
+    },
+    {
+      "path": ".github/workflows/southbound-sdk-return-validation.yml",
+      "semantic_responsibility": "Non-authorizing exact-head source validation for the reusable framework-return transition and fail-closed boundaries.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": ".github/workflows work-mutation/source-validation patterns",
+      "justification": "A dedicated path-filtered workflow proves the component contract tests actually execute rather than borrowing unrelated repository CI results.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "tests/test_southbound_sdk_return.py",
+        "scripts/validate_work_mutation_safety.py"
+      ]
+    }
+  ]
+}
