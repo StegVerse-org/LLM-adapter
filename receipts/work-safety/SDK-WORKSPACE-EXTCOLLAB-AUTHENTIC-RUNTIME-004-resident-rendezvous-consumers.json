@@ -1,0 +1,73 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SDK-WORKSPACE-EXTCOLLAB-AUTHENTIC-RUNTIME-004",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-Labs/.github:docs/SDK_WORKSPACE_EXTCOLLAB_AUTHENTIC_RUNTIME_004_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/REUSABLE_GOAL_TASK_TRANSPORT_COMPONENTS_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/RESIDENT_RENDEZVOUS_SERVICE_GATEWAY_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/SDK-WORKSPACE-EXTCOLLAB-AUTHENTIC-RUNTIME-004.json",
+    "StegVerse-Labs/.github:data/goal-task-transport-profiles/SDK-WORKSPACE-EXTCOLLAB-AUTHENTIC-RUNTIME-004.json",
+    "StegVerse-org/LLM-adapter:#72"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This change extends source-only non-authorizing rendezvous admission for two already-canonical resident requests. It emits no authentic runtime execution, provider, custody, consent, or reconstruction evidence; Master Records remains a later authentic-evidence predicate."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github:data/reusable-task-components/RTC-RESIDENT-RENDEZVOUS-010.json",
+      "StegVerse-Labs/.github:scripts/consume_resident_rendezvous.py",
+      "StegVerse-Labs/.github:docs/SDK_WORKSPACE_EXTCOLLAB_AUTHENTIC_RUNTIME_004_MIRROR_HANDOFF.md",
+      "StegVerse-org/LLM-adapter:#72"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/TVC",
+      "StegVerse-org/StegVerse-SDK"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/LLM-adapter:llm_adapter/resident_rendezvous_api.py",
+      "StegVerse-org/LLM-adapter:docs/RESIDENT_RENDEZVOUS_SERVICE_GATEWAY_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:data/reusable-task-components/RTC-RESIDENT-RENDEZVOUS-010.json",
+      "StegVerse-Labs/.github:scripts/consume_resident_rendezvous.py",
+      "StegVerse-Labs/.github:control/resident-execution-request.d/sdk-workspace-external-collab-client-secret-reseal-001.json",
+      "StegVerse-Labs/.github:control/resident-execution-request.d/sdk-workspace-external-collab-consent-listener-001.json"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "RTC-RESIDENT-RENDEZVOUS-010 and Service Gateway issue #72 already own bounded resident request transport. This change extends those exact owners with two exact consumers and creates no competing gateway, scheduler, dispatcher, credential path, transition authority, or device verifier."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "The repository already documents the Service Gateway as a non-authorizing runtime boundary. This is a bounded profile extension of the existing rendezvous component; the active Goal handoff records the exact source and evidence boundary.",
+    "evidence_refs": [
+      "README.md",
+      "docs/RESIDENT_RENDEZVOUS_SERVICE_GATEWAY_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:docs/SDK_WORKSPACE_EXTCOLLAB_AUTHENTIC_RUNTIME_004_MIRROR_HANDOFF.md"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/resident_rendezvous_api.py",
+    "tests/test_sdk_extcollab_resident_rendezvous_profiles.py"
+  ],
+  "new_files": [
+    {
+      "path": "tests/test_sdk_extcollab_resident_rendezvous_profiles.py",
+      "semantic_responsibility": "Deterministically prove the existing resident rendezvous Gateway accepts only the two exact external-collaboration resident request contracts, binds them by transport correlation, and fails closed on authority-bearing mutation.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter:tests/test_resident_rendezvous_api.py and tests/test_reusable_resident_rendezvous_gadi.py",
+      "decision": "EXTEND"
+    }
+  ]
+}
