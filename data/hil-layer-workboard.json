@@ -8,35 +8,24 @@
   "tasks": [
     {
       "id": "HIL-BUILD-001",
-      "title": "Managed receiver implementation present on main",
+      "title": "Receiver implementation present on main",
       "repository": "StegVerse-org/LLM-adapter",
       "location_type": "repository_paths",
       "location": "StegVerse-org/LLM-adapter@main",
-      "source_path": "render.yaml; .github/workflows/hil-managed-receiver-validation.yml; docs/HIL_HOSTED_RECEIVER_ACTIVATION.md",
-      "acceptance": "All managed receiver implementation files exist on main with the reviewed content",
-      "next_action": "Maintain these files while activation proceeds through issue #91",
-      "state": "COMPLETE"
-    },
-    {
-      "id": "HIL-CAPACITY-001",
-      "title": "Restore managed-host build capacity",
-      "repository": "StegVerse-org/LLM-adapter",
-      "location_type": "issue",
-      "location": "StegVerse-org/LLM-adapter#94",
-      "acceptance": "Render service srv-d9l4fhijnfac73a8ou20 can start a fresh build from main and reach a terminal successful deploy",
-      "next_action": "Closed after live deploy dep-d9n5tbrncjis739hgkug",
+      "source_path": ".github/workflows/hil-managed-receiver-validation.yml; docs/HIL_HOSTED_RECEIVER_ACTIVATION.md",
+      "acceptance": "Receiver implementation files exist on main with reviewed content and no third-party hosting dependency",
+      "next_action": "Maintain source while runtime activation proceeds through canonical StegVerse runtime composition",
       "state": "COMPLETE"
     },
     {
       "id": "HIL-ACTIVATE-001",
-      "title": "Deploy managed receiver",
+      "title": "Activate receiver on canonical StegVerse runtime",
       "repository": "StegVerse-org/LLM-adapter",
       "location_type": "issue",
       "location": "StegVerse-org/LLM-adapter#91",
-      "source_path": "render.yaml",
-      "acceptance": "Managed service reaches a terminal live deploy with durable storage attached",
-      "next_action": "Preserve deploy dep-d9n5tbrncjis739hgkug and advance to public readiness verification",
-      "state": "COMPLETE"
+      "acceptance": "Receiver reaches a live admitted runtime with durable storage under canonical StegVerse authority boundaries",
+      "next_action": "Use the canonical sovereign/runtime lane; do not select a third-party host",
+      "state": "IN_PROGRESS"
     },
     {
       "id": "HIL-VERIFY-001",
@@ -45,19 +34,19 @@
       "location_type": "workflow",
       "location": ".github/workflows/hil-https-receiver-probe.yml",
       "source_path": "scripts/probe_hil_https_receiver.py",
-      "acceptance": "Retained HIL-HTTPS-RECEIVER-PROBE-v1 reports READY with exact v1.1 hashes and zero blockers",
-      "next_action": "Dispatch probe against https://stegverse-hil-receiver.onrender.com and retain the evidence on issue #91",
+      "acceptance": "Retained HIL-HTTPS-RECEIVER-PROBE-v1 reports READY with exact v1.1 hashes and zero blockers on the admitted runtime origin",
+      "next_action": "Probe only the runtime origin admitted by canonical StegVerse coordination; no provider-specific default origin is permitted",
       "state": "IN_PROGRESS"
     },
     {
       "id": "HIL-PERSIST-001",
-      "title": "Prove hosted persistence",
+      "title": "Prove sovereign persistence",
       "repository": "StegVerse-org/LLM-adapter",
       "location_type": "issue",
       "location": "StegVerse-org/LLM-adapter#91",
       "source_path": "scripts/verify_hil_deployed_cycle_evidence.py",
-      "acceptance": "Same submission, PDF hash, and provenance hash survive a real hosted restart or replacement",
-      "next_action": "Execute one controlled cycle across hosted restart or replacement after readiness passes",
+      "acceptance": "Same submission, PDF hash, and provenance hash survive a real canonical-runtime restart or replacement",
+      "next_action": "Execute one controlled cycle across canonical-runtime restart or replacement after readiness passes",
       "state": "QUEUED"
     },
     {
