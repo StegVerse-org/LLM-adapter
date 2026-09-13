@@ -1,4 +1,9 @@
-"""Non-authorizing Service Gateway rendezvous for sovereign resident requests."""
+"""Non-authorizing Service Gateway rendezvous for sovereign resident requests.
+
+Implements the gateway side of RTC-RESIDENT-RENDEZVOUS-010.  The gateway stores,
+routes, and correlates bounded requests; it grants no execution, transition,
+claim/fence, credential, or user-verification authority.
+"""
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -18,6 +23,8 @@ ACK_SCHEMA = "stegverse.resident-rendezvous.acknowledgement/v1"
 ADVERTISEMENT_SCHEMA = "stegverse.resident-rendezvous.advertisement/v1"
 DISCOVERY_SCHEMA = "stegverse.resident-rendezvous.discovery/v1"
 RESIDENT_SCHEMA = "stegverse.resident-execution-request/v1"
+
+# Legacy exports retained for compatibility.
 ALLOWED_CONSUMER = "stegos_kv_intr_chain"
 ALLOWED_TASK = "SHWP-STEGOS-KV-INTR-CHAIN-001"
 ALLOWED_MODE = "STEGOS_KV_INTR_CHAIN"
@@ -27,18 +34,56 @@ CURRENT_ALLOWED_STEPS = [
     "SHWP-STEGOS-RELAY-NODE-KV-CONTINUITY-001",
     "SHWP-DEVICE-KV-INTR-OBSERVATION-001",
 ]
-LEGACY_ALLOWED_STEPS = [
-    *CURRENT_ALLOWED_STEPS,
-    "SHWP-ENDPOINT-FANOUT-SOVEREIGN-RUNTIME-001",
-]
+LEGACY_ALLOWED_STEPS = [*CURRENT_ALLOWED_STEPS, "SHWP-ENDPOINT-FANOUT-SOVEREIGN-RUNTIME-001"]
 ALLOWED_STEP_SETS = (CURRENT_ALLOWED_STEPS, LEGACY_ALLOWED_STEPS)
 CURRENT_REQUEST_ID = "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-003"
 LEGACY_REQUEST_IDS = {
     "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-001",
     "RESIDENT-EXEC-STEGOS-KV-INTR-CHAIN-002",
 }
+
+GADI_CONSUMER = "gadi_runtime_observation"
+GADI_REQUEST_ID = "RESIDENT-OBSERVE-GADI-RUNTIME-001"
+GADI_EXPECTED = {
+    "schema": RESIDENT_SCHEMA,
+    "request_id": GADI_REQUEST_ID,
+    "state": "REQUESTED",
+    "task_id": "GADI-RESIDENT-EXECUTION-001",
+    "parent_task_id": "GADI-001",
+    "mode": "GADI_RUNTIME_OBSERVATION",
+    "entrypoint": "scripts/dispatch_gadi_resident_execution.py",
+    "observation_steps": [
+        "CURRENT_RETAINED_STEGBROWSER_STEGOS_NODE_DISCOVERY",
+        "CURRENT_RETAINED_STEGBROWSER_STEGOS_CURRENT_IPHONE_RECEIPT_READBACK",
+        "CURRENT_GADI_RUNTIME_BINDING",
+    ],
+    "credential_authority": "TV/TVC",
+    "github_token_required": False,
+    "github_token_runtime_authority": "NONE",
+    "heartbeat_grants_execution_authority": False,
+    "request_granted_authority": False,
+    "network_source_fetch_allowed": False,
+    "second_machine_required": False,
+    "workercoordinator_may_be_visited_only_after_nonclaim_readiness": True,
+    "authority_effect": "NONE_REQUEST_ONLY",
+}
+
+PROFILES = {
+    ALLOWED_CONSUMER: {
+        "current_request_id": CURRENT_REQUEST_ID,
+        "validation": "legacy_stegos_kv",
+        "submitter_ref": "node_receipt_legacy_provenance",
+    },
+    GADI_CONSUMER: {
+        "current_request_id": GADI_REQUEST_ID,
+        "validation": "exact_gadi",
+        "submitter_ref": "transport_correlation_only",
+    },
+}
+
 CANONICAL_NODE_REF_RE = re.compile(r"^SV-NODE-[0-9a-f]{24}$")
 SUBMITTER_PROVENANCE_RE = re.compile(r"^node-receipt-1-sha256:[0-9a-f]{64}$")
+TRANSPORT_CORRELATION_RE = re.compile(r"^transport-correlation:sha256:[0-9a-f]{64}$")
 MAX_ADVERTISEMENT_LEASE_SECONDS = 300
 FORBIDDEN_FIELD_NAMES = {
     "password", "secret", "credential", "credential_value", "private_key",
@@ -57,6 +102,13 @@ def canonical_json(value: Any) -> str:
 
 def sha256_uri(value: Any) -> str:
     return "sha256:" + hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
+
+
+def _profile(consumer: str) -> dict[str, Any]:
+    value = PROFILES.get(consumer)
+    if value is None:
+        raise ResidentRendezvousError("consumer not admitted")
+    return value
 
 
 def _parse_time(value: Any) -> datetime:
@@ -88,10 +140,7 @@ def _reject_secret_or_command_fields(value: Any, path: str = "$") -> None:
             _reject_secret_or_command_fields(child, f"{path}[{index}]")
 
 
-def validate_resident_request(value: Any) -> dict[str, Any]:
-    if not isinstance(value, Mapping):
-        raise ResidentRendezvousError("resident_request must be an object")
-    _reject_secret_or_command_fields(value)
+def _validate_legacy_resident_request(value: Mapping[str, Any]) -> dict[str, Any]:
     expected = {
         "schema": RESIDENT_SCHEMA,
         "state": "REQUESTED",
@@ -127,6 +176,21 @@ def validate_resident_request(value: Any) -> dict[str, Any]:
     return dict(value)
 
 
+def validate_resident_request(value: Any, *, consumer: str = ALLOWED_CONSUMER) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        raise ResidentRendezvousError("resident_request must be an object")
+    _reject_secret_or_command_fields(value)
+    profile = _profile(consumer)
+    if profile["validation"] == "legacy_stegos_kv":
+        return _validate_legacy_resident_request(value)
+    if profile["validation"] == "exact_gadi":
+        rendered = dict(value)
+        if rendered != GADI_EXPECTED:
+            raise ResidentRendezvousError("GADI resident_request contract mismatch")
+        return rendered
+    raise ResidentRendezvousError("consumer validation profile unsupported")
+
+
 def validate_rendezvous_request(value: Any, *, now: datetime | None = None) -> dict[str, Any]:
     if not isinstance(value, Mapping):
         raise ResidentRendezvousError("request must be an object")
@@ -140,19 +204,23 @@ def validate_rendezvous_request(value: Any, *, now: datetime | None = None) -> d
         raise ResidentRendezvousError("rendezvous request fields invalid")
     if value["schema"] != REQUEST_SCHEMA:
         raise ResidentRendezvousError("rendezvous request schema mismatch")
-    if value["consumer"] != ALLOWED_CONSUMER:
-        raise ResidentRendezvousError("consumer not admitted")
+    consumer = str(value.get("consumer") or "")
+    profile = _profile(consumer)
     for field in ("request_id", "target_node_ref", "submitter_authorization_ref"):
         if not isinstance(value[field], str) or not value[field] or len(value[field]) > 256:
             raise ResidentRendezvousError(f"{field} invalid")
     if value["authority_effect"] != "NONE_REQUEST_ONLY":
         raise ResidentRendezvousError("authority_effect mismatch")
-    resident_request = validate_resident_request(value["resident_request"])
-    if resident_request.get("request_id") == CURRENT_REQUEST_ID:
-        _canonical_node_ref(value.get("target_node_ref"))
-        provenance = value.get("submitter_authorization_ref")
-        if not isinstance(provenance, str) or not SUBMITTER_PROVENANCE_RE.fullmatch(provenance):
-            raise ResidentRendezvousError("current request submitter Node Receipt #1 provenance invalid")
+    resident_request = validate_resident_request(value["resident_request"], consumer=consumer)
+    _canonical_node_ref(value.get("target_node_ref"))
+    correlation = value.get("submitter_authorization_ref")
+    if profile["submitter_ref"] == "node_receipt_legacy_provenance":
+        if resident_request.get("request_id") == CURRENT_REQUEST_ID:
+            if not isinstance(correlation, str) or not SUBMITTER_PROVENANCE_RE.fullmatch(correlation):
+                raise ResidentRendezvousError("current request submitter Node Receipt #1 provenance invalid")
+    elif profile["submitter_ref"] == "transport_correlation_only":
+        if not isinstance(correlation, str) or not TRANSPORT_CORRELATION_RE.fullmatch(correlation):
+            raise ResidentRendezvousError("transport correlation reference invalid")
     if value["resident_request_sha256"] != sha256_uri(resident_request):
         raise ResidentRendezvousError("resident request digest mismatch")
     submitted = _parse_time(value["submitted_at"])
@@ -187,9 +255,7 @@ def validate_acknowledgement(value: Any) -> dict[str, Any]:
     digest = value["resident_request_sha256"]
     if not isinstance(digest, str) or len(digest) != 71 or not digest.startswith("sha256:"):
         raise ResidentRendezvousError("resident request digest invalid")
-    if value["resident_consumption_state"] not in {
-        "ATTEMPT_RECORDED", "COMPLETED", "BLOCKED", "NO_REQUEST"
-    }:
+    if value["resident_consumption_state"] not in {"ATTEMPT_RECORDED", "COMPLETED", "BLOCKED", "NO_REQUEST"}:
         raise ResidentRendezvousError("resident consumption state invalid")
     refs = value["local_receipt_refs"]
     if not isinstance(refs, list) or len(refs) > 16 or any(not isinstance(x, str) or not x for x in refs):
@@ -217,10 +283,12 @@ def validate_advertisement(value: Any, *, now: datetime | None = None) -> dict[s
     }
     if set(value) != required:
         raise ResidentRendezvousError("advertisement fields invalid")
+    consumer = str(value.get("consumer") or "")
+    profile = _profile(consumer)
     expected = {
         "schema": ADVERTISEMENT_SCHEMA,
-        "consumer": ALLOWED_CONSUMER,
-        "current_resident_request_id": CURRENT_REQUEST_ID,
+        "consumer": consumer,
+        "current_resident_request_id": profile["current_request_id"],
         "credential_authority": "TV/TVC",
         "gateway_execution_authority": "NONE",
         "advertisement_grants_authority": False,
@@ -240,77 +308,6 @@ def validate_advertisement(value: Any, *, now: datetime | None = None) -> dict[s
     if expires <= current:
         raise ResidentRendezvousError("advertisement expired")
     return dict(value)
-
-
-def store_advertisement(
-    value: Mapping[str, Any],
-    *,
-    root: Path | None = None,
-    now: datetime | None = None,
-) -> dict[str, Any]:
-    advertisement = validate_advertisement(value, now=now)
-    base = root or rendezvous_root()
-    directory = base / "advertisements"
-    directory.mkdir(parents=True, exist_ok=True)
-    path = directory / (_safe_id(advertisement["target_node_ref"]) + ".json")
-    raw = (json.dumps(advertisement, indent=2, sort_keys=True) + "\n").encode("utf-8")
-    tmp = path.with_name("." + path.name + ".tmp")
-    fd = os.open(tmp, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, 0o600)
-    try:
-        os.write(fd, raw)
-    finally:
-        os.close(fd)
-    os.replace(tmp, path)
-    return {
-        "schema": "stegverse.resident-rendezvous.advertisement-store-result/v1",
-        "state": "ADVERTISED",
-        "target_node_ref": advertisement["target_node_ref"],
-        "expires_at": advertisement["expires_at"],
-        "gateway_execution_authority": "NONE",
-        "credential_authority": "TV/TVC",
-        "authority_effect": "NONE_DISCOVERY_ONLY",
-    }
-
-
-def discover_resident(
-    *,
-    root: Path | None = None,
-    now: datetime | None = None,
-) -> dict[str, Any]:
-    base = root or rendezvous_root()
-    directory = base / "advertisements"
-    current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    matches: list[dict[str, Any]] = []
-    if directory.is_dir():
-        for path in sorted(directory.glob("*.json")):
-            try:
-                value = validate_advertisement(
-                    json.loads(path.read_text(encoding="utf-8")),
-                    now=current,
-                )
-            except Exception:
-                continue
-            matches.append(value)
-    common = {
-        "schema": DISCOVERY_SCHEMA,
-        "consumer": ALLOWED_CONSUMER,
-        "current_resident_request_id": CURRENT_REQUEST_ID,
-        "gateway_execution_authority": "NONE",
-        "credential_authority": "TV/TVC",
-        "discovery_grants_authority": False,
-        "authority_effect": "NONE_DISCOVERY_ONLY",
-    }
-    if not matches:
-        return {**common, "state": "UNAVAILABLE", "target_node_ref": None, "expires_at": None}
-    if len(matches) != 1:
-        return {**common, "state": "AMBIGUOUS", "target_node_ref": None, "expires_at": None}
-    match = matches[0]
-    return {
-        **common,
-        "state": "AVAILABLE",
-        "target_node_ref": match["target_node_ref"],
-        "expires_at": match["expires_at"],
-    }
 
 
 def rendezvous_root() -> Path:
@@ -359,6 +356,73 @@ def _atomic_create(path: Path, value: Mapping[str, Any]) -> None:
         os.close(fd)
 
 
+def store_advertisement(value: Mapping[str, Any], *, root: Path | None = None, now: datetime | None = None) -> dict[str, Any]:
+    advertisement = validate_advertisement(value, now=now)
+    base = root or rendezvous_root()
+    directory = base / "advertisements"
+    directory.mkdir(parents=True, exist_ok=True)
+    key = advertisement["target_node_ref"] + "|" + advertisement["consumer"]
+    path = directory / (_safe_id(key) + ".json")
+    raw = (json.dumps(advertisement, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    tmp = path.with_name("." + path.name + ".tmp")
+    fd = os.open(tmp, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, 0o600)
+    try:
+        os.write(fd, raw)
+    finally:
+        os.close(fd)
+    os.replace(tmp, path)
+    return {
+        "schema": "stegverse.resident-rendezvous.advertisement-store-result/v1",
+        "state": "ADVERTISED",
+        "target_node_ref": advertisement["target_node_ref"],
+        "consumer": advertisement["consumer"],
+        "expires_at": advertisement["expires_at"],
+        "gateway_execution_authority": "NONE",
+        "credential_authority": "TV/TVC",
+        "authority_effect": "NONE_DISCOVERY_ONLY",
+    }
+
+
+def _active_advertisements(*, root: Path, now: datetime, consumer: str | None = None, target_node_ref: str | None = None) -> list[dict[str, Any]]:
+    directory = root / "advertisements"
+    matches: list[dict[str, Any]] = []
+    if not directory.is_dir():
+        return matches
+    for path in sorted(directory.glob("*.json")):
+        try:
+            value = validate_advertisement(json.loads(path.read_text(encoding="utf-8")), now=now)
+        except Exception:
+            continue
+        if consumer is not None and value["consumer"] != consumer:
+            continue
+        if target_node_ref is not None and value["target_node_ref"] != target_node_ref:
+            continue
+        matches.append(value)
+    return matches
+
+
+def discover_resident(*, root: Path | None = None, now: datetime | None = None, consumer: str = ALLOWED_CONSUMER) -> dict[str, Any]:
+    profile = _profile(consumer)
+    base = root or rendezvous_root()
+    current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    matches = _active_advertisements(root=base, now=current, consumer=consumer)
+    common = {
+        "schema": DISCOVERY_SCHEMA,
+        "consumer": consumer,
+        "current_resident_request_id": profile["current_request_id"],
+        "gateway_execution_authority": "NONE",
+        "credential_authority": "TV/TVC",
+        "discovery_grants_authority": False,
+        "authority_effect": "NONE_DISCOVERY_ONLY",
+    }
+    if not matches:
+        return {**common, "state": "UNAVAILABLE", "target_node_ref": None, "expires_at": None}
+    if len(matches) != 1:
+        return {**common, "state": "AMBIGUOUS", "target_node_ref": None, "expires_at": None}
+    match = matches[0]
+    return {**common, "state": "AVAILABLE", "target_node_ref": match["target_node_ref"], "expires_at": match["expires_at"]}
+
+
 def store_request(value: Mapping[str, Any], *, root: Path | None = None, now: datetime | None = None) -> dict[str, Any]:
     request = validate_rendezvous_request(value, now=now)
     base = root or rendezvous_root()
@@ -378,7 +442,7 @@ def store_request(value: Mapping[str, Any], *, root: Path | None = None, now: da
     }
 
 
-def next_request(target_node_ref: str, *, root: Path | None = None, now: datetime | None = None) -> dict[str, Any] | None:
+def next_request(target_node_ref: str, *, root: Path | None = None, now: datetime | None = None, consumer: str | None = None) -> dict[str, Any] | None:
     base = root or rendezvous_root()
     pending, acknowledged = _paths(base)
     current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
@@ -386,13 +450,14 @@ def next_request(target_node_ref: str, *, root: Path | None = None, now: datetim
         if (acknowledged / path.name).exists():
             continue
         try:
-            value = validate_rendezvous_request(
-                json.loads(path.read_text(encoding="utf-8")), now=current
-            )
+            value = validate_rendezvous_request(json.loads(path.read_text(encoding="utf-8")), now=current)
         except Exception:
             continue
-        if value["target_node_ref"] == target_node_ref:
-            return value
+        if value["target_node_ref"] != target_node_ref:
+            continue
+        if consumer is not None and value["consumer"] != consumer:
+            continue
+        return value
     return None
 
 
@@ -415,6 +480,8 @@ def store_acknowledgement(value: Mapping[str, Any], *, root: Path | None = None)
         "gateway_recorded_at": datetime.now(timezone.utc).isoformat(),
         "canonical_runtime_evidence_verified": False,
         "gateway_execution_authority": "NONE",
+        "user_verification_authority": "KV/SKAP Vault",
+        "target_node_identity_role": "ROUTING_ONLY",
         "authority_effect": "NONE_OBSERVATION_ONLY",
     }
     _atomic_create(acknowledged / name, record)
@@ -451,9 +518,12 @@ async def advertise_resident(request: Request) -> dict[str, Any]:
 
 
 @router.get("/api/resident-rendezvous/v1/discovery")
-def discover_resident_endpoint() -> dict[str, Any]:
+def discover_resident_endpoint(consumer: str = ALLOWED_CONSUMER) -> dict[str, Any]:
     _require_enabled()
-    return discover_resident()
+    try:
+        return discover_resident(consumer=consumer)
+    except ResidentRendezvousError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.post("/api/resident-rendezvous/v1/requests")
@@ -462,27 +532,44 @@ async def submit_resident_request(request: Request) -> dict[str, Any]:
     payload = await request.json()
     auth_header = request.headers.get("X-StegVerse-Authorization-Id", "")
     if not auth_header or auth_header != payload.get("submitter_authorization_ref"):
-        raise HTTPException(status_code=403, detail="submitter provenance reference binding required")
+        raise HTTPException(status_code=403, detail="submitter provenance/correlation reference binding required")
     try:
         return store_request(payload)
     except ResidentRendezvousError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+def _resolve_poll_consumer(target_node_ref: str, *, explicit: str | None = None) -> str:
+    if explicit:
+        _profile(explicit)
+        return explicit
+    base = rendezvous_root()
+    current = datetime.now(timezone.utc)
+    matches = _active_advertisements(root=base, now=current, target_node_ref=target_node_ref)
+    consumers = sorted({value["consumer"] for value in matches})
+    if len(consumers) == 1:
+        return consumers[0]
+    if len(consumers) > 1:
+        raise ResidentRendezvousError("resident poll consumer ambiguous")
+    return ALLOWED_CONSUMER
+
+
 @router.get("/api/resident-rendezvous/v1/requests")
-def fetch_resident_request(target_node_ref: str, request: Request) -> dict[str, Any]:
+def fetch_resident_request(target_node_ref: str, request: Request, consumer: str | None = None) -> dict[str, Any]:
     _require_enabled()
     node_header = request.headers.get("X-StegVerse-Node-Ref", "")
     if not node_header or node_header != target_node_ref:
         raise HTTPException(status_code=403, detail="node reference binding required")
     try:
         canonical_ref = _canonical_node_ref(target_node_ref)
+        selected_consumer = _resolve_poll_consumer(canonical_ref, explicit=consumer)
+        profile = _profile(selected_consumer)
         observed = datetime.now(timezone.utc)
         store_advertisement({
             "schema": ADVERTISEMENT_SCHEMA,
             "target_node_ref": canonical_ref,
-            "consumer": ALLOWED_CONSUMER,
-            "current_resident_request_id": CURRENT_REQUEST_ID,
+            "consumer": selected_consumer,
+            "current_resident_request_id": profile["current_request_id"],
             "advertised_at": observed.isoformat(),
             "expires_at": (observed + timedelta(seconds=120)).isoformat(),
             "credential_authority": "TV/TVC",
@@ -490,9 +577,9 @@ def fetch_resident_request(target_node_ref: str, request: Request) -> dict[str, 
             "advertisement_grants_authority": False,
             "authority_effect": "NONE_DISCOVERY_ONLY",
         }, now=observed)
+        value = next_request(target_node_ref, consumer=selected_consumer)
     except ResidentRendezvousError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    value = next_request(target_node_ref)
     if value is None:
         return {
             "schema": "stegverse.resident-rendezvous.fetch-result/v1",
