@@ -1,0 +1,90 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "MIR-CONNECTION-ROUNDTRIP-TECHNICAL-GUIDE-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-Labs/Site:docs/MIR_CONNECTION_ROUNDTRIP_TECHNICAL_GUIDE_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/CANONICAL_SOUTHBOUND_COMMUNICATION_LIFECYCLE.md",
+    "StegVerse-org/StegVerse-SDK:docs/PUBLISHER_SDK_RETURN_BINDING.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/MIR-CONNECTION-ROUNDTRIP-TECHNICAL-GUIDE-001.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This mutation prepares the manifest-declared final StegVerse-side LLM Adapter transition and exact InTr handoff only; it does not create Master Records custody or reconstruction authority."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github:docs/CANONICAL_SOUTHBOUND_COMMUNICATION_LIFECYCLE.md",
+      "StegVerse-org/StegVerse-SDK:docs/PUBLISHER_SDK_RETURN_BINDING.md",
+      "StegVerse-org/LLM-adapter:llm_adapter/external_llm_connection.py"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "GCAT-BCAT-Engine/Publisher",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/Site"
+    ],
+    "evidence_refs": [
+      "Provider-specific LLM Adapter egress functions are scoped to provider execution results and require exact response-hash InTr admission.",
+      "No generic external-framework SDK-result return transition existed in LLM-adapter main.",
+      "SDK PR #224 merged the canonical Publisher-return binding and stops at READY_FOR_FINAL_STEGVERSE_EGRESS_TRANSITION.",
+      "Canonical SOUTH lifecycle requires LLM Adapter as the final StegVerse-side transition for framework paths and far-side InTr as terminal communication."
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "intentional_parallel_versioning": false,
+    "reconciliation_ref": "docs/SOUTHBOUND_SDK_RETURN_EGRESS.md"
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.southbound-sdk-return.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.southbound-sdk-return.md documents the new generic final StegVerse-side transition and authority ceiling.",
+      "docs/SOUTHBOUND_SDK_RETURN_EGRESS.md documents the exact binding and runtime completion boundary."
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/southbound_sdk_return.py",
+    "tests/test_southbound_sdk_return.py",
+    "docs/SOUTHBOUND_SDK_RETURN_EGRESS.md",
+    "README.southbound-sdk-return.md",
+    ".github/workflows/southbound-sdk-return-validation.yml"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/southbound_sdk_return.py",
+      "semantic_responsibility": "Final StegVerse-side LLM Adapter transition for an exact SDK Publisher-return binding before canonical Interlock/InTr egress.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "llm_adapter/external_llm_connection.py provider-specific exact-response egress pattern",
+      "justification": "Generic framework-return traffic is not a provider execution result and must not be forced through provider-specific egress functions; this layer reuses their exact-hash/fail-closed pattern without duplicating provider execution or Interlock/InTr authority.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "StegVerse-org/StegVerse-SDK:stegverse/publisher_return_binding.py",
+        "StegVerse-org/LLM-adapter:llm_adapter/external_llm_connection.py"
+      ]
+    },
+    {
+      "path": "tests/test_southbound_sdk_return.py",
+      "semantic_responsibility": "Regression coverage for exact SDK binding preservation, LLM Adapter surface enforcement, InTr admission binding, and no premature communication completion.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "tests/test_external_llm_connection.py",
+      "justification": "Dedicated tests isolate the generic framework-return contract from provider-response egress tests.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "llm_adapter/southbound_sdk_return.py"
+      ]
+    }
+  ]
+}
