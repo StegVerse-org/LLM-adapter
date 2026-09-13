@@ -1,29 +1,78 @@
 # SOUTHBOUND SDK return egress mirror handoff
 
 Updated: 2026-09-12
-Parent Goal Task ID: `MIR-CONNECTION-ROUNDTRIP-TECHNICAL-GUIDE-001`
-Parent COSV ID: `50000000100000`
-Status: `ACTIVE / SOURCE IMPLEMENTATION UNDER VALIDATION / RUNTIME UNPROVEN`
+Originating Goal Task ID: `MIR-CONNECTION-ROUNDTRIP-TECHNICAL-GUIDE-001`
+Originating COSV ID: `50000000100000`
+Reusable Task Component Model: `StegVerse-Labs/.github@b9f8e5153aa1651f2d7f043fb902eacb7c113ed9`
+Reusable component binding: `RTC-STEGVERSE-EGRESS-007`
+Companion transport component: `RTC-INTERLOCK-INTR-TRANSPORT-008`
+Component family: `framework_provider_adapter` + reusable transport component
+Status: `ACTIVE / REUSABLE SOURCE IMPLEMENTATION VALIDATED / MERGE PENDING / RUNTIME UNPROVEN`
 
 ## Purpose
 
-Provide the reusable LLM Adapter final StegVerse-side transition for a complete-manifest external-framework return after Publisher and SDK return assembly, without creating a duplicate processor, Publisher format, provider executor, Interlock/InTr implementation, or authority surface.
+Provide the reusable LLM Adapter implementation of the **final StegVerse-side egress transition** for complete-manifest external-framework returns after Publisher and SDK return assembly. This is a reusable capability discovered while executing `MIR-CONNECTION-ROUNDTRIP-TECHNICAL-GUIDE-001`; it is not permanently MIR-specific and does not create a separate Goal Task because it has no independent goal-level completion semantics.
 
-Canonical architecture:
+Canonical composition:
 
 ```text
-Publisher
--> SDK stegverse.sdk.publisher-return-binding/v1
--> LLM Adapter final StegVerse-side transition
--> Interlock/InTr egress
--> far-side transition
+RTC-PUBLISHER-005
+-> RTC-SDK-RETURN-006
+-> RTC-STEGVERSE-EGRESS-007  [this implementation for LLM_ADAPTER framework paths]
+-> RTC-INTERLOCK-INTR-TRANSPORT-008
+-> RTC-FARSIDE-FINAL-009
 ```
+
+The originating MIR Goal Task consumes this component through its reusable component profile. Other Goal Tasks may consume the same component when their complete manifest selects `LLM_ADAPTER` as the final StegVerse-side framework egress surface.
 
 ## Reuse decision
 
-`EXTEND` existing LLM Adapter exact-response/fail-closed egress semantics.
+`EXTEND` existing LLM Adapter exact-response/fail-closed egress semantics; do not create provider-specific or Goal-Task-specific parallel return transports.
 
-Do not route generic SDK/framework returns through provider-specific `admit_*_egress` functions because those functions bind provider execution results. The generic SDK return is already a completed StegVerse result bound to the original initiator by SDK and requires only final protocol/framing transition plus the existing InTr seam.
+Provider-specific `admit_*_egress` functions remain scoped to provider execution results. A generic SDK return is already a completed StegVerse result bound to the original initiator by SDK and therefore requires only the reusable final StegVerse-side transition plus the canonical InTr seam.
+
+## Stable component interface
+
+### Inputs
+
+- exact canonical bytes of `stegverse.sdk.publisher-return-binding/v1`;
+- manifest-declared final StegVerse transition surface `LLM_ADAPTER`;
+- declared transport `INTERLOCK_INTR`;
+- far-side-transition requirement.
+
+### Outputs
+
+- `stegverse.llm-adapter.southbound-final-transition/v1`;
+- exact-byte InTr handoff bound to the SDK return SHA-256;
+- after authentic InTr ALLOW only, an `EGRESS_ADMITTED` observation that still leaves far-side transition and communication completion false.
+
+### Preconditions
+
+- `communication_state=READY_FOR_FINAL_STEGVERSE_EGRESS_TRANSITION`;
+- `authority_effect=NONE`;
+- `communication_complete=false`;
+- SDK return binding is exact and hash-verifiable;
+- manifest-selected final surface is `LLM_ADAPTER`.
+
+### Expected evidence
+
+- deterministic SDK-return binding hash;
+- deterministic LLM Adapter final-transition object;
+- authentic InTr egress receipt bound to the same return hash when runtime executes;
+- authentic far-side transition separately, outside this component.
+
+### Authority owner/effect
+
+- this reusable component: `NONE` authority creation;
+- LLM Adapter: protocol/framing and final StegVerse-side framework surface only;
+- Interlock/InTr: egress admission and state-transition authority;
+- TV/TVC: credential authority where required;
+- far-side Interlock/InTr: terminal receive/final transition;
+- component reuse does not authorize the next component.
+
+### Failure/reentry semantics
+
+Fail closed on malformed SDK return bytes, wrong schema, wrong communication state, wrong declared egress surface, weakened InTr requirement, authority escalation, hash mismatch, non-ALLOW egress disposition, or mismatched admitted response hash. Reentry requires a fresh valid input or authentic corrected InTr evidence; source validation alone cannot advance runtime state.
 
 ## Source surfaces
 
@@ -36,67 +85,25 @@ README.southbound-sdk-return.md
 receipts/work-safety/MIR-CONNECTION-ROUNDTRIP-TECHNICAL-GUIDE-001-southbound-sdk-return.json
 ```
 
-## Required input boundary
+## Duplicate-orchestration rule
 
-The input must be the exact canonical bytes of:
+Do not implement another MIR-specific or provider-specific generic SDK-result egress path. Goal Tasks must parameterize and consume this reusable component through `RTC-STEGVERSE-EGRESS-007`, then use `RTC-INTERLOCK-INTR-TRANSPORT-008` for the actual governed transport transition.
 
-```text
-stegverse.sdk.publisher-return-binding/v1
-```
-
-and must retain:
-
-- `communication_state=READY_FOR_FINAL_STEGVERSE_EGRESS_TRANSITION`;
-- `authority_effect=NONE`;
-- `communication_complete=false`;
-- `completion.egress.final_stegverse_transition_surface=LLM_ADAPTER` as projected into the SDK binding;
-- `transport=INTERLOCK_INTR`;
-- `far_side_transition_required=true`.
-
-## Output boundary
-
-`prepare_sdk_return_for_intr()` emits:
-
-```text
-stegverse.llm-adapter.southbound-final-transition/v1
-```
-
-plus an exact-byte InTr handoff. The SDK binding bytes are preserved in base64 and bound by SHA-256.
-
-The transition may establish that the LLM Adapter final StegVerse-side surface has been reached, but it may not claim:
-
-```text
-Interlock/InTr egress admitted
-far-side transition observed
-communication complete
-```
-
-`admit_intr_egress()` may record `EGRESS_ADMITTED` only from an authentic Interlock/InTr ALLOW binding the exact SDK return hash. It still leaves the far-side transition and communication completion false.
-
-## Authority invariants
-
-- processing selection: admitted manifest capability + route only;
-- Publisher: presentation/evidence assembly only;
-- SDK: caller-return assembly and initiator binding;
-- LLM Adapter: protocol/framing + final StegVerse-side framework transition only;
-- Interlock/InTr: egress admission/transition authority;
-- far-side system: terminal transition on its side;
-- TV/TVC: credential authority where credentials are required;
-- GitHub Actions: source validation only;
-- this handoff/source change: authority effect `NONE`.
+Historical task-specific source/evidence is retained for provenance and must not be deleted merely because the capability is now reusable.
 
 ## Validation state
 
-Initial PR head exposed two legitimate failures:
+Exact head `b610eeedd0c32a63cd6f55770fb5928d357ea27b` passed:
 
-1. dedicated workflow omitted repository import path;
-2. Work Mutation Safety required this local mirror handoff and fresh safety manifest.
+- `Work Mutation Safety - Non-Authorizing #53` — SUCCESS;
+- `Southbound SDK Return Validation #7` — SUCCESS;
+- repository-wide `validate #3466` — SUCCESS.
 
-The workflow import path and safety manifest have been corrected. Revalidation of the exact corrected head is required before merge.
+This handoff update rebinds that validated source to the canonical Reusable Task Component Model; the new exact head must re-run applicable source validation before merge.
 
 ## Runtime boundary
 
-Source validation cannot prove:
+The reusable source implementation and CI do **not** prove:
 
 - Publisher runtime execution;
 - SDK runtime return assembly;
