@@ -3,6 +3,7 @@
   "task_id": "MIR-CONNECTION-ROUNDTRIP-TECHNICAL-GUIDE-001",
   "authority_effect": "NONE_PREFLIGHT_ONLY",
   "canonical_handoff_refs": [
+    "docs/SOUTHBOUND_SDK_RETURN_EGRESS_MIRROR_HANDOFF.md",
     "StegVerse-Labs/Site:docs/MIR_CONNECTION_ROUNDTRIP_TECHNICAL_GUIDE_MIRROR_HANDOFF.md",
     "StegVerse-Labs/.github:docs/CANONICAL_SOUTHBOUND_COMMUNICATION_LIFECYCLE.md",
     "StegVerse-org/StegVerse-SDK:docs/PUBLISHER_SDK_RETURN_BINDING.md"
@@ -17,9 +18,10 @@
   "cross_task_coordination": {
     "checked": true,
     "refs": [
+      "docs/SOUTHBOUND_SDK_RETURN_EGRESS_MIRROR_HANDOFF.md",
       "StegVerse-Labs/.github:docs/CANONICAL_SOUTHBOUND_COMMUNICATION_LIFECYCLE.md",
       "StegVerse-org/StegVerse-SDK:docs/PUBLISHER_SDK_RETURN_BINDING.md",
-      "StegVerse-org/LLM-adapter:llm_adapter/external_llm_connection.py"
+      "llm_adapter/external_llm_connection.py"
     ]
   },
   "semantic_scan": {
@@ -44,7 +46,7 @@
     "checked": true,
     "collision_found": false,
     "intentional_parallel_versioning": false,
-    "reconciliation_ref": "docs/SOUTHBOUND_SDK_RETURN_EGRESS.md"
+    "reconciliation_ref": "docs/SOUTHBOUND_SDK_RETURN_EGRESS_MIRROR_HANDOFF.md"
   },
   "readme_impact": {
     "material_function_change": true,
@@ -59,6 +61,7 @@
     "llm_adapter/southbound_sdk_return.py",
     "tests/test_southbound_sdk_return.py",
     "docs/SOUTHBOUND_SDK_RETURN_EGRESS.md",
+    "docs/SOUTHBOUND_SDK_RETURN_EGRESS_MIRROR_HANDOFF.md",
     "README.southbound-sdk-return.md",
     ".github/workflows/southbound-sdk-return-validation.yml"
   ],
@@ -72,7 +75,7 @@
       "canonical_owner": "StegVerse-org/LLM-adapter",
       "evidence_refs": [
         "StegVerse-org/StegVerse-SDK:stegverse/publisher_return_binding.py",
-        "StegVerse-org/LLM-adapter:llm_adapter/external_llm_connection.py"
+        "llm_adapter/external_llm_connection.py"
       ]
     },
     {
