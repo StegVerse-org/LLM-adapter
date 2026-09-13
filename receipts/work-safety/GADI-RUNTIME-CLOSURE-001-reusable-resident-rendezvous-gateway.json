@@ -1,0 +1,73 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "GADI-RUNTIME-CLOSURE-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-Labs/.github:docs/GADI_RUNTIME_CLOSURE_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/REUSABLE_RESIDENT_RENDEZVOUS_COMPONENT_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/REUSABLE_RESIDENT_RENDEZVOUS_GATEWAY_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/GADI-RUNTIME-CLOSURE-001.json",
+    "StegVerse-Labs/.github:data/reusable-task-components/RTC-RESIDENT-RENDEZVOUS-010.json",
+    "StegVerse-Labs/.github:data/goal-task-transport-profiles/GADI-RUNTIME-CLOSURE-001.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This is source-only reusable transport/gateway construction. It emits no authentic resident delivery, transition, action, custody, readback, or reconstruction event. Master Records remains a later authentic-runtime predicate."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github:RTC-RESIDENT-RENDEZVOUS-010",
+      "StegVerse-Labs/.github:GADI-RUNTIME-CLOSURE-001",
+      "StegVerse-org/LLM-adapter:llm_adapter/resident_rendezvous_api.py",
+      "StegVerse-Labs/Site:assets/kv-ui/resident-rendezvous-client.js"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/Site",
+      "StegVerse-Labs/StegOS",
+      "StegVerse-Labs/StegBrowser"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/LLM-adapter:llm_adapter/resident_rendezvous_api.py",
+      "StegVerse-org/LLM-adapter:tests/test_resident_rendezvous_api.py",
+      "StegVerse-Labs/.github:scripts/consume_resident_rendezvous.py",
+      "StegVerse-Labs/.github:data/reusable-task-components/RTC-RESIDENT-RENDEZVOUS-010.json",
+      "StegVerse-Labs/Site:assets/kv-ui/resident-rendezvous-client.js"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "The existing LLM-adapter resident_rendezvous_api.py remains the sole Service Gateway rendezvous owner. This change adds registered profiles to that same implementation; no parallel gateway, listener, scheduler, credential path, WorkerCoordinator, InTr authority, or user-verification implementation is created."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "The repository already describes the Service Gateway as non-authorizing. The component/gateway mirror handoffs record the profile extension and authority invariants; no new public runtime-completion claim is made.",
+    "evidence_refs": [
+      "README.md",
+      "docs/REUSABLE_RESIDENT_RENDEZVOUS_GATEWAY_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:docs/REUSABLE_RESIDENT_RENDEZVOUS_COMPONENT_MIRROR_HANDOFF.md"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/resident_rendezvous_api.py",
+    "tests/test_reusable_resident_rendezvous_gadi.py"
+  ],
+  "new_files": [
+    {
+      "path": "tests/test_reusable_resident_rendezvous_gadi.py",
+      "semantic_responsibility": "Validate exact GADI resident request admission, transport-only correlation, consumer-scoped discovery/fetch, and cross-consumer isolation.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter:tests/test_resident_rendezvous_api.py",
+      "decision": "EXTEND"
+    }
+  ]
+}
