@@ -49,12 +49,17 @@ def validate_memory_packet(packet: Mapping[str, Any]) -> None:
     entries = packet.get("entries")
     _require(isinstance(entries, list), "memory packet entries missing")
     _require(packet.get("selected_item_count") == len(entries), "memory packet selected_item_count mismatch")
+    observed_bytes = 0
     for entry in entries:
         _require(isinstance(entry, Mapping), "memory packet entry malformed")
         for key in ("entry_id", "source_kv_instance_id", "relative_path", "content", "content_sha256", "provenance_ref"):
             _require(isinstance(entry.get(key), str), f"memory packet entry missing {key}")
         observed = hashlib.sha256(entry["content"].encode("utf-8")).hexdigest()
         _require(observed == entry["content_sha256"], "memory packet entry content hash mismatch")
+        observed_bytes += len(entry["content"].encode("utf-8"))
+    entries_hash = hashlib.sha256(_canonical_json(entries).encode("utf-8")).hexdigest()
+    _require(packet.get("entries_sha256") == entries_hash, "memory packet entries_sha256 mismatch")
+    _require(packet.get("selected_content_bytes") == observed_bytes, "memory packet selected_content_bytes mismatch")
 
 
 def validate_memory_packet_admission(packet: Mapping[str, Any], admission: Mapping[str, Any]) -> str:
