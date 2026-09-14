@@ -1,6 +1,6 @@
 # KV AI Memory Context Bridge Mirror Handoff
 
-Status: SOURCE_IMPLEMENTED / HOSTED_VALIDATION_PENDING / LIVE_RUNTIME_PROOF_REQUIRED
+Status: SOURCE_IMPLEMENTED / HOSTED_VALIDATION_PASS / LIVE_RUNTIME_PROOF_REQUIRED
 Repository: `StegVerse-org/LLM-adapter`
 Goal Task ID: `SV-KV-AI-PERSISTENCE-001`
 Parent KV handoff: `StegVerse-Labs/continuity-vault-kit/KV_AI_PERSISTENCE_CLASSES_MIRROR_HANDOFF.md`
@@ -15,7 +15,7 @@ Bind an already-admitted KnowledgeVault AI memory context packet into the existi
 - `llm_adapter/kv_memory_context_bridge.py`
 - `tests/test_kv_memory_context_bridge.py`
 - `.github/workflows/validate-kv-memory-context-bridge.yml`
-- `README.md`
+- this scoped handoff
 
 ## Canonical sequence
 
@@ -50,16 +50,15 @@ The existing `GovernedExternalProviderClient` remains unchanged and continues to
 
 ## Validation
 
-The dedicated test suite covers:
+The dedicated test suite covers exact memory packet admission and metadata binding, denial rejection, packet tamper rejection after admission, entry-content hash tamper rejection, cross-authority profile rejection, and secret-material flag rejection.
 
-- exact memory packet admission and metadata binding;
-- denial rejection;
-- packet tamper rejection after admission;
-- entry content hash tamper rejection;
-- cross-authority profile rejection;
-- secret-material flag rejection.
+Initial dedicated run `34798513098` failed only because the new workflow omitted the repository root from Python import resolution (`ModuleNotFoundError: llm_adapter`). The workflow was repaired by binding `PYTHONPATH=${{ github.workspace }}`. On repair head `ccaf6671289d96bcd535a88cae345f8ef92fa260`, dedicated run `34798649357` / job `103836623691` completed SUCCESS, including `pytest -q tests/test_kv_memory_context_bridge.py`.
 
-Hosted workflow result must be observed before validation PASS is claimed.
+A second repository validation job on the same repair head remains independent of this dedicated bridge test and must not be represented as complete until its own conclusion is observed.
+
+## README impact
+
+This scoped bridge does not replace the existing provider-neutral external-LLM architecture documented by the repository README. The canonical README remains correct about `ProviderRequest`, external ingress/egress InTr, TV/TVC, and source-vs-runtime proof. A focused README insertion for KV memory context remains documentation follow-through; this handoff is the current scoped source of truth for the bridge until that insertion is safely applied without truncating the large existing README.
 
 ## Runtime truth
 
