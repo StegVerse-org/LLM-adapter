@@ -36,6 +36,36 @@ provider transport/usage evidence: StegVerse-org/LLM-adapter
 custody/reconstruction: master-records/orchestration
 ```
 
+## KV-backed AI memory context
+
+For `PERSONAL_KV / PERSON / PERSONAL_ASSISTANT_AI`, KnowledgeVault may supply bounded persistent context before the ordinary provider request enters the existing LLM path. KV remains the durable memory authority; the model/provider session remains replaceable and non-authoritative.
+
+```text
+already-built Personal-KV context packet
+-> exact packet hash
+-> externally-produced memory-packet InTr ALLOW
+-> llm_adapter/kv_memory_context_bridge.py
+-> exact ProviderRequest with KV provenance metadata
+-> ordinary provider-request ingress InTr ALLOW
+-> existing TV/TVC/provider execution path
+-> provider response
+-> ordinary exact-response egress InTr ALLOW
+```
+
+`llm_adapter/kv_memory_context_bridge.py` rejects secret/cross-authority packet flags, verifies per-entry hashes, requires the Personal-KV authority profile, and requires an external `ALLOW` receipt bound to the exact packet ID and canonical packet hash before adding KV context to a `ProviderRequest`. The packet admission is separate from provider-request admission; neither context nor admission transfers KV authority to the model.
+
+`scripts/materialize_kv_memory_provider_request.py` supports the sovereign resident path. It consumes only resident-local packet/admission/request-input files, rejects credential-like request fields, requires an explicit reconstruction timestamp, and emits one deterministic provider request plus hash. The materialization result explicitly records provider ingress, provider execution, provider egress, and KV writeback as **not observed**. In the canonical `.github` resident binding these bytes remain under fenced bound state rather than GitHub repository state.
+
+Canonical scoped documentation:
+
+```text
+docs/KV_AI_MEMORY_CONTEXT_BRIDGE_MIRROR_HANDOFF.md
+StegVerse-Labs/.github/docs/KV_AI_MEMORY_RESIDENT_EXECUTION_MIRROR_HANDOFF.md
+StegVerse-Labs/continuity-vault-kit/KV_AI_PERSISTENCE_CLASSES_MIRROR_HANDOFF.md
+```
+
+Source and CI validation prove only deterministic/fail-closed behavior. They do not prove that private KV bytes were read, that a memory-packet InTr decision occurred, that a model consumed context, or that any resulting memory proposal was admitted back into KV.
+
 ## Ecosystem Chat distributed LLM service
 
 Until a fully realized native Ecosystem Chat LLM exists, the intended LLM capability is a **distributed service across named model sources**. A canonical Ecosystem Chat request may be represented as a deterministic workload that identifies one or more named sources, binds every contribution to the existing `ProviderRequest` / `ProviderResponse` envelopes, retains source-specific provenance and usage evidence, and packages the contribution set for the existing governance path.
@@ -329,10 +359,7 @@ The task-routing direction `INTERNAL` does not waive provider egress governance.
 
 `canonical_sovereign_route_replaced = false` and `hosted_provider_required = false`. Streaming, Batches, and Files are unsupported in v1 and require separate admitted endpoint profiles. Hashing and lossless content-block normalization are specified in `docs/CANONICALIZATION.md`. Source validation is `python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-runtime-fix-288`.
 
-The provider-neutral convergence path reuses that contract through
-`anthropic_convergence_bridge.py` and the existing TVC single-use,
-non-exportable `message_with_usage` operation. It does not retain a second
-direct-credential Anthropic compatibility path.
+The provider-neutral convergence path reuses that contract through `anthropic_convergence_bridge.py` and the existing TVC single-use, non-exportable `message_with_usage` operation. It does not retain a second direct-credential Anthropic compatibility path.
 
 Canonical Anthropic surfaces:
 
@@ -419,7 +446,7 @@ heartbeat recovery / current fence
 -> required Publisher/wiki propagation
 ```
 
-The distributed named-source workload, bounded executor, shared external-LLM connection primitive, Z.ai transport/runtime-profile executor, DeepSeek transport/runtime-profile executor, Kimi transport/runtime-profile executor, and Anthropic transport/runtime-profile executor are additive capability implementations. Their source/fixture validation does not satisfy this sovereign activation sequence and does not prove live multi-provider execution.
+The KV-backed memory bridge adds a pre-ingress context stage when an exact memory packet is separately admitted; it does not weaken or bypass this runtime sequence. The distributed named-source workload, bounded executor, shared external-LLM connection primitive, Z.ai transport/runtime-profile executor, DeepSeek transport/runtime-profile executor, Kimi transport/runtime-profile executor, and Anthropic transport/runtime-profile executor are additive capability implementations. Their source/fixture validation does not satisfy sovereign activation and does not prove live multi-provider execution.
 
 This continuation is machine-owned. It is not a reason to re-open the completed local-model or carrier-executor implementation tasks.
 
@@ -427,6 +454,9 @@ This continuation is machine-owned. It is not a reason to re-open the completed 
 
 ```text
 provider output != authority
+memory context != authority
+memory packet admission != provider request admission
+ProviderRequest materialization != provider execution
 route admission != execution authority
 runtime proof != product activation
 usage measurement != admissibility
@@ -453,6 +483,8 @@ pytest tests/test_distributed_workload.py -q
 python scripts/check_distributed_llm_workload.py
 pytest tests/test_distributed_executor.py -q
 python scripts/check_distributed_llm_executor.py
+pytest tests/test_kv_memory_context_bridge.py -q
+pytest tests/test_kv_memory_provider_request_materializer.py -q
 pytest tests/test_zai_intr_transport.py -q
 pytest tests/test_zai_intr_executor.py -q
 pytest tests/test_zai_tvc_runtime.py -q
