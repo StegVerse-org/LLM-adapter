@@ -19,6 +19,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHONPATH: ${{ github.workspace }}
+
 jobs:
   validate:
     runs-on: ubuntu-latest
