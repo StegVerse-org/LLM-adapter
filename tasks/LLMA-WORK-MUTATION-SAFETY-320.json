@@ -3,9 +3,9 @@
   "task_id": "LLMA-WORK-MUTATION-SAFETY-320",
   "originating_goal": "Install a fail-closed semantic-duplication and README-completeness safety gate at the LLM-adapter pull-request mutation boundary used by Work.",
   "repository": "StegVerse-org/LLM-adapter",
-  "branch": "work-safety-net-semantic-collision",
+  "branch": "main",
   "canonical_issue": 320,
-  "state": "ACTIVE_IMPLEMENTATION",
+  "state": "COMPLETE_RELEASED",
   "claimant": "chatgpt:work-mutation-safety-320",
   "role": "non-authorizing repository mutation safety implementer",
   "canonical_runtime_owner": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
@@ -36,5 +36,27 @@
     "require every new functional file to declare its semantic responsibility and nearest existing implementation/search result",
     "require README-impact completeness for every functional mutation manifest"
   ],
-  "release_condition": "PR merge after Work Mutation Safety and repository validation pass; then mark COMPLETE_RELEASED and retain the gate as validation-only, authority_effect NONE."
+  "validation_evidence": {
+    "implementation_pr": 321,
+    "merge_sha": "e0aa69706abdb236bf0485b02c038ce8e7d0d495",
+    "work_mutation_safety_run": 34076007695,
+    "repository_validate_run": 34076007662,
+    "positive_result": "PASS",
+    "negative_probe_pr": 322,
+    "negative_probe_run": 34076046758,
+    "negative_probe_expected_result": "FAIL_CLOSED_MISSING_FRESH_MANIFEST",
+    "negative_probe_merged": false
+  },
+  "readme_completeness": {
+    "material_function_change": false,
+    "root_readme_update_required": false,
+    "reason": "The released control affects development-time pull-request validation only and does not change LLM-adapter production runtime behavior, provider interfaces, authority semantics, production evidence semantics, runtime prerequisites, or externally meaningful capability behavior."
+  },
+  "release_condition": "SATISFIED by PR #321 merge plus successful Work Mutation Safety and repository validation, with PR #322 independently proving fail-closed rejection when the fresh manifest is absent.",
+  "propagation": {
+    "Site": "NOT_REQUIRED_VALIDATION_ONLY",
+    "Publisher": "NOT_REQUIRED_VALIDATION_ONLY",
+    "admissibility_wiki": "NOT_REQUIRED_VALIDATION_ONLY",
+    "stegguardian_wiki": "NOT_REQUIRED_VALIDATION_ONLY"
+  }
 }
