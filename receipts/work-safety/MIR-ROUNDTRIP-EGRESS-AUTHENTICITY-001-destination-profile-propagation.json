@@ -1,0 +1,86 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "MIR-ROUNDTRIP-EGRESS-AUTHENTICITY-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "docs/MIR_DESTINATION_PROFILE_PROPAGATION_MIRROR_HANDOFF.md",
+    "docs/SOUTHBOUND_SDK_RETURN_EGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/Site:docs/MIR_ROUNDTRIP_EGRESS_AUTHENTICITY_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/CANONICAL_SOUTHBOUND_COMMUNICATION_LIFECYCLE.md",
+    "StegVerse-Labs/Site:docs/INTERLOCK_INTR_CONNECTION_GUIDE.md",
+    "StegVerse-Labs/Site:docs/MIR_CONNECTION_AND_ROUNDTRIP_TECHNICAL_GUIDE.md",
+    "StegVerse-Labs/StegOS:docs/UNIVERSAL_INTERLOCK_PROTOCOL_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/MIR-ROUNDTRIP-EGRESS-AUTHENTICITY-001.json"
+  ],
+  "reusable_component_binding": {
+    "component_id": "RTC-STEGVERSE-EGRESS-007",
+    "companion_transport_component": "RTC-INTERLOCK-INTR-TRANSPORT-008",
+    "capability": "preserve manifest-declared destination profile into the existing final StegVerse-side InTr handoff",
+    "originating_goal_task_remains_owner": true,
+    "new_goal_task_created": false,
+    "authority_effect": "NONE"
+  },
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This repair changes only the pre-InTr profile binding in the existing egress component; it creates no custody/reconstruction authority."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "docs/MIR_DESTINATION_PROFILE_PROPAGATION_MIRROR_HANDOFF.md",
+      "StegVerse-org/StegVerse-SDK:docs/MIR_DESTINATION_PROFILE_PROPAGATION_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/StegOS:config/external_counterpart_profiles/mir.json"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-Labs/StegOS",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/Site"
+    ],
+    "evidence_refs": [
+      "Defining MIR transport documentation requires a designated destination profile before Universal InTr materialization.",
+      "SDK return binding already preserves the manifest egress object.",
+      "Existing RTC-STEGVERSE-EGRESS-007 previously emitted a generic InTr handoff without destination_profile.",
+      "StegOS canonical external counterpart profile ID for the owned MIR mirror is MIR."
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "intentional_parallel_versioning": false,
+    "reconciliation_ref": "docs/MIR_DESTINATION_PROFILE_PROPAGATION_MIRROR_HANDOFF.md"
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "readme_path": "README.southbound-sdk-return.md",
+    "readme_updated_in_change_set": false,
+    "evidence_refs": [
+      "Existing README already describes RTC-STEGVERSE-EGRESS-007 as manifest-bound final egress into canonical Interlock/InTr; this repair preserves a previously omitted manifest field without changing component authority or transport ownership."
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/southbound_sdk_return.py",
+    "tests/test_southbound_sdk_return.py",
+    "docs/MIR_DESTINATION_PROFILE_PROPAGATION_MIRROR_HANDOFF.md",
+    "receipts/work-safety/MIR-ROUNDTRIP-EGRESS-AUTHENTICITY-001-destination-profile-propagation.json"
+  ],
+  "new_files": [
+    {
+      "path": "docs/MIR_DESTINATION_PROFILE_PROPAGATION_MIRROR_HANDOFF.md",
+      "semantic_responsibility": "Bounded continuation record for exact MIR destination-profile propagation through RTC-STEGVERSE-EGRESS-007.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "docs/SOUTHBOUND_SDK_RETURN_EGRESS_MIRROR_HANDOFF.md",
+      "justification": "Records the task-specific repair without creating a new runtime or transport component.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": ["llm_adapter/southbound_sdk_return.py"]
+    }
+  ]
+}
