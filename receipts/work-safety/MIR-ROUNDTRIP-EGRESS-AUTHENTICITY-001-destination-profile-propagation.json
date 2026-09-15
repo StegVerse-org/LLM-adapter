@@ -62,7 +62,7 @@
     "material_function_change": false,
     "readme_path": "README.southbound-sdk-return.md",
     "readme_updated_in_change_set": false,
-    "reason": "The existing README already defines RTC-STEGVERSE-EGRESS-007 as manifest-bound final framework egress into canonical Interlock/InTr. This repair only preserves the manifest-declared destination profile through that existing seam and does not change authority, transport ownership, or public usage semantics.",
+    "no_readme_update_reason": "The existing README already defines RTC-STEGVERSE-EGRESS-007 as manifest-bound final framework egress into canonical Interlock/InTr. This repair only preserves the manifest-declared destination profile through that existing seam and does not change authority, transport ownership, or public usage semantics.",
     "evidence_refs": [
       "Existing README already describes RTC-STEGVERSE-EGRESS-007 as manifest-bound final egress into canonical Interlock/InTr; this repair preserves a previously omitted manifest field without changing component authority or transport ownership."
     ]
