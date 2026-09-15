@@ -49,6 +49,10 @@ def prepare_sdk_return_for_intr(sdk_binding_bytes: bytes, *, transition_id: str)
         raise SouthboundSDKReturnError("SDK binding not addressed to LLM_ADAPTER")
     if egress.get("transport") != "INTERLOCK_INTR" or egress.get("far_side_transition_required") is not True:
         raise SouthboundSDKReturnError("SDK binding does not require canonical InTr/far-side transition")
+    destination_profile = egress.get("destination_profile")
+    if not isinstance(destination_profile, str) or not destination_profile.strip():
+        raise SouthboundSDKReturnError("SDK binding InTr destination_profile required")
+    destination_profile = destination_profile.strip()
     if not isinstance(transition_id, str) or not transition_id.strip():
         raise SouthboundSDKReturnError("transition_id required")
 
@@ -60,6 +64,7 @@ def prepare_sdk_return_for_intr(sdk_binding_bytes: bytes, *, transition_id: str)
     handoff = {
         "schema": HANDOFF_SCHEMA,
         "protocol": "InTr",
+        "destination_profile": destination_profile,
         "transition_id": transition_id.strip(),
         "manifest_receipt_id": binding.get("manifest_receipt_id"),
         "sdk_binding_sha256": binding_hash,
@@ -77,6 +82,7 @@ def prepare_sdk_return_for_intr(sdk_binding_bytes: bytes, *, transition_id: str)
         "direction": "SOUTH",
         "state": "FINAL_STEGVERSE_SIDE_TRANSITION_PREPARED",
         "transition_surface": "LLM_ADAPTER",
+        "destination_profile": destination_profile,
         "transition_id": transition_id.strip(),
         "manifest_receipt_id": binding.get("manifest_receipt_id"),
         "initiator": binding.get("initiator"),
@@ -99,6 +105,11 @@ def admit_intr_egress(transition: Mapping[str, Any], *, disposition: str, egress
     handoff = transition.get("intr_handoff")
     if not isinstance(handoff, Mapping) or handoff.get("egress_intr_required") is not True:
         raise SouthboundSDKReturnError("southbound InTr handoff invalid")
+    destination_profile = handoff.get("destination_profile")
+    if not isinstance(destination_profile, str) or not destination_profile.strip():
+        raise SouthboundSDKReturnError("southbound InTr destination_profile missing")
+    if transition.get("destination_profile") != destination_profile:
+        raise SouthboundSDKReturnError("southbound InTr destination_profile binding mismatch")
     if disposition != "ALLOW":
         raise SouthboundSDKReturnError("southbound SDK return requires InTr ALLOW")
     if not isinstance(egress_receipt_hash, str) or len(egress_receipt_hash) != 64 or any(c not in "0123456789abcdef" for c in egress_receipt_hash):
@@ -109,6 +120,7 @@ def admit_intr_egress(transition: Mapping[str, Any], *, disposition: str, egress
         "schema": "stegverse.llm-adapter.southbound-intr-egress-admission/v1",
         "transition_id": transition.get("transition_id"),
         "manifest_receipt_id": transition.get("manifest_receipt_id"),
+        "destination_profile": destination_profile,
         "sdk_binding_sha256": admitted_sdk_binding_sha256,
         "egress_receipt_hash": egress_receipt_hash,
         "state": "EGRESS_ADMITTED",
