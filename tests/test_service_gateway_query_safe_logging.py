@@ -71,6 +71,20 @@ def test_runtime_disables_uvicorn_request_target_access_log():
     assert "QuerySecretSafeAccessLogMiddleware(_base_app)" in source
 
 
+def test_sovereign_deployed_gateway_uses_same_query_safe_boundary():
+    root = Path(__file__).resolve().parents[1]
+    deployed = (root / "llm_adapter" / "deployed_gateway.py").read_text(encoding="utf-8")
+    entrypoint = (root / "scripts" / "container-entrypoint.sh").read_text(encoding="utf-8")
+    tls_compose = (root / "compose.stegdeploy.tls.yaml").read_text(encoding="utf-8")
+
+    assert "from llm_adapter.query_safe_access_log import QuerySecretSafeAccessLogMiddleware" in deployed
+    assert "app.add_middleware(QuerySecretSafeAccessLogMiddleware)" in deployed
+    assert "llm_adapter.deployed_gateway:app" in entrypoint
+    assert "--no-access-log" in entrypoint
+    assert "llm_adapter.deployed_gateway:app" in tls_compose
+    assert "--no-access-log" in tls_compose
+
+
 def test_safe_middleware_never_reads_query_or_sensitive_request_surfaces():
     source = (Path(__file__).resolve().parents[1] / "llm_adapter" / "query_safe_access_log.py").read_text(encoding="utf-8")
     for prohibited in (
