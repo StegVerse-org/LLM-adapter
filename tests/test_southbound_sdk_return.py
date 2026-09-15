@@ -26,6 +26,7 @@ def binding_bytes():
             "final_stegverse_transition_surface": "LLM_ADAPTER",
             "transport": "INTERLOCK_INTR",
             "far_side_transition_required": True,
+            "destination_profile": "MIR",
         },
         "communication_state": "READY_FOR_FINAL_STEGVERSE_EGRESS_TRANSITION",
         "final_stegverse_transition_observed": False,
@@ -44,6 +45,8 @@ def test_prepares_exact_sdk_binding_for_intr_without_claiming_completion():
     result = prepare_sdk_return_for_intr(raw, transition_id="south-001")
     assert result["state"] == "FINAL_STEGVERSE_SIDE_TRANSITION_PREPARED"
     assert result["transition_surface"] == "LLM_ADAPTER"
+    assert result["destination_profile"] == "MIR"
+    assert result["intr_handoff"]["destination_profile"] == "MIR"
     assert result["final_stegverse_transition_surface_reached"] is True
     assert result["interlock_intr_egress_admitted"] is False
     assert result["far_side_transition_observed"] is False
@@ -60,6 +63,13 @@ def test_rejects_binding_for_other_egress_surface():
         prepare_sdk_return_for_intr(canonical(value), transition_id="south-001")
 
 
+def test_rejects_missing_destination_profile():
+    value = json.loads(binding_bytes())
+    del value["egress"]["destination_profile"]
+    with pytest.raises(SouthboundSDKReturnError, match="destination_profile required"):
+        prepare_sdk_return_for_intr(canonical(value), transition_id="south-001")
+
+
 def test_rejects_early_completion_claim():
     value = json.loads(binding_bytes())
     value["communication_complete"] = True
@@ -67,7 +77,7 @@ def test_rejects_early_completion_claim():
         prepare_sdk_return_for_intr(canonical(value), transition_id="south-001")
 
 
-def test_intr_admission_requires_exact_sdk_binding_hash():
+def test_intr_admission_requires_exact_sdk_binding_hash_and_destination_profile():
     transition = prepare_sdk_return_for_intr(binding_bytes(), transition_id="south-001")
     admitted = admit_intr_egress(
         transition,
@@ -77,8 +87,21 @@ def test_intr_admission_requires_exact_sdk_binding_hash():
     )
     assert admitted["state"] == "EGRESS_ADMITTED"
     assert admitted["transition_authority"] == "Interlock/InTr"
+    assert admitted["destination_profile"] == "MIR"
     assert admitted["far_side_transition_observed"] is False
     assert admitted["communication_complete"] is False
+
+
+def test_intr_admission_rejects_destination_profile_substitution():
+    transition = prepare_sdk_return_for_intr(binding_bytes(), transition_id="south-001")
+    transition["intr_handoff"]["destination_profile"] = "NOT-MIR"
+    with pytest.raises(SouthboundSDKReturnError, match="destination_profile binding mismatch"):
+        admit_intr_egress(
+            transition,
+            disposition="ALLOW",
+            egress_receipt_hash="b" * 64,
+            admitted_sdk_binding_sha256=transition["intr_handoff"]["sdk_binding_sha256"],
+        )
 
 
 def test_intr_admission_rejects_wrong_binding_hash():
