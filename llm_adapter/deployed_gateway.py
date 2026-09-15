@@ -15,6 +15,7 @@ from llm_adapter.service_gateway_evaluator_intr import router as evaluator_intr_
 from llm_adapter.service_gateway_hil_intr import router as hil_intr_router
 from llm_adapter.service_gateway_sv002_observation import router as sv002_observation_router
 from llm_adapter.service_gateway_personal_origin import personal_origin_middleware
+from llm_adapter.query_safe_access_log import QuerySecretSafeAccessLogMiddleware
 
 app.include_router(math_solver_router)
 app.include_router(attachment_router)
@@ -52,3 +53,10 @@ app.add_api_route(
 # Gateway API surface. The middleware only serves the verified public bundle;
 # all other personal-origin paths fail closed.
 app.middleware("http")(personal_origin_middleware)
+
+# The sovereign StegDeploy entrypoint must carry the same query-secret-safe
+# observability boundary as runtime_gateway. This middleware logs only method,
+# canonical path, and response status and never reads query_string/raw_path or
+# credential-bearing request surfaces. Uvicorn request-target logging is
+# separately disabled by every StegDeploy launch surface.
+app.add_middleware(QuerySecretSafeAccessLogMiddleware)
