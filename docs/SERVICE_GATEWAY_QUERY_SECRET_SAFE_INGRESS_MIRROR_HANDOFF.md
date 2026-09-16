@@ -5,7 +5,7 @@ Repository: `StegVerse-org/LLM-adapter`
 Issue: #271
 Goal: `KV-CONNECTION-REVALIDATION-WORKER-001`
 COSV: `50000000102000`
-State: SOVEREIGN_DEPLOYMENT_ENTRYPOINT_PARITY_REPAIR_IN_REVIEW / DEPLOYED_INGRESS_EVIDENCE_PENDING
+State: SOVEREIGN_DEPLOYMENT_ENTRYPOINT_PARITY_SOURCE_MERGED_VALIDATED / DEPLOYED_INGRESS_EVIDENCE_PENDING
 Authority effect: NONE
 
 ## Goal
@@ -28,51 +28,43 @@ PR #328 merged at `05140d58613cffcfd08f164ff5459c36870a60ee` from exact head `cb
 
 That change hardened `llm_adapter.runtime_gateway` by disabling Uvicorn built-in request-target access logging and wrapping the composed application in `QuerySecretSafeAccessLogMiddleware`, which logs only method, canonical path, and status and intentionally does not read query strings, raw request targets, headers, cookies, bodies, OAuth authorization codes, state, or provider credential material.
 
-## Sovereign entrypoint parity defect discovered
+## Sovereign entrypoint parity defect and repair
 
 Subsequent reconciliation established that canonical StegDeploy does not launch `llm_adapter.runtime_gateway`; the sovereign production entrypoint is `llm_adapter.deployed_gateway:app`.
 
-Therefore PR #328 source validation did not prove parity for the actual sovereign StegDeploy entrypoint. Before the parity repair:
+Before the parity repair:
 
 - `llm_adapter.deployed_gateway:app` did not bind `QuerySecretSafeAccessLogMiddleware`;
 - `scripts/container-entrypoint.sh` launched Uvicorn without explicitly disabling access logging;
 - `compose.stegdeploy.tls.yaml` launched the deployed gateway without explicitly disabling access logging.
 
-This is a source/runtime-entrypoint coverage defect only. It does not prove any secret was persisted and does not change TVC, Interlock/InTr, provider, credential, callback, or execution authority.
+This was a source/runtime-entrypoint coverage defect only. It did not prove any secret was persisted and did not change TVC, Interlock/InTr, provider, credential, callback, or execution authority.
 
-## Active parity repair
+PR #343 repaired that parity gap by:
 
-Branch: `fix/sovereign-query-safe-gateway-271`
-PR: #343
-Verified branch head before PR creation: `7ef63da212eabe623f24a3f08b1529a5e3f02542`
-Base at PR creation: `368a1ac9c64dfa8083a280c0a1fb63a7b4c7cabf`
+1. binding `QuerySecretSafeAccessLogMiddleware` to the actual `llm_adapter.deployed_gateway:app` entrypoint;
+2. adding `--no-access-log` to the non-TLS StegDeploy container entrypoint;
+3. adding `--no-access-log` to the TLS StegDeploy compose launch path;
+4. extending deterministic tests to require middleware parity and Uvicorn request-target logging suppression for both sovereign launch paths;
+5. preserving the existing runtime_gateway hardening and all existing authority boundaries.
 
-The repair is intentionally bounded to:
+PR #343 exact validated head: `cae48e9e24d763cbbecf667e374fdb322b60180e`
 
-1. bind `QuerySecretSafeAccessLogMiddleware` to the actual `llm_adapter.deployed_gateway:app` entrypoint;
-2. add `--no-access-log` to the non-TLS StegDeploy container entrypoint;
-3. add `--no-access-log` to the TLS StegDeploy compose launch path;
-4. extend deterministic tests to require middleware parity and Uvicorn request-target logging suppression for both sovereign launch paths;
-5. preserve the existing runtime_gateway hardening and all existing authority boundaries.
+Exact-head PR validation:
 
-Current repair files are:
+- `validate` run `35092908169`: SUCCESS;
+- `Work Mutation Safety - Non-Authorizing` run `35092908274`: SUCCESS;
+- `Coinbase SKAP Service Gateway Validation` run `35092908240`: SUCCESS.
 
-```text
-llm_adapter/deployed_gateway.py
-scripts/container-entrypoint.sh
-compose.stegdeploy.tls.yaml
-tests/test_service_gateway_query_safe_logging.py
-tasks/LLMA-SERVICE-GATEWAY-QUERY-SECRET-SAFE-271.json
-docs/SERVICE_GATEWAY_QUERY_SECRET_SAFE_INGRESS_MIRROR_HANDOFF.md
-```
+PR #343 merged with expected-head protection as merge commit `6e6a3ac8eb30ce8a2092c6ac0397b80380a9cd33`.
+
+README.md already states the sovereign Service Gateway contract as Uvicorn request-target logging disabled plus method/canonical-path/status-only `QuerySecretSafeAccessLogMiddleware`; the repair made the actual StegDeploy entrypoint conform to that existing documented contract rather than changing the contract.
 
 No source, CI, PR, or merge event counts as deployed-ingress evidence.
 
-## Required validation boundary
+## Authentic deployed observation boundary
 
-PR #343 may merge only after exact-head CI is green and the expected head SHA is re-read immediately before merge. If the head moves, validation must be repeated for the new exact head.
-
-After merge, the deployed predicate remains fail-closed until authentic observation proves the active sovereign public ingress is actually running the hardened boundary.
+The deployed predicate remains fail-closed until authentic observation proves the active sovereign public ingress is actually running the hardened boundary.
 
 The required runtime observation must use one harmless synthetic query-bearing request to a non-credential route through the canonical public gateway and retain enough active gateway log evidence to prove:
 
@@ -87,16 +79,19 @@ credential/provider secret material absent
 
 A public HTTP response alone is insufficient because it does not prove what the active gateway persisted in logs.
 
+At the 2026-09-16 post-merge checkpoint, the authorized resident-command surface reported no connected runtime device. Therefore no authentic active-gateway log observation could be collected in this session. This is a runtime-observation availability condition, not evidence that the deployed predicate passed or failed. No substitute GitHub Actions runtime, second runtime owner, or third-party fallback was introduced.
+
 ## Remaining sequence
 
-1. Obtain exact-head green CI for PR #343 and merge only with expected-head protection.
-2. Bind the existing resident observation carrier to the merged canonical sovereign Service Gateway runtime; do not create a second runtime owner or third-party fallback.
+1. Re-establish access to the existing authorized resident runtime/observation surface without creating a second runtime owner.
+2. Verify that the observed active sovereign Service Gateway is running the merged canonical source lineage containing merge commit `6e6a3ac8eb30ce8a2092c6ac0397b80380a9cd33` or a descendant carrying the same repair.
 3. Send one harmless synthetic query-bearing request to a non-credential route through that exact active public gateway.
 4. Inspect the corresponding active gateway logs and retain exact observation evidence proving method/path/status are present while the synthetic query value, raw request target, and query string are absent.
 5. Reconcile issue #271 and TVC #328/#317 only from that authentic deployed observation.
 6. Re-run TVC callback preflight; only then implement/activate the exact `/tvc/google-drive/callback` route using the already-merged TVC refresh custody, vault-session consumer, SKAP client-secret protected-use adapter, Interlock/InTr boundaries, and canonical carrier.
 7. Do not initiate Google consent or provider authorization until the TVC callback preflight passes.
+8. After successful provider authorization, perform CONNECT/VERIFY and only then materialize Google Drive KV #2 and complete the required roundtrip/terminal-readback evidence.
 
 ## Manual work
 
-None at this checkpoint. Do not initiate Google consent, expose provider credentials, treat source/CI/merge as deployed ingress proof, reopen TVC provider execution, re-emit the Google Drive KV request, or materialize KV #2 before authentic deployed query-secret-safe ingress evidence is retained.
+Reconnect the already-authorized resident runtime device to the existing resident-command surface so authentic active-gateway logs can be observed. Do not initiate Google consent, expose provider credentials, treat source/CI/merge as deployed ingress proof, reopen TVC provider execution, re-emit the Google Drive KV request, or materialize KV #2 before the deployed query-secret-safe ingress observation passes.
