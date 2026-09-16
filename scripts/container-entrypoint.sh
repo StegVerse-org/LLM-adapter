@@ -21,4 +21,5 @@ exec uvicorn llm_adapter.deployed_gateway:app \
   --host 0.0.0.0 \
   --port "$PORT" \
   --proxy-headers \
-  --forwarded-allow-ips='*'
+  --forwarded-allow-ips='*' \
+  --no-access-log
