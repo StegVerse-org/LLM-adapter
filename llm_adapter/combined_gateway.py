@@ -7,7 +7,7 @@ import json
 import os
 from types import SimpleNamespace
 
-from fastapi import Request
+from fastapi import HTTPException, Request
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -27,6 +27,11 @@ from llm_adapter.master_records_usage_submission import (
     submit_provider_usage_to_master_records,
 )
 from llm_adapter.provider_usage_submission import persist_provider_usage
+from llm_adapter.stegbrowser_master_records_state_transition_relay import (
+    StegBrowserMasterRecordsRelayError,
+    enabled as stegbrowser_master_records_relay_enabled,
+    relay_stegbrowser_state_transition,
+)
 from llm_adapter.resident_evidence_api import router as resident_evidence_router
 from llm_adapter.resident_rendezvous_api import router as resident_rendezvous_router
 from llm_adapter.usage_session_api import router as usage_session_router
@@ -79,6 +84,15 @@ def stegverse_node_advertisement(request: Request) -> dict:
         "capability_id": "ecosystem-chat-gateway",
         "endpoint": f"{base_url}/api/ecosystem-chat",
         "health_endpoint": f"{base_url}/health",
+        "stegbrowser_master_records_state_transition_endpoint": (
+            f"{base_url}/api/master-records/state-transitions"
+            if stegbrowser_master_records_relay_enabled()
+            else None
+        ),
+        "stegbrowser_master_records_state_transition_owner": "master-records/orchestration",
+        "stegbrowser_master_records_state_transition_credential_authority": "TV/TVC",
+        "stegbrowser_master_records_state_transition_browser_credential_required": False,
+        "stegbrowser_master_records_state_transition_gateway_authority": "NONE",
         "coinbase_skap_readiness_endpoint": f"{base_url}/api/coinbase/skap/readiness",
         "coinbase_skap_ingress_endpoint": f"{base_url}/api/coinbase/skap/ingress",
         "coinbase_skap_completed_boundary": "DEVICE_TO_KV",
@@ -131,6 +145,25 @@ def stegverse_node_advertisement(request: Request) -> dict:
     }
     payload["advertisement_sha256"] = _canonical_hash(payload)
     return payload
+
+
+@app.post("/api/master-records/state-transitions")
+def stegbrowser_master_records_state_transition_relay(payload: dict) -> dict:
+    """Relay the one immutable StegBrowser custody receipt without exporting credentials."""
+    try:
+        return relay_stegbrowser_state_transition(payload)
+    except StegBrowserMasterRecordsRelayError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "reason": str(exc),
+                "custody_recorded": False,
+                "credential_material_returned": False,
+                "credential_authority": "TV/TVC",
+                "gateway_authority": "NONE",
+                "authority_effect": "NONE_TRANSPORT_ONLY",
+            },
+        ) from exc
 
 
 @app.middleware("http")
