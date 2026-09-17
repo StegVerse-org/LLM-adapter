@@ -1,0 +1,98 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "MASTER-RECORDS-STEGBROWSER-ENDPOINT-BINDING-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/MASTER_RECORDS_STEGBROWSER_ENDPOINT_BINDING_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/MASTER-RECORDS-STEGBROWSER-ENDPOINT-BINDING-001.json",
+    "StegVerse-Labs/.github:data/canonical-task-registry.json"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "master-records/orchestration:services/canonical_state_transition_custody.py",
+      "master-records/orchestration:services/canonical_master_records_api.py",
+      "docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md"
+    ]
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github#2078",
+      "StegVerse-Labs/.github:docs/MASTER_RECORDS_STEGBROWSER_ENDPOINT_BINDING_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/Site:docs/STEGBROWSER_MASTER_RECORDS_ENDPOINT_BINDING_MIRROR_HANDOFF.md",
+      "master-records/orchestration:services/canonical_state_transition_custody.py"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/Site",
+      "StegVerse-Labs/.github",
+      "master-records/orchestration",
+      "StegVerse-Labs/TVC"
+    ],
+    "evidence_refs": [
+      "Existing combined Service Gateway already owns provider-neutral node advertisement and CORS transport.",
+      "Existing TV policy already defines service_gateway_master_records with server-side KV read scope.",
+      "Existing Master Records provider-usage clients establish credential-nonexporting server-side custody submission semantics.",
+      "Canonical state-transition custody remains solely implemented in master-records/orchestration."
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "intentional_parallel_versioning": false,
+    "reconciliation_ref": "docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md"
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md documents the bounded browser-to-Master-Records transport and explicitly preserves sole custody authority."
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/combined_gateway.py",
+    "llm_adapter/stegbrowser_master_records_state_transition_relay.py",
+    "tests/test_node_advertisement.py",
+    "tests/test_stegbrowser_master_records_state_transition_relay.py",
+    "README.md",
+    "LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md",
+    "receipts/work-safety/MASTER-RECORDS-STEGBROWSER-ENDPOINT-BINDING-001.json"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/stegbrowser_master_records_state_transition_relay.py",
+      "semantic_responsibility": "Task-bounded credential-nonexporting transport from the existing Service Gateway to the sole canonical Master Records state-transition API.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "llm_adapter/master_records_usage_submission.py plus llm_adapter/combined_gateway.py",
+      "justification": "The existing server-side Master Records transport pattern is extended to the canonical state-transition receipt without adding custody authority.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "llm_adapter/master_records_usage_submission.py",
+        "stegverse_tv_policy/roles.yml",
+        "master-records/orchestration:services/canonical_state_transition_custody.py"
+      ]
+    },
+    {
+      "path": "tests/test_stegbrowser_master_records_state_transition_relay.py",
+      "semantic_responsibility": "Regression coverage for immutable identity, credential non-export, authority boundaries, and exact reconstruction digest validation.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "tests/test_master_records_local_usage_submission.py and tests/test_node_advertisement.py",
+      "justification": "Adds task-specific coverage for the extended existing transport seam.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "llm_adapter/stegbrowser_master_records_state_transition_relay.py"
+      ]
+    }
+  ]
+}
