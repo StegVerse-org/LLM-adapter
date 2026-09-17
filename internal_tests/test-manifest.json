@@ -1,0 +1,37 @@
+{
+  "schema": "stegverse.internal-test-manifest.v1",
+  "suite_id": "llm-adapter-governed-reference-v1",
+  "execution_class": "INTERNAL_EXECUTION",
+  "public_replayable": true,
+  "independently_reproduced": false,
+  "production_observed": false,
+  "runner": "internal_tests/run_governed_reference_suite.py",
+  "vectors": [
+    "GOV-001",
+    "GOV-002",
+    "GOV-003",
+    "GOV-004",
+    "GOV-005",
+    "GOV-006",
+    "GOV-007",
+    "GOV-008"
+  ],
+  "required_disclosures": [
+    "inputs",
+    "expected_results",
+    "observed_results",
+    "per_test_hashes",
+    "runner_hash",
+    "limitations",
+    "claim_boundary",
+    "packet_hash"
+  ],
+  "not_established": [
+    "live deployment",
+    "provider execution",
+    "durable infrastructure persistence",
+    "HIL publication custody",
+    "independent reproduction",
+    "production assurance"
+  ]
+}

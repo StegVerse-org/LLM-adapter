@@ -1,0 +1,48 @@
+name: Internal Governed Reference Suite
+
+on:
+  pull_request:
+    paths:
+      - 'internal_tests/**'
+      - '.github/workflows/internal-governed-reference.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  governed-reference:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run deterministic governed reference vectors
+        run: python internal_tests/run_governed_reference_suite.py
+
+      - name: Verify evidence packet boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          packet = json.loads(Path('internal_tests/artifacts/governed-reference-results.json').read_text())
+          assert packet['execution_class'] == 'INTERNAL_EXECUTION'
+          assert packet['public_replayable'] is True
+          assert packet['independently_reproduced'] is False
+          assert packet['production_observed'] is False
+          assert packet['summary']['failed'] == 0
+          assert packet['packet_sha256'].startswith('sha256:')
+          print('EVIDENCE_BOUNDARY=PASS')
+          PY
+
+      - name: Upload governed evidence packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: governed-reference-evidence
+          path: internal_tests/artifacts/governed-reference-results.json
+          if-no-files-found: error
