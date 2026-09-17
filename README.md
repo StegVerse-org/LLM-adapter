@@ -528,3 +528,12 @@ tests/test_service_gateway_query_safe_logging.py
 docs/SERVICE_GATEWAY_QUERY_SECRET_SAFE_INGRESS_MIRROR_HANDOFF.md
 tasks/LLMA-SERVICE-GATEWAY-QUERY-SECRET-SAFE-271.json
 ```
+
+
+## StegBrowser canonical Master Records relay
+
+The existing Service Gateway can advertise a bounded, credential-nonexporting transport for the immutable StegBrowser runtime-readiness custody receipt. Site discovers the route through the existing hash/health-bound StegVerse node advertisement instead of assuming a fixed host. The browser submits only `stegverse.master-records.state-transition-submission/v1`; the gateway uses the existing TV/TVC-scoped `service_gateway_master_records` server-side credential path to call the sole `master-records/orchestration` state-transition custody API.
+
+The relay is intentionally bound to nonce `STEG-BROWSER-MANIFEST-INTR-INGRESS-EXECUTION-001-20260915T142500Z`, sequence 1, transition `STEGBROWSER_RUNTIME_READINESS_MASTER_RECORDS_CUSTODY`, COSV `40000100100000`, and the exact Node/Interlock/Receipt-1/lease/runtime/exported-bundle evidence tuple. It returns success only when Master Records returns `RECORDED`, reconstruction `PASS`, and exact canonical digest equality with no authority escalation. The browser never receives the Master Records bearer credential.
+
+This is transport over the existing gateway, not a second custody implementation, scheduler, runtime, or authority plane. Source and CI validate the binding only; they do not prove a reachable sovereign gateway, authentic Master Records custody, or reconstruction for the immutable invocation. Scoped continuation: `docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md`.

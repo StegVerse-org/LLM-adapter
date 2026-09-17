@@ -428,3 +428,16 @@ Installed StegDeploy behavior:
 - incomplete vendored StegIndex source is omitted fail-closed.
 
 This closes only the downstream StegDeploy source-locator/materialization seam. It does not prove authentic resident StegIndex materialization, blocker-derived preflight invocation, runtime activation, or any authority promotion. TV/TVC remains credential authority; GitHub-token runtime authority remains NONE.
+
+
+## StegBrowser Master Records relay intake
+
+Canonical Goal `StegVerse-Labs/.github:MASTER-RECORDS-STEGBROWSER-ENDPOINT-BINDING-001` reuses the existing Service Gateway and TV/TVC `service_gateway_master_records` credential role as a non-authorizing transport to the sole canonical state-transition custody API in `master-records/orchestration`.
+
+Source surfaces:
+- `llm_adapter/stegbrowser_master_records_state_transition_relay.py`;
+- `tests/test_stegbrowser_master_records_state_transition_relay.py`;
+- `docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md`;
+- `llm_adapter/combined_gateway.py` advertisement plus bounded relay route.
+
+The relay accepts only the immutable StegBrowser nonce/count-1 custody receipt and complete exact tuple, keeps credential material server-side, and requires authoritative `RECORDED + reconstruction_status=PASS` with exact digest equality. It grants no custody, execution, transition, publication, provider, route, or governance authority. Authentic runtime custody remains separately evidence-gated.

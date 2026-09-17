@@ -18,6 +18,9 @@ def test_node_advertisement_is_health_bound_and_non_authorizing(monkeypatch) -> 
     monkeypatch.setenv("STEGVERSE_NODE_ID", "test-portable-node")
     monkeypatch.setenv("STEGVERSE_PROVIDER_ENABLED", "true")
     monkeypatch.setenv("STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS", "true")
+    monkeypatch.setenv("STEGVERSE_MASTER_RECORDS_ENDPOINT", "https://master-records.example")
+    monkeypatch.setenv("STEGVERSE_MASTER_RECORDS_TOKEN", "server-only-token")
+    monkeypatch.setenv("STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS", "master-records.example")
 
     response = TestClient(app).get("/api/stegverse-node")
 
@@ -28,6 +31,11 @@ def test_node_advertisement_is_health_bound_and_non_authorizing(monkeypatch) -> 
     assert payload["capability_id"] == "ecosystem-chat-gateway"
     assert payload["endpoint"].endswith("/api/ecosystem-chat")
     assert payload["health_endpoint"].endswith("/health")
+    assert payload["stegbrowser_master_records_state_transition_endpoint"].endswith("/api/master-records/state-transitions")
+    assert payload["stegbrowser_master_records_state_transition_owner"] == "master-records/orchestration"
+    assert payload["stegbrowser_master_records_state_transition_credential_authority"] == "TV/TVC"
+    assert payload["stegbrowser_master_records_state_transition_browser_credential_required"] is False
+    assert payload["stegbrowser_master_records_state_transition_gateway_authority"] == "NONE"
     assert payload["coinbase_skap_readiness_endpoint"].endswith("/api/coinbase/skap/readiness")
     assert payload["coinbase_skap_ingress_endpoint"].endswith("/api/coinbase/skap/ingress")
     assert payload["coinbase_skap_completed_boundary"] == "DEVICE_TO_KV"
