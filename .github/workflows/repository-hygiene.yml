@@ -1,0 +1,19 @@
+name: Repository hygiene inventory
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repository-hygiene.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    uses: StegVerse-Labs/.github/.github/workflows/repository-hygiene-reusable.yml@739a611afd70bbe5b8e598b03180e62624fb8459
+    with:
+      stale_days: 30
+      protect_regex: '^(main|master|gh-pages|release/.*|support/.*)$'
+      approval_file: '.github/repository-hygiene-approved-retirements.txt'
