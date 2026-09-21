@@ -108,6 +108,7 @@ def test_activate_resident_binds_vendor_stegos_cvk_and_durable_kv_root(monkeypat
     (control / "vendor" / "micro-node-runtime" / "experiments" / "self-characterization-001").mkdir(parents=True)
     (control / "vendor" / "micro-node-runtime" / "schemas").mkdir(parents=True)
     (control / "vendor" / "micro-node-runtime" / "tools" / "run_self_characterization_principal.py").write_text("# principal\n")
+    (control / "vendor" / "micro-node-runtime" / "tools" / "verify_self_characterization_runtime_identity.py").write_text("# verify identity\n")
     (control / "vendor" / "micro-node-runtime" / "experiments" / "self-characterization-001" / "CONSTRUCTION_PROVENANCE.v0.1.json").write_text("{}\n")
     (control / "vendor" / "micro-node-runtime" / "schemas" / "self_characterization_runtime_identity.schema.json").write_text("{}\n")
     (control / "vendor" / "master-records-orchestration" / "scripts").mkdir(parents=True)
