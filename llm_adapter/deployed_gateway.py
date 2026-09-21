@@ -13,6 +13,7 @@ from llm_adapter.service_gateway_composed import (
 from llm_adapter.service_gateway_http01 import http01_challenge_response
 from llm_adapter.service_gateway_evaluator_intr import router as evaluator_intr_router
 from llm_adapter.service_gateway_hil_intr import router as hil_intr_router
+from llm_adapter.service_gateway_hil_receiver_proxy import HILMachineReceiverProxyMiddleware
 from llm_adapter.service_gateway_sv002_observation import router as sv002_observation_router
 from llm_adapter.service_gateway_personal_origin import personal_origin_middleware
 from llm_adapter.query_safe_access_log import QuerySecretSafeAccessLogMiddleware
@@ -22,6 +23,7 @@ app.include_router(attachment_router)
 app.include_router(evaluator_intr_router)
 app.include_router(hil_intr_router)
 app.include_router(sv002_observation_router)
+app.add_middleware(HILMachineReceiverProxyMiddleware)
 app.mount("/user-llm", create_app())
 
 # Reuse the validated Service Gateway Coinbase SKAP handlers on the actual
