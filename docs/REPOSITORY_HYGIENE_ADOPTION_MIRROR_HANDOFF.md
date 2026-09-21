@@ -49,3 +49,8 @@ NO_AGE_OR_NAME_BASED_REF_DELETION
 ```
 
 Source installation alone does not satisfy the hosted inventory or ref-retirement predicates.
+
+
+### Repository hygiene first hosted census — 2026-09-21
+
+Reusable hygiene run `35636235950` completed `SUCCESS`: 270 branches inspected, 58 retirement candidates requiring owner clearance, 211 review-required, 1 protected/retained, and zero approved-retirement-ready entries. Evidence artifact `10656017857`, digest `sha256:7e52ff98e69b29b0796a28b332aafb1ed11ed2e8ae152c14f114ed582022dc66`. No ref, PR, or issue mutation occurred; zero refs are routed to `HYGIENE-BRANCH-REF-RETIREMENT` until repository-local owner/evidence approval exists.
