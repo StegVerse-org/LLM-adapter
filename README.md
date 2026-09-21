@@ -542,3 +542,8 @@ This is transport over the existing gateway, not a second custody implementation
 ### Canonical resident control-root map binding — 2026-09-21
 
 StegDeploy now includes its already-materialized canonical control root in `STEGVERSE_REPO_ROOTS_JSON` under `StegVerse-Labs/.github`. This lets the existing Healer neutral reusable-task scheduler resolve `.github`-owned children such as `RT-CANONICAL-WORK-PORTABLE-DISPATCH-001` without another checkout or transport. The binding is path-only and non-authorizing.
+
+
+## Repository hygiene adoption — 2026-09-21
+
+This Wave-1 repository now adopts canonical hygiene goal `HYGIENE-CAUSAL-ROOTS-001` through the shared read-only inventory workflow pinned to `739a611afd70bbe5b8e598b03180e62624fb8459`. Pre-adoption branch census: **268**. The workflow classifies only; it cannot delete refs, close PRs/issues, or treat branch age/name as retirement authority. See `docs/REPOSITORY_HYGIENE_ADOPTION_MIRROR_HANDOFF.md`.

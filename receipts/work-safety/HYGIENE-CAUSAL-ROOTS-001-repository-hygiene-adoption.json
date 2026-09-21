@@ -1,0 +1,69 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "HYGIENE-CAUSAL-ROOTS-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "docs/REPOSITORY_HYGIENE_ADOPTION_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/REPOSITORY_HYGIENE_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:control/task-vectors/HYGIENE-CAUSAL-ROOTS-001.json",
+    "StegVerse-Labs/.github:data/canonical-task-registry.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Repository hygiene inventory produces non-authorizing CI evidence only; it creates no governed runtime/state-transition artifact requiring Master Records custody."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github#165",
+      "StegVerse-Labs/.github:docs/REPOSITORY_HYGIENE_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:.github/workflows/repository-hygiene-reusable.yml"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/StegHealth"
+    ],
+    "evidence_refs": [
+      "StegVerse-Labs/.github owns the canonical reusable repository-hygiene workflow and classifier.",
+      "StegHealth is the first validated private-repository consumer of the exact shared revision.",
+      "LLM-adapter has no equivalent repository-local reusable hygiene implementation to duplicate."
+    ]
+  },
+  "reuse_decision": "REUSE",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "intentional_parallel_versioning": false,
+    "reconciliation_ref": "docs/REPOSITORY_HYGIENE_ADOPTION_MIRROR_HANDOFF.md"
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md documents the read-only shared hygiene adoption and non-authority boundary."
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/repository-hygiene.yml",
+    "README.md",
+    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "docs/REPOSITORY_HYGIENE_ADOPTION_MIRROR_HANDOFF.md",
+    "receipts/work-safety/HYGIENE-CAUSAL-ROOTS-001-repository-hygiene-adoption.json"
+  ],
+  "new_files": [
+    {
+      "path": ".github/workflows/repository-hygiene.yml",
+      "semantic_responsibility": "Thin read-only caller of the centrally owned reusable repository-hygiene inventory; no local classifier or mutation authority.",
+      "decision": "REUSE",
+      "closest_existing_implementation": "StegVerse-Labs/.github:.github/workflows/repository-hygiene-reusable.yml@739a611afd70bbe5b8e598b03180e62624fb8459"
+    }
+  ]
+}
