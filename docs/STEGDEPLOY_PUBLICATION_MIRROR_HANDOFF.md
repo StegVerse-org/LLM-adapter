@@ -367,3 +367,16 @@ STEGVERSE_REPO_ROOTS_JSON["StegVerse-org/LLM-adapter"]=<same exact ROOT>
 This closes the local discovery seam created when StegIndex indexed LLM-adapter provenance for the verified resident StegIndex root-binding capability. Without this mapping, those required local source observations would be present but invisible to `StegIndex/scripts/refresh_sources.py`, producing a fail-closed `PARTIAL` refresh.
 
 The mapping is a locator only. It performs no network fetch and grants no credential, execution, admission, claim/fence, routing, transition, publication, custody, consequence, runtime, or activation authority.
+
+
+## 2026-09-21 canonical control-root repository-map repair
+
+The standing Healer reusable-task scheduler resolves child repositories from `STEGVERSE_REPO_ROOTS_JSON`. StegDeploy already materialized the canonical control plane and exported the exact same path as `STEGVERSE_HEARTBEAT_SOURCE_ROOT`, but the repository map omitted the `StegVerse-Labs/.github` key. A StegHealth-scoped `RT-CANONICAL-WORK-PORTABLE-DISPATCH-001` row therefore reached the existing neutral scheduler with `repository=StegVerse-Labs/.github` and deterministically stopped at `LOCAL_DOTGITHUB_SOURCE_NOT_MATERIALIZED` before the portable dispatch runner could execute.
+
+The bounded repair adds only:
+
+```text
+STEGVERSE_REPO_ROOTS_JSON["StegVerse-Labs/.github"] = <existing verified control_root>
+```
+
+The value is the already-verified/materialized control root used by the same StegDeploy activation call. No additional checkout, source transport, runtime, scheduler, dispatcher, WorkerCoordinator, credential path, or authority plane is created.
