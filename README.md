@@ -547,3 +547,8 @@ StegDeploy now includes its already-materialized canonical control root in `STEG
 ## Repository hygiene adoption — 2026-09-21
 
 This Wave-1 repository now adopts canonical hygiene goal `HYGIENE-CAUSAL-ROOTS-001` through the shared read-only inventory workflow pinned to `739a611afd70bbe5b8e598b03180e62624fb8459`. Pre-adoption branch census: **268**. The workflow classifies only; it cannot delete refs, close PRs/issues, or treat branch age/name as retirement authority. See `docs/REPOSITORY_HYGIENE_ADOPTION_MIRROR_HANDOFF.md`.
+
+
+### Machine-owned HIL receiver Gateway projection
+
+The deployed Service Gateway can project the already-running loopback HIL receiver through `/api/hil/*` without conflating it with the Universal InTr `/intr/materialization` upstream. The projection is transport-only, loopback-only, rejects browser authorization/cookie headers, and does not create a second receiver or custody lineage.
