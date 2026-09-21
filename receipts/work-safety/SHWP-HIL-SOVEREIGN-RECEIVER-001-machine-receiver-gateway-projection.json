@@ -1,0 +1,89 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SHWP-HIL-SOVEREIGN-RECEIVER-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "docs/HIL_RUNTIME_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/HIL_SOVEREIGN_RECEIVER_ACTIVATION_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:control/task-vectors/SHWP-HIL-SOVEREIGN-RECEIVER-001.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This repair changes only Service Gateway carriage into the existing machine-owned HIL receiver and creates no Master Records custody or reconstruction authority."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "docs/HIL_RUNTIME_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/StegVerse-Healer:docs/COINBASE_STEGDEPLOY_GATEWAY_ACTIVATION_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:docs/HIL_SOVEREIGN_RECEIVER_ACTIVATION_MIRROR_HANDOFF.md"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/StegVerse-Healer",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/Site"
+    ],
+    "evidence_refs": [
+      "Existing deployed_gateway already composes combined_gateway and the public Service Gateway.",
+      "Existing service_gateway_hil_intr owns only Universal InTr /intr/* carriage.",
+      "Existing machine-owned HIL worker launches combined_gateway separately and retains its loopback base_url.",
+      "No existing distinct /api/hil/* loopback relay to that retained machine receiver was found."
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "intentional_parallel_versioning": false,
+    "reconciliation_ref": "docs/HIL_RUNTIME_MIRROR_HANDOFF.md"
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md now documents the distinct machine-owned HIL receiver Gateway projection and its separation from Universal InTr."
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/deployed_gateway.py",
+    "llm_adapter/service_gateway_hil_receiver_proxy.py",
+    "tests/test_service_gateway_hil_receiver_proxy.py",
+    "docs/HIL_RUNTIME_MIRROR_HANDOFF.md",
+    "README.md",
+    "receipts/work-safety/SHWP-HIL-SOVEREIGN-RECEIVER-001-machine-receiver-gateway-projection.json"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/service_gateway_hil_receiver_proxy.py",
+      "semantic_responsibility": "Transport-only loopback projection of public /api/hil/* requests to the already-running machine-owned HIL combined_gateway receiver.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "llm_adapter/service_gateway_hil_intr.py",
+      "justification": "Universal InTr carriage cannot be reused directly because its upstream is path-bound to /intr/materialization; the receiver projection must preserve the distinct /api/hil/* contract.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "llm_adapter/deployed_gateway.py",
+        "llm_adapter/service_gateway_hil_intr.py",
+        "docs/HIL_RUNTIME_MIRROR_HANDOFF.md"
+      ]
+    },
+    {
+      "path": "tests/test_service_gateway_hil_receiver_proxy.py",
+      "semantic_responsibility": "Deterministic validation of loopback-only HIL receiver projection, exact-byte carriage, credential rejection, and reconstruction-header preservation.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "tests/test_service_gateway_hil_intr.py",
+      "justification": "The distinct receiver projection needs focused regression coverage separate from Universal InTr tests.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "llm_adapter/service_gateway_hil_receiver_proxy.py"
+      ]
+    }
+  ]
+}
