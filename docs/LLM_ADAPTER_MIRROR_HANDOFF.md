@@ -151,3 +151,8 @@ The historical bounded reconciliation is complete and archive-safe. Workflow-cle
 ## Repository hygiene reusable adoption — 2026-09-21
 
 Canonical ecosystem hygiene goal `HYGIENE-CAUSAL-ROOTS-001` / COSV `10100000100000` is adopted as a non-authorizing Wave-1 inventory surface. Direct pre-adoption census observed **268** branches. The caller `.github/workflows/repository-hygiene.yml` is pinned to shared revision `739a611afd70bbe5b8e598b03180e62624fb8459` with `contents: read` only. It performs classification/evidence generation only: no branch deletion, PR/issue closure, runtime mutation, credential use beyond ephemeral read-only checkout, or age/name-based retirement authority. First hosted inventory remains to be observed after merge. Detailed adoption handoff: `docs/REPOSITORY_HYGIENE_ADOPTION_MIRROR_HANDOFF.md`.
+
+
+### Repository hygiene first hosted census — 2026-09-21
+
+Reusable hygiene run `35636235950` completed `SUCCESS`: 270 branches inspected, 58 retirement candidates requiring owner clearance, 211 review-required, 1 protected/retained, and zero approved-retirement-ready entries. Evidence artifact `10656017857`, digest `sha256:7e52ff98e69b29b0796a28b332aafb1ed11ed2e8ae152c14f114ed582022dc66`. No ref, PR, or issue mutation occurred; zero refs are routed to `HYGIENE-BRANCH-REF-RETIREMENT` until repository-local owner/evidence approval exists.
