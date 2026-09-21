@@ -537,3 +537,8 @@ The existing Service Gateway can advertise a bounded, credential-nonexporting tr
 The relay is intentionally bound to nonce `STEG-BROWSER-MANIFEST-INTR-INGRESS-EXECUTION-001-20260915T142500Z`, sequence 1, transition `STEGBROWSER_RUNTIME_READINESS_MASTER_RECORDS_CUSTODY`, COSV `40000100100000`, and the exact Node/Interlock/Receipt-1/lease/runtime/exported-bundle evidence tuple. It returns success only when Master Records returns `RECORDED`, reconstruction `PASS`, and exact canonical digest equality with no authority escalation. The browser never receives the Master Records bearer credential.
 
 This is transport over the existing gateway, not a second custody implementation, scheduler, runtime, or authority plane. Source and CI validate the binding only; they do not prove a reachable sovereign gateway, authentic Master Records custody, or reconstruction for the immutable invocation. Scoped continuation: `docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md`.
+
+
+### Canonical resident control-root map binding — 2026-09-21
+
+StegDeploy now includes its already-materialized canonical control root in `STEGVERSE_REPO_ROOTS_JSON` under `StegVerse-Labs/.github`. This lets the existing Healer neutral reusable-task scheduler resolve `.github`-owned children such as `RT-CANONICAL-WORK-PORTABLE-DISPATCH-001` without another checkout or transport. The binding is path-only and non-authorizing.
