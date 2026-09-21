@@ -328,3 +328,10 @@ new_artifact_sha256: sha256:1e8a70d18633f084b777b15724bf9fe53892d02e7dcffef990ff
 runtime_activation: false
 authority_effect: NONE_SOURCE_PROJECTION
 ```
+
+
+## 2026-09-21 machine-owned receiver Gateway projection
+
+The public Service Gateway and Universal InTr materialization upstream are separate surfaces. `/intr/materialization` continues to use the existing Universal InTr loopback upstream. When `STEGVERSE_HIL_RECEIVER_PROXY_ENABLED=true`, the deployed Gateway intercepts only `/api/hil/*` and relays exact request bytes to the separately projected loopback origin in `STEGVERSE_HIL_RECEIVER_UPSTREAM`. That origin must be loopback HTTP with no path/query/credentials and is expected to identify the already-running machine-owned `llm_adapter.combined_gateway:app` receiver.
+
+The projection does not start a receiver, create custody, mint a receipt, or widen credential authority. The machine receiver remains the sole producer of the durable `receiver-receipts/<submission_id>.json` and `intr-outbox/tvc-hil-lifecycle/<submission_id>.json` pair. Authorization/cookie headers are rejected at the public relay; the existing bounded HIL review header may be forwarded for TV/TVC-controlled exact-byte reconstruction.
