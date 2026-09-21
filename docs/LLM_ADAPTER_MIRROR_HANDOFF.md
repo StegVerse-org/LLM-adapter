@@ -146,3 +146,8 @@ MERGED INTO: master-records/orchestration
 ```
 
 The historical bounded reconciliation is complete and archive-safe. Workflow-cleanup claim 051 is not complete until exact-head Architecture Guard/global validate pass, PR merge, post-merge workflow census, claim release, and canonical workflow handoff finalization.
+
+
+## Repository hygiene reusable adoption — 2026-09-21
+
+Canonical ecosystem hygiene goal `HYGIENE-CAUSAL-ROOTS-001` / COSV `10100000100000` is adopted as a non-authorizing Wave-1 inventory surface. Direct pre-adoption census observed **268** branches. The caller `.github/workflows/repository-hygiene.yml` is pinned to shared revision `739a611afd70bbe5b8e598b03180e62624fb8459` with `contents: read` only. It performs classification/evidence generation only: no branch deletion, PR/issue closure, runtime mutation, credential use beyond ephemeral read-only checkout, or age/name-based retirement authority. First hosted inventory remains to be observed after merge. Detailed adoption handoff: `docs/REPOSITORY_HYGIENE_ADOPTION_MIRROR_HANDOFF.md`.
