@@ -23,7 +23,11 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from llm_adapter.external_review_store import now_iso
-from llm_adapter.wiki_publication_master_records import (\n    PublicationCustodyError,\n    require_publication_master_records_closure,\n)\n
+from llm_adapter.wiki_publication_master_records import (
+    PublicationCustodyError,
+    require_publication_master_records_closure,
+)
+
 router = APIRouter(prefix="/api/external-review", tags=["external-chat-mutation"])
 
 ALLOWED_REPOSITORY = "StegVerse-Labs/admissibility-wiki"
