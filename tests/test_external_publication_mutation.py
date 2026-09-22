@@ -52,7 +52,24 @@ def seed_database(path: str) -> str:
             "INSERT OR REPLACE INTO publication_transitions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (publication_id, package_id, correction_id, "publisher:test", "delegation:publisher:test",
              "docs/external-frameworks/reports/decisionassure-reviewed.md", "ALLOW_PUBLICATION_CANDIDATE",
-             "8" * 64, json.dumps({"source_commit_ref": "commit:test"}), datetime.now(timezone.utc).isoformat()),
+             "8" * 64, json.dumps({
+                 "schema_version": "1.0.0",
+                 "transition_type": "external_framework_wiki_publication_transition",
+                 "package_id": package_id,
+                 "correction_receipt_id": correction_id,
+                 "publisher_ref": "publisher:test",
+                 "target_path": "docs/external-frameworks/reports/decisionassure-reviewed.md",
+                 "decision": "ALLOW_PUBLICATION_CANDIDATE",
+                 "source_commit_ref": "commit:test",
+                 "evidence_references": ["compat:test", "review:test"],
+                 "publication_executed": False,
+                 "boundary": {
+                     "transition_is_not_repository_write": True,
+                     "transition_is_not_certification": True,
+                     "transition_creates_no_standing": True,
+                     "separate_repository_mutation_required": True,
+                 },
+             }), datetime.now(timezone.utc).isoformat()),
         )
         db.commit()
     return publication_id
@@ -66,6 +83,18 @@ def configure(monkeypatch, tmp_path):
     monkeypatch.setenv("STEGVERSE_EXTERNAL_GITHUB_TOKEN", "github-secret")
     monkeypatch.setenv("STEGVERSE_EXTERNAL_MUTATION_RECEIPT_KEY", "receipt-secret")
     monkeypatch.setenv("STEGVERSE_EXTERNAL_MUTATION_POLICY_REF", "policy:external-wiki:v1")
+    monkeypatch.setattr(
+        mutation,
+        "require_publication_master_records_closure",
+        lambda **kwargs: {
+            "state": "RECORDED",
+            "reconstruction_status": "PASS",
+            "required_evidence_validation_status": "PASS",
+            "receipt_sha256": kwargs["receipt_sha256"],
+            "reconstructed_receipt_sha256": kwargs["receipt_sha256"],
+            "authority_effect": "NONE_CUSTODY_RECONSTRUCTION_ONLY",
+        },
+    )
     monkeypatch.setenv(
         "STEGVERSE_EXTERNAL_MUTATORS_JSON",
         json.dumps({
@@ -185,3 +214,49 @@ def test_wrong_policy_and_path_fail_closed(monkeypatch, tmp_path):
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 422
+
+
+def test_invalid_governed_master_records_closure_blocks_before_github(monkeypatch, tmp_path):
+    publication_id, token = configure(monkeypatch, tmp_path)
+    calls = []
+    monkeypatch.setattr(
+        mutation,
+        "require_publication_master_records_closure",
+        lambda **kwargs: (_ for _ in ()).throw(mutation.PublicationCustodyError("closure_missing")),
+    )
+    monkeypatch.setattr(mutation, "_github_json", lambda *args, **kwargs: calls.append(args) or {})
+    response = TestClient(app).post(
+        "/api/external-review/repository-mutations",
+        json=request(publication_id),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 409
+    assert response.json()["detail"]["reason"] == "governed_publication_master_records_closure_invalid"
+    assert calls == []
+
+
+def test_deny_and_review_required_produce_zero_repository_mutation(monkeypatch, tmp_path):
+    for decision in ("DENY_PUBLICATION", "REVIEW_REQUIRED"):
+        publication_id, token = configure(monkeypatch, tmp_path)
+        with mutation._connect() as db:
+            row = db.execute(
+                "SELECT payload_json FROM publication_transitions WHERE publication_transition_id = ?",
+                (publication_id,),
+            ).fetchone()
+            payload = json.loads(row["payload_json"])
+            payload["decision"] = decision
+            db.execute(
+                "UPDATE publication_transitions SET decision = ?, payload_json = ? WHERE publication_transition_id = ?",
+                (decision, json.dumps(payload), publication_id),
+            )
+            db.commit()
+        calls = []
+        monkeypatch.setattr(mutation, "_github_json", lambda *args, **kwargs: calls.append(args) or {})
+        response = TestClient(app).post(
+            "/api/external-review/repository-mutations",
+            json=request(publication_id),
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 409
+        assert response.json()["detail"]["reason"] == "publication_transition_not_allowed"
+        assert calls == []
