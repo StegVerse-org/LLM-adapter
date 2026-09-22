@@ -139,6 +139,7 @@ class RepositoryMutationRequest(BaseModel):
     schema_version: Literal["1.0.0"]
     request_type: Literal["external_framework_repository_mutation_request"]
     publication_transition_id: str = Field(min_length=1, max_length=256)
+    master_records_receipt_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     actor_ref: str = Field(min_length=1, max_length=256)
     repository_full_name: Literal["StegVerse-Labs/admissibility-wiki"]
     target_path: str = Field(min_length=1, max_length=512)
