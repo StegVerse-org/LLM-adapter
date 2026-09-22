@@ -23,7 +23,7 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from llm_adapter.external_review_store import now_iso
-
+from llm_adapter.wiki_publication_master_records import (\n    PublicationCustodyError,\n    require_publication_master_records_closure,\n)\n
 router = APIRouter(prefix="/api/external-review", tags=["external-chat-mutation"])
 
 ALLOWED_REPOSITORY = "StegVerse-Labs/admissibility-wiki"
@@ -208,6 +208,22 @@ def mutate_repository(payload: RepositoryMutationRequest, authorization: str | N
     if not payload.authority_ref:
         raise HTTPException(status_code=403, detail={"reason": "commit_time_authority_missing"})
 
+    try:
+        governed_closure = require_publication_master_records_closure(
+            receipt_sha256=payload.master_records_receipt_sha256,
+            publication_transition_id=payload.publication_transition_id,
+            publication_transition=publication_payload,
+        )
+    except PublicationCustodyError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "reason": "governed_publication_master_records_closure_invalid",
+                "detail": str(exc),
+                "repository_mutation_performed": False,
+            },
+        ) from exc
+
     head = _github_json("GET", f"https://api.github.com/repos/{ALLOWED_REPOSITORY}/git/ref/heads/{payload.branch}", github_token)
     current_head = head.get("object", {}).get("sha")
     if current_head != payload.expected_repository_head_sha:
@@ -265,7 +281,7 @@ def mutate_repository(payload: RepositoryMutationRequest, authorization: str | N
         "committed_at": committed_at,
         "commit_time_revalidation": {
             "authority": "PASS", "delegation": "PASS", "policy": "PASS", "freshness": "PASS",
-            "repository_head": "PASS", "target_blob": "PASS", "publication_identity": "PASS",
+            "repository_head": "PASS", "target_blob": "PASS", "publication_identity": "PASS",\n            "governed_master_records_closure": "PASS",
         },
         "boundary": {
             "mutation_receipt_is_certification": False,
