@@ -285,7 +285,8 @@ def mutate_repository(payload: RepositoryMutationRequest, authorization: str | N
         "committed_at": committed_at,
         "commit_time_revalidation": {
             "authority": "PASS", "delegation": "PASS", "policy": "PASS", "freshness": "PASS",
-            "repository_head": "PASS", "target_blob": "PASS", "publication_identity": "PASS",\n            "governed_master_records_closure": "PASS",
+            "repository_head": "PASS", "target_blob": "PASS", "publication_identity": "PASS",
+            "governed_master_records_closure": "PASS",
         },
         "boundary": {
             "mutation_receipt_is_certification": False,
