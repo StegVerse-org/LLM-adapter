@@ -552,3 +552,8 @@ This Wave-1 repository now adopts canonical hygiene goal `HYGIENE-CAUSAL-ROOTS-0
 ### Machine-owned HIL receiver Gateway projection
 
 The deployed Service Gateway can project the already-running loopback HIL receiver through `/api/hil/*` without conflating it with the Universal InTr `/intr/materialization` upstream. The projection is transport-only, loopback-only, rejects browser authorization/cookie headers, and does not create a second receiver or custody lineage.
+
+
+## Governed public-wiki publication closure
+
+`GOVERNED-WIKI-PUBLICATION-TRANSITION-001` now reuses the existing Service Gateway TV/TVC-materialized Master Records transport for the publication decision. The adapter validates the exact SDK manifest, posture-bound governed result, and a separately observed external Interlock/InTr `ALLOW` decision; it then submits one canonical state-transition receipt to `master-records/orchestration` and immediately rereads the retained reconstruction. Repository mutation requires only that canonical receipt SHA-256 as caller input and independently reconstructs it before any GitHub API operation. `DENY_PUBLICATION` and `REVIEW_REQUIRED` stop before repository mutation. This adds no custody store, local allow decision, credential path, runtime, scheduler, or direct submitter write surface. See `docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md`.
