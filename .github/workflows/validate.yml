@@ -210,7 +210,7 @@ jobs:
       - name: Test External Review expired delegation
         run: "$PYTHON_BIN -m pytest tests/test_external_review_api.py::test_expired_reviewer_delegation_is_rejected -v"
       - name: Test External Chat publication and mutation
-        run: "$PYTHON_BIN -m pytest tests/test_external_review_publication.py tests/test_external_publication_mutation.py -v"
+        run: "$PYTHON_BIN -m pytest tests/test_external_review_publication.py tests/test_wiki_publication_master_records.py tests/test_external_publication_mutation.py -v"
       - name: Check workflow parity
         run: "$PYTHON_BIN scripts/check_workflow_parity.py"
       - name: Check authority boundary
