@@ -1,6 +1,6 @@
 # Governed Wiki Publication Transition Mirror Handoff
 
-Status: ACTIVE — CANONICAL CUSTODY + MUTATION GATE SOURCE IMPLEMENTATION
+Status: ACTIVE — SOURCE MERGED / AUTHENTIC RUNTIME DECISION NOT YET OBSERVED
 Goal Task ID: `GOVERNED-WIKI-PUBLICATION-TRANSITION-001`
 COSV ID: NOT ESTABLISHED IN CANONICAL TASK REGISTRY
 
@@ -63,3 +63,51 @@ Source/CI success is not authentic publication completion. End-to-end completion
 Added `llm_adapter/wiki_publication_master_records.py` as a non-authorizing client over the existing canonical Master Records transport. It validates exact publication-transition/SDK-manifest identity, requires posture-bound SDK execution plus a separately observed external Interlock/InTr `ALLOW`, records `PUBLIC_WIKI_GOVERNED_PUBLICATION_DECISION`, and rereads the exact retained receipt before returning closure.
 
 Updated `llm_adapter/external_publication_mutation.py` so `master_records_receipt_sha256` is mandatory and is independently reconstructed before any GitHub operation. The reconstructed receipt must bind the same publication transition, target repository/path, external InTr ALLOW, and exact digest equality. Non-ALLOW publication transitions remain rejected before closure or mutation consequence.
+
+
+## Source merge and authentic caller boundary
+
+LLM-adapter PR #348 merged to `main` as `9e21949926b4f082e93fbf4087f8e3c9ac2b2f09` after all eight exact-head workflows succeeded.
+
+The merged source now contains the canonical custody client and pre-GitHub mutation gate, but `record_governed_publication_closure(...)` has no production caller on current `main`.
+
+The traced existing chain is:
+
+```text
+Site External Chat compatibility
+-> cooperative review package
+-> delegated correction receipt
+-> LLM-adapter create_publication_transition(...)
+-> stored external_framework_wiki_publication_transition
+-> [FIRST AUTHENTIC CALLER BOUNDARY]
+-> SDK prepare_wiki_publication_manifest(...)
+-> existing SDK governed execution
+-> authoritative Interlock/InTr posture binding
+-> separately observed external Interlock/InTr ALLOW
+-> record_governed_publication_closure(...)
+-> canonical Master Records reconstruction
+-> existing repository-mutation endpoint
+```
+
+Current Site reviewer UI stops after correction. Current LLM-adapter records publication transitions but does not invoke the SDK publication converter or SDK execution path. No LLM-adapter source on `main` imports or calls `prepare_wiki_publication_manifest(...)` or `run_external_framework(...)`.
+
+Therefore the next caller must be attached only to an existing execution surface that actually possesses both:
+
+1. the exact SDK run artifact for this stored publication transition; and
+2. a separately observed external Interlock/InTr ingress decision whose `disposition=ALLOW`, `authority=Interlock/InTr`, request hash equals the SDK transition-request hash, transition identity matches the SDK request, a valid ingress receipt hash exists, and `locally_generated_allow=false`.
+
+The SDK posture binding alone is not that decision and must never be promoted to ALLOW.
+
+## Runtime evidence state
+
+Repository searches across the canonical task, SDK, LLM-adapter, StegVerse-Labs control-plane surfaces, and master-records did not find a retained authentic external Interlock/InTr ALLOW or a retained `PUBLIC_WIKI_GOVERNED_PUBLICATION_DECISION` closure for this task.
+
+Current runtime state:
+
+```text
+AUTHENTIC_EXTERNAL_INTR_ALLOW = UNKNOWN_NOT_AUTHENTICALLY_OBSERVED
+PUBLIC_WIKI_GOVERNED_PUBLICATION_DECISION_MASTER_RECORDS_CLOSURE = UNKNOWN_NOT_AUTHENTICALLY_OBSERVED
+REPOSITORY_MUTATION_FROM_GOVERNED_CLOSURE = UNKNOWN_NOT_AUTHENTICALLY_OBSERVED
+```
+
+Absence is not interpreted as DENY or execution failure. No synthetic ALLOW, locally manufactured closure, direct submitter write, or alternate runtime/custody path is authorized.

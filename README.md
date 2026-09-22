@@ -557,3 +557,8 @@ The deployed Service Gateway can project the already-running loopback HIL receiv
 ## Governed public-wiki publication closure
 
 `GOVERNED-WIKI-PUBLICATION-TRANSITION-001` now reuses the existing Service Gateway TV/TVC-materialized Master Records transport for the publication decision. The adapter validates the exact SDK manifest, posture-bound governed result, and a separately observed external Interlock/InTr `ALLOW` decision; it then submits one canonical state-transition receipt to `master-records/orchestration` and immediately rereads the retained reconstruction. Repository mutation requires only that canonical receipt SHA-256 as caller input and independently reconstructs it before any GitHub API operation. `DENY_PUBLICATION` and `REVIEW_REQUIRED` stop before repository mutation. This adds no custody store, local allow decision, credential path, runtime, scheduler, or direct submitter write surface. See `docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md`.
+
+
+### Governed wiki publication runtime boundary
+
+The governed publication source chain is merged through SDK PRs #307/#308 and LLM-adapter PR #348. Repository mutation now requires canonical Master Records reconstruction of the exact governed publication decision before any GitHub operation. Authentic runtime progression remains separately evidence-gated: no retained external Interlock/InTr ALLOW or `PUBLIC_WIKI_GOVERNED_PUBLICATION_DECISION` closure has yet been observed for `GOVERNED-WIKI-PUBLICATION-TRANSITION-001`. The current state is `UNKNOWN_NOT_AUTHENTICALLY_OBSERVED`, not failure or authorization. See `docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md`.
