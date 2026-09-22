@@ -1,0 +1,82 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "GOVERNED-WIKI-PUBLICATION-TRANSITION-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md",
+    "StegVerse-org/StegVerse-SDK:docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/GOVERNED-WIKI-PUBLICATION-TRANSITION-001.json"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "master-records/orchestration:services/canonical_state_transition_custody.py",
+      "StegVerse-Labs/.github:workers/canonical_state_transition_custody.py",
+      "llm_adapter/stegbrowser_master_records_state_transition_relay.py"
+    ]
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "GOVERNED-WIKI-PUBLICATION-TRANSITION-001",
+      "CANONICAL-MASTER-RECORDS-STATE-TRANSITION-CUSTODY-001",
+      "SDK-GENERIC-MANIFEST-DOWNSTREAM-PROPAGATION-003"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-Labs/.github",
+      "master-records/orchestration"
+    ],
+    "evidence_refs": [
+      "llm_adapter/stegbrowser_master_records_state_transition_relay.py reuses TV/TVC-materialized canonical Master Records transport",
+      "llm_adapter/anthropic_intr_transport.py verifies externally supplied Interlock/InTr ALLOW instead of generating it",
+      "StegVerse-Labs/.github:workers/canonical_state_transition_custody.py defines canonical RECORDED/reconstruction/evidence/digest closure contract"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md documents governed public-wiki publication closure and mutation gate"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/wiki_publication_master_records.py",
+    "tests/test_wiki_publication_master_records.py",
+    "llm_adapter/external_publication_mutation.py",
+    "tests/test_external_publication_mutation.py",
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/wiki_publication_master_records.py",
+      "semantic_responsibility": "Validate existing SDK/InTr publication evidence, submit the canonical publication decision to the existing Master Records API, and reconstruct the retained closure without creating custody or authority.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "llm_adapter/stegbrowser_master_records_state_transition_relay.py plus StegVerse-Labs/.github:workers/canonical_state_transition_custody.py",
+      "justification": "A publication-specific validator/client is required because the existing StegBrowser relay intentionally accepts only one immutable StegBrowser receipt and cannot be broadened without violating its bounded contract.",
+      "canonical_owner": "StegVerse-org/LLM-adapter"
+    },
+    {
+      "path": "tests/test_wiki_publication_master_records.py",
+      "semantic_responsibility": "Exercise exact publication/SDK/InTr binding, canonical Master Records closure, and fail-closed negative cases.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "tests/test_stegbrowser_master_records_state_transition_relay.py and tests/test_external_publication_mutation.py",
+      "justification": "Dedicated tests are required to verify the new composition of existing custody and publication seams.",
+      "canonical_owner": "StegVerse-org/LLM-adapter"
+    }
+  ]
+}
