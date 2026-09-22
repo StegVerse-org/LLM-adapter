@@ -120,6 +120,7 @@ def request(publication_id: str) -> dict:
         "schema_version": "1.0.0",
         "request_type": "external_framework_repository_mutation_request",
         "publication_transition_id": publication_id,
+        "master_records_receipt_sha256": "9" * 64,
         "actor_ref": "mutator:test",
         "repository_full_name": "StegVerse-Labs/admissibility-wiki",
         "target_path": "docs/external-frameworks/reports/decisionassure-reviewed.md",
