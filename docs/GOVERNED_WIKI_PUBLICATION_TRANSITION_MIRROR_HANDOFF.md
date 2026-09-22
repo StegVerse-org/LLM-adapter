@@ -56,3 +56,10 @@ The existing `/api/external-review/repository-mutations` request must carry only
 ## Completion truth
 
 Source/CI success is not authentic publication completion. End-to-end completion requires an authentic retained Interlock/InTr ALLOW, canonical Master Records closure, and a resulting Publisher/repository mutation receipt for an admitted publication candidate. Non-ALLOW negative controls must retain zero mutation.
+
+
+## Source implementation — current branch
+
+Added `llm_adapter/wiki_publication_master_records.py` as a non-authorizing client over the existing canonical Master Records transport. It validates exact publication-transition/SDK-manifest identity, requires posture-bound SDK execution plus a separately observed external Interlock/InTr `ALLOW`, records `PUBLIC_WIKI_GOVERNED_PUBLICATION_DECISION`, and rereads the exact retained receipt before returning closure.
+
+Updated `llm_adapter/external_publication_mutation.py` so `master_records_receipt_sha256` is mandatory and is independently reconstructed before any GitHub operation. The reconstructed receipt must bind the same publication transition, target repository/path, external InTr ALLOW, and exact digest equality. Non-ALLOW publication transitions remain rejected before closure or mutation consequence.
