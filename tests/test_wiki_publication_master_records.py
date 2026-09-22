@@ -158,19 +158,15 @@ def test_local_or_detached_intr_allow_is_rejected():
 
 def test_record_requires_recorded_pass_evidence_pass_digest_equality_and_retained_reconstruction(monkeypatch):
     value = transition()
-    receipt = mod.build_publication_state_receipt(
-        publication_transition_id="publication:test",
-        publication_transition=value,
-        sdk_manifest=manifest(value),
-        governed_result=governed(value),
-        intr_allow_decision=decision(),
-    )
-    digest = mod.canonical_sha256(receipt)
     monkeypatch.setattr(mod, "master_records_transport_enabled", lambda: True)
     monkeypatch.setattr(mod, "_master_records_configuration", lambda: ("https://master-records.example/api/master-records/state-transitions", "server-token", 10.0, set(), False))
     observed = {}
     def post(url, json, headers, timeout):
+        submitted_receipt = json["receipt"]
+        digest = mod.canonical_sha256(submitted_receipt)
         observed["post"] = (url, json, headers, timeout)
+        observed["receipt"] = submitted_receipt
+        observed["digest"] = digest
         return FakeResponse({
             "state": "RECORDED",
             "reconstruction_status": "PASS",
@@ -183,12 +179,13 @@ def test_record_requires_recorded_pass_evidence_pass_digest_equality_and_retaine
         })
     def get(url, headers, timeout):
         observed["get"] = (url, headers, timeout)
+        digest = observed["digest"]
         return FakeResponse({
             "state": "PASS",
             "required_evidence_validation_status": "PASS",
             "receipt_sha256": digest,
             "reconstructed_receipt_sha256": digest,
-            "receipt": receipt,
+            "receipt": observed["receipt"],
             "master_records_grants_transition_authority": False,
         })
     closure = mod.record_governed_publication_closure(
@@ -200,13 +197,13 @@ def test_record_requires_recorded_pass_evidence_pass_digest_equality_and_retaine
         post=post,
         get=get,
     )
+    digest = observed["digest"]
     assert closure["state"] == "RECORDED"
     assert closure["reconstruction_status"] == "PASS"
     assert closure["required_evidence_validation_status"] == "PASS"
     assert closure["receipt_sha256"] == closure["reconstructed_receipt_sha256"] == digest
     assert observed["post"][2]["Authorization"] == "Bearer server-token"
     assert observed["get"][0].endswith(f"/{digest}/reconstruction")
-
 
 def test_mutation_gate_reconstructs_exact_publication_closure(monkeypatch):
     value = transition()
