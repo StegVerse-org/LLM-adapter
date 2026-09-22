@@ -111,3 +111,38 @@ REPOSITORY_MUTATION_FROM_GOVERNED_CLOSURE = UNKNOWN_NOT_AUTHENTICALLY_OBSERVED
 ```
 
 Absence is not interpreted as DENY or execution failure. No synthetic ALLOW, locally manufactured closure, direct submitter write, or alternate runtime/custody path is authorized.
+
+
+## Existing Interlock/InTr decision-surface trace
+
+The first unsatisfied predicate remains:
+
+```text
+AUTHENTIC_EXTERNAL_INTR_ALLOW = UNKNOWN_NOT_AUTHENTICALLY_OBSERVED
+```
+
+A bounded trace of existing InTr surfaces found two materially different contracts:
+
+1. **Universal InTr materialization ingress** — the existing shared Service Gateway forwards `/intr/materialization` to the existing sovereign Universal InTr listener. The canonical-work and device-local ingress implementations validate the exact request hash and retain write-once `INGRESS_ADMITTED` receipts. Their authority effect is ingress-transition/admission only. Those receipts do not contain the required publication decision contract: no `disposition=ALLOW`, no `authority=Interlock/InTr`, and no explicit `locally_generated_allow=false`. Therefore `INGRESS_ADMITTED` cannot be promoted to the publication-governance ALLOW required by `record_governed_publication_closure(...)`.
+
+2. **Provider-specific InTr transport verification** — `llm_adapter/anthropic_intr_transport.py` defines an `IngressDecision` with the needed `disposition`, `request_hash`, `transition_id`, `ingress_receipt_hash`, `carrier_ref`, and `authority=Interlock/InTr` shape, and its durable verification explicitly records `locally_generated_allow=false`. However, this code only verifies an externally supplied decision for the Anthropic provider transport; it does not obtain that decision from a generic InTr authority service and is bound to the Anthropic request/endpoint contract. `anthropic_convergence_bridge.py` likewise constructs a provider-specific verification envelope from caller-supplied ingress fields. It is not a generic publication-governance decision surface.
+
+The existing SDK `resolve_task_security_posture(...)` surface remains posture resolution only. Its exact `transition_request_sha256` binding is necessary but is not a governance ALLOW.
+
+### Result
+
+No existing source surface was found that both:
+
+- consumes the exact SDK transition request for a stored `external_framework_wiki_publication_transition`; and
+- returns an externally authoritative decision with all of:
+  - `disposition=ALLOW`
+  - exact `request_hash`
+  - exact `transition_id`
+  - valid `ingress_receipt_hash`
+  - nonempty `carrier_ref`
+  - `authority=Interlock/InTr`
+  - `locally_generated_allow=false`
+
+Therefore no caller is connected between `create_publication_transition(...)` and the SDK publication execution path in this pass. No runtime, scheduler, dispatcher, WorkerCoordinator, custody, credential, mutation, or authority surface is changed.
+
+The next progression condition is authentic retained evidence from an already-existing Interlock/InTr decision surface that satisfies the exact decision contract above. Until then, absence remains `UNKNOWN_NOT_AUTHENTICALLY_OBSERVED`, not DENY, failure, or authorization.
