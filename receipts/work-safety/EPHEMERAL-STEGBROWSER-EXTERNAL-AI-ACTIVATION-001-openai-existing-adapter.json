@@ -1,0 +1,89 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "EPHEMERAL-STEGBROWSER-EXTERNAL-AI-ACTIVATION-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "docs/EPHEMERAL_STEGBROWSER_OPENAI_TVC_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/EPHEMERAL_STEGBROWSER_EXTERNAL_AI_ACTIVATION_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/EPHEMERAL-STEGBROWSER-EXTERNAL-AI-ACTIVATION-001.json",
+    "StegVerse-Labs/.github:data/ephemeral-external-ai-reusable-component-profile.v1.json",
+    "StegVerse-org/LLM-adapter:#324"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "llm_adapter/master_records_usage_submission.py",
+      "StegVerse-Labs/.github:control/organization-batch-custody-replay-contract.json",
+      "StegVerse-Labs/.github:resident-runtime/aggregate_repo_transition.py",
+      "master-records/orchestration:services/ecosystem_transition_ledger.py"
+    ],
+    "reason": "Existing provider-usage submission remains under original Master Records owner; org ledger must append existing canonical receipt before custody; live closure not claimed."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/LLM-adapter#324",
+      "StegVerse-Labs/TVC:feat/ephemeral-openai-task-bound-lease-20260924",
+      "StegVerse-Labs/StegBrowser#4",
+      "StegVerse-Labs/.github:docs/EPHEMERAL_STEGBROWSER_EXTERNAL_AI_ACTIVATION_MIRROR_HANDOFF.md"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/TVC",
+      "StegVerse-Labs/StegBrowser",
+      "StegVerse-Labs/.github",
+      "master-records/orchestration"
+    ],
+    "evidence_refs": [
+      "llm_adapter/external_llm_connection.py",
+      "llm_adapter/governed_external_provider_client.py",
+      "llm_adapter/anthropic_tvc_runtime_executor.py",
+      "llm_adapter/anthropic_tvc_broker.py",
+      "StegVerse-Labs/TVC:tvc_provider_operation_broker.py",
+      "StegVerse-Labs/StegBrowser:src/stegbrowser/ecosystem_ephemeral.py",
+      "StegVerse-Labs/.github:control/organization-batch-custody-replay-contract.json"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "LLM-adapter#324 owns provider-neutral convergence, TVC retains OpenAI credential/broker and task-scoped lease, and StegBrowser retains ephemeral browser lifecycle. This branch extends existing dispatcher and only introduces thin OpenAI Responses translation under LLM-adapter."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "docs/EPHEMERAL_STEGBROWSER_OPENAI_TVC_MIRROR_HANDOFF.md"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/openai_tvc_runtime_executor.py",
+    "llm_adapter/external_llm_connection.py",
+    "llm_adapter/governed_external_provider_client.py",
+    "tests/test_ephemeral_openai_governed_integration.py",
+    ".github/workflows/validate-external-llm-convergence.yml"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/openai_tvc_runtime_executor.py",
+      "semantic_responsibility": "Extend the existing provider-neutral convergence implementation with a task-bound OpenAI Responses projection and TVC broker result normalization without another credential or execution authority.",
+      "closest_existing_implementation": "llm_adapter/anthropic_tvc_runtime_executor.py and llm_adapter/anthropic_tvc_broker.py",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "tests/test_ephemeral_openai_governed_integration.py",
+      "semantic_responsibility": "Adversarial offline exact-boundary integration regression for TVC task-scoped lease, OpenAI wire hash, InTr ingress/egress, organizational receipt continuity and usage custody.",
+      "closest_existing_implementation": "tests/test_external_anthropic_tvc_runtime.py and tests/test_governed_external_provider_client.py",
+      "decision": "EXTEND"
+    }
+  ]
+}
