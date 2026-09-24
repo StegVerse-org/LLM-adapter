@@ -17,6 +17,7 @@ from .zai_tvc_runtime_executor import execute_governed_zai_via_tvc_runtime, admi
 from .deepseek_tvc_runtime_executor import execute_governed_deepseek_via_tvc_runtime, admit_deepseek_tvc_runtime_egress
 from .kimi_tvc_runtime_executor import execute_governed_kimi_via_tvc_runtime, admit_kimi_tvc_runtime_egress
 from .anthropic_tvc_runtime_executor import execute_governed_anthropic_via_tvc_runtime, admit_anthropic_tvc_runtime_egress
+from .openai_tvc_runtime_executor import execute_governed_openai_via_tvc_runtime, admit_openai_tvc_runtime_egress
 
 class ExternalLLMConnectionError(RuntimeError): pass
 
@@ -25,6 +26,7 @@ _PROVIDER_ALIASES = {
     "deepseek": "deepseek", "deepseek_http": "deepseek",
     "kimi": "kimi", "moonshot": "kimi", "kimi_http": "kimi",
     "anthropic": "anthropic", "claude": "anthropic", "anthropic_http": "anthropic",
+    "openai": "openai", "chatgpt": "openai", "openai_http": "openai",
 }
 
 @dataclass(frozen=True)
@@ -45,6 +47,7 @@ class GovernedConnectionResult:
         if transport is not None and getattr(transport, "response", None) is not None: return transport.response
         broker = getattr(self.execution, "broker", None)
         if broker is not None and getattr(broker, "response", None) is not None: return broker.response
+        if getattr(self.execution, "response", None) is not None: return self.execution.response
         raise ExternalLLMConnectionError("governed execution has no provider response")
     def evidence(self) -> dict[str, Any]:
         execution_evidence = self.execution.evidence() if hasattr(self.execution, "evidence") else {
@@ -72,6 +75,10 @@ def execute_governed_external_llm(request: ProviderRequest, *, session_id: str, 
         elif provider == "deepseek": execution = execute_governed_deepseek_via_tvc_runtime(**tvc)
         elif provider == "kimi": execution = execute_governed_kimi_via_tvc_runtime(**tvc)
         elif provider == "anthropic": execution = execute_governed_anthropic_via_tvc_runtime(**tvc)
+        elif provider == "openai":
+            recorder = provider_options.get("org_transition_recorder")
+            if not callable(recorder): raise ExternalLLMConnectionError("existing organization receipt recorder required")
+            execution = execute_governed_openai_via_tvc_runtime(**tvc, org_transition_recorder=recorder, **({"usage_submitter": provider_options["usage_submitter"]} if "usage_submitter" in provider_options else {}))
         else: raise ExternalLLMConnectionError("provider TVC dispatch invariant violated")
         return GovernedConnectionResult(provider, execution, "TVC_NON_EXPORTABLE_RUNTIME")
 
@@ -81,9 +88,9 @@ def execute_governed_external_llm(request: ProviderRequest, *, session_id: str, 
     if provider == "zai": execution = execute_governed_zai(**direct, endpoint_profile=provider_options.get("endpoint_profile", "general"))
     elif provider == "deepseek": execution = execute_governed_deepseek(**direct)
     elif provider == "kimi": execution = execute_governed_kimi(**direct)
-    elif provider == "anthropic":
+    elif provider in {"anthropic", "openai"}:
         raise ExternalLLMConnectionError(
-            "Anthropic requires the canonical TVC non-exportable runtime path"
+            f"{provider} requires the canonical TVC non-exportable runtime path"
         )
     else: raise ExternalLLMConnectionError("provider compatibility dispatch invariant violated")
     return GovernedConnectionResult(provider, execution, "TV_TVC_RESOLVER_COMPATIBILITY")
@@ -96,12 +103,13 @@ def admit_external_llm_egress(result: GovernedConnectionResult, *, egress_dispos
         if result.provider == "deepseek": return admit_deepseek_tvc_runtime_egress(**kwargs)
         if result.provider == "kimi": return admit_kimi_tvc_runtime_egress(**kwargs)
         if result.provider == "anthropic": return admit_anthropic_tvc_runtime_egress(**kwargs)
+        if result.provider == "openai": return admit_openai_tvc_runtime_egress(**kwargs)
     if result.provider == "zai": return admit_zai_egress(**kwargs)
     if result.provider == "deepseek": return admit_deepseek_egress(**kwargs)
     if result.provider == "kimi": return admit_kimi_egress(**kwargs)
-    if result.provider == "anthropic":
+    if result.provider in {"anthropic", "openai"}:
         raise ExternalLLMConnectionError(
-            "Anthropic compatibility egress is not an admitted execution path"
+            f"{result.provider} compatibility egress is not an admitted execution path"
         )
     raise ExternalLLMConnectionError("provider egress dispatch invariant violated")
 
