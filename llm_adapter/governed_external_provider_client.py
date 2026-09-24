@@ -47,6 +47,7 @@ class GovernedExternalProviderClient:
     tvc_material_resolver: Callable[[ProviderRequest, Mapping[str, Any]], Mapping[str, Any]]
     egress_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]]
     org_transition_recorder: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None
+    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] | None = None
 
     def complete(self, request: ProviderRequest) -> ProviderResponse:
         if not all(callable(x) for x in (self.measurement_id_factory, self.ingress_evaluator, self.tvc_material_resolver, self.egress_evaluator)):
@@ -79,6 +80,10 @@ class GovernedExternalProviderClient:
             if not callable(self.org_transition_recorder):
                 raise GovernedExternalProviderClientError("current organization receipt recorder required for OpenAI")
             execution_kwargs["org_transition_recorder"] = self.org_transition_recorder
+            if self.usage_submitter is not None:
+                if not callable(self.usage_submitter):
+                    raise GovernedExternalProviderClientError("usage custody callback malformed")
+                execution_kwargs["usage_submitter"] = self.usage_submitter
 
         result = execute_governed_external_llm(
             request,
