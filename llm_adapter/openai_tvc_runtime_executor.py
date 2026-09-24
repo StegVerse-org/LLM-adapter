@@ -278,8 +278,21 @@ def execute_governed_openai_via_tvc_runtime(
     }
     org = org_transition_recorder(dict(source))
     expected_hash = "sha256:" + _hash(source)
-    if not isinstance(org, Mapping) or org.get("source_transition_sha256") != expected_hash:
-        raise OpenAIEphemeralExecutionError("authentic org receipt missing/exact source mismatch")
+    # Only the EXISTING canonical-state-transition receipt is accepted by the
+    # organization ledger. The callback wraps this exact provider-event digest
+    # into that canonical receipt, then appends it to the existing org ledger.
+    # It must return the actual org receipt, not a self-asserted adapter event.
+    if not isinstance(org, Mapping) or org.get("source_receipt_schema") != "stegverse.canonical-state-transition-receipt/v1":
+        raise OpenAIEphemeralExecutionError("canonical org receipt missing")
+    if org.get("subject_or_correlation_id") != TASK_ID or org.get("org_transition_class") != "ORGANIZATION_STATE_TRANSITION":
+        raise OpenAIEphemeralExecutionError("organization transition identity mismatch")
+    if not isinstance(org.get("boundary_evidence"), Mapping) or org["boundary_evidence"].get("provider_event_sha256") != expected_hash:
+        raise OpenAIEphemeralExecutionError("canonical org provider-event binding mismatch")
+    if org.get("canonical_state_transition_receipt_sha256") != org.get("source_transition_sha256"):
+        raise OpenAIEphemeralExecutionError("canonical org source digest mismatch")
+    if "previous_receipt_sha256" not in org:
+        raise OpenAIEphemeralExecutionError("organization predecessor field missing")
+
     body = dict(org)
     org_hash = body.pop("receipt_sha256", None)
     if org.get("organization") != "StegVerse-org" or org_hash != "sha256:" + _hash(body):
