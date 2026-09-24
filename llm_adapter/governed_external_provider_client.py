@@ -17,6 +17,7 @@ from .zai_intr_transport import zai_wire_request_hash
 from .deepseek_intr_transport import deepseek_wire_request_hash
 from .kimi_intr_transport import kimi_wire_request_hash
 from .anthropic_convergence_bridge import anthropic_wire_request_hash
+from .openai_tvc_runtime_executor import openai_wire_request_hash
 
 class GovernedExternalProviderClientError(RuntimeError): pass
 
@@ -27,6 +28,7 @@ def external_wire_request_hash(request: ProviderRequest) -> str:
     if provider == "deepseek": return deepseek_wire_request_hash(request)
     if provider == "kimi": return kimi_wire_request_hash(request)
     if provider == "anthropic": return anthropic_wire_request_hash(request)
+    if provider == "openai": return openai_wire_request_hash(request)
     raise GovernedExternalProviderClientError("unsupported provider wire hash")
 
 
@@ -44,6 +46,7 @@ class GovernedExternalProviderClient:
     ingress_evaluator: Callable[[ProviderRequest, str], Mapping[str, Any]]
     tvc_material_resolver: Callable[[ProviderRequest, Mapping[str, Any]], Mapping[str, Any]]
     egress_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]]
+    org_transition_recorder: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None
 
     def complete(self, request: ProviderRequest) -> ProviderResponse:
         if not all(callable(x) for x in (self.measurement_id_factory, self.ingress_evaluator, self.tvc_material_resolver, self.egress_evaluator)):
@@ -71,6 +74,11 @@ class GovernedExternalProviderClient:
             execution_kwargs["broker_submitter"] = _required(tvc, "broker_submitter")
         else:
             execution_kwargs["credential_resolver"] = _required(tvc, "credential_resolver")
+
+        if normalize_provider(request.provider) == "openai":
+            if not callable(self.org_transition_recorder):
+                raise GovernedExternalProviderClientError("current organization receipt recorder required for OpenAI")
+            execution_kwargs["org_transition_recorder"] = self.org_transition_recorder
 
         result = execute_governed_external_llm(
             request,
