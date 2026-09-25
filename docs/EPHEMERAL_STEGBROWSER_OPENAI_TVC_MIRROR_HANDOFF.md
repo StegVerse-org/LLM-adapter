@@ -33,3 +33,19 @@ The source-level integration tests inject an **offline independent issuance snap
 The ephemeral OpenAI adapter must receive both the existing `org_transition_recorder` and a **separate read-only `org_chain_verifier`** supplied by the original organization ledger owner. The recorder wraps the provider event in the existing canonical-state receipt and appends it to the original organization's hash-linked ledger. The verifier subsequently reads back that exact receipt and its immediate predecessor from the **existing** ledger. It must independently return the exact organization ID, appended receipt SHA-256, previous receipt SHA-256, original provider-event digest, and `predecessor_verified=true`. The adapter fails closed before usage custody or egress if that readback is absent, malformed, contradictory or unreachable. Merely hashing locally supplied receipt JSON does **not** demonstrate independent predecessor continuity. This adds no new store, runtime, scheduler, independent authorization or Master Records prerequisite.
 
 The exact native OpenAI usage assertion now requires measured nonnegative integer input/output/total tokens, positive task input/output and `total=input+output`. Broker-returned provider evidence and use receipts are rejected if they carry protected credential field names or recognizable token prefixes, even when their metadata claims that no secret was exported. The source-only adversarial tests intentionally use fake credentials and fake custody callbacks; they cannot establish that any real provider or existing resident ran. The existing StegBrowser owner remains responsible for authentic ephemeral session destruction and the existing organization owner for worker/lease/transition receipts.
+
+
+## Independent native vault-broker consumption confirmation
+
+The actual credential-bearing process is the existing
+`StegVerse-Labs/stegfin-governance#112` owner, beyond TVC PR #468's
+forwarding-client validation. OpenAI's shared LLM Adapter now requires
+`TV/TVC+WorkerCoordinator+Interlock/InTr+StegBrowser` readback at its
+same-invocation verifier, matching the original TVC and native vault owner.
+Provider output cannot be returned without the **native broker's**
+`durable_consumption_receipt_ref` and exact task/invocation/wire request
+digest/issuer confirmation on its non-secret use receipt. An adapter fixture,
+direct OpenAI HTTP client or measurement-only TVC lease cannot replace
+this evidence. Even a successful broker response is NOT StegBrowser
+terminal-session destruction or complete organization replay; those remain
+separate authentic transitions under their existing owners.
