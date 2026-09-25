@@ -89,6 +89,7 @@ def verify_tvc_lease(
     transition_id: str,
     ingress_receipt_hash: str,
     carrier_ref: str,
+    current_admission_verifier: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None,
 ) -> None:
     wire_hash = openai_wire_request_hash(request)
     expected = {
@@ -124,6 +125,27 @@ def verify_tvc_lease(
     current = datetime.now(timezone.utc)
     if _datetime(lease.get("issued_at_utc")) > current or _datetime(lease.get("expiry_utc")) <= current:
         raise OpenAIEphemeralExecutionError("TVC capability lease outside current time")
+    # A freely recomputable digest cannot authenticate a WorkerCoordinator fence.
+    # The EXISTING resident custody owner supplies a read-only, current-invocation
+    # verifier. Its issuer receipt lookup and exact fence check are out of this
+    # provider adapter's authority; no source-only fallback is permitted.
+    if not callable(current_admission_verifier):
+        raise OpenAIEphemeralExecutionError("authentic current claim/fence/lease verifier required")
+    verified = current_admission_verifier(dict(lease))
+    if not isinstance(verified, Mapping) or verified.get("verified") is not True:
+        raise OpenAIEphemeralExecutionError("current admission not authentically verified")
+    if verified.get("authority") != "WorkerCoordinator+Interlock/InTr+StegBrowser+TV/TVC":
+        raise OpenAIEphemeralExecutionError("current admission verifier authority mismatch")
+    for field in (
+        "task_id", "invocation_id", "worker_claim_ref", "fence_ref",
+        "browser_lease_id", "browser_lease_commitment", "transition_id",
+        "ingress_receipt_hash", "request_hash", "carrier_ref",
+        "authenticated_admission_receipt_ref", "lease_id", "receipt_sha256",
+    ):
+        if not isinstance(verified.get(field), str) or verified[field] != lease.get(field):
+            raise OpenAIEphemeralExecutionError("current admission exact binding mismatch:" + field)
+    if verified.get("current_fence_active") is not True or verified.get("browser_lease_active") is not True:
+        raise OpenAIEphemeralExecutionError("claim/fence or browser lease no longer active")
 
 
 def _operation(
@@ -190,6 +212,7 @@ def execute_governed_openai_via_tvc_runtime(
     carrier_ref: str, lease_receipt: Mapping[str, Any],
     broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]],
     org_transition_recorder: Callable[[Mapping[str, Any]], Mapping[str, Any]],
+    current_admission_verifier: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
     usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records,
     max_output_tokens: int = 2048, response_format: str = "text",
 ) -> OpenAIEphemeralExecution:
@@ -205,6 +228,7 @@ def execute_governed_openai_via_tvc_runtime(
         lease_receipt, request, session_id=session_id,
         transition_id=transition_id,
         ingress_receipt_hash=ingress_receipt_hash, carrier_ref=carrier_ref,
+        current_admission_verifier=current_admission_verifier,
     )
     wire_hash = openai_wire_request_hash(request)
     operation = _operation(request, lease_receipt, max_output_tokens=max_output_tokens)
