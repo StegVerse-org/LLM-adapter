@@ -319,3 +319,55 @@ def test_missing_existing_org_chain_verifier_refuses_before_broker():
     with pytest.raises(GovernedExternalProviderClientError, match="predecessor verifier"):
         invalid.complete(r)
     assert calls == ["ingress", "tvc"]
+
+
+def _candidate_broker_result():
+    return {
+        "decision": "ALLOW_OPERATION_RESULT",
+        "measurement_evidence": {
+            "provider": "openai", "model": MODEL,
+            "provider_response_id": "source-test-response-1",
+            "candidate_output": "Test response",
+            "normalized_usage": {"input_tokens": 8, "output_tokens": 11, "total_tokens": 19},
+            "provider_api_key_transferred_to_consumer": False,
+            "secret_material_returned": False,
+        },
+        "use_receipt": {k: False for k in (
+            "secret_material_returned", "secret_material_logged", "secret_material_retained",
+            "wallet_contacted", "signed", "broadcast",
+        )} | {"single_use_consumed": True},
+    }
+
+
+@pytest.mark.parametrize("path,value", [
+    (("measurement_evidence", "api_key"), "sk-proj-source-test-NEVER_REAL"),
+    (("measurement_evidence", "authorization"), "Bearer source-test-only"),
+    (("measurement_evidence", "normalized_usage", "secret"), "source-test-secret"),
+    (("use_receipt", "credential"), "source-test-secret"),
+])
+def test_broker_evidence_secret_injection_is_refused(path, value):
+    reply = _candidate_broker_result()
+    cursor = reply
+    for key in path[:-1]:
+        cursor = cursor[key]
+    cursor[path[-1]] = value
+    r, _, client, calls = fixture_boundaries(broker_override=reply)
+    with pytest.raises(OpenAIEphemeralExecutionError, match="protected material"):
+        client.complete(r)
+    assert calls == ["ingress", "tvc", "verify_admission", "broker"]
+
+
+@pytest.mark.parametrize("invalid_usage", [
+    {"input_tokens": 8, "output_tokens": 11},
+    {"input_tokens": 8, "output_tokens": 11, "total_tokens": 18},
+    {"input_tokens": 0, "output_tokens": 11, "total_tokens": 11},
+    {"input_tokens": 8, "output_tokens": True, "total_tokens": 9},
+    {"input_tokens": 8, "output_tokens": -1, "total_tokens": 7},
+])
+def test_incomplete_or_fabricated_native_usage_is_refused(invalid_usage):
+    reply = _candidate_broker_result()
+    reply["measurement_evidence"]["normalized_usage"] = invalid_usage
+    r, _, client, calls = fixture_boundaries(broker_override=reply)
+    with pytest.raises(OpenAIEphemeralExecutionError, match="usage"):
+        client.complete(r)
+    assert calls == ["ingress", "tvc", "verify_admission", "broker"]
