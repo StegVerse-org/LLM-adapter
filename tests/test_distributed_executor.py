@@ -264,3 +264,67 @@ def test_execution_summary_hash_is_deterministic_for_fixed_inputs():
     assert validate_execution_result(w, second)
     assert len(first.summary.execution_hash) == 64
     assert len(second.summary.execution_hash) == 64
+
+
+def test_manifest_selected_xai_and_sovereign_local_independent_fanout(monkeypatch):
+    """Fixture transport proof, not a live provider call or an InTr admission."""
+    from llm_adapter.http_provider_clients import XAIHTTPProviderClient
+    captured = []
+    class FakeResponse:
+        def raise_for_status(self): return None
+        def json(self): return {
+            "id": "fixture-xai-two-source", "model": "grok-fixture",
+            "choices": [{"message": {"content": "independent Grok contribution"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 8, "completion_tokens": 5, "total_tokens": 13},
+        }
+    def fake_post(url, **kwargs):
+        captured.append(url)
+        return FakeResponse()
+    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", fake_post)
+    workload = build(
+        sources=(
+            src("local", "stegverse-local", "stegverse-reference-lm-v1", required=True),
+            src("grok", "xai", "grok-fixture"),
+        )
+    )
+    result = execute_distributed_workload(
+        workload,
+        {
+            "local": FixtureProviderClient("independent local contribution"),
+            "grok": XAIHTTPProviderClient(api_key="scoped-fixture-key"),
+        },
+        MESSAGES,
+        created_at=FIXED,
+    )
+    assert result.summary.returned_source_ids == ("local", "grok")
+    assert [item.provider for item in result.contributions] == ["stegverse-local", "xai"]
+    assert [item.output for item in result.contributions] == [
+        "independent local contribution", "independent Grok contribution"
+    ]
+    assert len(set(result.summary.contribution_hashes)) == 2
+    assert captured == ["https://api.x.ai/v1/chat/completions"]
+    assert validate_execution_result(workload, result)
+    assert not any(result.summary.to_dict()["authority"].values())
+
+
+def test_optional_xai_failure_does_not_prevent_local_contribution():
+    from llm_adapter.http_provider_clients import XAIHTTPProviderClient
+    workload = build(
+        sources=(
+            src("local", "stegverse-local", "stegverse-reference-lm-v1", required=True),
+            src("grok", "xai", "grok-fixture"),
+        )
+    )
+    result = execute_distributed_workload(
+        workload,
+        {
+            "local": FixtureProviderClient("sovereign answer"),
+            "grok": XAIHTTPProviderClient(),  # No admitted execution-scoped credential.
+        },
+        MESSAGES,
+        created_at=FIXED,
+    )
+    assert result.summary.returned_source_ids == ("local",)
+    assert result.summary.failed_source_ids == ("grok",)
+    assert "XAI_CREDENTIAL_UNAVAILABLE" in result.contributions[1].uncertainty_notes[0]
+    assert validate_execution_result(workload, result)
