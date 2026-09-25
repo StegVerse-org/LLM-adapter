@@ -70,10 +70,32 @@ def lease(req=None):
 
 
 def fixture_boundaries(*, request_override=None, lease_override=None, org_override=None, custody_override=None,
-                       ingress_override=None, egress_override=None, broker_override=None):
+                       ingress_override=None, egress_override=None, broker_override=None,
+                       admission_baseline=None, admission_override=None):
     req = request_override or request()
     l = lease_override or lease(req)
+    # Snapshot the TVC-issued admission independently from any caller-modified
+    # lease. In live execution this readback is owned by resident custody.
+    original = copy.deepcopy(admission_baseline or l)
     calls = []
+    def verify_admission(proposed):
+        calls.append("verify_admission")
+        row = {
+            "verified": True,
+            "authority": "WorkerCoordinator+Interlock/InTr+StegBrowser+TV/TVC",
+            "current_fence_active": True,
+            "browser_lease_active": True,
+        }
+        for field in (
+            "task_id", "invocation_id", "worker_claim_ref", "fence_ref",
+            "browser_lease_id", "browser_lease_commitment", "transition_id",
+            "ingress_receipt_hash", "request_hash", "carrier_ref",
+            "authenticated_admission_receipt_ref", "lease_id", "receipt_sha256",
+        ):
+            row[field] = original[field]
+        if admission_override:
+            row.update(admission_override)
+        return row
     def ingress(r, request_hash):
         calls.append("ingress")
         assert r is req
@@ -143,6 +165,7 @@ def fixture_boundaries(*, request_override=None, lease_override=None, org_overri
         ingress_evaluator=ingress, tvc_material_resolver=tvc,
         org_transition_recorder=org, usage_submitter=custody,
         egress_evaluator=egress,
+        current_admission_verifier=verify_admission,
     )
     return req, l, client, calls
 
@@ -166,7 +189,7 @@ def test_one_complete_offline_provider_operation_order_and_attributed_usage():
     assert result.metadata["governed_external_connection"] is True
     assert result.metadata["egress_intr_admitted"] is True
     assert result.metadata["credential_material_present"] is False
-    assert calls == ["ingress", "tvc", "broker", "organization", "custody", "egress"]
+    assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization", "custody", "egress"]
 
 
 @pytest.mark.parametrize("field,value", [
@@ -178,16 +201,19 @@ def test_one_complete_offline_provider_operation_order_and_attributed_usage():
 def test_forged_or_stale_task_lease_never_reaches_broker(field, value):
     r = request()
     l = lease(r)
+    original = copy.deepcopy(l)
     l[field] = value
     # Deliberately recompute hash: an attacker who can edit source JSON still
     # cannot substitute exact authority bindings.
     body = dict(l)
     body.pop("receipt_sha256")
     l["receipt_sha256"] = "sha256:" + sha(body)
-    _, _, client, calls = fixture_boundaries(request_override=r, lease_override=l)
+    _, _, client, calls = fixture_boundaries(request_override=r, lease_override=l, admission_baseline=original)
     with pytest.raises(OpenAIEphemeralExecutionError):
         client.complete(r)
     assert "broker" not in calls
+    if field in {"worker_claim_ref", "fence_ref"}:
+        assert "verify_admission" in calls
 
 
 def test_ingress_deny_and_exact_hash_mismatch_fail_before_tvc():
@@ -220,7 +246,7 @@ def test_org_receipt_must_bind_original_event_and_correct_owner():
             continue
         with pytest.raises(OpenAIEphemeralExecutionError):
             client.complete(r)
-        assert calls == ["ingress", "tvc", "broker", "organization"]
+        assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization"]
 
 
 def test_usage_custody_cannot_be_inferred_from_source_or_unavailable_receipt():
@@ -229,7 +255,7 @@ def test_usage_custody_cannot_be_inferred_from_source_or_unavailable_receipt():
         r, _, client, calls = fixture_boundaries(custody_override=custody)
         with pytest.raises(OpenAIEphemeralExecutionError):
             client.complete(r)
-        assert calls == ["ingress", "tvc", "broker", "organization", "custody"]
+        assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization", "custody"]
 
 
 def test_egress_deny_and_response_hash_mismatch_fail_closed():
@@ -237,7 +263,7 @@ def test_egress_deny_and_response_hash_mismatch_fail_closed():
         r, _, client, calls = fixture_boundaries(egress_override=reply)
         with pytest.raises(GovernedExternalProviderClientError):
             client.complete(r)
-        assert calls == ["ingress", "tvc", "broker", "organization", "custody", "egress"]
+        assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization", "custody", "egress"]
 
 
 def test_missing_org_recorder_fails_before_provider_execution():
