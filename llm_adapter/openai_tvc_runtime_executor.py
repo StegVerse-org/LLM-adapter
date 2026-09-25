@@ -134,7 +134,7 @@ def verify_tvc_lease(
     verified = current_admission_verifier(dict(lease))
     if not isinstance(verified, Mapping) or verified.get("verified") is not True:
         raise OpenAIEphemeralExecutionError("current admission not authentically verified")
-    if verified.get("authority") != "WorkerCoordinator+Interlock/InTr+StegBrowser+TV/TVC":
+    if verified.get("authority") != "TV/TVC+WorkerCoordinator+Interlock/InTr+StegBrowser":
         raise OpenAIEphemeralExecutionError("current admission verifier authority mismatch")
     for field in (
         "task_id", "invocation_id", "worker_claim_ref", "fence_ref",
@@ -272,6 +272,21 @@ def execute_governed_openai_via_tvc_runtime(
             raise OpenAIEphemeralExecutionError("TVC use receipt violation:" + field)
     if use_receipt.get("single_use_consumed") is not True:
         raise OpenAIEphemeralExecutionError("TVC single-use receipt missing")
+    # This result must come from the real existing vault broker's independently
+    # authenticated, durable consumption path. An injected TVC-only fixture or
+    # local forwarding-client approval cannot substitute for its broker receipt.
+    for field, expected in (
+        ("task_id", TASK_ID),
+        ("invocation_id", lease_receipt["invocation_id"]),
+        ("request_hash", wire_hash),
+        ("authenticated_admission_receipt_ref", lease_receipt["authenticated_admission_receipt_ref"]),
+    ):
+        if use_receipt.get(field) != expected:
+            raise OpenAIEphemeralExecutionError("existing vault broker receipt mismatch:" + field)
+    consumption_ref = use_receipt.get("durable_consumption_receipt_ref")
+    if not isinstance(consumption_ref, str) or not consumption_ref:
+        raise OpenAIEphemeralExecutionError("durable TVC capability consumption unverified")
+
     output = normalized.get("candidate_output")
     usage = normalized.get("normalized_usage")
     response_id = normalized.get("provider_response_id")
