@@ -392,7 +392,7 @@ def test_broker_receipt_must_prove_actual_existing_durable_consumption(field, va
     valid = client.tvc_material_resolver(r, {"disposition": "ALLOW"})["broker_submitter"]
     # Use a complete independently mocked existing broker reply, then corrupt
     # its receipt field. This is a source-only negative test.
-    original = valid({})
+    original = valid({"secret_ref": "vault://tvc/providers/openai/api-key", "lease_receipt": l})
     original["use_receipt"][field] = value
     r, l, client, calls = fixture_boundaries(broker_override=original)
     with pytest.raises(OpenAIEphemeralExecutionError, match="broker receipt|consumption"):
