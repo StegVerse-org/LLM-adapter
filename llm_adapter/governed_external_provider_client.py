@@ -103,6 +103,16 @@ class GovernedExternalProviderClient:
             **execution_kwargs,
         )
 
+        response = result.response
+        if normalize_provider(response.provider) != normalize_provider(request.provider):
+            raise GovernedExternalProviderClientError("provider response identity mismatch")
+        if response.model != request.model:
+            raise GovernedExternalProviderClientError("provider response model mismatch")
+        if response.request_hash != wire_hash:
+            raise GovernedExternalProviderClientError("provider response wire request hash mismatch")
+        if response.response_hash != result.response_hash:
+            raise GovernedExternalProviderClientError("provider response commitment mismatch")
+
         egress = self.egress_evaluator(result.egress_handoff)
         if not isinstance(egress, Mapping): raise GovernedExternalProviderClientError("egress evaluator reply malformed")
         if egress.get("disposition") != "ALLOW": raise GovernedExternalProviderClientError("egress InTr did not ALLOW exact response")
@@ -113,9 +123,16 @@ class GovernedExternalProviderClient:
             egress_receipt_hash=str(_required(egress, "receipt_hash")),
             admitted_response_hash=result.response_hash,
         )
-        response = result.response
         metadata = dict(response.metadata)
+        # Wire admission and the caller's ProviderRequest are different hash
+        # domains. Preserve the admitted commitment before projecting the result
+        # back to the exact source alias and envelope expected by Chat.
         metadata.update({
+            "wire_request_hash": wire_hash,
+            "admitted_provider_response_hash": response.response_hash,
+            "canonical_provider": normalize_provider(response.provider),
+            "ingress_intr_receipt_hash": receipt_hash,
+            "egress_intr_receipt_hash": egress["receipt_hash"],
             "governed_external_connection": True,
             "ingress_intr_admitted": True,
             "egress_intr_admitted": True,
@@ -124,6 +141,13 @@ class GovernedExternalProviderClient:
             "credential_material_present": False,
             "authority_effect": "NONE",
         })
-        return ProviderResponse(provider=response.provider, model=response.model, output=response.output, request_hash=response.request_hash, metadata=metadata)
+        event = getattr(result.execution, "provider_usage_event", None)
+        if isinstance(event, Mapping) and event.get("event_sha256"):
+            refs = list(metadata.get("usage_refs") or ())
+            ref = "provider-usage-event:" + str(event["event_sha256"])
+            if ref not in refs:
+                refs.append(ref)
+            metadata["usage_refs"] = refs
+        return ProviderResponse(provider=request.provider, model=response.model, output=response.output, request_hash=request.request_hash, metadata=metadata)
 
 __all__ = ["GovernedExternalProviderClientError","GovernedExternalProviderClient","external_wire_request_hash"]

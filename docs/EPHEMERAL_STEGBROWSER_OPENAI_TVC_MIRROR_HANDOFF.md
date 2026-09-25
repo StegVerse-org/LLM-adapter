@@ -49,3 +49,13 @@ direct OpenAI HTTP client or measurement-only TVC lease cannot replace
 this evidence. Even a successful broker response is NOT StegBrowser
 terminal-session destruction or complete organization replay; those remain
 separate authentic transitions under their existing owners.
+
+## Ecosystem Chat integration repair — 2026-09-25
+
+Continued the existing PR #351 from `ddcaa3e4ad72befef601f2c99df03687e6cc191f` after reading central Registry generation 243 and the canonical external-AI handoff. No new task, claim, fence or runtime is created. The shared ProviderClient returned provider-canonical aliases and wire-request digests, but `distributed_workload.build_contribution` requires the exact declared alias and original envelope digest. An offline full OpenAI adapter-to-distributed-executor test reproduced `provider response identity does not match declared source`; the independent digest mismatch was also established by the existing exact-hash test.
+
+The bridge now checks canonical provider, exact model, wire digest and provider response commitment before egress. After existing egress admission it projects the caller alias and envelope digest while retaining wire request hash, admitted provider response hash, both InTr receipt hashes and measured usage-event references. Both canonical OpenAI and ChatGPT alias compose with the existing executor. Alias tests cover Claude, Z.ai, DeepSeek and Kimi; provider/model/request/response tampering cannot reach egress.
+
+Validation: 115 focused tests passed locally across the existing convergence workflow selection, OpenAI integration, distributed workload and distributed executor. All provider/admission/credential/org/custody fixtures remain OFFLINE TEST DOUBLES. Authentic hosted execution, browser lifecycle destruction, Site routing and organization/Master Records reconstruction remain NOT_OBSERVED. OpenAI companion TVC #468 and native vault-broker consumption remain independent requirements. Grok/Gemini still need provider-specific edge integration at these existing owners; no fake availability is advertised.
+
+Session Prompt Count: 1. Historical Goal Prompt Count was not recorded in the canonical central handoff; this is one additional qualifying prompt, cumulative total UNVERIFIED. Preserve the goal and reconcile history without resetting it.

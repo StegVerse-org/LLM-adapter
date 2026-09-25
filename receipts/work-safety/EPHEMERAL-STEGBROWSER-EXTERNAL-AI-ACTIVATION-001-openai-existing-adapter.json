@@ -46,7 +46,10 @@
       "llm_adapter/anthropic_tvc_broker.py",
       "StegVerse-Labs/TVC:tvc_provider_operation_broker.py",
       "StegVerse-Labs/StegBrowser:src/stegbrowser/ecosystem_ephemeral.py",
-      "StegVerse-Labs/.github:control/organization-batch-custody-replay-contract.json"
+      "StegVerse-Labs/.github:control/organization-batch-custody-replay-contract.json",
+      "llm_adapter/distributed_workload.py:build_contribution requires envelope request hash and exact source alias",
+      "llm_adapter/distributed_executor.py:execute_distributed_workload",
+      "PR #351 current owner branch reused; PRs #325/#327 own separate universal-ingress proposals; #283 owns coordination ingress"
     ]
   },
   "reuse_decision": "EXTEND",
@@ -70,7 +73,8 @@
     "llm_adapter/external_llm_connection.py",
     "llm_adapter/governed_external_provider_client.py",
     "tests/test_ephemeral_openai_governed_integration.py",
-    ".github/workflows/validate-external-llm-convergence.yml"
+    ".github/workflows/validate-external-llm-convergence.yml",
+    "tests/test_governed_external_provider_client.py"
   ],
   "new_files": [
     {
@@ -85,5 +89,12 @@
       "closest_existing_implementation": "tests/test_external_anthropic_tvc_runtime.py and tests/test_governed_external_provider_client.py",
       "decision": "EXTEND"
     }
-  ]
+  ],
+  "continuation_preflight": {
+    "date": "2026-09-25",
+    "registry_generation": 243,
+    "source_baseline": "ddcaa3e4ad72befef601f2c99df03687e6cc191f",
+    "scope": "Repair existing ProviderClient-to-distributed-contribution binding, retaining distinct admitted wire hashes and usage references. No gate, credential, runtime or task-state transition.",
+    "runtime_evidence": "NOT_OBSERVED"
+  }
 }

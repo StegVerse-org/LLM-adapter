@@ -217,6 +217,42 @@ def test_one_complete_offline_provider_operation_order_and_attributed_usage():
     assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization", "org_replay", "custody", "egress"]
 
 
+@pytest.mark.parametrize("provider", ["openai", "chatgpt"])
+def test_openai_result_composes_with_existing_distributed_chat_executor(provider):
+    from llm_adapter.distributed_executor import execute_distributed_workload
+    from llm_adapter.distributed_workload import build_distributed_workload, build_source_descriptor
+
+    workload = build_distributed_workload(
+        workload_id="offline-chat-workload", canonical_request_id="offline-chat-request",
+        canonical_request_hash="1" * 64, routing_mode="single",
+        sources=(build_source_descriptor(source_id="chatgpt", provider=provider, model=MODEL,
+                                         locality="external-optional", capabilities=("text",), required=True),),
+        governance_refs=("offline-test-only",),
+    )
+    observed = {}
+
+    class BoundFixtureClient:
+        def complete(self, req):
+            _, _, client, calls = fixture_boundaries(request_override=req)
+            observed["response"] = client.complete(req)
+            observed["calls"] = calls
+            return observed["response"]
+
+    result = execute_distributed_workload(workload, {"chatgpt": BoundFixtureClient()},
+                                          [{"role": "user", "content": "Non-private test input"}])
+    assert result.summary.returned_source_ids == ("chatgpt",)
+    contribution = result.contributions[0]
+    assert contribution.provider == provider
+    assert contribution.output == "The non-private task has a useful answer."
+    response = observed["response"]
+    assert contribution.provider_request_hash == response.request_hash
+    assert response.metadata["wire_request_hash"] != response.request_hash
+    assert response.metadata["admitted_provider_response_hash"] != response.response_hash
+    assert response.metadata["egress_intr_receipt_hash"] == "d" * 64
+    assert contribution.usage_refs
+    assert observed["calls"][-1] == "egress"
+
+
 @pytest.mark.parametrize("field,value", [
     ("worker_claim_ref", "wrong-worker"), ("fence_ref", "stale-fence"),
     ("browser_lease_id", "other-session"), ("transition_id", "different-transition"),
