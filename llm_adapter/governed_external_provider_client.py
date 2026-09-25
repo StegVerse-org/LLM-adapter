@@ -48,6 +48,8 @@ class GovernedExternalProviderClient:
     egress_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]]
     org_transition_recorder: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None
     usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] | None = None
+    # Supplied by existing resident admission custody, never minted by this client.
+    current_admission_verifier: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None
 
     def complete(self, request: ProviderRequest) -> ProviderResponse:
         if not all(callable(x) for x in (self.measurement_id_factory, self.ingress_evaluator, self.tvc_material_resolver, self.egress_evaluator)):
@@ -79,6 +81,9 @@ class GovernedExternalProviderClient:
         if normalize_provider(request.provider) == "openai":
             if not callable(self.org_transition_recorder):
                 raise GovernedExternalProviderClientError("current organization receipt recorder required for OpenAI")
+            if not callable(self.current_admission_verifier):
+                raise GovernedExternalProviderClientError("current WorkerCoordinator/InTr/StegBrowser/TVC verifier required")
+            execution_kwargs["current_admission_verifier"] = self.current_admission_verifier
             execution_kwargs["org_transition_recorder"] = self.org_transition_recorder
             if self.usage_submitter is not None:
                 if not callable(self.usage_submitter):
