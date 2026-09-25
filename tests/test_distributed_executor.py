@@ -280,7 +280,7 @@ def test_manifest_selected_xai_and_sovereign_local_independent_fanout(monkeypatc
     def fake_post(url, **kwargs):
         captured.append(url)
         return FakeResponse()
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", fake_post)
+    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", fake_post, raising=False)
     workload = build(
         sources=(
             src("local", "stegverse-local", "stegverse-reference-lm-v1", required=True),
