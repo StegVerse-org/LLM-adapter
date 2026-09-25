@@ -342,7 +342,14 @@ def _candidate_broker_result():
         "use_receipt": {k: False for k in (
             "secret_material_returned", "secret_material_logged", "secret_material_retained",
             "wallet_contacted", "signed", "broadcast",
-        )} | {"single_use_consumed": True},
+        )} | {
+            "single_use_consumed": True,
+            "task_id": TASK,
+            "invocation_id": "task-invocation-1",
+            "request_hash": openai_wire_request_hash(request()),
+            "authenticated_admission_receipt_ref": "source-test-only-admission",
+            "durable_consumption_receipt_ref": "source-test-only-existing-TVC-consumption",
+        },
     }
 
 
