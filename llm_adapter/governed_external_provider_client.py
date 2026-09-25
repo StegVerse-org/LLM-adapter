@@ -47,6 +47,7 @@ class GovernedExternalProviderClient:
     tvc_material_resolver: Callable[[ProviderRequest, Mapping[str, Any]], Mapping[str, Any]]
     egress_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]]
     org_transition_recorder: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None
+    org_chain_verifier: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None
     usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] | None = None
     # Supplied by existing resident admission custody, never minted by this client.
     current_admission_verifier: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None
@@ -79,12 +80,13 @@ class GovernedExternalProviderClient:
             execution_kwargs["credential_resolver"] = _required(tvc, "credential_resolver")
 
         if normalize_provider(request.provider) == "openai":
-            if not callable(self.org_transition_recorder):
-                raise GovernedExternalProviderClientError("current organization receipt recorder required for OpenAI")
+            if not callable(self.org_transition_recorder) or not callable(self.org_chain_verifier):
+                raise GovernedExternalProviderClientError("current organization receipt recorder and predecessor verifier required for OpenAI")
             if not callable(self.current_admission_verifier):
                 raise GovernedExternalProviderClientError("current WorkerCoordinator/InTr/StegBrowser/TVC verifier required")
             execution_kwargs["current_admission_verifier"] = self.current_admission_verifier
             execution_kwargs["org_transition_recorder"] = self.org_transition_recorder
+            execution_kwargs["org_chain_verifier"] = self.org_chain_verifier
             if self.usage_submitter is not None:
                 if not callable(self.usage_submitter):
                     raise GovernedExternalProviderClientError("usage custody callback malformed")
