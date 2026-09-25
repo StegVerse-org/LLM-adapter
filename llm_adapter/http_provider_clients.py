@@ -136,7 +136,73 @@ class AnthropicHTTPProviderClient:
         return ProviderResponse(provider=request.provider,model=request.model,output=output,request_hash=request.request_hash,metadata={"provider_mode":"anthropic_http","response_id":body.get("id","unresolved"),"stop_reason":body.get("stop_reason","unresolved")})
 
 
-def build_http_provider_client(provider: str, *, api_key: Optional[str] = None, base_url: Optional[str] = None) -> Union[StegVerseLocalHTTPProviderClient, OpenAIHTTPProviderClient, AnthropicHTTPProviderClient]:
+
+@dataclass(frozen=True)
+class XAIHTTPProviderClient:
+    """Optional, manifest-selected xAI/Grok transport; no admission or credential authority.
+
+    The caller supplies a scoped credential at the existing TV/TVC+SKAP execution
+    edge. No environment fallback, browser credentials or stored API keys.
+    """
+
+    api_key: Optional[str] = None
+    base_url: str = "https://api.x.ai/v1/chat/completions"
+    timeout_seconds: int = 60
+
+    def __post_init__(self) -> None:
+        parsed = urlparse(self.base_url)
+        if parsed.scheme != "https" or parsed.hostname not in {"api.x.ai", "mtls.api.x.ai"} or parsed.path != "/v1/chat/completions" or parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.port:
+            raise ProviderConfigurationError("XAI_ENDPOINT_NOT_ALLOWED: xAI chat completions HTTPS endpoint required")
+
+    def complete(self, request: ProviderRequest) -> ProviderResponse:
+        if request.provider.lower().strip() not in {"xai", "grok"}:
+            raise ProviderConfigurationError("XAI_PROVIDER_MISMATCH: manifest must select xai or grok")
+        if not self.api_key:
+            raise ProviderConfigurationError("XAI_CREDENTIAL_UNAVAILABLE: execution-scoped TV/TVC credential required")
+        payload = {
+            "model": request.model,
+            "messages": [message.to_dict() for message in request.messages],
+            "stream": False,
+        }
+        response = requests.post(
+            self.base_url,
+            headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
+            json=payload,
+            timeout=self.timeout_seconds,
+        )
+        response.raise_for_status()
+        body = response.json()
+        try:
+            choice = body["choices"][0]
+            output = choice["message"]["content"]
+            actual_model = body["model"]
+            usage = body["usage"]
+            if not isinstance(output, str) or not isinstance(actual_model, str) or not actual_model:
+                raise ValueError("output/model missing")
+            if not isinstance(usage, dict) or not all(isinstance(usage.get(k), int) and not isinstance(usage[k], bool) and usage[k] >= 0 for k in ("prompt_tokens", "completion_tokens", "total_tokens")):
+                raise ValueError("measured token usage missing")
+            if not isinstance(body.get("id"), str) or not body["id"]:
+                raise ValueError("provider response id missing")
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            raise ProviderConfigurationError("XAI_RESPONSE_INVALID: missing output, model, response id or measured usage") from exc
+        return ProviderResponse(
+            provider=request.provider,
+            model=request.model,
+            output=output,
+            request_hash=request.request_hash,
+            metadata={
+                "provider_mode": "xai_chat_completions",
+                "response_id": body["id"],
+                "runtime_model": actual_model,
+                "finish_reason": choice.get("finish_reason"),
+                "usage": usage,
+                "credential_authority": "TV/TVC",
+                "governance_authority": False,
+            },
+        )
+
+
+def build_http_provider_client(provider: str, *, api_key: Optional[str] = None, base_url: Optional[str] = None) -> Union[StegVerseLocalHTTPProviderClient, OpenAIHTTPProviderClient, AnthropicHTTPProviderClient, XAIHTTPProviderClient]:
     normalized = provider.lower().strip()
     if normalized in {"stegverse", "stegverse-local", "stegverse_local", "local-sovereign"}:
         return StegVerseLocalHTTPProviderClient(base_url=base_url or "http://127.0.0.1:11434/v1/chat/completions")
@@ -144,7 +210,9 @@ def build_http_provider_client(provider: str, *, api_key: Optional[str] = None, 
         return OpenAIHTTPProviderClient(api_key=api_key, base_url=base_url or "https://api.openai.com/v1/chat/completions")
     if normalized in {"anthropic", "claude", "anthropic_http"}:
         return AnthropicHTTPProviderClient(api_key=api_key, base_url=base_url or "https://api.anthropic.com/v1/messages")
+    if normalized in {"xai", "grok", "xai_http"}:
+        return XAIHTTPProviderClient(api_key=api_key, base_url=base_url or "https://api.x.ai/v1/chat/completions")
     raise ValueError(f"unsupported provider for HTTP client: {provider}")
 
 
-__all__ = ["AnthropicHTTPProviderClient", "OpenAIHTTPProviderClient", "StegVerseLocalHTTPProviderClient", "ProviderConfigurationError", "build_http_provider_client"]
+__all__ = ["AnthropicHTTPProviderClient", "OpenAIHTTPProviderClient", "StegVerseLocalHTTPProviderClient", "XAIHTTPProviderClient", "ProviderConfigurationError", "build_http_provider_client"]
