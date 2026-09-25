@@ -212,6 +212,7 @@ def execute_governed_openai_via_tvc_runtime(
     carrier_ref: str, lease_receipt: Mapping[str, Any],
     broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]],
     org_transition_recorder: Callable[[Mapping[str, Any]], Mapping[str, Any]],
+    org_chain_verifier: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
     current_admission_verifier: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
     usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records,
     max_output_tokens: int = 2048, response_format: str = "text",
@@ -222,8 +223,8 @@ def execute_governed_openai_via_tvc_runtime(
         raise OpenAIEphemeralExecutionError("current external ingress/task identity required")
     if max_output_tokens != 2048 or response_format != "text":
         raise OpenAIEphemeralExecutionError("pinned exact wire profile required")
-    if not callable(broker_submitter) or not callable(org_transition_recorder) or not callable(usage_submitter):
-        raise OpenAIEphemeralExecutionError("existing broker/org/usage callback required")
+    if not all(callable(x) for x in (broker_submitter, org_transition_recorder, org_chain_verifier, usage_submitter)):
+        raise OpenAIEphemeralExecutionError("existing broker/org/org-chain/usage callback required")
     verify_tvc_lease(
         lease_receipt, request, session_id=session_id,
         transition_id=transition_id,
@@ -314,13 +315,26 @@ def execute_governed_openai_via_tvc_runtime(
         raise OpenAIEphemeralExecutionError("canonical org provider-event binding mismatch")
     if org.get("canonical_state_transition_receipt_sha256") != org.get("source_transition_sha256"):
         raise OpenAIEphemeralExecutionError("canonical org source digest mismatch")
-    if "previous_receipt_sha256" not in org:
-        raise OpenAIEphemeralExecutionError("organization predecessor field missing")
+    previous = org.get("previous_receipt_sha256")
+    if not isinstance(previous, str) or not previous.startswith("sha256:") or not SHA256.fullmatch(previous[7:]):
+        raise OpenAIEphemeralExecutionError("exact organization predecessor digest missing")
 
     body = dict(org)
     org_hash = body.pop("receipt_sha256", None)
     if org.get("organization") != "StegVerse-org" or org_hash != "sha256:" + _hash(body):
         raise OpenAIEphemeralExecutionError("organization receipt integrity/owner mismatch")
+    # Reuse the EXISTING organization ledger readback/replay interface. A local
+    # adapter cannot authenticate a predecessor by hashing a supplied JSON blob.
+    # The owner must read back this receipt AND its exact immediately preceding
+    # retained receipt from independent existing org custody before usage/egress.
+    chain = org_chain_verifier(dict(org))
+    if (not isinstance(chain, Mapping) or chain.get("verified") is not True
+        or chain.get("organization") != "StegVerse-org"
+        or chain.get("receipt_sha256") != org_hash
+        or chain.get("previous_receipt_sha256") != previous
+        or chain.get("predecessor_verified") is not True
+        or chain.get("source_event_sha256") != expected_hash):
+        raise OpenAIEphemeralExecutionError("authenticated organization predecessor replay unavailable or mismatched")
     ref = f"openai:tvc:{lease_receipt['lease_id']}"
     metrics = {
         "prompt_tokens": _metric(usage.get("input_tokens"), ref),
