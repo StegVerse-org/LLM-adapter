@@ -71,13 +71,14 @@ def lease(req=None):
 
 def fixture_boundaries(*, request_override=None, lease_override=None, org_override=None, custody_override=None,
                        ingress_override=None, egress_override=None, broker_override=None,
-                       admission_baseline=None, admission_override=None):
+                       admission_baseline=None, admission_override=None, chain_override=None):
     req = request_override or request()
     l = lease_override or lease(req)
     # Snapshot the TVC-issued admission independently from any caller-modified
     # lease. In live execution this readback is owned by resident custody.
     original = copy.deepcopy(admission_baseline or l)
     calls = []
+    retained_org = {}
     def verify_admission(proposed):
         calls.append("verify_admission")
         row = {
@@ -144,7 +145,24 @@ def fixture_boundaries(*, request_override=None, lease_override=None, org_overri
         }
         if org_override:
             body.update(org_override)
-        return {**body, "receipt_sha256": "sha256:" + sha(body)}
+        retained_org.clear()
+        retained_org.update({**body, "receipt_sha256": "sha256:" + sha(body)})
+        return dict(retained_org)
+    def org_chain(receipt):
+        calls.append("org_replay")
+        # Source-level fake of a separate read-only organization ledger lookup.
+        # Production MUST bind this to real predecessor and successor readback.
+        response = {
+            "verified": receipt == retained_org,
+            "organization": retained_org.get("organization"),
+            "receipt_sha256": retained_org.get("receipt_sha256"),
+            "previous_receipt_sha256": retained_org.get("previous_receipt_sha256"),
+            "predecessor_verified": True,
+            "source_event_sha256": retained_org.get("boundary_evidence", {}).get("provider_event_sha256"),
+        }
+        if chain_override:
+            response.update(chain_override)
+        return response
     def custody(event):
         calls.append("custody")
         row = {"status": "CUSTODY_RECORDED", "custody_recorded": True,
@@ -163,7 +181,7 @@ def fixture_boundaries(*, request_override=None, lease_override=None, org_overri
     client = GovernedExternalProviderClient(
         session_id=SESSION, measurement_id_factory=lambda _: "source-test-measurement",
         ingress_evaluator=ingress, tvc_material_resolver=tvc,
-        org_transition_recorder=org, usage_submitter=custody,
+        org_transition_recorder=org, org_chain_verifier=org_chain, usage_submitter=custody,
         egress_evaluator=egress,
         current_admission_verifier=verify_admission,
     )
@@ -189,7 +207,7 @@ def test_one_complete_offline_provider_operation_order_and_attributed_usage():
     assert result.metadata["governed_external_connection"] is True
     assert result.metadata["egress_intr_admitted"] is True
     assert result.metadata["credential_material_present"] is False
-    assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization", "custody", "egress"]
+    assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization", "org_replay", "custody", "egress"]
 
 
 @pytest.mark.parametrize("field,value", [
@@ -241,9 +259,6 @@ def test_org_receipt_must_bind_original_event_and_correct_owner():
         {"previous_receipt_sha256": None, "source_transition_sha256": "sha256:"+"b"*64},
     ):
         r, l, client, calls = fixture_boundaries(org_override=broken)
-        if broken.get("previous_receipt_sha256", "valid") is None:
-            # Explicit predecessor validity is checked independently below.
-            continue
         with pytest.raises(OpenAIEphemeralExecutionError):
             client.complete(r)
         assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization"]
@@ -255,7 +270,7 @@ def test_usage_custody_cannot_be_inferred_from_source_or_unavailable_receipt():
         r, _, client, calls = fixture_boundaries(custody_override=custody)
         with pytest.raises(OpenAIEphemeralExecutionError):
             client.complete(r)
-        assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization", "custody"]
+        assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization", "org_replay", "custody"]
 
 
 def test_egress_deny_and_response_hash_mismatch_fail_closed():
@@ -263,7 +278,7 @@ def test_egress_deny_and_response_hash_mismatch_fail_closed():
         r, _, client, calls = fixture_boundaries(egress_override=reply)
         with pytest.raises(GovernedExternalProviderClientError):
             client.complete(r)
-        assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization", "custody", "egress"]
+        assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization", "org_replay", "custody", "egress"]
 
 
 def test_missing_org_recorder_fails_before_provider_execution():
@@ -274,5 +289,33 @@ def test_missing_org_recorder_fails_before_provider_execution():
         egress_evaluator=client.egress_evaluator,
     )
     with pytest.raises(GovernedExternalProviderClientError, match="organization"):
+        invalid.complete(r)
+    assert calls == ["ingress", "tvc"]
+
+
+def test_replayed_org_receipt_must_have_exact_existing_predecessor():
+    for alteration in (
+        {"verified": False},
+        {"predecessor_verified": False},
+        {"previous_receipt_sha256": "sha256:" + "0"*64},
+        {"source_event_sha256": "sha256:" + "0"*64},
+        {"organization": "unknown-org"},
+    ):
+        r, _, client, calls = fixture_boundaries(chain_override=alteration)
+        with pytest.raises(OpenAIEphemeralExecutionError, match="predecessor replay"):
+            client.complete(r)
+        assert calls == ["ingress", "tvc", "verify_admission", "broker", "organization", "org_replay"]
+
+
+def test_missing_existing_org_chain_verifier_refuses_before_broker():
+    r, _, client, calls = fixture_boundaries()
+    invalid = GovernedExternalProviderClient(
+        session_id=client.session_id, measurement_id_factory=client.measurement_id_factory,
+        ingress_evaluator=client.ingress_evaluator, tvc_material_resolver=client.tvc_material_resolver,
+        org_transition_recorder=client.org_transition_recorder,
+        current_admission_verifier=client.current_admission_verifier,
+        egress_evaluator=client.egress_evaluator,
+    )
+    with pytest.raises(GovernedExternalProviderClientError, match="predecessor verifier"):
         invalid.complete(r)
     assert calls == ["ingress", "tvc"]
