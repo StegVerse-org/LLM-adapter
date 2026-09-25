@@ -77,12 +77,14 @@ def execute_governed_external_llm(request: ProviderRequest, *, session_id: str, 
         elif provider == "anthropic": execution = execute_governed_anthropic_via_tvc_runtime(**tvc)
         elif provider == "openai":
             recorder = provider_options.get("org_transition_recorder")
-            if not callable(recorder): raise ExternalLLMConnectionError("existing organization receipt recorder required")
+            chain_verifier = provider_options.get("org_chain_verifier")
+            if not callable(recorder) or not callable(chain_verifier): raise ExternalLLMConnectionError("existing organization receipt recorder and predecessor verifier required")
             verifier = provider_options.get("current_admission_verifier")
             if not callable(verifier):
                 raise ExternalLLMConnectionError("authentic current admission verifier required")
             execution = execute_governed_openai_via_tvc_runtime(
                 **tvc, org_transition_recorder=recorder,
+                org_chain_verifier=chain_verifier,
                 current_admission_verifier=verifier,
                 **({"usage_submitter": provider_options["usage_submitter"]}
                    if "usage_submitter" in provider_options else {}),
