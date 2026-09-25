@@ -78,7 +78,15 @@ def execute_governed_external_llm(request: ProviderRequest, *, session_id: str, 
         elif provider == "openai":
             recorder = provider_options.get("org_transition_recorder")
             if not callable(recorder): raise ExternalLLMConnectionError("existing organization receipt recorder required")
-            execution = execute_governed_openai_via_tvc_runtime(**tvc, org_transition_recorder=recorder, **({"usage_submitter": provider_options["usage_submitter"]} if "usage_submitter" in provider_options else {}))
+            verifier = provider_options.get("current_admission_verifier")
+            if not callable(verifier):
+                raise ExternalLLMConnectionError("authentic current admission verifier required")
+            execution = execute_governed_openai_via_tvc_runtime(
+                **tvc, org_transition_recorder=recorder,
+                current_admission_verifier=verifier,
+                **({"usage_submitter": provider_options["usage_submitter"]}
+                   if "usage_submitter" in provider_options else {}),
+            )
         else: raise ExternalLLMConnectionError("provider TVC dispatch invariant violated")
         return GovernedConnectionResult(provider, execution, "TVC_NON_EXPORTABLE_RUNTIME")
 
