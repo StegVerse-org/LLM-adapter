@@ -1,0 +1,66 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "EPHEMERAL-STEGBROWSER-EXTERNAL-AI-ACTIVATION-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "docs/XAI_MANIFEST_PROVIDER_MIRROR_HANDOFF.md",
+    "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/EPHEMERAL_STEGBROWSER_EXTERNAL_AI_ACTIVATION_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-registry.json#generation=243",
+    "StegVerse-Labs/.github:data/canonical-task-records/EPHEMERAL-STEGBROWSER-EXTERNAL-AI-ACTIVATION-001.json"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "master-records/orchestration:docs/ECOSYSTEM_CHAT_CUSTODY_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/.github:control/organization-batch-custody-replay-contract.json"
+    ]
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/LLM-adapter#272",
+      "StegVerse-org/LLM-adapter#274",
+      "StegVerse-Labs/.github:docs/EPHEMERAL_STEGBROWSER_EXTERNAL_AI_ACTIVATION_MIRROR_HANDOFF.md",
+      "StegVerse-Labs/StegBrowser:docs/STEGBROWSER_ECOSYSTEM_EPHEMERAL_MIRROR_HANDOFF.md"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "llm_adapter/http_provider_clients.py",
+      "llm_adapter/distributed_executor.py",
+      "llm_adapter/distributed_workload.py",
+      "docs/DISTRIBUTED_LLM_EXECUTOR_MIRROR_HANDOFF.md",
+      "GitHub issue/PR searches for xai and grok in StegVerse-org/LLM-adapter returned no matching owner"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md#optional-manifest-selected-grokxai",
+      "docs/XAI_MANIFEST_PROVIDER_MIRROR_HANDOFF.md"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/http_provider_clients.py",
+    "tests/test_http_provider_clients.py",
+    "tests/test_distributed_executor.py"
+  ],
+  "new_files": [],
+  "decision_rationale": "Extend existing ProviderClient/factory with optional xAI transport; never introduce broker, runtime, admission plane or new custody."
+}
