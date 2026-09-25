@@ -127,7 +127,7 @@ def test_xai_returns_real_response_metadata_and_native_usage(monkeypatch):
     def fake_post(url, **kwargs):
         captured.update({"url": url, **kwargs})
         return FakeResponse()
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", fake_post)
+    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", fake_post, raising=False)
     request = build_provider_request(provider="xai", model="grok-fixture", messages=[{"role": "user", "content": "Hello"}])
     response = XAIHTTPProviderClient(api_key="scoped-fixture-key").complete(request)
     assert response.request_hash == request.request_hash
@@ -147,7 +147,7 @@ def test_xai_fails_closed_on_missing_measured_usage(monkeypatch):
             "id": "fixture-xai-response", "model": "grok-fixture",
             "choices": [{"message": {"content": "unattributed"}}],
         }
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", lambda *a, **k: FakeResponse())
+    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", lambda *a, **k: FakeResponse(), raising=False)
     request = build_provider_request(provider="xai", model="grok-fixture", messages=[{"role": "user", "content": "Hello"}])
     with pytest.raises(ProviderConfigurationError, match="XAI_RESPONSE_INVALID"):
         XAIHTTPProviderClient(api_key="scoped-fixture-key").complete(request)
