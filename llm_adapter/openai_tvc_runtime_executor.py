@@ -240,6 +240,27 @@ def execute_governed_openai_via_tvc_runtime(
     use_receipt = reply.get("use_receipt")
     if not isinstance(normalized, Mapping) or not isinstance(use_receipt, Mapping):
         raise OpenAIEphemeralExecutionError("TVC provider evidence/use receipt absent")
+    # TVC must reject protected fields at its own broker boundary. Also fail
+    # closed on any such material passed through a misconfigured callback;
+    # a claimed zero-leak flag alone is not evidence of a sanitized result.
+    forbidden_fields = {
+        "authorization", "api_key", "apikey", "bearer_token",
+        "credential", "credentials", "password", "secret", "secret_value",
+        "provider_key", "provider_api_key", "private_key",
+    }
+    def reject_protected(value: Any) -> None:
+        if isinstance(value, Mapping):
+            for key, child in value.items():
+                if str(key).lower().replace("-", "_") in forbidden_fields:
+                    raise OpenAIEphemeralExecutionError("provider evidence contains protected material")
+                reject_protected(child)
+        elif isinstance(value, (list, tuple)):
+            for child in value:
+                reject_protected(child)
+        elif isinstance(value, str) and value.lstrip().lower().startswith(("sk-", "bearer ", "ghp_", "github_pat_")):
+            raise OpenAIEphemeralExecutionError("provider evidence contains protected material")
+    reject_protected(normalized)
+    reject_protected(use_receipt)
     if normalized.get("provider") != "openai" or normalized.get("model") != request.model:
         raise OpenAIEphemeralExecutionError("provider/model attribution mismatch")
     if normalized.get("provider_api_key_transferred_to_consumer") is not False or normalized.get("secret_material_returned") is not False:
@@ -256,6 +277,13 @@ def execute_governed_openai_via_tvc_runtime(
     response_id = normalized.get("provider_response_id")
     if not isinstance(output, str) or not output.strip() or not isinstance(usage, Mapping) or not response_id:
         raise OpenAIEphemeralExecutionError("genuine provider output/usage missing")
+    if not isinstance(response_id, str) or not response_id.strip():
+        raise OpenAIEphemeralExecutionError("provider response id invalid")
+    for field in ("input_tokens", "output_tokens", "total_tokens"):
+        if type(usage.get(field)) is not int or usage[field] < 0:
+            raise OpenAIEphemeralExecutionError("measured OpenAI usage invalid:" + field)
+    if usage["input_tokens"] == 0 or usage["output_tokens"] == 0 or usage["total_tokens"] != usage["input_tokens"] + usage["output_tokens"]:
+        raise OpenAIEphemeralExecutionError("provider usage incomplete or internally inconsistent")
     response = ProviderResponse(
         provider="openai", model=request.model, output=output,
         request_hash=wire_hash,
