@@ -83,7 +83,7 @@ def fixture_boundaries(*, request_override=None, lease_override=None, org_overri
         calls.append("verify_admission")
         row = {
             "verified": True,
-            "authority": "WorkerCoordinator+Interlock/InTr+StegBrowser+TV/TVC",
+            "authority": "TV/TVC+WorkerCoordinator+Interlock/InTr+StegBrowser",
             "current_fence_active": True,
             "browser_lease_active": True,
         }
@@ -126,7 +126,14 @@ def fixture_boundaries(*, request_override=None, lease_override=None, org_overri
             "use_receipt": {k: False for k in (
                 "secret_material_returned", "secret_material_logged", "secret_material_retained",
                 "wallet_contacted", "signed", "broadcast",
-            )} | {"single_use_consumed": True},
+            )} | {
+                "single_use_consumed": True,
+                "task_id": TASK,
+                "invocation_id": l["invocation_id"],
+                "request_hash": openai_wire_request_hash(req),
+                "authenticated_admission_receipt_ref": l["authenticated_admission_receipt_ref"],
+                "durable_consumption_receipt_ref": "source-test-only-existing-TVC-consumption",
+            },
         }
     def org(event):
         calls.append("organization")
@@ -371,3 +378,24 @@ def test_incomplete_or_fabricated_native_usage_is_refused(invalid_usage):
     with pytest.raises(OpenAIEphemeralExecutionError, match="usage"):
         client.complete(r)
     assert calls == ["ingress", "tvc", "verify_admission", "broker"]
+
+
+@pytest.mark.parametrize("field,value", [
+    ("durable_consumption_receipt_ref", None),
+    ("task_id", "wrong-task"),
+    ("invocation_id", "wrong-invocation"),
+    ("request_hash", "0" * 64),
+    ("authenticated_admission_receipt_ref", "forged-issuer"),
+])
+def test_broker_receipt_must_prove_actual_existing_durable_consumption(field, value):
+    r, l, client, calls = fixture_boundaries()
+    valid = client.tvc_material_resolver(r, {"disposition": "ALLOW"})["broker_submitter"]
+    # Use a complete independently mocked existing broker reply, then corrupt
+    # its receipt field. This is a source-only negative test.
+    original = valid({})
+    original["use_receipt"][field] = value
+    r, l, client, calls = fixture_boundaries(broker_override=original)
+    with pytest.raises(OpenAIEphemeralExecutionError, match="broker receipt|consumption"):
+        client.complete(r)
+    assert "broker" in calls
+    assert "organization" not in calls
