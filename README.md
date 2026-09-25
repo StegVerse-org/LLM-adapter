@@ -562,3 +562,12 @@ The deployed Service Gateway can project the already-running loopback HIL receiv
 ### Governed wiki publication runtime boundary
 
 The governed publication source chain is merged through SDK PRs #307/#308 and LLM-adapter PR #348. Repository mutation now requires canonical Master Records reconstruction of the exact governed publication decision before any GitHub operation. Authentic runtime progression remains separately evidence-gated: no retained external Interlock/InTr ALLOW or `PUBLIC_WIKI_GOVERNED_PUBLICATION_DECISION` closure has yet been observed for `GOVERNED-WIKI-PUBLICATION-TRANSITION-001`. The current state is `UNKNOWN_NOT_AUTHENTICALLY_OBSERVED`, not failure or authorization. See `docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md`.
+
+
+## Optional manifest-selected Grok/xAI
+
+The existing distributed Ecosystem Chat workload may declare a named `provider: xai` source (or compatibility alias `grok`) alongside a sovereign local source. `build_http_provider_client("xai", api_key=<execution-scoped key>)` constructs the optional `XAIHTTPProviderClient` at the existing LLM Adapter provider boundary. The caller must first obtain its exact manifested InTr ingress ALLOW and TV/TVC+SKAP execution-scoped credential. This transport never discovers credentials from environment variables and rejects non-xAI HTTPS endpoints. Do not place credentials, cookies, raw personal KV context or provider keys in workload manifests or retained response artifacts.
+
+This is a compatibility adapter for xAI's documented chat-completions endpoint; it preserves reported actual model identity, native measured token usage and provider-side cost ticks when supplied. It fails closed on malformed response or missing usage. The existing distributed executor can independently collect a local and an xAI response and retain an optional provider failure without disabling the sovereign route. No model contribution grants execution, route, custody or governance authority.
+
+Current source tests use deterministic HTTP fixtures only. They prove no real Grok invocation, TVC secret operation, admitted ephemeral StegBrowser lease, InTr ingress/egress, terminal session destruction, Master Records reconstruction or Site activation. xAI Responses API support and true governed challenge/sequential deliberation are separate subsequent integrations. See `docs/XAI_MANIFEST_PROVIDER_MIRROR_HANDOFF.md`.
