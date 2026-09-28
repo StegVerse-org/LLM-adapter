@@ -63,8 +63,8 @@ def verify_chain(control_root: Path) -> dict[str, Any]:
         errors.append("activation_state")
     if activation.get("task_id") != "SHWP-ECOSYSTEM-CHAT-INFERENCE-001":
         errors.append("activation_task")
-    if not isinstance(activation.get("fencing_token"), int) or activation["fencing_token"] <= 22:
-        errors.append("fresh_parent_fence_gt22")
+    if not isinstance(activation.get("fencing_token"), int) or activation["fencing_token"] <= 24:
+        errors.append("fresh_parent_fence_gt24")
     if any(activation.get(key) is not True for key in REQUIRED_TRUE):
         errors.append("terminal_predicates")
     if activation.get("credential_authority") != "TV/TVC":
