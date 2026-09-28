@@ -49,8 +49,8 @@ class ParentActivationProjectionTests(unittest.TestCase):
         activation = {
             "schema": "stegverse.ecosystem-chat-independent-parent-activation/v1",
             "task_id": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
-            "claim_id": "claim-23",
-            "fencing_token": 23,
+            "claim_id": "claim-25",
+            "fencing_token": 25,
             "heartbeat_reference_epoch": 4000,
             "heartbeat_reference_is_causal": False,
             "state": "PASS",
@@ -96,7 +96,7 @@ class ParentActivationProjectionTests(unittest.TestCase):
         chain = self.m.verify_chain(self.root)
         projection = self.m.build_projection(chain)
         self.assertEqual(projection["state"], "VERIFIED")
-        self.assertEqual(projection["fencing_token"], 23)
+        self.assertEqual(projection["fencing_token"], 25)
         self.assertTrue(all(projection["predicates"].values()))
         self.assertFalse(projection["credential_boundary"]["github_token_required"])
         self.assertTrue(all(value is False for value in projection["authority_boundary"].values()))
@@ -108,12 +108,24 @@ class ParentActivationProjectionTests(unittest.TestCase):
     def test_old_or_reused_fence_is_rejected(self):
         path = self.receipts / "independent_parent_activation.latest.json"
         value = json.loads(path.read_text())
-        value["fencing_token"] = 22
+        value["fencing_token"] = 24
         binding = dict(value)
         binding.pop("activation_receipt_hash", None)
         value["activation_receipt_hash"] = self.m.stable_hash(binding)
         path.write_text(json.dumps(value))
-        with self.assertRaisesRegex(ValueError, "fresh_parent_fence_gt22"):
+        with self.assertRaisesRegex(ValueError, "fresh_parent_fence_gt24"):
+            self.m.verify_chain(self.root)
+
+    def test_historical_g23_is_rejected_with_valid_hash(self):
+        path = self.receipts / "independent_parent_activation.latest.json"
+        value = json.loads(path.read_text())
+        value["fencing_token"] = 23
+        value["claim_id"] = "claim-23"
+        binding = dict(value)
+        binding.pop("activation_receipt_hash", None)
+        value["activation_receipt_hash"] = self.m.stable_hash(binding)
+        path.write_text(json.dumps(value))
+        with self.assertRaisesRegex(ValueError, "fresh_parent_fence_gt24"):
             self.m.verify_chain(self.root)
 
     def test_hash_binding_drift_is_rejected(self):
