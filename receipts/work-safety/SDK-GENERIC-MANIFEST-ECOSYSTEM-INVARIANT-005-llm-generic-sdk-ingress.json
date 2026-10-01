@@ -1,0 +1,58 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SDK-GENERIC-MANIFEST-ECOSYSTEM-INVARIANT-005",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "docs/HIL_RUNTIME_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/SDK_GENERIC_MANIFEST_ECOSYSTEM_INVARIANT_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/SDK-GENERIC-MANIFEST-ECOSYSTEM-INVARIANT-005.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This repair changes pre-execution Node/InTr framing and processor-selection delegation only; it does not create or mutate Master Records custody."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/LLM-adapter#354",
+      "StegVerse-Labs/.github#1615",
+      "StegVerse-org/StegVerse-SDK:stegverse/governance_ingress_runtime.py"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "Existing governed_manifest_ingress directly injected governance_handler.",
+      "SDK governance_ingress_runtime already binds processing.capability and processing.route_id before processor-specific construction.",
+      "Existing LLM Adapter HIL handoff documents Universal Interlock/InTr intake."
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "intentional_parallel_versioning": false,
+    "reconciliation_ref": "StegVerse-org/LLM-adapter#354"
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md documents generic SDK manifest InTr ingress and runtime nonclaim."
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/governed_manifest_ingress.py",
+    "tests/test_governed_manifest_ingress.py"
+  ],
+  "new_files": []
+}
