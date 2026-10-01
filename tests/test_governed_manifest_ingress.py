@@ -16,6 +16,8 @@ def manifest(output_id="evt-1", return_projection=None):
         "candidate": candidate,
         "declared_intent": "evaluation",
         "requested_consequence": "none",
+        "processing": {"capability": "governance", "route_id": "stegverse.route.canonical-governed.v1"},
+        "node_endpoint": {"node_id": "node-external-ai-1", "recognized": True},
         "hashes": {"payload_sha256": _hash(payload), "candidate_sha256": _hash(candidate)},
     }
     if return_projection is not None:
@@ -23,7 +25,7 @@ def manifest(output_id="evt-1", return_projection=None):
     return value
 
 
-def allow_handler(_manifest):
+def allow_handler(_transfer):
     return {
         "governance_state": "ALLOW",
         "governed_result": {"answer": "accepted"},
@@ -39,8 +41,47 @@ def allow_handler(_manifest):
 
 
 class GovernedManifestIngressTests(unittest.TestCase):
+    def test_transfer_reaches_generic_sdk_endpoint_with_manifest_declared_route(self):
+        seen = []
+        def endpoint(transfer):
+            seen.append(transfer)
+            return allow_handler(transfer)
+        result = process_manifest(manifest(), mode="TEST", sdk_manifest_endpoint=endpoint)
+        self.assertEqual(result["governance_state"], "ALLOW")
+        self.assertEqual(seen[0]["protocol"], "InTr")
+        self.assertTrue(seen[0]["interlock_required"])
+        self.assertEqual(seen[0]["destination"], "DISTRIBUTED_SDK_MANIFEST_ENDPOINT")
+        self.assertEqual(seen[0]["requested_processing"]["capability"], "governance")
+        self.assertEqual(seen[0]["requested_processing"]["route_id"], "stegverse.route.canonical-governed.v1")
+        self.assertFalse(seen[0]["adapter_selects_processing"])
+        self.assertFalse(seen[0]["source_identity_selects_processing"])
+
+    def test_source_identity_cannot_select_processing_or_bypass_declared_route(self):
+        left = manifest("evt-left")
+        right = manifest("evt-right")
+        left["source_framework"] = "provider.alpha"
+        right["source_framework"] = "provider.beta"
+        right["processing"] = {"capability": "analysis", "route_id": "route.analysis.v1"}
+        seen = []
+        def endpoint(transfer):
+            seen.append(transfer["requested_processing"])
+            return allow_handler(transfer)
+        process_manifest(left, mode="TEST", sdk_manifest_endpoint=endpoint)
+        process_manifest(right, mode="TEST", sdk_manifest_endpoint=endpoint)
+        self.assertEqual(seen[0], left["processing"])
+        self.assertEqual(seen[1], right["processing"])
+
+    def test_unrecognized_node_fails_closed_before_sdk_endpoint(self):
+        value = manifest()
+        value["node_endpoint"]["recognized"] = False
+        seen = []
+        result = process_manifest(value, mode="TEST", sdk_manifest_endpoint=lambda transfer: seen.append(transfer))
+        self.assertEqual(result["governance_state"], "FAIL_CLOSED")
+        self.assertEqual(result["reason"], "recognized_node_endpoint_required")
+        self.assertEqual(seen, [])
+
     def test_test_mode_returns_governed_model_envelope(self):
-        result = process_manifest(manifest(), mode="TEST", governance_handler=allow_handler)
+        result = process_manifest(manifest(), mode="TEST", sdk_manifest_endpoint=allow_handler)
         self.assertEqual(result["governance_state"], "ALLOW")
         self.assertEqual(result["manifest_receipt_id"], "MR-0123456789ABCDEF")
         self.assertFalse(result["adapter_is_governance_authority"])
@@ -50,7 +91,7 @@ class GovernedManifestIngressTests(unittest.TestCase):
         result = process_manifest(
             manifest(return_projection={"mode": "NONE"}),
             mode="TEST",
-            governance_handler=allow_handler,
+            sdk_manifest_endpoint=allow_handler,
         )
         self.assertEqual(result["governance_state"], "ALLOW")
         self.assertEqual(result["manifest_receipt_id"], "MR-0123456789ABCDEF")
@@ -64,7 +105,7 @@ class GovernedManifestIngressTests(unittest.TestCase):
         result = process_manifest(
             manifest(return_projection={"mode": "SELECTED", "transition_classes": ["governance"]}),
             mode="TEST",
-            governance_handler=allow_handler,
+            sdk_manifest_endpoint=allow_handler,
         )
         self.assertEqual(result["transition_evidence"], [
             {"transition_class": "governance", "state": "ALLOW"}
@@ -72,14 +113,14 @@ class GovernedManifestIngressTests(unittest.TestCase):
 
     def test_invalid_manifest_fails_closed_without_calling_governance(self):
         called = []
-        result = process_manifest({}, mode="TEST", governance_handler=lambda value: called.append(value))
+        result = process_manifest({}, mode="TEST", sdk_manifest_endpoint=lambda value: called.append(value))
         self.assertEqual(result["governance_state"], "FAIL_CLOSED")
         self.assertEqual(called, [])
 
     def test_non_allow_cannot_claim_consequence(self):
         def bad(_manifest):
             return {"governance_state": "DENY", "manifest_receipt_id": "MR-0123456789ABCDEF", "consequence_executed": True}
-        result = process_manifest(manifest(), mode="TEST", governance_handler=bad)
+        result = process_manifest(manifest(), mode="TEST", sdk_manifest_endpoint=bad)
         self.assertEqual(result["governance_state"], "FAIL_CLOSED")
 
     def test_live_stream_preserves_order_and_idempotency(self):
