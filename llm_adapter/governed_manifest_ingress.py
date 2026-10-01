@@ -52,7 +52,7 @@ def validate_ingress_manifest(manifest: Mapping[str, Any]) -> dict[str, Any]:
     required = (
         "manifest_profile", "manifest_profile_version", "source_framework",
         "source_output_id", "created_at", "candidate", "declared_intent",
-        "requested_consequence", "hashes",
+        "requested_consequence", "hashes", "processing", "node_endpoint",
     )
     missing = [key for key in required if key not in manifest]
     if missing:
@@ -75,6 +75,18 @@ def validate_ingress_manifest(manifest: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("manifest_requires_exactly_one_payload_or_commitment")
     if has_payload and hashes.get("payload_sha256") != _hash(manifest["payload"]):
         raise ValueError("manifest_payload_hash_mismatch")
+    processing = manifest.get("processing")
+    if not isinstance(processing, Mapping):
+        raise ValueError("manifest_processing_invalid")
+    capability = str(processing.get("capability") or "").strip()
+    route_id = str(processing.get("route_id") or "").strip()
+    if not capability or not route_id:
+        raise ValueError("manifest_processing_capability_route_required")
+    node_endpoint = manifest.get("node_endpoint")
+    if not isinstance(node_endpoint, Mapping) or not str(node_endpoint.get("node_id") or "").strip():
+        raise ValueError("recognized_node_endpoint_required")
+    if node_endpoint.get("recognized") is not True:
+        raise ValueError("recognized_node_endpoint_required")
     normalized = dict(manifest)
     normalized["return_projection"] = _normalize_return_projection(manifest.get("return_projection"))
     normalized["external_manifest_valid"] = True
@@ -120,11 +132,41 @@ def _project_transition_evidence(governed: Mapping[str, Any], projection: Mappin
     return filtered, verification_refs, receipt_refs
 
 
+def build_sdk_manifest_intr_transfer(canonical_manifest: Mapping[str, Any]) -> dict[str, Any]:
+    """Build the existing-boundary transfer into the distributed SDK manifest endpoint.
+
+    This envelope is transport/framing only. The manifest's processing declaration,
+    not source/provider identity and not this adapter, selects processing downstream.
+    """
+    processing = canonical_manifest["processing"]
+    node = canonical_manifest["node_endpoint"]
+    body = {
+        "schema": "stegverse.sdk-manifest.intr-transfer/v1",
+        "protocol": "InTr",
+        "interlock_required": True,
+        "source_node_id": node["node_id"],
+        "source_node_recognized": True,
+        "destination": "DISTRIBUTED_SDK_MANIFEST_ENDPOINT",
+        "manifest": dict(canonical_manifest),
+        "manifest_sha256": _hash(canonical_manifest),
+        "requested_processing": {
+            "capability": processing["capability"],
+            "route_id": processing["route_id"],
+        },
+        "adapter_selects_processing": False,
+        "source_identity_selects_processing": False,
+        "transport_grants_execution_authority": False,
+        "authority_effect": "NONE",
+    }
+    body["transfer_sha256"] = _hash(body)
+    return body
+
+
 def process_manifest(
     manifest: Mapping[str, Any],
     *,
     mode: str,
-    governance_handler: Callable[[Mapping[str, Any]], Mapping[str, Any]],
+    sdk_manifest_endpoint: Callable[[Mapping[str, Any]], Mapping[str, Any]],
     stream_id: str | None = None,
     sequence: int | None = None,
 ) -> dict[str, Any]:
@@ -137,9 +179,9 @@ def process_manifest(
     except ValueError as exc:
         return _fail_closed(mode=mode, reason=str(exc), manifest=manifest, stream_id=stream_id, sequence=sequence)
     try:
-        governed = governance_handler(canonical_manifest)
+        governed = sdk_manifest_endpoint(build_sdk_manifest_intr_transfer(canonical_manifest))
     except Exception as exc:
-        return _fail_closed(mode=mode, reason=f"governance_dependency_failed:{type(exc).__name__}", manifest=canonical_manifest, stream_id=stream_id, sequence=sequence)
+        return _fail_closed(mode=mode, reason=f"sdk_manifest_endpoint_failed:{type(exc).__name__}", manifest=canonical_manifest, stream_id=stream_id, sequence=sequence)
     state = str(governed.get("governance_state") or governed.get("disposition") or "")
     receipt_id = governed.get("manifest_receipt_id")
     if state not in ALLOWED_STATES:
@@ -185,7 +227,7 @@ class GovernedStreamSession:
     """
 
     stream_id: str
-    governance_handler: Callable[[Mapping[str, Any]], Mapping[str, Any]]
+    sdk_manifest_endpoint: Callable[[Mapping[str, Any]], Mapping[str, Any]]
     _next_sequence: int = 0
     _seen: dict[str, dict[str, Any]] = field(default_factory=dict)
 
@@ -202,7 +244,7 @@ class GovernedStreamSession:
         result = process_manifest(
             manifest,
             mode="LIVE_STREAM",
-            governance_handler=self.governance_handler,
+            sdk_manifest_endpoint=self.sdk_manifest_endpoint,
             stream_id=self.stream_id,
             sequence=sequence,
         )
