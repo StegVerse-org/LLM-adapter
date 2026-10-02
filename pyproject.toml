@@ -26,7 +26,7 @@ classifiers = [
 dependencies = [
     "requests>=2.28.0",
     "pydantic>=2.0",
-    "stegverse-sdk>=1.0.13",
+    "stegverse-sdk @ git+https://github.com/StegVerse-org/StegVerse-SDK.git@1b24ab0fe4ca1690994a7bacb4ac2286a35f2603",
 ]
 
 [project.optional-dependencies]
@@ -66,3 +66,4 @@ Issues = "https://github.com/StegVerse-org/LLM-adapter/issues"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["llm_adapter*", "va_claim_assistant*"]
+
