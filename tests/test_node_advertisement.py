@@ -56,6 +56,18 @@ def test_node_advertisement_is_health_bound_and_non_authorizing(monkeypatch) -> 
     assert payload["continuation_mapping"]["ORGANIZATION_INTR_FRAME"].endswith("/api/org-federation/v1/frames")
     assert payload["continuation_mapping"]["EVALUATOR_INTR"].endswith("/intr/evaluator")
     assert payload["continuation_mapping_is_authority"] is False
+    llm = payload["machine_readable_instructions"]["LLM_MACHINE_CONTINUATION"]
+    assert llm["standing_required"] is True
+    assert llm["receiving_owner"] == "llm_adapter.governed_manifest_ingress"
+    assert llm["processing_selector"] == "manifest.processing.capability + manifest.processing.route_id"
+    assert llm["direct_bypass_without_standing"] == "FAIL_CLOSED"
+    framework = payload["machine_readable_instructions"]["EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION"]
+    assert framework["sdk_builder_api"] == "stegverse.manifest_builder.build_manifest"
+    assert framework["sdk_builder_cli"] == "stegverse manifest build"
+    assert framework["sdk_framework_api"] == "stegverse.external_framework_runner.manifest_external_framework_submission"
+    assert framework["sdk_framework_cli"] == "stegverse external-run"
+    assert framework["enclosed_validation_is_canonical"] is False
+    assert payload["machine_readable_instructions_authority_effect"] == "NONE_INSTRUCTIONS_ONLY"
     assert payload["provider_enabled"] is True
     assert payload["durable_storage"] is True
     assert payload["credential_authority"] == "TV/TVC"
