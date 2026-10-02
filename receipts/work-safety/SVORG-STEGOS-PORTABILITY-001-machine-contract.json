@@ -63,7 +63,8 @@
     "llm_adapter/machine_instructions.py",
     "tests/test_machine_discovery_submission.py",
     "pyproject.toml",
-    ".github/workflows/validate.yml"
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml"
   ],
   "new_files": [
     {
