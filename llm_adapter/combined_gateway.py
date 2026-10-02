@@ -84,6 +84,25 @@ def stegverse_node_advertisement(request: Request) -> dict:
         "capability_id": "ecosystem-chat-gateway",
         "endpoint": f"{base_url}/api/ecosystem-chat",
         "health_endpoint": f"{base_url}/health",
+        "node_standing_contract": "ALL_EXTERNAL_ECOSYSTEM_INGRESS_REQUIRES_CANONICAL_NODE_STANDING",
+        "node_standing_modes": ["ESTABLISH_GENESIS", "VERIFY_EXISTING"],
+        "node_standing_predecessor_key_required": True,
+        "node_standing_null_predecessor_means": "EXPLICIT_GENESIS_ONLY",
+        "node_standing_missing_predecessor_disposition": "FAIL_CLOSED",
+        "node_standing_failed_verification_silent_reenrollment": False,
+        "canonical_ingress_contract_single": True,
+        "canonical_ingress_host_single": False,
+        "continuation_mapping": {
+            "PUBLIC_BOUNDED_CHAT": f"{base_url}/api/ecosystem-chat",
+            "RESIDENT_NODE_RENDEZVOUS_REQUEST": f"{base_url}/api/resident-rendezvous/v1/requests",
+            "RESIDENT_NODE_RENDEZVOUS_ACK": f"{base_url}/api/resident-rendezvous/v1/acknowledgements",
+            "ORGANIZATION_INTR_FRAME": f"{base_url}/api/org-federation/v1/frames",
+            "ORGANIZATION_INTR_ACK": f"{base_url}/api/org-federation/v1/acknowledgements",
+            "EVALUATOR_INTR": f"{base_url}/intr/evaluator",
+            "HIL_INTAKE": f"{base_url}/api/hil/submissions",
+            "ATTACHMENT_INTAKE": f"{base_url}/api/attachments/v1/intake",
+        },
+        "continuation_mapping_is_authority": False,
         "stegbrowser_master_records_state_transition_endpoint": (
             f"{base_url}/api/master-records/state-transitions"
             if stegbrowser_master_records_relay_enabled()
