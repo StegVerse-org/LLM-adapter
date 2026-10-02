@@ -131,9 +131,12 @@ def _public_grounding(message: str) -> tuple[str | None, str]:
     return grounded.answer, f"Grounded public StegVerse sources: {source_text}. Model memory is not the factual source."
 
 
-def build_ai_entry_backend_response(message: str) -> AIEntryBackendResponse:
+def build_ai_entry_backend_response(message: str, *, declared_route_id: str | None = None) -> AIEntryBackendResponse:
     clean = message.strip()
-    route_id = classify_route(clean)
+    # Message-content classification is descriptive fallback guidance only.
+    # A governed caller that supplies a manifest-selected route remains bound to
+    # that declaration; this module does not substitute a route from message text.
+    route_id = str(declared_route_id or "").strip() or classify_route(clean)
     provider_answer, provider_guidance = _provider_surface_grounding(clean) if clean else (None, "")
     grounded_answer, grounding_guidance = _public_grounding(clean) if clean and provider_answer is None else (None, "")
     if provider_answer is not None:
