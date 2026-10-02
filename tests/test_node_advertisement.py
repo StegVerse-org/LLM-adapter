@@ -45,6 +45,17 @@ def test_node_advertisement_is_health_bound_and_non_authorizing(monkeypatch) -> 
     assert payload["math_solver_readiness_endpoint"].endswith("/api/math-solver/v1/readiness")
     assert payload["math_solver_solve_endpoint"].endswith("/api/math-solver/v1/solve")
     assert payload["health_bound"] is True
+    assert payload["node_standing_contract"] == "ALL_EXTERNAL_ECOSYSTEM_INGRESS_REQUIRES_CANONICAL_NODE_STANDING"
+    assert payload["node_standing_modes"] == ["ESTABLISH_GENESIS", "VERIFY_EXISTING"]
+    assert payload["node_standing_predecessor_key_required"] is True
+    assert payload["node_standing_failed_verification_silent_reenrollment"] is False
+    assert payload["canonical_ingress_contract_single"] is True
+    assert payload["canonical_ingress_host_single"] is False
+    assert payload["continuation_mapping"]["PUBLIC_BOUNDED_CHAT"].endswith("/api/ecosystem-chat")
+    assert payload["continuation_mapping"]["RESIDENT_NODE_RENDEZVOUS_REQUEST"].endswith("/api/resident-rendezvous/v1/requests")
+    assert payload["continuation_mapping"]["ORGANIZATION_INTR_FRAME"].endswith("/api/org-federation/v1/frames")
+    assert payload["continuation_mapping"]["EVALUATOR_INTR"].endswith("/intr/evaluator")
+    assert payload["continuation_mapping_is_authority"] is False
     assert payload["provider_enabled"] is True
     assert payload["durable_storage"] is True
     assert payload["credential_authority"] == "TV/TVC"
