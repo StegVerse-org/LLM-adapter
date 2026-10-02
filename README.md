@@ -584,3 +584,8 @@ The public node advertisement maps existing gateway surfaces to the canonical no
 The governed machine-manifest ingress carries this standing evidence into the existing distributed SDK manifest transfer. Processing remains selected by the manifest-declared capability and route; message-content classification is descriptive fallback guidance and cannot substitute a governed declaration. The gateway, advertisement, transport and adapter grant no additional execution or governance authority.
 
 KV-as-established-node and StegBrowser-as-KV-surface are not asserted by this repair.
+
+
+## Machine-readable continuation instructions
+
+The node advertisement publishes two non-authorizing instruction profiles. `LLM_MACHINE_CONTINUATION` directs a machine that already has a canonical manifest through canonical standing to `llm_adapter.governed_manifest_ingress` and the existing distributed SDK manifest transfer. `EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION` directs a framework to the SDK-owned `stegverse.manifest_builder.build_manifest` / `stegverse manifest build` and `stegverse.external_framework_runner.manifest_external_framework_submission` / `stegverse external-run` path. Source regressions exercise both genesis and established-node LLM transfer into the existing SDK endpoint. Authentic deployed discovery, external transport, far-side InTr admission and organization custody remain separate runtime proof.
