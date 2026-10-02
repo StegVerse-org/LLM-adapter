@@ -103,6 +103,40 @@ def stegverse_node_advertisement(request: Request) -> dict:
             "ATTACHMENT_INTAKE": f"{base_url}/api/attachments/v1/intake",
         },
         "continuation_mapping_is_authority": False,
+        "machine_readable_instructions": {
+            "LLM_MACHINE_CONTINUATION": {
+                "standing_required": True,
+                "standing_modes": ["ESTABLISH_GENESIS", "VERIFY_EXISTING"],
+                "receiving_owner": "llm_adapter.governed_manifest_ingress",
+                "processing_selector": "manifest.processing.capability + manifest.processing.route_id",
+                "steps": [
+                    "GET_NODE_ADVERTISEMENT_AND_HEALTH",
+                    "ESTABLISH_OR_VERIFY_CANONICAL_NODE_STANDING",
+                    "PROVIDE_CANONICAL_MANIFEST_WITH_DECLARED_PROCESSING_BINDING",
+                    "SUBMIT_THROUGH_GOVERNED_MANIFEST_INGRESS_TO_INTERLOCK_INTR",
+                    "RETAIN_ALLOW_DENY_OR_FAIL_CLOSED_AND_EVIDENCE",
+                ],
+                "direct_bypass_without_standing": "FAIL_CLOSED",
+            },
+            "EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION": {
+                "standing_required": True,
+                "standing_modes": ["ESTABLISH_GENESIS", "VERIFY_EXISTING"],
+                "sdk_builder_api": "stegverse.manifest_builder.build_manifest",
+                "sdk_builder_cli": "stegverse manifest build",
+                "sdk_framework_api": "stegverse.external_framework_runner.manifest_external_framework_submission",
+                "sdk_framework_cli": "stegverse external-run",
+                "enclosed_validation_flag": "--execute-enclosed",
+                "enclosed_validation_is_canonical": False,
+                "steps": [
+                    "GET_NODE_ADVERTISEMENT_AND_HEALTH",
+                    "ESTABLISH_OR_VERIFY_CANONICAL_NODE_STANDING",
+                    "BUILD_AND_VALIDATE_CANONICAL_MANIFEST_WITH_SDK",
+                    "HANDOFF_WITH_EXISTING_SDK_MANIFEST_STATE_TRANSITION_INTERLOCK_INTR_PATH",
+                    "DO_NOT_PROMOTE_UNOBSERVED_FAR_SIDE_OR_LOCAL_VALIDATION_TO_CANONICAL_COMPLETION",
+                ],
+            },
+        },
+        "machine_readable_instructions_authority_effect": "NONE_INSTRUCTIONS_ONLY",
         "stegbrowser_master_records_state_transition_endpoint": (
             f"{base_url}/api/master-records/state-transitions"
             if stegbrowser_master_records_relay_enabled()
