@@ -34,3 +34,8 @@ The production `/api/ecosystem-chat` request model still accepts caller-supplied
 ## Proof boundary
 
 Source changes and regression definitions do not prove deployed propagation, authentic node standing, attestation, external transport, custody, KV-as-node, or StegBrowser-as-KV-surface. Those remain NOT_PROVEN unless their canonical owners provide evidence.
+
+
+## Machine-readable continuation instructions
+
+The node advertisement publishes two non-authorizing instruction profiles. `LLM_MACHINE_CONTINUATION` directs a machine that already has a canonical manifest through canonical standing to `llm_adapter.governed_manifest_ingress` and the existing distributed SDK manifest transfer. `EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION` directs a framework to the SDK-owned `stegverse.manifest_builder.build_manifest` / `stegverse manifest build` and `stegverse.external_framework_runner.manifest_external_framework_submission` / `stegverse external-run` path. Source regressions exercise both genesis and established-node LLM transfer into the existing SDK endpoint. Authentic deployed discovery, external transport, far-side InTr admission and organization custody remain separate runtime proof.
