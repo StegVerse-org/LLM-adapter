@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from .machine_instructions import machine_instruction_advertisement
+from . import node_standing
 
 from datetime import datetime, timezone
 import hashlib
@@ -76,6 +77,31 @@ def hil_sovereign_receiver_profile() -> dict:
     return dict(HIL_SOVEREIGN_RECEIVER_PROFILE)
 
 
+@app.get("/api/node-standing/readiness")
+def node_standing_readiness() -> dict:
+    """Publish what standing requires. Readiness is not standing."""
+    return node_standing.readiness()
+
+
+@app.post("/api/node-standing")
+def establish_or_verify_node_standing(request: Request, payload: dict) -> dict:
+    """Resolve standing and release the continuation only on ALLOW.
+
+    The instructions are the SDK's own declarations, projected rather than
+    duplicated, and they are returned here instead of from the unauthenticated
+    advertisement so that reaching them requires crossing the contract.
+    """
+    try:
+        disposition = node_standing.resolve(payload)
+    except node_standing.StandingRefused as refused:
+        body = node_standing.refusal(
+            refused, mode=payload.get("mode") if isinstance(payload, dict) else None)
+        status = 422 if refused.disposition == node_standing.FAIL_CLOSED else 403
+        raise HTTPException(status_code=status, detail=body)
+    return {**disposition, "instructions_released": True,
+            **machine_instruction_advertisement()}
+
+
 @app.get("/api/stegverse-node")
 def stegverse_node_advertisement(request: Request) -> dict:
     """Return a health-bound, non-authorizing advertisement for this StegVerse node."""
@@ -86,8 +112,10 @@ def stegverse_node_advertisement(request: Request) -> dict:
         "capability_id": "ecosystem-chat-gateway",
         "endpoint": f"{base_url}/api/ecosystem-chat",
         "health_endpoint": f"{base_url}/health",
-        "node_standing_contract": "ALL_EXTERNAL_ECOSYSTEM_INGRESS_REQUIRES_CANONICAL_NODE_STANDING",
-        "node_standing_modes": ["ESTABLISH_GENESIS", "VERIFY_EXISTING"],
+        "node_standing_contract": node_standing.CONTRACT_ID,
+        "node_standing_readiness_endpoint": f"{base_url}/api/node-standing/readiness",
+        "node_standing_endpoint": f"{base_url}/api/node-standing",
+        "node_standing_modes": list(node_standing.MODES),
         "node_standing_predecessor_key_required": True,
         "node_standing_null_predecessor_means": "EXPLICIT_GENESIS_ONLY",
         "node_standing_missing_predecessor_disposition": "FAIL_CLOSED",
@@ -105,7 +133,8 @@ def stegverse_node_advertisement(request: Request) -> dict:
             "ATTACHMENT_INTAKE": f"{base_url}/api/attachments/v1/intake",
         },
         "continuation_mapping_is_authority": False,
-        **machine_instruction_advertisement(),
+        "machine_readable_instructions_released_only_on": node_standing.ALLOW,
+        "machine_readable_instructions_available_unauthenticated": False,
         "stegbrowser_master_records_state_transition_endpoint": (
             f"{base_url}/api/master-records/state-transitions"
             if stegbrowser_master_records_relay_enabled()

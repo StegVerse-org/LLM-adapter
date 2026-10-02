@@ -29,7 +29,7 @@ The production `/api/ecosystem-chat` request model still accepts caller-supplied
 - explicit generation-1 null predecessor is carried as ESTABLISH_GENESIS
 - generation >1 canonical predecessor is carried as VERIFY_EXISTING
 - failed existing-node verification does not re-enroll
-- node advertisement exposes standing semantics and maps existing continuations
+- node advertisement exposes standing semantics, maps existing continuations, and withholds the machine continuation until standing resolves `ALLOW`
 
 ## Proof boundary
 
@@ -38,7 +38,15 @@ Source changes and regression definitions do not prove deployed propagation, aut
 
 ## Machine-readable continuation instructions
 
-The node advertisement publishes two non-authorizing instruction profiles. `LLM_MACHINE_CONTINUATION` directs a machine that already has a canonical manifest through canonical standing to `llm_adapter.governed_manifest_ingress` and the existing distributed SDK manifest transfer. `EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION` directs a framework to the SDK-owned `stegverse.manifest_builder.build_manifest` / `stegverse manifest build` and `stegverse.external_framework_runner.manifest_external_framework_submission` / `stegverse external-run` path. Source regressions exercise both genesis and established-node LLM transfer into the existing SDK endpoint. Authentic deployed discovery, external transport, far-side InTr admission and organization custody remain separate runtime proof.
+Two non-authorizing instruction profiles exist, and canonical standing is what releases them. `LLM_MACHINE_CONTINUATION` directs a machine that already has a canonical manifest to `llm_adapter.governed_manifest_ingress` and the existing distributed SDK manifest transfer. `EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION` directs a framework to the SDK-owned `stegverse.manifest_builder.build_manifest` / `stegverse manifest build` and `stegverse.external_framework_runner.manifest_external_framework_submission` / `stegverse external-run` path.
+
+The advertisement does not serve either profile. `GET /api/stegverse-node` names `node_standing_readiness_endpoint` and `node_standing_endpoint` and declares `machine_readable_instructions_available_unauthenticated: false`; `llm_adapter.node_standing` resolves `POST /api/node-standing` and the profiles are returned on `ALLOW` and from nowhere else. This is the gap this amendment closes: the advertisement previously declared `ALL_EXTERNAL_ECOSYSTEM_INGRESS_REQUIRES_CANONICAL_NODE_STANDING` and served the continuation in the same unauthenticated response, so the requirement was a statement the surface made about itself rather than a gate anything crossed.
+
+`GET /api/node-standing/readiness` publishes the requirement before anyone attempts it — mandatory `predecessor` key, `null` for explicit genesis, absent key `FAIL_CLOSED`, the two modes, oscillator-epoch ordering only — and grants nothing. A failed `VERIFY_EXISTING` stays failed; `failed_verification_becomes_genesis` and `silent_reenrollment_permitted` are both false and are asserted as such.
+
+The predecessor field set is read off `stegverse.external_interlock_bootstrap.successor_predecessor_binding` at import rather than restated in this repository, because `lineage_contract.owner` is `StegVerse-org/StegVerse-SDK` and `local_second_predecessor_semantics_permitted` is false. The owner's binding function cannot be re-run from a standing request: it consumes the predecessor manifest and result, while the request carries their digests only. A declared predecessor is therefore checked against the owner's shape, not recomputed, and both the readiness and the disposition carry `declared_predecessor_lineage_recomputed: false`.
+
+An `ALLOW` is structural standing, not authenticated standing. `attestation_owner_state` remains `NOT_PROVEN`, caller-supplied identity is unverified, and the released profiles still carry `NONE_INSTRUCTIONS_ONLY`. Source regressions exercise both standing modes, every neighbouring refusal, and release on `ALLOW` only. Authentic deployed discovery, external transport, far-side InTr admission and organization custody remain separate runtime proof.
 
 
 
