@@ -575,3 +575,12 @@ The existing distributed Ecosystem Chat workload may declare a named `provider: 
 This is a compatibility adapter for xAI's documented chat-completions endpoint; it preserves reported actual model identity, native measured token usage and provider-side cost ticks when supplied. It fails closed on malformed response or missing usage. The existing distributed executor can independently collect a local and an xAI response and retain an optional provider failure without disabling the sovereign route. No model contribution grants execution, route, custody or governance authority.
 
 Current source tests use deterministic HTTP fixtures only. They prove no real Grok invocation, TVC secret operation, admitted ephemeral StegBrowser lease, InTr ingress/egress, terminal session destruction, Master Records reconstruction or Site activation. xAI Responses API support and true governed challenge/sequential deliberation are separate subsequent integrations. See `docs/XAI_MANIFEST_PROVIDER_MIRROR_HANDOFF.md`.
+
+
+## Canonical node-standing ingress
+
+The public node advertisement maps existing gateway surfaces to the canonical node-standing contract rather than creating a second ingress host. The contract distinguishes explicit genesis from continuity by a mandatory predecessor key: `null` is explicit generation-1 genesis; established-node continuation carries the canonical predecessor binding. Missing or invalid continuity fails closed and cannot silently re-enroll.
+
+The governed machine-manifest ingress carries this standing evidence into the existing distributed SDK manifest transfer. Processing remains selected by the manifest-declared capability and route; message-content classification is descriptive fallback guidance and cannot substitute a governed declaration. The gateway, advertisement, transport and adapter grant no additional execution or governance authority.
+
+KV-as-established-node and StegBrowser-as-KV-surface are not asserted by this repair.
