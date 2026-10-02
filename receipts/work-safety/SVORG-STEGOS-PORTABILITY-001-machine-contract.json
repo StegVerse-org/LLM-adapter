@@ -1,0 +1,82 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SVORG-STEGOS-PORTABILITY-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-org/.github:docs/STEGOS_PORTABILITY_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github:orchestration/task-registry.json#SVORG-STEGOS-PORTABILITY-001"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Source-only discovery, instruction projection and fixture validation; no runtime or custody transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/.github/pull/31",
+      "https://github.com/StegVerse-org/.github/pull/32",
+      "https://github.com/StegVerse-org/StegVerse-SDK/pull/424",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/356"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-org/.github",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "llm_adapter/governed_manifest_ingress.py",
+      "llm_adapter/combined_gateway.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/evaluator_console.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/machine_contract.py",
+      "StegVerse-Labs/.github:docs/EPHEMERAL_STEGBROWSER_EXTERNAL_AI_AUTHENTIC_RUNTIME_MIRROR_HANDOFF.md"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Extends existing adapter #356 and consumes SDK-owned declarations from #424; creates no alternative ingress or authority owner."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/ai_entry_backend_service.py",
+    "llm_adapter/combined_gateway.py",
+    "llm_adapter/governed_manifest_ingress.py",
+    "tests/test_governed_manifest_ingress.py",
+    "tests/test_node_advertisement.py",
+    "llm_adapter/machine_instructions.py",
+    "tests/test_machine_discovery_submission.py",
+    "pyproject.toml",
+    ".github/workflows/validate.yml"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/machine_instructions.py",
+      "semantic_responsibility": "Project the SDK-owned machine contract into the existing node advertisement.",
+      "closest_existing_implementation": "llm_adapter/combined_gateway.py:machine_readable_instructions; StegVerse-org/StegVerse-SDK:stegverse/machine_contract.py",
+      "decision": "REFACTOR"
+    },
+    {
+      "path": "tests/test_machine_discovery_submission.py",
+      "semantic_responsibility": "Exercise discovery to SDK construction/validation to existing adapter submission with explicitly fixture receivers.",
+      "closest_existing_implementation": "tests/test_governed_manifest_ingress.py; tests/test_node_advertisement.py",
+      "decision": "EXTEND"
+    }
+  ]
+}
