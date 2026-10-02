@@ -112,6 +112,31 @@ class GovernedManifestIngressTests(unittest.TestCase):
         self.assertEqual(result["reason"], "genesis_requires_generation_one")
         self.assertEqual(seen, [])
 
+    def test_llm_machine_instruction_path_reaches_existing_sdk_transfer(self):
+        value = manifest()
+        seen = []
+        result = process_manifest(value, mode="TEST", sdk_manifest_endpoint=lambda transfer: seen.append(transfer) or allow_handler(transfer))
+        self.assertEqual(result["governance_state"], "ALLOW")
+        self.assertEqual(seen[0]["canonical_node_standing"]["mode"], "ESTABLISH_GENESIS")
+        self.assertEqual(seen[0]["requested_processing"], value["processing"])
+        self.assertEqual(seen[0]["destination"], "DISTRIBUTED_SDK_MANIFEST_ENDPOINT")
+
+    def test_existing_node_instruction_path_reaches_same_sdk_transfer(self):
+        value = manifest()
+        value["generation"] = 2
+        value["predecessor"] = {
+            "generation": 1,
+            "manifest_sha256": "c" * 64,
+            "result_sha256": "d" * 64,
+            "heartbeat_epoch": 7,
+        }
+        seen = []
+        result = process_manifest(value, mode="TEST", sdk_manifest_endpoint=lambda transfer: seen.append(transfer) or allow_handler(transfer))
+        self.assertEqual(result["governance_state"], "ALLOW")
+        self.assertEqual(seen[0]["canonical_node_standing"]["mode"], "VERIFY_EXISTING")
+        self.assertEqual(seen[0]["requested_processing"], value["processing"])
+        self.assertEqual(seen[0]["destination"], "DISTRIBUTED_SDK_MANIFEST_ENDPOINT")
+
     def test_unrecognized_node_fails_closed_before_sdk_endpoint(self):
         value = manifest()
         value["node_endpoint"]["recognized"] = False
