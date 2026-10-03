@@ -105,6 +105,16 @@ def establish_or_verify_node_standing(request: Request, payload: dict) -> dict:
     except node_standing.StandingRefused as refused:
         body = node_standing.refusal(
             refused, mode=payload.get("mode") if isinstance(payload, dict) else None)
+        # The boundary recorded the refusal before raising. Return its receipt so
+        # a refused caller cites its own refusal rather than being told nothing
+        # happened -- a held or retried arrival is a transition, not a gap.
+        body = {
+            **body,
+            "ingress_recorded_at_boundary": node_ingress_boundary.BOUNDARY,
+            "ingress_transition_class": node_ingress_boundary.REFUSED_CLASS,
+            "ingress_receipt_sha256": getattr(refused, "ingress_receipt_sha256", None),
+            "ingress_transition_id": getattr(refused, "ingress_transition_id", None),
+        }
         status = 422 if refused.disposition == node_standing.FAIL_CLOSED else 403
         raise HTTPException(status_code=status, detail=body)
 
@@ -144,14 +154,26 @@ def _sdk_surface(surface, payload, handler):
     """Resolve standing, run the surface, record the crossing. No standing, no SDK.
 
     One seam for all four surfaces, so a surface cannot be added that crosses
-    this boundary without being recorded. Standing is resolved before anything
-    runs and the record is appended after, so a crossing refused for want of
-    standing leaves no entry claiming it happened.
+    this boundary without being recorded. Every crossing is recorded under its
+    disposition, including one refused for want of standing: the intended action
+    arrived, and the transition is the disposition of that action. The refused
+    record names no node endpoint and says the surface never ran, so it cannot
+    be read as a crossing that had standing.
     """
     try:
         standing = sdk_boundary.require_standing(payload)
     except node_standing.StandingRefused as refused:
-        body = node_standing.refusal(refused)
+        # A crossing refused for want of standing is still a crossing of this
+        # boundary: the intended action arrived and its disposition is DENY.
+        receipt = sdk_boundary.record_standing_refusal(
+            surface, refused, payload if isinstance(payload, dict) else {})
+        body = {
+            **node_standing.refusal(refused),
+            "crossing_recorded_at_boundary": sdk_boundary.BOUNDARY,
+            "crossing_transition_class": sdk_boundary.REFUSED_CLASS,
+            "crossing_receipt_sha256": receipt["receipt_sha256"],
+            "crossing_transition_id": receipt["transition_id"],
+        }
         status = 422 if refused.disposition == node_standing.FAIL_CLOSED else 403
         raise HTTPException(status_code=status, detail=body)
     request = payload if isinstance(payload, dict) else {}

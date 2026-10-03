@@ -4,12 +4,17 @@ The four SDK surfaces ran behind standing and recorded nothing, so the chain
 began and ended at ingress: a node could discover the contract, build a
 manifest and hand it off with no record that any of it happened.
 
-The properties worth asserting are the ones that make the chain honest. A read
-is not a state transition. A refused crossing of a state-changing surface
-changed nothing. A refusal is still a crossing, because discovery happens by
-being refused and a chain that dropped refusals would show only the attempts
-that succeeded. And payloads stay out: digests bind the request and result
-without copying a caller's arguments into the record.
+A state transition is the disposition of an intended action, not only a
+successful one, so every crossing is a transition and every crossing is
+recorded with its disposition. An earlier version of these tests asserted a
+second test -- did some store change? -- which marked a contract read and a
+refused build as not transitions; that definition is not the one the ecosystem
+holds and the assertions here replace it. The same correction applies to a
+crossing refused for want of standing: it arrived, so it is recorded, under its
+own transition class and naming nothing the boundary did not issue.
+
+Payloads stay out: digests bind the request and result without copying a
+caller's arguments into the record.
 """
 from __future__ import annotations
 
@@ -81,35 +86,45 @@ class SdkBoundaryCrossingRecordTests(unittest.TestCase):
         receipt, = self.receipts("SDK_CONTRACT_DISCOVERED")
         self.assertEqual(receipt["receipt_sha256"], body["crossing_receipt_sha256"])
 
-    def test_a_read_is_not_recorded_as_a_state_transition(self):
-        """The contract is the SDK's declaration and validation is side-effect free."""
+    def test_every_crossing_records_the_disposition_of_its_intended_action(self):
+        """The disposition is the transition, so every crossing carries one."""
         self.cross("/api/sdk/contract", {})
         self.cross("/api/sdk/manifest/validate", {"manifest": {}})
-        for transition_class in ("SDK_CONTRACT_DISCOVERED", "SDK_MANIFEST_VALIDATED"):
+        self.cross("/api/sdk/manifest/build", {"arguments": arguments()})
+        for transition_class, action in (
+                ("SDK_CONTRACT_DISCOVERED", "DISCOVER_THE_SDK_CONTRACT"),
+                ("SDK_MANIFEST_VALIDATED", "VALIDATE_A_CANONICAL_MANIFEST"),
+                ("SDK_MANIFEST_BUILT", "BUILD_A_CANONICAL_MANIFEST")):
             receipt, = self.receipts(transition_class)
             record = receipt["evidence"]
-            self.assertIs(record["state_changed"], False, transition_class)
-            self.assertIs(record["surface_can_change_state"], False, transition_class)
-            self.assertIs(record["surface_is_side_effect_free"], True, transition_class)
+            self.assertEqual(record["intended_action"], action, transition_class)
+            self.assertIn(record["disposition"], ("ALLOW", "DENY"), transition_class)
+            self.assertIs(record["transition_is_the_disposition_of_the_intended_action"], True)
+            # The definition this replaced: a read is still a transition.
+            self.assertNotIn("state_changed", record, transition_class)
+            self.assertNotIn("surface_can_change_state", record, transition_class)
 
-    def test_a_refused_crossing_of_a_state_changing_surface_changed_nothing(self):
-        """A build that was refused produced no manifest."""
+    def test_a_refused_build_is_a_transition_whose_disposition_is_deny(self):
+        """Not an absence. A refused intended action is still a transition."""
         refused = self.cross("/api/sdk/manifest/build", {"arguments": {"data": {"x": 1}}}).json()
         self.assertIs(refused["accepted"], False)
         receipt, = self.receipts("SDK_MANIFEST_BUILT")
         record = receipt["evidence"]
         self.assertIs(record["accepted"], False)
-        self.assertIs(record["state_changed"], False)
-        # The surface's declared capability and what this crossing did are
-        # different claims, and both are kept.
-        self.assertIs(record["surface_can_change_state"], True)
+        self.assertEqual(record["disposition"], "DENY")
+        self.assertEqual(record["intended_action"], "BUILD_A_CANONICAL_MANIFEST")
 
-    def test_an_accepted_build_did_change_state(self):
-        built = self.cross("/api/sdk/manifest/build", {"arguments": arguments()}).json()
-        self.assertIs(built["accepted"], True)
-        record = self.receipts("SDK_MANIFEST_BUILT")[0]["evidence"]
-        self.assertIs(record["accepted"], True)
-        self.assertIs(record["state_changed"], True)
+    def test_the_correction_round_trip_records_both_transitions(self):
+        """A refusal naming what was wrong, then the corrected build: two transitions."""
+        self.cross("/api/sdk/manifest/build", {"arguments": {"data": {"x": 1}}})
+        self.cross("/api/sdk/manifest/build", {"arguments": arguments()})
+        builds = self.receipts("SDK_MANIFEST_BUILT")
+        self.assertEqual(len(builds), 2)
+        by_digest = {r["receipt_sha256"]: r for r in builds}
+        ordered = sorted(builds, key=lambda r: r["previous_receipt_sha256"] is not None)
+        dispositions = [r["evidence"]["disposition"] for r in ordered]
+        self.assertEqual(sorted(dispositions), ["ALLOW", "DENY"])
+        self.assertEqual(len(by_digest), 2)
 
     def test_a_refusal_is_still_a_crossing(self):
         """Discovery happens by being refused; a chain that dropped those lies."""
@@ -127,11 +142,42 @@ class SdkBoundaryCrossingRecordTests(unittest.TestCase):
         record = self.receipts("SDK_MANIFEST_BUILT")[0]["evidence"]
         self.assertIsNone(record["refusal_stage"])
 
-    def test_no_standing_records_nothing(self):
-        """Refused for want of standing leaves no entry claiming it happened."""
+    def test_a_crossing_refused_for_want_of_standing_is_still_recorded(self):
+        """The intended action arrived. Its disposition is the transition."""
         response = self.client.post("/api/sdk/contract", json={})
         self.assertEqual(response.status_code, 422)
-        self.assertEqual(self.receipts(), [])
+        receipt, = self.receipts(sdk_boundary.REFUSED_CLASS)
+        record = receipt["evidence"]
+        self.assertEqual(record["surface"], "CONTRACT")
+        self.assertEqual(record["intended_action"], "DISCOVER_THE_SDK_CONTRACT")
+        self.assertEqual(record["disposition"], "DENY")
+        self.assertIs(record["refused_for_want_of_standing"], True)
+        self.assertIs(record["surface_was_run"], False)
+        self.assertIn("direct_bypass_without_standing", record["refusal_reason"])
+        self.assertIs(record["transition_is_the_disposition_of_the_intended_action"], True)
+
+    def test_the_refused_record_names_no_node_the_boundary_never_issued(self):
+        """A record naming an endpoint would read as a crossing that had standing."""
+        self.client.post("/api/sdk/manifest/build", json={"arguments": arguments()})
+        record = self.receipts(sdk_boundary.REFUSED_CLASS)[0]["evidence"]
+        for issued in ("node_endpoint", "generation", "predecessor", "result_sha256"):
+            self.assertNotIn(issued, record, issued)
+        self.assertEqual(record["attestation_owner_state"], "NOT_PROVEN")
+
+    def test_the_refused_caller_is_handed_its_own_refusal_receipt(self):
+        """A refused caller cites its refusal rather than being told nothing happened."""
+        detail = self.client.post("/api/sdk/contract", json={}).json()["detail"]
+        self.assertEqual(detail["crossing_recorded_at_boundary"], "LLM_ADAPTER_SDK_BOUNDARY")
+        self.assertEqual(detail["crossing_transition_class"], sdk_boundary.REFUSED_CLASS)
+        receipt, = self.receipts(sdk_boundary.REFUSED_CLASS)
+        self.assertEqual(receipt["receipt_sha256"], detail["crossing_receipt_sha256"])
+        self.assertEqual(receipt["transition_id"], detail["crossing_transition_id"])
+
+    def test_a_refused_crossing_is_never_recorded_under_an_admitted_class(self):
+        """No reader can mistake a refusal for a crossing the boundary let through."""
+        self.client.post("/api/sdk/contract", json={})
+        self.assertEqual([r["transition_class"] for r in self.receipts()],
+                         [sdk_boundary.REFUSED_CLASS])
 
     def test_the_record_carries_digests_rather_than_payloads(self):
         self.cross("/api/sdk/manifest/build", {"arguments": arguments()})
@@ -171,12 +217,14 @@ class SdkBoundaryCrossingRecordTests(unittest.TestCase):
 class SurfaceTableTests(unittest.TestCase):
     """One seam records every surface, so a surface cannot be added unrecorded."""
 
-    def test_every_declared_surface_names_a_class_and_a_state_claim(self):
+    def test_every_declared_surface_names_a_class_and_an_intended_action(self):
         self.assertEqual(set(sdk_boundary.SURFACES),
                          {"CONTRACT", "MANIFEST_BUILD", "MANIFEST_VALIDATE", "MANIFEST_SUBMIT"})
         for surface, declared in sdk_boundary.SURFACES.items():
             self.assertTrue(declared["transition_class"].startswith("SDK_"), surface)
-            self.assertIsInstance(declared["state_changed"], bool, surface)
+            self.assertTrue(declared["intended_action"].strip(), surface)
+            # No surface declares whether it is "really" a transition. They all are.
+            self.assertNotIn("state_changed", declared, surface)
 
     def test_submit_is_recorded_as_a_handoff_not_a_completion(self):
         """A receipt reading SUBMITTED would imply the transition completed here."""

@@ -44,7 +44,7 @@
   "active_owner_collision": {
     "checked": true,
     "collision_found": false,
-    "reason": "Extends the existing sdk_boundary module, which already owns this boundary, and appends through the repository's existing transition ledger. Creates no second ledger, no second recorder and no second boundary; node_ingress_boundary continues to own the ingress record."
+    "reason": "Extends the existing sdk_boundary and node_ingress_boundary modules, which already own these two boundaries, and appends through the repository's existing transition ledger. Creates no second ledger, no second recorder and no second boundary; each boundary continues to own its own record."
   },
   "readme_impact": {
     "material_function_change": true,
@@ -53,6 +53,7 @@
     "evidence_refs": [
       "README.md",
       "llm_adapter/sdk_boundary.py",
+      "llm_adapter/node_ingress_boundary.py",
       "llm_adapter/combined_gateway.py"
     ]
   },
@@ -61,13 +62,15 @@
     ".github/workflows/validate.yml",
     "iosnoperiod/github/workflows/validate.yml",
     "llm_adapter/sdk_boundary.py",
+    "llm_adapter/node_ingress_boundary.py",
     "llm_adapter/combined_gateway.py",
-    "tests/test_sdk_boundary_crossing_record.py"
+    "tests/test_sdk_boundary_crossing_record.py",
+    "tests/test_node_ingress_boundary.py"
   ],
   "new_files": [
     {
       "path": "tests/test_sdk_boundary_crossing_record.py",
-      "semantic_responsibility": "Exercise that every surface records its crossing, that a read is not recorded as a state transition, that a refused crossing of a state-changing surface changed nothing, that a refusal is still a crossing, and that digests rather than payloads reach the chain.",
+      "semantic_responsibility": "Exercise that every crossing of the SDK boundary is recorded as the disposition of its intended action -- ALLOW or DENY, never a second question about whether a store changed -- that a refused build and a crossing refused for want of standing are each transitions on the chain under their own class, that a refused record names nothing the boundary did not issue, and that digests rather than payloads reach the chain.",
       "closest_existing_implementation": "tests/test_node_ingress_boundary.py covers the ingress record; nothing covered the SDK boundary's crossings.",
       "decision": "EXTEND"
     }
