@@ -179,6 +179,78 @@ jobs:
         run: "$PYTHON_BIN -m pytest tests/test_node_standing.py -v"
       - name: Test the ingress boundary records establishing a healthy node
         run: "$PYTHON_BIN -m pytest tests/test_node_ingress_boundary.py -v"
+      - name: Test every SDK boundary crossing is recorded
+        run: "$PYTHON_BIN -m pytest tests/test_sdk_boundary_crossing_record.py -v"
+      - name: Every front-half transition, admitted or refused, is on one chain in order
+        run: |
+          "$PYTHON_BIN" - <<'PY'
+          import glob, json, os, tempfile
+          from pathlib import Path
+          with tempfile.TemporaryDirectory() as root:
+              # The ledger a deployed node uses is never the one a CI run appends to.
+              os.environ["STEGVERSE_REPO_LEDGER_ROOT"] = root
+              from fastapi.testclient import TestClient
+              from llm_adapter.combined_gateway import app
+              client = TestClient(app)
+              standing = {"mode": "ESTABLISH_GENESIS", "node_ref": "ci-front-half",
+                          "predecessor": None, "node_class": "LLM_ADAPTER"}
+
+              # A transition is the disposition of an intended action, not only a
+              # successful one, so the refused arrivals are on the chain too: a
+              # registration that established no node, and a crossing that
+              # declared no standing.
+              client.post("/api/node-standing", json={**standing, "node_ref": ""})
+              issued = client.post("/api/node-standing", json=standing).json()["manifest_fields"]
+              client.post("/api/sdk/contract", json={})
+              client.post("/api/sdk/contract", json={"standing": standing})
+              client.post("/api/sdk/manifest/build",
+                          json={"standing": standing, "arguments": {"data": {"x": 1}}})
+              built = client.post("/api/sdk/manifest/build", json={"standing": standing,
+                  "arguments": {"data": {"probe": True}, "source_framework": "ci",
+                                "source_output_id": "front-half",
+                                "processor_request": {"candidate": {"action": "inspect"},
+                                    "judgment": {}, "signal": {}, "execution": {},
+                                    "capability": {}, "continuity": {}, "approval": {},
+                                    "permission_present": False},
+                                "created_at": "2026-10-03T00:00:00Z"}}).json()
+              manifest = built["manifest"]
+              client.post("/api/sdk/manifest/validate",
+                          json={"standing": standing, "manifest": manifest})
+              client.post("/api/sdk/manifest/submit", json={"standing": standing,
+                          "standing_evidence": issued, "manifest": manifest, "mode": "TEST"})
+
+              receipts = {}
+              for path in glob.glob(os.path.join(root, "receipts", "*.json")):
+                  receipt = json.loads(Path(path).read_text())
+                  receipts[receipt["receipt_sha256"]] = receipt
+              cursor = json.loads((Path(root) / "HEAD.json").read_text())["receipt_sha256"]
+              chain = []
+              while cursor in receipts:
+                  chain.append(receipts[cursor])
+                  cursor = receipts[cursor]["previous_receipt_sha256"]
+              chain.reverse()
+              assert [r["transition_class"] for r in chain] == [
+                  "NODE_INGRESS_REFUSED", "NODE_INGRESS_ADMITTED",
+                  "SDK_CROSSING_REFUSED_FOR_WANT_OF_STANDING", "SDK_CONTRACT_DISCOVERED",
+                  "SDK_MANIFEST_BUILT", "SDK_MANIFEST_BUILT", "SDK_MANIFEST_VALIDATED",
+                  "SDK_MANIFEST_HANDED_OFF"
+              ], [r["transition_class"] for r in chain]
+              # Every entry is the disposition of an intended action. A refused
+              # arrival is DENY, not an absence; nothing asks whether a store changed.
+              assert [r["evidence"]["disposition"] for r in chain] == [
+                  "DENY", "ALLOW", "DENY", "ALLOW", "DENY", "ALLOW", "ALLOW", "ALLOW"
+              ], [(r["transition_class"], r["evidence"]["disposition"]) for r in chain]
+              for receipt in chain:
+                  evidence = receipt["evidence"]
+                  assert evidence["intended_action"], receipt["transition_class"]
+                  assert evidence["transition_is_the_disposition_of_the_intended_action"] is True
+                  assert "state_changed" not in evidence, receipt["transition_class"]
+              # No refusal is ever recorded under a class that reads as admitted.
+              refused = [r for r in chain if r["evidence"]["disposition"] == "DENY"]
+              assert [r["transition_class"] for r in refused[:1]] == ["NODE_INGRESS_REFUSED"]
+              assert all(r["ordering"] == "OSCILLATOR_HEARTBEAT_EPOCH_ONLY" for r in chain)
+              print("FRONT_HALF_TRANSITIONS_ON_ONE_CHAIN=PASS", len(chain))
+          PY
       - name: A concurrent arrival never orphans an ingress receipt
         run: |
           "$PYTHON_BIN" - <<'PY'

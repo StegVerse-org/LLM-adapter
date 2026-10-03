@@ -36,6 +36,10 @@ to its declared route.
 """
 from __future__ import annotations
 
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
 from typing import Any, Mapping
 
 from stegverse.machine_contract import sdk_machine_contract
@@ -45,8 +49,44 @@ from stegverse.manifest_contract import validate_ingress_manifest as sdk_validat
 
 from .governed_manifest_ingress import ALLOWED_MODES, process_manifest
 
+ROOT = Path(__file__).resolve().parents[1]
+
 BOUNDARY_SCHEMA = "stegverse.sdk-boundary.v1"
 REJECTION_SCHEMA = "stegverse.sdk-boundary-rejection.v1"
+RECORD_SCHEMA = "stegverse.sdk-boundary-crossing-record/v1"
+BOUNDARY = "LLM_ADAPTER_SDK_BOUNDARY"
+
+#: The intended action each surface carries.
+#:
+#: A state transition is the disposition of an intended action, not only a
+#: successful one, so every crossing of this boundary is a transition and every
+#: crossing is recorded. An earlier version of this file asked a second
+#: question -- did some store change? -- and used it to mark a contract read and
+#: a refused build as not transitions. That is a definition the ecosystem does
+#: not hold: the disposition *is* the transition, and a record saying otherwise
+#: understates the chain.
+SURFACES: Mapping[str, Mapping[str, Any]] = {
+    "CONTRACT": {"transition_class": "SDK_CONTRACT_DISCOVERED",
+                 "intended_action": "DISCOVER_THE_SDK_CONTRACT"},
+    "MANIFEST_BUILD": {"transition_class": "SDK_MANIFEST_BUILT",
+                       "intended_action": "BUILD_A_CANONICAL_MANIFEST"},
+    "MANIFEST_VALIDATE": {"transition_class": "SDK_MANIFEST_VALIDATED",
+                          "intended_action": "VALIDATE_A_CANONICAL_MANIFEST"},
+    # Submit returns a handoff, not a runtime result. The class says so, because
+    # a receipt reading SUBMITTED would imply the transition completed here.
+    "MANIFEST_SUBMIT": {"transition_class": "SDK_MANIFEST_HANDED_OFF",
+                        "intended_action": "HAND_A_MANIFEST_TO_THE_INSTALLED_RUNTIME"},
+}
+
+#: The disposition vocabulary this boundary resolves an intended action to.
+ALLOW = "ALLOW"
+DENY = "DENY"
+
+#: A crossing refused for want of standing. The intended action still arrived
+#: and still has a disposition, so it is still a transition; it is recorded
+#: under its own class because a reader must not mistake it for a crossing that
+#: the standing boundary let through.
+REFUSED_CLASS = "SDK_CROSSING_REFUSED_FOR_WANT_OF_STANDING"
 
 
 def require_standing(payload: Any) -> dict[str, Any]:
@@ -61,6 +101,114 @@ def require_standing(payload: Any) -> dict[str, Any]:
             node_standing.FAIL_CLOSED,
             "declare standing on every call: direct_bypass_without_standing is FAIL_CLOSED")
     return node_standing.resolve(standing)
+
+
+def _ledger():
+    """This repository's own transition ledger, loaded as the module it is."""
+    spec = importlib.util.spec_from_file_location(
+        "repo_transition_emit", ROOT / ".stegverse/transition-ledger/emit.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _sha(value: Any) -> str:
+    return "sha256:" + hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":"),
+                   ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def crossing_record(surface: str, standing: Mapping[str, Any],
+                    payload: Mapping[str, Any], result: Mapping[str, Any]) -> dict[str, Any]:
+    """What a crossing of this boundary recorded.
+
+    Digests, not payloads. A caller's arguments and a manifest's contents are
+    its own; what the chain needs is that this node crossed this surface and
+    what came back, bound so neither can be swapped afterwards.
+    """
+    declared = SURFACES[surface]
+    issued = standing["manifest_fields"]
+    accepted = result.get("accepted")
+    return {
+        "schema": RECORD_SCHEMA,
+        "boundary": BOUNDARY,
+        "surface": surface,
+        "node_endpoint": issued["node_endpoint"],
+        "generation": issued["generation"],
+        "predecessor": issued["predecessor"],
+        "request_sha256": _sha(dict(payload)),
+        "result_sha256": _sha(dict(result)),
+        # The transition is the disposition of the intended action. A refused
+        # build is a transition whose disposition is DENY, not an absence.
+        "intended_action": declared["intended_action"],
+        "disposition": DENY if accepted is False else ALLOW,
+        "transition_is_the_disposition_of_the_intended_action": True,
+        "accepted": accepted if isinstance(accepted, bool) else None,
+        # A refused crossing is still a crossing: the caller learns the shape by
+        # being refused, and a chain that dropped refusals would show only the
+        # attempts that happened to succeed.
+        "refusal_stage": result.get("stage") if accepted is False else None,
+        "sdk_refusal_is_verbatim": result.get("rejection_is_verbatim_from_the_sdk"),
+        "structural_standing_is_authenticated_standing": False,
+        "attestation_owner_state": standing["attestation_owner_state"],
+        "authority_effect": "NONE_CROSSING_RECORD_ONLY",
+    }
+
+
+def record(surface: str, standing: Mapping[str, Any], payload: Mapping[str, Any],
+           result: Mapping[str, Any], *, hb_epoch: int | None = None) -> dict[str, Any]:
+    """Append this crossing to the repository's transition ledger."""
+    if surface not in SURFACES:
+        raise ValueError("unrecorded SDK boundary surface: " + str(surface))
+    crossing = crossing_record(surface, standing, payload, result)
+    return _ledger().append(
+        SURFACES[surface]["transition_class"] + ":" + crossing["node_endpoint"]["node_id"],
+        SURFACES[surface]["transition_class"],
+        crossing["request_sha256"], crossing["result_sha256"],
+        crossing, "NONE", hb_epoch=hb_epoch)
+
+
+def standing_refusal_record(surface: str, error: node_standing.StandingRefused,
+                            payload: Mapping[str, Any]) -> dict[str, Any]:
+    """What a crossing refused for want of standing recorded.
+
+    No node endpoint, generation or predecessor appears: the standing boundary
+    issued none, and a record naming them would read as a crossing that had
+    standing. What the chain needs is that something tried to cross this
+    surface, what it sent by digest, and why it was refused.
+    """
+    declared = SURFACES[surface]
+    return {
+        "schema": RECORD_SCHEMA,
+        "boundary": BOUNDARY,
+        "surface": surface,
+        "request_sha256": _sha(dict(payload) if isinstance(payload, Mapping) else payload),
+        "intended_action": declared["intended_action"],
+        "disposition": DENY,
+        "transition_is_the_disposition_of_the_intended_action": True,
+        "refused_for_want_of_standing": True,
+        "standing_disposition": error.disposition,
+        "refusal_reason": error.reason,
+        "refusal_is_verbatim": True,
+        "surface_was_run": False,
+        "structural_standing_is_authenticated_standing": False,
+        "attestation_owner_state": "NOT_PROVEN",
+        "authority_effect": "NONE_CROSSING_RECORD_ONLY",
+    }
+
+
+def record_standing_refusal(surface: str, error: node_standing.StandingRefused,
+                            payload: Mapping[str, Any], *,
+                            hb_epoch: int | None = None) -> dict[str, Any]:
+    """Append a crossing refused for want of standing to the transition ledger."""
+    if surface not in SURFACES:
+        raise ValueError("unrecorded SDK boundary surface: " + str(surface))
+    crossing = standing_refusal_record(surface, error, payload)
+    return _ledger().append(
+        REFUSED_CLASS + ":" + surface + ":" + crossing["request_sha256"],
+        REFUSED_CLASS,
+        crossing["request_sha256"], _sha(crossing),
+        crossing, "NONE", hb_epoch=hb_epoch)
 
 
 def rejected(reason: str, *, stage: str) -> dict[str, Any]:
@@ -199,4 +347,7 @@ def submit(payload: Mapping[str, Any]) -> dict[str, Any]:
 
 
 __all__ = ["require_standing", "contract", "build", "validate", "submit",
-           "installed_runtime", "process_manifest", "BOUNDARY_SCHEMA", "REJECTION_SCHEMA"]
+           "installed_runtime", "process_manifest", "record", "crossing_record",
+           "record_standing_refusal", "standing_refusal_record",
+           "ALLOW", "DENY", "BOUNDARY", "BOUNDARY_SCHEMA", "RECORD_SCHEMA",
+           "REFUSED_CLASS", "REJECTION_SCHEMA", "SURFACES"]

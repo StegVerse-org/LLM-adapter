@@ -1,9 +1,16 @@
 """Establishing a healthy node is ingress, and the boundary records it.
 
 These assert the properties that made this worth building: the record exists at
-all, it is a property of the crossing rather than of HTTP, a refusal leaves no
-entry claiming a node was admitted, and concurrent arrivals do not fork the
-chain -- which the unrepaired emitter did, orphaning seven of eight receipts.
+all, it is a property of the crossing rather than of HTTP, every arrival is
+recorded under its disposition while no refusal is ever recorded as an
+admission, and concurrent arrivals do not fork the chain -- which the unrepaired
+emitter did, orphaning seven of eight receipts.
+
+A state transition is the disposition of an intended action, not only a
+successful one. An earlier version of this boundary minted only on success, so a
+refused registration left no trace: the chain then showed only the arrivals that
+happened to succeed, and a held or dropped signal was indistinguishable from one
+that never arrived. These assert the refused half of that.
 """
 from __future__ import annotations
 
@@ -49,9 +56,12 @@ class IngressBoundaryTests(unittest.TestCase):
             os.environ["STEGVERSE_REPO_LEDGER_ROOT"] = self._previous
         self._root.cleanup()
 
-    def receipts(self):
-        return [json.loads(Path(p).read_text())
-                for p in glob.glob(os.path.join(self._root.name, "receipts", "*.json"))]
+    def receipts(self, transition_class=None):
+        found = [json.loads(Path(p).read_text())
+                 for p in glob.glob(os.path.join(self._root.name, "receipts", "*.json"))]
+        if transition_class is not None:
+            found = [r for r in found if r["transition_class"] == transition_class]
+        return found
 
     def register(self, **overrides):
         return self.client.post("/api/node-standing", json=genesis(**overrides))
@@ -92,18 +102,77 @@ class IngressBoundaryTests(unittest.TestCase):
         self.assertIs(record["caller_supplied_identity_is_not_authenticated"], True)
         self.assertIs(record["ingress_classification_is_authoritative"], False)
 
-    def test_a_refused_registration_records_nothing(self):
-        """A refusal established no node, so the chain carries no entry for one."""
-        for refusal in ({"node_class": None}, {"predecessor": "not-a-predecessor"},
-                        {"node_ref": ""}):
+    def refuse(self, **refusal):
+        body = dict(genesis())
+        body.update(refusal)
+        if refusal.get("node_class") is None and "node_class" in refusal:
+            body.pop("node_class")
+        return self.client.post("/api/node-standing", json=body)
+
+    def test_every_refused_registration_is_recorded_as_a_transition(self):
+        """The signal arrived. A transition is the disposition of that arrival."""
+        refusals = ({"node_class": None}, {"predecessor": "not-a-predecessor"},
+                    {"node_ref": ""})
+        for refusal in refusals:
             with self.subTest(refusal=refusal):
-                body = dict(genesis())
-                body.update(refusal)
-                if refusal.get("node_class") is None:
-                    body.pop("node_class")
-                response = self.client.post("/api/node-standing", json=body)
-                self.assertIn(response.status_code, (403, 422))
-        self.assertEqual(self.receipts(), [])
+                self.assertIn(self.refuse(**refusal).status_code, (403, 422))
+        recorded = self.receipts(node_ingress_boundary.REFUSED_CLASS)
+        self.assertEqual(len(recorded), len(refusals))
+        for receipt in recorded:
+            record = receipt["evidence"]
+            self.assertEqual(record["intended_action"], "ESTABLISH_A_HEALTHY_NODE")
+            self.assertEqual(record["disposition"], "DENY")
+            self.assertIs(record["transition_is_the_disposition_of_the_intended_action"], True)
+            self.assertTrue(record["refusal_reason"])
+            self.assertIs(record["refusal_is_verbatim"], True)
+            self.assertIs(record["retry_is_a_transition_not_a_lost_signal"], True)
+
+    def test_a_refusal_is_never_recorded_as_an_admission(self):
+        """A refusal established no node, so no entry may read as one admitted."""
+        self.refuse(node_ref="")
+        self.assertEqual(self.receipts(node_ingress_boundary.ADMITTED_CLASS), [])
+        record = self.receipts(node_ingress_boundary.REFUSED_CLASS)[0]["evidence"]
+        self.assertIs(record["healthy_node_established"], False)
+        self.assertIs(record["node_endpoint_issued"], False)
+        self.assertIs(record["instructions_released"], False)
+        # Nothing the boundary never issued appears in the record.
+        for issued in ("node_endpoint", "node_class", "continuation_profile",
+                       "generation", "predecessor"):
+            self.assertNotIn(issued, record, issued)
+
+    def test_the_refused_caller_is_handed_its_own_refusal_receipt(self):
+        """A held or retried arrival is a transition the caller can cite."""
+        detail = self.refuse(node_ref="").json()["detail"]
+        self.assertEqual(detail["ingress_recorded_at_boundary"],
+                         node_ingress_boundary.BOUNDARY)
+        self.assertEqual(detail["ingress_transition_class"],
+                         node_ingress_boundary.REFUSED_CLASS)
+        receipt, = self.receipts(node_ingress_boundary.REFUSED_CLASS)
+        self.assertEqual(receipt["receipt_sha256"], detail["ingress_receipt_sha256"])
+        self.assertEqual(receipt["transition_id"], detail["ingress_transition_id"])
+
+    def test_a_refusal_and_the_corrected_retry_chain_as_two_transitions(self):
+        """The retry is a signal, so the chain shows the refusal and the admission."""
+        self.refuse(node_ref="")
+        self.register()
+        by = {r["receipt_sha256"]: r for r in self.receipts()}
+        head = json.loads((Path(self._root.name) / "HEAD.json").read_text())["receipt_sha256"]
+        order, cursor = [], head
+        while cursor in by:
+            order.append(by[cursor]["transition_class"])
+            cursor = by[cursor]["previous_receipt_sha256"]
+        order.reverse()
+        self.assertEqual(order, [node_ingress_boundary.REFUSED_CLASS,
+                                 node_ingress_boundary.ADMITTED_CLASS])
+
+    def test_an_arrival_over_an_unsupported_transport_is_recorded(self):
+        """The signal still arrived, so the refusal is still its transition."""
+        with self.assertRaises(node_standing.StandingRefused):
+            node_ingress_boundary.admit(genesis(), transport="SMOKE_SIGNAL")
+        record = self.receipts(node_ingress_boundary.REFUSED_CLASS)[0]["evidence"]
+        self.assertEqual(record["transport"], "SMOKE_SIGNAL")
+        self.assertIsNone(record["transport_state"])
+        self.assertIn("unsupported ingress transport", record["refusal_reason"])
 
     def test_the_chain_continues_rather_than_forking(self):
         first = self.register().json()
