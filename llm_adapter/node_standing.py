@@ -57,6 +57,22 @@ ESTABLISH_GENESIS = "ESTABLISH_GENESIS"
 VERIFY_EXISTING = "VERIFY_EXISTING"
 MODES = (ESTABLISH_GENESIS, VERIFY_EXISTING)
 
+# A registering node declares its class, and the class selects which
+# instructions come back in the healthy-node packet. A console builds a
+# manifest with the SDK; a node interfacing with the adapter submits one. The
+# other ingress dimensions -- substrate, node materialization, runtime -- are
+# orthogonal descriptors, not selectors.
+CONSOLE = "CONSOLE"
+ADAPTER = "LLM_ADAPTER"
+NODE_CLASSES = (CONSOLE, ADAPTER)
+
+# The instruction profile each class receives. Both are the SDK's own
+# declarations, projected rather than restated.
+CLASS_CONTINUATION = {
+    CONSOLE: "EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION",
+    ADAPTER: "LLM_MACHINE_CONTINUATION",
+}
+
 ALLOW = "ALLOW"
 DENY = "DENY"
 FAIL_CLOSED = "FAIL_CLOSED"
@@ -118,6 +134,16 @@ def readiness() -> dict[str, Any]:
         "silent_reenrollment_permitted": False,
         "failed_verification_becomes_genesis": False,
         "instructions_released_only_on": ALLOW,
+        # So a caller can satisfy this on the first attempt instead of being
+        # refused to learn it.
+        "continuation_selector": "node_class",
+        "continuation_selector_required": True,
+        "node_classes": {
+            CONSOLE: "build a manifest with the SDK console",
+            ADAPTER: "interface with the LLM-adapter and submit a manifest",
+        },
+        "ingress_dimensions_are_recorded_not_selectors": True,
+        "ingress_classification_is_authoritative": False,
         # Stated here so a reader does not mistake a structural ALLOW for an
         # authenticated one. No owner currently supplies non-caller-editable
         # evidence, and this boundary does not invent one.
@@ -208,7 +234,63 @@ def resolve(request: Any) -> dict[str, Any]:
         "structural_standing_is_authenticated_standing": False,
         "attestation_owner_state": "NOT_PROVEN",
         "silent_reenrollment_occurred": False,
+        # What the caller puts in its manifest, issued by this boundary rather
+        # than asserted by the caller. `recognized` is the whole point: it says
+        # this node was recognized here, and a caller writing that about itself
+        # is the `LIVE_GATEWAY_ACCEPTS_CALLER_FABRICATED_IDENTITY` bypass. The
+        # predecessor is the chain position standing just resolved, so the
+        # manifest continues the same chain instead of declaring a second one.
+        "manifest_fields": {
+            "node_endpoint": {"node_id": node_ref, "recognized": True},
+            "node_standing_mode": mode,
+            "generation": resolved_generation,
+            "predecessor": resolved_predecessor,
+        },
+        "manifest_fields_are_boundary_issued_not_caller_asserted": True,
         "authority_effect": "NONE_STANDING_ONLY",
+    }
+
+
+def node_class(request: Any) -> str:
+    """Read the class this node declares, which selects its instructions.
+
+    Undeclared or unrecognised fails closed:
+    `unresolved_classification_disposition` is FAIL_CLOSED, and handing a
+    console the adapter's instructions -- or the reverse -- is worse than
+    refusing and saying what to declare.
+    """
+    declared = request.get("node_class") if isinstance(request, Mapping) else None
+    declared = declared.strip() if isinstance(declared, str) else None
+    if not declared:
+        raise StandingRefused(
+            FAIL_CLOSED,
+            "declare node_class: CONSOLE to build a manifest with the SDK console, "
+            "or LLM_ADAPTER to interface with the adapter and submit one")
+    if declared not in NODE_CLASSES:
+        raise StandingRefused(FAIL_CLOSED, "unrecognised node_class: " + declared)
+    return declared
+
+
+def continuation_profile(request: Any) -> str:
+    """The instruction profile this node's declared class receives."""
+    return CLASS_CONTINUATION[node_class(request)]
+
+
+def declared_ingress(request: Any) -> dict[str, Any]:
+    """Record the ingress dimensions the caller declared, as declared.
+
+    These are recorded, never used to select processing or instructions.
+    `caller_editable_ingress_source_field` is
+    `FORBIDDEN_AS_AUTHORITATIVE_EVIDENCE`, so validating them would confer
+    nothing -- the honest thing is to keep what was said and say whose word it
+    is on.
+    """
+    declared = request.get("ingress") if isinstance(request, Mapping) else None
+    return {
+        "declared_ingress_dimensions": dict(declared) if isinstance(declared, Mapping) else None,
+        "ingress_classification_is_caller_declared": True,
+        "ingress_classification_is_authoritative": False,
+        "ingress_dimensions_select_processing": False,
     }
 
 

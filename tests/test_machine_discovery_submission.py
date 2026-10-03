@@ -23,9 +23,14 @@ class DiscoverySubmissionTests(unittest.TestCase):
                          source_output_id="discovery-submission", processor_request=self.request(),
                          created_at="2026-10-02T00:00:00Z")
         validate_ingress_manifest(manifest)
-        manifest.update(generation=1, predecessor=None,
-                        node_endpoint={"node_id": "fixture-node", "recognized": True})
         return manifest
+
+    def standing(self, **overrides):
+        # Standing is a property of the crossing, issued by the node boundary.
+        value = {"node_standing_mode": "ESTABLISH_GENESIS", "generation": 1, "predecessor": None,
+                 "node_endpoint": {"node_id": "fixture-node", "recognized": True}}
+        value.update(overrides)
+        return value
 
     def test_both_discovery_paths_reach_submission_and_retain_denial(self):
         advertisement = machine_instruction_advertisement()
@@ -41,7 +46,8 @@ class DiscoverySubmissionTests(unittest.TestCase):
                 seen.append(transfer)
                 return {"disposition": "DENY", "manifest_receipt_id": "MR-SOURCE-FIXTURE",
                         "verification_refs": ["fixture:denial"], "consequence_executed": False}
-            result = process_manifest(value, mode="TEST", sdk_manifest_endpoint=receiver)
+            result = process_manifest(value, mode="TEST", standing=self.standing(),
+                                      sdk_manifest_endpoint=receiver)
             self.assertEqual(len(seen), 1)
             self.assertEqual(seen[0]["requested_processing"], value["processing"])
             self.assertEqual(result["governance_state"], "DENY")
@@ -51,9 +57,11 @@ class DiscoverySubmissionTests(unittest.TestCase):
     def test_missing_standing_prevents_both_paths_from_calling_receiver(self):
         for framework in (False, True):
             value = self.manifest(framework)
-            del value["predecessor"]
+            crossing = self.standing()
+            del crossing["predecessor"]
             seen = []
-            result = process_manifest(value, mode="TEST", sdk_manifest_endpoint=lambda t: seen.append(t))
+            result = process_manifest(value, mode="TEST", standing=crossing,
+                                      sdk_manifest_endpoint=lambda t: seen.append(t))
             self.assertEqual(result["governance_state"], "FAIL_CLOSED")
             self.assertEqual(seen, [])
 
@@ -61,6 +69,7 @@ class DiscoverySubmissionTests(unittest.TestCase):
         def unavailable(_):
             raise RuntimeError("source fixture: no authentic endpoint binding")
         for framework in (False, True):
-            result = process_manifest(self.manifest(framework), mode="TEST", sdk_manifest_endpoint=unavailable)
+            result = process_manifest(self.manifest(framework), mode="TEST", standing=self.standing(),
+                                      sdk_manifest_endpoint=unavailable)
             self.assertEqual(result["governance_state"], "FAIL_CLOSED")
             self.assertIsNone(result["manifest_receipt_id"])

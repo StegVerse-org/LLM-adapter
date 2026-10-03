@@ -87,8 +87,9 @@ def test_default_cors_allows_stegverse_site() -> None:
     assert response.headers["access-control-allow-origin"] == "https://stegverse.org"
 
 
-def _genesis() -> dict:
-    return {"mode": "ESTABLISH_GENESIS", "node_ref": "external-reviewer-node", "predecessor": None}
+def _genesis(node_class: str) -> dict:
+    return {"mode": "ESTABLISH_GENESIS", "node_ref": "external-reviewer-node",
+            "predecessor": None, "node_class": node_class}
 
 
 def test_instructions_are_released_only_after_standing_resolves_allow() -> None:
@@ -102,9 +103,11 @@ def test_instructions_are_released_only_after_standing_resolves_allow() -> None:
     assert detail["instructions_released"] is False
     assert "machine_readable_instructions" not in detail
 
-    allowed = client.post("/api/node-standing", json=_genesis())
-    assert allowed.status_code == 200
-    body = allowed.json()
+    # Each class receives its own profile, so the two are asserted on the two
+    # registrations that earn them rather than on one response carrying both.
+    adapter = client.post("/api/node-standing", json=_genesis("LLM_ADAPTER"))
+    assert adapter.status_code == 200
+    body = adapter.json()
     assert body["disposition"] == "ALLOW"
     assert body["generation"] == 1
     assert body["instructions_released"] is True
@@ -118,7 +121,11 @@ def test_instructions_are_released_only_after_standing_resolves_allow() -> None:
     assert llm["receiving_owner"] == "llm_adapter.governed_manifest_ingress"
     assert llm["processing_selector"] == "manifest.processing.capability + manifest.processing.route_id"
     assert llm["direct_bypass_without_standing"] == "FAIL_CLOSED"
-    framework = body["machine_readable_instructions"]["EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION"]
+
+    console = client.post("/api/node-standing", json=_genesis("CONSOLE"))
+    assert console.status_code == 200
+    framework = console.json()["machine_readable_instructions"][
+        "EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION"]
     assert framework["sdk_builder_api"] == "stegverse.manifest_builder.build_manifest"
     assert framework["sdk_builder_cli"] == "stegverse manifest build"
     assert framework["sdk_framework_api"] == "stegverse.external_framework_runner.manifest_external_framework_submission"

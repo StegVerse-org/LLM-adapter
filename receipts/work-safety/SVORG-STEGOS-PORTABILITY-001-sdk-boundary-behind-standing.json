@@ -1,0 +1,82 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SVORG-STEGOS-PORTABILITY-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/ADAPTER_SDK_SYSTEM_BOUNDARY_MIRROR_HANDOFF.md",
+    "StegVerse-org/.github:docs/NODE_INGRESS_SETTLED_SPECIFICATION.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github:orchestration/task-registry.json#SVORG-STEGOS-PORTABILITY-001",
+    "StegVerse-org/.github:orchestration/task-registry.json#SVORG-MANIFEST-SELECTS-PROCESSING-001"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Source-only boundary projection and standing validation. No runtime execution, no custody transition, and the organization transition receipt this change requires is observed from the far side rather than minted here."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/356",
+      "https://github.com/StegVerse-org/.github/pull/37",
+      "https://github.com/StegVerse-org/.github/pull/38",
+      "https://github.com/StegVerse-org/StegVerse-SDK/pull/423"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-org/.github"
+    ],
+    "evidence_refs": [
+      "llm_adapter/governed_manifest_ingress.py",
+      "llm_adapter/node_standing.py",
+      "llm_adapter/machine_instructions.py",
+      "llm_adapter/combined_gateway.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/machine_contract.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/manifest_builder.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/manifest_contract.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/manifest_state_transition_runtime.py",
+      "StegVerse-org/.github:.stegverse/transition-ledger/org-contract.json"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Projects the SDK's own builder, validator, contract and runtime through the existing standing gate. Creates no second validator, no second instruction recipe and no second ingress host; the SDK remains the enforcing authority and its refusals are passed through verbatim."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md",
+      "StegVerse-org/.github:docs/NODE_INGRESS_SETTLED_SPECIFICATION.md"
+    ]
+  },
+  "covered_paths": [
+    "README.md",
+    "llm_adapter/combined_gateway.py",
+    "llm_adapter/governed_manifest_ingress.py",
+    "llm_adapter/node_standing.py",
+    "llm_adapter/sdk_boundary.py",
+    "tests/test_governed_manifest_ingress.py",
+    "tests/test_machine_discovery_submission.py",
+    "tests/test_node_advertisement.py",
+    "tests/test_node_standing.py"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/sdk_boundary.py",
+      "semantic_responsibility": "Project the SDK's own contract, builder, validator and runtime through the adapter boundary behind standing, passing SDK refusals through verbatim rather than restating them.",
+      "closest_existing_implementation": "llm_adapter/machine_instructions.py projects the SDK machine contract into the advertisement but exposes no callable surface; llm_adapter/governed_manifest_ingress.py owns submission only; StegVerse-org/StegVerse-SDK:stegverse/evaluator_console.py is the human console equivalent.",
+      "decision": "REFACTOR"
+    }
+  ]
+}
