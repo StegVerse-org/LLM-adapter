@@ -614,6 +614,13 @@ The class is the selector. A registering node declares `node_class`: `CONSOLE` t
 
 ### The SDK boundary behind standing
 
+Every crossing of that boundary is recorded. The four surfaces run through one seam, so a surface cannot be added that crosses this boundary without being recorded: standing resolves first, the surface runs, and the crossing is appended to this repository's transition ledger as `SDK_CONTRACT_DISCOVERED`, `SDK_MANIFEST_BUILT`, `SDK_MANIFEST_VALIDATED` or `SDK_MANIFEST_HANDED_OFF` — a handoff, because a receipt reading `SUBMITTED` would imply the transition completed here. The response carries the receipt's digest, so a caller cites the crossing rather than asserting it.
+
+The record claims only what the crossing did. A read is not a state transition: the contract is the SDK's own declaration and validation is side-effect-free, so both record `state_changed: false`. Neither is a refused crossing of a surface that otherwise would be — a build that was refused produced no manifest — so `surface_can_change_state` and `state_changed` are kept apart rather than collapsed. A refusal is still recorded as a crossing, because a caller discovers the shape by being refused and a chain that dropped refusals would show only the attempts that happened to succeed.
+
+Digests, not payloads. The request and result are bound by `request_sha256` and `result_sha256` so neither can be swapped afterwards, without copying a caller's arguments or a manifest's contents into the chain. A crossing refused for want of standing records nothing, because it never happened.
+
+
 `POST /api/sdk/contract`, `/api/sdk/manifest/build`, `/api/sdk/manifest/validate` and `/api/sdk/manifest/submit` put the SDK's own surfaces behind the same standing check — no token, standing resolved per call, no standing no SDK. The contract surface is discovered from the enforcing code rather than from a published schema copy that could drift, and a build refusal is the SDK's own refusal passed through verbatim, so a caller learns the shape from the authority that enforces it. Validation is side-effect-free, so discovery costs nothing.
 
 ### Standing is a property of the crossing, not of the document

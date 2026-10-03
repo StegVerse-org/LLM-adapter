@@ -36,6 +36,10 @@ to its declared route.
 """
 from __future__ import annotations
 
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
 from typing import Any, Mapping
 
 from stegverse.machine_contract import sdk_machine_contract
@@ -45,8 +49,29 @@ from stegverse.manifest_contract import validate_ingress_manifest as sdk_validat
 
 from .governed_manifest_ingress import ALLOWED_MODES, process_manifest
 
+ROOT = Path(__file__).resolve().parents[1]
+
 BOUNDARY_SCHEMA = "stegverse.sdk-boundary.v1"
 REJECTION_SCHEMA = "stegverse.sdk-boundary-rejection.v1"
+RECORD_SCHEMA = "stegverse.sdk-boundary-crossing-record/v1"
+BOUNDARY = "LLM_ADAPTER_SDK_BOUNDARY"
+
+#: What each surface is, and whether crossing it changes ecosystem state.
+#:
+#: `organization_scope_rule` is that every state transition within the
+#: organization emits a receipt, so every crossing of this boundary is recorded.
+#: Two of these surfaces are reads: the contract is the SDK's own declaration
+#: and validation is side-effect-free, which is why a caller may retry them
+#: freely. Recording them as transitions would claim a read mutated something,
+#: so the record says which it was rather than flattening the difference.
+SURFACES: Mapping[str, Mapping[str, Any]] = {
+    "CONTRACT": {"transition_class": "SDK_CONTRACT_DISCOVERED", "state_changed": False},
+    "MANIFEST_BUILD": {"transition_class": "SDK_MANIFEST_BUILT", "state_changed": True},
+    "MANIFEST_VALIDATE": {"transition_class": "SDK_MANIFEST_VALIDATED", "state_changed": False},
+    # Submit returns a handoff, not a runtime result. The class says so, because
+    # a receipt reading SUBMITTED would imply the transition completed here.
+    "MANIFEST_SUBMIT": {"transition_class": "SDK_MANIFEST_HANDED_OFF", "state_changed": True},
+}
 
 
 def require_standing(payload: Any) -> dict[str, Any]:
@@ -61,6 +86,73 @@ def require_standing(payload: Any) -> dict[str, Any]:
             node_standing.FAIL_CLOSED,
             "declare standing on every call: direct_bypass_without_standing is FAIL_CLOSED")
     return node_standing.resolve(standing)
+
+
+def _ledger():
+    """This repository's own transition ledger, loaded as the module it is."""
+    spec = importlib.util.spec_from_file_location(
+        "repo_transition_emit", ROOT / ".stegverse/transition-ledger/emit.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _sha(value: Any) -> str:
+    return "sha256:" + hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":"),
+                   ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def crossing_record(surface: str, standing: Mapping[str, Any],
+                    payload: Mapping[str, Any], result: Mapping[str, Any]) -> dict[str, Any]:
+    """What a crossing of this boundary recorded.
+
+    Digests, not payloads. A caller's arguments and a manifest's contents are
+    its own; what the chain needs is that this node crossed this surface and
+    what came back, bound so neither can be swapped afterwards.
+    """
+    declared = SURFACES[surface]
+    issued = standing["manifest_fields"]
+    accepted = result.get("accepted")
+    return {
+        "schema": RECORD_SCHEMA,
+        "boundary": BOUNDARY,
+        "surface": surface,
+        "node_endpoint": issued["node_endpoint"],
+        "generation": issued["generation"],
+        "predecessor": issued["predecessor"],
+        "request_sha256": _sha(dict(payload)),
+        "result_sha256": _sha(dict(result)),
+        # A surface that only reads is not a transition of ecosystem state, and
+        # neither is a refused crossing of one that otherwise would be: a build
+        # that was refused produced no manifest. The declared capability of the
+        # surface and what this crossing actually changed are different claims.
+        "state_changed": bool(declared["state_changed"]) and accepted is not False,
+        "surface_can_change_state": declared["state_changed"],
+        "surface_is_side_effect_free": not declared["state_changed"],
+        "accepted": accepted if isinstance(accepted, bool) else None,
+        # A refused crossing is still a crossing: the caller learns the shape by
+        # being refused, and a chain that dropped refusals would show only the
+        # attempts that happened to succeed.
+        "refusal_stage": result.get("stage") if accepted is False else None,
+        "sdk_refusal_is_verbatim": result.get("rejection_is_verbatim_from_the_sdk"),
+        "structural_standing_is_authenticated_standing": False,
+        "attestation_owner_state": standing["attestation_owner_state"],
+        "authority_effect": "NONE_CROSSING_RECORD_ONLY",
+    }
+
+
+def record(surface: str, standing: Mapping[str, Any], payload: Mapping[str, Any],
+           result: Mapping[str, Any], *, hb_epoch: int | None = None) -> dict[str, Any]:
+    """Append this crossing to the repository's transition ledger."""
+    if surface not in SURFACES:
+        raise ValueError("unrecorded SDK boundary surface: " + str(surface))
+    crossing = crossing_record(surface, standing, payload, result)
+    return _ledger().append(
+        SURFACES[surface]["transition_class"] + ":" + crossing["node_endpoint"]["node_id"],
+        SURFACES[surface]["transition_class"],
+        crossing["request_sha256"], crossing["result_sha256"],
+        crossing, "NONE", hb_epoch=hb_epoch)
 
 
 def rejected(reason: str, *, stage: str) -> dict[str, Any]:
@@ -199,4 +291,5 @@ def submit(payload: Mapping[str, Any]) -> dict[str, Any]:
 
 
 __all__ = ["require_standing", "contract", "build", "validate", "submit",
-           "installed_runtime", "process_manifest", "BOUNDARY_SCHEMA", "REJECTION_SCHEMA"]
+           "installed_runtime", "process_manifest", "record", "crossing_record",
+           "BOUNDARY", "BOUNDARY_SCHEMA", "RECORD_SCHEMA", "REJECTION_SCHEMA", "SURFACES"]

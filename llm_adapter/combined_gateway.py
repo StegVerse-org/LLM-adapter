@@ -140,39 +140,54 @@ def establish_or_verify_node_standing(request: Request, payload: dict) -> dict:
     }
 
 
-def _sdk_surface(payload, handler):
-    """Resolve standing, then run the surface. No standing, no SDK."""
+def _sdk_surface(surface, payload, handler):
+    """Resolve standing, run the surface, record the crossing. No standing, no SDK.
+
+    One seam for all four surfaces, so a surface cannot be added that crosses
+    this boundary without being recorded. Standing is resolved before anything
+    runs and the record is appended after, so a crossing refused for want of
+    standing leaves no entry claiming it happened.
+    """
     try:
-        sdk_boundary.require_standing(payload)
+        standing = sdk_boundary.require_standing(payload)
     except node_standing.StandingRefused as refused:
         body = node_standing.refusal(refused)
         status = 422 if refused.disposition == node_standing.FAIL_CLOSED else 403
         raise HTTPException(status_code=status, detail=body)
-    return handler(payload if isinstance(payload, dict) else {})
+    request = payload if isinstance(payload, dict) else {}
+    result = handler(request)
+    receipt = sdk_boundary.record(surface, standing, request, result)
+    return {
+        **result,
+        # Returned so a caller can cite the crossing rather than assert it.
+        "crossing_recorded_at_boundary": sdk_boundary.BOUNDARY,
+        "crossing_receipt_sha256": receipt["receipt_sha256"],
+        "crossing_transition_id": receipt["transition_id"],
+    }
 
 
 @app.post("/api/sdk/contract")
 def sdk_contract(payload: dict) -> dict:
     """What a caller may ask the ecosystem for, as the SDK declares it."""
-    return _sdk_surface(payload, lambda _: sdk_boundary.contract())
+    return _sdk_surface("CONTRACT", payload, lambda _: sdk_boundary.contract())
 
 
 @app.post("/api/sdk/manifest/build")
 def sdk_manifest_build(payload: dict) -> dict:
     """Build a manifest. A refusal names what was wrong, and nothing is submitted."""
-    return _sdk_surface(payload, sdk_boundary.build)
+    return _sdk_surface("MANIFEST_BUILD", payload, sdk_boundary.build)
 
 
 @app.post("/api/sdk/manifest/validate")
 def sdk_manifest_validate(payload: dict) -> dict:
     """Check a manifest against the SDK. Side-effect free, so retry freely."""
-    return _sdk_surface(payload, sdk_boundary.validate)
+    return _sdk_surface("MANIFEST_VALIDATE", payload, sdk_boundary.validate)
 
 
 @app.post("/api/sdk/manifest/submit")
 def sdk_manifest_submit(payload: dict) -> dict:
     """Submit an accepted manifest, or state what binding is missing."""
-    return _sdk_surface(payload, sdk_boundary.submit)
+    return _sdk_surface("MANIFEST_SUBMIT", payload, sdk_boundary.submit)
 
 
 @app.get("/api/stegverse-node")

@@ -179,6 +179,63 @@ jobs:
         run: "$PYTHON_BIN -m pytest tests/test_node_standing.py -v"
       - name: Test the ingress boundary records establishing a healthy node
         run: "$PYTHON_BIN -m pytest tests/test_node_ingress_boundary.py -v"
+      - name: Test every SDK boundary crossing is recorded
+        run: "$PYTHON_BIN -m pytest tests/test_sdk_boundary_crossing_record.py -v"
+      - name: All seven front-half transitions land on one chain, in order
+        run: |
+          "$PYTHON_BIN" - <<'PY'
+          import glob, json, os, tempfile
+          from pathlib import Path
+          with tempfile.TemporaryDirectory() as root:
+              # The ledger a deployed node uses is never the one a CI run appends to.
+              os.environ["STEGVERSE_REPO_LEDGER_ROOT"] = root
+              from fastapi.testclient import TestClient
+              from llm_adapter.combined_gateway import app
+              client = TestClient(app)
+              standing = {"mode": "ESTABLISH_GENESIS", "node_ref": "ci-front-half",
+                          "predecessor": None, "node_class": "LLM_ADAPTER"}
+
+              issued = client.post("/api/node-standing", json=standing).json()["manifest_fields"]
+              client.post("/api/sdk/contract", json={"standing": standing})
+              client.post("/api/sdk/manifest/build",
+                          json={"standing": standing, "arguments": {"data": {"x": 1}}})
+              built = client.post("/api/sdk/manifest/build", json={"standing": standing,
+                  "arguments": {"data": {"probe": True}, "source_framework": "ci",
+                                "source_output_id": "front-half",
+                                "processor_request": {"candidate": {"action": "inspect"},
+                                    "judgment": {}, "signal": {}, "execution": {},
+                                    "capability": {}, "continuity": {}, "approval": {},
+                                    "permission_present": False},
+                                "created_at": "2026-10-03T00:00:00Z"}}).json()
+              manifest = built["manifest"]
+              client.post("/api/sdk/manifest/validate",
+                          json={"standing": standing, "manifest": manifest})
+              client.post("/api/sdk/manifest/submit", json={"standing": standing,
+                          "standing_evidence": issued, "manifest": manifest, "mode": "TEST"})
+
+              receipts = {}
+              for path in glob.glob(os.path.join(root, "receipts", "*.json")):
+                  receipt = json.loads(Path(path).read_text())
+                  receipts[receipt["receipt_sha256"]] = receipt
+              cursor = json.loads((Path(root) / "HEAD.json").read_text())["receipt_sha256"]
+              chain = []
+              while cursor in receipts:
+                  chain.append(receipts[cursor])
+                  cursor = receipts[cursor]["previous_receipt_sha256"]
+              chain.reverse()
+              assert [r["transition_class"] for r in chain] == [
+                  "NODE_INGRESS_ADMITTED", "SDK_CONTRACT_DISCOVERED", "SDK_MANIFEST_BUILT",
+                  "SDK_MANIFEST_BUILT", "SDK_MANIFEST_VALIDATED", "SDK_MANIFEST_HANDED_OFF"
+              ], [r["transition_class"] for r in chain]
+              # A read is not a transition, and a refused build changed nothing.
+              reads = [r for r in chain if r["transition_class"] in
+                       ("SDK_CONTRACT_DISCOVERED", "SDK_MANIFEST_VALIDATED")]
+              assert all(r["evidence"]["state_changed"] is False for r in reads)
+              builds = [r for r in chain if r["transition_class"] == "SDK_MANIFEST_BUILT"]
+              assert [r["evidence"]["state_changed"] for r in builds] == [False, True], builds
+              assert all(r["ordering"] == "OSCILLATOR_HEARTBEAT_EPOCH_ONLY" for r in chain)
+              print("FRONT_HALF_TRANSITIONS_ON_ONE_CHAIN=PASS", len(chain))
+          PY
       - name: A concurrent arrival never orphans an ingress receipt
         run: |
           "$PYTHON_BIN" - <<'PY'
