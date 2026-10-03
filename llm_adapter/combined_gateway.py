@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from .machine_instructions import machine_instruction_advertisement
+from .ecosystem_chat_gateway import health
 from . import node_standing
+from . import sdk_boundary
 
 from datetime import datetime, timezone
 import hashlib
@@ -93,13 +95,69 @@ def establish_or_verify_node_standing(request: Request, payload: dict) -> dict:
     """
     try:
         disposition = node_standing.resolve(payload)
+        profile = node_standing.continuation_profile(payload)
     except node_standing.StandingRefused as refused:
         body = node_standing.refusal(
             refused, mode=payload.get("mode") if isinstance(payload, dict) else None)
         status = 422 if refused.disposition == node_standing.FAIL_CLOSED else 403
         raise HTTPException(status_code=status, detail=body)
-    return {**disposition, "instructions_released": True,
-            **machine_instruction_advertisement()}
+
+    advertised = machine_instruction_advertisement()
+    instructions = advertised["machine_readable_instructions"]
+    return {
+        **disposition,
+        # The caller asked whether it reached a healthy node. Answer with the
+        # node's own health surface rather than a separate assertion about it,
+        # so "healthy" means the same thing here as it does at /health.
+        "healthy_node_established": True,
+        "node_health": health(),
+        "instructions_released": True,
+        # Instructions for the class this node declared, not every class's.
+        "node_class": node_standing.node_class(payload),
+        "continuation_profile": profile,
+        "machine_readable_instructions": {profile: instructions[profile]},
+        "other_continuation_profiles": sorted(
+            set(node_standing.CLASS_CONTINUATION.values()) - {profile}),
+        "machine_readable_instructions_authority_effect":
+            advertised["machine_readable_instructions_authority_effect"],
+        "SDK_MACHINE_CONTRACT": advertised["SDK_MACHINE_CONTRACT"],
+        **node_standing.declared_ingress(payload),
+    }
+
+
+def _sdk_surface(payload, handler):
+    """Resolve standing, then run the surface. No standing, no SDK."""
+    try:
+        sdk_boundary.require_standing(payload)
+    except node_standing.StandingRefused as refused:
+        body = node_standing.refusal(refused)
+        status = 422 if refused.disposition == node_standing.FAIL_CLOSED else 403
+        raise HTTPException(status_code=status, detail=body)
+    return handler(payload if isinstance(payload, dict) else {})
+
+
+@app.post("/api/sdk/contract")
+def sdk_contract(payload: dict) -> dict:
+    """What a caller may ask the ecosystem for, as the SDK declares it."""
+    return _sdk_surface(payload, lambda _: sdk_boundary.contract())
+
+
+@app.post("/api/sdk/manifest/build")
+def sdk_manifest_build(payload: dict) -> dict:
+    """Build a manifest. A refusal names what was wrong, and nothing is submitted."""
+    return _sdk_surface(payload, sdk_boundary.build)
+
+
+@app.post("/api/sdk/manifest/validate")
+def sdk_manifest_validate(payload: dict) -> dict:
+    """Check a manifest against the SDK. Side-effect free, so retry freely."""
+    return _sdk_surface(payload, sdk_boundary.validate)
+
+
+@app.post("/api/sdk/manifest/submit")
+def sdk_manifest_submit(payload: dict) -> dict:
+    """Submit an accepted manifest, or state what binding is missing."""
+    return _sdk_surface(payload, sdk_boundary.submit)
 
 
 @app.get("/api/stegverse-node")
