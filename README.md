@@ -594,6 +594,22 @@ Neither is served by the public advertisement. `GET /api/stegverse-node` names t
 
 `POST /api/node-standing` resolves `ESTABLISH_GENESIS` or `VERIFY_EXISTING` to `ALLOW`, `DENY` or `FAIL_CLOSED`. A `null` predecessor is explicit genesis; an absent `predecessor` key fails closed rather than defaulting to genesis; a failed `VERIFY_EXISTING` stays failed and never silently re-enrolls. The predecessor field set is read off the SDK's own `successor_predecessor_binding` at import rather than restated here, because `local_second_predecessor_semantics_permitted` is false.
 
+### The healthy-node packet selects one profile by node class
+
+A device registers once and is told, in the same response, that it reached a healthy node and what to do next. `POST /api/node-standing` on `ALLOW` returns `healthy_node_established`, the node's own `/health` body as `node_health` — so "healthy" means here what it means there rather than being a separate assertion about it — and the instructions for the class that registered.
+
+The class is the selector. A registering node declares `node_class`: `CONSOLE` to build a manifest with the SDK console, or `LLM_ADAPTER` to interface with the adapter and submit one. `CONSOLE` receives `EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION`; `LLM_ADAPTER` receives `LLM_MACHINE_CONTINUATION`. Only the selected profile comes back, with the others named in `other_continuation_profiles` and withheld. An undeclared or unrecognised `node_class` fails closed and says what to declare, because handing a console the adapter's instructions is worse than refusing. `GET /api/node-standing/readiness` publishes `continuation_selector` and the class list so a caller satisfies this on the first attempt. The other declared ingress dimensions — substrate, materialization, runtime — are recorded as declared and select nothing: `caller_editable_ingress_source_field` is `FORBIDDEN_AS_AUTHORITATIVE_EVIDENCE`.
+
+### The SDK boundary behind standing
+
+`POST /api/sdk/contract`, `/api/sdk/manifest/build`, `/api/sdk/manifest/validate` and `/api/sdk/manifest/submit` put the SDK's own surfaces behind the same standing check — no token, standing resolved per call, no standing no SDK. The contract surface is discovered from the enforcing code rather than from a published schema copy that could drift, and a build refusal is the SDK's own refusal passed through verbatim, so a caller learns the shape from the authority that enforces it. Validation is side-effect-free, so discovery costs nothing.
+
+### Standing is a property of the crossing, not of the document
+
+Standing evidence no longer travels inside the manifest. `node_endpoint`, `node_standing_mode`, `generation` and `predecessor` are issued by the standing boundary as `manifest_fields` and passed to `process_manifest` as a separate `standing` argument, validated before the manifest is looked at. The manifest handed to the SDK runtime is the manifest the SDK built — `wire_manifest` strips this adapter's bookkeeping, because the runtime refuses unknown top-level fields and a caller writing `recognized: true` about itself is the fabricated-identity bypass. A live stream carries one standing for the stream; every unit still keeps its own manifest and receipt identity.
+
+An `ALLOW` result is only accepted when an organization transition receipt was observed. The organization ledger is `runtime_reality_authority` and `propagation_gates_organization_runtime_reality` is false, so waiting on a Master Records id would gate organization reality on propagation. A non-`ALLOW` result that claims `consequence_executed` fails closed, and the far-side disposition is preserved in the result rather than collapsed into a local verdict.
+
 An `ALLOW` is structural, not authenticated. The caller still supplies its own identity, `attestation_owner_state` remains `NOT_PROVEN`, and a declared predecessor is checked against the owner's shape rather than recomputed — the SDK's binding function takes the predecessor manifest and result, while a standing request carries the digests only. Both the readiness and the disposition say so in their own fields. Source regressions exercise both standing modes and both released profiles. Authentic deployed discovery, external transport, far-side InTr admission and organization custody remain separate runtime proof.
 
 

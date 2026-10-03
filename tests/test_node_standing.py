@@ -262,7 +262,7 @@ class HealthyNodeGrantsTypedIngressTests(unittest.TestCase):
 
     def test_a_registered_node_is_told_it_is_healthy(self):
         """The whole point of the first step: did I reach a healthy node?"""
-        body = self.register(emits_canonical_manifest=False).json()
+        body = self.register(node_class="CONSOLE").json()
         self.assertEqual(body["disposition"], "ALLOW")
         self.assertIs(body["healthy_node_established"], True)
         # Health is the node's own health surface, so "healthy" means here what
@@ -270,8 +270,9 @@ class HealthyNodeGrantsTypedIngressTests(unittest.TestCase):
         self.assertEqual(body["node_health"], self.client.get("/health").json())
         self.assertEqual(body["node_health"]["status"], "ok")
 
-    def test_a_caller_without_a_manifest_is_sent_to_the_sdk_builder_first(self):
-        body = self.register(emits_canonical_manifest=False).json()
+    def test_a_console_class_node_is_sent_to_the_sdk_builder_first(self):
+        body = self.register(node_class="CONSOLE").json()
+        self.assertEqual(body["node_class"], "CONSOLE")
         self.assertEqual(body["continuation_profile"], "EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION")
         profile = body["machine_readable_instructions"][body["continuation_profile"]]
         self.assertIn("BUILD_AND_VALIDATE_CANONICAL_MANIFEST_WITH_SDK", profile["steps"])
@@ -279,8 +280,9 @@ class HealthyNodeGrantsTypedIngressTests(unittest.TestCase):
         self.assertEqual(profile["sdk_builder_cli"], "stegverse manifest build")
         self.assertEqual(profile["receiving_owner"], "llm_adapter.governed_manifest_ingress")
 
-    def test_a_caller_that_already_has_a_manifest_is_sent_straight_to_validate_and_submit(self):
-        body = self.register(emits_canonical_manifest=True).json()
+    def test_an_adapter_class_node_is_sent_to_validate_and_submit(self):
+        body = self.register(node_class="LLM_ADAPTER").json()
+        self.assertEqual(body["node_class"], "LLM_ADAPTER")
         self.assertEqual(body["continuation_profile"], "LLM_MACHINE_CONTINUATION")
         profile = body["machine_readable_instructions"][body["continuation_profile"]]
         self.assertIn("VALIDATE_CANONICAL_MANIFEST_WITH_SDK", profile["steps"])
@@ -289,29 +291,37 @@ class HealthyNodeGrantsTypedIngressTests(unittest.TestCase):
                          "llm_adapter.governed_manifest_ingress.process_manifest")
 
     def test_only_this_caller_s_profile_is_returned(self):
-        """Instructions for the ingress that arrived, not a dump of every one."""
+        """Instructions for the class that registered, not a dump of every one."""
         for declared, expected, other in (
-                (False, "EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION", "LLM_MACHINE_CONTINUATION"),
-                (True, "LLM_MACHINE_CONTINUATION", "EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION")):
-            with self.subTest(emits_canonical_manifest=declared):
-                body = self.register(emits_canonical_manifest=declared).json()
+                ("CONSOLE", "EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION", "LLM_MACHINE_CONTINUATION"),
+                ("LLM_ADAPTER", "LLM_MACHINE_CONTINUATION", "EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION")):
+            with self.subTest(node_class=declared):
+                body = self.register(node_class=declared).json()
                 self.assertEqual(list(body["machine_readable_instructions"]), [expected])
                 self.assertEqual(body["other_continuation_profiles"], [other])
 
-    def test_an_undeclared_ingress_capability_fails_closed(self):
+    def test_an_undeclared_node_class_fails_closed(self):
         """Guessing which instructions someone needs is the defaulting this forbids."""
         response = self.register()
         self.assertEqual(response.status_code, 422)
         detail = response.json()["detail"]
         self.assertEqual(detail["disposition"], "FAIL_CLOSED")
-        self.assertIn("emits_canonical_manifest", detail["reason"])
+        self.assertIn("node_class", detail["reason"])
         self.assertIs(detail["instructions_released"], False)
+
+    def test_an_unrecognised_node_class_fails_closed(self):
+        response = self.register(node_class="SOMETHING_ELSE")
+        self.assertEqual(response.status_code, 422)
+        detail = response.json()["detail"]
+        self.assertEqual(detail["disposition"], "FAIL_CLOSED")
+        self.assertIs(detail["instructions_released"], False)
+        self.assertNotIn("machine_readable_instructions", detail)
 
     def test_declared_ingress_dimensions_are_recorded_and_not_believed(self):
         """`caller_editable_ingress_source_field` is forbidden as authoritative evidence."""
         declared = {"participant": "EXTERNAL_FRAMEWORK_OR_LLM",
                     "interaction_surface": "API_OR_MACHINE_CLIENT"}
-        body = self.register(emits_canonical_manifest=False, ingress=declared).json()
+        body = self.register(node_class="CONSOLE", ingress=declared).json()
         self.assertEqual(body["declared_ingress_dimensions"], declared)
         self.assertIs(body["ingress_classification_is_caller_declared"], True)
         self.assertIs(body["ingress_classification_is_authoritative"], False)
@@ -320,14 +330,13 @@ class HealthyNodeGrantsTypedIngressTests(unittest.TestCase):
     def test_no_standing_means_no_instructions_at_all(self):
         response = self.client.post("/api/node-standing",
                                     json={"mode": "ESTABLISH_GENESIS", "node_ref": "x",
-                                          "emits_canonical_manifest": True})
+                                          "node_class": "LLM_ADAPTER"})
         self.assertEqual(response.status_code, 422)
         self.assertNotIn("machine_readable_instructions", response.json()["detail"])
 
     def test_readiness_tells_a_caller_what_to_declare(self):
         ready = self.client.get("/api/node-standing/readiness").json()
-        self.assertEqual(ready["continuation_selector"], "emits_canonical_manifest")
+        self.assertEqual(ready["continuation_selector"], "node_class")
         self.assertIs(ready["continuation_selector_required"], True)
-        self.assertEqual(sorted(ready["continuation_profiles"]),
-                         ["EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION", "LLM_MACHINE_CONTINUATION"])
+        self.assertEqual(sorted(ready["node_classes"]), ["CONSOLE", "LLM_ADAPTER"])
         self.assertIs(ready["ingress_classification_is_authoritative"], False)

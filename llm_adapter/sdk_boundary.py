@@ -41,7 +41,9 @@ from typing import Any, Mapping
 from stegverse.machine_contract import sdk_machine_contract
 
 from . import node_standing
-from .governed_manifest_ingress import ALLOWED_MODES, process_manifest, validate_ingress_manifest
+from stegverse.manifest_contract import validate_ingress_manifest as sdk_validate_manifest
+
+from .governed_manifest_ingress import ALLOWED_MODES, process_manifest
 
 BOUNDARY_SCHEMA = "stegverse.sdk-boundary.v1"
 REJECTION_SCHEMA = "stegverse.sdk-boundary-rejection.v1"
@@ -128,7 +130,7 @@ def validate(payload: Mapping[str, Any]) -> dict[str, Any]:
     if not isinstance(manifest, Mapping):
         return rejected("manifest must be an object", stage="ARGUMENTS")
     try:
-        canonical = validate_ingress_manifest(manifest)
+        canonical = sdk_validate_manifest(manifest)
     except ValueError as exc:
         return rejected(str(exc), stage="VALIDATE")
     return {
@@ -142,14 +144,36 @@ def validate(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def submit(payload: Mapping[str, Any]) -> dict[str, Any]:
-    """Submit an accepted manifest, or say why submission cannot happen here.
+def installed_runtime(transfer: Mapping[str, Any]) -> dict[str, Any]:
+    """Hand the transfer's manifest to the runtime the SDK says is installed.
 
-    `process_manifest` requires a bound far-side receiver, and the SDK contract
-    records that the binding does not exist:
-    `missing_binding_disposition: FAIL_CLOSED`. So this refuses rather than
-    inventing a receiver, and names what is missing instead of failing
-    obscurely. Build and validate work today; submission waits on that binding.
+    Every published route declares `runtime_installed: true` bound to
+    `stegverse.manifest_state_transition_runtime.execute_manifest`, so the
+    receiver was never missing -- it was simply never bound. The destination is
+    not chosen here: `DESTINATION_RESOLUTION_SOURCE` is
+    `CANONICAL_CONNECTOR_CAPABILITY_OVERLAY`, so the capability overlay
+    resolves it and this boundary carries the manifest to the runtime that asks
+    the overlay.
+    """
+    from stegverse.manifest_state_transition_runtime import execute_manifest
+
+    return execute_manifest(transfer["manifest"])
+
+
+def submit(payload: Mapping[str, Any]) -> dict[str, Any]:
+    """Hand an accepted manifest to the installed runtime and return the handoff.
+
+    What comes back is a handoff disposition, not a result. The SDK states why:
+    it does not perform the transition and does not wait for one, and a result
+    arrives separately through `admit_runtime_result`. So a caller that reads
+    this as a result has misread it, and the response says which it is.
+
+    That asynchrony is the reason a chain is required rather than optional.
+    Handoff is one transition and the result arriving is another; between them
+    sits a gap that a response body cannot represent. When the receiver is
+    unavailable the SDK's own disposition is
+    `DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION` -- the work persists or
+    re-materializes rather than being dropped.
     """
     manifest = payload.get("manifest")
     if not isinstance(manifest, Mapping):
@@ -157,23 +181,22 @@ def submit(payload: Mapping[str, Any]) -> dict[str, Any]:
     mode = str(payload.get("mode") or "").upper()
     if mode not in ALLOWED_MODES:
         return rejected("mode must be one of " + ", ".join(sorted(ALLOWED_MODES)), stage="ARGUMENTS")
-    try:
-        validate_ingress_manifest(manifest)
-    except ValueError as exc:
-        return rejected(str(exc), stage="VALIDATE")
+
+    envelope = process_manifest(manifest, mode=mode,
+                                standing=payload.get("standing_evidence") or {},
+                                sdk_manifest_endpoint=installed_runtime)
     return {
         "schema": BOUNDARY_SCHEMA,
         "surface": "MANIFEST_SUBMIT",
-        "accepted": False,
-        "disposition": "FAIL_CLOSED",
-        "reason": "no_authentic_far_side_receiver_is_bound",
-        "missing_binding": "governed_manifest_ingress.process_manifest(sdk_manifest_endpoint=...)",
-        "sdk_contract_states": "SOURCE_CALLABLE_REQUIRES_EXISTING_AUTHENTIC_ENDPOINT_BINDING",
-        "manifest_was_accepted_by_validation": True,
-        "what_this_means": "the manifest is well-formed and would submit; the receiver does not exist yet",
-        "authority_effect": "NONE_REFUSAL_ONLY",
+        "handed_off": True,
+        "result_is_a_handoff_not_a_runtime_result": True,
+        "result_arrives_separately_through": "stegverse.manifest_state_transition_runtime.admit_runtime_result",
+        "destination_resolution_source": "CANONICAL_CONNECTOR_CAPABILITY_OVERLAY",
+        "receiver_unavailable_disposition": "DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION",
+        "envelope": envelope,
+        "authority_effect": "NONE_HANDOFF_ONLY",
     }
 
 
 __all__ = ["require_standing", "contract", "build", "validate", "submit",
-           "process_manifest", "BOUNDARY_SCHEMA", "REJECTION_SCHEMA"]
+           "installed_runtime", "process_manifest", "BOUNDARY_SCHEMA", "REJECTION_SCHEMA"]

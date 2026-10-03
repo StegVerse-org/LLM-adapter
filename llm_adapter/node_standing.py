@@ -242,6 +242,7 @@ def resolve(request: Any) -> dict[str, Any]:
         # manifest continues the same chain instead of declaring a second one.
         "manifest_fields": {
             "node_endpoint": {"node_id": node_ref, "recognized": True},
+            "node_standing_mode": mode,
             "generation": resolved_generation,
             "predecessor": resolved_predecessor,
         },
