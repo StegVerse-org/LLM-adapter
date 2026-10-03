@@ -1,0 +1,71 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SVORG-STEGOS-PORTABILITY-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/PRE_PROTOCOL_RECEIPT_FINDING_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github:orchestration/task-registry.json#SVORG-STEGOS-PORTABILITY-001"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Records a finding about existing committed artifacts. No runtime transition, no custody, and no receipt is created, deleted or rewritten."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/358",
+      "https://github.com/StegVerse-org/.github/pull/41"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/.github"
+    ],
+    "evidence_refs": [
+      ".stegverse/transition-ledger/emit.py",
+      ".stegverse/heartbeat-awareness.json",
+      "llm_adapter/retrieval_evidence.py",
+      "tests/test_va_claim_assistant_governed_retrieval.py",
+      "StegVerse-org/.github:.stegverse/transition-ledger/org-contract.json"
+    ]
+  },
+  "reuse_decision": "CREATE_NEW",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No existing register or finding record covers these artifacts; nothing else declares which receipts predate the transition protocol."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Records a finding about existing artifacts and changes no behaviour, surface or contract. The protocol the register cites is already documented in README.",
+    "evidence_refs": [
+      "docs/PRE_PROTOCOL_RECEIPT_FINDING_MIRROR_HANDOFF.md",
+      ".stegverse/pre-protocol-receipt-register.json"
+    ]
+  },
+  "covered_paths": [
+    ".stegverse/pre-protocol-receipt-register.json",
+    "docs/PRE_PROTOCOL_RECEIPT_FINDING_MIRROR_HANDOFF.md"
+  ],
+  "new_files": [
+    {
+      "path": ".stegverse/pre-protocol-receipt-register.json",
+      "semantic_responsibility": "Declare, machine-readably, which committed receipts predate the current transition protocol, what ruleset they were produced under, and why a sweep leaves them modified.",
+      "closest_existing_implementation": ".stegverse/transition-ledger/contract.json declares the current ledger contract; .stegverse/heartbeat-awareness.json declares the ordering. Neither says which existing artifacts predate them.",
+      "decision": "CREATE_NEW",
+      "justification": "The churn is otherwise indistinguishable from a defect introduced by whatever change was being tested, and a clock-stamped validation artifact is otherwise indistinguishable from a chain receipt.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        ".stegverse/transition-ledger/emit.py",
+        ".stegverse/heartbeat-awareness.json",
+        "llm_adapter/retrieval_evidence.py"
+      ]
+    }
+  ]
+}

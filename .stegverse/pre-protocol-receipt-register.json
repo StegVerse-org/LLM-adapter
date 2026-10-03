@@ -1,0 +1,75 @@
+{
+  "schema": "stegverse.pre-protocol-receipt-register/v1",
+  "repository": "StegVerse-org/LLM-adapter",
+  "finding_id": "LLM-ADAPTER-PRE-PROTOCOL-RECEIPTS-001",
+  "statement": "These committed receipts were produced under an earlier ruleset. They are not receipts of the current transition protocol and must not be read as one.",
+  "ruleset_they_predate": {
+    "ordering": "OSCILLATOR_HEARTBEAT_EPOCH_ONLY",
+    "ordering_declared_in": ".stegverse/heartbeat-awareness.json",
+    "ordering_enforced_in": ".stegverse/transition-ledger/emit.py",
+    "wall_clock_ordering_permitted": false,
+    "receipt_content_may_depend_on_when_it_was_produced": false,
+    "a_test_run_may_write_a_committed_receipt": false,
+    "append_is_serialized_and_head_is_published_atomically": true,
+    "receipts_are_hash_linked_into_a_single_chain": true
+  },
+  "how_these_differ": [
+    "Their timestamps are read from a host clock, so the same transition yields different content on every run.",
+    "They are written by test modules and validation scripts rather than appended to a ledger.",
+    "They carry no hb_reference, no previous_receipt_sha256 and no chain position, so they cannot be replayed or reconstructed as a chain.",
+    "Five are written at module import, so collecting the test file rewrites the committed file."
+  ],
+  "observable_consequence": "A repository sweep leaves these files modified with no source change, because the suite rewrote them with the run's own clock. The churn is the finding, not a defect introduced by whatever change was being tested.",
+  "written_at_module_import_by_tests": [
+    {"receipt": "receipts/va-claim-assistant-governed-dispatch-validation.json",
+     "writer": "tests/test_va_claim_assistant_governed_dispatch.py:215"},
+    {"receipt": "receipts/va-claim-assistant-privacy-runtime-validation.json",
+     "writer": "tests/test_va_claim_assistant_privacy_runtime.py:158"},
+    {"receipt": "receipts/va-claim-assistant-public-source-fixture.json",
+     "writer": "tests/test_va_claim_assistant_governed_retrieval.py:67"},
+    {"receipt": "receipts/va-claim-assistant-route-classifier-validation.json",
+     "writer": "tests/test_va_claim_assistant_route_classifier.py:75"},
+    {"receipt": "receipts/va-claim-assistant-route-generators-validation.json",
+     "writer": "tests/test_va_claim_assistant_route_generators.py:203"}
+  ],
+  "clock_source": "llm_adapter/retrieval_evidence.py::evidence_pointer defaults retrieved_at to utc_now_iso(), which reads datetime.now(timezone.utc)",
+  "written_by_tests_or_validation_scripts": [
+    "receipts/chat-llm-profiles-validation.json",
+    "receipts/chat-llm-session-binding-validation.json",
+    "receipts/ecosystem-chat-authorized-provider-activation.latest.json",
+    "receipts/ecosystem-chat-live-activation.latest.json",
+    "receipts/ecosystem-chat-live-activation.verified.json",
+    "receipts/ecosystem-va-chat-session-consolidation-validation.json",
+    "receipts/llm-adapter-open-pr-consolidation.json",
+    "receipts/local-runtime-model-proof.latest.json",
+    "receipts/provider-execution-authority.github-models.v1.json",
+    "receipts/service-gateway-activation-proof.json",
+    "receipts/stegdeploy-image-publication.json",
+    "receipts/va-claim-assistant-governed-dispatch-validation.json",
+    "receipts/va-claim-assistant-privacy-runtime-validation.json",
+    "receipts/va-claim-assistant-provider-execution-authority.github-models.v1.json",
+    "receipts/va-claim-assistant-public-source-fixture.json",
+    "receipts/va-claim-assistant-route-classifier-validation.json",
+    "receipts/va-claim-assistant-route-generators-validation.json",
+    "receipts/va-claim-assistant-service-connection-execution-readiness.json",
+    "receipts/va-claim-assistant-service-connection-execution.json",
+    "receipts/va-claims-chat-runtime-contract-validation.json"
+  ],
+  "excluded_from_this_register": {
+    "path_prefix": "receipts/work-safety/",
+    "reason": "Preflight mutation-safety manifests are authored deliberately per change set and are not produced by a run."
+  },
+  "this_register_does_not": [
+    "DELETE_OR_REWRITE_ANY_RECEIPT",
+    "MIGRATE_ANY_RECEIPT_TO_THE_CURRENT_PROTOCOL",
+    "CLAIM_THESE_RECEIPTS_ARE_INVALID_AS_THE_SOURCE_EVIDENCE_THEY_WERE_WRITTEN_TO_BE",
+    "GRANT_ANY_AUTHORITY"
+  ],
+  "remediation_not_performed_here": [
+    "Stop test modules writing committed receipts; a run's output belongs outside the committed tree.",
+    "Supply retrieved_at from the heartbeat rather than defaulting it to a host clock, so a receipt's content does not depend on when it was produced.",
+    "Decide per receipt whether it is a ledger transition, which would place it on the chain, or a validation artifact, which should not be committed as a receipt at all."
+  ],
+  "remediation_owner": "StegVerse-org/LLM-adapter",
+  "authority_effect": "NONE_REGISTER_ONLY"
+}
