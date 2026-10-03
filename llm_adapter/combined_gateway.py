@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from .machine_instructions import machine_instruction_advertisement
 from .ecosystem_chat_gateway import health
-from . import node_standing
+from . import node_ingress_boundary, node_standing
 from . import sdk_boundary
 
 from datetime import datetime, timezone
@@ -87,25 +87,40 @@ def node_standing_readiness() -> dict:
 
 @app.post("/api/node-standing")
 def establish_or_verify_node_standing(request: Request, payload: dict) -> dict:
-    """Resolve standing and release the continuation only on ALLOW.
+    """Admit the signal at the ingress boundary and release the continuation.
+
+    Establishing a healthy node is ingress, so this route is the HTTP transport
+    reaching `node_ingress_boundary` rather than the place standing is resolved.
+    The boundary resolves standing, records the ingress in this repository's
+    transition ledger and returns the packet; this route adds the instruction
+    projection and the HTTP status for a refusal.
 
     The instructions are the SDK's own declarations, projected rather than
     duplicated, and they are returned here instead of from the unauthenticated
     advertisement so that reaching them requires crossing the contract.
     """
     try:
-        disposition = node_standing.resolve(payload)
-        profile = node_standing.continuation_profile(payload)
+        admitted = node_ingress_boundary.admit(
+            payload, transport=node_ingress_boundary.HTTP, health=health)
     except node_standing.StandingRefused as refused:
         body = node_standing.refusal(
             refused, mode=payload.get("mode") if isinstance(payload, dict) else None)
         status = 422 if refused.disposition == node_standing.FAIL_CLOSED else 403
         raise HTTPException(status_code=status, detail=body)
 
+    disposition = admitted["disposition"]
+    profile = admitted["continuation_profile"]
     advertised = machine_instruction_advertisement()
     instructions = advertised["machine_readable_instructions"]
     return {
         **disposition,
+        # The ingress record, so the node can cite its own arrival rather than
+        # assert it, and a reader of the chain can find this crossing.
+        "ingress_recorded_at_boundary": admitted["ingress_recorded_at_boundary"],
+        "ingress_receipt_sha256": admitted["ingress_receipt_sha256"],
+        "ingress_transition_id": admitted["ingress_transition_id"],
+        "ingress_ordering": admitted["ingress_ordering"],
+        "ingress_transport": admitted["ingress_record"]["transport"],
         # The caller asked whether it reached a healthy node. Answer with the
         # node's own health surface rather than a separate assertion about it,
         # so "healthy" means the same thing here as it does at /health.
@@ -113,7 +128,7 @@ def establish_or_verify_node_standing(request: Request, payload: dict) -> dict:
         "node_health": health(),
         "instructions_released": True,
         # Instructions for the class this node declared, not every class's.
-        "node_class": node_standing.node_class(payload),
+        "node_class": admitted["node_class"],
         "continuation_profile": profile,
         "machine_readable_instructions": {profile: instructions[profile]},
         "other_continuation_profiles": sorted(

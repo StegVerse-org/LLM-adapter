@@ -1,0 +1,100 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SVORG-STEGOS-PORTABILITY-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "StegVerse-org/.github:docs/NODE_INGRESS_SETTLED_SPECIFICATION.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github:orchestration/task-registry.json#SVORG-STEGOS-PORTABILITY-001",
+    "StegVerse-org/.github:orchestration/task-registry.json#SVORG-MANIFEST-SELECTS-PROCESSING-001"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Repository-level ingress recording only. The receipt is this repository's own transition receipt; no organization propagation, custody transition or Master Records closure is performed or claimed."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/357",
+      "https://github.com/StegVerse-org/.github/pull/39",
+      "https://github.com/StegVerse-org/.github/pull/40",
+      "https://github.com/StegVerse-org/.github/pull/41"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/.github",
+      "StegVerse-org/StegVerse-SDK"
+    ],
+    "evidence_refs": [
+      ".stegverse/transition-ledger/emit.py",
+      ".stegverse/transition-ledger/contract.json",
+      ".stegverse/heartbeat-awareness.json",
+      "llm_adapter/node_standing.py",
+      "llm_adapter/combined_gateway.py",
+      "StegVerse-org/.github:.stegverse/transition-ledger/emit.py",
+      "StegVerse-org/.github:resident-runtime/ledger_store.py",
+      "StegVerse-org/.github:org-kernel/kernel.py",
+      "StegVerse-org/.github:org-boundary/runtime/process_boundary.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Uses this repository's own existing transition ledger and its own declared heartbeat parameters rather than creating a second ledger or restating the heartbeat. The lock and atomic-HEAD mechanics mirror the repair StegVerse-org/.github already made to its emitter; consolidating both repositories onto one ledger store is recorded as a follow-up, not forked here."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "llm_adapter/node_ingress_boundary.py",
+      ".stegverse/transition-ledger/emit.py"
+    ]
+  },
+  "covered_paths": [
+    "README.md",
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    ".stegverse/transition-ledger/emit.py",
+    "llm_adapter/combined_gateway.py",
+    "llm_adapter/node_ingress_boundary.py",
+    "tests/conftest.py",
+    "tests/test_node_ingress_boundary.py"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/node_ingress_boundary.py",
+      "semantic_responsibility": "The ingress boundary: admit an arriving signal, record the ingress in this repository's transition ledger, and return the healthy-node packet carrying the receipt reference. Transport is a field on the record, not a property of the surface.",
+      "closest_existing_implementation": "llm_adapter/node_standing.py resolves standing but records nothing and is reached directly by the route; StegVerse-org/.github:org-boundary/runtime/process_boundary.py is the organization-side boundary whose order this follows.",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "tests/conftest.py",
+      "semantic_responsibility": "Redirect this repository's transition ledger root for the whole test session, so a suite run cannot append into the ledger a deployed node uses.",
+      "closest_existing_implementation": "No conftest existed; StegVerse-org/.github redirects both ledger roots per test in tests/test_organization_manifest_ingress.py.",
+      "decision": "CREATE_NEW",
+      "justification": "A per-test redirect was the thing that got forgotten and wrote eight receipts into the real ledger during a sweep. An autouse session fixture is the only placement that cannot be forgotten by a future test reaching the route.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "tests/test_node_standing.py",
+        "tests/test_node_advertisement.py",
+        "StegVerse-org/.github:tests/test_organization_manifest_ingress.py"
+      ]
+    },
+    {
+      "path": "tests/test_node_ingress_boundary.py",
+      "semantic_responsibility": "Exercise the ingress record, the refusal leaving no entry, the chain continuing under concurrent arrival, oscillator ordering, and transport independence.",
+      "closest_existing_implementation": "tests/test_node_standing.py covers standing resolution and the released continuation but nothing about recording.",
+      "decision": "EXTEND"
+    }
+  ]
+}
