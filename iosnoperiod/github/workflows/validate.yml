@@ -174,7 +174,9 @@ jobs:
           tests/test_provider_readiness_stable_projection.py
           tests/test_live_activation_status_persistence.py -v
       - name: Test StegVerse node advertisement contract
-        run: "$PYTHON_BIN -m pytest tests/test_node_advertisement.py -v"
+        run: "$PYTHON_BIN -m pytest tests/test_node_advertisement.py tests/test_machine_discovery_submission.py tests/test_governed_manifest_ingress.py -v"
+      - name: Test canonical node standing gates the machine continuation
+        run: "$PYTHON_BIN -m pytest tests/test_node_standing.py -v"
       - name: Check immutable verified activation receipt contract
         run: "$PYTHON_BIN scripts/check_ecosystem_chat_verified_receipt_contract.py"
       - name: Test sovereign destination activation projection
@@ -264,3 +266,4 @@ jobs:
           print('GLOBAL_VALIDATE_GITHUB_TOKEN_AUTHORITY=NONE')
           print('GLOBAL_VALIDATE_ACTIVATION_EFFECT=NONE')
           PY
+

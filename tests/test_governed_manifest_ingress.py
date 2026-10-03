@@ -18,6 +18,8 @@ def manifest(output_id="evt-1", return_projection=None):
         "requested_consequence": "none",
         "processing": {"capability": "governance", "route_id": "stegverse.route.canonical-governed.v1"},
         "node_endpoint": {"node_id": "node-external-ai-1", "recognized": True},
+        "generation": 1,
+        "predecessor": None,
         "hashes": {"payload_sha256": _hash(payload), "candidate_sha256": _hash(candidate)},
     }
     if return_projection is not None:
@@ -70,6 +72,70 @@ class GovernedManifestIngressTests(unittest.TestCase):
         process_manifest(right, mode="TEST", sdk_manifest_endpoint=endpoint)
         self.assertEqual(seen[0], left["processing"])
         self.assertEqual(seen[1], right["processing"])
+
+
+    def test_genesis_requires_present_null_predecessor(self):
+        value = manifest()
+        value.pop("predecessor")
+        result = process_manifest(value, mode="TEST", sdk_manifest_endpoint=allow_handler)
+        self.assertEqual(result["governance_state"], "FAIL_CLOSED")
+        self.assertIn("predecessor", result["reason"])
+
+    def test_genesis_standing_is_carried_to_sdk_endpoint(self):
+        seen = []
+        process_manifest(manifest(), mode="TEST", sdk_manifest_endpoint=lambda transfer: seen.append(transfer) or allow_handler(transfer))
+        self.assertEqual(seen[0]["canonical_node_standing"]["mode"], "ESTABLISH_GENESIS")
+        self.assertIsNone(seen[0]["canonical_node_standing"]["predecessor"])
+
+    def test_established_node_requires_validated_predecessor(self):
+        value = manifest()
+        value["generation"] = 2
+        value["predecessor"] = {
+            "generation": 1,
+            "manifest_sha256": "a" * 64,
+            "result_sha256": "b" * 64,
+            "heartbeat_epoch": 4096,
+        }
+        seen = []
+        result = process_manifest(value, mode="TEST", sdk_manifest_endpoint=lambda transfer: seen.append(transfer) or allow_handler(transfer))
+        self.assertEqual(result["governance_state"], "ALLOW")
+        self.assertEqual(seen[0]["canonical_node_standing"]["mode"], "VERIFY_EXISTING")
+        self.assertEqual(seen[0]["canonical_node_standing"]["predecessor"], value["predecessor"])
+
+    def test_failed_existing_verification_does_not_reenroll(self):
+        value = manifest()
+        value["generation"] = 2
+        value["predecessor"] = None
+        seen = []
+        result = process_manifest(value, mode="TEST", sdk_manifest_endpoint=lambda transfer: seen.append(transfer))
+        self.assertEqual(result["governance_state"], "FAIL_CLOSED")
+        self.assertEqual(result["reason"], "genesis_requires_generation_one")
+        self.assertEqual(seen, [])
+
+    def test_llm_machine_instruction_path_reaches_existing_sdk_transfer(self):
+        value = manifest()
+        seen = []
+        result = process_manifest(value, mode="TEST", sdk_manifest_endpoint=lambda transfer: seen.append(transfer) or allow_handler(transfer))
+        self.assertEqual(result["governance_state"], "ALLOW")
+        self.assertEqual(seen[0]["canonical_node_standing"]["mode"], "ESTABLISH_GENESIS")
+        self.assertEqual(seen[0]["requested_processing"], value["processing"])
+        self.assertEqual(seen[0]["destination"], "DISTRIBUTED_SDK_MANIFEST_ENDPOINT")
+
+    def test_existing_node_instruction_path_reaches_same_sdk_transfer(self):
+        value = manifest()
+        value["generation"] = 2
+        value["predecessor"] = {
+            "generation": 1,
+            "manifest_sha256": "c" * 64,
+            "result_sha256": "d" * 64,
+            "heartbeat_epoch": 7,
+        }
+        seen = []
+        result = process_manifest(value, mode="TEST", sdk_manifest_endpoint=lambda transfer: seen.append(transfer) or allow_handler(transfer))
+        self.assertEqual(result["governance_state"], "ALLOW")
+        self.assertEqual(seen[0]["canonical_node_standing"]["mode"], "VERIFY_EXISTING")
+        self.assertEqual(seen[0]["requested_processing"], value["processing"])
+        self.assertEqual(seen[0]["destination"], "DISTRIBUTED_SDK_MANIFEST_ENDPOINT")
 
     def test_unrecognized_node_fails_closed_before_sdk_endpoint(self):
         value = manifest()

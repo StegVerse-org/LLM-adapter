@@ -575,3 +575,33 @@ The existing distributed Ecosystem Chat workload may declare a named `provider: 
 This is a compatibility adapter for xAI's documented chat-completions endpoint; it preserves reported actual model identity, native measured token usage and provider-side cost ticks when supplied. It fails closed on malformed response or missing usage. The existing distributed executor can independently collect a local and an xAI response and retain an optional provider failure without disabling the sovereign route. No model contribution grants execution, route, custody or governance authority.
 
 Current source tests use deterministic HTTP fixtures only. They prove no real Grok invocation, TVC secret operation, admitted ephemeral StegBrowser lease, InTr ingress/egress, terminal session destruction, Master Records reconstruction or Site activation. xAI Responses API support and true governed challenge/sequential deliberation are separate subsequent integrations. See `docs/XAI_MANIFEST_PROVIDER_MIRROR_HANDOFF.md`.
+
+
+## Canonical node-standing ingress
+
+The public node advertisement maps existing gateway surfaces to the canonical node-standing contract rather than creating a second ingress host. The contract distinguishes explicit genesis from continuity by a mandatory predecessor key: `null` is explicit generation-1 genesis; established-node continuation carries the canonical predecessor binding. Missing or invalid continuity fails closed and cannot silently re-enroll.
+
+The governed machine-manifest ingress carries this standing evidence into the existing distributed SDK manifest transfer. Processing remains selected by the manifest-declared capability and route; message-content classification is descriptive fallback guidance and cannot substitute a governed declaration. The gateway, advertisement, transport and adapter grant no additional execution or governance authority.
+
+KV-as-established-node and StegBrowser-as-KV-surface are not asserted by this repair.
+
+
+## Machine-readable continuation instructions
+
+Two non-authorizing instruction profiles exist, and standing is what releases them. `LLM_MACHINE_CONTINUATION` directs a machine that already has a canonical manifest to `llm_adapter.governed_manifest_ingress` and the existing distributed SDK manifest transfer. `EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION` directs a framework to the SDK-owned `stegverse.manifest_builder.build_manifest` / `stegverse manifest build` and `stegverse.external_framework_runner.manifest_external_framework_submission` / `stegverse external-run` path.
+
+Neither is served by the public advertisement. `GET /api/stegverse-node` names the standing endpoints and states that the continuation is withheld until standing resolves; the profiles are returned by `POST /api/node-standing` on `ALLOW` and from nowhere else. `GET /api/node-standing/readiness` publishes what standing requires — the mandatory `predecessor` key, the two modes, the oscillator-epoch ordering — so a machine can satisfy it on the first attempt instead of discovering the shape by being refused. Readiness is not standing and grants nothing.
+
+`POST /api/node-standing` resolves `ESTABLISH_GENESIS` or `VERIFY_EXISTING` to `ALLOW`, `DENY` or `FAIL_CLOSED`. A `null` predecessor is explicit genesis; an absent `predecessor` key fails closed rather than defaulting to genesis; a failed `VERIFY_EXISTING` stays failed and never silently re-enrolls. The predecessor field set is read off the SDK's own `successor_predecessor_binding` at import rather than restated here, because `local_second_predecessor_semantics_permitted` is false.
+
+An `ALLOW` is structural, not authenticated. The caller still supplies its own identity, `attestation_owner_state` remains `NOT_PROVEN`, and a declared predecessor is checked against the owner's shape rather than recomputed — the SDK's binding function takes the predecessor manifest and result, while a standing request carries the digests only. Both the readiness and the disposition say so in their own fields. Source regressions exercise both standing modes and both released profiles. Authentic deployed discovery, external transport, far-side InTr admission and organization custody remain separate runtime proof.
+
+
+
+## Test 5/6 external submission boundary — 2026-10-02
+
+External instructions terminate at `SUBMIT_CANONICAL_MANIFEST` and `RETAIN_SUBMISSION_RESULT_AND_EVIDENCE`. Interlock/InTr is `INTERNAL_POST_SUBMISSION`; `EXTERNAL_INTERLOCK_INTR` is deferred to a separate successor expansion after Tests 5/6. This changes the caller instruction boundary, not the retained experiment, Test 5-before-Test 6 ordering, or downstream receipt/custody acceptance. Source tests are not Test 5/6 runtime results.
+
+`SDK_MACHINE_CONTRACT` derives from existing SDK builder signatures, processor/route declarations, return projections and console commands. The adapter consumes that SDK projection instead of maintaining a second instruction recipe. The console wrapper already dispatched manifest/external-run; its top-level help omitted them. Shared dispatch/help declarations repair that discovery mismatch.
+
+The external-framework helper currently reports `SDK_LOCAL_MANIFEST_HANDOFF`; it does not prove receiver observation. Adapter predecessor checks establish structural validity only, not authenticated standing. Production endpoint binding, authentic standing, runtime execution, deployment and custody remain NOT_PROVEN. No endpoint, runtime, credential path or authority was created.

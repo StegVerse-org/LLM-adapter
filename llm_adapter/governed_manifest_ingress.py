@@ -52,7 +52,7 @@ def validate_ingress_manifest(manifest: Mapping[str, Any]) -> dict[str, Any]:
     required = (
         "manifest_profile", "manifest_profile_version", "source_framework",
         "source_output_id", "created_at", "candidate", "declared_intent",
-        "requested_consequence", "hashes", "processing", "node_endpoint",
+        "requested_consequence", "hashes", "processing", "node_endpoint", "predecessor",
     )
     missing = [key for key in required if key not in manifest]
     if missing:
@@ -87,8 +87,33 @@ def validate_ingress_manifest(manifest: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("recognized_node_endpoint_required")
     if node_endpoint.get("recognized") is not True:
         raise ValueError("recognized_node_endpoint_required")
+    predecessor = manifest["predecessor"]
+    generation = manifest.get("generation")
+    if predecessor is None:
+        if generation != 1:
+            raise ValueError("genesis_requires_generation_one")
+        standing_mode = "ESTABLISH_GENESIS"
+    else:
+        if not isinstance(generation, int) or isinstance(generation, bool) or generation < 2:
+            raise ValueError("existing_node_requires_generation_beyond_one")
+        if not isinstance(predecessor, Mapping):
+            raise ValueError("existing_node_predecessor_invalid")
+        required_predecessor = ("generation", "manifest_sha256", "result_sha256", "heartbeat_epoch")
+        if set(predecessor) != set(required_predecessor):
+            raise ValueError("existing_node_predecessor_fields_invalid")
+        if predecessor.get("generation") != generation - 1:
+            raise ValueError("existing_node_predecessor_generation_mismatch")
+        for key in ("manifest_sha256", "result_sha256"):
+            value = predecessor.get(key)
+            if not isinstance(value, str) or len(value) != 64 or any(ch not in "0123456789abcdef" for ch in value):
+                raise ValueError(f"existing_node_predecessor_{key}_invalid")
+        epoch = predecessor.get("heartbeat_epoch")
+        if not isinstance(epoch, int) or isinstance(epoch, bool) or epoch < 1:
+            raise ValueError("existing_node_predecessor_heartbeat_epoch_invalid")
+        standing_mode = "VERIFY_EXISTING"
     normalized = dict(manifest)
     normalized["return_projection"] = _normalize_return_projection(manifest.get("return_projection"))
+    normalized["node_standing_mode"] = standing_mode
     normalized["external_manifest_valid"] = True
     normalized["external_manifest_grants_authority"] = False
     normalized["master_records_transition_custody_independent_of_return_projection"] = True
@@ -149,6 +174,11 @@ def build_sdk_manifest_intr_transfer(canonical_manifest: Mapping[str, Any]) -> d
         "destination": "DISTRIBUTED_SDK_MANIFEST_ENDPOINT",
         "manifest": dict(canonical_manifest),
         "manifest_sha256": _hash(canonical_manifest),
+        "canonical_node_standing": {
+            "mode": canonical_manifest["node_standing_mode"],
+            "generation": canonical_manifest["generation"],
+            "predecessor": canonical_manifest["predecessor"],
+        },
         "requested_processing": {
             "capability": processing["capability"],
             "route_id": processing["route_id"],
