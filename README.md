@@ -594,6 +594,18 @@ Neither is served by the public advertisement. `GET /api/stegverse-node` names t
 
 `POST /api/node-standing` resolves `ESTABLISH_GENESIS` or `VERIFY_EXISTING` to `ALLOW`, `DENY` or `FAIL_CLOSED`. A `null` predecessor is explicit genesis; an absent `predecessor` key fails closed rather than defaulting to genesis; a failed `VERIFY_EXISTING` stays failed and never silently re-enrolls. The predecessor field set is read off the SDK's own `successor_predecessor_binding` at import rather than restated here, because `local_second_predecessor_semantics_permitted` is false.
 
+### Establishing a healthy node is ingress, and the boundary records it
+
+`llm_adapter/node_ingress_boundary.py` is the ingress boundary. `POST /api/node-standing` is the HTTP transport reaching it, not the place standing is resolved: the boundary resolves standing, records the ingress in this repository's transition ledger, and returns the healthy-node packet carrying the receipt's own digest, so a node cites its arrival rather than asserting it.
+
+The record is a property of the crossing, not of HTTP. `transport` names how the signal arrived — `HTTP` is `INSTALLED`, `INTERLOCK_INTR` is `NOT_YET_ENABLED` — and every other field is identical whichever transport carried it. The next stage puts an external ingress point (an ephemeral StegBrowser, a StegNode, or a device that already understands the manifest protocol) on the far side of Interlock/InTr with its egress at this boundary; that swaps the transport and leaves the boundary and the record unchanged.
+
+`NODE_INGRESS_ADMITTED` carries what makes this the record of ingress: the boundary-issued `node_endpoint`, the declared class, the standing mode and chain position, the health the node was told about, and the continuation profile it was instructed to use. Boundary-issued fields are kept apart from caller-declared ones, because a caller writing `recognized` about itself is the fabricated-identity bypass. Admission is structural, not authenticated, and the record says so rather than letting a chain entry read as proof of who arrived.
+
+Standing and class resolve before anything is minted, so a refused registration leaves no entry implying a node was admitted — the refusal is answered as a disposition and the chain stays clean.
+
+`.stegverse/transition-ledger/emit.py` needed two repairs before it could hold that record. It published HEAD with no lock and no atomic replacement: eight concurrent appends produced eight receipts, five bound to a null predecessor and one reachable from HEAD, orphaning seven. An HTTP ingress boundary takes concurrent arrivals as its normal case, so the append is now serialized and HEAD is replaced atomically. It also ordered by a host clock; progression is `OSCILLATOR_ONLY`, so the chain is ordered by a heartbeat reference derived from the parameters this repository already declares in `.stegverse/heartbeat-awareness.json` — whose `canonical_owner` is `StegVerse-Labs/.github` — and a reference derived from a clock sample marks itself. `observed_at` stays because the ledger contract requires it, and is descriptive only.
+
 ### The healthy-node packet selects one profile by node class
 
 A device registers once and is told, in the same response, that it reached a healthy node and what to do next. `POST /api/node-standing` on `ALLOW` returns `healthy_node_established`, the node's own `/health` body as `node_health` — so "healthy" means here what it means there rather than being a separate assertion about it — and the instructions for the class that registered.

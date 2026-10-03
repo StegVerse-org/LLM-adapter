@@ -177,6 +177,44 @@ jobs:
         run: "$PYTHON_BIN -m pytest tests/test_node_advertisement.py tests/test_machine_discovery_submission.py tests/test_governed_manifest_ingress.py -v"
       - name: Test canonical node standing gates the machine continuation
         run: "$PYTHON_BIN -m pytest tests/test_node_standing.py -v"
+      - name: Test the ingress boundary records establishing a healthy node
+        run: "$PYTHON_BIN -m pytest tests/test_node_ingress_boundary.py -v"
+      - name: A concurrent arrival never orphans an ingress receipt
+        run: |
+          "$PYTHON_BIN" - <<'PY'
+          import glob, json, os, tempfile, threading
+          from pathlib import Path
+          with tempfile.TemporaryDirectory() as root:
+              # The ledger a deployed node uses is never the one a CI run appends to.
+              os.environ["STEGVERSE_REPO_LEDGER_ROOT"] = root
+              from fastapi.testclient import TestClient
+              from llm_adapter.combined_gateway import app
+              client = TestClient(app)
+
+              def register(index):
+                  client.post("/api/node-standing", json={
+                      "mode": "ESTABLISH_GENESIS", "node_ref": f"ci-concurrent-{index}",
+                      "predecessor": None, "node_class": "LLM_ADAPTER"})
+
+              threads = [threading.Thread(target=register, args=(i,)) for i in range(8)]
+              for thread in threads:
+                  thread.start()
+              for thread in threads:
+                  thread.join()
+              receipts = [json.loads(Path(p).read_text())
+                          for p in glob.glob(os.path.join(root, "receipts", "*.json"))]
+              assert len(receipts) == 8, len(receipts)
+              assert sum(1 for r in receipts if r["previous_receipt_sha256"] is None) == 1
+              by = {r["receipt_sha256"]: r for r in receipts}
+              cursor = json.loads((Path(root) / "HEAD.json").read_text())["receipt_sha256"]
+              reachable = 0
+              while cursor in by:
+                  reachable += 1
+                  cursor = by[cursor]["previous_receipt_sha256"]
+              assert reachable == 8, f"orphaned {8 - reachable} of 8"
+              assert receipts[0]["ordering"] == "OSCILLATOR_HEARTBEAT_EPOCH_ONLY"
+              print("NODE_INGRESS_CHAIN_SURVIVES_CONCURRENT_ARRIVAL=PASS")
+          PY
       - name: Check immutable verified activation receipt contract
         run: "$PYTHON_BIN scripts/check_ecosystem_chat_verified_receipt_contract.py"
       - name: Test sovereign destination activation projection
