@@ -441,3 +441,12 @@ Source surfaces:
 - `llm_adapter/combined_gateway.py` advertisement plus bounded relay route.
 
 The relay accepts only the immutable StegBrowser nonce/count-1 custody receipt and complete exact tuple, keeps credential material server-side, and requires authoritative `RECORDED + reconstruction_status=PASS` with exact digest equality. It grants no custody, execution, transition, publication, provider, route, or governance authority. Authentic runtime custody remains separately evidence-gated.
+
+
+## 2026-10-04 Ecosystem Chat capability-addressed route mapping
+
+Canonical hybrid-collab PR #35 supplies provider-neutral capability, media and entitlement metadata. LLM-adapter reuses the existing recorded SDK manifest-build crossing rather than adding an ingress or broker. An AVAILABLE external text/reasoning descriptor constrained to an ephemeral surface selects only the existing StegBrowser manifest processing pair `stegbrowser / stegverse.route.stegbrowser.v1`; provider/model mismatch is DENY and no substitution is permitted. `llm_adapter.external_llm_connection` remains the text/reasoning execution primitive.
+
+Requested-but-unentitled `UPGRADE_REQUIRED` and `PURCHASE_REQUIRED` outcomes terminate before manifest construction/provider invocation and are recorded by the existing SDK transition ledger as denied intended-action crossings. They remain semantically distinct from `PROVIDER_UNAVAILABLE`. Image/video/audio/code/science/research/data/other classes remain independently extensible and currently return an explicit no-compatible-adapter non-ALLOW rather than falling back to text.
+
+Historical LLM-adapter PR #351 is design evidence only and remains closed/unmerged; no code or authority is imported from that branch. This mapping adds no broker, runtime, SDK ingress, credential authority, device prerequisite, authority plane or external-AI Node identity. Source/CI does not claim live specialized-provider execution.
