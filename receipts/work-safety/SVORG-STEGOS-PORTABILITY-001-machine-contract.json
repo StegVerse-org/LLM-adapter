@@ -31,11 +31,9 @@
       "StegVerse-Labs/.github"
     ],
     "evidence_refs": [
-      "llm_adapter/governed_manifest_ingress.py",
-      "llm_adapter/combined_gateway.py",
-      "StegVerse-org/StegVerse-SDK:stegverse/evaluator_console.py",
+      "llm_adapter/machine_instructions.py",
       "StegVerse-org/StegVerse-SDK:stegverse/machine_contract.py",
-      "StegVerse-Labs/.github:docs/EPHEMERAL_STEGBROWSER_EXTERNAL_AI_AUTHENTIC_RUNTIME_MIRROR_HANDOFF.md"
+      "StegVerse-org/.github:docs/STEGOS_PORTABILITY_MIRROR_HANDOFF.md"
     ]
   },
   "reuse_decision": "EXTEND",
@@ -43,7 +41,7 @@
   "active_owner_collision": {
     "checked": true,
     "collision_found": false,
-    "reason": "Extends existing adapter #356 and consumes SDK-owned declarations from #424; creates no alternative ingress or authority owner."
+    "reason": "Existing parent authorizes only current-source projection/dependency alignment after closed #424; no route, standing or runtime owner changed."
   },
   "readme_impact": {
     "material_function_change": true,
@@ -55,29 +53,9 @@
     ]
   },
   "covered_paths": [
-    "llm_adapter/ai_entry_backend_service.py",
-    "llm_adapter/combined_gateway.py",
-    "llm_adapter/governed_manifest_ingress.py",
-    "tests/test_governed_manifest_ingress.py",
-    "tests/test_node_advertisement.py",
     "llm_adapter/machine_instructions.py",
-    "tests/test_machine_discovery_submission.py",
     "pyproject.toml",
-    ".github/workflows/validate.yml",
-    "iosnoperiod/github/workflows/validate.yml"
+    "tests/test_machine_discovery_submission.py"
   ],
-  "new_files": [
-    {
-      "path": "llm_adapter/machine_instructions.py",
-      "semantic_responsibility": "Project the SDK-owned machine contract into the existing node advertisement.",
-      "closest_existing_implementation": "llm_adapter/combined_gateway.py:machine_readable_instructions; StegVerse-org/StegVerse-SDK:stegverse/machine_contract.py",
-      "decision": "REFACTOR"
-    },
-    {
-      "path": "tests/test_machine_discovery_submission.py",
-      "semantic_responsibility": "Exercise discovery to SDK construction/validation to existing adapter submission with explicitly fixture receivers.",
-      "closest_existing_implementation": "tests/test_governed_manifest_ingress.py; tests/test_node_advertisement.py",
-      "decision": "EXTEND"
-    }
-  ]
+  "new_files": []
 }
