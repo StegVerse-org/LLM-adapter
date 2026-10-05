@@ -86,7 +86,10 @@
     "handoff": "docs/DEEPSEEK_INTR_TRANSPORT_MIRROR_HANDOFF.md",
     "validation_workflow": ".github/workflows/validate-deepseek-intr.yml",
     "endpoint": "https://api.deepseek.com/chat/completions",
-    "supported_models": ["deepseek-v4-flash", "deepseek-v4-pro"],
+    "supported_models": [
+      "deepseek-v4-flash",
+      "deepseek-v4-pro"
+    ],
     "pull_request": 289,
     "validated_head": "3811b9d47e8eb90818ca6f5ce32a25473ff1dd5a",
     "merge_commit": "6eb6603c8a31c0efb46ab58fed47ce304b5733cd",
@@ -124,7 +127,9 @@
     "handoff": "docs/KIMI_INTR_TRANSPORT_MIRROR_HANDOFF.md",
     "validation_workflow": ".github/workflows/validate-kimi-intr.yml",
     "endpoint": "https://api.moonshot.ai/v1/chat/completions",
-    "supported_models": ["kimi-k3"],
+    "supported_models": [
+      "kimi-k3"
+    ],
     "pull_request": 293,
     "ingress_intr_required": true,
     "egress_intr_required": true,
@@ -169,7 +174,8 @@
     "kimi_intr_transport": "built_optional_fail_closed",
     "kimi_governed_executor": "built_optional_fail_closed",
     "kimi_tvc_non_exportable_bridge": "built_optional_fail_closed",
-    "kimi_egress_verifier": "built_non_authorizing_exact_response_binding"
+    "kimi_egress_verifier": "built_non_authorizing_exact_response_binding",
+    "ecosystem_chat_capability_routing": "built_non_authorizing_existing_sdk_crossing"
   },
   "ai_entry_response_fields": {
     "free_tier_trust": {
@@ -183,7 +189,18 @@
         "curiosity_level_meaningful_inquiries": "3-10",
         "reliance_level_evaluation_inquiries": "20-50"
       },
-      "upgrade_for": ["higher_quota", "private_connectors", "premium_models", "longer_retention", "deeper_replay", "deeper_reconstruction", "team_workspace", "api_access", "custom_policy", "exportable_audit_packet"]
+      "upgrade_for": [
+        "higher_quota",
+        "private_connectors",
+        "premium_models",
+        "longer_retention",
+        "deeper_replay",
+        "deeper_reconstruction",
+        "team_workspace",
+        "api_access",
+        "custom_policy",
+        "exportable_audit_packet"
+      ]
     }
   },
   "system_boundary_declaration": {
@@ -195,7 +212,13 @@
     "tests": "tests/test_system_boundary.py",
     "manifest_field": "system_boundary_declaration",
     "receipt_reference_field": "system_boundary_declaration_ref",
-    "surfaces": ["model", "orchestration", "session", "memory", "environment"],
+    "surfaces": [
+      "model",
+      "orchestration",
+      "session",
+      "memory",
+      "environment"
+    ],
     "required_non_claims": {
       "model_has_execution_authority": false,
       "consciousness_claim": "not_evaluated",
@@ -231,7 +254,10 @@
     "zai_provider_credential": "TV/TVC-resolved at execution time only; never serialized",
     "deepseek_provider_credential": "TV/TVC-resolved at execution time only; never serialized",
     "kimi_provider_credential": "TVC non-exportable provider operation; plaintext never delivered to production LLM-adapter",
-    "continuity_search_service": ["STEGVERSE_CONTINUITY_SEARCH_URL", "STEGVERSE_CONTINUITY_SEARCH_KEY optional"],
+    "continuity_search_service": [
+      "STEGVERSE_CONTINUITY_SEARCH_URL",
+      "STEGVERSE_CONTINUITY_SEARCH_KEY optional"
+    ],
     "external_executor": "canonical same-carrier executor is implemented; optional Z.ai, DeepSeek and Kimi governed executors are separately admitted and non-authoritative",
     "site_display": "StegVerse-Labs/Site consumes bounded metadata only after activation evidence and mirror validation",
     "sdk_ingestion": "StegVerse-org/StegVerse-SDK validates system-boundary declaration and non-authorizing metadata"
@@ -285,7 +311,9 @@
     "DeepSeek source validation is not live provider execution or product activation.",
     "Kimi ingress ALLOW is not reusable as egress ALLOW.",
     "Kimi provider output does not grant transition authority.",
-    "Kimi source validation is not live provider execution or product activation."
+    "Kimi source validation is not live provider execution or product activation.",
+    "Capability-route selection does not grant provider execution authority or silently substitute a different capability.",
+    "UPGRADE_REQUIRED and PURCHASE_REQUIRED are entitlement dispositions, not provider-unavailable claims."
   ],
   "local_verification": {
     "unit_tests": "pytest",
