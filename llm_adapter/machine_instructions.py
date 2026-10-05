@@ -15,6 +15,7 @@ def machine_instruction_advertisement() -> dict:
         # native projection. Preserve that boundary requirement explicitly on
         # the adapter-scoped copy without mutating SDK_MACHINE_CONTRACT.
         profile["direct_bypass_without_standing"] = "FAIL_CLOSED"
+        profile["enclosed_validation_is_canonical"] = False
     return {
         "SDK_MACHINE_CONTRACT": contract,
         "machine_readable_instructions": profiles,
