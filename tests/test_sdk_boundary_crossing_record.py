@@ -305,8 +305,11 @@ class EcosystemChatCapabilityRoutingTests(SdkBoundaryCrossingRecordTests):
             "capability": "stegbrowser",
             "route_id": "stegverse.route.stegbrowser.v1",
         })
-        self.assertEqual(body["capability_selection"]["execution_primitive"],
-                         "llm_adapter.external_llm_connection")
+        self.assertEqual(body["capability_selection"]["execution_owner"], "StegBrowser")
+        self.assertEqual(body["capability_selection"]["execution_owner_binding"],
+                         "stegbrowser.llm_browser_execution.execute_manifested_llm_browser_operation")
+        self.assertEqual(body["capability_selection"]["external_llm_connection_role"],
+                         "SEPARATE_PROVIDER_NEUTRAL_TEXT_REASONING_PRIMITIVE_NOT_SELECTED_BY_THIS_ROUTE")
         self.assertIs(body["capability_selection"]["fallback_selected"], False)
 
     def test_upgrade_required_is_recorded_deny_without_provider_execution(self):
