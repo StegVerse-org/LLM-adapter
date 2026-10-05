@@ -335,4 +335,4 @@
     "kimi_tvc_runtime_test": "pytest tests/test_kimi_tvc_runtime.py -q"
   },
   "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation. Optional Z.ai, DeepSeek or Kimi execution does not replace or satisfy that canonical activation definition."
-}\n
+}
