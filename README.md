@@ -640,3 +640,10 @@ External instructions terminate at `SUBMIT_CANONICAL_MANIFEST` and `RETAIN_SUBMI
 `SDK_MACHINE_CONTRACT` derives from existing SDK builder signatures, processor/route declarations, return projections and console commands. The adapter consumes that SDK projection instead of maintaining a second instruction recipe. The console wrapper already dispatched manifest/external-run; its top-level help omitted them. Shared dispatch/help declarations repair that discovery mismatch.
 
 The external-framework helper currently reports `SDK_LOCAL_MANIFEST_HANDOFF`; it does not prove receiver observation. Adapter predecessor checks establish structural validity only, not authenticated standing. Production endpoint binding, authentic standing, runtime execution, deployment and custody remain NOT_PROVEN. No endpoint, runtime, credential path or authority was created.
+
+
+## Ecosystem Chat capability-addressed route selection
+
+The canonical hybrid-collab `CapabilityDescriptor` may be supplied to the existing LLM-adapter SDK manifest-build crossing as non-authoritative selection input. The adapter does not invent a route: an `AVAILABLE` external text/reasoning descriptor whose execution constraints require an ephemeral surface maps only to the already-published `stegbrowser / stegverse.route.stegbrowser.v1` processing pair. Its provider/model identity must match the processor request, and the execution primitive remains `llm_adapter.external_llm_connection`.
+
+`UPGRADE_REQUIRED` and `PURCHASE_REQUIRED` stop before manifest construction or provider execution and are returned through the same recorded SDK build crossing with disposition `DENY`. They are not rewritten as `PROVIDER_UNAVAILABLE`, and no free/local/alternate provider is silently selected. Other capability work classes remain explicit non-ALLOW until an existing compatible execution adapter is installed; they are not coerced into text/reasoning. Descriptor authority remains `NONE`, and successful provider outputs still require independent retained observations with `authority_effect=NONE`.

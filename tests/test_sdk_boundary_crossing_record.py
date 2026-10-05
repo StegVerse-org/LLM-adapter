@@ -34,6 +34,58 @@ STANDING = {"mode": "ESTABLISH_GENESIS", "node_ref": "sdk-crossing-node",
             "predecessor": None, "node_class": "LLM_ADAPTER"}
 
 
+def capability_descriptor(**override):
+    value = {
+        "capability_id": "text-generate",
+        "work_class": "text",
+        "input_media": ["text"],
+        "output_media": ["text"],
+        "provider": "example-provider",
+        "model": "example-model",
+        "entitlement_state": "ENTITLED",
+        "routing_disposition": "AVAILABLE",
+        "required_tier": None,
+        "execution_constraints": {"ephemeral_surface": True, "network_required": True},
+        "evidence_return": "RETAINED_OBSERVATION_REQUIRED",
+        "authority_effect": "NONE",
+    }
+    value.update(override)
+    return value
+
+
+def stegbrowser_arguments():
+    return {
+        "data": {"probe": True},
+        "source_framework": "ecosystem-chat",
+        "source_output_id": "capability-routing",
+        "processor_request": {
+            "schema": "stegbrowser.llm-profile-request.v1",
+            "profile": "llm.v1",
+            "prompt": "Return marker.",
+            "response_marker": "MARKER",
+            "provider": "example-provider",
+            "model": "example-model",
+            "secure_url": "https://example.invalid/ai",
+            "journey": {
+                "schema": "stegverse.packet-carried-endpoint-receipt-journey/v1",
+                "journey_id": "capability-routing",
+                "origin_endpoint": "stegverse:ecosystem-chat",
+                "ephemeral_endpoint": "stegbrowser:ephemeral:capability-routing",
+                "outbound_manifest_sha256": "sha256:" + "a" * 64,
+                "return_manifest_sha256": "sha256:" + "c" * 64,
+                "return_predecessor_manifest_sha256": "sha256:" + "a" * 64,
+            },
+            "browser_actions": [
+                {"op": "fill", "frame_selector": "iframe", "selector": "#input", "value": "Return marker."},
+                {"op": "click", "frame_selector": "iframe", "selector": "#send"},
+                {"op": "wait_for", "frame_selector": "iframe", "selector": ".msg.ai .bubble", "state": "visible", "timeout_ms": 120000},
+                {"op": "read_text", "frame_selector": "iframe", "selector": ".msg.ai .bubble", "timeout_ms": 120000},
+            ],
+        },
+        "created_at": "2026-10-04T00:00:00Z",
+    }
+
+
 def arguments():
     return {"data": {"probe": True}, "source_framework": "crossing-test",
             "source_output_id": "sdk-boundary-crossing",
@@ -240,3 +292,73 @@ class SurfaceTableTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EcosystemChatCapabilityRoutingTests(SdkBoundaryCrossingRecordTests):
+    def test_available_text_descriptor_selects_existing_stegbrowser_route(self):
+        body = self.cross("/api/sdk/manifest/build", {
+            "arguments": stegbrowser_arguments(),
+            "capability_descriptor": capability_descriptor(),
+        }).json()
+        self.assertTrue(body["accepted"])
+        self.assertEqual(body["manifest"]["processing"], {
+            "capability": "stegbrowser",
+            "route_id": "stegverse.route.stegbrowser.v1",
+        })
+        self.assertEqual(body["capability_selection"]["execution_primitive"],
+                         "llm_adapter.external_llm_connection")
+        self.assertIs(body["capability_selection"]["fallback_selected"], False)
+
+    def test_upgrade_required_is_recorded_deny_without_provider_execution(self):
+        body = self.cross("/api/sdk/manifest/build", {
+            "arguments": stegbrowser_arguments(),
+            "capability_descriptor": capability_descriptor(
+                entitlement_state="NOT_ENTITLED",
+                routing_disposition="UPGRADE_REQUIRED",
+                required_tier="pro",
+            ),
+        }).json()
+        self.assertFalse(body["accepted"])
+        self.assertEqual(body["stage"], "CAPABILITY_ENTITLEMENT")
+        self.assertEqual(body["routing_disposition"], "UPGRADE_REQUIRED")
+        self.assertIs(body["provider_execution_performed"], False)
+        self.assertIs(body["fallback_selected"], False)
+        receipt = self.receipts("SDK_MANIFEST_BUILT")[-1]
+        self.assertEqual(receipt["evidence"]["disposition"], "DENY")
+
+    def test_purchase_required_is_not_provider_unavailable(self):
+        body = self.cross("/api/sdk/manifest/build", {
+            "arguments": stegbrowser_arguments(),
+            "capability_descriptor": capability_descriptor(
+                entitlement_state="NOT_ENTITLED",
+                routing_disposition="PURCHASE_REQUIRED",
+            ),
+        }).json()
+        self.assertEqual(body["routing_disposition"], "PURCHASE_REQUIRED")
+        self.assertNotEqual(body["routing_disposition"], "PROVIDER_UNAVAILABLE")
+        self.assertIs(body["provider_execution_performed"], False)
+
+    def test_unsupported_media_class_does_not_fallback_to_text(self):
+        body = self.cross("/api/sdk/manifest/build", {
+            "arguments": stegbrowser_arguments(),
+            "capability_descriptor": capability_descriptor(
+                capability_id="image-generate",
+                work_class="image",
+                output_media=["image"],
+            ),
+        }).json()
+        self.assertFalse(body["accepted"])
+        self.assertEqual(body["stage"], "CAPABILITY_ADAPTER")
+        self.assertEqual(body["routing_disposition"], "NO_COMPATIBLE_EXECUTION_ADAPTER")
+        self.assertIs(body["fallback_selected"], False)
+
+    def test_provider_mismatch_is_denied_without_substitution(self):
+        bad = stegbrowser_arguments()
+        bad["processor_request"]["provider"] = "different-provider"
+        body = self.cross("/api/sdk/manifest/build", {
+            "arguments": bad,
+            "capability_descriptor": capability_descriptor(),
+        }).json()
+        self.assertFalse(body["accepted"])
+        self.assertEqual(body["stage"], "CAPABILITY_PROVIDER_MISMATCH")
+        self.assertIs(body["fallback_selected"], False)

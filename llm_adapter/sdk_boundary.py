@@ -242,6 +242,110 @@ def contract() -> dict[str, Any]:
     }
 
 
+ECOSYSTEM_CHAT_CAPABILITY_WORK_CLASSES = ("text", "reasoning", "code", "image", "video", "audio", "science", "research", "data", "other")
+ECOSYSTEM_CHAT_TEXT_REASONING_PROCESSING = {
+    "capability": "stegbrowser",
+    "route_id": "stegverse.route.stegbrowser.v1",
+}
+ECOSYSTEM_CHAT_ENTITLEMENT_NON_ALLOW = ("UPGRADE_REQUIRED", "PURCHASE_REQUIRED")
+
+
+def resolve_ecosystem_chat_capability_descriptor(value: Mapping[str, Any]) -> dict[str, Any]:
+    """Map canonical Ecosystem Chat capability metadata to an existing route only.
+
+    This boundary never invents a route and never changes provider choice.  The
+    generic descriptor is non-authoritative selection input.  Text/reasoning
+    external-AI work can use the already-published StegBrowser ephemeral route;
+    other work classes remain independently extensible and are refused here
+    until an existing compatible adapter is actually installed.
+    """
+    if not isinstance(value, Mapping):
+        raise ValueError("capability_descriptor_must_be_an_object")
+    work_class = str(value.get("work_class") or "").strip().lower()
+    capability_id = str(value.get("capability_id") or "").strip()
+    provider = str(value.get("provider") or "").strip()
+    routing_disposition = str(value.get("routing_disposition") or "").strip().upper()
+    entitlement_state = str(value.get("entitlement_state") or "").strip().upper()
+    evidence_return = str(value.get("evidence_return") or "").strip()
+    authority_effect = str(value.get("authority_effect") or "").strip()
+    if not capability_id or not provider:
+        raise ValueError("capability_descriptor_identity_required")
+    if work_class not in ECOSYSTEM_CHAT_CAPABILITY_WORK_CLASSES:
+        raise ValueError("capability_descriptor_work_class_invalid")
+    if authority_effect != "NONE":
+        raise ValueError("capability_descriptor_must_be_non_authoritative")
+    if evidence_return != "RETAINED_OBSERVATION_REQUIRED":
+        raise ValueError("capability_descriptor_retained_observation_required")
+    if routing_disposition in ECOSYSTEM_CHAT_ENTITLEMENT_NON_ALLOW:
+        return {
+            "accepted": False,
+            "stage": "CAPABILITY_ENTITLEMENT",
+            "routing_disposition": routing_disposition,
+            "entitlement_state": entitlement_state,
+            "required_tier": value.get("required_tier"),
+            "capability_id": capability_id,
+            "work_class": work_class,
+            "provider": provider,
+            "provider_execution_performed": False,
+            "fallback_selected": False,
+            "authority_effect": "NONE_REJECTION_ONLY",
+        }
+    if routing_disposition != "AVAILABLE":
+        return {
+            "accepted": False,
+            "stage": "CAPABILITY_AVAILABILITY",
+            "routing_disposition": routing_disposition or "ENTITLEMENT_UNKNOWN",
+            "entitlement_state": entitlement_state or "UNKNOWN",
+            "capability_id": capability_id,
+            "work_class": work_class,
+            "provider": provider,
+            "provider_execution_performed": False,
+            "fallback_selected": False,
+            "authority_effect": "NONE_REJECTION_ONLY",
+        }
+    constraints = value.get("execution_constraints") or {}
+    if not isinstance(constraints, Mapping):
+        raise ValueError("capability_descriptor_execution_constraints_invalid")
+    if work_class not in {"text", "reasoning"}:
+        return {
+            "accepted": False,
+            "stage": "CAPABILITY_ADAPTER",
+            "routing_disposition": "NO_COMPATIBLE_EXECUTION_ADAPTER",
+            "entitlement_state": entitlement_state,
+            "capability_id": capability_id,
+            "work_class": work_class,
+            "provider": provider,
+            "provider_execution_performed": False,
+            "fallback_selected": False,
+            "authority_effect": "NONE_REJECTION_ONLY",
+        }
+    if constraints.get("ephemeral_surface") is not True:
+        return {
+            "accepted": False,
+            "stage": "CAPABILITY_EXECUTION_SURFACE",
+            "routing_disposition": "EXISTING_NON_EPHEMERAL_ROUTE_OWNED_ELSEWHERE",
+            "entitlement_state": entitlement_state,
+            "capability_id": capability_id,
+            "work_class": work_class,
+            "provider": provider,
+            "provider_execution_performed": False,
+            "fallback_selected": False,
+            "authority_effect": "NONE_REJECTION_ONLY",
+        }
+    return {
+        "accepted": True,
+        "capability_id": capability_id,
+        "work_class": work_class,
+        "provider": provider,
+        "model": value.get("model"),
+        "processing": dict(ECOSYSTEM_CHAT_TEXT_REASONING_PROCESSING),
+        "execution_primitive": "llm_adapter.external_llm_connection",
+        "retained_observation_required": True,
+        "fallback_selected": False,
+        "authority_effect": "NONE_SELECTION_ONLY",
+    }
+
+
 def build(payload: Mapping[str, Any]) -> dict[str, Any]:
     """Build a manifest from the caller's arguments, or return why it could not.
 
@@ -256,13 +360,78 @@ def build(payload: Mapping[str, Any]) -> dict[str, Any]:
         return rejected("arguments must be an object of builder parameters; "
                         "see sdk_machine_contract.builder.required_parameters",
                         stage="ARGUMENTS")
+    arguments = dict(arguments)
+    selection = None
+    if payload.get("capability_descriptor") is not None:
+        try:
+            selection = resolve_ecosystem_chat_capability_descriptor(payload["capability_descriptor"])
+        except ValueError as exc:
+            return {
+                "schema": REJECTION_SCHEMA,
+                "accepted": False,
+                "stage": "CAPABILITY_DESCRIPTOR",
+                "sdk_rejection": str(exc),
+                "rejection_is_verbatim_from_the_sdk": False,
+                "provider_execution_performed": False,
+                "fallback_selected": False,
+                "authority_effect": "NONE_REJECTION_ONLY",
+            }
+        if selection["accepted"] is False:
+            return {
+                "schema": REJECTION_SCHEMA,
+                **selection,
+                "sdk_rejection": selection["routing_disposition"],
+                "rejection_is_verbatim_from_the_sdk": False,
+                "retry_permitted": selection["routing_disposition"] in ECOSYSTEM_CHAT_ENTITLEMENT_NON_ALLOW,
+            }
+        mapped = selection["processing"]
+        declared_process = str(arguments.get("process") or "").strip().lower()
+        if declared_process and declared_process != mapped["capability"]:
+            return {
+                "schema": REJECTION_SCHEMA,
+                "accepted": False,
+                "stage": "CAPABILITY_PROCESSING_MISMATCH",
+                "sdk_rejection": "capability descriptor route may not be silently substituted",
+                "rejection_is_verbatim_from_the_sdk": False,
+                "requested_process": declared_process,
+                "mapped_process": mapped["capability"],
+                "provider_execution_performed": False,
+                "fallback_selected": False,
+                "authority_effect": "NONE_REJECTION_ONLY",
+            }
+        request = arguments.get("processor_request")
+        if isinstance(request, Mapping):
+            if str(request.get("provider") or "").strip() not in {"", selection["provider"]}:
+                return {
+                    "schema": REJECTION_SCHEMA,
+                    "accepted": False,
+                    "stage": "CAPABILITY_PROVIDER_MISMATCH",
+                    "sdk_rejection": "processor request provider does not match selected capability provider",
+                    "rejection_is_verbatim_from_the_sdk": False,
+                    "provider_execution_performed": False,
+                    "fallback_selected": False,
+                    "authority_effect": "NONE_REJECTION_ONLY",
+                }
+            selected_model = selection.get("model")
+            if selected_model is not None and str(request.get("model") or "").strip() not in {"", str(selected_model)}:
+                return {
+                    "schema": REJECTION_SCHEMA,
+                    "accepted": False,
+                    "stage": "CAPABILITY_MODEL_MISMATCH",
+                    "sdk_rejection": "processor request model does not match selected capability model",
+                    "rejection_is_verbatim_from_the_sdk": False,
+                    "provider_execution_performed": False,
+                    "fallback_selected": False,
+                    "authority_effect": "NONE_REJECTION_ONLY",
+                }
+        arguments["process"] = mapped["capability"]
     try:
-        manifest = build_manifest(**dict(arguments))
+        manifest = build_manifest(**arguments)
     except TypeError as exc:
         return rejected(str(exc), stage="BUILD")
     except ValueError as exc:
         return rejected(str(exc), stage="BUILD")
-    return {
+    response = {
         "schema": BOUNDARY_SCHEMA,
         "surface": "MANIFEST_BUILD",
         "accepted": True,
@@ -270,6 +439,21 @@ def build(payload: Mapping[str, Any]) -> dict[str, Any]:
         "nothing_was_submitted": True,
         "authority_effect": "NONE_CONSTRUCTION_ONLY",
     }
+    if selection is not None:
+        processing = manifest.get("processing") if isinstance(manifest, Mapping) else None
+        if processing != selection["processing"]:
+            return {
+                "schema": REJECTION_SCHEMA,
+                "accepted": False,
+                "stage": "CAPABILITY_ROUTE_MISMATCH",
+                "sdk_rejection": "built manifest did not preserve selected existing capability route",
+                "rejection_is_verbatim_from_the_sdk": False,
+                "provider_execution_performed": False,
+                "fallback_selected": False,
+                "authority_effect": "NONE_REJECTION_ONLY",
+            }
+        response["capability_selection"] = selection
+    return response
 
 
 def validate(payload: Mapping[str, Any]) -> dict[str, Any]:
@@ -350,4 +534,5 @@ __all__ = ["require_standing", "contract", "build", "validate", "submit",
            "installed_runtime", "process_manifest", "record", "crossing_record",
            "record_standing_refusal", "standing_refusal_record",
            "ALLOW", "DENY", "BOUNDARY", "BOUNDARY_SCHEMA", "RECORD_SCHEMA",
-           "REFUSED_CLASS", "REJECTION_SCHEMA", "SURFACES"]
+           "REFUSED_CLASS", "REJECTION_SCHEMA", "SURFACES",
+           "resolve_ecosystem_chat_capability_descriptor"]
