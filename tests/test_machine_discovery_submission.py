@@ -54,6 +54,15 @@ class DiscoverySubmissionTests(unittest.TestCase):
             self.assertEqual(result["verification_refs"], ["fixture:denial"])
             self.assertEqual(value, before)
 
+    def test_adapter_scope_does_not_mutate_native_sdk_projection(self):
+        advertisement = machine_instruction_advertisement()
+        native = advertisement["SDK_MACHINE_CONTRACT"]["machine_readable_instructions"]["EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION"]
+        adapter = advertisement["machine_readable_instructions"]["EXTERNAL_FRAMEWORK_MANIFEST_CONTINUATION"]
+        self.assertFalse(native["native_sdk_requires_llm_adapter"])
+        self.assertEqual(native["submission_api"], "stegverse.external_framework_runner.manifest_external_framework_submission")
+        self.assertEqual(adapter["submission_api"], "llm_adapter.governed_manifest_ingress.process_manifest")
+        self.assertEqual(advertisement["SDK_MACHINE_CONTRACT"], sdk_machine_contract())
+
     def test_missing_standing_prevents_both_paths_from_calling_receiver(self):
         for framework in (False, True):
             value = self.manifest(framework)

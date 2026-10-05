@@ -61,3 +61,38 @@ The external-framework helper currently reports `SDK_LOCAL_MANIFEST_HANDOFF`; it
 Source checkpoint: SDK PR #424 at `1b24ab0fe4ca1690994a7bacb4ac2286a35f2603`; 35 local source tests and 4 subtests passed. Organization PR #31 merged as `96541b2f0dcb33c3fc23a30869d9bcb4258f1f5a` during this session; this Test 5/6 amendment is a follow-up, not part of that merge. SDK and adapter integration still require exact-head CI and merge; no deployment or runtime claim.
 
 Counter reconciliation: session has 4 user prompts; goal recovery count was already 20/20, now 24 qualifying prompts. Do not reset the parent counter. The external Interlock/InTr successor may be registered only after this boundary is retained on canonical main; its concrete scope is reciprocal external-node transport contracts and tests, with an explicit dependency on Tests 5/6 and no change to their caller instructions. No successor ID has yet been invented or registered.
+
+
+## Current-source reconciliation — 2026-10-05
+
+Goal `SVORG-STEGOS-PORTABILITY-001` remains ACTIVE/in_progress during terminal completion. Session prompt 13;
+parent goal prompt 33/20, retained without reset. SDK #424 is closed unmerged;
+this is a newly reconciled bounded delta, not restoration of its stale branch.
+
+COSV omission was a coordination defect, not an exemption. The orchestration
+registry's closed schema does not prevent a separate canonical-profile task.v1
+projection. `control/task-vector-index.json` and its referenced source metrics in
+StegVerse-org/.github propose `20011100100000`, generated with the existing
+StegVerse-Labs/.github `scripts/cosv.py` encoder. This is source coordination only,
+not a WorkerCoordinator claim/fence or execution authority. PR #71 merged as `b6335d4b455a6233e2754c940f487b9e0c9f3576`; COSV `20011100100000` is canonical main.
+
+Current SDK declarations already own manifest construction, validation, route
+selection, peer governance execution profiles and local handoff evidence. The
+bounded repair projects those declarations, adds missing manifest-command help,
+and makes the external-framework helper reuse public run-manifest's canonical
+source-bound dispatcher. Completion egress does not select the outbound route.
+Adapter discovery preserves its existing adapter receiving operation; native SDK
+discovery does not acquire an adapter prerequisite. No standing evaluator changes.
+
+Both instruction profiles terminate at SUBMIT_CANONICAL_MANIFEST and
+RETAIN_SUBMISSION_RESULT_AND_EVIDENCE. Interlock/InTr remains INTERNAL_POST_SUBMISSION;
+EXTERNAL_INTERLOCK_INTR remains deferred until after Tests 5/6. SDK_LOCAL_MANIFEST_HANDOFF
+is not receiver observation. Source tests with injected canonical source/receiver
+fixtures do not establish authentic submission, transport, custody or Test 5/6 PASS.
+
+Local validation: 50 SDK tests + 4 subtests; 53 adapter tests + 2 subtests passed
+against the repaired SDK source. SDK bundled test runner also passed 18 affected tests.
+SDK PR #429 passed all exact-head workflows and merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`. Adapter exact-head CI and merge remain required. No release or runtime attempt.
+Remaining portability obligations retain their existing registry ownership.
+
+Integration order is now satisfied through organization PR #71 and SDK PR #429. This adapter dependency is pinned to canonical SDK merge `ac4fccc1271487c0134ca8f93d17e14ccb395842`. Do not describe closed #424 or the pre-merge #429 branch SHA as the current SDK baseline.

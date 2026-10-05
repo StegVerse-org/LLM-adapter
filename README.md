@@ -652,3 +652,14 @@ The canonical hybrid-collab `CapabilityDescriptor` may be supplied to the existi
 ### StegBrowser owner clarification
 
 Current StegVerse-SDK main resolves the `stegbrowser / stegverse.route.stegbrowser.v1` path through the installed StegBrowser owner `stegbrowser.llm_browser_execution.execute_manifested_llm_browser_operation`. Therefore the capability-selection metadata names StegBrowser as the execution owner. `llm_adapter.external_llm_connection` remains a separate provider-neutral text/reasoning primitive; selecting the StegBrowser route does not by itself invoke it. No bridge between these surfaces is inferred or created.
+
+
+### Test 5/6 machine submission reconciliation
+
+Existing goal: `SVORG-STEGOS-PORTABILITY-001` (parent counter 33/20; completion execution in progress).
+COSV `20011100100000` is canonically admitted on StegVerse-org/.github main by PR #71 merge `b6335d4b455a6233e2754c940f487b9e0c9f3576`. SDK `machine-contract` projects current declarations and
+peer execution profiles. The framework helper uses existing run-manifest routing;
+adapter discovery preserves its own receiving operation. External instructions
+end at canonical manifest submission and evidence retention. Local handoff is not
+receiver observation; external reciprocal Interlock/InTr remains deferred.
+SDK PR #429 is canonically merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`; this adapter pins that canonical merge. See the repository's portability/canonical-standing/machine-contract mirror handoff for retained proof boundaries.
