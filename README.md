@@ -656,13 +656,10 @@ Current StegVerse-SDK main resolves the `stegbrowser / stegverse.route.stegbrows
 
 ### Test 5/6 machine submission reconciliation
 
-Existing goal: `SVORG-STEGOS-PORTABILITY-001` (parent counter 28/20).
-COSV source projection candidate: `20011100100000`, retained with exact metrics
-in StegVerse-org/.github `control/task-vector-index.json`; canonical admission
-requires review/merge. SDK `machine-contract` projects current declarations and
+Existing goal: `SVORG-STEGOS-PORTABILITY-001` (parent counter 33/20; completion execution in progress).
+COSV `20011100100000` is canonically admitted on StegVerse-org/.github main by PR #71 merge `b6335d4b455a6233e2754c940f487b9e0c9f3576`. SDK `machine-contract` projects current declarations and
 peer execution profiles. The framework helper uses existing run-manifest routing;
 adapter discovery preserves its own receiving operation. External instructions
 end at canonical manifest submission and evidence retention. Local handoff is not
 receiver observation; external reciprocal Interlock/InTr remains deferred.
-See the repository's portability/canonical-standing/machine-contract mirror handoff
-for source validation and remaining evidence.
+SDK PR #429 is canonically merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`; this adapter pins that canonical merge. See the repository's portability/canonical-standing/machine-contract mirror handoff for retained proof boundaries.
