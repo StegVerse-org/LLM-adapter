@@ -35,7 +35,7 @@
       "StegVerse-org/StegVerse-SDK:stegverse/ecosystem_chat_ask.py"
     ]
   },
-  "reuse_decision": "CORRECT_EXISTING_DECLARATION",
+  "reuse_decision": "REFACTOR",
   "existing_equivalent_found": true,
   "active_owner_collision": {
     "checked": true,
