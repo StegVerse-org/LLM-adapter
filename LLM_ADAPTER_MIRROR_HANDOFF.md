@@ -450,3 +450,8 @@ Canonical hybrid-collab PR #35 supplies provider-neutral capability, media and e
 Requested-but-unentitled `UPGRADE_REQUIRED` and `PURCHASE_REQUIRED` outcomes terminate before manifest construction/provider invocation and are recorded by the existing SDK transition ledger as denied intended-action crossings. They remain semantically distinct from `PROVIDER_UNAVAILABLE`. Image/video/audio/code/science/research/data/other classes remain independently extensible and currently return an explicit no-compatible-adapter non-ALLOW rather than falling back to text.
 
 Historical LLM-adapter PR #351 is design evidence only and remains closed/unmerged; no code or authority is imported from that branch. This mapping adds no broker, runtime, SDK ingress, credential authority, device prerequisite, authority plane or external-AI Node identity. Source/CI does not claim live specialized-provider execution.
+
+
+## 2026-10-04 StegBrowser execution-owner correction
+
+Re-reading current StegVerse-SDK main demonstrated that the installed Ecosystem Chat governed-ask and `stegbrowser` execution path resolves `stegbrowser.llm_browser_execution.execute_manifested_llm_browser_operation` through the StegBrowser owner. It does not traverse `llm_adapter.external_llm_connection`. The earlier capability-selection metadata from PR #361 named external_llm_connection as the execution primitive too strongly. The mapping now names StegBrowser as the execution owner and explicitly records external_llm_connection as a separate provider-neutral text/reasoning primitive not selected by this route. No new bridge, route, broker or authority is introduced merely to make the two implementations look contiguous.
