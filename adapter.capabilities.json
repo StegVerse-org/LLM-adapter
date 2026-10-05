@@ -313,7 +313,8 @@
     "Kimi provider output does not grant transition authority.",
     "Kimi source validation is not live provider execution or product activation.",
     "Capability-route selection does not grant provider execution authority or silently substitute a different capability.",
-    "UPGRADE_REQUIRED and PURCHASE_REQUIRED are entitlement dispositions, not provider-unavailable claims."
+    "UPGRADE_REQUIRED and PURCHASE_REQUIRED are entitlement dispositions, not provider-unavailable claims.",
+    "Selecting stegverse.route.stegbrowser.v1 does not by itself invoke llm_adapter.external_llm_connection; current SDK main resolves the installed StegBrowser owner directly."
   ],
   "local_verification": {
     "unit_tests": "pytest",
@@ -334,4 +335,4 @@
     "kimi_tvc_runtime_test": "pytest tests/test_kimi_tvc_runtime.py -q"
   },
   "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation. Optional Z.ai, DeepSeek or Kimi execution does not replace or satisfy that canonical activation definition."
-}
+}\n
