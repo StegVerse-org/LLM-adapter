@@ -313,7 +313,8 @@
     "Kimi provider output does not grant transition authority.",
     "Kimi source validation is not live provider execution or product activation.",
     "Capability-route selection does not grant provider execution authority or silently substitute a different capability.",
-    "UPGRADE_REQUIRED and PURCHASE_REQUIRED are entitlement dispositions, not provider-unavailable claims."
+    "UPGRADE_REQUIRED and PURCHASE_REQUIRED are entitlement dispositions, not provider-unavailable claims.",
+    "Selecting stegverse.route.stegbrowser.v1 does not by itself invoke llm_adapter.external_llm_connection; current SDK main resolves the installed StegBrowser owner directly."
   ],
   "local_verification": {
     "unit_tests": "pytest",
