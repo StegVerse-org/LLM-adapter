@@ -1,0 +1,70 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-Labs/Site:docs/SITE_HOMEPAGE_CHAT_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/SHWP-ECOSYSTEM-CHAT-INFERENCE-001.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Source-only capability selection and SDK-crossing refusal semantics; no live provider execution, runtime consequence, deployment, custody, or Master Records transition is performed or claimed."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-Labs/hybrid-collab-bridge/pull/35",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/351",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/355",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/357",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/358",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/360",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/361"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-Labs/hybrid-collab-bridge",
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK"
+    ],
+    "evidence_refs": [
+      "StegVerse-Labs/hybrid-collab-bridge:api/app/models.py:CapabilityDescriptor",
+      "llm_adapter/sdk_boundary.py",
+      "llm_adapter/governed_manifest_ingress.py",
+      "llm_adapter/external_llm_connection.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/route_resolution.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/capability_map.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Extends the existing recorded SDK MANIFEST_BUILD crossing and published StegBrowser route only; does not create another route owner, provider broker, runtime, credential authority, ingress, device prerequisite, authority plane, or external-AI Node identity."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "LLM_ADAPTER_MIRROR_HANDOFF.md",
+      "adapter.capabilities.json"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/sdk_boundary.py",
+    "tests/test_sdk_boundary_crossing_record.py",
+    "README.md",
+    "LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "adapter.capabilities.json",
+    "receipts/work-safety/SHWP-ECOSYSTEM-CHAT-INFERENCE-001-capability-routing.json"
+  ],
+  "new_files": []
+}
