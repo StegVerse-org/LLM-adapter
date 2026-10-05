@@ -11,6 +11,10 @@ def machine_instruction_advertisement() -> dict:
         # Native SDK callers retain their independently projected SDK path.
         profile["receiving_owner"] = "llm_adapter.governed_manifest_ingress"
         profile["submission_api"] = "llm_adapter.governed_manifest_ingress.process_manifest"
+        # Standing is enforced by the adapter boundary, not by the SDK-owned
+        # native projection. Preserve that boundary requirement explicitly on
+        # the adapter-scoped copy without mutating SDK_MACHINE_CONTRACT.
+        profile["direct_bypass_without_standing"] = "FAIL_CLOSED"
     return {
         "SDK_MACHINE_CONTRACT": contract,
         "machine_readable_instructions": profiles,
