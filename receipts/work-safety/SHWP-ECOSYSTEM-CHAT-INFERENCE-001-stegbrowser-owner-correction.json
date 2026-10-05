@@ -1,0 +1,64 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "canonical_handoff_refs": [
+    "StegVerse-Labs/Site:docs/SITE_HOMEPAGE_CHAT_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/SHWP-ECOSYSTEM-CHAT-INFERENCE-001.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Corrects source metadata to the execution owner already selected by current SDK main; performs no provider operation, runtime consequence, custody or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/LLM-adapter#361",
+      "StegVerse-org/StegVerse-SDK:stegverse/ecosystem_chat_ask.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/governed_llm_fan.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/stegbrowser_processor.py"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK"
+    ],
+    "evidence_refs": [
+      "llm_adapter/sdk_boundary.py",
+      "llm_adapter/external_llm_connection.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/governed_llm_fan.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/ecosystem_chat_ask.py"
+    ]
+  },
+  "reuse_decision": "CORRECT_EXISTING_DECLARATION",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Preserves the existing StegBrowser execution owner and leaves external_llm_connection separate; creates no bridge, route, runtime, broker or authority."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "LLM_ADAPTER_MIRROR_HANDOFF.md",
+      "adapter.capabilities.json"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/sdk_boundary.py",
+    "tests/test_sdk_boundary_crossing_record.py",
+    "README.md",
+    "LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "adapter.capabilities.json",
+    "receipts/work-safety/SHWP-ECOSYSTEM-CHAT-INFERENCE-001-stegbrowser-owner-correction.json"
+  ],
+  "new_files": []
+}
