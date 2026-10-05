@@ -50,7 +50,8 @@
       "README.md",
       "LLM_ADAPTER_MIRROR_HANDOFF.md",
       "adapter.capabilities.json"
-    ]
+    ],
+    "reason": "Execution-owner metadata and documentation are corrected together; no new runtime behavior is introduced."
   },
   "covered_paths": [
     "llm_adapter/sdk_boundary.py",
