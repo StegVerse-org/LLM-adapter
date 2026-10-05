@@ -65,8 +65,8 @@ Counter reconciliation: session has 4 user prompts; goal recovery count was alre
 
 ## Current-source reconciliation — 2026-10-05
 
-Goal `SVORG-STEGOS-PORTABILITY-001` remains ACTIVE/in_progress. Session prompt 8;
-parent goal prompt 28/20, retained without reset. SDK #424 is closed unmerged;
+Goal `SVORG-STEGOS-PORTABILITY-001` remains ACTIVE/in_progress during terminal completion. Session prompt 13;
+parent goal prompt 33/20, retained without reset. SDK #424 is closed unmerged;
 this is a newly reconciled bounded delta, not restoration of its stale branch.
 
 COSV omission was a coordination defect, not an exemption. The orchestration
@@ -74,8 +74,7 @@ registry's closed schema does not prevent a separate canonical-profile task.v1
 projection. `control/task-vector-index.json` and its referenced source metrics in
 StegVerse-org/.github propose `20011100100000`, generated with the existing
 StegVerse-Labs/.github `scripts/cosv.py` encoder. This is source coordination only,
-not a WorkerCoordinator claim/fence or execution authority. Until reviewed/merged,
-the projection remains a candidate and must not be described as canonical main.
+not a WorkerCoordinator claim/fence or execution authority. PR #71 merged as `b6335d4b455a6233e2754c940f487b9e0c9f3576`; COSV `20011100100000` is canonical main.
 
 Current SDK declarations already own manifest construction, validation, route
 selection, peer governance execution profiles and local handoff evidence. The
@@ -93,10 +92,7 @@ fixtures do not establish authentic submission, transport, custody or Test 5/6 P
 
 Local validation: 50 SDK tests + 4 subtests; 53 adapter tests + 2 subtests passed
 against the repaired SDK source. SDK bundled test runner also passed 18 affected tests.
-Exact-head CI, review and merge remain required. No release or runtime attempt.
+SDK PR #429 passed all exact-head workflows and merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`. Adapter exact-head CI and merge remain required. No release or runtime attempt.
 Remaining portability obligations retain their existing registry ownership.
 
-Integration order: organization COSV projection PR #71, SDK PR #429 at
-`9dff3c742f291265a74b42dc69c3c560cbe5942a`, then this adapter dependency update.
-The pin uses that exact SDK source commit; canonical-main availability is pending
-SDK review/merge. Do not describe closed #424 as the current SDK baseline.
+Integration order is now satisfied through organization PR #71 and SDK PR #429. This adapter dependency is pinned to canonical SDK merge `ac4fccc1271487c0134ca8f93d17e14ccb395842`. Do not describe closed #424 or the pre-merge #429 branch SHA as the current SDK baseline.
