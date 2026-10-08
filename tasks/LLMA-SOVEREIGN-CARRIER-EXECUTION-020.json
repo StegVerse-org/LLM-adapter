@@ -16,7 +16,7 @@
   "route_authority_owner": "StegVerse-Labs/TVC:TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002",
   "credential_authority_model": "TC/TVC",
   "legacy_repository_note": "Older evidence may name StegVerse-Labs/TV as credential-policy owner. Those references are historical evidence only and do not redefine the current TC/TVC credential-authority model.",
-  "custody_owner": "master-records/orchestration",
+  "record_owner": "master-records/orchestration",
   "surfaces": [
     "scripts/execute_canonical_sovereign_route.py",
     "tests/test_execute_canonical_sovereign_route.py",

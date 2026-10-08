@@ -1,0 +1,69 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002",
+  "cosv_task_vector": "50000000100000",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/StegDB:registry/role-boundary/rulesets/master-records.json#MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "StegVerse-Labs/StegDB:registry/role-boundary/rulesets/master-records.json",
+      "master-records/orchestration:.stegverse/transition-ledger/ecosystem-contract.json"
+    ],
+    "reason": "Renames the custody_owner field to record_owner wherever its value names Master Records (master-records/orchestration). Master Records keeps organization records. The binding checker reads both names; data files write only the new name."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/366",
+      "https://github.com/master-records/orchestration/pull/117"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "master-records/orchestration",
+      "StegVerse-002/micro-node-runtime"
+    ],
+    "evidence_refs": [
+      "scripts/check_stegverse_live_baseline_provider_authority_binding.py",
+      "status/stegverse-live-baseline-provider-authority-binding.json",
+      "adapter.capabilities.json"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Field rename in place; no new client, store or route."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Field rename in task/status/capability data and one checker; README does not document the field.",
+    "evidence_refs": [
+      "README.md",
+      "adapter.capabilities.json"
+    ]
+  },
+  "covered_paths": [
+    "adapter.capabilities.json",
+    "scripts/check_stegverse_live_baseline_provider_authority_binding.py",
+    "status/stegverse-live-baseline-provider-authority-binding.json",
+    "tasks/LLMA-DISTRIBUTED-LLM-EXECUTOR-274.json",
+    "tasks/LLMA-DISTRIBUTED-LLM-WORKLOAD-272.json",
+    "tasks/LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007.json",
+    "tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json",
+    "tasks/LLMA-WORK-MUTATION-SAFETY-320.json",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-VA-GOVERNED-RETRIEVAL-050.json",
+    "tasks/LLMA-ZAI-INTR-EXECUTOR-278.json",
+    "tests/test_organization_record_legacy_names.py"
+  ],
+  "new_files": []
+}

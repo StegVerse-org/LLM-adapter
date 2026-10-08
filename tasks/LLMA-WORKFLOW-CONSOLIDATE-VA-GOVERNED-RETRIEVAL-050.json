@@ -43,7 +43,7 @@
     "issues": ["StegVerse-org/LLM-adapter#90", "StegVerse-org/LLM-adapter#142"],
     "task": "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
     "execution_owner": "resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records",
-    "custody_owner": "master-records/orchestration#15",
+    "record_owner": "master-records/orchestration#15",
     "site_projection_owner": "StegVerse-Labs/Site#113/#241",
     "github_token_required": false
   },

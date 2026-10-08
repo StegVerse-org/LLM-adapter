@@ -16,7 +16,7 @@
   "canonical_model_owner": "StegVerse-002/micro-node-runtime#16/#22",
   "route_authority_owner": "StegVerse-Labs/TVC",
   "credential_authority_model": "TC/TVC",
-  "custody_owner": "master-records/orchestration",
+  "record_owner": "master-records/orchestration",
   "surfaces": [
     "llm_adapter/distributed_workload.py",
     "schemas/ecosystem-chat-distributed-llm-workload.schema.json",

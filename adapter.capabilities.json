@@ -12,7 +12,7 @@
     "github_actions_production_role": false,
     "hosted_provider_required": false,
     "provider_transport_owner": "StegVerse-org/LLM-adapter",
-    "custody_owner": "master-records/orchestration"
+    "record_owner": "master-records/orchestration"
   },
   "sovereign_local_model": {
     "implementation_state": "COMPLETE_RELEASED",
