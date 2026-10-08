@@ -14,7 +14,7 @@
   "canonical_runtime_owner": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
   "route_authority_owner": "StegVerse-Labs/TVC",
   "credential_authority_model": "TC/TVC",
-  "custody_owner": "master-records/orchestration",
+  "record_owner": "master-records/orchestration",
   "surfaces": [
     "llm_adapter/distributed_executor.py",
     "schemas/ecosystem-chat-distributed-llm-execution.schema.json",

@@ -21,7 +21,7 @@
     "canonical_runtime_owner": "StegVerse-org/LLM-adapter#18",
     "canonical_execution_owner": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
     "route_authority": "TV/TVC",
-    "custody_owner": "master-records/orchestration",
+    "record_owner": "master-records/orchestration",
     "site_activation_owner": "StegVerse-Labs/Site",
     "duplicate_execution_lane": false
   },

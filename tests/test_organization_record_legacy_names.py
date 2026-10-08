@@ -71,3 +71,18 @@ def test_orchestration_state_accepts_both_blocker_names():
     assert module.external_blockers_valid(sorted(module.BLOCKERS))
     assert module.external_blockers_valid(sorted(module.LEGACY_BLOCKERS))
     assert not module.external_blockers_valid(["persistent endpoint"])
+
+
+def test_provider_authority_binding_accepts_record_owner_and_legacy_custody_owner():
+    module = _load_script("check_stegverse_live_baseline_provider_authority_binding")
+    assert module.RECORD_OWNER_FIELD == "record_owner"
+    assert module.LEGACY_RECORD_OWNER_FIELD == "custody_owner"
+    binding = json.loads(module.BINDING.read_text(encoding="utf-8"))
+    path_block = binding["provider_authority_path"]
+    assert path_block["record_owner"] == "master-records/orchestration"
+    assert "custody_owner" not in path_block
+    assert module.main() == 0
+    assert module.record_owner({"record_owner": "master-records/orchestration"}) == "master-records/orchestration"
+    assert module.record_owner({"custody_owner": "master-records/orchestration"}) == "master-records/orchestration"
+    assert module.record_owner({"record_owner": "x/y", "custody_owner": "master-records/orchestration"}) == "x/y"
+    assert module.record_owner({}) is None

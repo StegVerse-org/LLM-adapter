@@ -8,7 +8,7 @@
     "authority_owner": "StegVerse-Labs/TVC",
     "runtime_owner": "StegVerse-002/micro-node-runtime",
     "transport_executor": "StegVerse-org/LLM-adapter",
-    "custody_owner": "master-records/orchestration",
+    "record_owner": "master-records/orchestration",
     "organization_handoff": "StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md",
     "local_model_handoff": "StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md",
     "github_hosted_provider_workflow": null

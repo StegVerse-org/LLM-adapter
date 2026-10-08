@@ -30,6 +30,18 @@ def require(value: object, message: str) -> None:
         raise AssertionError(message)
 
 
+RECORD_OWNER_FIELD = "record_owner"
+# Legacy field name (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): the Master Records owner used to be
+# written as "custody_owner". Accepted when reading a binding, never written.
+LEGACY_RECORD_OWNER_FIELD = "custody_owner"
+
+
+def record_owner(path: dict) -> object:
+    if RECORD_OWNER_FIELD in path:
+        return path[RECORD_OWNER_FIELD]
+    return path.get(LEGACY_RECORD_OWNER_FIELD)
+
+
 def main() -> int:
     for path in (BINDING, INTAKE, WORKFLOW_HANDOFF):
         require(path.is_file(), f"missing required artifact: {path.relative_to(ROOT)}")
@@ -48,7 +60,7 @@ def main() -> int:
     require(path.get("authority_owner") == "StegVerse-Labs/TVC", "TVC authority owner mismatch")
     require(path.get("runtime_owner") == "StegVerse-002/micro-node-runtime", "local runtime owner mismatch")
     require(path.get("transport_executor") == "StegVerse-org/LLM-adapter", "transport executor mismatch")
-    require(path.get("custody_owner") == "master-records/orchestration", "custody owner mismatch")
+    require(record_owner(path) == "master-records/orchestration", "Master Records record owner mismatch")
     require(path.get("github_hosted_provider_workflow") is None, "GitHub-hosted provider workflow cannot remain authoritative")
 
     contract = binding.get("provider_contract") or {}

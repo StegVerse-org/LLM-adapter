@@ -23,7 +23,7 @@
   "canonical_sovereign_route_replaced": false,
   "credential_authority": "TV/TVC",
   "route_authority": "Interlock/InTr + applicable TV/TVC provider route admission",
-  "custody_owner": "master-records/orchestration",
+  "record_owner": "master-records/orchestration",
   "provider_output_authority": "NONE",
   "ingress_intr_required": true,
   "egress_intr_required": true,
