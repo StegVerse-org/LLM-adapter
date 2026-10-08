@@ -9,7 +9,7 @@ Merge: `e0aa69706abdb236bf0485b02c038ce8e7d0d495`
 
 ## Authority
 
-This scoped handoff is subordinate to `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`, the StegVerse-Labs canonical work coordination system, existing Interlock/InTr transition authority, TV/TVC credential and route authority, the existing WorkerCoordinator/runtime owners, and Master Records custody/reconstruction.
+This scoped handoff is subordinate to `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`, the StegVerse-Labs canonical work coordination system, existing Interlock/InTr transition authority, TV/TVC credential and route authority, the existing WorkerCoordinator/runtime owners, and Master Records organization records/reconstruction.
 
 The safety gate is validation-only. It grants no execution, transition, admission, route, credential, claim/fence, runtime, provider, publication, or custody authority.
 
@@ -60,7 +60,7 @@ Do not duplicate or move into this gate:
 - provider transport implementation;
 - LLM identity or capability semantics;
 - WorkerCoordinator / HeartBeat / resident runtime behavior;
-- Master Records custody or reconstruction;
+- Master Records organization record or reconstruction;
 - live provider/runtime validation.
 
 Those remain owned by their canonical components. This gate only blocks repository mutation when the pre-work safety record is incomplete or internally contradictory.

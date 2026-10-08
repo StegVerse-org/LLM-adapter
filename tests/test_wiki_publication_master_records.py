@@ -203,6 +203,8 @@ def test_record_requires_recorded_pass_evidence_pass_digest_equality_and_retaine
     assert closure["required_evidence_validation_status"] == "PASS"
     assert closure["receipt_sha256"] == closure["reconstructed_receipt_sha256"] == digest
     assert observed["post"][2]["Authorization"] == "Bearer server-token"
+    assert observed["post"][1]["record_requested"] is True
+    assert "custody_requested" not in observed["post"][1]
     assert observed["get"][0].endswith(f"/{digest}/reconstruction")
 
 def test_mutation_gate_reconstructs_exact_publication_closure(monkeypatch):
@@ -226,7 +228,7 @@ def test_mutation_gate_reconstructs_exact_publication_closure(monkeypatch):
             "receipt": receipt,
             "master_records_grants_transition_authority": False,
         })
-    closure = mod.require_publication_master_records_closure(
+    closure = mod.require_publication_master_records_organization_record(
         receipt_sha256=digest,
         publication_transition_id="publication:test",
         publication_transition=value,

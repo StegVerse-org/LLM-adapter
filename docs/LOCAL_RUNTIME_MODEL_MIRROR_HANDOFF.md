@@ -111,7 +111,7 @@ model output != authority
 runtime discovery != admissibility
 runtime launch != public deployment
 local inference proof != Ecosystem Chat activation
-local inference proof != Master Records custody
+local inference proof != Master Records organization record
 Ollama discovery compatibility != Ollama dependency
 repository-developed reference model != foundation LLM
 ```

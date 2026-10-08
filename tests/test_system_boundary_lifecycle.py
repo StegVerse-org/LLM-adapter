@@ -16,7 +16,7 @@ def sample_response():
         "authority": {
             "repository_mutation_allowed": False,
             "publication_allowed": False,
-            "local_persistence_is_master_records_custody": False,
+            "local_persistence_is_master_records_organization_record": False,
         },
     }
 

@@ -100,7 +100,7 @@ This repository remains the validated source implementation of the two precursor
 Destination-owned propagation remains required where applicable, but is not owned by this completed implementation lane:
 
 - `StegVerse-Labs/Site` — workload admission and hosted/public surfaces;
-- `master-records/orchestration` — custody/reconstruction services and connection/state lifetimes;
+- `master-records/orchestration` — organization-record/reconstruction services and connection/state lifetimes;
 - `GCAT-BCAT-Engine/Publisher` — publication workers and transport;
 - `AdmittedCode` — gate/API/browser/provider-adapter decomposition;
 - StegVerse-owned hosting/deployment plane — micro-node scheduling, leases, scale-to-zero, secret materialization, endpoint discovery, replacement and teardown;

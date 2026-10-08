@@ -108,7 +108,7 @@ TVC ROUTE_ADMITTED receipt
 -> reject route/execution authority escalation
 -> execute exact endpoint through StegVerseLocalHTTPProviderClient
 -> persist request/response hashes + MEASURED usage
--> reuse Master Records provider-usage custody
+-> reuse Master Records provider-usage organization record
 -> advance to same-execution transition reconstruction
 ```
 
@@ -135,7 +135,7 @@ heartbeat persistent lifecycle: COMPLETE_MERGED_VALIDATED
 heartbeat automatic TVC invocation: COMPLETE_MERGED_VALIDATED
 TVC canonical proof compatibility: COMPLETE_MERGED_SOURCE
 orphan recovery: StegVerse-Labs/.github#78 COMPLETE_RELEASED
-G20 lifecycle custody: master-records/orchestration#27 COMPLETE_RELEASED
+G20 lifecycle organization record: master-records/orchestration#27 COMPLETE_RELEASED
 hosted GitHub activation/persistence retirement: StegVerse-Labs/.github#79 COMPLETE_RELEASED
 ```
 
@@ -191,7 +191,7 @@ orphan recovery: StegVerse-Labs/.github / RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-
 credential authority: TC/TVC / credential class NONE
 route authority: StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json
 provider transport/usage: StegVerse-org/LLM-adapter#18 + task 020 COMPLETE_RELEASED
-custody/reconstruction: master-records/orchestration
+organization records/reconstruction: master-records/orchestration
 site activation: StegVerse-Labs/Site#239/#242
 required downstream ingestion after immutable verified activation: GCAT-BCAT-Engine/Publisher, StegVerse-Labs/admissibility-wiki, StegVerse-002/stegguardian-wiki
 ```

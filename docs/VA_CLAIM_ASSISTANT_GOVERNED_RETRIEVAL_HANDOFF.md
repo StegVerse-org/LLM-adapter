@@ -111,12 +111,12 @@ third_party_runtime_authority: NONE
 
 ## Machine-observable release condition for live activation
 
-The live lane remains incomplete until a resident sovereign worker produces real service-connection execution evidence through the admitted TVC capability and canonical StegGate identity, the observer transitions to `COMPLETE`, Master Records returns custody `RECORDED` plus reconstruction `PASS`, and Site projects only the immutable verified capability. Missing execution evidence must remain `BLOCKED`.
+The live lane remains incomplete until a resident sovereign worker produces real service-connection execution evidence through the admitted TVC capability and canonical StegGate identity, the observer transitions to `COMPLETE`, Master Records returns organization record `RECORDED` plus reconstruction `PASS`, and Site projects only the immutable verified capability. Missing execution evidence must remain `BLOCKED`.
 
 ## Exact remaining product tasks
 
 - issue #142/task 023: sovereign VACC provider execution through TVC;
-- `master-records/orchestration#15`: custody and reconstruction of genuine execution/privacy events;
+- `master-records/orchestration#15`: organization records and reconstruction of genuine execution/privacy events;
 - `StegVerse-Labs/Site#113/#241`: receipt-derived deployed capability projection;
 - `StegVerse-Labs/Site#116`: production PII detection/redaction/model-leakage and substantive document evidence;
 - admitted current `VA-CRISIS-LINE` source or continued urgent-safety fail-closed posture;

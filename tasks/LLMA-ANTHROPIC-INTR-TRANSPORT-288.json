@@ -58,7 +58,7 @@
   "activation": {
     "live": false,
     "live_provider_execution": false,
-    "master_records_custody": false,
+    "master_records_organization_record": false,
     "egress_allow_observed": false,
     "site_activation": false
   },

@@ -429,7 +429,7 @@ def build_master_records_handoff(envelope: Mapping[str, Any], evidence: Mapping[
         "usage_event": dict(usage),
         "credential_material_present": False,
         "authority_effect": AUTHORITY_EFFECT,
-        "custody_grants_authority": False,
+        "record_grants_authority": False,
     }
 
 
@@ -438,7 +438,7 @@ def verify_master_records_receipt(receipt: Mapping[str, Any]) -> dict[str, Any]:
         raise CustodyRejected("Master Records receipt object required")
     out = dict(receipt)
     if out.get("accepted") is not True:
-        raise CustodyRejected("Master Records did not accept custody")
+        raise CustodyRejected("Master Records did not record the organization record")
     if out.get("authority_effect", "NONE") != "NONE":
         raise AuthorityEscalation("custody receipt may not grant authority")
     return out

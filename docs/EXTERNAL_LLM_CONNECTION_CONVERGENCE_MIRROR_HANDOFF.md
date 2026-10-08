@@ -15,7 +15,7 @@ Make Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic use one provider-neutral gover
 - transition admission: existing Interlock/InTr only;
 - credential/provider-operation authority: existing TV/TVC only;
 - runtime work ownership: existing WorkerCoordinator only;
-- custody/reconstruction: existing Master Records only;
+- organization records/reconstruction: existing Master Records only;
 - HB/oscillator: reference/carrier only, never execution or admission authority.
 
 This lane creates none of those systems.
@@ -30,7 +30,7 @@ ProviderRequest
 -> provider-specific transport
 -> provider response / authority_effect NONE
 -> provider usage event
--> Master Records usage/custody submission
+-> Master Records provider-usage organization record
 -> exact response hash
 -> externally-produced egress InTr ALLOW bound to exact response
 -> downstream consequence
@@ -79,7 +79,7 @@ Direct credential-resolver executors remain compatibility/test surfaces for Z.ai
 
 ## Runtime proof boundary
 
-Source, CI, merge, public pages, and provider self-description are not live connection evidence. A provider is `CONNECTED` only after authentic same-execution evidence proves ingress ALLOW, TV/TVC single-use provider operation, provider response, Master Records custody/reconstruction, and exact-response egress ALLOW.
+Source, CI, merge, public pages, and provider self-description are not live connection evidence. A provider is `CONNECTED` only after authentic same-execution evidence proves ingress ALLOW, TV/TVC single-use provider operation, provider response, Master Records organization records/reconstruction, and exact-response egress ALLOW.
 
 ## Current evidence
 
@@ -122,6 +122,6 @@ The preflight resolved canonical handoffs, task registry, Master Records authori
 
 ## Runtime continuation
 
-The source lane is closed. The canonical successor is `SHWP-ECOSYSTEM-CHAT-INFERENCE-001` in `StegVerse-Labs/.github`. That task must reuse the existing WorkerCoordinator/independent task-control resident lane, Interlock/InTr admission, TV/TVC provider-operation authority, LLM-adapter provider-neutral transport, and Master Records custody/reconstruction. No provider is `CONNECTED` until the authentic same-execution chain produces exact ingress ALLOW, a TV/TVC single-use provider operation, an authentic provider response, Master Records custody/reconstruction PASS, and exact-response egress ALLOW.
+The source lane is closed. The canonical successor is `SHWP-ECOSYSTEM-CHAT-INFERENCE-001` in `StegVerse-Labs/.github`. That task must reuse the existing WorkerCoordinator/independent task-control resident lane, Interlock/InTr admission, TV/TVC provider-operation authority, LLM-adapter provider-neutral transport, and Master Records organization records/reconstruction. No provider is `CONNECTED` until the authentic same-execution chain produces exact ingress ALLOW, a TV/TVC single-use provider operation, an authentic provider response, Master Records organization records/reconstruction PASS, and exact-response egress ALLOW.
 
 Do not reopen this repository's functional convergence source unless that authentic runtime proof exposes a bounded defect.

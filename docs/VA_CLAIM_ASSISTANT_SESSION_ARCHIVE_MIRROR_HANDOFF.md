@@ -24,7 +24,7 @@ Adjacent: PRIVATE_CLAIM_DOCUMENT_WORKSPACE
           VETERAN_APPROVED_AUTOMATED_CLAIM_FILING
           FEDERAL_PLUS_SECURITY
           PII_REDACTION_AND_POST_CREDENTIAL_IDENTITY_REALIGNMENT
-          MASTER_RECORDS_CUSTODY_AND_RECONSTRUCTION
+          MASTER_RECORDS_ORGANIZATION_RECORD_AND_RECONSTRUCTION
           GOVERNED_PROVIDER_EXECUTION
           ECOSYSTEM_CHAT_ACTIVATION_AND_PROPAGATION
 ```
@@ -61,7 +61,7 @@ hosted_provider_fallback: DISALLOWED
 model_output_authority: NONE
 ```
 
-The preserved VACC gates remain: privacy guard PASS before model input, admitted official/federal grounding, fresh TVC admission, bounded generation, Master Records custody, same-execution reconstruction PASS, and Site projection only from verified execution evidence.
+The preserved VACC gates remain: privacy guard PASS before model input, admitted official/federal grounding, fresh TVC admission, bounded generation, Master Records organization record, same-execution reconstruction PASS, and Site projection only from verified execution evidence.
 
 ## Historical release proof
 

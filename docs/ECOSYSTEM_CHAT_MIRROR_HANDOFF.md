@@ -11,7 +11,7 @@ canonical_model_runtime_owner: StegVerse-002/micro-node-runtime#16/#22
 canonical_binding_task: tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json
 canonical_execution_owner: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
 recovery_task: RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28
-custody_reconstruction_owner: master-records/orchestration
+organization_records_reconstruction_owner: master-records/orchestration
 credential_authority: TV/TVC
 third_party_deployment_dependency: NONE_ALLOWED
 third_party_inference_platform_dependency: NONE_ALLOWED
@@ -80,7 +80,7 @@ recovery fencing token: 22
 old fencing token: 20
 old authority ended: true
 old authority reused: false
-Master Records custody valid: true
+Master Records organization-record valid: true
 successor authority granted by recovery: false
 ```
 
@@ -107,13 +107,13 @@ No earlier level implies the next.
 
 ## Same-carrier runtime seam
 
-`verify_sovereign_model_runtime.py` is proof-oriented and may terminate its probe process. Production activation therefore requires the canonical live model process to remain available across health/model-identity proof → TVC route admission → LLM-adapter request → E1/model/E2 evidence → usage persistence → Master Records custody/reconstruction. The process may be retired only after the bounded same-execution evidence path completes.
+`verify_sovereign_model_runtime.py` is proof-oriented and may terminate its probe process. Production activation therefore requires the canonical live model process to remain available across health/model-identity proof → TVC route admission → LLM-adapter request → E1/model/E2 evidence → usage persistence → Master Records organization records/reconstruction. The process may be retired only after the bounded same-execution evidence path completes.
 
 ## Collision and authority boundaries
 
 - Do not restore GitHub Models, Render, Cloudflare, GitHub Actions, PATs, or private-repository checkout as production blockers or authorities.
 - Do not create another local model/runtime authority in LLM-adapter.
-- Do not create a second heartbeat, worker registry, TV/TVC route authority, governance engine, or Master Records custody path.
+- Do not create a second heartbeat, worker registry, TV/TVC route authority, governance engine, or Master Records organization-record path.
 - Recovery authority is continuity-only and may not execute parent inference.
 - Provider output, usage measurement, workflow success, recovery completion, custody, or reconstruction alone do not grant activation authority.
 - Activation requires the exact same-execution zero-blocker receipt and downstream verified consumption.
@@ -139,7 +139,7 @@ MERGED INTO: StegVerse-org/LLM-adapter/tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-
 ALSO CONTINUED BY: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
 RECOVERY: StegVerse-Labs/.github/control/worker-registry.d/ecosystem-chat-orphan-recovery-hb28.json
 MODEL OWNER: StegVerse-002/micro-node-runtime#16/#22
-CUSTODY OWNER: master-records/orchestration
+ORGANIZATION RECORD OWNER: master-records/orchestration
 unique_chat_owned_work_remaining: false
 product_activation_complete: false
 ```
@@ -181,7 +181,7 @@ released source/runtime contract
 !=
 observed live sovereign execution
 !=
-Master Records custody/reconstruction
+Master Records organization records/reconstruction
 !=
 Site activation
 ```

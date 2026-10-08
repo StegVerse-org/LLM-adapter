@@ -1,9 +1,11 @@
-"""Canonical governed-publication closure over the existing Master Records API.
+"""Master Records organization record of a governed wiki-publication decision.
 
-This module validates already-produced SDK and Interlock/InTr evidence, records one
-canonical state-transition receipt through master-records/orchestration, and
-reconstructs it before returning a closure. It creates no governance, transition,
-credential, custody, publication, or execution authority.
+Interlock/InTr admits the publication transition. This module validates the
+already-produced SDK and Interlock/InTr evidence, writes one canonical
+state-transition receipt into the Master Records organization record through
+master-records/orchestration, and reconstructs it before returning the governed
+publication result. It creates no governance, transition, credential, record,
+publication, or execution authority.
 """
 from __future__ import annotations
 
@@ -271,7 +273,8 @@ def record_governed_publication_closure(
         "schema": SUBMISSION_SCHEMA,
         "receipt": receipt,
         "authority_requested": False,
-        "custody_requested": True,
+        # Formerly ``custody_requested`` (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002).
+        "record_requested": True,
         "reconstruction_requested": True,
     }
     try:
@@ -279,7 +282,7 @@ def record_governed_publication_closure(
         recorded_response.raise_for_status()
         recorded = recorded_response.json()
     except Exception as exc:
-        raise PublicationCustodyError(f"master_records_submission_failed:{type(exc).__name__}") from exc
+        raise PublicationCustodyError(f"master_records_organization_record_write_failed:{type(exc).__name__}") from exc
     receipt_sha256 = _validate_recorded(recorded, receipt)
     try:
         reconstruction_response = get(
@@ -309,7 +312,7 @@ def record_governed_publication_closure(
     }
 
 
-def require_publication_master_records_closure(
+def require_publication_master_records_organization_record(
     *,
     receipt_sha256: str,
     publication_transition_id: str,
@@ -370,5 +373,5 @@ __all__ = [
     "TRANSITION_ID",
     "build_publication_state_receipt",
     "record_governed_publication_closure",
-    "require_publication_master_records_closure",
+    "require_publication_master_records_organization_record",
 ]

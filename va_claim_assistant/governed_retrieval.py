@@ -105,10 +105,16 @@ def build_evidence_requirement_answer(
     )
 
 
+ORGANIZATION_RECORD_RECEIPT = "master_records_organization_record_receipt"
+# Evidence naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): records
+# written before the migration name this evidence by its legacy name; readers accept it.
+LEGACY_ORGANIZATION_RECORD_RECEIPT = "master_records_custody_receipt"
+
+
 def _required_evidence(route: str) -> list[str]:
     common = [
         "tvc_capability_receipt",
-        "master_records_custody_receipt",
+        ORGANIZATION_RECORD_RECEIPT,
         "reconstruction_receipt",
     ]
     if route == "document_organization":
@@ -227,7 +233,12 @@ def validate_dispatch(record: dict[str, Any], registry: dict[str, Any]) -> None:
         if not isinstance(answer, dict) or answer.get("route") != route:
             raise ValueError("answer-ready dispatch answer mismatch")
         validate_answer(answer, registry)
-        if next_required != _required_evidence(route):
+        expected_required = _required_evidence(route)
+        legacy_required = [
+            LEGACY_ORGANIZATION_RECORD_RECEIPT if item == ORGANIZATION_RECORD_RECEIPT else item
+            for item in expected_required
+        ]
+        if next_required not in (expected_required, legacy_required):
             raise ValueError("answer-ready dispatch lost required evidence gates")
         if route == "document_organization":
             if (

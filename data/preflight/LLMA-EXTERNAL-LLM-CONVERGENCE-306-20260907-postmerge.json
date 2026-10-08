@@ -37,7 +37,7 @@
     "exact_request_intr_ingress_allow",
     "tvc_single_use_non_exportable_provider_operation",
     "authentic_provider_response",
-    "master_records_custody_and_reconstruction",
+    "master_records_organization_record_and_reconstruction",
     "exact_response_intr_egress_allow"
   ],
   "claims": {

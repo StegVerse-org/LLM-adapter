@@ -54,7 +54,7 @@
     "Do not claim custody, reconstruction, deployment, Site activation, filing, submission, representation, adjudication, rating, medical opinion, publication, or release authority.",
     "Do not modify TVC canonical source; preserve its commit and blob identity in the caller repository mirror."
   ],
-  "next_executable_action": "Continue StegVerse-org/LLM-adapter#90 with the distinct explicit-authority single-request provider execution lane. The lane must fail closed until protected Master Records configuration and a valid unexpired provider execution authority receipt are available.",
+  "next_executable_action": "Continue StegVerse-org/LLM-adapter#90 with the distinct explicit-authority single-request provider execution lane. The lane must refuse to run until protected Master Records organization-record configuration and a valid unexpired provider execution authority receipt are available.",
   "next_task_after_release": "Implement and validate the workflow-dispatch-only VA service_connection provider execution lane, then project only receipt-verified execution to StegVerse-Labs/Site#113.",
   "session_consolidation": {
     "state": "MERGED_INTO_CANONICAL_WORKSTREAM",

@@ -35,7 +35,7 @@ def test_local_node_vertical_slice(monkeypatch) -> None:
     health = health_response.json()
     assert health["status"] == "ok"
     assert health["governed_provider_enabled"] is False
-    assert health["local_persistence_is_master_records_custody"] is False
+    assert health["local_persistence_is_master_records_organization_record"] is False
     assert health["provider_output_is_authority"] is False
 
     transition = {
@@ -73,5 +73,5 @@ def test_local_node_vertical_slice(monkeypatch) -> None:
     assert result["run_id"] == transition["run_id"]
     assert result["provider"]["used"] is False
     assert result["authority"]["provider_usage_grants_authority"] is False
-    assert result["authority"]["provider_usage_is_master_records_custody"] is False
+    assert result["authority"]["provider_usage_is_master_records_organization_record"] is False
     assert result["master_records_usage_submission"] is None

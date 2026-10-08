@@ -60,7 +60,7 @@ def _response() -> dict:
         },
         "custody_submission": {
             "state": "RECORDED",
-            "custody_receipt_id": "master-records-custody-receipt:hmac-sha256:test",
+            "custody_receipt_id": "master-records-organization-record-receipt:hmac-sha256:test",
         },
         "authority": {
             "provider_output_is_authority": False,
@@ -68,11 +68,11 @@ def _response() -> dict:
             "publication_allowed": False,
             "gateway_receipt_is_final": False,
             "final_response_receipt_is_repository_execution_authority": False,
-            "local_persistence_is_master_records_custody": False,
+            "local_persistence_is_master_records_organization_record": False,
             "site_grants_admissibility": False,
             "provider_usage_grants_authority": False,
-            "provider_usage_is_master_records_custody": True,
-            "master_records_installed": True,
+            "provider_usage_is_master_records_organization_record": True,
+            "organization_record_installed": True,
         },
     }
 
@@ -117,3 +117,25 @@ def test_authority_escalation_fails_closed() -> None:
     response["authority"]["publication_allowed"] = True
     blockers = validate_runtime_result(_health(), response, _identity())
     assert "authority_publication_allowed_must_be_false" in blockers
+
+
+def test_legacy_authority_key_names_from_deployed_adapters_are_accepted() -> None:
+    response = _response()
+    authority = response["authority"]
+    authority["local_persistence_is_master_records_custody"] = authority.pop(
+        "local_persistence_is_master_records_organization_record"
+    )
+    authority["provider_usage_is_master_records_custody"] = authority.pop(
+        "provider_usage_is_master_records_organization_record"
+    )
+    authority["master_records_installed"] = authority.pop("organization_record_installed")
+    assert validate_runtime_result(_health(), response, _identity()) == []
+
+
+def test_missing_organization_record_projection_fails_closed() -> None:
+    response = _response()
+    del response["authority"]["organization_record_installed"]
+    del response["authority"]["provider_usage_is_master_records_organization_record"]
+    blockers = validate_runtime_result(_health(), response, _identity())
+    assert "organization_record_installation_projection_missing" in blockers
+    assert "provider_usage_organization_record_projection_missing" in blockers

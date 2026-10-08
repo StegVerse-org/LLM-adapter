@@ -77,7 +77,7 @@ Mandatory invariants:
 
 ```text
 controls_user_return_only: true
-suppresses_master_records_custody: false
+suppresses_master_records_organization_record: false
 erases_ecosystem_transitions: false
 grants_authority: false
 master_records_transition_custody_independent_of_return_projection: true
@@ -109,12 +109,12 @@ master-records/orchestration/render-custody.yaml
 [done] per-unit stream identity/sequence/idempotency enforcement installed
 [done] governed model-facing result envelope installed
 [done] ALL / SELECTED / NONE caller return projection installed
-[done] explicit caller-return vs Master Records custody separation installed
+[done] explicit caller-return vs Master Records organization-record separation installed
 [done] ALLOW/DENY/REVIEW/FAIL_CLOSED preservation installed
 [done] malformed/dependency/non-ALLOW-consequence fail-closed behavior installed
 [done] StegCore exact-run receipt semantics available
 [done] StegCore shared-backing provider contract available
-[done] Master Records exact-run custody routes available on canonical deployment target
+[done] Master Records exact-run organization-record routes available on canonical deployment target
 ```
 
 ## Worker continuation boundary
@@ -140,7 +140,7 @@ The external LLM must never receive an ungoverned or fail-open answer presented 
 
 ## Activation boundary
 
-Master Records route composition is installed, but production custody activation remains gated by the Master Records repository-wide persistent-storage, backup/restore, and live-authenticated round-trip readiness requirements. The adapter must not represent installed custody code as live production custody until those conditions are evidenced.
+Master Records route composition is installed. Production use of the Master Records organization record still waits on the Master Records repository-wide persistent-storage, backup/restore, and live-authenticated round-trip readiness requirements. The adapter must not represent installed organization-record code as a live production organization record until those conditions are evidenced.
 
 ## Validation status
 

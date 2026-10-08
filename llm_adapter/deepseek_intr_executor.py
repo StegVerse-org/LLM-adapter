@@ -1,7 +1,7 @@
 """Governed execution wrapper for optional DeepSeek InTr transport.
 
 Ingress/egress decisions are externally produced by Interlock/InTr. This module
-reuses canonical provider-usage and Master Records submission paths and grants no
+reuses canonical provider-usage recording and the Master Records organization record and grants no
 authority itself.
 """
 from __future__ import annotations
@@ -18,7 +18,7 @@ from .deepseek_intr_transport import (
     DeepSeekTransportResult,
     build_deepseek_intr_envelope,
 )
-from .master_records_usage_submission import submit_provider_usage_to_master_records
+from .master_records_usage_record import record_provider_usage_in_master_records
 from .provider_request import ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
 
@@ -96,7 +96,7 @@ def _metric(value: Any, *, source_ref: str) -> ProviderMetric:
     return ProviderMetric(value=None, unit="tokens", evidence_class="UNAVAILABLE", source_ref=source_ref)
 
 
-def _verify_custody_reply(reply: Mapping[str, Any]) -> None:
+def _verify_organization_record_reply(reply: Mapping[str, Any]) -> None:
     for key in ("authority_granted", "grants_authority", "assumes_governance"):
         if reply.get(key):
             raise DeepSeekExecutionError(f"master_records_usage_authority_escalation:{key}")
@@ -116,7 +116,7 @@ def execute_governed_deepseek(
     carrier_ref: str,
     credential_resolver: Callable[[], str],
     transport_factory: Callable[..., DeepSeekHTTPTransport] = DeepSeekHTTPTransport,
-    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records,
+    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_in_master_records,
 ) -> DeepSeekGovernedExecution:
     for label, value in (("session_id", session_id), ("transition_id", transition_id), ("measurement_id", measurement_id)):
         if not value.strip():
@@ -155,7 +155,7 @@ def execute_governed_deepseek(
     master_records_usage = usage_submitter(event)
     if not isinstance(master_records_usage, Mapping):
         raise DeepSeekExecutionError("master_records_usage_reply_malformed")
-    _verify_custody_reply(master_records_usage)
+    _verify_organization_record_reply(master_records_usage)
 
     egress_handoff = {
         "schema": "stegverse.llm_adapter.deepseek_egress_handoff/v1",

@@ -2,7 +2,7 @@
   "task_id": "LLMA-ZAI-INTR-EXECUTOR-278",
   "issue": 278,
   "repository": "StegVerse-org/LLM-adapter",
-  "goal": "Bind the merged Z.ai Interlock/InTr transport to provider execution, provider-usage evidence, Master Records custody, and exact-response egress verification without creating parallel authority.",
+  "goal": "Bind the merged Z.ai Interlock/InTr transport to provider execution, provider-usage evidence, Master Records organization record, and exact-response egress verification without creating parallel authority.",
   "state": "COMPLETE_RELEASED_SOURCE",
   "authority_effect": "NONE_EXECUTION_WRAPPER_ONLY",
   "depends_on": {
@@ -40,7 +40,7 @@
     "executor_source": "COMPLETE",
     "deterministic_tests_implemented": "COMPLETE",
     "provider_usage_integration": "COMPLETE",
-    "master_records_submission_reuse": "COMPLETE",
+    "master_records_organization_record_reuse": "COMPLETE",
     "egress_exact_response_binding": "COMPLETE",
     "readme_required": true,
     "readme_in_same_change_set": "COMPLETE",
@@ -55,7 +55,7 @@
   "collision_boundaries": [
     "existing Interlock/InTr transition authority",
     "TV/TVC credential and route authority",
-    "master-records/orchestration custody authority",
+    "master-records/orchestration organization record",
     "StegVerse-Labs/.github heartbeat and WorkerCoordinator",
     "canonical sovereign local provider execution"
   ],

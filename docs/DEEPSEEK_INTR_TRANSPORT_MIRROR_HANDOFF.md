@@ -65,7 +65,7 @@ canonical ProviderRequest provenance
 -> reject any credential echo in provider body or emitted evidence
 -> provider output authority_effect NONE
 -> canonical provider-usage event
--> existing Master Records provider-usage submission
+-> existing Master Records provider-usage organization record
 -> deterministic egress handoff requests ALLOW but assumes none
 -> separate Interlock/InTr egress evaluation
 -> exact egress ALLOW receipt binds exact provider response hash
@@ -157,7 +157,7 @@ No implementation, schema, test, README, capability-projection, validation, or m
 Separately governed future work may include:
 
 1. optional authentic runtime exercise only when a current task admits DeepSeek and TV/TVC resolves the credential;
-2. authentic provider usage through the existing Master Records custody/reconstruction lane;
+2. authentic provider usage through the existing Master Records organization records/reconstruction lane;
 3. downstream Site/Publisher/wiki projection only when an activation/release gate explicitly requires it.
 
 ## Completion accounting

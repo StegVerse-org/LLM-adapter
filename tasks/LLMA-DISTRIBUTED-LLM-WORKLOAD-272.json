@@ -45,7 +45,7 @@
     "do not replace TVC route authority",
     "do not replace TC/TVC credential authority",
     "do not create a second WorkerCoordinator, heartbeat, InTr, or governance engine",
-    "do not duplicate Master Records custody/reconstruction",
+    "do not duplicate Master Records organization records/reconstruction",
     "do not embed provider credentials in workload/contribution/reconciliation/result artifacts",
     "do not claim live external model execution from fixture tests",
     "do not make the unfinished 12-lane analysis a prerequisite"

@@ -48,7 +48,7 @@ personhood_claim: not_evaluated
 welfare_claim: not_evaluated
 ```
 
-Fixture acceptance, SDK serialization, receipt handoff, and hash preservation do not create execution authority, admissibility, standing, Master-Records custody, consciousness classification, personhood classification, or welfare classification.
+Fixture acceptance, SDK serialization, receipt handoff, and hash preservation do not create execution authority, admissibility, standing, Master Records organization record, consciousness classification, personhood classification, or welfare classification.
 
 ## Verification
 

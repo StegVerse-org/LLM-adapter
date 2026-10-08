@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from llm_adapter.external_review_store import now_iso
 from llm_adapter.wiki_publication_master_records import (
     PublicationCustodyError,
-    require_publication_master_records_closure,
+    require_publication_master_records_organization_record,
 )
 
 router = APIRouter(prefix="/api/external-review", tags=["external-chat-mutation"])
@@ -214,7 +214,7 @@ def mutate_repository(payload: RepositoryMutationRequest, authorization: str | N
         raise HTTPException(status_code=403, detail={"reason": "commit_time_authority_missing"})
 
     try:
-        governed_closure = require_publication_master_records_closure(
+        publication_record = require_publication_master_records_organization_record(
             receipt_sha256=payload.master_records_receipt_sha256,
             publication_transition_id=payload.publication_transition_id,
             publication_transition=publication_payload,
@@ -223,7 +223,7 @@ def mutate_repository(payload: RepositoryMutationRequest, authorization: str | N
         raise HTTPException(
             status_code=409,
             detail={
-                "reason": "governed_publication_master_records_closure_invalid",
+                "reason": "governed_publication_master_records_organization_record_invalid",
                 "detail": str(exc),
                 "repository_mutation_performed": False,
             },
@@ -287,7 +287,7 @@ def mutate_repository(payload: RepositoryMutationRequest, authorization: str | N
         "commit_time_revalidation": {
             "authority": "PASS", "delegation": "PASS", "policy": "PASS", "freshness": "PASS",
             "repository_head": "PASS", "target_blob": "PASS", "publication_identity": "PASS",
-            "governed_master_records_closure": "PASS",
+            "governed_master_records_organization_record": "PASS",
         },
         "boundary": {
             "mutation_receipt_is_certification": False,

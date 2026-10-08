@@ -7,7 +7,7 @@ from typing import Any, Callable, Mapping
 
 from .anthropic_convergence_bridge import AnthropicConvergenceEnvelope, build_anthropic_convergence_envelope
 from .anthropic_tvc_broker import RUNTIME_PROFILE_ID, AnthropicTVCBrokerResult, execute_anthropic_via_tvc_broker
-from .master_records_usage_submission import submit_provider_usage_to_master_records
+from .master_records_usage_record import record_provider_usage_in_master_records
 from .provider_request import ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
 
@@ -48,7 +48,7 @@ class AnthropicTVCRuntimeEgressAdmission:
     def to_dict(self) -> dict[str, Any]: return dict(self.__dict__)
 
 
-def execute_governed_anthropic_via_tvc_runtime(request: ProviderRequest, *, session_id: str, transition_id: str, measurement_id: str, ingress_disposition: str, ingress_receipt_hash: str, carrier_ref: str, lease_receipt: Mapping[str, Any], broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]], usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records, max_output_tokens: int = 2048, response_format: str = "text") -> AnthropicTVCRuntimeExecution:
+def execute_governed_anthropic_via_tvc_runtime(request: ProviderRequest, *, session_id: str, transition_id: str, measurement_id: str, ingress_disposition: str, ingress_receipt_hash: str, carrier_ref: str, lease_receipt: Mapping[str, Any], broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]], usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_in_master_records, max_output_tokens: int = 2048, response_format: str = "text") -> AnthropicTVCRuntimeExecution:
     for label, value in (("session_id",session_id),("transition_id",transition_id),("measurement_id",measurement_id)):
         if not isinstance(value, str) or not value.strip(): raise AnthropicTVCRuntimeExecutionError(f"{label}_required")
     envelope = build_anthropic_convergence_envelope(request, session_id=session_id, transition_id=transition_id, ingress_disposition=ingress_disposition, ingress_receipt_hash=ingress_receipt_hash, carrier_ref=carrier_ref, max_tokens=max_output_tokens)
@@ -59,13 +59,13 @@ def execute_governed_anthropic_via_tvc_runtime(request: ProviderRequest, *, sess
     if isinstance(input_tokens, (int,float)) and not isinstance(input_tokens,bool) and isinstance(output_tokens,(int,float)) and not isinstance(output_tokens,bool): total = input_tokens + output_tokens
     source_ref = f"anthropic:tvc:{envelope.transport_id}"
     event = build_provider_usage_event(measurement_id=measurement_id, session_id=session_id, transition_id=transition_id, origin_entry_point="intr", interaction_type="governed_anthropic_inference", provider="anthropic", model=broker.response.model, metrics={"prompt_tokens":_metric(input_tokens,source_ref),"completion_tokens":_metric(output_tokens,source_ref),"total_tokens":_metric(total,source_ref)}, receipt_refs=[ingress_receipt_hash,envelope.envelope_hash,broker.response.response_hash])
-    custody = usage_submitter(event)
-    if not isinstance(custody, Mapping): raise AnthropicTVCRuntimeExecutionError("master_records_usage_reply_malformed")
-    if custody.get("authority_effect") not in (None,"NONE"): raise AnthropicTVCRuntimeExecutionError("master_records_usage_authority_escalation")
+    usage_record = usage_submitter(event)
+    if not isinstance(usage_record, Mapping): raise AnthropicTVCRuntimeExecutionError("master_records_usage_reply_malformed")
+    if usage_record.get("authority_effect") not in (None,"NONE"): raise AnthropicTVCRuntimeExecutionError("master_records_usage_authority_escalation")
     for key in ("authority_granted","grants_authority","assumes_governance"):
-        if custody.get(key): raise AnthropicTVCRuntimeExecutionError(f"master_records_usage_authority_escalation:{key}")
-    handoff = {"schema":"stegverse.llm_adapter.anthropic_tvc_runtime_egress_handoff/v1","runtime_profile_id":RUNTIME_PROFILE_ID,"protocol_version":envelope.protocol_version,"transport_id":envelope.transport_id,"transition_id":envelope.transition_id,"request_hash":envelope.request_hash,"ingress_receipt_hash":envelope.ingress_receipt_hash,"envelope_hash":envelope.envelope_hash,"response_hash":broker.response.response_hash,"tvc_use_receipt_hash":broker.response.metadata["tvc_use_receipt_hash"],"provider_usage_event_sha256":event["event_sha256"],"master_records_usage_status":custody.get("status"),"requested_disposition":"ALLOW","egress_intr_required":True,"credential_material_present":False,"authority_effect":"NONE"}
-    return AnthropicTVCRuntimeExecution(envelope=envelope,broker=broker,provider_usage_event=event,master_records_usage=dict(custody),egress_handoff=handoff,session_id=session_id,measurement_id=measurement_id)
+        if usage_record.get(key): raise AnthropicTVCRuntimeExecutionError(f"master_records_usage_authority_escalation:{key}")
+    handoff = {"schema":"stegverse.llm_adapter.anthropic_tvc_runtime_egress_handoff/v1","runtime_profile_id":RUNTIME_PROFILE_ID,"protocol_version":envelope.protocol_version,"transport_id":envelope.transport_id,"transition_id":envelope.transition_id,"request_hash":envelope.request_hash,"ingress_receipt_hash":envelope.ingress_receipt_hash,"envelope_hash":envelope.envelope_hash,"response_hash":broker.response.response_hash,"tvc_use_receipt_hash":broker.response.metadata["tvc_use_receipt_hash"],"provider_usage_event_sha256":event["event_sha256"],"master_records_usage_status":usage_record.get("status"),"requested_disposition":"ALLOW","egress_intr_required":True,"credential_material_present":False,"authority_effect":"NONE"}
+    return AnthropicTVCRuntimeExecution(envelope=envelope,broker=broker,provider_usage_event=event,master_records_usage=dict(usage_record),egress_handoff=handoff,session_id=session_id,measurement_id=measurement_id)
 
 
 def admit_anthropic_tvc_runtime_egress(execution: AnthropicTVCRuntimeExecution, *, egress_disposition: str, egress_receipt_hash: str, admitted_response_hash: str) -> AnthropicTVCRuntimeEgressAdmission:

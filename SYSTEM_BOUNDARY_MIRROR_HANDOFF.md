@@ -126,7 +126,7 @@ recurrence != identity continuity
 state persistence != consciousness
 feedback paths != admissibility
 system-boundary declaration != permission to execute
-receipt != master-records custody
+receipt != Master Records organization record
 receipt presence != public validation
 explicit lifecycle binding != production activation
 declaration reference persistence != SDK execution authority
@@ -191,7 +191,7 @@ GCAT-BCAT-Engine/Publisher:
 
 ## Permitted continuation
 
-A successor session may inspect adapter and SDK canonical workflow evidence, repair the first repository-local failing step, and update local receipts and handoffs. No automatic production binding, Site publication, Publisher propagation, Master-Records custody claim, execution authority, admissibility, standing, or classification claim is authorized by this file.
+A successor session may inspect adapter and SDK canonical workflow evidence, repair the first repository-local failing step, and update local receipts and handoffs. No automatic production binding, Site publication, Publisher propagation, Master Records organization record claim, execution authority, admissibility, standing, or classification claim is authorized by this file.
 
 ## Archival status
 

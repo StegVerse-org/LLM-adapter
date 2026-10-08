@@ -68,7 +68,7 @@
     "live_connection": false,
     "runtime_execution": false,
     "provider_operation": false,
-    "master_records_custody": false,
+    "master_records_organization_record": false,
     "activation": false,
     "release_authority": false
   }

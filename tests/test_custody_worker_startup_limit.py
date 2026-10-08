@@ -16,7 +16,7 @@ def test_main_uses_configured_limit_without_inventing_custody(monkeypatch, capsy
     def fake_run(limit=20):
         observed["limit"] = limit
         return {
-            "worker": "master_records_custody",
+            "worker": "master_records_organization_record",
             "enabled": True,
             "processed": 0,
             "recorded": 0,

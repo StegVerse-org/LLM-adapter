@@ -35,7 +35,7 @@ python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-runtime-
 python3 scripts/validate_anthropic_intr.py --branch feat/anthropic-intr-runtime-fix-288 --json > validation-288.json
 ```
 
-The gate retains the exact 43-check contract and sets `merge_permitted: true` only on PASS. Its scope is installed-source integrity only and explicitly does not attest live Claude execution, Master Records custody acceptance, egress ALLOW, or product activation.
+The gate retains the exact 43-check contract and sets `merge_permitted: true` only on PASS. Its scope is installed-source integrity only and explicitly does not attest live Claude execution, Master Records organization-record acceptance, egress ALLOW, or product activation.
 
 ## README completeness
 
@@ -81,7 +81,7 @@ runtime capability: bounded_process_execution
 task-routing direction: INTERNAL
 credential authority: TV/TVC
 provider ingress/egress: external Interlock/InTr
-custody/reconstruction: Master Records
+organization records/reconstruction: Master Records
 ```
 
 Runtime-profile discovery must not manufacture a new provider runtime. A current authentic task-executing WorkerCoordinator remains required for a live call even though candidate discovery does not require current observation.
@@ -95,7 +95,7 @@ After source validation, record no stronger than:
 | transport/source/schema/canonicalization | INSTALLED, commit-referenced |
 | source gate | PASSING on validated commit |
 | live Claude execution | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
-| Master Records custody acceptance | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
+| Master Records organization-record acceptance | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
 | exact-response egress ALLOW | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
 | product activation / tag / release | NOT CLAIMED |
 

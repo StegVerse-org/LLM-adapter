@@ -2,7 +2,7 @@
 """Source-integrity gate for stegverse.intr.anthropic.transport.v1.
 
 This gate never attests live provider execution, route admission, credentials,
-Master Records custody, egress ALLOW, product activation, tag, or release.
+a Master Records organization record, egress ALLOW, product activation, tag, or release.
 """
 from __future__ import annotations
 

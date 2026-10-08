@@ -115,5 +115,8 @@ def bind_system_boundary_to_lifecycle(
         "production_binding_enabled": False,
     }
     result.setdefault("authority", {})["system_boundary_declaration_is_execution_authority"] = False
+    # This key name is fixed by the SDK-produced, provenance-hashed fixture
+    # (fixtures/adapter_system_boundary_sdk_packet.v0.1.json); it changes only when the
+    # SDK re-issues that fixture under the organization-record name.
     result["authority"]["system_boundary_receipt_is_master_records_custody"] = False
     return result

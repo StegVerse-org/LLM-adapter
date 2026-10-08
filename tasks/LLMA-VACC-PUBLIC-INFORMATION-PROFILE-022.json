@@ -27,7 +27,7 @@
     "source_materialization": "ANONYMOUS_ARCHIVE",
     "marker": "PUBLIC_KNOWLEDGE_VACC_SOURCE_VALIDATION_PASS"
   },
-  "completion_boundary": "Broad VA/federal informational source profile and fail-closed source evaluator are complete and validated. Broad-topic route execution, real provider execution, Master Records custody/reconstruction, HTTPS endpoint projection, and Site end-to-end activation remain owned by issue #90/Site#113 and are not claimed complete here.",
+  "completion_boundary": "Broad VA/federal informational source profile and fail-closed source evaluator are complete and validated. Broad-topic route execution, real provider execution, HTTPS endpoint projection, and Site end-to-end activation remain owned by issue #90/Site#113 and are not claimed complete here. The Master Records organization records/reconstruction for those routes are not claimed here either.",
   "collision_boundaries": [
     "Existing profiles/va-claims-chat-llm.v1.json remains unchanged and official-VA-only for claim-specific external factual grounding.",
     "Issue #90 remains sole VA provider runtime/gateway owner.",

@@ -117,7 +117,7 @@ admitted workload
 -> externally produced Interlock/InTr ingress ALLOW
 -> TV/TVC-resolved Z.ai provider credential/route admission
 -> merged Z.ai executor
--> authentic provider-usage custody/reconstruction in master-records/orchestration
+-> authentic provider-usage organization records/reconstruction in master-records/orchestration
 -> externally produced egress InTr ALLOW bound to exact provider response
 ```
 

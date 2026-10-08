@@ -60,12 +60,12 @@
   "integration_state": {
     "provider_executor_release_dependency_bound": true,
     "site_pii_rdy_06_import_pending": true,
-    "master_records_operational_custody_pending": true,
+    "master_records_operational_organization_record_pending": true,
     "site_production_detection_redaction_leakage_pending": true
   },
   "next_owners": [
     "StegVerse-org/LLM-adapter#90 task VACP-ADAPTER-AUTHORIZED-EXECUTION-005",
-    "master-records/orchestration#15 for PII-RDY-07 operational custody and reconstruction",
+    "master-records/orchestration#15 for PII-RDY-07 operational organization records and reconstruction",
     "StegVerse-Labs/Site#113 for receipt-derived PII-RDY-06 projection",
     "StegVerse-Labs/Site#116 for PII-RDY-01 through PII-RDY-03 production evidence"
   ],

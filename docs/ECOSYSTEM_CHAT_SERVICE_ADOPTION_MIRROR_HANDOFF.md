@@ -75,7 +75,7 @@ StegProfile — identity and controlled disclosure
 admissibility-gateway — governed request and receipt evaluation
 capability-registry — machine-readable capability ownership and versioning
 TVC — transition/admission verification
-Master Records — custody and reconstruction authority
+Master Records — organization records and reconstruction
 SCW — StegVerse communications and service workloads
 ```
 
@@ -91,7 +91,7 @@ Issue #18 owns the exact sequence:
 1. Build StegVerse-owned compute and deployment control plane using micro-node-runtime and core-lite.
 2. Build StegVerse-owned naming, routing, certificate, and edge-protection control plane.
 3. Migrate transition-hosted gateway, HIL receiver, TVC, Site, and SCW workloads with state-preserving receipts.
-4. Bind authenticated StegVerse Master Records custody.
+4. Bind authenticated StegVerse Master Records organization record.
 5. Provide StegVerse-owned or StegVerse-federated model execution.
 6. Execute the governed provider/persistence/custody/reconstruction vertical slice on the sovereign path.
 7. Verify service continuity without transitional hosting, edge, or hosted inference dependencies.
@@ -120,7 +120,7 @@ Ecosystem Chat is not sovereignly complete until:
 ```text
 StegVerse-owned compute and deployment control plane: COMPLETE
 StegVerse-owned DNS/routing/certificate/edge control plane: COMPLETE
-StegVerse-owned persistence and Master Records custody: COMPLETE
+StegVerse-owned persistence and Master Records organization record: COMPLETE
 StegVerse-owned or federated model execution: COMPLETE
 all temporary platform workloads and state migrated: VERIFIED
 external platform removal test: PASS

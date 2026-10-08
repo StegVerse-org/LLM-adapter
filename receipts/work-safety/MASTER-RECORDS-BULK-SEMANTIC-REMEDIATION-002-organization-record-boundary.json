@@ -1,0 +1,202 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002",
+  "cosv_task_vector": "50000000100000",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/StegDB:registry/role-boundary/rulesets/master-records.json#MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "StegVerse-Labs/StegDB:registry/role-boundary/rulesets/master-records.json",
+      "StegVerse-Labs/StegDB:tools/scan_role_boundary.py",
+      "master-records/orchestration:services/master_records_local_provider_usage_broker.py"
+    ],
+    "reason": "Rewords every role this repository assigned to Master Records. Master Records keeps organization records and reconstruction. Interlock/InTr admits transitions. The Organization owns runtime reality. Renamed wire fields are written under the new names only and read under both the new and the legacy names."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/365",
+      "StegVerse-org/StegVerse-SDK:stegverse/llm_adapter_bridge.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/activation_evidence.py",
+      "master-records/orchestration:services/canonical_state_transition_custody.py"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "master-records/orchestration",
+      "StegVerse-Labs/Site",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/StegOS"
+    ],
+    "evidence_refs": [
+      "llm_adapter/master_records_usage_record.py",
+      "llm_adapter/master_records_local_usage_record.py",
+      "llm_adapter/master_records_organization_record_client.py",
+      "llm_adapter/stegbrowser_master_records_state_transition_relay.py",
+      "llm_adapter/wiki_publication_master_records.py"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Renames and rewords the existing Master Records clients in place. No second client, store or route is created; closed PR #365 on the earlier wording branch is superseded by this change set."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "llm_adapter/master_records_usage_record.py",
+      "llm_adapter/master_records_organization_record_client.py"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/validate.yml",
+    "adapter.capabilities.json",
+    "capability/stegverse-intr-deepseek-transport.capability.json",
+    "capability/stegverse-intr-kimi-transport.capability.json",
+    "capability/stegverse-intr-zai-transport.capability.json",
+    "data/llm-adapter-orchestration-state.json",
+    "data/preflight/LLMA-DISTRIBUTED-LLM-WORKLOAD-272-20260906.json",
+    "data/preflight/LLMA-EXTERNAL-LLM-CONVERGENCE-306-20260907-postmerge.json",
+    "data/preflight/LLMA-EXTERNAL-LLM-CONVERGENCE-306-20260907-resolved.json",
+    "data/stegverse-public-knowledge.v1.json",
+    "data/va-claim-assistant-session-consolidation.json",
+    "docs/llm-communications-stack.json",
+    "intake/stegverse-live-baseline-execution-request-v1.json",
+    "iosnoperiod/github/workflows/validate.yml",
+    "llm_adapter/anthropic_intr_executor.py",
+    "llm_adapter/anthropic_intr_transport.py",
+    "llm_adapter/anthropic_tvc_runtime_executor.py",
+    "llm_adapter/attachment_intake.py",
+    "llm_adapter/combined_gateway.py",
+    "llm_adapter/custody_worker.py",
+    "llm_adapter/deepseek_intr_executor.py",
+    "llm_adapter/deepseek_tvc_runtime_executor.py",
+    "llm_adapter/ecosystem_chat_gateway.py",
+    "llm_adapter/external_publication_mutation.py",
+    "llm_adapter/governed_chat_pipeline.py",
+    "llm_adapter/governed_external_provider_client.py",
+    "llm_adapter/governed_manifest_ingress.py",
+    "llm_adapter/kimi_canonical_runtime.py",
+    "llm_adapter/kimi_intr_executor.py",
+    "llm_adapter/kimi_tvc_runtime_executor.py",
+    "llm_adapter/master_records_local_usage_record.py",
+    "llm_adapter/master_records_organization_record_client.py",
+    "llm_adapter/master_records_usage_record.py",
+    "llm_adapter/provider_usage_submission.py",
+    "llm_adapter/service_gateway.py",
+    "llm_adapter/sovereign_local_model_binding.py",
+    "llm_adapter/stegbrowser_master_records_state_transition_relay.py",
+    "llm_adapter/system_boundary_lifecycle.py",
+    "llm_adapter/transition_store.py",
+    "llm_adapter/usage_session_api.py",
+    "llm_adapter/wiki_publication_master_records.py",
+    "llm_adapter/zai_intr_executor.py",
+    "llm_adapter/zai_tvc_runtime_executor.py",
+    "scripts/check_llm_adapter_orchestration_state.py",
+    "scripts/check_stegverse_live_baseline_runtime_readiness.py",
+    "scripts/observe_va_provider_execution_preflight.py",
+    "scripts/observe_va_service_connection_execution.py",
+    "scripts/validate_anthropic_intr.py",
+    "scripts/validate_ecosystem_va_chat_session_consolidation.py",
+    "scripts/validate_va_claim_assistant_session_consolidation.py",
+    "scripts/verify_authorized_provider_activation.py",
+    "scripts/verify_hil_receiver_deployment_evidence.py",
+    "scripts/verify_live_ecosystem_chat_activation.py",
+    "scripts/write_ecosystem_chat_destination_activation_state.py",
+    "status/stegverse-live-baseline-runtime-readiness.json",
+    "tasks/LLMA-ANTHROPIC-INTR-TRANSPORT-288.json",
+    "tasks/LLMA-DEEPSEEK-INTR-TRANSPORT-289.json",
+    "tasks/LLMA-DISTRIBUTED-LLM-WORKLOAD-272.json",
+    "tasks/LLMA-ECOSYSTEM-CHAT-SERVICE-ADOPTION-012.json",
+    "tasks/LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011.json",
+    "tasks/LLMA-KIMI-INTR-RUNTIME-292.json",
+    "tasks/LLMA-SEQUENCE-0001-RELEASE-015.json",
+    "tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json",
+    "tasks/LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019.json",
+    "tasks/LLMA-STALE-ACTIVATION-PR-RECONCILIATION-016.json",
+    "tasks/LLMA-VACC-PUBLIC-INFORMATION-PROFILE-022.json",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-STEGGATE-CONSUMER-055.json",
+    "tasks/LLMA-WORKFLOW-CONSOLIDATE-VA-PRIVACY-RUNTIME-049.json",
+    "tasks/LLMA-WORKFLOW-RETIRE-SUPERSEDED-VA-PREFLIGHT-047.json",
+    "tasks/LLMA-ZAI-INTR-EXECUTOR-278.json",
+    "tasks/LLMA-ZAI-INTR-TRANSPORT-276.json",
+    "tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json",
+    "tasks/VACP-ADAPTER-EXECUTION-PREFLIGHT-004.json",
+    "tasks/VACP-ADAPTER-PII-RUNTIME-006.json",
+    "tasks/VACP-ADAPTER-ROUTES-002.json",
+    "tasks/VACP-PREFLIGHT-HOSTED-EXECUTION-008.json",
+    "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+    "tests/test_authorized_provider_activation_verifier.py",
+    "tests/test_custody_worker_startup_limit.py",
+    "tests/test_deepseek_tvc_runtime.py",
+    "tests/test_ecosystem_chat_gateway.py",
+    "tests/test_external_publication_mutation.py",
+    "tests/test_governed_manifest_ingress.py",
+    "tests/test_kimi_canonical_runtime.py",
+    "tests/test_local_node_vertical_slice.py",
+    "tests/test_master_records_local_usage_record.py",
+    "tests/test_master_records_usage_record.py",
+    "tests/test_organization_record_legacy_names.py",
+    "tests/test_stegbrowser_master_records_state_transition_relay.py",
+    "tests/test_system_boundary_lifecycle.py",
+    "tests/test_transition_store_and_custody.py",
+    "tests/test_va_claim_assistant_governed_dispatch.py",
+    "tests/test_wiki_publication_master_records.py",
+    "va_claim_assistant/governed_retrieval.py",
+    "web_runtime/execute_canonical_sovereign_route.js"
+  ],
+  "new_files": [
+    {
+      "path": "tests/test_organization_record_legacy_names.py",
+      "semantic_responsibility": "Exercise that readers accept both the organization-record names and the legacy names of renamed prerequisites, gates and blockers.",
+      "closest_existing_implementation": "tests/test_authorized_provider_activation_verifier.py covers the authority-key legacy names; nothing covered the script-level readers.",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "llm_adapter/master_records_usage_record.py",
+      "semantic_responsibility": "Renamed from llm_adapter/master_records_usage_submission.py: records provider usage in the Master Records organization record.",
+      "closest_existing_implementation": "llm_adapter/master_records_usage_submission.py",
+      "decision": "MOVE"
+    },
+    {
+      "path": "llm_adapter/master_records_local_usage_record.py",
+      "semantic_responsibility": "Renamed from llm_adapter/master_records_local_usage_submission.py: records provider usage through the local Master Records broker.",
+      "closest_existing_implementation": "llm_adapter/master_records_local_usage_submission.py",
+      "decision": "MOVE"
+    },
+    {
+      "path": "llm_adapter/master_records_organization_record_client.py",
+      "semantic_responsibility": "Renamed from llm_adapter/master_records_client.py: writes completed transitions into the Master Records organization record.",
+      "closest_existing_implementation": "llm_adapter/master_records_client.py",
+      "decision": "MOVE"
+    },
+    {
+      "path": "tests/test_master_records_usage_record.py",
+      "semantic_responsibility": "Renamed from tests/test_master_records_usage_submission.py.",
+      "closest_existing_implementation": "tests/test_master_records_usage_submission.py",
+      "decision": "MOVE"
+    },
+    {
+      "path": "tests/test_master_records_local_usage_record.py",
+      "semantic_responsibility": "Renamed from tests/test_master_records_local_usage_submission.py.",
+      "closest_existing_implementation": "tests/test_master_records_local_usage_submission.py",
+      "decision": "MOVE"
+    }
+  ]
+}

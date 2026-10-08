@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from llm_adapter.master_records_client import build_submission, validate_response
+from llm_adapter.master_records_organization_record_client import build_organization_record_request, validate_response
 from llm_adapter.transition_store import TransitionStore
 
 
@@ -68,7 +68,7 @@ def test_mark_recorded_requires_external_receipt_values(tmp_path: Path) -> None:
 
 def test_submission_and_response_preserve_identity() -> None:
     record = completed_record()
-    submission = build_submission(record)
+    submission = build_organization_record_request(record)
     assert submission["authority_boundary"]["submission_is_custody"] is False
     response = {
         "transition_id": record["transition_id"],
@@ -82,6 +82,29 @@ def test_submission_and_response_preserve_identity() -> None:
     custody_receipt, master_ref = validate_response(record, response)
     assert custody_receipt == "custody-receipt:test-001"
     assert master_ref == "master-record:test-001"
+
+
+def test_response_record_status_and_legacy_name_are_both_accepted() -> None:
+    record = completed_record()
+    base = {
+        "transition_id": record["transition_id"],
+        "run_id": record["run_id"],
+        "final_receipt_id": record["continuity"]["final_receipt_id"],
+        "custody_receipt_id": "custody-receipt:test-001",
+        "master_record_ref": "master-record:test-001",
+        "reconstruction_status": "PASS",
+    }
+    for field in ("record_status", "custody_status"):
+        assert validate_response(record, {**base, field: "RECORDED"}) == (
+            "custody-receipt:test-001",
+            "master-record:test-001",
+        )
+    try:
+        validate_response(record, {**base, "record_status": "PENDING"})
+    except ValueError as exc:
+        assert "did not confirm RECORDED" in str(exc)
+    else:
+        raise AssertionError("an unconfirmed record_status must be rejected")
 
 
 def test_identity_mismatch_is_rejected() -> None:

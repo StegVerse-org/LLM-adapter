@@ -1,13 +1,14 @@
-"""Credential-nonexporting relay for the immutable StegBrowser state-transition custody receipt.
+"""Credential-nonexporting relay that records the immutable StegBrowser state-transition receipt.
 
-The browser supplies only the canonical non-secret state-transition submission. This
-module uses the existing service-gateway Master Records configuration materialized
-under TV/TVC authority, forwards the unchanged submission to the sole canonical
-Master Records API, and returns only the canonical custody result after exact
-reconstruction validation.
+Interlock/InTr has already admitted the StegBrowser transition; Master Records keeps
+the organization record of it. The browser supplies only the canonical non-secret
+state-transition receipt. This module uses the existing service-gateway Master Records
+configuration materialized under TV/TVC authority, forwards the unchanged request to
+the Master Records organization-record service, and returns only the canonical
+organization-record result after exact reconstruction validation.
 
-This is transport only. It grants no transition, execution, credential, custody,
-publication, or governance authority and does not implement a second custody store.
+This is transport only. It grants no transition, execution, credential, record,
+publication, or governance authority and does not implement a second record store.
 """
 from __future__ import annotations
 
@@ -22,14 +23,24 @@ import requests
 
 SUBMISSION_SCHEMA = "stegverse.master-records.state-transition-submission/v1"
 RECEIPT_SCHEMA = "stegverse.canonical-state-transition-receipt/v1"
-CUSTODY_SCHEMA = "stegverse.master-records.state-transition-custody-receipt/v1"
+ORGANIZATION_RECORD_SCHEMA = "stegverse.master-records.state-transition-organization-record-receipt/v1"
 CANONICAL_PATH = "/api/master-records/state-transitions"
 
 NONCE = "STEG-BROWSER-MANIFEST-INTR-INGRESS-EXECUTION-001-20260915T142500Z"
-TRANSITION_ID = "STEGBROWSER_RUNTIME_READINESS_MASTER_RECORDS_CUSTODY"
+TRANSITION_ID = "STEGBROWSER_RUNTIME_READINESS_MASTER_RECORDS_ORGANIZATION_RECORD"
 CANONICAL_TASK = "STEG-BROWSER-RUNTIME-CONNECTION-INGRESS-001"
 COSV = "40000100100000"
 SOURCE_SCHEMA = "stegverse.master-records.stegbrowser-readiness-custody-intr-admission/v1"
+
+# Naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002). Receipts, requests
+# and responses produced by already-deployed peers still carry the legacy names; this
+# relay reads them and forwards requests unchanged, so it accepts both spellings.
+LEGACY_ORGANIZATION_RECORD_SCHEMA = "stegverse.master-records.state-transition-custody-receipt/v1"
+LEGACY_TRANSITION_ID = "STEGBROWSER_RUNTIME_READINESS_MASTER_RECORDS_CUSTODY"
+LEGACY_RECORD_REQUESTED_FIELD = "custody_requested"
+RECORD_REQUESTED_FIELD = "record_requested"
+TRANSITION_IDS = (TRANSITION_ID, LEGACY_TRANSITION_ID)
+ORGANIZATION_RECORD_SCHEMAS = (ORGANIZATION_RECORD_SCHEMA, LEGACY_ORGANIZATION_RECORD_SCHEMA)
 
 SHA_URI = re.compile(r"^sha256:[0-9a-f]{64}$")
 
@@ -87,18 +98,19 @@ def enabled() -> bool:
 
 
 def _validate_submission(payload: Mapping[str, Any]) -> dict[str, Any]:
-    if set(payload) != {"schema", "receipt", "authority_requested", "custody_requested", "reconstruction_requested"}:
+    record_field = RECORD_REQUESTED_FIELD if RECORD_REQUESTED_FIELD in payload else LEGACY_RECORD_REQUESTED_FIELD
+    if set(payload) != {"schema", "receipt", "authority_requested", record_field, "reconstruction_requested"}:
         raise StegBrowserMasterRecordsRelayError("state_transition_submission_field_set_invalid")
     if payload.get("schema") != SUBMISSION_SCHEMA:
         raise StegBrowserMasterRecordsRelayError("state_transition_submission_schema_mismatch")
-    if payload.get("authority_requested") is not False or payload.get("custody_requested") is not True or payload.get("reconstruction_requested") is not True:
+    if payload.get("authority_requested") is not False or payload.get(record_field) is not True or payload.get("reconstruction_requested") is not True:
         raise StegBrowserMasterRecordsRelayError("state_transition_submission_boundary_invalid")
     receipt = payload.get("receipt")
     if not isinstance(receipt, Mapping):
         raise StegBrowserMasterRecordsRelayError("state_transition_receipt_required")
     if receipt.get("schema") != RECEIPT_SCHEMA:
         raise StegBrowserMasterRecordsRelayError("state_transition_receipt_schema_mismatch")
-    if receipt.get("transition_id") != TRANSITION_ID or receipt.get("transition_sequence") != 1:
+    if receipt.get("transition_id") not in TRANSITION_IDS or receipt.get("transition_sequence") != 1:
         raise StegBrowserMasterRecordsRelayError("stegbrowser_transition_identity_mismatch")
     if receipt.get("subject_or_correlation_id") != NONCE:
         raise StegBrowserMasterRecordsRelayError("stegbrowser_immutable_nonce_mismatch")
@@ -114,7 +126,7 @@ def _validate_submission(payload: Mapping[str, Any]) -> dict[str, Any]:
         raise StegBrowserMasterRecordsRelayError("stegbrowser_transition_evidence_required")
     exact = {
         "source_schema": SOURCE_SCHEMA,
-        "transition_id": TRANSITION_ID,
+        "transition_id": receipt.get("transition_id"),
         "canonical_task": CANONICAL_TASK,
         "cosv_task_vector": COSV,
         "invocation_request_nonce": NONCE,
@@ -141,13 +153,13 @@ def _validate_submission(payload: Mapping[str, Any]) -> dict[str, Any]:
 
 def _validate_response(response: Mapping[str, Any], receipt: Mapping[str, Any]) -> dict[str, Any]:
     expected = receipt_digest(receipt)
-    if response.get("schema") != CUSTODY_SCHEMA:
+    if response.get("schema") not in ORGANIZATION_RECORD_SCHEMAS:
         raise StegBrowserMasterRecordsRelayError("master_records_state_transition_response_schema_mismatch")
     if response.get("state") != "RECORDED" or response.get("reconstruction_status") != "PASS":
         raise StegBrowserMasterRecordsRelayError("master_records_state_transition_reconstruction_not_pass")
     if response.get("receipt_sha256") != expected or response.get("reconstructed_receipt_sha256") != expected:
         raise StegBrowserMasterRecordsRelayError("master_records_state_transition_digest_mismatch")
-    if response.get("transition_id") != TRANSITION_ID or response.get("transition_sequence") != 1 or response.get("subject_or_correlation_id") != NONCE:
+    if response.get("transition_id") != receipt.get("transition_id") or response.get("transition_sequence") != 1 or response.get("subject_or_correlation_id") != NONCE:
         raise StegBrowserMasterRecordsRelayError("master_records_state_transition_identity_mismatch")
     for key in ("master_records_grants_transition_authority", "master_records_grants_execution_authority", "master_records_grants_credential_authority"):
         if response.get(key) is not False:
@@ -184,6 +196,7 @@ __all__ = [
     "CANONICAL_PATH",
     "NONCE",
     "TRANSITION_ID",
+    "LEGACY_TRANSITION_ID",
     "StegBrowserMasterRecordsRelayError",
     "enabled",
     "relay_stegbrowser_state_transition",

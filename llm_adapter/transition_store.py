@@ -1,8 +1,9 @@
 """Durable SQLite storage for Ecosystem Chat transition relationships.
 
-This store persists canonical transition records and Master-Records submission queue
-entries. Local persistence is not Master-Records custody and never marks a record
-RECORDED without an independently returned custody receipt.
+This store persists canonical transition records and the queue of records waiting to
+be written to the Master Records organization record. Local persistence is not a
+Master Records organization record and never marks a record RECORDED without an
+independently returned organization-record receipt.
 """
 from __future__ import annotations
 

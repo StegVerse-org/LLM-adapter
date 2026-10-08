@@ -396,7 +396,7 @@ async def attachment_intake(
         "artifact_state": "EXACT_BYTES_PRESERVED",
         "review_state": "PENDING_PROFILE_REVIEW",
         "provider_processing": "not_required_for_acceptance",
-        "master_records_custody": "not_required_for_acceptance",
+        "master_records_organization_record": "not_required_for_acceptance",
         "credential_authority": "TV/TVC",
         "github_token_runtime_authority": "NONE",
         "authority": {

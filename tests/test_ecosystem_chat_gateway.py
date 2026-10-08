@@ -49,7 +49,7 @@ def test_health_reports_bounded_native_executor_and_storage_posture() -> None:
     assert body["bounded_response_pipeline"] is True
     assert body["sqlite_transition_store"] is True
     assert isinstance(body["storage_durable_across_restarts"], bool)
-    assert body["local_persistence_is_master_records_custody"] is False
+    assert body["local_persistence_is_master_records_organization_record"] is False
     assert body["custody_queue"] is True
     assert body["execution_authority"] is False
     assert body["repository_mutation_authority"] is False
@@ -75,7 +75,7 @@ def test_request_preserves_identity_and_returns_completed_lifecycle() -> None:
     assert body["transition_candidate"]["relationships"]["target_ref"] == "executor:STEGVERSE_AI_ENTITY"
     assert body["authority"]["native_executor_active"] is True
     assert body["authority"]["repository_mutation_allowed"] is False
-    assert body["authority"]["local_persistence_is_master_records_custody"] is False
+    assert body["authority"]["local_persistence_is_master_records_organization_record"] is False
     assert body["sqlite_persisted"] is True
     assert body["master_record_status"] in {"PENDING", "RECORDED"}
     assert body["custody_submission"]["state"] in {"PENDING", "RETRY", "RECORDED"}

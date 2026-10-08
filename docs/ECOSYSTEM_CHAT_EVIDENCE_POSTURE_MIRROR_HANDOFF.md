@@ -74,7 +74,7 @@ No hosted CI result is being inferred from mergeability. Source is integrated; d
 2. Bind the receipt builder into `llm_adapter/ecosystem_chat_gateway.py` so every bounded response retains an evidence receipt, using `UNKNOWN`/`certainty_constraint_applied=false` when no governed evidence posture exists.
 3. Add an admitted evidence-aggregation input that can populate actual sources, ERL relationships, model observations, contradictions, uncertainty, and governed posture without accepting public-client self-assertion as authority.
 4. When governed posture exists, enforce the certainty-language ceiling before returning the conversational response.
-5. Submit the full evidence receipt through the existing Master Records custody/reconstruction path.
+5. Submit the full evidence receipt through the existing Master Records organization records/reconstruction path.
 6. Project only the conversational answer plus minimum evidence metadata to `StegVerse-Labs/Site`, with an optional evidence/history control.
 7. Prove one real deployed response reconstructs the exact answer, evidence used, posture, and why that certainty language was permitted.
 
@@ -85,7 +85,7 @@ source implementation: COMPLETE_MERGED
 hosted/deterministic validation: PENDING OBSERVATION
 gateway integration: PENDING
 governed evidence aggregation: PENDING
-Master Records custody/reconstruction: PENDING
+Master Records organization records/reconstruction: PENDING
 Site conversational projection: PENDING
 real governed response proof: PENDING
 product activation effect: NONE CLAIMED

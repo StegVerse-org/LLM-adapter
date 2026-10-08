@@ -37,7 +37,7 @@
   },
   "evidence": {
     "provider_usage": "reuse canonical llm_adapter.provider_usage",
-    "master_records_submission": "reuse canonical llm_adapter.master_records_usage_submission",
+    "master_records_submission": "reuse canonical llm_adapter.master_records_usage_record",
     "egress_response_hash_binding": true
   },
   "independence": {
@@ -53,7 +53,7 @@
       "authentic ingress InTr receipt",
       "TV/TVC credential resolution",
       "authentic DeepSeek provider execution",
-      "Master Records custody/reconstruction",
+      "Master Records organization records/reconstruction",
       "authentic egress InTr receipt"
     ]
   }

@@ -7,7 +7,7 @@ from typing import Any, Callable, Mapping
 
 from .kimi_intr_transport import KimiInTrEnvelope, build_kimi_intr_envelope
 from .kimi_tvc_broker import RUNTIME_PROFILE_ID, KimiTVCBrokerResult, execute_kimi_via_tvc_broker
-from .master_records_usage_submission import submit_provider_usage_to_master_records
+from .master_records_usage_record import record_provider_usage_in_master_records
 from .provider_request import ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
 
@@ -76,7 +76,7 @@ def execute_governed_kimi_via_tvc_runtime(
     carrier_ref: str,
     lease_receipt: Mapping[str, Any],
     broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]],
-    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records,
+    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_in_master_records,
     max_output_tokens: int = 2048,
     response_format: str = "text",
     admitted_envelope: KimiInTrEnvelope | None = None,
@@ -130,11 +130,11 @@ def execute_governed_kimi_via_tvc_runtime(
         },
         receipt_refs=[ingress_receipt_hash, envelope.envelope_hash, broker.response.response_hash],
     )
-    custody = usage_submitter(event)
-    if not isinstance(custody, Mapping): raise KimiTVCRuntimeExecutionError("master_records_usage_reply_malformed")
-    if custody.get("authority_effect") not in (None, "NONE"): raise KimiTVCRuntimeExecutionError("master_records_usage_authority_escalation")
+    usage_record = usage_submitter(event)
+    if not isinstance(usage_record, Mapping): raise KimiTVCRuntimeExecutionError("master_records_usage_reply_malformed")
+    if usage_record.get("authority_effect") not in (None, "NONE"): raise KimiTVCRuntimeExecutionError("master_records_usage_authority_escalation")
     for key in ("authority_granted", "grants_authority", "assumes_governance"):
-        if custody.get(key): raise KimiTVCRuntimeExecutionError(f"master_records_usage_authority_escalation:{key}")
+        if usage_record.get(key): raise KimiTVCRuntimeExecutionError(f"master_records_usage_authority_escalation:{key}")
 
     egress_handoff = {
         "schema": "stegverse.llm_adapter.kimi_tvc_runtime_egress_handoff/v1",
@@ -148,13 +148,13 @@ def execute_governed_kimi_via_tvc_runtime(
         "response_hash": broker.response.response_hash,
         "tvc_use_receipt_hash": broker.response.metadata["tvc_use_receipt_hash"],
         "provider_usage_event_sha256": event["event_sha256"],
-        "master_records_usage_status": custody.get("status"),
+        "master_records_usage_status": usage_record.get("status"),
         "requested_disposition": "ALLOW",
         "egress_intr_required": True,
         "credential_material_present": False,
         "authority_effect": "NONE",
     }
-    return KimiTVCRuntimeExecution(envelope=envelope, broker=broker, provider_usage_event=event, master_records_usage=dict(custody), egress_handoff=egress_handoff, session_id=session_id, measurement_id=measurement_id)
+    return KimiTVCRuntimeExecution(envelope=envelope, broker=broker, provider_usage_event=event, master_records_usage=dict(usage_record), egress_handoff=egress_handoff, session_id=session_id, measurement_id=measurement_id)
 
 
 def admit_kimi_tvc_runtime_egress(execution: KimiTVCRuntimeExecution, *, egress_disposition: str, egress_receipt_hash: str, admitted_response_hash: str) -> KimiTVCRuntimeEgressAdmission:

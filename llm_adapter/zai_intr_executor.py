@@ -1,7 +1,7 @@
 """Governed execution wrapper for the Z.ai Interlock/InTr transport.
 
-This module binds the optional Z.ai transport to the existing provider-usage and
-Master Records evidence path. It does not evaluate governance itself. Ingress and
+This module binds the optional Z.ai transport to the existing provider-usage
+recording and the Master Records organization record. It does not evaluate governance itself. Ingress and
 egress decisions are supplied as already-observed Interlock/InTr evidence and are
 validated fail-closed against the exact wire request/response hashes.
 """
@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
-from .master_records_usage_submission import submit_provider_usage_to_master_records
+from .master_records_usage_record import record_provider_usage_in_master_records
 from .provider_request import ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
 from .zai_intr_transport import (
@@ -101,7 +101,7 @@ def _metric(value: Any, *, source_ref: str) -> ProviderMetric:
     return ProviderMetric(value=None, unit="tokens", evidence_class="UNAVAILABLE", source_ref=source_ref)
 
 
-def _verify_custody_reply(reply: Mapping[str, Any]) -> None:
+def _verify_organization_record_reply(reply: Mapping[str, Any]) -> None:
     for key in ("authority_granted", "grants_authority", "assumes_governance"):
         if reply.get(key):
             raise ZAIExecutionError(f"master_records_usage_authority_escalation:{key}")
@@ -122,7 +122,7 @@ def execute_governed_zai(
     credential_resolver: Callable[[], str],
     endpoint_profile: str = "general",
     transport_factory: Callable[..., ZAIHTTPTransport] = ZAIHTTPTransport,
-    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records,
+    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_in_master_records,
 ) -> ZAIGovernedExecution:
     """Execute one exact ingress-admitted Z.ai wire request and preserve evidence."""
 
@@ -165,7 +165,7 @@ def execute_governed_zai(
     master_records_usage = usage_submitter(event)
     if not isinstance(master_records_usage, Mapping):
         raise ZAIExecutionError("master_records_usage_reply_malformed")
-    _verify_custody_reply(master_records_usage)
+    _verify_organization_record_reply(master_records_usage)
 
     egress_handoff = {
         "schema": "stegverse.llm_adapter.zai_egress_handoff/v1",

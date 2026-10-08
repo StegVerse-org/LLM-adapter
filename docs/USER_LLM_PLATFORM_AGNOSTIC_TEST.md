@@ -37,4 +37,4 @@ Expected result:
 - test mode remains explicit
 - downstream execution remains unverified
 
-This test validates the portable service boundary and governed request-return path. It does not claim execution, publication, continuity, or Master-Records custody authority.
+This test validates the portable service boundary and governed request-return path. It does not claim execution, publication, continuity, or Master Records organization-record authority.

@@ -1,8 +1,8 @@
-"""Credential-free client for the Master Records local provider-usage custody broker.
+"""Credential-free client for the Master Records local provider-usage organization-record broker.
 
 The caller supplies only the canonical provider-usage event. Master Records keeps
 its bearer and receipt-key material inside its own process and returns a sanitized
-custody+reconstruction result over an owner-local Unix socket.
+organization-record + reconstruction result over an owner-local Unix socket.
 """
 from __future__ import annotations
 
@@ -15,6 +15,9 @@ DEFAULT_SOCKET = "/run/stegverse/master-records-provider-usage.sock"
 REQUEST_SCHEMA = "stegverse.master_records.local_provider_usage_request.v1"
 RESPONSE_SCHEMA = "stegverse.master_records.local_provider_usage_result.v1"
 MAX_MESSAGE = 2_000_000
+# Request field naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002):
+# writers emit only ``record_requested`` (formerly ``custody_requested``).
+RECORD_REQUESTED_FIELD = "record_requested"
 
 
 class MasterRecordsLocalUsageError(RuntimeError):
@@ -60,7 +63,7 @@ def _validate_reply(reply: Mapping[str, Any], event: Mapping[str, Any]) -> dict[
     if reply.get("schema") != RESPONSE_SCHEMA:
         raise MasterRecordsLocalUsageError("master_records_local_response_schema_mismatch")
     if reply.get("decision") != "ALLOW_CUSTODY_RESULT" or reply.get("status") != "CUSTODY_RECORDED":
-        raise MasterRecordsLocalUsageError("master_records_local_custody_not_admitted")
+        raise MasterRecordsLocalUsageError("master_records_local_organization_record_not_recorded")
     if reply.get("custody_recorded") is not True or reply.get("reconstructability") != "PASS":
         raise MasterRecordsLocalUsageError("master_records_local_reconstruction_not_pass")
     for key in ("authority_granted", "admissibility_determined", "execution_authority", "publication_authority"):
@@ -95,7 +98,7 @@ def _validate_reply(reply: Mapping[str, Any], event: Mapping[str, Any]) -> dict[
     }
 
 
-def submit_provider_usage_to_local_master_records(
+def record_provider_usage_in_local_master_records(
     event: dict[str, Any],
     *,
     socket_path: str | None = None,
@@ -112,7 +115,7 @@ def submit_provider_usage_to_local_master_records(
         "schema": REQUEST_SCHEMA,
         "event": dict(event),
         "authority_requested": False,
-        "custody_requested": True,
+        RECORD_REQUESTED_FIELD: True,
     }
     if exchange is None:
         selected = socket_path or os.getenv("STEGVERSE_MASTER_RECORDS_PROVIDER_USAGE_SOCKET", DEFAULT_SOCKET)
@@ -126,5 +129,5 @@ def submit_provider_usage_to_local_master_records(
 
 __all__ = [
     "DEFAULT_SOCKET", "MasterRecordsLocalUsageError",
-    "submit_provider_usage_to_local_master_records",
+    "record_provider_usage_in_local_master_records",
 ]

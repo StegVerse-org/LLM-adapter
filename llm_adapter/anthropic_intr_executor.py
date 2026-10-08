@@ -11,7 +11,7 @@ Orchestrates exactly one governed transaction:
     -> Claude inference (injected wire transport)
     -> normalized non-authoritative ProviderResponse
     -> provider-usage evidence
-    -> Master Records custody/reconstruction
+    -> Master Records organization record/reconstruction
     -> external Interlock/InTr egress evaluation
     -> exact response-hash-bound ALLOW
     -> downstream consequence (caller's, gated on EGRESS_ADMITTED)
@@ -176,7 +176,7 @@ def execute_governed_transaction(
             provider_response, envelope, evidence, provider_request.session_id
         )
 
-        # 9. Master Records custody/reconstruction. Custody != authorization.
+        # 9. Master Records organization record/reconstruction. A record != authorization.
         handoff = build_master_records_handoff(envelope, evidence, provider_response, usage_event)
         receipt = verify_master_records_receipt(master_records(handoff))
 

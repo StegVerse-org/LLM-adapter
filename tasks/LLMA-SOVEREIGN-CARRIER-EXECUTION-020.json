@@ -55,7 +55,7 @@
     "do not duplicate TVC route authority",
     "do not use GitHub tokens for model/runtime discovery, retrieval, route, or execution",
     "do not create a second heartbeat or worker registry",
-    "do not duplicate Master Records custody",
+    "do not duplicate Master Records organization record",
     "do not treat reference-model execution as production-scale LLM activation"
   ],
   "implementation_claim_release_condition": "SATISFIED by PR #135 merge plus passing validation matrix.",

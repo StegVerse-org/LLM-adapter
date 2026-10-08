@@ -167,7 +167,7 @@ def test_governed_runtime_continues_to_master_records_and_egress_handoff():
 
 def test_runtime_fails_closed_when_custody_or_reconstruction_is_not_complete():
     req = _request(); env = _envelope(req)
-    with pytest.raises(DeepSeekTVCRuntimeExecutionError, match="custody_not_recorded"):
+    with pytest.raises(DeepSeekTVCRuntimeExecutionError, match="organization_record_not_recorded"):
         execute_governed_deepseek_via_tvc_runtime(
             req, session_id="session-1", transition_id="tx-1", measurement_id="measurement-1",
             ingress_disposition="ALLOW", ingress_receipt_hash="a" * 64, carrier_ref="carrier-1",

@@ -300,7 +300,7 @@ async def hil_intake(document: UploadFile = File(...), metadata: str = Form(...)
         "tvc_decision_id": runtime["tvc"].get("decision_id"),
         "tvc_policy_hash": runtime["tvc"].get("policy_hash"),
         "provider_processing": "not_required_for_acceptance",
-        "master_records_custody": "queued_separately",
+        "master_records_organization_record": "queued_separately",
     }
     receipt["receipt_hash"] = sha256_tag(canonical_json(receipt))
     receipt["signature"] = "hmac-sha256:" + hmac.new(
