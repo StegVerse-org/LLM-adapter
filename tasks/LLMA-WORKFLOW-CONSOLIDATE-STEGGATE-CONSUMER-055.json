@@ -56,7 +56,7 @@
     "Do not create another StegGate authority or evaluator.",
     "Do not change canonical StegCore runtime identity or admit transport identity as authority.",
     "Do not introduce GitHub/OIDC runtime authority, artifact transport, repository writeback, or TV/TVC credential export into Actions.",
-    "Do not claim public provider execution, carrier activation, Site mutation, Master Records custody, filing, or wallet/trade authority."
+    "Do not claim public provider execution, carrier activation, Site mutation, Master Records organization record, filing, or wallet/trade authority."
   ],
   "next_task_after_release": "Reconcile architecture-guard.yml and capability-runtime.yml against the no-non-TV/TVC-token rule and <=2 final workflow target.",
   "authority_effect": false,

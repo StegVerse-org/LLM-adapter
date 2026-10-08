@@ -50,7 +50,7 @@
   "remaining_full_goal_blockers": [
     "authorized provider configuration and scoped execution grant",
     "authorized persistent endpoint/runtime",
-    "authenticated Master Records custody configuration"
+    "authenticated Master Records organization-record configuration"
   ],
   "next_executable_action": "None for this task. Issue #18 continues only after its authority-bound release conditions clear; PR #63 requires a separate bounded safety-review claim before merge or closure.",
   "manual_user_action_required": false,

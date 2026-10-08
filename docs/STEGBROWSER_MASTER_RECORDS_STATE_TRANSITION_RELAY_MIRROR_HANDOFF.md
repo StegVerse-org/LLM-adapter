@@ -15,7 +15,7 @@ Site browser canonical receipt
 -> verified StegVerse node advertisement
 -> existing Service Gateway
 -> existing TV/TVC service_gateway_master_records credential materialization
--> sole master-records/orchestration POST /api/master-records/state-transitions
+-> sole master-records/orchestration route /api/master-records/state-transitions (Master Records organization record)
 -> RECORDED + reconstruction_status PASS + exact digest equality
 -> canonical result returned to browser
 ```
@@ -27,7 +27,7 @@ The browser never receives or supplies the Master Records bearer token. The exis
 The relay accepts only:
 
 - subject `STEG-BROWSER-MANIFEST-INTR-INGRESS-EXECUTION-001-20260915T142500Z`;
-- transition `STEGBROWSER_RUNTIME_READINESS_MASTER_RECORDS_CUSTODY`;
+- transition `STEGBROWSER_RUNTIME_READINESS_MASTER_RECORDS_ORGANIZATION_RECORD`;
 - sequence `1`;
 - canonical task `STEG-BROWSER-RUNTIME-CONNECTION-INGRESS-001`;
 - COSV `40000100100000`;

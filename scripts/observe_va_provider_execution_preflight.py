@@ -223,7 +223,7 @@ def main() -> int:
         next_action = "Repair the TVC reusable admission binding before any provider authority or configuration can be consumed."
     elif not config_ready:
         state = "CONFIGURATION_REQUIRED"
-        next_action = "Configure the authorized Master Records endpoint, allowed hosts, and token in the protected GitHub execution environment."
+        next_action = "Configure the authorized Master Records organization-record service URL, allowed hosts, and token in the protected GitHub execution environment."
     elif not authority_ready:
         state = "AUTHORITY_REQUIRED"
         next_action = "A separately authorized owner must commit a valid, unexpired VA-specific provider-execution authority receipt for this exact caller commit."

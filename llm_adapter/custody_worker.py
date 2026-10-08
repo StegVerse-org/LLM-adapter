@@ -1,14 +1,15 @@
-"""Process pending Master-Records custody submissions.
+"""Write pending completed transitions into the Master Records organization record.
 
-The worker is safe to run at service startup or on a schedule. It performs no
-submission when the endpoint is disabled and never invents custody state.
+The worker is safe to run at service startup or on a schedule. It writes nothing
+when the Master Records organization-record service is disabled and never invents
+record state.
 """
 from __future__ import annotations
 
 import json
 import os
 
-from llm_adapter.master_records_client import enabled, process_pending
+from llm_adapter.master_records_organization_record_client import enabled, process_pending
 
 
 def configured_limit(default: int = 20) -> int:
@@ -28,7 +29,7 @@ def configured_limit(default: int = 20) -> int:
 def run(limit: int = 20) -> dict[str, object]:
     if not enabled():
         return {
-            "worker": "master_records_custody",
+            "worker": "master_records_organization_record",
             "enabled": False,
             "processed": 0,
             "recorded": 0,
@@ -37,7 +38,7 @@ def run(limit: int = 20) -> dict[str, object]:
         }
     results = process_pending(limit=limit)
     return {
-        "worker": "master_records_custody",
+        "worker": "master_records_organization_record",
         "enabled": True,
         "processed": len(results),
         "recorded": sum(1 for item in results if item.get("state") == "RECORDED"),

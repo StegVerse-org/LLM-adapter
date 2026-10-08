@@ -176,7 +176,7 @@ class GovernedManifestIngressTests(unittest.TestCase):
         self.assertEqual(result["verification_refs"], [])
         self.assertEqual(result["receipt_refs"], [])
         self.assertTrue(result["master_records_transition_custody_independent_of_return_projection"])
-        self.assertFalse(result["return_projection"]["suppresses_master_records_custody"])
+        self.assertFalse(result["return_projection"]["suppresses_master_records_organization_record"])
 
     def test_selected_projection_filters_transition_detail(self):
         result = process_manifest(

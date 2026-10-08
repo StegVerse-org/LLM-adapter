@@ -2,7 +2,8 @@
 
 This module advances one canonical transition relationship through bridge,
 delegation, standing, executor, response-receipt, durable local persistence, and
-Master-Records submission queue boundaries. Local persistence is not custody.
+the queue of records waiting for the Master Records organization record. Local
+persistence is not an organization record.
 """
 from __future__ import annotations
 
@@ -123,7 +124,7 @@ def progress_bounded_response(
 
     record["lifecycle_state"] = "COMPLETED"
     record["relationships"]["target_ref"] = "executor:STEGVERSE_AI_ENTITY"
-    record["relationships"]["next_task_ref"] = "task:master-records-custody-submission"
+    record["relationships"]["next_task_ref"] = "task:master-records-organization-record"
     record["governance"]["delegation_refs"] = [delegation_receipt]
     record["governance"]["evidence_refs"] = _append_unique(
         record["governance"]["evidence_refs"],

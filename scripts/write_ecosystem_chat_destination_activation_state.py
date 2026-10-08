@@ -162,7 +162,7 @@ def live_predicates(live: dict[str, Any] | None, verified: bool) -> dict[str, bo
     transition = evidence.get("transition") if isinstance(evidence.get("transition"), dict) else {}
     provider = chat.get("provider") if isinstance(chat.get("provider"), dict) else {}
     local_usage = chat.get("provider_usage_submission") if isinstance(chat.get("provider_usage_submission"), dict) else {}
-    custody = chat.get("master_records_usage_submission") if isinstance(chat.get("master_records_usage_submission"), dict) else {}
+    usage_record = chat.get("master_records_usage_submission") if isinstance(chat.get("master_records_usage_submission"), dict) else {}
     authority = chat.get("authority") if isinstance(chat.get("authority"), dict) else {}
 
     return {
@@ -176,11 +176,11 @@ def live_predicates(live: dict[str, Any] | None, verified: bool) -> dict[str, bo
         ),
         "provider_usage_custody_recorded": bool(
             verified
-            and custody.get("custody_recorded") is True
-            and custody.get("authority_granted") is False
+            and usage_record.get("custody_recorded") is True
+            and usage_record.get("authority_granted") is False
         ),
         "provider_usage_reconstructability_pass": bool(
-            verified and custody.get("reconstructability") == "PASS"
+            verified and usage_record.get("reconstructability") == "PASS"
         ),
         "transition_custody_recorded": bool(
             verified and transition.get("master_record_status") == "RECORDED"

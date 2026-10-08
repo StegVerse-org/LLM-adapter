@@ -85,7 +85,7 @@ def configure(monkeypatch, tmp_path):
     monkeypatch.setenv("STEGVERSE_EXTERNAL_MUTATION_POLICY_REF", "policy:external-wiki:v1")
     monkeypatch.setattr(
         mutation,
-        "require_publication_master_records_closure",
+        "require_publication_master_records_organization_record",
         lambda **kwargs: {
             "state": "RECORDED",
             "reconstruction_status": "PASS",
@@ -217,12 +217,12 @@ def test_wrong_policy_and_path_fail_closed(monkeypatch, tmp_path):
     assert response.status_code == 422
 
 
-def test_invalid_governed_master_records_closure_blocks_before_github(monkeypatch, tmp_path):
+def test_invalid_governed_master_records_organization_record_blocks_before_github(monkeypatch, tmp_path):
     publication_id, token = configure(monkeypatch, tmp_path)
     calls = []
     monkeypatch.setattr(
         mutation,
-        "require_publication_master_records_closure",
+        "require_publication_master_records_organization_record",
         lambda **kwargs: (_ for _ in ()).throw(mutation.PublicationCustodyError("closure_missing")),
     )
     monkeypatch.setattr(mutation, "_github_json", lambda *args, **kwargs: calls.append(args) or {})
@@ -232,7 +232,7 @@ def test_invalid_governed_master_records_closure_blocks_before_github(monkeypatc
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 409
-    assert response.json()["detail"]["reason"] == "governed_publication_master_records_closure_invalid"
+    assert response.json()["detail"]["reason"] == "governed_publication_master_records_organization_record_invalid"
     assert calls == []
 
 

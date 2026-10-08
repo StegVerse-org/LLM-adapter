@@ -39,7 +39,7 @@ receipt classes
 editability boundaries
 authority boundaries
 caller-return projection
-Master Records custody
+Master Records organization record
 exact-run locator semantics
 ```
 

@@ -1,7 +1,7 @@
 """Internal provider-usage persistence for the governed Ecosystem Chat lifecycle.
 
 This module records provider-owned measurements in the local usage-session ledger.
-Local persistence is not Master-Records custody and grants no authority.
+Local persistence is not a Master Records organization record and grants no authority.
 """
 from __future__ import annotations
 

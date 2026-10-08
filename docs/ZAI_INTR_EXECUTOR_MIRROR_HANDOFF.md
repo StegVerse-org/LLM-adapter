@@ -8,7 +8,7 @@ Authority effect: `NONE_EXECUTION_WRAPPER_ONLY`
 
 ## Source of truth
 
-This is the scoped completion record for `LLMA-ZAI-INTR-EXECUTOR-278`. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, the merged transport task `LLMA-ZAI-INTR-TRANSPORT-276`, the organization runtime authority in `StegVerse-Labs/.github`, existing Interlock/InTr transition authority, TV/TVC credential/route authority, and Master Records custody authority.
+This is the scoped completion record for `LLMA-ZAI-INTR-EXECUTOR-278`. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, the merged transport task `LLMA-ZAI-INTR-TRANSPORT-276`, the organization runtime authority in `StegVerse-Labs/.github`, existing Interlock/InTr transition authority, TV/TVC credential/route authority, and Master Records organization-record authority.
 
 The canonical sovereign local route remains independently sufficient and unchanged.
 
@@ -55,7 +55,7 @@ exact ProviderRequest
 -> Z.ai provider execution
 -> non-authoritative provider response
 -> provider usage event using existing provider_usage schema
--> existing Master Records provider-usage submission path
+-> existing Master Records provider-usage organization record
 -> execution evidence with egress_intr_required=true
 -> external egress Interlock/InTr evaluation
 -> `admit_zai_egress` verifies ALLOW + exact response hash + receipt hash
@@ -101,7 +101,7 @@ Source and CI prove deterministic binding and fail-closed behavior. They do not 
 - a live Z.ai provider request;
 - current TV/TVC credential materialization;
 - production provider route admission;
-- authentic Master Records custody/reconstruction;
+- authentic Master Records organization records/reconstruction;
 - live egress InTr ALLOW;
 - canonical resident WorkerCoordinator execution;
 - Ecosystem Chat activation;
@@ -116,7 +116,7 @@ admitted workload
 -> Interlock/InTr ingress ALLOW
 -> TV/TVC provider credential/route authority
 -> merged Z.ai executor
--> authentic provider-usage custody/reconstruction in master-records/orchestration
+-> authentic provider-usage organization records/reconstruction in master-records/orchestration
 -> external egress InTr ALLOW bound to exact response
 ```
 
@@ -136,7 +136,7 @@ executor source: COMPLETE_MERGED_VALIDATED
 dedicated Z.ai validation: PASS
 repository validation: PASS
 provider usage integration: COMPLETE
-Master Records submission reuse: COMPLETE
+Master Records organization-record reuse: COMPLETE
 egress exact-response binding: COMPLETE
 README: COMPLETE
 source claim: RELEASED

@@ -19,7 +19,7 @@ runtime/carrier: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
 canonical local model: StegVerse-002/micro-node-runtime#16/#22
 route authority: StegVerse-Labs/TVC
 credential semantics: TC/TVC
-custody/reconstruction: master-records/orchestration
+organization records/reconstruction: master-records/orchestration
 ```
 
 ## Goal result
@@ -120,7 +120,7 @@ canonical request
 -> normalized contribution receipts
 -> existing governance reconciliation
 -> governed result receipt
--> Master Records custody/reconstruction
+-> Master Records organization records/reconstruction
 ```
 
 The sovereign local source remains available as a qualifying source/fallback so distributed expansion does not turn third-party availability into a production dependency.

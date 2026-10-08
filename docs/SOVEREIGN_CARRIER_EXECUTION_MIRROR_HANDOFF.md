@@ -20,7 +20,7 @@ heartbeat_owner: StegVerse-Labs/.github#60
 model_owner: StegVerse-002/micro-node-runtime#22
 route_owner: StegVerse-Labs/TVC:TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002
 credential_authority_model: TC/TVC
-custody_owner: master-records/orchestration
+organization_record_owner: master-records/orchestration
 remaining_role: MACHINE_OWNED_SAME_CARRIER_OBSERVATION_AND_RECONSTRUCTION
 ```
 
@@ -71,7 +71,7 @@ The executor:
 7. derives only the canonical `/v1/chat/completions` transport path from the admitted private base endpoint;
 8. calls existing `execute_verified_local_model`, which uses `StegVerseLocalHTTPProviderClient`;
 9. preserves request/response hashes and MEASURED prompt/completion/total-token and latency evidence;
-10. reuses canonical Master Records provider-usage submission rather than duplicating custody authority;
+10. reuses the canonical Master Records provider-usage organization record rather than creating a second record;
 11. does not claim activation when custody/reconstruction or production-scale predicates remain incomplete.
 
 ## Validation evidence
@@ -101,7 +101,7 @@ credential_authority_model: TC/TVC
 provider_output_authority: false
 route_execution_authority: false
 binding_receipt_authority: false
-master_records_custody_authority_duplicated: false
+master_records_organization_record_authority_duplicated: false
 ```
 
 Historical committed evidence may contain the older `StegVerse-Labs/TV` credential-policy label. Those references remain historical evidence only. Current credential-authority semantics are TC/TVC; `StegVerse-Labs/TVC` remains the actual canonical route-authority repository.
@@ -133,7 +133,7 @@ python -m unittest -v tests.test_sovereign_local_model_binding
 
 ## Integration and propagation obligations
 
-`.github#60` owns invocation of this released executor after `TVC_LOCAL_MODEL_ROUTE_ADMITTED`. Master Records owns same-execution custody/reconstruction. Only after immutable activation verification may Site, Publisher, admissibility-wiki, and stegguardian-wiki claim verified ingestion.
+`.github#60` owns invocation of this released executor after `TVC_LOCAL_MODEL_ROUTE_ADMITTED`. Master Records keeps the same-execution organization records/reconstruction. Only after immutable activation verification may Site, Publisher, admissibility-wiki, and stegguardian-wiki claim verified ingestion.
 
 ## Completion accounting
 

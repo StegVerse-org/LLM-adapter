@@ -114,7 +114,7 @@ Source tests and repository validation can prove deterministic transport binding
 - valid/current TV/TVC credential materialization;
 - route admission for a production workload;
 - canonical resident WorkerCoordinator execution;
-- provider-usage Master Records custody/reconstruction;
+- provider-usage Master Records organization records/reconstruction;
 - egress InTr ALLOW;
 - Ecosystem Chat activation;
 - Site activation or downstream publication.
@@ -129,7 +129,7 @@ README change is mandatory in this same change set because the new protocol chan
 2. merge only if validation and authority-boundary checks pass;
 3. no live-provider or activation claim from merge;
 4. separately governed runtime observation may later exercise this lane only if a current task admits Z.ai as an optional source and TV/TVC supplies the required credential;
-5. any authentic provider usage must enter the existing Master Records provider-usage custody/reconstruction lane;
+5. any authentic provider usage must enter the existing Master Records provider-usage organization records/reconstruction lane;
 6. downstream Site/Publisher/wiki propagation occurs only when a capability/release gate explicitly requires it.
 
 ## Completion accounting

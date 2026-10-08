@@ -40,7 +40,7 @@
     "StegVerse-Labs/.github canonical heartbeat and WorkerCoordinator",
     "Interlock/InTr transition authority",
     "StegVerse-Labs/TVC route and credential authority",
-    "master-records/orchestration custody and reconstruction",
+    "master-records/orchestration organization records and reconstruction",
     "canonical sovereign local provider execution"
   ],
   "release_condition": "Exact-head source validation passes, README completeness passes, and merge occurs without authority escalation. Live provider execution remains separately governed.",

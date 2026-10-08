@@ -27,7 +27,7 @@ exact ProviderRequest
 -> order-preserving/lossless content-block normalization
 -> response hash over blocks + normalized metadata
 -> canonical/provider-native usage evidence
--> Master Records custody handoff without authority escalation
+-> Master Records organization-record handoff without authority escalation
 -> external Interlock/InTr egress decision
 -> exact admitted response-hash verification
 -> local EGRESS_ADMITTED report with authority_effect NONE_LOCAL
@@ -116,7 +116,7 @@ network calls during tests: NONE
 
 ## Live evidence boundary
 
-Source/tests and runtime-profile binding do not prove live Anthropic execution, valid/current TV/TVC credential materialization, a currently task-executing resident WorkerCoordinator, authentic Master Records custody/reconstruction, egress Interlock/InTr ALLOW, Ecosystem Chat activation, Site activation, or downstream publication.
+Source/tests and runtime-profile binding do not prove live Anthropic execution, valid/current TV/TVC credential materialization, a currently task-executing resident WorkerCoordinator, authentic Master Records organization records/reconstruction, egress Interlock/InTr ALLOW, Ecosystem Chat activation, Site activation, or downstream publication.
 
 Current canonical repository state records `control/heartbeat-carrier-runtime-state.json` as `ACTIVE` at epoch/generation 31, but `control/worker-runtime-state.json` last cycled at `2026-08-18T19:47:00Z` in `CARRIER_REFERENCE_ONLY_NO_TASK_EXECUTION` mode. The remaining runtime predicate is therefore authentic current task-executing WorkerCoordinator observation, not a missing runtime profile.
 

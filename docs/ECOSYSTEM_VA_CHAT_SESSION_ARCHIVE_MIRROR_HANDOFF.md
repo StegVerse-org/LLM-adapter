@@ -181,7 +181,7 @@ Ecosystem runtime: issue #18 is sole owner.
 VA provider execution: VACP-ADAPTER-AUTHORIZED-EXECUTION-005 / issue #90 is sole owner.
 VA route/privacy implementations: RELEASED_COMPLETE — do not fork.
 TVC admission: TVC#9 is sole authority owner.
-Custody/reconstruction: master-records/orchestration#15 and its machine task are sole owners.
+Organization records/reconstruction: master-records/orchestration#15 and its machine task are sole owners.
 Site projection/document privacy: Site#113/#116 are sole owners.
 Historical PR #108: SUPERSEDED and CLOSED.
 PR #109: final archive evidence transport.

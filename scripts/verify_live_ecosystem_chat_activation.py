@@ -207,12 +207,12 @@ def main() -> int:
         local_usage = chat.get("provider_usage_submission") or {}
         if not local_usage or local_usage.get("custody_recorded") is not False:
             blockers.append("local_usage_submission_invalid")
-        custody = chat.get("master_records_usage_submission") or {}
-        if custody.get("custody_recorded") is not True:
+        usage_record = chat.get("master_records_usage_submission") or {}
+        if usage_record.get("custody_recorded") is not True:
             blockers.append("provider_usage_custody_not_recorded")
-        if custody.get("reconstructability") != "PASS":
+        if usage_record.get("reconstructability") != "PASS":
             blockers.append("provider_usage_reconstructability_not_pass")
-        if custody.get("authority_granted") is not False:
+        if usage_record.get("authority_granted") is not False:
             blockers.append("provider_usage_authority_escalation")
         authority = chat.get("authority") or {}
         if authority.get("provider_usage_grants_authority") is not False:

@@ -9,8 +9,8 @@ COSV ID: NOT ESTABLISHED IN CANONICAL TASK REGISTRY
 - SDK reviewed-candidate binding merged in StegVerse-SDK PR #307 as `e025175f1c2e5ec4bd9c91d8ab093200f28f856c`.
 - SDK authoritative Interlock/InTr posture-request binding merged in PR #308 as `ecccfb511c6baf012c33ea27aa8e747dfe482273`.
 - The existing External Chat review store retains the cooperative review package, correction receipt, and `external_framework_wiki_publication_transition`.
-- The existing LLM-adapter Service Gateway already owns TV/TVC-materialized canonical Master Records endpoint/token transport.
-- Canonical state-transition custody remains solely in `master-records/orchestration`.
+- The existing LLM-adapter Service Gateway already owns TV/TVC-materialized transport of the Master Records organization-record service URL and token.
+- The organization record of each canonical state transition is kept solely by `master-records/orchestration`.
 
 ## This seam
 
@@ -28,7 +28,7 @@ The SDK posture binding is not itself re-labeled as an ALLOW decision.
 
 ## Master Records transport
 
-The implementation reuses the same server-side `STEGVERSE_MASTER_RECORDS_ENDPOINT`, `STEGVERSE_MASTER_RECORDS_TOKEN`, timeout, host allowlist, and TV/TVC materialization semantics already used by the Service Gateway StegBrowser relay. It submits to and reconstructs from the existing `master-records/orchestration /api/master-records/state-transitions` authority. It creates no custody database, alternate ledger, or credential path.
+The implementation reuses the same server-side `STEGVERSE_MASTER_RECORDS_ENDPOINT`, `STEGVERSE_MASTER_RECORDS_TOKEN`, timeout, host allowlist, and TV/TVC materialization semantics already used by the Service Gateway StegBrowser relay. It records the publication decision in, and reconstructs it from, the existing Master Records organization-record route `master-records/orchestration /api/master-records/state-transitions`. It creates no second record database, alternate ledger, or credential path.
 
 ## Mutation gate
 
@@ -55,7 +55,7 @@ The existing `/api/external-review/repository-mutations` request must carry only
 
 ## Completion truth
 
-Source/CI success is not authentic publication completion. End-to-end completion requires an authentic retained Interlock/InTr ALLOW, canonical Master Records closure, and a resulting Publisher/repository mutation receipt for an admitted publication candidate. Non-ALLOW negative controls must retain zero mutation.
+Source/CI success is not authentic publication completion. End-to-end completion requires an authentic retained Interlock/InTr ALLOW (Interlock/InTr admits the publication transition), the Master Records organization record of that decision, and a resulting Publisher/repository mutation receipt for an admitted publication candidate. Non-ALLOW negative controls must retain zero mutation.
 
 
 ## Source implementation — current branch
@@ -106,7 +106,7 @@ Current runtime state:
 
 ```text
 AUTHENTIC_EXTERNAL_INTR_ALLOW = UNKNOWN_NOT_AUTHENTICALLY_OBSERVED
-PUBLIC_WIKI_GOVERNED_PUBLICATION_DECISION_MASTER_RECORDS_CLOSURE = UNKNOWN_NOT_AUTHENTICALLY_OBSERVED
+PUBLIC_WIKI_GOVERNED_PUBLICATION_DECISION_MASTER_RECORDS_ORGANIZATION_RECORD = UNKNOWN_NOT_AUTHENTICALLY_OBSERVED
 REPOSITORY_MUTATION_FROM_GOVERNED_CLOSURE = UNKNOWN_NOT_AUTHENTICALLY_OBSERVED
 ```
 

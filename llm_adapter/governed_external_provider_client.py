@@ -3,7 +3,7 @@
 The injected callbacks are adapters to existing Interlock/InTr and TV/TVC
 surfaces. They are not implemented or authorized here. A ProviderResponse is
 returned to Ecosystem Chat only after ingress ALLOW, provider execution,
-Master Records usage submission, and exact-response egress ALLOW all validate.
+the Master Records usage organization record, and exact-response egress ALLOW all validate.
 """
 from __future__ import annotations
 

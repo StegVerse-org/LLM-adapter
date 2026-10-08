@@ -19,6 +19,14 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "receipts" / "ecosystem-chat-authorized-provider-activation.latest.json"
 BASE_URL = os.getenv("STEGVERSE_PROVIDER_ACTIVATION_BASE_URL", "http://127.0.0.1:8110").rstrip("/")
+# Authority-key naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): the
+# adapter now emits the organization-record names; already-deployed adapters still emit
+# the legacy names, which this reader accepts.
+LEGACY_AUTHORITY_KEYS = {
+    "local_persistence_is_master_records_organization_record": "local_persistence_is_master_records_custody",
+    "provider_usage_is_master_records_organization_record": "provider_usage_is_master_records_custody",
+    "organization_record_installed": "master_records_installed",
+}
 
 
 def canonical_sha256(payload: dict) -> str:
@@ -91,14 +99,14 @@ def validate_runtime_result(health: dict, response: dict, identity: dict) -> lis
     if local_usage.get("custody_recorded") is not False:
         blockers.append("local_usage_misclassified_as_custody")
 
-    usage_custody = response.get("master_records_usage_submission") or {}
-    if usage_custody.get("status") != "CUSTODY_RECORDED":
+    usage_record = response.get("master_records_usage_submission") or {}
+    if usage_record.get("status") != "CUSTODY_RECORDED":
         blockers.append("provider_usage_custody_not_recorded")
-    if usage_custody.get("custody_recorded") is not True:
+    if usage_record.get("custody_recorded") is not True:
         blockers.append("provider_usage_custody_flag_false")
-    if not usage_custody.get("receipt_id"):
+    if not usage_record.get("receipt_id"):
         blockers.append("provider_usage_custody_receipt_missing")
-    if usage_custody.get("authority_granted") is not False:
+    if usage_record.get("authority_granted") is not False:
         blockers.append("provider_usage_custody_authority_escalation")
 
     if response.get("lifecycle_state") != "COMPLETED":
@@ -117,23 +125,30 @@ def validate_runtime_result(health: dict, response: dict, identity: dict) -> lis
         blockers.append("transition_custody_receipt_missing")
 
     authority = response.get("authority") or {}
+
+    def authority_value(key: str) -> object:
+        # Peers deployed before the organization-record rename still emit the legacy names.
+        if key in authority:
+            return authority.get(key)
+        return authority.get(LEGACY_AUTHORITY_KEYS.get(key, key))
+
     required_false = (
         "provider_output_is_authority",
         "repository_mutation_allowed",
         "publication_allowed",
         "gateway_receipt_is_final",
         "final_response_receipt_is_repository_execution_authority",
-        "local_persistence_is_master_records_custody",
+        "local_persistence_is_master_records_organization_record",
         "site_grants_admissibility",
         "provider_usage_grants_authority",
     )
     for key in required_false:
-        if authority.get(key) is not False:
+        if authority_value(key) is not False:
             blockers.append(f"authority_{key}_must_be_false")
-    if authority.get("provider_usage_is_master_records_custody") is not True:
-        blockers.append("provider_usage_custody_authority_projection_missing")
-    if authority.get("master_records_installed") is not True:
-        blockers.append("master_records_installation_projection_missing")
+    if authority_value("provider_usage_is_master_records_organization_record") is not True:
+        blockers.append("provider_usage_organization_record_projection_missing")
+    if authority_value("organization_record_installed") is not True:
+        blockers.append("organization_record_installation_projection_missing")
 
     return blockers
 
@@ -183,7 +198,7 @@ def main() -> int:
         blockers.extend(validate_runtime_result(health, response, identity))
         provider = response.get("provider") or {}
         local_usage = response.get("provider_usage_submission") or {}
-        usage_custody = response.get("master_records_usage_submission") or {}
+        usage_record = response.get("master_records_usage_submission") or {}
         evidence["runtime"] = {
             "transition_id": response.get("transition_id"),
             "run_id": response.get("run_id"),
@@ -196,8 +211,8 @@ def main() -> int:
             "provider_receipt_id": provider.get("provider_receipt_id"),
             "provider_usage_measurement_id": local_usage.get("measurement_id"),
             "provider_usage_event_sha256": local_usage.get("event_sha256"),
-            "provider_usage_custody_status": usage_custody.get("status"),
-            "provider_usage_custody_receipt_id": usage_custody.get("receipt_id"),
+            "provider_usage_custody_status": usage_record.get("status"),
+            "provider_usage_custody_receipt_id": usage_record.get("receipt_id"),
             "master_record_status": response.get("master_record_status"),
             "master_record_ref": response.get("master_record_ref"),
             "reconstruction_status": response.get("reconstruction_status"),

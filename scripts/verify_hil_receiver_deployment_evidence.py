@@ -69,7 +69,7 @@ def main() -> None:
 
     require(data["site"].get("canonical_upload_url") == "https://stegverse.org/hil/upload/", "canonical Site URL mismatch")
     require(data["site"].get("upload_enabled_observed") is True, "public upload control not observed enabled")
-    require(data["master_records"].get("custody_state") == "RECORDED", "Master-Records custody not recorded")
+    require(data["master_records"].get("custody_state") == "RECORDED", "Master Records organization record not recorded")
     require(data["master_records"].get("reconstruction_state") == "PASS", "Master-Records reconstruction not PASS")
     require(is_sha256(data["master_records"].get("receipt_sha256")), "Master-Records receipt hash missing")
     require(all(value is False for value in data["authority"].values()), "deployment evidence must not grant authority")

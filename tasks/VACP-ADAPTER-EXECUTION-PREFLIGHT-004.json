@@ -48,10 +48,10 @@
   "reconstruction_state": "NOT_SUBMITTED",
   "next_owner": "StegVerse-org/LLM-adapter#90 explicit-authority single-request execution lane and master-records/orchestration#15",
   "next_release_conditions": [
-    "Configure Master Records endpoint, allowed-host list, and token in the protected GitHub execution environment.",
+    "Configure the Master Records organization-record service URL, allowed-host list, and token in the protected GitHub execution environment.",
     "A separately authorized owner commits a valid, unexpired VA-specific provider authority receipt for the exact caller commit.",
     "A workflow_dispatch-only execution lane consumes fresh TVC admission and explicit authority before requesting models:read.",
-    "One provider call emits a schema-valid execution receipt, then Master Records returns custody RECORDED and reconstruction PASS."
+    "One provider call emits a schema-valid execution receipt, then Master Records returns organization record RECORDED and reconstruction PASS."
   ],
   "collision_boundaries": [
     "Do not modify or dispatch the Ecosystem Chat provider workflow owned by issue #18.",

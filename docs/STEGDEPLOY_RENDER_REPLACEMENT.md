@@ -32,7 +32,7 @@ The runtime remains provider-neutral. It can execute on a StegVerse-owned server
 
 ## Current authority posture
 
-Provider execution, Master-Records custody, and external mutation remain disabled by default. Their credentials and endpoints can be supplied through environment variables without changing the image. The deployment receipt grants no execution, review, publication, provider, or custody authority.
+Provider execution, Master Records organization record, and external mutation remain disabled by default. Their credentials and endpoints can be supplied through environment variables without changing the image. The deployment receipt grants no execution, review, publication, provider, or custody authority.
 
 ## Files
 

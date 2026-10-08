@@ -119,7 +119,7 @@ privacy_guarded_dispatch PASS before model input
 admitted VA/federal grounding and provenance
 fresh TVC route admission
 bounded response generation
-Master Records custody RECORDED
+Master Records organization record RECORDED
 same-execution reconstruction PASS
 Site projection only after immutable execution evidence
 ```
@@ -142,7 +142,7 @@ TVC emits ROUTE_ADMITTED with credential_requirement NONE
 TVC records github_token_required=false
 VACC executes against that exact admitted private endpoint
 privacy guard PASS precedes model input
-Master Records custody RECORDED
+Master Records organization record RECORDED
 same-execution reconstruction PASS
 Site projection consumes immutable activation evidence
 ```

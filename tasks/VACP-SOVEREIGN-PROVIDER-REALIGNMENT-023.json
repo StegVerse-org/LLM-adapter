@@ -54,7 +54,7 @@
     "admitted VA/federal public grounding and provenance",
     "fresh TVC route admission",
     "bounded response generation",
-    "Master Records custody",
+    "Master Records organization record",
     "same-execution reconstruction PASS",
     "Site projection only after verified activation evidence"
   ],
@@ -64,14 +64,14 @@
     "canonical private language-model runtime proof exists and remains live",
     "TVC emits ROUTE_ADMITTED with credential_requirement NONE",
     "a real VACC request executes through the implemented runtime against that exact endpoint",
-    "Master Records custody returns RECORDED and same-execution reconstruction PASS",
+    "Master Records organization record returns RECORDED and same-execution reconstruction PASS",
     "persistent VACC runtime readiness returns READY",
     "an admitted public HTTPS transport is bound without gaining model or execution authority",
     "Site performs a real end-to-end conversational request and updates its projection from immutable evidence"
   ],
   "next_executable_action": "The already-registered resident recovery/parent worker chain consumes these implemented runtime surfaces on its next independently admitted execution opportunity. After same-execution reconstruction PASS, the carrier bridge starts the persistent VACC HTTP runtime automatically; the following transition binds public HTTPS transport and observes Site -> runtime -> Site.",
   "collision_boundaries": [
-    "Do not create a second heartbeat, local model runtime, provider authority, TVC authority, privacy path, or Master Records custody path.",
+    "Do not create a second heartbeat, local model runtime, provider authority, TVC authority, privacy path, or Master Records organization-record path.",
     "The new VACC HTTP service is an application gateway consuming the existing admitted provider path, not a competing provider gateway.",
     "Do not authorize or consume GitHub Models/GITHUB_TOKEN for VACC inference.",
     "Do not treat source/profile validation as live VACC activation."

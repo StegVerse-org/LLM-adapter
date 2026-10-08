@@ -115,5 +115,5 @@ def bind_system_boundary_to_lifecycle(
         "production_binding_enabled": False,
     }
     result.setdefault("authority", {})["system_boundary_declaration_is_execution_authority"] = False
-    result["authority"]["system_boundary_receipt_is_master_records_custody"] = False
+    result["authority"]["system_boundary_receipt_is_master_records_organization_record"] = False
     return result

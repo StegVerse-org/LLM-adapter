@@ -65,7 +65,7 @@
   "collision_boundaries_preserved": [
     "Historical PR #120/run evidence remains preserved as provenance only.",
     "No GitHub Models/GITHUB_TOKEN VACC inference route was recreated.",
-    "No privacy, Master Records custody, Site projection, filing, publication, wallet, or activation authority changed.",
+    "No privacy, Master Records organization record, Site projection, filing, publication, wallet, or activation authority changed.",
     "No non-TV/TVC credentials, GitHub/OIDC runtime authority, hosted provider fallback, repository writeback, artifact transport, or third-party runtime authority introduced."
   ],
   "next_executable_action": "NONE_FOR_CLAIM_047",

@@ -9,7 +9,7 @@
     "authorized_provider_configuration_receipt": false,
     "persistent_endpoint_activation_receipt": false,
     "provider_usage_persistence_contract": false,
-    "master_records_custody_acceptance": false,
+    "master_records_organization_record_acceptance": false,
     "transition_custody_acceptance": false,
     "immutable_adapter_receipt_contract": false
   },
@@ -17,7 +17,7 @@
     "authorized provider configuration receipt not observed",
     "persistent endpoint activation receipt not observed",
     "provider usage persistence contract not observed",
-    "Master-Records custody acceptance not observed",
+    "Master Records organization-record acceptance not observed",
     "transition custody acceptance not observed",
     "immutable adapter receipt contract not observed"
   ],
@@ -37,7 +37,7 @@
     "canonical governed event stream",
     "provider response event",
     "provider usage persistence receipt",
-    "Master-Records custody receipt",
+    "Master Records organization-record receipt",
     "transition custody receipt",
     "immutable adapter VERIFIED receipt",
     "post-execution reconstruction report",

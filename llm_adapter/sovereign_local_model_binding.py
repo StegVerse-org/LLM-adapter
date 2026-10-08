@@ -9,7 +9,7 @@ from .http_provider_clients import StegVerseLocalHTTPProviderClient
 from .provider_client import ProviderResponse
 from .provider_request import ProviderMessage, ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
-from .master_records_usage_submission import submit_provider_usage_to_master_records
+from .master_records_usage_record import record_provider_usage_in_master_records
 
 
 class SovereignLocalModelBindingError(RuntimeError):
@@ -134,7 +134,7 @@ def execute_verified_local_model(
     messages: Sequence[Mapping[str, str] | ProviderMessage],
     origin_entry_point: str = "ecosystem_chat",
     interaction_type: str = "sovereign_local_model_inference",
-    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records,
+    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_in_master_records,
 ) -> SovereignLocalModelExecution:
     proof = validate_runtime_proof(runtime_proof)
     model_id = str(proof.get("model_id", "")).strip()
@@ -184,7 +184,7 @@ def execute_verified_local_model(
     reconstructed = mr_usage.get("reconstructability") == "PASS"
     remaining = []
     if not custody:
-        remaining.append("provider_usage_master_records_custody")
+        remaining.append("provider_usage_master_records_organization_record")
     if not reconstructed:
         remaining.append("provider_usage_master_records_reconstruction_pass")
     if not production_scale:

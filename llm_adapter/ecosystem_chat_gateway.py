@@ -1,8 +1,9 @@
 """Deployable governed HTTP gateway for StegVerse Ecosystem Chat.
 
 The service preserves canonical transition identity, rejects restricted requests,
-applies bounded rate and provider policies, persists lifecycle state, and submits
-completed records to Master-Records only after an identity-matched custody receipt.
+applies bounded rate and provider policies, persists lifecycle state, and writes
+completed records into the Master Records organization record, marking them RECORDED
+only after an identity-matched organization-record receipt.
 """
 from __future__ import annotations
 
@@ -21,8 +22,8 @@ from llm_adapter.ai_entry_backend_service import build_ai_entry_backend_response
 from llm_adapter.governed_chat_pipeline import build_relationship, get_transition_status, progress_bounded_response
 from llm_adapter.governed_provider import enabled as provider_enabled
 from llm_adapter.governed_provider import generate as generate_provider_response
-from llm_adapter.master_records_client import enabled as master_records_enabled
-from llm_adapter.master_records_client import submit_record
+from llm_adapter.master_records_organization_record_client import enabled as master_records_enabled
+from llm_adapter.master_records_organization_record_client import write_organization_record
 from llm_adapter.transition_store import store
 
 RESTRICTED_PATTERNS = (
@@ -152,7 +153,7 @@ def health() -> dict[str, Any]:
         "transition_status_lookup": True,
         "sqlite_transition_store": True,
         "storage_durable_across_restarts": STORAGE_DURABLE_ACROSS_RESTARTS,
-        "local_persistence_is_master_records_custody": False,
+        "local_persistence_is_master_records_organization_record": False,
         "custody_queue": True,
         "master_records_submission_enabled": master_records_enabled(),
         "governed_provider_enabled": provider_enabled(),
@@ -270,7 +271,7 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
 
     custody_result: dict[str, Any] | None = None
     if progressed["lifecycle_state"] == "COMPLETED":
-        custody_result = submit_record(progressed)
+        custody_result = write_organization_record(progressed)
         progressed = get_transition_status(progressed["transition_id"]) or progressed
 
     return {
@@ -306,8 +307,8 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
             "publication_allowed": False,
             "gateway_receipt_is_final": False,
             "final_response_receipt_is_repository_execution_authority": False,
-            "local_persistence_is_master_records_custody": False,
+            "local_persistence_is_master_records_organization_record": False,
             "site_grants_admissibility": False,
-            "master_records_installed": progressed["continuity"]["master_record_status"] == "RECORDED",
+            "organization_record_installed": progressed["continuity"]["master_record_status"] == "RECORDED",
         },
     }

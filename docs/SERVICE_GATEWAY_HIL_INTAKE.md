@@ -4,7 +4,7 @@
 
 The Service Gateway accepts an unchanged PDF plus JSON metadata, validates the PDF signature and declared SHA-256, stores the packet durably, and returns a signed `HIL-RECEIVER-RECEIPT-v2`.
 
-Provider invocation and Master Records custody are not prerequisites for intake.
+Intake proceeds without provider invocation and without a Master Records organization record.
 
 ## TV/TVC authority path
 

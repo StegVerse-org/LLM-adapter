@@ -209,7 +209,7 @@ def main() -> None:
                 "cost_usd": evidence["cost_usd"],
                 "custody_state": "READY_FOR_MASTER_RECORDS",
                 "reconstruction_state": "READY_FOR_MASTER_RECORDS",
-                "next_executable_action": "Submit the execution and TVC admission receipts to master-records/orchestration#15.",
+                "next_executable_action": "Record the execution and TVC admission receipts as Master Records organization records through master-records/orchestration#15.",
                 "next_owner": "master-records/orchestration#15",
             }
 

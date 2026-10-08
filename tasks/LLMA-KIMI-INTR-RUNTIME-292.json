@@ -16,7 +16,7 @@
     "llm_adapter.provider_request",
     "llm_adapter.provider_client",
     "llm_adapter.provider_usage",
-    "llm_adapter.master_records_usage_submission",
+    "llm_adapter.master_records_usage_record",
     "StegVerse-Labs/TVC::provider_operation_profiles[kimi]",
     "StegVerse-Labs/TVC::non-exportable-provider-operation-broker",
     "stegverse:runtime-profile:hb-intr-resident:v1"

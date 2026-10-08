@@ -82,7 +82,7 @@ independent parent authorization: AUTHORIZED
 fresh fence required: >22
 resident execution request: already merged / runtime execution not observed
 canonical local/private model route: remains independently sufficient
-Master Records provider-usage custody: waits on real provider usage
+Master Records provider-usage organization record: waits on real provider usage
 Master Records same-execution reconstruction: waits on real execution
 ```
 
@@ -92,7 +92,7 @@ If separately admitted named `ProviderClient` instances are available during a l
 
 ## Master Records boundary
 
-`master-records/orchestration/docs/ECOSYSTEM_CHAT_CUSTODY_MIRROR_HANDOFF.md` remains authoritative for custody/reconstruction. `MR-PROVIDER-USAGE-001` remains waiting on authentic provider usage. No second custody executor is authorized.
+`master-records/orchestration/docs/ECOSYSTEM_CHAT_CUSTODY_MIRROR_HANDOFF.md` remains authoritative for Master Records organization records/reconstruction. `MR-PROVIDER-USAGE-001` remains waiting on authentic provider usage. No second custody executor is authorized.
 
 ## README impact
 

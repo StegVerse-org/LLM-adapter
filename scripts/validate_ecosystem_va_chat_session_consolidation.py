@@ -19,6 +19,9 @@ SOVEREIGN_VA_PROVIDER_TASK = ROOT / "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-0
 ECOSYSTEM_RECEIPT = ROOT / "receipts/ecosystem-chat-authorized-provider-activation.latest.json"
 CONSOLIDATION_TASK = ROOT / "tasks/LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011.json"
 OUTPUT = ROOT / "receipts/ecosystem-va-chat-session-consolidation-validation.json"
+# Gate naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): task records
+# written before the rename name this gate by its legacy text; it is accepted.
+LEGACY_ORGANIZATION_RECORD_GATE = "Master Records custody"
 
 REQUIRED_ITEM_FIELDS = {
     "task_id", "originating_session_goal", "destination_repository", "branch",
@@ -239,11 +242,12 @@ def validate_provider_continuation() -> tuple[dict[str, Any], dict[str, Any]]:
     required_gates = {
         "privacy guarded dispatch before model input",
         "fresh TVC route admission",
-        "Master Records custody",
         "same-execution reconstruction PASS",
         "Site projection only after verified activation evidence",
     }
-    if not required_gates.issubset(set(sovereign.get("preserved_vacc_gates") or [])):
+    preserved_gates = set(sovereign.get("preserved_vacc_gates") or [])
+    organization_record_gate = {"Master Records organization record", LEGACY_ORGANIZATION_RECORD_GATE}
+    if not required_gates.issubset(preserved_gates) or not preserved_gates & organization_record_gate:
         fail("sovereign_vacc_gates_incomplete")
     release_conditions = sovereign.get("machine_observable_release_condition")
     if release_conditions is None:

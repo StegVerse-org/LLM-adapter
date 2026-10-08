@@ -131,7 +131,7 @@ Reuse the current resident/WorkerCoordinator external-LLM lane to feed one authe
 5. TV/TVC provider-operation evidence;
 6. provider response hash;
 7. egress ALLOW receipt;
-8. Master Records custody/reconstruction evidence.
+8. Master Records organization records/reconstruction evidence.
 
 Then, if a memory write is proposed, route the non-authorizing write proposal through target-KV admission and exact-byte readback before claiming persistent memory.
 

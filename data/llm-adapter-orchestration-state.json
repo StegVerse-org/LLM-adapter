@@ -141,7 +141,7 @@
       "external_blockers": [
         "authorized provider configuration and scoped execution grant",
         "persistent endpoint",
-        "authenticated Master Records custody configuration"
+        "authenticated Master Records organization-record configuration"
       ],
       "completed_dependency_evidence": [
         "published-package consumer access: READY",

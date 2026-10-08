@@ -111,12 +111,12 @@ model output != authority
 runtime discovery != admissibility
 runtime launch != public deployment
 local inference proof != Ecosystem Chat activation
-local inference proof != Master Records custody
+local inference proof != Master Records organization record
 Ollama discovery compatibility != Ollama dependency
 repository-developed reference model != foundation LLM
 ```
 
-Canonical StegGate remains `StegVerse-Labs/StegCore`; Master Records remains the custody/reconstruction owner.
+Canonical StegGate remains `StegVerse-Labs/StegCore`; Master Records keeps organization records/reconstruction.
 
 ## Completion and continuation
 

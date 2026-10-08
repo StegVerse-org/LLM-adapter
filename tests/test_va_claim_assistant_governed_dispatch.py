@@ -49,7 +49,7 @@ for route, question in questions.items():
     assert record["answer"]["route"] == route
     assert record["next_required_evidence"] == [
         "tvc_capability_receipt",
-        "master_records_custody_receipt",
+        "master_records_organization_record_receipt",
         "reconstruction_receipt",
     ]
     assert record["document_context_refs"] is None
@@ -124,7 +124,7 @@ assert document_ready["next_required_evidence"] == [
     "pii_redaction_manifest",
     "model_leakage_receipt",
     "tvc_capability_receipt",
-    "master_records_custody_receipt",
+    "master_records_organization_record_receipt",
     "reconstruction_receipt",
 ]
 assert not any(document_ready["authority_flags"].values())
@@ -172,6 +172,16 @@ except ValueError as exc:
     assert "authority escalation" in str(exc)
 else:
     raise AssertionError("dispatch authority escalation was not rejected")
+
+# A record written before the organization-record evidence rename still validates.
+legacy_named = copy.deepcopy(document_ready)
+legacy_named["next_required_evidence"] = [
+    module.LEGACY_ORGANIZATION_RECORD_RECEIPT if item == module.ORGANIZATION_RECORD_RECEIPT else item
+    for item in legacy_named["next_required_evidence"]
+]
+assert "master_records_custody_receipt" in legacy_named["next_required_evidence"]
+legacy_named["receipt_hash"] = module.canonical_hash({k: v for k, v in legacy_named.items() if k != "receipt_hash"})
+module.validate_dispatch(legacy_named, registry)
 
 Path("receipts").mkdir(exist_ok=True)
 receipt = {

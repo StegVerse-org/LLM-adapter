@@ -27,9 +27,9 @@ from llm_adapter.hil_sovereign_receiver_profile import (
     apply_sovereign_hil_receiver_profile,
 )
 from llm_adapter.org_federation_rendezvous_api import router as org_federation_rendezvous_router
-from llm_adapter.master_records_usage_submission import (
+from llm_adapter.master_records_usage_record import (
     MasterRecordsUsageError,
-    submit_provider_usage_to_master_records,
+    record_provider_usage_in_master_records,
 )
 from llm_adapter.provider_usage_submission import persist_provider_usage
 from llm_adapter.stegbrowser_master_records_state_transition_relay import (
@@ -310,7 +310,9 @@ def stegverse_node_advertisement(request: Request) -> dict:
 
 @app.post("/api/master-records/state-transitions")
 def stegbrowser_master_records_state_transition_relay(payload: dict) -> dict:
-    """Relay the one immutable StegBrowser custody receipt without exporting credentials."""
+    """Relay the one immutable StegBrowser state-transition receipt to the Master Records
+    organization record without exporting credentials. Interlock/InTr admitted the
+    transition; this route only carries the receipt to be recorded."""
     try:
         return relay_stegbrowser_state_transition(payload)
     except StegBrowserMasterRecordsRelayError as exc:
@@ -329,11 +331,12 @@ def stegbrowser_master_records_state_transition_relay(payload: dict) -> dict:
 
 @app.middleware("http")
 async def record_provider_usage_after_ecosystem_chat(request: Request, call_next):
-    """Persist successful provider usage and attempt authenticated custody transfer.
+    """Persist successful provider usage and record it in the Master Records organization record.
 
-    Local persistence remains non-custodial. Master-Records custody is reported only
-    when an identity-bound external receipt validates. Transport or custody failure is
-    visible in the response but never converts provider output into authority.
+    Local persistence is not an organization record. A Master Records organization
+    record is reported only when an identity-bound external receipt validates.
+    Transport or recording failure is visible in the response but never converts
+    provider output into authority.
     """
     if request.method != "POST" or request.url.path != "/api/ecosystem-chat":
         return await call_next(request)
@@ -360,13 +363,13 @@ async def record_provider_usage_after_ecosystem_chat(request: Request, call_next
                 parent_transition_id=(request_payload.get("transition_identity") or {}).get("parent_transition_id"),
                 provider_result=SimpleNamespace(**provider),
             )
-            custody_submission = None
+            usage_record = None
             if local_submission is not None:
                 canonical_event = local_submission.pop("canonical_event")
                 try:
-                    custody_submission = submit_provider_usage_to_master_records(canonical_event)
+                    usage_record = record_provider_usage_in_master_records(canonical_event)
                 except MasterRecordsUsageError as exc:
-                    custody_submission = {
+                    usage_record = {
                         "schema": "stegverse.usage.master_records_submission.v1",
                         "status": "CUSTODY_SUBMISSION_FAILED",
                         "reason": str(exc),
@@ -375,10 +378,11 @@ async def record_provider_usage_after_ecosystem_chat(request: Request, call_next
                     }
 
             response_payload["provider_usage_submission"] = local_submission
-            response_payload["master_records_usage_submission"] = custody_submission
+            # The response key name is read by other repositories and is kept as is.
+            response_payload["master_records_usage_submission"] = usage_record
             authority = response_payload.setdefault("authority", {})
-            authority["provider_usage_is_master_records_custody"] = bool(
-                custody_submission and custody_submission.get("custody_recorded") is True
+            authority["provider_usage_is_master_records_organization_record"] = bool(
+                usage_record and usage_record.get("custody_recorded") is True
             )
             authority["provider_usage_grants_authority"] = False
             raw_body = json.dumps(response_payload, separators=(",", ":")).encode("utf-8")

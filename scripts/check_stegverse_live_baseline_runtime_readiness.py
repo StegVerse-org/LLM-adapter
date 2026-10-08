@@ -20,10 +20,13 @@ RUNTIME_PREREQUISITES = {
     "authorized_provider_configuration_receipt",
     "persistent_endpoint_activation_receipt",
     "provider_usage_persistence_contract",
-    "master_records_custody_acceptance",
+    "master_records_organization_record_acceptance",
     "transition_custody_acceptance",
     "immutable_adapter_receipt_contract",
 }
+# Prerequisite naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): readiness
+# written before the rename names this prerequisite by its legacy key; it is accepted.
+LEGACY_ORGANIZATION_RECORD_PREREQUISITE = "master_records_custody_acceptance"
 
 
 def require(value: object, message: str) -> None:
@@ -43,7 +46,12 @@ def main() -> int:
     require(intake.get("authority") == NO_AUTHORITY, "intake authority boundary changed")
     require(readiness.get("authority") == NO_AUTHORITY, "readiness authority boundary changed")
 
-    prerequisites = readiness.get("prerequisites") or {}
+    prerequisites = dict(readiness.get("prerequisites") or {})
+    if LEGACY_ORGANIZATION_RECORD_PREREQUISITE in prerequisites:
+        prerequisites.setdefault(
+            "master_records_organization_record_acceptance",
+            prerequisites.pop(LEGACY_ORGANIZATION_RECORD_PREREQUISITE),
+        )
     require(prerequisites.get("intake_received") is True, "intake receipt regressed")
     require(RUNTIME_PREREQUISITES <= set(prerequisites), "missing runtime prerequisite")
     all_ready = all(prerequisites.get(key) is True for key in RUNTIME_PREREQUISITES)

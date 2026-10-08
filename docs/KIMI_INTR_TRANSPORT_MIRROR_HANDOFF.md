@@ -18,7 +18,7 @@ provider authority effect: NONE
 exact-packet transport evidence: Universal InTr / TRANSPORT_COMPLETE
 governance disposition: StegCore / ALLOW | DENY | FAIL-CLOSED
 credential/provider-operation authority: TV/TVC
-custody/reconstruction authority: Master Records
+organization records/reconstruction: Master Records
 heartbeat/scheduler/worker authority: NONE
 canonical sovereign local route replaced: false
 ```
@@ -31,7 +31,7 @@ Universal InTr transport completion is not an ALLOW decision. Governance ALLOW i
 llm_adapter.provider_request.ProviderRequest
 llm_adapter.provider_client.ProviderResponse
 llm_adapter.provider_usage.build_provider_usage_event
-llm_adapter.master_records_usage_submission.submit_provider_usage_to_master_records
+llm_adapter.master_records_usage_record.record_provider_usage_in_master_records
 StegVerse-Labs/StegOS external-provider-operation Universal InTr profile
 StegVerse-Labs/Governance hosted-llm-provider-operation.v1 profile
 StegCore canonical three-layer evaluator
@@ -80,7 +80,7 @@ exact TVC/Moonshot provider payload bytes
 -> https://api.moonshot.ai/v1/chat/completions / kimi-k3
 -> sanitized provider result + TVC use receipt
 -> canonical LLM-adapter provider usage event
--> canonical Master Records provider-usage custody/reconstruction
+-> canonical Master Records provider-usage organization records/reconstruction
 -> exact response bytes through Universal InTr response transport
 -> response may return only after the complete retained evidence chain
 ```
@@ -110,7 +110,7 @@ Source integration is not live activation. Merge readiness requires exact-head C
 - lease provider/model/authority boundary validation;
 - sanitized TVC result normalization;
 - canonical provider-usage/Master Records continuation;
-- Master Records custody required before canonical egress;
+- Master Records organization record required before canonical egress;
 - exact egress response-hash binding;
 - validation-only GitHub Actions authority.
 
@@ -123,7 +123,7 @@ Status remains `IMPLEMENTED_PENDING_RUNTIME_PROOF` until one authentic same-exec
 3. authentic TV/TVC Kimi capability lease and non-exportable operation;
 4. authentic Moonshot/Kimi provider response for the bound request;
 5. authentic TVC use receipt with no credential export/log/retention;
-6. authentic Master Records provider-usage custody and reconstruction PASS;
+6. authentic Master Records provider-usage organization records and reconstruction PASS;
 7. authentic Universal InTr egress transport completion bound to the exact response;
 8. common session/transition/request identifiers across retained evidence.
 

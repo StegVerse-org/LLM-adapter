@@ -1,8 +1,8 @@
 import pytest
 
-from llm_adapter.master_records_local_usage_submission import (
+from llm_adapter.master_records_local_usage_record import (
     MasterRecordsLocalUsageError,
-    submit_provider_usage_to_local_master_records,
+    record_provider_usage_in_local_master_records,
 )
 
 
@@ -47,16 +47,16 @@ def reply(**overrides):
     return base
 
 
-def test_local_submitter_sends_only_non_authorizing_custody_request_and_requires_reconstruction_pass():
+def test_local_recorder_sends_only_non_authorizing_record_request_and_requires_reconstruction_pass():
     observed = []
-    result = submit_provider_usage_to_local_master_records(
+    result = record_provider_usage_in_local_master_records(
         event(), exchange=lambda request: observed.append(request) or reply()
     )
     assert observed == [{
         "schema": "stegverse.master_records.local_provider_usage_request.v1",
         "event": event(),
         "authority_requested": False,
-        "custody_requested": True,
+        "record_requested": True,
     }]
     assert result["status"] == "CUSTODY_RECORDED"
     assert result["custody_recorded"] is True
@@ -83,19 +83,19 @@ def test_local_submitter_sends_only_non_authorizing_custody_request_and_requires
     ("measurement_id", "drift"),
     ("event_sha256", "b" * 64),
 ])
-def test_local_submitter_fails_closed_on_boundary_or_identity_drift(field, value):
+def test_local_recorder_fails_closed_on_boundary_or_identity_drift(field, value):
     with pytest.raises(MasterRecordsLocalUsageError):
-        submit_provider_usage_to_local_master_records(
+        record_provider_usage_in_local_master_records(
             event(), exchange=lambda request: reply(**{field: value})
         )
 
 
-def test_local_submitter_rejects_client_self_custody_or_authority_claim():
+def test_local_recorder_rejects_client_self_recorded_or_authority_claim():
     bad = event()
     bad["custody_recorded"] = True
     with pytest.raises(MasterRecordsLocalUsageError, match="provider_usage_event_boundary_invalid"):
-        submit_provider_usage_to_local_master_records(bad, exchange=lambda request: reply())
+        record_provider_usage_in_local_master_records(bad, exchange=lambda request: reply())
     bad = event()
     bad["authority_granted"] = True
     with pytest.raises(MasterRecordsLocalUsageError, match="provider_usage_event_boundary_invalid"):
-        submit_provider_usage_to_local_master_records(bad, exchange=lambda request: reply())
+        record_provider_usage_in_local_master_records(bad, exchange=lambda request: reply())

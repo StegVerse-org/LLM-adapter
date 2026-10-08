@@ -61,7 +61,7 @@
     "Privacy gate remains before classification/governed dispatch/model input.",
     "Raw PII rejection, no rejected value/hash retention, sanitized derived-context requirement, safe custody projection, and no authority/activation effect remain unchanged.",
     "Historical hosted PR #99/run/artifact evidence remains provenance only and is not a live provider-release predicate.",
-    "Site#116 production document ownership and Master Records custody authority remain unchanged.",
+    "Site#116 production document ownership and Master Records organization-record authority remain unchanged.",
     "No GitHub/OIDC/provider/Master-Records credentials, hosted activation, repository writeback, artifact transport, filing, custody, Site mutation, or wallet authority were added."
   ],
   "next_executable_action": "NONE_FOR_CLAIM_049",

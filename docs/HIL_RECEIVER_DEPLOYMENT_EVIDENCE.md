@@ -29,7 +29,7 @@ public DNS
 → managed restart or redeploy
 → byte-identical reconstruction
 → public Site upload control enabled
-→ Master-Records custody RECORDED
+→ Master Records organization record RECORDED
 → Master-Records reconstruction PASS
 ```
 

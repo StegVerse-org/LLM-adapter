@@ -10,7 +10,7 @@ Authority effect: `NONE_INTERFACE_CORRECTION_ONLY`
 
 ## Source of truth
 
-This is the completion record for reconciliation of the user-supplied Z.ai reference package with canonical `stegverse.intr.zai.transport.v1`. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, `docs/ZAI_INTR_RELEASE_MIRROR_HANDOFF.md`, existing Interlock/InTr transition authority, TV/TVC credential/route authority, Master Records custody authority, and canonical resident runtime authority.
+This is the completion record for reconciliation of the user-supplied Z.ai reference package with canonical `stegverse.intr.zai.transport.v1`. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, `docs/ZAI_INTR_RELEASE_MIRROR_HANDOFF.md`, existing Interlock/InTr transition authority, TV/TVC credential/route authority, Master Records organization-record authority, and canonical resident runtime authority.
 
 The reconciliation did not install competing `_ref` runtime modules, create a second Z.ai lane, replace the canonical sovereign route, or create transition/route/credential/custody/runtime/publication authority.
 
@@ -34,7 +34,7 @@ ingress binding: exact transition/request/receipt binding
 egress handoff: deterministic, non-authorizing, requested_disposition=ALLOW only
 egress admission: separately supplied exact ALLOW + exact response hash
 provider output authority: NONE
-Master Records custody reply: cannot grant authority
+Master Records organization-record reply: cannot grant authority
 activation.live: false
 ```
 
@@ -125,7 +125,7 @@ admitted workload
 -> TV/TVC live provider credential/route materialization
 -> canonical Z.ai executor
 -> authentic provider response + measured usage
--> Master Records provider-usage custody/reconstruction
+-> Master Records provider-usage organization records/reconstruction
 -> external egress InTr ALLOW bound to exact response
 ```
 

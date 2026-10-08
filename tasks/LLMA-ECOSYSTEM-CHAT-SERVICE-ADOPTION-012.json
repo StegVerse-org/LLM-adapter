@@ -24,7 +24,7 @@
     "build StegVerse-owned compute and deployment control plane using micro-node-runtime and core-lite",
     "build StegVerse-owned naming, routing, certificate, and edge-protection control plane",
     "migrate Render-hosted gateway, HIL receiver, TVC, Site, and SCW workloads to StegVerse-owned nodes",
-    "bind authenticated StegVerse Master Records custody",
+    "bind authenticated StegVerse Master Records organization record",
     "provide StegVerse-owned or StegVerse-federated model execution",
     "execute one governed provider request through the sovereign path",
     "retain persistence, custody, reconstruction, and zero-blocker activation evidence",

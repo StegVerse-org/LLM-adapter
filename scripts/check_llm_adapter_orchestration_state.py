@@ -32,7 +32,14 @@ COMMITTED_RECEIPT = "a04c192cbc89933d02dcb51517fbb56de88c0ab4bb4384df296519516f1
 # v2 receipt and READY projection supersede the older Aug-4 digest snapshot.
 IMAGE_DIGEST = "sha256:a599fc154f4bde14ab9adc140feb1285b43af3da4ea9214804b007fb9ff38f19"
 IMAGE_RECEIPT = "67feb640e7be9489ca52438c9c7c609eeeae90c8e1e5409ea5c8fac6a38ef122"
-BLOCKERS = {"authorized provider configuration and scoped execution grant", "persistent endpoint", "authenticated Master Records custody configuration"}
+BLOCKERS = {"authorized provider configuration and scoped execution grant", "persistent endpoint", "authenticated Master Records organization-record configuration"}
+# Blocker naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): state written
+# before the rename names the third blocker by its legacy text; it is accepted.
+LEGACY_BLOCKERS = {"authorized provider configuration and scoped execution grant", "persistent endpoint", "authenticated Master Records custody configuration"}
+
+
+def external_blockers_valid(values: Any) -> bool:
+    return set(values or []) in (BLOCKERS, LEGACY_BLOCKERS)
 
 
 def fail(message: str) -> None:
@@ -116,7 +123,7 @@ def main() -> int:
     live = one(state.get("queued_exclusive_tasks") or [], "LLMA-0002-LIVE-PROVIDER")
     if live.get("owner") != "issue/18" or live.get("state") != "BLOCKED" or live.get("execution_class") != "EXCLUSIVE":
         fail("live-provider ownership or state mismatch")
-    if live.get("blocked_until") != "all authority-bound blockers are cleared" or set(live.get("external_blockers") or []) != BLOCKERS:
+    if live.get("blocked_until") != "all authority-bound blockers are cleared" or not external_blockers_valid(live.get("external_blockers")):
         fail("live-provider release condition mismatch")
     if str(RUN) not in "\n".join(live.get("completed_dependency_evidence") or []):
         fail("reconciliation dependency missing from live-provider task")

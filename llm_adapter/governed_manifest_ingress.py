@@ -4,8 +4,8 @@ The adapter validates transport framing and delegates governance to an injected
 canonical handler. It does not implement or replace StegGate authority.
 
 The manifest may request how transition evidence is projected back to the
-external caller. That projection never suppresses canonical Master Records
-custody or alters the governed transition history.
+external caller. That projection never suppresses the Master Records organization
+record or alters the governed transition history.
 """
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ def _normalize_return_projection(value: Mapping[str, Any] | None) -> dict[str, A
         "mode": mode,
         "transition_classes": selected,
         "controls_user_return_only": True,
-        "suppresses_master_records_custody": False,
+        "suppresses_master_records_organization_record": False,
         "erases_ecosystem_transitions": False,
         "grants_authority": False,
     }
@@ -275,13 +275,13 @@ def process_manifest(
 
     # The receipt a transition emits is the organization's, not Master Records'.
     #
-    # This required an `MR-` id, which is custody evidence from the end of the
-    # chain used as proof of its beginning. The organization ledger contract is
+    # This required an `MR-` id, a Master Records organization-record id from the
+    # end of the chain used as proof of its beginning. The organization ledger contract is
     # explicit about the order: it emits
     # `stegverse.organization-transition-receipt/v1`, its ledger root is the
     # runtime-reality locus, and `propagation_gates_organization_runtime_reality`
-    # is false -- Master Records is a propagation target that was never
-    # permitted to gate the transition. This adapter also declares
+    # is false. Master Records is a propagation target that keeps the
+    # organization record; the transition itself is admitted by Interlock/InTr. This adapter also declares
     # `master_records_authority: false`, so demanding an MR id was asserting an
     # authority it does not hold.
     #

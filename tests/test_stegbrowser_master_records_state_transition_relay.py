@@ -4,6 +4,7 @@ import json
 import pytest
 
 from llm_adapter.stegbrowser_master_records_state_transition_relay import (
+    LEGACY_TRANSITION_ID,
     NONCE,
     TRANSITION_ID,
     StegBrowserMasterRecordsRelayError,
@@ -19,10 +20,10 @@ def _sha_uri(seed):
     return "sha256:" + hashlib.sha256(seed.encode("utf-8")).hexdigest()
 
 
-def receipt():
+def receipt(transition_id=TRANSITION_ID):
     evidence = {
         "source_schema": "stegverse.master-records.stegbrowser-readiness-custody-intr-admission/v1",
-        "transition_id": TRANSITION_ID,
+        "transition_id": transition_id,
         "canonical_task": "STEG-BROWSER-RUNTIME-CONNECTION-INGRESS-001",
         "cosv_task_vector": "40000100100000",
         "source_receipt_sha256": _sha_uri("source"),
@@ -40,12 +41,12 @@ def receipt():
     }
     return {
         "schema": "stegverse.canonical-state-transition-receipt/v1",
-        "transition_id": TRANSITION_ID,
+        "transition_id": transition_id,
         "transition_sequence": 1,
         "subject_or_correlation_id": NONCE,
         "prior_state_ref_or_hash": None,
         "resulting_state_ref_or_hash": evidence["runtime_readiness_receipt_sha256"],
-        "governance_decision_ref_where_applicable": "intr:ALLOW:" + TRANSITION_ID,
+        "governance_decision_ref_where_applicable": "intr:ALLOW:" + transition_id,
         "transition_evidence": evidence,
         "recorded_at": "2026-09-17T23:10:00Z",
         "transition_outcome": "OBSERVED",
@@ -57,12 +58,12 @@ def receipt():
     }
 
 
-def submission():
+def submission(transition_id=TRANSITION_ID, record_field="record_requested"):
     return {
         "schema": "stegverse.master-records.state-transition-submission/v1",
-        "receipt": receipt(),
+        "receipt": receipt(transition_id),
         "authority_requested": False,
-        "custody_requested": True,
+        record_field: True,
         "reconstruction_requested": True,
     }
 
@@ -76,12 +77,12 @@ class Response:
         return self.payload
 
 
-def recorded(r):
+def recorded(r, schema="stegverse.master-records.state-transition-organization-record-receipt/v1"):
     digest = hashlib.sha256(_canonical(r).encode("utf-8")).hexdigest()
     return {
-        "schema": "stegverse.master-records.state-transition-custody-receipt/v1",
+        "schema": schema,
         "state": "RECORDED",
-        "transition_id": TRANSITION_ID,
+        "transition_id": r["transition_id"],
         "transition_sequence": 1,
         "subject_or_correlation_id": NONCE,
         "transition_outcome": "OBSERVED",
@@ -143,3 +144,40 @@ def test_relay_requires_exact_reconstruction_digest(monkeypatch):
     bad["reconstructed_receipt_sha256"] = "0" * 64
     with pytest.raises(StegBrowserMasterRecordsRelayError, match="digest_mismatch"):
         relay_stegbrowser_state_transition(body, post=lambda *a, **k: Response(bad))
+
+
+@pytest.mark.parametrize("transition_id, record_field, schema", [
+    (TRANSITION_ID, "record_requested", "stegverse.master-records.state-transition-organization-record-receipt/v1"),
+    (LEGACY_TRANSITION_ID, "custody_requested", "stegverse.master-records.state-transition-custody-receipt/v1"),
+    (LEGACY_TRANSITION_ID, "record_requested", "stegverse.master-records.state-transition-organization-record-receipt/v1"),
+])
+def test_relay_accepts_organization_record_and_legacy_names(monkeypatch, transition_id, record_field, schema):
+    _configure(monkeypatch)
+    body = submission(transition_id, record_field)
+    observed = {}
+
+    def post(url, data=None, headers=None, timeout=None):
+        observed["data"] = json.loads(data.decode("utf-8"))
+        return Response(recorded(body["receipt"], schema))
+
+    result = relay_stegbrowser_state_transition(body, post=post)
+    assert result["state"] == "RECORDED"
+    assert result["transition_id"] == transition_id
+    assert observed["data"] == body
+
+
+def test_relay_rejects_both_record_request_spellings_at_once(monkeypatch):
+    _configure(monkeypatch)
+    body = submission()
+    body["custody_requested"] = True
+    with pytest.raises(StegBrowserMasterRecordsRelayError, match="field_set_invalid"):
+        relay_stegbrowser_state_transition(body, post=lambda *a, **k: None)
+
+
+def test_relay_rejects_response_for_a_different_transition_spelling(monkeypatch):
+    _configure(monkeypatch)
+    body = submission(LEGACY_TRANSITION_ID, "custody_requested")
+    response = recorded(body["receipt"])
+    response["transition_id"] = TRANSITION_ID
+    with pytest.raises(StegBrowserMasterRecordsRelayError, match="identity_mismatch"):
+        relay_stegbrowser_state_transition(body, post=lambda *a, **k: Response(response))

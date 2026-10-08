@@ -1,8 +1,9 @@
-"""Authenticated Master-Records submission for provider-owned usage events.
+"""Authenticated Master Records organization-record writes for provider-owned usage events.
 
 This module is server-side only. Configuration is resolved at call time, credentials
-never enter response payloads, and a transport response is not treated as custody
-until the returned receipt is identity-bound and explicitly records custody.
+never enter response payloads, and a transport response is not treated as a recorded
+organization record until the returned receipt is identity-bound and explicitly
+confirms that the Master Records organization record was written.
 """
 from __future__ import annotations
 
@@ -15,46 +16,53 @@ from urllib.parse import urlparse
 
 
 class MasterRecordsUsageError(RuntimeError):
-    """Fail-closed Master-Records usage submission error."""
+    """Raised when a Master Records usage organization record cannot be confirmed."""
+
+
+# Request field naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002):
+# writers emit only ``record_requested`` (formerly ``custody_requested``).
+RECORD_REQUESTED_FIELD = "record_requested"
 
 
 @dataclass(frozen=True)
 class MasterRecordsUsageConfig:
-    endpoint: str
+    record_url: str
     token: str
     timeout_seconds: float = 10.0
 
 
-def _resolve_endpoint() -> tuple[str, bool]:
-    explicit_endpoint = os.getenv("STEGVERSE_MASTER_RECORDS_USAGE_URL", "").strip()
-    base_endpoint = os.getenv("STEGVERSE_MASTER_RECORDS_ENDPOINT", "").strip().rstrip("/")
+def _resolve_record_url() -> tuple[str, bool]:
+    # Environment variable names are deployment configuration shared with other
+    # repositories; they locate the Master Records organization-record service.
+    explicit_url = os.getenv("STEGVERSE_MASTER_RECORDS_USAGE_URL", "").strip()
+    base_url = os.getenv("STEGVERSE_MASTER_RECORDS_ENDPOINT", "").strip().rstrip("/")
     private_hostport = os.getenv("STEGVERSE_MASTER_RECORDS_HOSTPORT", "").strip().strip("/")
-    if explicit_endpoint:
-        return explicit_endpoint, False
-    if base_endpoint:
-        return base_endpoint + "/api/custody/provider-usage", False
+    if explicit_url:
+        return explicit_url, False
+    if base_url:
+        return base_url + "/api/custody/provider-usage", False
     if private_hostport:
         return f"http://{private_hostport}/api/custody/provider-usage", True
     return "", False
 
 
 def _configured() -> MasterRecordsUsageConfig | None:
-    endpoint, private_network = _resolve_endpoint()
+    record_url, private_network = _resolve_record_url()
     token = os.getenv("STEGVERSE_MASTER_RECORDS_TOKEN", "").strip()
-    if not endpoint and not token:
+    if not record_url and not token:
         return None
-    if not endpoint or not token:
+    if not record_url or not token:
         raise MasterRecordsUsageError("master_records_usage_configuration_incomplete")
 
-    parsed = urlparse(endpoint)
+    parsed = urlparse(record_url)
     local_http = parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
     allow_local = os.getenv("STEGVERSE_ALLOW_LOCAL_MASTER_RECORDS_HTTP", "").lower() == "true"
     allow_private = os.getenv("STEGVERSE_ALLOW_PRIVATE_MASTER_RECORDS_HTTP", "").lower() == "true"
     safe_http = (local_http and allow_local) or (private_network and allow_private)
     if parsed.scheme != "https" and not safe_http:
-        raise MasterRecordsUsageError("master_records_usage_endpoint_must_use_https")
+        raise MasterRecordsUsageError("master_records_usage_record_url_must_use_https")
     if not parsed.netloc:
-        raise MasterRecordsUsageError("master_records_usage_endpoint_invalid")
+        raise MasterRecordsUsageError("master_records_usage_record_url_invalid")
 
     try:
         timeout = float(os.getenv("STEGVERSE_MASTER_RECORDS_TIMEOUT_SECONDS", "10"))
@@ -62,7 +70,7 @@ def _configured() -> MasterRecordsUsageConfig | None:
         raise MasterRecordsUsageError("master_records_usage_timeout_invalid") from exc
     if timeout <= 0:
         raise MasterRecordsUsageError("master_records_usage_timeout_invalid")
-    return MasterRecordsUsageConfig(endpoint=endpoint, token=token, timeout_seconds=timeout)
+    return MasterRecordsUsageConfig(record_url=record_url, token=token, timeout_seconds=timeout)
 
 
 def _validate_receipt(receipt: Any, event: dict[str, Any]) -> dict[str, Any]:
@@ -79,7 +87,7 @@ def _validate_receipt(receipt: Any, event: dict[str, Any]) -> dict[str, Any]:
     if receipt["event_sha256"] != event["event_sha256"]:
         raise MasterRecordsUsageError("master_records_usage_event_digest_mismatch")
     if receipt["custody_recorded"] is not True:
-        raise MasterRecordsUsageError("master_records_usage_custody_not_recorded")
+        raise MasterRecordsUsageError("master_records_usage_organization_record_not_recorded")
     if receipt["authority_granted"] is not False:
         raise MasterRecordsUsageError("master_records_usage_authority_escalation")
     if not isinstance(receipt["receipt_id"], str) or not receipt["receipt_id"].strip():
@@ -87,13 +95,13 @@ def _validate_receipt(receipt: Any, event: dict[str, Any]) -> dict[str, Any]:
     return receipt
 
 
-def submit_provider_usage_to_master_records(event: dict[str, Any], *, opener: Callable[..., Any] = request.urlopen) -> dict[str, Any]:
+def record_provider_usage_in_master_records(event: dict[str, Any], *, opener: Callable[..., Any] = request.urlopen) -> dict[str, Any]:
     config = _configured()
     if config is None:
         return {"schema": "stegverse.usage.master_records_submission.v1", "status": "NOT_CONFIGURED", "authority_granted": False, "custody_recorded": False}
 
-    body = json.dumps({"schema": "stegverse.master_records.provider_usage_submission.v1", "event": event, "authority_requested": False, "custody_requested": True}, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    outbound = request.Request(config.endpoint, data=body, method="POST", headers={"Authorization": f"Bearer {config.token}", "Content-Type": "application/json", "Accept": "application/json", "X-SteGVerse-Session": str(event["session_id"])})
+    body = json.dumps({"schema": "stegverse.master_records.provider_usage_submission.v1", "event": event, "authority_requested": False, RECORD_REQUESTED_FIELD: True}, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    outbound = request.Request(config.record_url, data=body, method="POST", headers={"Authorization": f"Bearer {config.token}", "Content-Type": "application/json", "Accept": "application/json", "X-SteGVerse-Session": str(event["session_id"])})
     try:
         with opener(outbound, timeout=config.timeout_seconds) as response:
             status = int(getattr(response, "status", 200))

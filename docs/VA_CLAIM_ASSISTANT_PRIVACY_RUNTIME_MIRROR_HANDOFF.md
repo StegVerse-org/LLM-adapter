@@ -1,6 +1,6 @@
 # VA Claim Assistant Privacy Runtime Mirror Handoff
 
-This handoff is subordinate to `docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md` and `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`. It governs only `PII-RDY-06` and does not replace provider execution, Site document processing, TVC route authority, Master Records custody, filing, or Ecosystem Chat activation lanes.
+This handoff is subordinate to `docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md` and `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`. It governs only `PII-RDY-06` and does not replace provider execution, Site document processing, TVC route authority, Master Records organization record, filing, or Ecosystem Chat activation lanes.
 
 ## Goal identity
 
@@ -117,7 +117,7 @@ The sovereign executor must invoke `privacy_guarded_dispatch.py` before any mode
 
 ```text
 StegVerse-org/LLM-adapter#90/#142: privacy gate remains required before sovereign VACC inference
-master-records/orchestration#15: genuine operational privacy custody/reconstruction owner
+master-records/orchestration#15: genuine operational privacy organization records/reconstruction owner
 StegVerse-Labs/Site#113: projection owner after immutable execution evidence
 StegVerse-Labs/Site#116: production document detection/redaction/model-leakage owner
 ```

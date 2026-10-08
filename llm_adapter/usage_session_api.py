@@ -2,7 +2,7 @@
 
 The browser retrieval route uses a same-origin session cookie or matching
 X-SteGVerse-Session header. Machine submission is separately authenticated.
-Retrieval grants no authority, admissibility, or Master-Records custody.
+Retrieval grants no authority or admissibility and is not a Master Records organization record.
 """
 from __future__ import annotations
 

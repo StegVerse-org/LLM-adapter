@@ -86,7 +86,7 @@
   "remaining_blockers": [
     "authorized provider configuration and scoped execution grant",
     "authorized persistent endpoint/runtime",
-    "authenticated Master Records custody configuration",
+    "authenticated Master Records organization-record configuration",
     "transition reconstruction PASS",
     "zero-blocker VERIFIED activation receipt",
     "Site activation and verified downstream ingestion"

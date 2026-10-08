@@ -6,7 +6,7 @@ from typing import Any, Callable, Mapping
 
 from .kimi_governed_admission import GovernedKimiAdmission, build_governed_kimi_admission, validate_governed_kimi_admission
 from .kimi_tvc_runtime_executor import KimiTVCRuntimeExecution, execute_governed_kimi_via_tvc_runtime
-from .master_records_usage_submission import submit_provider_usage_to_master_records
+from .master_records_usage_record import record_provider_usage_in_master_records
 from .provider_request import ProviderRequest
 
 
@@ -31,7 +31,7 @@ def execute_canonical_kimi_via_tvc_runtime(
     carrier_ref: str,
     lease_receipt: Mapping[str, Any],
     broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]],
-    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = submit_provider_usage_to_master_records,
+    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_in_master_records,
     max_output_tokens: int = 2048,
     response_format: str = "text",
 ) -> CanonicalKimiRuntimeExecution:
@@ -66,14 +66,14 @@ def execute_canonical_kimi_via_tvc_runtime(
     )
     if execution.envelope != admission.envelope:
         raise RuntimeError("canonical Kimi admission/execution envelope mismatch")
-    custody = execution.master_records_usage
+    usage_record = execution.master_records_usage
     if (
-        not isinstance(custody, Mapping)
-        or custody.get("status") != "CUSTODY_RECORDED"
-        or custody.get("custody_recorded") is not True
-        or custody.get("authority_granted") is not False
+        not isinstance(usage_record, Mapping)
+        or usage_record.get("status") != "CUSTODY_RECORDED"
+        or usage_record.get("custody_recorded") is not True
+        or usage_record.get("authority_granted") is not False
     ):
-        raise RuntimeError("canonical Kimi egress requires authentic Master Records custody")
+        raise RuntimeError("canonical Kimi egress requires an authentic Master Records organization record")
     handoff = {
         **dict(execution.egress_handoff),
         "schema": "stegverse.llm_adapter.kimi_canonical_runtime_egress_handoff/v1",
@@ -82,7 +82,7 @@ def execute_canonical_kimi_via_tvc_runtime(
         "governance_disposition": governance_disposition,
         "governance_receipt_hash": governance_receipt_hash,
         "master_records_usage_status": "CUSTODY_RECORDED",
-        "master_records_custody_recorded": True,
+        "master_records_organization_record_recorded": True,
         "transport_grants_execution_authority": False,
         "governance_grants_execution_authority": False,
         "governance_grants_credential_authority": False,

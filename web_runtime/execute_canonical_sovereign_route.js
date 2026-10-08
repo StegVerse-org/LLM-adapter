@@ -224,7 +224,7 @@
                 production_scale_llm_observed: false,
                 reference_model_only: true,
                 activation_complete: false,
-                remaining_activation_predicates: ["provider_usage_master_records_custody", "provider_usage_master_records_reconstruction_pass", "production_scale_sovereign_llm", "same_execution_transition_reconstruction_pass"],
+                remaining_activation_predicates: ["provider_usage_master_records_organization_record", "provider_usage_master_records_reconstruction_pass", "production_scale_sovereign_llm", "same_execution_transition_reconstruction_pass"],
                 authority: {
                   provider_output_grants_authority: false,
                   usage_event_grants_authority: false,
