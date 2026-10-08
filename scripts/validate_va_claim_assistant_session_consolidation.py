@@ -12,7 +12,7 @@ INVENTORY = ROOT / "data" / "va-claim-assistant-session-consolidation.json"
 PRIVACY_RECEIPT = ROOT / "receipts" / "va-claim-assistant-privacy-runtime-validation.json"
 PRIVACY_TASK = ROOT / "tasks" / "VACP-ADAPTER-PII-RUNTIME-006.json"
 LEGACY_PROVIDER_TASK = ROOT / "tasks" / "VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json"
-LEGACY_ORGANIZATION_RECORD_GATE = "Master Records custody"
+LEGACY_ORGANIZATION_RECORD_REQUIREMENT = "Master Records custody"
 SOVEREIGN_PROVIDER_TASK = ROOT / "tasks" / "VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json"
 ARCHIVE_TASK = ROOT / "tasks" / "VACP-SESSION-CONSOLIDATION-007.json"
 OUTPUT = ROOT / "receipts" / "va-claim-assistant-session-consolidation-validation.json"
@@ -34,9 +34,9 @@ ALLOWED_SOVEREIGN_PROVIDER_STATES = {
 }
 
 
-def organization_record_gate_present(gates: set[str]) -> bool:
-    # LEGACY_ORGANIZATION_RECORD_GATE is the pre-rename name of this gate (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002).
-    return bool(gates & {"Master Records organization record", LEGACY_ORGANIZATION_RECORD_GATE})
+def organization_record_requirement_present(gates: set[str]) -> bool:
+    # LEGACY_ORGANIZATION_RECORD_REQUIREMENT is the pre-rename name of this gate (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002).
+    return bool(gates & {"Master Records organization record", LEGACY_ORGANIZATION_RECORD_REQUIREMENT})
 
 
 def fail(message: str) -> None:
@@ -166,7 +166,7 @@ def main() -> int:
         if contract.get(key) != expected_value:
             fail(f"sovereign_provider_contract_invalid:{key}")
     gates = set(sovereign.get("preserved_vacc_gates") or [])
-    if "privacy guarded dispatch before model input" not in gates or not organization_record_gate_present(gates):
+    if "privacy guarded dispatch before model input" not in gates or not organization_record_requirement_present(gates):
         fail("sovereign_provider_preserved_gates_incomplete")
     release_conditions = (
         sovereign.get("machine_observable_release_condition")

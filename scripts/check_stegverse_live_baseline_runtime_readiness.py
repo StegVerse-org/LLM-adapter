@@ -26,7 +26,7 @@ RUNTIME_PREREQUISITES = {
 }
 # Prerequisite naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): readiness
 # written before the rename names this prerequisite by its legacy key; it is accepted.
-LEGACY_ORGANIZATION_RECORD_PREREQUISITE = "master_records_custody_acceptance"
+LEGACY_ORGANIZATION_RECORD_ACCEPTANCE_KEY = "master_records_custody_acceptance"
 
 
 def require(value: object, message: str) -> None:
@@ -47,10 +47,10 @@ def main() -> int:
     require(readiness.get("authority") == NO_AUTHORITY, "readiness authority boundary changed")
 
     prerequisites = dict(readiness.get("prerequisites") or {})
-    if LEGACY_ORGANIZATION_RECORD_PREREQUISITE in prerequisites:
+    if LEGACY_ORGANIZATION_RECORD_ACCEPTANCE_KEY in prerequisites:
         prerequisites.setdefault(
             "master_records_organization_record_acceptance",
-            prerequisites.pop(LEGACY_ORGANIZATION_RECORD_PREREQUISITE),
+            prerequisites.pop(LEGACY_ORGANIZATION_RECORD_ACCEPTANCE_KEY),
         )
     require(prerequisites.get("intake_received") is True, "intake receipt regressed")
     require(RUNTIME_PREREQUISITES <= set(prerequisites), "missing runtime prerequisite")

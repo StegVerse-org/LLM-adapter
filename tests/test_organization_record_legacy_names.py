@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "check_stegverse_live_baseline_runtime_readiness.py"
+ORGANIZATION_RECORD = "Master Records organization record"
 
 
 def _load():
@@ -16,9 +17,9 @@ def _load():
 def _run_with(tmp_path, monkeypatch, prerequisites_key):
     module = _load()
     readiness = json.loads(module.READINESS.read_text(encoding="utf-8"))
-    prerequisites = readiness["prerequisites"]
-    value = prerequisites.pop("master_records_organization_record_acceptance")
-    prerequisites[prerequisites_key] = value
+    required = readiness["prerequisites"]
+    value = required.pop("master_records_organization_record_acceptance")
+    required[prerequisites_key] = value
     path = tmp_path / "readiness.json"
     path.write_text(json.dumps(readiness), encoding="utf-8")
     monkeypatch.setattr(module, "READINESS", path)
@@ -40,10 +41,10 @@ def _load_script(name):
     return module
 
 
-def _sovereign_task_with_gate(tmp_path, gate):
+def _sovereign_task_with_gate(tmp_path, name):
     task = json.loads((ROOT / "tasks" / "VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json").read_text(encoding="utf-8"))
-    gates = [item for item in task["preserved_vacc_gates"] if item != "Master Records organization record"]
-    task["preserved_vacc_gates"] = gates + [gate]
+    kept = [item for item in task["preserved_vacc_gates"] if item != ORGANIZATION_RECORD]
+    task["preserved_vacc_gates"] = kept + [name]
     path = tmp_path / "sovereign-task.json"
     path.write_text(json.dumps(task), encoding="utf-8")
     return path
@@ -51,17 +52,18 @@ def _sovereign_task_with_gate(tmp_path, gate):
 
 def test_ecosystem_consolidation_accepts_both_organization_record_gate_names(tmp_path, monkeypatch):
     module = _load_script("validate_ecosystem_va_chat_session_consolidation")
-    for gate in ("Master Records organization record", "Master Records custody"):
-        monkeypatch.setattr(module, "SOVEREIGN_VA_PROVIDER_TASK", _sovereign_task_with_gate(tmp_path, gate))
+    for name in (ORGANIZATION_RECORD, module.LEGACY_ORGANIZATION_RECORD_REQUIREMENT):
+        monkeypatch.setattr(module, "SOVEREIGN_VA_PROVIDER_TASK", _sovereign_task_with_gate(tmp_path, name))
         _legacy, sovereign = module.validate_provider_continuation()
-        assert gate in sovereign["preserved_vacc_gates"]
+        assert name in sovereign["preserved_vacc_gates"]
 
 
 def test_va_session_consolidation_accepts_both_organization_record_gate_names():
     module = _load_script("validate_va_claim_assistant_session_consolidation")
-    assert module.organization_record_gate_present({"Master Records organization record"})
-    assert module.organization_record_gate_present({"Master Records custody"})
-    assert not module.organization_record_gate_present({"privacy guarded dispatch before model input"})
+    assert module.organization_record_requirement_present({ORGANIZATION_RECORD})
+    assert module.organization_record_requirement_present({module.LEGACY_ORGANIZATION_RECORD_REQUIREMENT})
+    assert module.LEGACY_ORGANIZATION_RECORD_REQUIREMENT == "Master Records custody"
+    assert not module.organization_record_requirement_present({"privacy guarded dispatch before model input"})
 
 
 def test_orchestration_state_accepts_both_blocker_names():
