@@ -65,7 +65,7 @@ Do not reopen or duplicate:
 - `docs/VACC_PUBLIC_INFORMATION_PROFILE_MIRROR_HANDOFF.md` broad VACC source-policy layer;
 - issue #18 provider/runtime path;
 - issue #90/#142 VACC governed retrieval/runtime;
-- Master Records custody/reconstruction authority.
+- Master Records organization records and reconstruction.
 
 ## Validation evidence
 
