@@ -80,7 +80,7 @@ It explicitly refuses `GITHUB_TOKEN`, `GH_TOKEN`, `OPENAI_API_KEY`, `ANTHROPIC_A
 
 ## Continuation
 
-Issue #140 owns future public corpus expansion. Add entries only when a canonical public StegVerse repository/path exists. Update changed operational instructions at the canonical source before refreshing the public manifest. Sovereign runtime/provider/model activation remains a separate machine-owned lane; heartbeat/local-model work is not reopened; Site requires its own orchestrator; Master Records keeps organization records/reconstruction.
+Issue #140 owns future public corpus expansion. Add entries only when a canonical public StegVerse repository/path exists. Update changed operational instructions at the canonical source before refreshing the public manifest. Sovereign runtime/provider/model activation remains a separate machine-owned lane; heartbeat/local-model work is not reopened; Site requires its own orchestrator; Master Records remains limited to organization records and reconstruction.
 
 The originating public-knowledge implementation is complete and released. Workflow consolidation is repository maintenance and does not reopen the product implementation.
 

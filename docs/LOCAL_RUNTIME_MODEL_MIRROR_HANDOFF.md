@@ -116,7 +116,7 @@ Ollama discovery compatibility != Ollama dependency
 repository-developed reference model != foundation LLM
 ```
 
-Canonical StegGate remains `StegVerse-Labs/StegCore`; Master Records keeps organization records/reconstruction.
+Canonical StegGate remains `StegVerse-Labs/StegCore`; Master Records remains limited to organization records and reconstruction.
 
 ## Completion and continuation
 

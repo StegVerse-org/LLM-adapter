@@ -48,7 +48,7 @@ provider handoffs:
   docs/KIMI_INTR_TRANSPORT_MIRROR_HANDOFF.md
   docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md (or current Anthropic scoped handoff where renamed)
 task registry: tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json
-Master Records organization records/reconstruction authority: master-records/orchestration
+Master Records organization records and reconstruction: master-records/orchestration
 runtime owner: StegVerse-Labs/.github WorkerCoordinator resident lane
 credential/provider-operation authority: StegVerse-Labs/TVC
 cross-repo dependency: StegVerse-Labs/TVC#345 / PR #346
