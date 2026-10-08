@@ -34,6 +34,11 @@ ALLOWED_SOVEREIGN_PROVIDER_STATES = {
 }
 
 
+def organization_record_gate_present(gates: set[str]) -> bool:
+    # LEGACY_ORGANIZATION_RECORD_GATE is the pre-rename name of this gate (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002).
+    return bool(gates & {"Master Records organization record", LEGACY_ORGANIZATION_RECORD_GATE})
+
+
 def fail(message: str) -> None:
     raise SystemExit(f"VA_SESSION_CONSOLIDATION_FAIL:{message}")
 
@@ -161,9 +166,7 @@ def main() -> int:
         if contract.get(key) != expected_value:
             fail(f"sovereign_provider_contract_invalid:{key}")
     gates = set(sovereign.get("preserved_vacc_gates") or [])
-    # LEGACY_ORGANIZATION_RECORD_GATE is the pre-rename name of this gate (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002).
-    organization_record_gate = {"Master Records organization record", LEGACY_ORGANIZATION_RECORD_GATE}
-    if "privacy guarded dispatch before model input" not in gates or not gates & organization_record_gate:
+    if "privacy guarded dispatch before model input" not in gates or not organization_record_gate_present(gates):
         fail("sovereign_provider_preserved_gates_incomplete")
     release_conditions = (
         sovereign.get("machine_observable_release_condition")

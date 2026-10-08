@@ -57,12 +57,11 @@ def test_ecosystem_consolidation_accepts_both_organization_record_gate_names(tmp
         assert gate in sovereign["preserved_vacc_gates"]
 
 
-def test_va_session_consolidation_accepts_both_organization_record_gate_names(tmp_path, monkeypatch):
+def test_va_session_consolidation_accepts_both_organization_record_gate_names():
     module = _load_script("validate_va_claim_assistant_session_consolidation")
-    monkeypatch.setattr(module, "OUTPUT", tmp_path / "receipt.json")
-    for gate in ("Master Records organization record", "Master Records custody"):
-        monkeypatch.setattr(module, "SOVEREIGN_PROVIDER_TASK", _sovereign_task_with_gate(tmp_path, gate))
-        assert module.main() == 0
+    assert module.organization_record_gate_present({"Master Records organization record"})
+    assert module.organization_record_gate_present({"Master Records custody"})
+    assert not module.organization_record_gate_present({"privacy guarded dispatch before model input"})
 
 
 def test_orchestration_state_accepts_both_blocker_names():

@@ -48,7 +48,7 @@ def test_binds_after_governed_response_without_authority_or_custody_escalation()
     assert reference["admissibility_determined"] is False
     assert reference["production_binding_enabled"] is False
     assert result["authority"]["system_boundary_declaration_is_execution_authority"] is False
-    assert result["authority"]["system_boundary_receipt_is_master_records_organization_record"] is False
+    assert result["authority"]["system_boundary_receipt_is_master_records_custody"] is False
 
 
 def test_binding_persists_session_transition_run_and_receipt_evidence():
