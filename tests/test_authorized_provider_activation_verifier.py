@@ -26,7 +26,6 @@ def _identity() -> dict:
 def _health() -> dict:
     return {
         "governed_provider_enabled": True,
-        "master_records_submission_enabled": True,
         "provider_output_is_authority": False,
     }
 
@@ -36,9 +35,8 @@ def _response() -> dict:
     return {
         **identity,
         "lifecycle_state": "COMPLETED",
-        "master_record_status": "RECORDED",
-        "master_record_ref": "master-record:sha256:test",
-        "reconstruction_status": "PASS",
+        "final_receipt": True,
+        "final_receipt_id": "final-response-receipt:sha256:test",
         "provider": {
             "used": True,
             "status": "USED",
@@ -52,16 +50,6 @@ def _response() -> dict:
             "authority_granted": False,
             "custody_recorded": False,
         },
-        "master_records_usage_submission": {
-            "status": "CUSTODY_RECORDED",
-            "custody_recorded": True,
-            "receipt_id": "master-records-provider-usage-receipt:hmac-sha256:test",
-            "authority_granted": False,
-        },
-        "custody_submission": {
-            "state": "RECORDED",
-            "custody_receipt_id": "master-records-organization-record-receipt:hmac-sha256:test",
-        },
         "authority": {
             "provider_output_is_authority": False,
             "repository_mutation_allowed": False,
@@ -71,8 +59,6 @@ def _response() -> dict:
             "local_persistence_is_master_records_organization_record": False,
             "site_grants_admissibility": False,
             "provider_usage_grants_authority": False,
-            "provider_usage_is_master_records_organization_record": True,
-            "organization_record_installed": True,
         },
     }
 
@@ -99,17 +85,41 @@ def test_local_usage_cannot_self_claim_custody() -> None:
     assert "local_usage_misclassified_as_custody" in blockers
 
 
-def test_provider_usage_requires_external_custody_receipt() -> None:
+def test_master_records_is_not_a_predicate() -> None:
+    """No Master Records health flag, usage reply, or reconstruction gates the slice."""
+    health = _health()
+    health["master_records_submission_enabled"] = False
     response = _response()
-    response["master_records_usage_submission"] = {
-        "status": "NOT_CONFIGURED",
-        "custody_recorded": False,
-        "authority_granted": False,
-    }
+    response["master_records_usage_submission"] = {"status": "NOT_CONFIGURED", "custody_recorded": False}
+    response["master_record_status"] = "NOT_RECORDED"
+    response["reconstruction_status"] = "NOT_RUN"
+    assert validate_runtime_result(health, response, _identity()) == []
+
+
+def test_missing_provider_usage_record_fails_closed() -> None:
+    response = _response()
+    response["provider_usage_submission"] = {}
     blockers = validate_runtime_result(_health(), response, _identity())
-    assert "provider_usage_custody_not_recorded" in blockers
-    assert "provider_usage_custody_flag_false" in blockers
-    assert "provider_usage_custody_receipt_missing" in blockers
+    assert "provider_usage_persistence_missing" in blockers
+    assert "provider_usage_identity_missing" in blockers
+
+
+def test_missing_organization_ledger_transition_receipt_fails_closed() -> None:
+    response = _response()
+    response["final_receipt"] = False
+    response["final_receipt_id"] = None
+    blockers = validate_runtime_result(_health(), response, _identity())
+    assert "organization_ledger_transition_receipt_missing" in blockers
+
+
+def test_unverified_slice_carries_the_six_non_allow_fields() -> None:
+    disposition = MODULE.non_allow(["organization_ledger_transition_receipt_missing"])
+    assert disposition["disposition"] == "FAIL_CLOSED"
+    for key in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+        assert disposition[key], key
+    assert disposition["owning_existing_goal"] == "LLMA-DECLARED-PATH-CONFORMANCE-368"
+    assert '"BLOCKED"' not in (ROOT / "scripts" / "verify_authorized_provider_activation.py").read_text()
 
 
 def test_authority_escalation_fails_closed() -> None:
@@ -125,17 +135,4 @@ def test_legacy_authority_key_names_from_deployed_adapters_are_accepted() -> Non
     authority["local_persistence_is_master_records_custody"] = authority.pop(
         "local_persistence_is_master_records_organization_record"
     )
-    authority["provider_usage_is_master_records_custody"] = authority.pop(
-        "provider_usage_is_master_records_organization_record"
-    )
-    authority["master_records_installed"] = authority.pop("organization_record_installed")
     assert validate_runtime_result(_health(), response, _identity()) == []
-
-
-def test_missing_organization_record_projection_fails_closed() -> None:
-    response = _response()
-    del response["authority"]["organization_record_installed"]
-    del response["authority"]["provider_usage_is_master_records_organization_record"]
-    blockers = validate_runtime_result(_health(), response, _identity())
-    assert "organization_record_installation_projection_missing" in blockers
-    assert "provider_usage_organization_record_projection_missing" in blockers

@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Verify the real provider -> usage -> custody -> reconstruction runtime slice.
+"""Verify the real provider -> provider usage record -> transition receipt runtime slice.
 
-This verifier accepts only a genuinely used provider response. Deterministic fallback
-text, local persistence without custody, or a response that upgrades authority fails
-closed. The generated receipt never includes credentials or provider response text.
+This verifier accepts only a genuinely used provider response whose provider usage
+record was persisted and whose transition closed on its organization-ledger
+transition receipt. Deterministic fallback text, a missing usage record or
+transition receipt, or a response that upgrades authority fails closed with the
+six non-ALLOW fields. Master Records receives released organization batches
+downstream and is not a predicate here. The generated receipt never includes
+credentials or provider response text.
 """
 from __future__ import annotations
 
@@ -19,13 +23,13 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "receipts" / "ecosystem-chat-authorized-provider-activation.latest.json"
 BASE_URL = os.getenv("STEGVERSE_PROVIDER_ACTIVATION_BASE_URL", "http://127.0.0.1:8110").rstrip("/")
+OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
+RETRY_ENTRYPOINT = "python scripts/verify_authorized_provider_activation.py"
 # Authority-key naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): the
 # adapter now emits the organization-record names; already-deployed adapters still emit
 # the legacy names, which this reader accepts.
 LEGACY_AUTHORITY_KEYS = {
     "local_persistence_is_master_records_organization_record": "local_persistence_is_master_records_custody",
-    "provider_usage_is_master_records_organization_record": "provider_usage_is_master_records_custody",
-    "organization_record_installed": "master_records_installed",
 }
 
 
@@ -52,6 +56,19 @@ def fetch_json(url: str, *, data: dict | None = None, headers: dict[str, str] | 
     return value
 
 
+def non_allow(blockers: list[str]) -> dict:
+    """The six fields a caller acts on when the runtime slice is not verified."""
+    return {
+        "disposition": "FAIL_CLOSED",
+        "failure_code": blockers[0],
+        "failed_predicate": "authorized_provider_runtime_slice_verified",
+        "required_evidence_or_repair": "repair every listed blocker: " + ", ".join(blockers),
+        "retry_entrypoint": RETRY_ENTRYPOINT,
+        "owning_existing_goal": OWNING_EXISTING_GOAL,
+        "next_attempt": "rerun the verifier against the same gateway once the blockers are repaired",
+    }
+
+
 def wait_for_health() -> dict:
     last_error = "unobserved"
     for _ in range(60):
@@ -70,8 +87,6 @@ def validate_runtime_result(health: dict, response: dict, identity: dict) -> lis
 
     if health.get("governed_provider_enabled") is not True:
         blockers.append("provider_not_enabled")
-    if health.get("master_records_submission_enabled") is not True:
-        blockers.append("transition_custody_not_enabled")
     if health.get("provider_output_is_authority") is not False:
         blockers.append("health_provider_authority_boundary_invalid")
 
@@ -99,30 +114,11 @@ def validate_runtime_result(health: dict, response: dict, identity: dict) -> lis
     if local_usage.get("custody_recorded") is not False:
         blockers.append("local_usage_misclassified_as_custody")
 
-    usage_record = response.get("master_records_usage_submission") or {}
-    if usage_record.get("status") != "CUSTODY_RECORDED":
-        blockers.append("provider_usage_custody_not_recorded")
-    if usage_record.get("custody_recorded") is not True:
-        blockers.append("provider_usage_custody_flag_false")
-    if not usage_record.get("receipt_id"):
-        blockers.append("provider_usage_custody_receipt_missing")
-    if usage_record.get("authority_granted") is not False:
-        blockers.append("provider_usage_custody_authority_escalation")
-
+    # The transition closes on its organization-ledger transition receipt.
     if response.get("lifecycle_state") != "COMPLETED":
         blockers.append("transition_not_completed")
-    if response.get("master_record_status") != "RECORDED":
-        blockers.append("transition_custody_not_recorded")
-    if not response.get("master_record_ref"):
-        blockers.append("master_record_ref_missing")
-    if response.get("reconstruction_status") != "PASS":
-        blockers.append("transition_reconstruction_not_pass")
-
-    custody = response.get("custody_submission") or {}
-    if custody.get("state") != "RECORDED":
-        blockers.append("custody_submission_state_not_recorded")
-    if not custody.get("custody_receipt_id"):
-        blockers.append("transition_custody_receipt_missing")
+    if response.get("final_receipt") is not True or not response.get("final_receipt_id"):
+        blockers.append("organization_ledger_transition_receipt_missing")
 
     authority = response.get("authority") or {}
 
@@ -145,10 +141,6 @@ def validate_runtime_result(health: dict, response: dict, identity: dict) -> lis
     for key in required_false:
         if authority_value(key) is not False:
             blockers.append(f"authority_{key}_must_be_false")
-    if authority_value("provider_usage_is_master_records_organization_record") is not True:
-        blockers.append("provider_usage_organization_record_projection_missing")
-    if authority_value("organization_record_installed") is not True:
-        blockers.append("organization_record_installation_projection_missing")
 
     return blockers
 
@@ -171,18 +163,17 @@ def main() -> int:
             "status": health.get("status"),
             "service": health.get("service"),
             "governed_provider_enabled": health.get("governed_provider_enabled"),
-            "master_records_submission_enabled": health.get("master_records_submission_enabled"),
             "provider_output_is_authority": health.get("provider_output_is_authority"),
         }
         response = fetch_json(
             f"{BASE_URL}/api/ecosystem-chat",
             data={
-                "message": "Describe the verified StegVerse provider, custody, and reconstruction boundary.",
+                "message": "Describe the verified StegVerse provider and transition receipt boundary.",
                 "session_id": f"authorized-provider-session-{os.getenv('GITHUB_RUN_ID', 'local')}",
                 "requested_route": "Site",
                 "transition_intent": "explain",
                 "transition_destination": "ecosystem-chat.html#how-it-works",
-                "goal": "verify real provider through authenticated custody and reconstruction",
+                "goal": "verify real provider through its usage record and transition receipt",
                 "execution_model": "allowlisted_task_request_only",
                 "raw_shell_allowed": False,
                 "authority_required": True,
@@ -197,8 +188,7 @@ def main() -> int:
         )
         blockers.extend(validate_runtime_result(health, response, identity))
         provider = response.get("provider") or {}
-        local_usage = response.get("provider_usage_submission") or {}
-        usage_record = response.get("master_records_usage_submission") or {}
+        provider_usage_record = response.get("provider_usage_submission") or {}
         evidence["runtime"] = {
             "transition_id": response.get("transition_id"),
             "run_id": response.get("run_id"),
@@ -209,13 +199,8 @@ def main() -> int:
             "model": provider.get("model"),
             "provider_request_id": provider.get("provider_request_id"),
             "provider_receipt_id": provider.get("provider_receipt_id"),
-            "provider_usage_measurement_id": local_usage.get("measurement_id"),
-            "provider_usage_event_sha256": local_usage.get("event_sha256"),
-            "provider_usage_custody_status": usage_record.get("status"),
-            "provider_usage_custody_receipt_id": usage_record.get("receipt_id"),
-            "master_record_status": response.get("master_record_status"),
-            "master_record_ref": response.get("master_record_ref"),
-            "reconstruction_status": response.get("reconstruction_status"),
+            "provider_usage_measurement_id": provider_usage_record.get("measurement_id"),
+            "provider_usage_event_sha256": provider_usage_record.get("event_sha256"),
             "final_receipt_id": response.get("final_receipt_id"),
         }
     except Exception as exc:
@@ -223,16 +208,16 @@ def main() -> int:
 
     payload = {
         "schema": "stegverse.ecosystem_chat.authorized_provider_activation.v1",
-        "state": "VERIFIED" if not blockers else "BLOCKED",
+        "state": "VERIFIED" if not blockers else "FAIL_CLOSED",
         "observed_at": datetime.now(timezone.utc).isoformat(),
         "runtime_path": [
             "governed_provider_response",
-            "provider_usage_persistence",
-            "provider_usage_custody",
-            "transition_custody",
-            "transition_reconstruction",
+            "provider_usage_record",
+            "organization_ledger_transition_receipt",
         ],
         "blockers": blockers,
+        **(non_allow(blockers) if blockers else {"disposition": "ALLOW"}),
+        "master_records_is_a_predicate": False,
         "evidence": evidence,
         "provider_output_is_authority": False,
         "custody_grants_execution_authority": False,

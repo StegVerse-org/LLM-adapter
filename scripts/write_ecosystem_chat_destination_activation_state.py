@@ -4,6 +4,9 @@
 This projection follows the canonical sovereign execution path. Repository/source
 readiness is reported separately from live execution evidence and can never by itself
 satisfy activation. Historical Render topology is intentionally not consulted.
+Live evidence is the provider usage record and the organization-ledger transition
+receipt; Master Records receives released organization batches downstream and is not
+a predicate. A state that is not complete carries the six non-ALLOW fields.
 """
 from __future__ import annotations
 
@@ -20,6 +23,7 @@ SOVEREIGN_STATE = ROOT / "data" / "ecosystem-chat-sovereign-orchestration-state.
 CARRIER_TASK = ROOT / "tasks" / "LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json"
 LIVE_RECEIPT = ROOT / "receipts" / "ecosystem-chat-live-activation.verified.json"
 SOVEREIGN_RECEIPT = ROOT / "receipts" / "ecosystem-chat-sovereign-activation.verified.json"
+OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
 
 
 def env(name: str) -> str | None:
@@ -99,13 +103,13 @@ def verified_sovereign_receipt(value: dict[str, Any] | None) -> tuple[bool, list
         "private_endpoint_only",
         "ephemeral_e1_e2_execution_observed",
         "measured_usage_persisted",
-        "provider_usage_reconstruction_pass",
-        "transition_reconstruction_pass",
         "same_execution",
         "persistent_conversational_runtime_ready",
     )
     if any(predicates.get(key) is not True for key in required):
         errors.append("verified_sovereign_receipt_predicates")
+    if not isinstance(value.get("source_activation_receipt_hash"), str) or not value["source_activation_receipt_hash"]:
+        errors.append("verified_sovereign_receipt_transition_receipt_missing")
     credential = value.get("credential_boundary") if isinstance(value.get("credential_boundary"), dict) else {}
     if credential.get("credential_authority") != "TV/TVC" or credential.get("credential_requirement") != "NONE":
         errors.append("verified_sovereign_receipt_credential_boundary")
@@ -126,30 +130,27 @@ def verified_sovereign_receipt(value: dict[str, Any] | None) -> tuple[bool, list
     return not errors, errors
 
 
+OBSERVED_PREDICATES = (
+    "runtime_service_observed",
+    "real_provider_used",
+    "local_usage_receipt_valid",
+    "organization_ledger_transition_receipt_observed",
+    "provider_usage_authority_false",
+)
+
+
 def sovereign_predicates(value: dict[str, Any] | None, verified: bool) -> dict[str, bool]:
     if not verified or not isinstance(value, dict):
-        return {
-            "runtime_service_observed": False,
-            "real_provider_used": False,
-            "local_usage_receipt_valid": False,
-            "provider_usage_custody_recorded": False,
-            "provider_usage_reconstructability_pass": False,
-            "transition_custody_recorded": False,
-            "transition_reconstructability_pass": False,
-            "provider_usage_authority_false": False,
-        }
+        return {key: False for key in OBSERVED_PREDICATES}
     provider = value.get("provider_usage") if isinstance(value.get("provider_usage"), dict) else {}
-    transition = value.get("transition") if isinstance(value.get("transition"), dict) else {}
     runtime = value.get("runtime") if isinstance(value.get("runtime"), dict) else {}
     predicates = value.get("predicates") if isinstance(value.get("predicates"), dict) else {}
     return {
         "runtime_service_observed": runtime.get("persistent_conversational_runtime_ready") is True,
         "real_provider_used": predicates.get("ephemeral_e1_e2_execution_observed") is True,
         "local_usage_receipt_valid": provider.get("measured") is True and isinstance(provider.get("event_sha256"), str),
-        "provider_usage_custody_recorded": provider.get("custody_recorded") is True and provider.get("authority_granted") is False,
-        "provider_usage_reconstructability_pass": provider.get("reconstructability") == "PASS",
-        "transition_custody_recorded": transition.get("custody_recorded") is True,
-        "transition_reconstructability_pass": transition.get("reconstructability") == "PASS",
+        "organization_ledger_transition_receipt_observed": isinstance(value.get("source_activation_receipt_hash"), str)
+        and bool(value["source_activation_receipt_hash"]),
         "provider_usage_authority_false": provider.get("authority_granted") is False,
     }
 
@@ -162,7 +163,6 @@ def live_predicates(live: dict[str, Any] | None, verified: bool) -> dict[str, bo
     transition = evidence.get("transition") if isinstance(evidence.get("transition"), dict) else {}
     provider = chat.get("provider") if isinstance(chat.get("provider"), dict) else {}
     local_usage = chat.get("provider_usage_submission") if isinstance(chat.get("provider_usage_submission"), dict) else {}
-    usage_record = chat.get("master_records_usage_submission") if isinstance(chat.get("master_records_usage_submission"), dict) else {}
     authority = chat.get("authority") if isinstance(chat.get("authority"), dict) else {}
 
     return {
@@ -174,19 +174,10 @@ def live_predicates(live: dict[str, Any] | None, verified: bool) -> dict[str, bo
             and local_usage.get("custody_recorded") is False
             and isinstance(local_usage.get("event_sha256"), str)
         ),
-        "provider_usage_custody_recorded": bool(
+        "organization_ledger_transition_receipt_observed": bool(
             verified
-            and usage_record.get("custody_recorded") is True
-            and usage_record.get("authority_granted") is False
-        ),
-        "provider_usage_reconstructability_pass": bool(
-            verified and usage_record.get("reconstructability") == "PASS"
-        ),
-        "transition_custody_recorded": bool(
-            verified and transition.get("master_record_status") == "RECORDED"
-        ),
-        "transition_reconstructability_pass": bool(
-            verified and transition.get("reconstruction_status") == "PASS"
+            and transition.get("lifecycle_state") == "COMPLETED"
+            and transition.get("final_receipt_id")
         ),
         "provider_usage_authority_false": bool(
             verified and authority.get("provider_usage_grants_authority") is False
@@ -246,24 +237,20 @@ def main() -> int:
             "complete": bool(
                 observed["real_provider_used"]
                 and observed["local_usage_receipt_valid"]
-                and observed["provider_usage_custody_recorded"]
             ),
-            "owner": "StegVerse-org/LLM-adapter -> master-records/orchestration",
-            "current_semantics": "measured_provider_usage_emitted_and_custodied_in_verified_same_execution",
+            "owner": "StegVerse-org/LLM-adapter",
+            "current_semantics": "measured_provider_usage_record_emitted_in_verified_same_execution",
             "source_contract_ready": source_contract_ready,
         },
         "retrieval_and_provider_usage_receipts": {
             "complete": bool(
                 observed["real_provider_used"]
                 and observed["local_usage_receipt_valid"]
-                and observed["provider_usage_custody_recorded"]
-                and observed["provider_usage_reconstructability_pass"]
-                and observed["transition_custody_recorded"]
-                and observed["transition_reconstructability_pass"]
+                and observed["organization_ledger_transition_receipt_observed"]
                 and observed["provider_usage_authority_false"]
             ),
-            "owner": "StegVerse-org/LLM-adapter + master-records/orchestration",
-            "current_semantics": "verified_provider_usage_and_transition_same_execution_evidence",
+            "owner": "StegVerse-org/LLM-adapter -> organization ledger transition receipt",
+            "current_semantics": "verified_provider_usage_record_and_organization_ledger_transition_receipt",
             "source_contract_ready": source_contract_ready,
         },
     }
@@ -301,6 +288,7 @@ def main() -> int:
             "path": str(SOVEREIGN_RECEIPT.relative_to(ROOT)),
         },
         "observed_live_predicates": observed,
+        "master_records_is_a_predicate": False,
         "superseded_topology": {
             "render_required": False,
             "github_models_required": False,
@@ -320,6 +308,20 @@ def main() -> int:
             "execution_authorized": False,
         },
     }
+    if complete:
+        payload["disposition"] = "ALLOW"
+    else:
+        incomplete = sorted(name for name, gate in gates.items() if not gate["complete"])
+        payload.update({
+            "disposition": "FAIL_CLOSED",
+            "failure_code": "destination_activation_gates_incomplete:" + ",".join(incomplete),
+            "failed_predicate": "ecosystem_chat_destination_activation_gates_complete",
+            "required_evidence_or_repair": "a verified live activation receipt or sovereign parent projection "
+            "carrying the provider usage record and the organization-ledger transition receipt",
+            "retry_entrypoint": "python scripts/write_ecosystem_chat_destination_activation_state.py",
+            "owning_existing_goal": OWNING_EXISTING_GOAL,
+            "next_attempt": "rewrite this state after the next verified live or sovereign receipt is retained",
+        })
     payload["state_sha256"] = canonical_sha256(payload)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

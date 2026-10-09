@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Verify an explicitly selected Ecosystem Chat runtime, provider usage, and custody path.
+"""Verify an explicitly selected Ecosystem Chat runtime, provider usage record, and transition receipt.
 
 The verifier requires no browser credential and never mutates a repository. It writes
 one machine-readable result suitable for evidence retention. A non-ready runtime is
-reported as PENDING rather than hidden behind a transport exception. No hosted or
-third-party gateway is selected implicitly; live verification requires an explicit
-STEGVERSE_GATEWAY_BASE_URL supplied by the invoking resident/runtime lane.
+reported as PENDING with the six non-ALLOW fields rather than hidden behind a
+transport exception. No hosted or third-party gateway is selected implicitly; live
+verification requires an explicit STEGVERSE_GATEWAY_BASE_URL supplied by the invoking
+resident/runtime lane. The transition closes on its organization-ledger transition
+receipt; Master Records receives released organization batches downstream and is not
+a predicate here.
 """
 from __future__ import annotations
 
@@ -24,6 +27,8 @@ TIMEOUT = float(os.getenv("STEGVERSE_LIVE_ACTIVATION_TIMEOUT_SECONDS", "35"))
 ATTEMPTS = max(1, int(os.getenv("STEGVERSE_LIVE_ACTIVATION_ATTEMPTS", "5")))
 RETRY_DELAY = max(0.0, float(os.getenv("STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS", "8")))
 RETRYABLE_HTTP = {408, 425, 429, 500, 502, 503, 504}
+OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
+RETRY_ENTRYPOINT = "STEGVERSE_GATEWAY_BASE_URL=<gateway> python scripts/verify_live_ecosystem_chat_activation.py"
 RETAINED_RESPONSE_HEADERS = {
     "content-type",
     "date",
@@ -107,6 +112,21 @@ def fetch_json(
     raise RuntimeError(f"transport_retry_exhausted:{type(last_error).__name__ if last_error else 'Unknown'}")
 
 
+def non_allow(blockers: list[str]) -> dict:
+    """The six fields a caller acts on when the live path is not verified."""
+    if not blockers:
+        return {"disposition": "ALLOW"}
+    return {
+        "disposition": "FAIL_CLOSED",
+        "failure_code": blockers[0],
+        "failed_predicate": "ecosystem_chat_live_path_verified",
+        "required_evidence_or_repair": "repair every listed blocker: " + ", ".join(blockers),
+        "retry_entrypoint": RETRY_ENTRYPOINT,
+        "owning_existing_goal": OWNING_EXISTING_GOAL,
+        "next_attempt": "rerun the verifier against the same gateway once the blockers are repaired",
+    }
+
+
 def result(state: str, blockers: list[str], evidence: dict) -> dict:
     payload = {
         "schema": "stegverse.ecosystem_chat.live_activation.v1",
@@ -121,6 +141,8 @@ def result(state: str, blockers: list[str], evidence: dict) -> dict:
             "timeout_seconds": TIMEOUT,
         },
         "blockers": blockers,
+        **non_allow(blockers),
+        "master_records_is_a_predicate": False,
         "evidence": evidence,
         "authority_granted": False,
         "publication_authorized": False,
@@ -158,8 +180,6 @@ def main() -> int:
             blockers.append("gateway_storage_not_durable")
         if health.get("governed_provider_enabled") is not True:
             blockers.append("governed_provider_not_enabled")
-        if health.get("master_records_submission_enabled") is not True:
-            blockers.append("master_records_transition_submission_not_enabled")
 
         nonce = uuid.uuid4().hex
         session_id = f"ecosystem-live-session-{nonce}"
@@ -171,7 +191,7 @@ def main() -> int:
             "requested_route": "Site",
             "transition_intent": "verify_live_activation",
             "transition_destination": "ecosystem-chat.html",
-            "goal": "verify governed live request response provider usage and custody",
+            "goal": "verify governed live request response provider usage record and transition receipt",
             "execution_model": "allowlisted_task_request_only",
             "raw_shell_allowed": False,
             "authority_required": True,
@@ -204,16 +224,15 @@ def main() -> int:
         provider = chat.get("provider") or {}
         if provider.get("used") is not True:
             blockers.append("live_provider_not_used")
-        local_usage = chat.get("provider_usage_submission") or {}
-        if not local_usage or local_usage.get("custody_recorded") is not False:
+        provider_usage_record = chat.get("provider_usage_submission") or {}
+        if not provider_usage_record or provider_usage_record.get("custody_recorded") is not False:
             blockers.append("local_usage_submission_invalid")
-        usage_record = chat.get("master_records_usage_submission") or {}
-        if usage_record.get("custody_recorded") is not True:
-            blockers.append("provider_usage_custody_not_recorded")
-        if usage_record.get("reconstructability") != "PASS":
-            blockers.append("provider_usage_reconstructability_not_pass")
-        if usage_record.get("authority_granted") is not False:
+        if not provider_usage_record.get("measurement_id") or not provider_usage_record.get("event_sha256"):
+            blockers.append("provider_usage_record_missing")
+        if provider_usage_record.get("authority_granted") is not False:
             blockers.append("provider_usage_authority_escalation")
+        if chat.get("lifecycle_state") != "COMPLETED" or not chat.get("final_receipt_id"):
+            blockers.append("chat_organization_ledger_transition_receipt_missing")
         authority = chat.get("authority") or {}
         if authority.get("provider_usage_grants_authority") is not False:
             blockers.append("chat_authority_boundary_invalid")
@@ -225,10 +244,10 @@ def main() -> int:
             blockers.append(f"transition_http_status_{transition_status}")
         if transition.get("transition_id") != transition_id or transition.get("run_id") != run_id:
             blockers.append("transition_identity_mismatch")
-        if transition.get("master_record_status") != "RECORDED":
-            blockers.append("transition_custody_not_recorded")
-        if transition.get("reconstruction_status") != "PASS":
-            blockers.append("transition_reconstructability_not_pass")
+        if transition.get("lifecycle_state") != "COMPLETED":
+            blockers.append("transition_not_completed")
+        if not transition.get("final_receipt_id") or transition.get("final_receipt_id") != chat.get("final_receipt_id"):
+            blockers.append("organization_ledger_transition_receipt_not_observed")
 
         state = "VERIFIED" if not blockers else "PENDING"
         payload = result(state, sorted(set(blockers)), evidence)

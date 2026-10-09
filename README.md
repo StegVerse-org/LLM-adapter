@@ -211,6 +211,17 @@ docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md
 
 Source/CI/merge are not connection evidence. `CONNECTED` requires authentic same-execution ingress ALLOW, TVC provider operation, provider response, the organization ledger transition receipt, and exact-response egress ALLOW. Master Records reconstruction is not a `CONNECTED` predicate: Master Records receives released organization batches downstream.
 
+### Activation verifiers (LLMA-368)
+
+`scripts/verify_authorized_provider_activation.py`, `scripts/verify_live_ecosystem_chat_activation.py`,
+`scripts/write_live_activation_status.py` and `scripts/write_ecosystem_chat_destination_activation_state.py`
+read the provider usage record (`provider_usage_submission`) and the organization-ledger transition
+receipt (a `COMPLETED` transition's `final_receipt_id`, or a sovereign parent projection's
+`source_activation_receipt_hash`). None of them reads a Master Records usage submission, custody
+flag or reconstruction status. A result that is not verified is `FAIL_CLOSED` (or the retained
+`PENDING` state name) and carries `failure_code`, `failed_predicate`, `required_evidence_or_repair`,
+`retry_entrypoint`, `owning_existing_goal` and `next_attempt`; no verifier reports a bare `BLOCKED`.
+
 ## Z.ai Interlock/InTr transport and governed execution
 
 Z.ai is supported as an **optional hosted-provider interoperability transport** through `stegverse.intr.zai.transport.v1`. It does not replace the canonical sovereign local route and does not acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.

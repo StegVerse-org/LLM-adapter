@@ -14,10 +14,10 @@ def test_live_activation_verifier_preserves_required_boundaries() -> None:
     source = (ROOT / "scripts/verify_live_ecosystem_chat_activation.py").read_text()
     for required in (
         "governed_provider_enabled",
-        "master_records_submission_enabled",
-        "provider_usage_custody_not_recorded",
-        "provider_usage_reconstructability_not_pass",
-        "transition_custody_not_recorded",
+        "provider_usage_record_missing",
+        "organization_ledger_transition_receipt_not_observed",
+        '"master_records_is_a_predicate": False',
+        '"owning_existing_goal"',
         '"authority_granted": False',
         '"repository_mutation_authorized": False',
         "STEGVERSE_LIVE_ACTIVATION_ATTEMPTS",
@@ -32,6 +32,9 @@ def test_live_activation_verifier_preserves_required_boundaries() -> None:
         assert required in source
     assert "STEGVERSE_PROVIDER_TOKEN" not in source
     assert "STEGVERSE_MASTER_RECORDS_TOKEN" not in source
+    for retired in ("master_records_submission_enabled", "master_records_usage_submission",
+                    "master_record_status", "reconstruction_status"):
+        assert retired not in source, retired
     assert "onrender.com" not in source
     assert "vercel.app" not in source
     assert "netlify.app" not in source
