@@ -28,6 +28,6 @@
     "explicit_cosv_tasks_vectorized": 2,
     "explicit_cosv_gap": 0,
     "repository_active_task_surface_audit_complete": false,
-    "repository_vector_present_claimed": true
+    "repository_vector_present_claimed": false
   }
 }
