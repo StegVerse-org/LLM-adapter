@@ -283,6 +283,40 @@ class SurfaceTableTests(unittest.TestCase):
         self.assertEqual(sdk_boundary.SURFACES["MANIFEST_SUBMIT"]["transition_class"],
                          "SDK_MANIFEST_HANDED_OFF")
 
+    def submit_payload(self, manifest):
+        return {"manifest": manifest, "mode": "TEST", "standing_evidence": {
+            "node_endpoint": {"node_id": "sdk-crossing-node", "recognized": True},
+            "generation": 1, "predecessor": None}}
+
+    def test_submit_refused_before_the_runtime_is_not_handed_off(self):
+        """F3: handed_off and disposition are read off the envelope, not asserted."""
+        body = sdk_boundary.submit({"manifest": {}, "mode": "TEST"})
+        self.assertIs(body["handed_off"], False)
+        self.assertEqual(body["disposition"], "FAIL_CLOSED")
+        self.assertNotIn("receiver_unavailable_disposition", body)
+        for key in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                    "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+            self.assertTrue(body[key], key)
+        self.assertEqual(body["owning_existing_goal"], "LLMA-DECLARED-PATH-CONFORMANCE-368")
+
+    def test_submit_handed_off_carries_the_runtime_disposition(self):
+        from unittest import mock
+        from stegverse.manifest_builder import build_manifest
+        manifest = build_manifest(**arguments())
+        deny = {"disposition": "DENY", "consequence_executed": False}
+        with mock.patch.object(sdk_boundary, "installed_runtime", lambda _t: deny):
+            denied = sdk_boundary.submit(self.submit_payload(manifest))
+        self.assertIs(denied["handed_off"], True)
+        self.assertEqual(denied["disposition"], "DENY")
+        self.assertEqual(denied["failure_code"], "SDK_RUNTIME_DENY")
+        allow = {"disposition": "ALLOW", "organization_receipt_observed": True,
+                 "manifest_receipt_id": "ORG-1", "consequence_executed": False}
+        with mock.patch.object(sdk_boundary, "installed_runtime", lambda _t: allow):
+            allowed = sdk_boundary.submit(self.submit_payload(manifest))
+        self.assertIs(allowed["handed_off"], True)
+        self.assertEqual(allowed["disposition"], "ALLOW")
+        self.assertNotIn("failure_code", allowed)
+
     def test_an_unrecorded_surface_cannot_be_recorded(self):
         standing = node_standing.resolve(STANDING)
         with self.assertRaises(ValueError) as refused:

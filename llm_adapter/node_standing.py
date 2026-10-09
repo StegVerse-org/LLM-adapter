@@ -49,6 +49,8 @@ from stegverse.external_interlock_bootstrap import (
     successor_predecessor_binding,
 )
 
+from .governed_manifest_ingress import STANDING_ENTRYPOINT, non_allow_fields
+
 CONTRACT_ID = "ALL_EXTERNAL_ECOSYSTEM_INGRESS_REQUIRES_CANONICAL_NODE_STANDING"
 READINESS_SCHEMA = "stegverse.node-standing-readiness.v1"
 DISPOSITION_SCHEMA = "stegverse.node-standing-disposition.v1"
@@ -295,7 +297,11 @@ def declared_ingress(request: Any) -> dict[str, Any]:
 
 
 def refusal(error: StandingRefused, *, mode: Any = None) -> dict[str, Any]:
-    """Render a refusal as a disposition rather than an opaque error."""
+    """Render a refusal as a disposition rather than an opaque error.
+
+    The refusal is a transition with the six standard non-ALLOW fields, so a
+    refused caller knows the predicate it failed and where to retry.
+    """
     return {
         "schema": DISPOSITION_SCHEMA,
         "contract_id": CONTRACT_ID,
@@ -305,4 +311,13 @@ def refusal(error: StandingRefused, *, mode: Any = None) -> dict[str, Any]:
         "instructions_released": False,
         "silent_reenrollment_occurred": False,
         "authority_effect": "NONE_REFUSAL_ONLY",
+        **non_allow_fields(
+            failure_code="NODE_STANDING_" + str(error.disposition),
+            failed_predicate=error.reason,
+            required_evidence_or_repair=(
+                "declare standing as GET /api/node-standing/readiness publishes it: "
+                "explicit genesis or the owner's predecessor binding, and a known node_class"),
+            retry_entrypoint=STANDING_ENTRYPOINT,
+            next_attempt="re-declare corrected standing, then repeat the intended action",
+        ),
     }

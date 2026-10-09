@@ -47,7 +47,7 @@ from stegverse.machine_contract import sdk_machine_contract
 from . import node_standing
 from stegverse.manifest_contract import validate_ingress_manifest as sdk_validate_manifest
 
-from .governed_manifest_ingress import ALLOWED_MODES, process_manifest
+from .governed_manifest_ingress import ALLOWED_MODES, NON_ALLOW_FIELDS, process_manifest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -502,12 +502,11 @@ def submit(payload: Mapping[str, Any]) -> dict[str, Any]:
     arrives separately through `admit_runtime_result`. So a caller that reads
     this as a result has misread it, and the response says which it is.
 
-    That asynchrony is the reason a chain is required rather than optional.
-    Handoff is one transition and the result arriving is another; between them
-    sits a gap that a response body cannot represent. When the receiver is
-    unavailable the SDK's own disposition is
-    `DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION` -- the work persists or
-    re-materializes rather than being dropped.
+    Whether the manifest was handed off, and with what disposition, is read
+    off the envelope rather than asserted: a manifest refused before the
+    runtime was not handed off, and a non-ALLOW carries the six standard
+    fields naming its predicate, repair and retry entrypoint. Nothing here
+    waits on an external receiver; the disposition is the transition.
     """
     manifest = payload.get("manifest")
     if not isinstance(manifest, Mapping):
@@ -519,17 +518,21 @@ def submit(payload: Mapping[str, Any]) -> dict[str, Any]:
     envelope = process_manifest(manifest, mode=mode,
                                 standing=payload.get("standing_evidence") or {},
                                 sdk_manifest_endpoint=installed_runtime)
-    return {
+    disposition = str(envelope.get("governance_state") or "FAIL_CLOSED")
+    response = {
         "schema": BOUNDARY_SCHEMA,
         "surface": "MANIFEST_SUBMIT",
-        "handed_off": True,
+        "handed_off": envelope.get("reached_sdk_runtime") is True,
+        "disposition": disposition,
         "result_is_a_handoff_not_a_runtime_result": True,
         "result_arrives_separately_through": "stegverse.manifest_state_transition_runtime.admit_runtime_result",
         "destination_resolution_source": "CANONICAL_CONNECTOR_CAPABILITY_OVERLAY",
-        "receiver_unavailable_disposition": "DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION",
         "envelope": envelope,
         "authority_effect": "NONE_HANDOFF_ONLY",
     }
+    if disposition != "ALLOW":
+        response.update({key: envelope.get(key) for key in NON_ALLOW_FIELDS})
+    return response
 
 
 __all__ = ["require_standing", "contract", "build", "validate", "submit",

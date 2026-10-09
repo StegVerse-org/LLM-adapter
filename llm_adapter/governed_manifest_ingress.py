@@ -6,6 +6,21 @@ canonical handler. It does not implement or replace StegGate authority.
 The manifest may request how transition evidence is projected back to the
 external caller. That projection never suppresses the Master Records organization
 record or alters the governed transition history.
+
+Manifest validity is the SDK's to decide, not this adapter's. The adapter used
+to keep its own copy of the ingress rules, and the copy was stricter than the
+owner: it demanded a candidate on every manifest, where the SDK requires one
+only when the declared processing is governance. So an SDK-built
+non-governance manifest was refused here and never reached the SDK at all.
+`validate_ingress_manifest` now delegates to
+`stegverse.manifest_contract.validate_ingress_manifest` and adds only this
+adapter's own bookkeeping.
+
+Every non-ALLOW this module returns is a state transition carrying the six
+standard fields (`failure_code`, `failed_predicate`,
+`required_evidence_or_repair`, `retry_entrypoint`, `owning_existing_goal`,
+`next_attempt`), so a refused caller is told what to repair and where to
+retry rather than being left to wait on anything.
 """
 from __future__ import annotations
 
@@ -14,11 +29,42 @@ import hashlib
 import json
 from typing import Any, Callable, Mapping
 
+from stegverse.manifest_contract import validate_ingress_manifest as sdk_validate_ingress_manifest
+
 INGRESS_SCHEMA = "stegverse.ingress-manifest.v1"
 RESULT_SCHEMA = "stegverse.llm-adapter.governed-result.v1"
 ALLOWED_STATES = {"ALLOW", "DENY", "REVIEW", "FAIL_CLOSED"}
 ALLOWED_MODES = {"TEST", "LIVE_STREAM"}
 RETURN_PROJECTION_MODES = {"ALL", "SELECTED", "NONE"}
+
+#: The existing goal that owns every non-ALLOW this adapter path emits.
+OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
+#: The six fields every non-ALLOW disposition carries.
+NON_ALLOW_FIELDS = (
+    "failure_code", "failed_predicate", "required_evidence_or_repair",
+    "retry_entrypoint", "owning_existing_goal", "next_attempt",
+)
+SUBMIT_ENTRYPOINT = "POST /api/sdk/manifest/submit"
+VALIDATE_ENTRYPOINT = "POST /api/sdk/manifest/validate"
+STANDING_ENTRYPOINT = "POST /api/node-standing"
+
+
+def non_allow_fields(*, failure_code: str, failed_predicate: str,
+                     required_evidence_or_repair: str, retry_entrypoint: str,
+                     next_attempt: str) -> dict[str, str]:
+    """The six standard fields of a non-ALLOW disposition.
+
+    A non-ALLOW is a state transition with a named predicate and repair, not a
+    wait on any external machine, receiver or observer.
+    """
+    return {
+        "failure_code": failure_code,
+        "failed_predicate": failed_predicate,
+        "required_evidence_or_repair": required_evidence_or_repair,
+        "retry_entrypoint": retry_entrypoint,
+        "owning_existing_goal": OWNING_EXISTING_GOAL,
+        "next_attempt": next_attempt,
+    }
 
 
 def _hash(value: Any) -> str:
@@ -59,6 +105,7 @@ ADAPTER_ADDED_FIELDS = (
     "external_manifest_grants_authority",
     "master_records_transition_custody_independent_of_return_projection",
     "adapter_ingress_hash",
+    "sdk_declared_processing",
 )
 
 
@@ -121,41 +168,22 @@ def validate_standing(standing: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def validate_ingress_manifest(manifest: Mapping[str, Any]) -> dict[str, Any]:
-    required = (
-        "manifest_profile", "manifest_profile_version", "source_framework",
-        "source_output_id", "created_at", "candidate", "declared_intent",
-        "requested_consequence", "hashes", "processing",
-    )
-    missing = [key for key in required if key not in manifest]
-    if missing:
-        raise ValueError("manifest_missing_required_fields:" + ",".join(missing))
-    if manifest.get("manifest_profile") != INGRESS_SCHEMA:
-        raise ValueError("manifest_profile_not_supported")
-    if str(manifest.get("manifest_profile_version")) != "1":
-        raise ValueError("manifest_profile_version_not_supported")
-    if not isinstance(manifest.get("candidate"), Mapping):
-        raise ValueError("manifest_candidate_invalid")
-    hashes = manifest.get("hashes")
-    if not isinstance(hashes, Mapping):
-        raise ValueError("manifest_hashes_invalid")
-    candidate_hash = _hash(manifest["candidate"])
-    if hashes.get("candidate_sha256") != candidate_hash:
-        raise ValueError("manifest_candidate_hash_mismatch")
-    has_payload = "payload" in manifest and manifest.get("payload") is not None
-    has_commitment = isinstance(manifest.get("payload_commitment"), str) and bool(str(manifest.get("payload_commitment")).strip())
-    if has_payload == has_commitment:
-        raise ValueError("manifest_requires_exactly_one_payload_or_commitment")
-    if has_payload and hashes.get("payload_sha256") != _hash(manifest["payload"]):
-        raise ValueError("manifest_payload_hash_mismatch")
-    processing = manifest.get("processing")
-    if not isinstance(processing, Mapping):
-        raise ValueError("manifest_processing_invalid")
-    capability = str(processing.get("capability") or "").strip()
-    route_id = str(processing.get("route_id") or "").strip()
-    if not capability or not route_id:
-        raise ValueError("manifest_processing_capability_route_required")
+    """Validate through the SDK, then add only this adapter's bookkeeping.
+
+    The SDK's refusal message is raised verbatim. The wire manifest stays the
+    manifest as the SDK built it; the processing the SDK resolved travels in
+    `sdk_declared_processing`, which is stripped before handoff.
+    """
+    if not isinstance(manifest, Mapping):
+        raise ValueError("manifest must be an object")
+    sdk_canonical = sdk_validate_ingress_manifest(manifest)
+    processing = sdk_canonical["processing"]
     normalized = dict(manifest)
     normalized["return_projection"] = _normalize_return_projection(manifest.get("return_projection"))
+    normalized["sdk_declared_processing"] = {
+        "capability": processing["capability"],
+        "route_id": processing["route_id"],
+    }
     normalized["external_manifest_valid"] = True
     normalized["external_manifest_grants_authority"] = False
     normalized["master_records_transition_custody_independent_of_return_projection"] = True
@@ -163,7 +191,49 @@ def validate_ingress_manifest(manifest: Mapping[str, Any]) -> dict[str, Any]:
     return normalized
 
 
-def _fail_closed(*, mode: str, reason: str, manifest: Mapping[str, Any] | None = None, stream_id: str | None = None, sequence: int | None = None) -> dict[str, Any]:
+#: What each refusal stage names, and where its caller retries.
+_FAIL_CLOSED_STAGES: Mapping[str, Mapping[str, str]] = {
+    "MODE": {
+        "failure_code": "INGRESS_MODE_UNSUPPORTED",
+        "required_evidence_or_repair": "declare mode TEST or LIVE_STREAM",
+        "retry_entrypoint": SUBMIT_ENTRYPOINT,
+        "next_attempt": "resubmit with a supported mode",
+    },
+    "STANDING": {
+        "failure_code": "NODE_STANDING_NOT_ESTABLISHED",
+        "required_evidence_or_repair": "declare recognized node standing: explicit genesis (generation 1, predecessor null) or the owner's predecessor binding",
+        "retry_entrypoint": STANDING_ENTRYPOINT,
+        "next_attempt": "establish standing, then resubmit the same manifest",
+    },
+    "MANIFEST": {
+        "failure_code": "MANIFEST_REFUSED_BY_SDK_CONTRACT",
+        "required_evidence_or_repair": "rebuild the manifest with the SDK builder and correct the field the SDK named",
+        "retry_entrypoint": VALIDATE_ENTRYPOINT,
+        "next_attempt": "validate (side-effect free) until accepted, then resubmit",
+    },
+    "HANDOFF": {
+        "failure_code": "SDK_RUNTIME_HANDOFF_RAISED",
+        "required_evidence_or_repair": "repair the installed SDK runtime binding named in the failed predicate",
+        "retry_entrypoint": SUBMIT_ENTRYPOINT,
+        "next_attempt": "resubmit the same manifest once the binding is repaired",
+    },
+    "RESULT": {
+        "failure_code": "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE",
+        "required_evidence_or_repair": "a result whose state is ALLOW, DENY, REVIEW or FAIL_CLOSED, claiming no consequence unless ALLOW, and an organization transition receipt for ALLOW",
+        "retry_entrypoint": SUBMIT_ENTRYPOINT,
+        "next_attempt": "resubmit the same manifest; the runtime decides the transition again",
+    },
+    "STREAM": {
+        "failure_code": "LIVE_STREAM_ORDERING_REFUSED",
+        "required_evidence_or_repair": "the next expected sequence number and a fresh idempotency key for new input",
+        "retry_entrypoint": SUBMIT_ENTRYPOINT,
+        "next_attempt": "resubmit the unit at the expected sequence",
+    },
+}
+
+
+def _fail_closed(*, mode: str, reason: str, stage: str, manifest: Mapping[str, Any] | None = None, stream_id: str | None = None, sequence: int | None = None) -> dict[str, Any]:
+    declared = _FAIL_CLOSED_STAGES[stage]
     body: dict[str, Any] = {
         "schema": RESULT_SCHEMA,
         "mode": mode,
@@ -175,8 +245,12 @@ def _fail_closed(*, mode: str, reason: str, manifest: Mapping[str, Any] | None =
         "stream_id": stream_id,
         "sequence": sequence,
         "adapter_is_governance_authority": False,
+        # Only a result the runtime returned and the adapter then refused was
+        # handed off; every earlier stage stopped before the runtime.
+        "reached_sdk_runtime": stage == "RESULT",
+        **non_allow_fields(failed_predicate=reason, **declared),
     }
-    if manifest is not None:
+    if isinstance(manifest, Mapping):
         body["source_output_id"] = manifest.get("source_output_id")
     body["result_hash"] = _hash(body)
     return body
@@ -206,7 +280,7 @@ def build_sdk_manifest_intr_transfer(canonical_manifest: Mapping[str, Any],
     This envelope is transport/framing only. The manifest's processing declaration,
     not source/provider identity and not this adapter, selects processing downstream.
     """
-    processing = canonical_manifest["processing"]
+    processing = canonical_manifest["sdk_declared_processing"]
     node = standing["node_endpoint"]
     body = {
         "schema": "stegverse.sdk-manifest.intr-transfer/v1",
@@ -253,25 +327,25 @@ def process_manifest(
     """Validate one machine manifest, delegate canonical governance, return a model-facing envelope."""
     mode = mode.upper()
     if mode not in ALLOWED_MODES:
-        return _fail_closed(mode=mode, reason="unsupported_ingress_mode", manifest=manifest, stream_id=stream_id, sequence=sequence)
+        return _fail_closed(mode=mode, reason="unsupported_ingress_mode", stage="MODE", manifest=manifest, stream_id=stream_id, sequence=sequence)
     # Standing first: a crossing that has not established it must not reach the
     # question of whether its manifest is well-formed.
     try:
         resolved_standing = validate_standing(standing)
     except ValueError as exc:
-        return _fail_closed(mode=mode, reason=str(exc), manifest=manifest, stream_id=stream_id, sequence=sequence)
+        return _fail_closed(mode=mode, reason=str(exc), stage="STANDING", manifest=manifest, stream_id=stream_id, sequence=sequence)
     try:
         canonical_manifest = validate_ingress_manifest(manifest)
-    except ValueError as exc:
-        return _fail_closed(mode=mode, reason=str(exc), manifest=manifest, stream_id=stream_id, sequence=sequence)
+    except (ValueError, TypeError) as exc:
+        return _fail_closed(mode=mode, reason=str(exc), stage="MANIFEST", manifest=manifest, stream_id=stream_id, sequence=sequence)
     try:
         governed = sdk_manifest_endpoint(
             build_sdk_manifest_intr_transfer(canonical_manifest, resolved_standing))
     except Exception as exc:
-        return _fail_closed(mode=mode, reason=f"sdk_manifest_endpoint_failed:{type(exc).__name__}", manifest=canonical_manifest, stream_id=stream_id, sequence=sequence)
+        return _fail_closed(mode=mode, reason=f"sdk_manifest_endpoint_failed:{type(exc).__name__}", stage="HANDOFF", manifest=canonical_manifest, stream_id=stream_id, sequence=sequence)
     state = str(governed.get("governance_state") or governed.get("disposition") or "")
     if state not in ALLOWED_STATES:
-        return _fail_closed(mode=mode, reason="governance_result_state_invalid", manifest=canonical_manifest, stream_id=stream_id, sequence=sequence)
+        return _fail_closed(mode=mode, reason="governance_result_state_invalid", stage="RESULT", manifest=canonical_manifest, stream_id=stream_id, sequence=sequence)
 
     # The receipt a transition emits is the organization's, not Master Records'.
     #
@@ -291,11 +365,11 @@ def process_manifest(
     organization_receipt_observed = bool(governed.get("organization_receipt_observed", False))
     consequence_executed = bool(governed.get("consequence_executed", False))
     if state != "ALLOW" and consequence_executed:
-        return _fail_closed(mode=mode, reason="non_allow_result_claimed_consequence", manifest=canonical_manifest, stream_id=stream_id, sequence=sequence)
+        return _fail_closed(mode=mode, reason="non_allow_result_claimed_consequence", stage="RESULT", manifest=canonical_manifest, stream_id=stream_id, sequence=sequence)
     if state == "ALLOW" and not organization_receipt_observed:
         # An admitted transition with no organization receipt would be a
         # consequence with nothing recording it.
-        return _fail_closed(mode=mode, reason="organization_transition_receipt_not_observed", manifest=canonical_manifest, stream_id=stream_id, sequence=sequence)
+        return _fail_closed(mode=mode, reason="organization_transition_receipt_not_observed", stage="RESULT", manifest=canonical_manifest, stream_id=stream_id, sequence=sequence)
 
     projection = canonical_manifest["return_projection"]
     transition_evidence, verification_refs, receipt_refs = _project_transition_evidence(governed, projection)
@@ -331,7 +405,21 @@ def process_manifest(
         "sequence": sequence,
         "adapter_is_governance_authority": False,
         "provider_output_grants_consequence_authority": False,
+        "reached_sdk_runtime": True,
     }
+    if state != "ALLOW":
+        # A DENY, REVIEW or FAIL_CLOSED from the runtime is a transition with
+        # its own predicate and repair. The far side's values are carried when
+        # it named them; otherwise the adapter names the runtime's state.
+        body.update(non_allow_fields(
+            failure_code=str(governed.get("failure_code") or "SDK_RUNTIME_" + state),
+            failed_predicate=str(governed.get("failed_predicate") or "sdk_runtime_disposition_is_allow"),
+            required_evidence_or_repair=str(governed.get("required_evidence_or_repair")
+                                            or "the repair the runtime's disposition names"),
+            retry_entrypoint=str(governed.get("retry_entrypoint") or SUBMIT_ENTRYPOINT),
+            next_attempt=str(governed.get("next_attempt")
+                             or "resubmit once the named predicate holds"),
+        ))
     body["result_hash"] = _hash(body)
     return body
 
@@ -352,14 +440,14 @@ class GovernedStreamSession:
 
     def process(self, manifest: Mapping[str, Any], *, sequence: int, idempotency_key: str) -> dict[str, Any]:
         if not idempotency_key:
-            return _fail_closed(mode="LIVE_STREAM", reason="idempotency_key_required", manifest=manifest, stream_id=self.stream_id, sequence=sequence)
+            return _fail_closed(mode="LIVE_STREAM", reason="idempotency_key_required", stage="STREAM", manifest=manifest, stream_id=self.stream_id, sequence=sequence)
         if idempotency_key in self._seen:
             previous = self._seen[idempotency_key]
             if previous.get("source_output_id") != manifest.get("source_output_id"):
-                return _fail_closed(mode="LIVE_STREAM", reason="idempotency_key_reused_for_different_input", manifest=manifest, stream_id=self.stream_id, sequence=sequence)
+                return _fail_closed(mode="LIVE_STREAM", reason="idempotency_key_reused_for_different_input", stage="STREAM", manifest=manifest, stream_id=self.stream_id, sequence=sequence)
             return dict(previous)
         if sequence != self._next_sequence:
-            return _fail_closed(mode="LIVE_STREAM", reason=f"stream_sequence_expected:{self._next_sequence}", manifest=manifest, stream_id=self.stream_id, sequence=sequence)
+            return _fail_closed(mode="LIVE_STREAM", reason=f"stream_sequence_expected:{self._next_sequence}", stage="STREAM", manifest=manifest, stream_id=self.stream_id, sequence=sequence)
         result = process_manifest(
             manifest,
             mode="LIVE_STREAM",
