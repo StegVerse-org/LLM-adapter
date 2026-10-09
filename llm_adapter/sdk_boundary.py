@@ -359,4 +359,4 @@ __all__ = ["require_standing", "contract", "build", "validate", "submit",
            "record_standing_refusal", "standing_refusal_record",
            "ALLOW", "DENY", "BOUNDARY", "BOUNDARY_SCHEMA", "RECORD_SCHEMA",
            "REFUSED_CLASS", "REJECTION_SCHEMA", "SURFACES",
-           "resolve_ecosystem_chat_capability_descriptor"]
+           ]
