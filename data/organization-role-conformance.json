@@ -73,6 +73,12 @@
       "findings": ["F4", "F5"],
       "statement": "The declared manifest path is canonical; the local-model chain is an optional route; remaining items are six-field manifest-transition dispositions, not observer gates.",
       "source_change": "branch claude/368-pr3-docs-declaration"
+    },
+    {
+      "surface": "llm_adapter/va_claims_runtime_core.py",
+      "findings": ["F7 (VA claims turn)"],
+      "statement": "A turn closes on its VA_CLAIMS_TURN_EXECUTED transition receipt; Master Records packet emission and reconstruction are optional, non-gating evidence with stable packet keys; failures are six-field non-ALLOW.",
+      "source_change": "branch claude/368-r2-va-claims"
     }
   ],
   "open_repairs": [
@@ -86,17 +92,6 @@
       "retry_entrypoint": "StegVerse-org/LLM-adapter#368",
       "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
       "next_attempt": "after the owner rules on the declared mapping"
-    },
-    {
-      "surface": "llm_adapter/va_claims_runtime_core.py:_reconstruct_turn",
-      "finding": "F7 (adjacent; not named in the review)",
-      "disposition": "REVIEW",
-      "failure_code": "PER_TURN_MASTER_RECORDS_RECONSTRUCTION_IN_RESPONSE_PATH",
-      "failed_predicate": "no_master_records_reconstruction_gates_a_va_claims_turn",
-      "required_evidence_or_repair": "owner decision; the packet is read by a Master Records script in another repository",
-      "retry_entrypoint": "StegVerse-org/LLM-adapter#368",
-      "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
-      "next_attempt": "after the owner rules on the cross-repository packet"
     },
     {
       "surface": "scripts/verify_authorized_provider_activation.py and the live-activation status writers",
