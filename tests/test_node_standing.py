@@ -218,6 +218,13 @@ def test_a_refusal_renders_as_a_disposition_releasing_nothing():
     assert body["silent_reenrollment_occurred"] is False
     assert body["authority_effect"] == "NONE_REFUSAL_ONLY"
     assert body["reason"]
+    # F9: a refusal is a non-ALLOW transition carrying the six standard fields.
+    for key in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+        assert isinstance(body[key], str) and body[key].strip(), key
+    assert body["failure_code"] == "NODE_STANDING_DENY"
+    assert body["failed_predicate"] == body["reason"]
+    assert body["owning_existing_goal"] == "LLMA-DECLARED-PATH-CONFORMANCE-368"
 
 
 def test_predecessor_field_set_is_read_off_the_owner_not_declared_locally() -> None:

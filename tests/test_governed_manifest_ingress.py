@@ -1,24 +1,44 @@
+import ast
+from pathlib import Path
 import unittest
 
-from llm_adapter.governed_manifest_ingress import GovernedStreamSession, _hash, process_manifest
+from stegverse.manifest_builder import build_manifest
+from stegverse.manifest_contract import validate_ingress_manifest as sdk_validate_ingress_manifest
+
+from llm_adapter import governed_manifest_ingress
+from llm_adapter.governed_manifest_ingress import (
+    NON_ALLOW_FIELDS,
+    OWNING_EXISTING_GOAL,
+    GovernedStreamSession,
+    process_manifest,
+    validate_ingress_manifest,
+)
+
+GOVERNANCE_REQUEST = {
+    "candidate": {"action": "evaluate"}, "judgment": {}, "signal": {}, "execution": {},
+    "capability": {}, "continuity": {}, "approval": {}, "permission_present": False,
+}
+
+DIAGNOSTIC_REQUEST = {
+    "schema": "stegverse.ecosystem-diagnostic-request.v1",
+    "diagnostic_request_id": "diag-1",
+    "scope": "component",
+    "mutation_permitted": False,
+    "tests": [{"test_id": "t1", "component_id": "llm-adapter", "predicate_id": "p1",
+               "authority_owner": "StegVerse-org/LLM-adapter", "observation": None}],
+}
 
 
-def manifest(output_id="evt-1", return_projection=None):
-    payload = {"value": 7}
-    candidate = {"action": "evaluate"}
-    value = {
-        "manifest_profile": "stegverse.ingress-manifest.v1",
-        "manifest_profile_version": "1",
-        "source_framework": "external.ai",
-        "source_output_id": output_id,
-        "created_at": "2026-08-12T19:00:00Z",
-        "payload": payload,
-        "candidate": candidate,
-        "declared_intent": "evaluation",
-        "requested_consequence": "none",
-        "processing": {"capability": "governance", "route_id": "stegverse.route.canonical-governed.v1"},
-        "hashes": {"payload_sha256": _hash(payload), "candidate_sha256": _hash(candidate)},
-    }
+def manifest(output_id="evt-1", return_projection=None, process="governance"):
+    """A manifest built by the SDK, which is what a caller submits.
+
+    The adapter is not the authority on manifest shape, so its fixtures are
+    the SDK builder's output rather than a hand-written approximation of it.
+    """
+    request = GOVERNANCE_REQUEST if process == "governance" else DIAGNOSTIC_REQUEST
+    value = build_manifest(data={"value": 7}, source_framework="external.ai",
+                           source_output_id=output_id, processor_request=request,
+                           process=process, created_at="2026-08-12T19:00:00Z")
     if return_projection is not None:
         value["return_projection"] = return_projection
     return value
@@ -73,10 +93,9 @@ class GovernedManifestIngressTests(unittest.TestCase):
 
     def test_source_identity_cannot_select_processing_or_bypass_declared_route(self):
         left = manifest("evt-left")
-        right = manifest("evt-right")
+        right = manifest("evt-right", process="ecosystem_diagnostic")
         left["source_framework"] = "provider.alpha"
         right["source_framework"] = "provider.beta"
-        right["processing"] = {"capability": "analysis", "route_id": "route.analysis.v1"}
         seen = []
         def endpoint(transfer):
             seen.append(transfer["requested_processing"])
@@ -157,7 +176,10 @@ class GovernedManifestIngressTests(unittest.TestCase):
         self.assertEqual(seen, [])
 
     def test_test_mode_returns_governed_model_envelope(self):
-        result = process_manifest(manifest(), mode="TEST", standing=standing(), sdk_manifest_endpoint=allow_handler)
+        value = manifest()
+        # An absent projection defaults to ALL.
+        value.pop("return_projection")
+        result = process_manifest(value, mode="TEST", standing=standing(), sdk_manifest_endpoint=allow_handler)
         self.assertEqual(result["governance_state"], "ALLOW")
         self.assertEqual(result["manifest_receipt_id"], "MR-0123456789ABCDEF")
         self.assertFalse(result["adapter_is_governance_authority"])
@@ -194,6 +216,96 @@ class GovernedManifestIngressTests(unittest.TestCase):
         result = process_manifest({}, mode="TEST", standing=standing(), sdk_manifest_endpoint=lambda value: called.append(value))
         self.assertEqual(result["governance_state"], "FAIL_CLOSED")
         self.assertEqual(called, [])
+
+    def test_sdk_built_non_governance_manifest_passes_adapter_validation(self):
+        # F1: the SDK requires a candidate only for governance processing. An
+        # SDK-built ecosystem_diagnostic manifest carries none, and the adapter
+        # must not refuse what the SDK accepts.
+        value = manifest("evt-diag", process="ecosystem_diagnostic")
+        self.assertNotIn("candidate", value)
+        sdk_validate_ingress_manifest(value)
+        canonical = validate_ingress_manifest(value)
+        self.assertEqual(canonical["sdk_declared_processing"], {
+            "capability": "ecosystem_diagnostic", "route_id": value["processing"]["route_id"]})
+        seen = []
+        result = process_manifest(value, mode="TEST", standing=standing(),
+                                  sdk_manifest_endpoint=lambda transfer: seen.append(transfer) or allow_handler(transfer))
+        self.assertEqual(result["governance_state"], "ALLOW")
+        self.assertEqual(len(seen), 1)
+        self.assertEqual(seen[0]["requested_processing"], value["processing"])
+        self.assertEqual(seen[0]["manifest"], {**value, "return_projection": seen[0]["manifest"]["return_projection"]})
+        self.assertNotIn("sdk_declared_processing", seen[0]["manifest"])
+
+    def test_sdk_refusal_is_carried_verbatim(self):
+        value = manifest()
+        value["unexpected_top_level"] = True
+        result = process_manifest(value, mode="TEST", standing=standing(), sdk_manifest_endpoint=allow_handler)
+        self.assertEqual(result["governance_state"], "FAIL_CLOSED")
+        self.assertEqual(result["reason"], "unknown top-level manifest fields: unexpected_top_level")
+
+    def assert_six_fields(self, result):
+        for key in NON_ALLOW_FIELDS:
+            self.assertIsInstance(result.get(key), str, key)
+            self.assertTrue(result[key].strip(), key)
+        self.assertEqual(result["owning_existing_goal"], OWNING_EXISTING_GOAL)
+
+    def test_every_non_allow_carries_the_six_standard_fields(self):
+        # F2: adapter fail-closed results at every stage.
+        unsupported = process_manifest(manifest(), mode="BATCH", standing=standing(), sdk_manifest_endpoint=allow_handler)
+        no_standing = process_manifest(manifest(), mode="TEST", standing={}, sdk_manifest_endpoint=allow_handler)
+        invalid = process_manifest({}, mode="TEST", standing=standing(), sdk_manifest_endpoint=allow_handler)
+        def raises(_transfer):
+            raise RuntimeError("binding missing")
+        handoff = process_manifest(manifest(), mode="TEST", standing=standing(), sdk_manifest_endpoint=raises)
+        no_receipt = process_manifest(manifest(), mode="TEST", standing=standing(),
+                                      sdk_manifest_endpoint=lambda _t: {"governance_state": "ALLOW"})
+        stages = {
+            "INGRESS_MODE_UNSUPPORTED": unsupported,
+            "NODE_STANDING_NOT_ESTABLISHED": no_standing,
+            "MANIFEST_REFUSED_BY_SDK_CONTRACT": invalid,
+            "SDK_RUNTIME_HANDOFF_RAISED": handoff,
+            "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE": no_receipt,
+        }
+        for code, result in stages.items():
+            self.assertEqual(result["governance_state"], "FAIL_CLOSED")
+            self.assertEqual(result["failure_code"], code)
+            self.assertEqual(result["failed_predicate"], result["reason"])
+            self.assert_six_fields(result)
+        self.assertFalse(handoff["reached_sdk_runtime"])
+        self.assertTrue(no_receipt["reached_sdk_runtime"])
+        session = GovernedStreamSession("stream-six", allow_handler, standing())
+        out_of_order = session.process(manifest("evt-9"), sequence=3, idempotency_key="k9")
+        self.assertEqual(out_of_order["failure_code"], "LIVE_STREAM_ORDERING_REFUSED")
+        self.assert_six_fields(out_of_order)
+
+    def test_runtime_non_allow_carries_six_fields_preferring_far_side_values(self):
+        def deny(_transfer):
+            return {"disposition": "DENY", "failure_code": "FAR_SIDE_DENY",
+                    "failed_predicate": "far_side_predicate", "consequence_executed": False}
+        result = process_manifest(manifest(), mode="TEST", standing=standing(), sdk_manifest_endpoint=deny)
+        self.assertEqual(result["governance_state"], "DENY")
+        self.assert_six_fields(result)
+        self.assertEqual(result["failure_code"], "FAR_SIDE_DENY")
+        self.assertEqual(result["failed_predicate"], "far_side_predicate")
+        allowed = process_manifest(manifest(), mode="TEST", standing=standing(), sdk_manifest_endpoint=allow_handler)
+        for key in NON_ALLOW_FIELDS:
+            self.assertNotIn(key, allowed)
+
+    def test_ingress_module_imports_no_master_records_heartbeat_or_socket_module(self):
+        # The generic ingress path is transport only: nothing on it waits on
+        # Master Records, a heartbeat or a socket receiver.
+        tree = ast.parse(Path(governed_manifest_ingress.__file__).read_text(encoding="utf-8"))
+        imported = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom):
+                imported.add(("." * node.level) + (node.module or ""))
+        for name in imported:
+            lowered = name.lower()
+            self.assertNotIn("master_records", lowered, name)
+            self.assertNotIn("heartbeat", lowered, name)
+            self.assertNotIn("socket", lowered, name)
 
     def test_non_allow_cannot_claim_consequence(self):
         def bad(_manifest):
