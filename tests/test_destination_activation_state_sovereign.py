@@ -71,16 +71,11 @@ class DestinationActivationSovereignTests(unittest.TestCase):
                         "custody_recorded": False,
                         "event_sha256": "a" * 64,
                     },
-                    "master_records_usage_submission": {
-                        "custody_recorded": True,
-                        "reconstructability": "PASS",
-                        "authority_granted": False,
-                    },
                     "authority": {"provider_usage_grants_authority": False},
                 },
                 "transition": {
-                    "master_record_status": "RECORDED",
-                    "reconstruction_status": "PASS",
+                    "lifecycle_state": "COMPLETED",
+                    "final_receipt_id": "final-response-receipt:sha256:test",
                 },
             },
             "authority_granted": False,
@@ -114,6 +109,11 @@ class DestinationActivationSovereignTests(unittest.TestCase):
         self.assertFalse(state["gates"]["retrieval_and_provider_usage_receipts"]["complete"])
         self.assertFalse(state["superseded_topology"]["render_required"])
         self.assertFalse(state["credential_boundary"]["github_token_required"])
+        self.assertEqual(state["disposition"], "FAIL_CLOSED")
+        for key in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                    "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+            self.assertTrue(state[key], key)
+        self.assertEqual(state["owning_existing_goal"], "LLMA-DECLARED-PATH-CONFORMANCE-368")
 
     def test_valid_same_execution_live_receipt_completes_compatibility_gates(self):
         self.m.LIVE_RECEIPT.write_text(json.dumps(self.verified_receipt()))
@@ -130,6 +130,8 @@ class DestinationActivationSovereignTests(unittest.TestCase):
         self.assertEqual(state["state"], "DESTINATION_ACTIVATION_EVIDENCE_COMPLETE")
         self.assertTrue(all(gate["complete"] for gate in state["gates"].values()))
         self.assertTrue(state["live_receipt"]["verified"])
+        self.assertEqual(state["disposition"], "ALLOW")
+        self.assertIs(state["master_records_is_a_predicate"], False)
         self.assertEqual(
             state["gates"]["same_origin_authenticated_deployment"]["current_semantics"],
             "canonical_sovereign_runtime_service_observed",
@@ -139,13 +141,12 @@ class DestinationActivationSovereignTests(unittest.TestCase):
         value = {
             "schema": "stegverse.ecosystem_chat.sovereign_activation_projection.v1",
             "state": "VERIFIED",
+            "source_activation_receipt_hash": "f" * 64,
             "predicates": {
                 "real_model_process_observed": True,
                 "private_endpoint_only": True,
                 "ephemeral_e1_e2_execution_observed": True,
                 "measured_usage_persisted": True,
-                "provider_usage_reconstruction_pass": True,
-                "transition_reconstruction_pass": True,
                 "same_execution": True,
                 "persistent_conversational_runtime_ready": True,
             },
@@ -197,9 +198,18 @@ class DestinationActivationSovereignTests(unittest.TestCase):
         self.assertFalse(state["live_receipt"]["verified"])
         self.assertEqual(state["state"], "DESTINATION_ACTIVATION_EVIDENCE_COMPLETE")
 
+    def test_live_receipt_without_transition_receipt_does_not_complete(self):
+        receipt = self.verified_receipt()
+        del receipt["evidence"]["transition"]["final_receipt_id"]
+        receipt["result_sha256"] = self.m.canonical_sha256(receipt, omit="result_sha256")
+        observed = self.m.live_predicates(receipt, True)
+        self.assertFalse(observed["organization_ledger_transition_receipt_observed"])
+        self.assertNotIn("transition_reconstructability_pass", observed)
+        self.assertNotIn("provider_usage_custody_recorded", observed)
+
     def test_tampered_verified_receipt_fails_closed(self):
         receipt = self.verified_receipt()
-        receipt["evidence"]["transition"]["reconstruction_status"] = "PARTIAL"
+        receipt["evidence"]["transition"]["final_receipt_id"] = "substituted"
         self.m.LIVE_RECEIPT.write_text(json.dumps(receipt))
         valid, errors = self.m.verified_live_receipt(receipt)
         self.assertFalse(valid)

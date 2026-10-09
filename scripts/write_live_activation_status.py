@@ -5,6 +5,8 @@ The output intentionally omits timestamps and volatile request evidence. It chan
 when the semantic blocker or gate posture changes. Missing or malformed observations are
 converted into durable fail-closed blockers rather than causing the status writer itself
 to fail. No third-party gateway is implied when an observation does not name one.
+A PENDING status carries the six non-ALLOW fields. The gates read the provider usage
+record and the organization-ledger transition receipt; Master Records is not a gate.
 """
 from __future__ import annotations
 
@@ -16,6 +18,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "receipts" / "ecosystem-chat-live-activation.latest.json"
 OUTPUT = ROOT / "reports" / "ecosystem-chat-live-activation-status.json"
+OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
 
 
 def canonical_sha(value: dict[str, Any]) -> str:
@@ -45,7 +48,7 @@ def main() -> int:
     chat = evidence.get("chat") if isinstance(evidence.get("chat"), dict) else {}
     transition = evidence.get("transition") if isinstance(evidence.get("transition"), dict) else {}
     provider = chat.get("provider") if isinstance(chat.get("provider"), dict) else {}
-    provider_usage = chat.get("master_records_usage_submission") if isinstance(chat.get("master_records_usage_submission"), dict) else {}
+    provider_usage_record = chat.get("provider_usage_submission") if isinstance(chat.get("provider_usage_submission"), dict) else {}
 
     observation_blockers = observation.get("blockers", [])
     if not isinstance(observation_blockers, list):
@@ -81,12 +84,14 @@ def main() -> int:
             "gateway_health_ok": health.get("status") == "ok",
             "durable_storage": health.get("storage_durable_across_restarts") is True,
             "governed_provider_enabled": health.get("governed_provider_enabled") is True,
-            "master_records_submission_enabled": health.get("master_records_submission_enabled") is True,
             "provider_used": provider.get("used") is True,
-            "provider_usage_custody_recorded": provider_usage.get("custody_recorded") is True,
-            "provider_usage_reconstructability_pass": provider_usage.get("reconstructability") == "PASS",
-            "transition_custody_recorded": transition.get("master_record_status") == "RECORDED",
-            "transition_reconstructability_pass": transition.get("reconstruction_status") == "PASS",
+            "provider_usage_record_present": bool(
+                provider_usage_record.get("measurement_id") and provider_usage_record.get("event_sha256")
+            ),
+            "provider_usage_authority_false": provider_usage_record.get("authority_granted") is False,
+            "organization_ledger_transition_receipt_observed": bool(
+                transition.get("lifecycle_state") == "COMPLETED" and transition.get("final_receipt_id")
+            ),
         },
         "manual_user_action_required": False,
         "continuation_mode": "resident_worker_managed",
@@ -97,6 +102,20 @@ def main() -> int:
             "status_is_release_authority": False,
         },
     }
+    if requested_state != "VERIFIED":
+        failure_code = blockers[0] if blockers else "live_activation_not_verified"
+        payload.update({
+            "disposition": "FAIL_CLOSED",
+            "failure_code": failure_code,
+            "failed_predicate": "ecosystem_chat_live_activation_verified",
+            "required_evidence_or_repair": "repair every listed blocker in the live activation observation: "
+            + (", ".join(blockers) or failure_code),
+            "retry_entrypoint": "STEGVERSE_GATEWAY_BASE_URL=<gateway> python scripts/verify_live_ecosystem_chat_activation.py",
+            "owning_existing_goal": OWNING_EXISTING_GOAL,
+            "next_attempt": "rewrite this status from the next live activation observation",
+        })
+    else:
+        payload["disposition"] = "ALLOW"
     payload["status_sha256"] = canonical_sha(payload)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")

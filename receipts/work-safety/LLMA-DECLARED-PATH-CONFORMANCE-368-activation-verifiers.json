@@ -1,0 +1,77 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github:orchestration/task-registry.json#LLMA-DECLARED-PATH-CONFORMANCE-368"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "receipts/work-safety/MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002-organization-record-boundary.json",
+      "data/organization-role-conformance.json"
+    ]
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/LLM-adapter#368",
+      "StegVerse-org/.github:docs/ORGANIZATION_ROLE_RUNTIME_REALITY_DEPLOYMENT.md"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "llm_adapter/combined_gateway.py",
+      "llm_adapter/ecosystem_chat_gateway.py",
+      "llm_adapter/provider_usage_submission.py",
+      "scripts/project_independent_parent_activation.py",
+      "scripts/check_ecosystem_chat_verified_receipt_contract.py"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md#activation-verifiers-llma-368"
+    ]
+  },
+  "covered_paths": [
+    "scripts/verify_authorized_provider_activation.py",
+    "scripts/verify_live_ecosystem_chat_activation.py",
+    "scripts/write_live_activation_status.py",
+    "scripts/write_ecosystem_chat_destination_activation_state.py",
+    "tests/test_authorized_provider_activation_verifier.py",
+    "tests/test_destination_activation_state_sovereign.py",
+    "tests/test_live_activation_automation_contract.py",
+    "data/organization-role-conformance.json",
+    "README.md",
+    "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-activation-verifiers.json"
+  ],
+  "new_files": [
+    {
+      "path": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-activation-verifiers.json",
+      "semantic_responsibility": "Document the activation-verifier mutation: provider usage record and org-ledger transition receipt replace Master Records predicates; six-field dispositions",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-master-records-decoupling.json",
+      "justification": "Fresh manifest required for this functional diff",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#368"
+      ]
+    }
+  ]
+}

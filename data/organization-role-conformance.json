@@ -85,20 +85,15 @@
       "findings": ["F7 (VA claims turn)"],
       "statement": "A turn closes on its VA_CLAIMS_TURN_EXECUTED transition receipt; Master Records packet emission and reconstruction are optional, non-gating evidence with stable packet keys; failures are six-field non-ALLOW.",
       "source_change": "branch claude/368-r2-va-claims"
+    },
+    {
+      "surface": "scripts/verify_authorized_provider_activation.py, scripts/verify_live_ecosystem_chat_activation.py, scripts/write_live_activation_status.py, scripts/write_ecosystem_chat_destination_activation_state.py",
+      "findings": ["F4 (CONNECTED predicate)"],
+      "statement": "Read the provider usage record and the organization-ledger transition receipt; no Master Records usage submission, custody or reconstruction predicate; every unverified result carries the six non-ALLOW fields.",
+      "source_change": "branch claude/368-r2-verifiers"
     }
   ],
   "open_repairs": [
-    {
-      "surface": "scripts/verify_authorized_provider_activation.py and the live-activation status writers",
-      "finding": "F4 (CONNECTED predicate)",
-      "disposition": "REVIEW",
-      "failure_code": "ACTIVATION_VERIFIER_READS_MASTER_RECORDS_USAGE_SUBMISSION",
-      "failed_predicate": "activation_verifiers_use_the_organization_transition_receipt",
-      "required_evidence_or_repair": "replace master_records_usage_submission predicates with the organization transition receipt",
-      "retry_entrypoint": "StegVerse-org/LLM-adapter#368",
-      "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
-      "next_attempt": "follow-up source repair after PR-2 merges"
-    }
   ],
   "exemptions_requested": [],
   "exemption_register": "StegVerse-org/.github:data/organization-role-exemption-register.json",
