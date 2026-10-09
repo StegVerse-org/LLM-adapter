@@ -466,6 +466,20 @@ docs/SOVEREIGN_CARRIER_EXECUTION_MIRROR_HANDOFF.md
 
 The executor requires an admitted TVC route, binds the exact canonical runtime proof and private endpoint, requires credential class `NONE`, rejects route/execution authority escalation, executes through `StegVerseLocalHTTPProviderClient`, persists request/response hashes and measured usage, and advances into Master Records reconstruction.
 
+### VA claims turn closure (LLMA-368)
+
+A VA claims chat turn (`llm_adapter/va_claims_runtime_core.py`) closes on its own
+transition receipt, appended to this repository's transition ledger
+(`.stegverse/transition-ledger/emit.py`) as `VA_CLAIMS_TURN_EXECUTED`. Master Records
+reconstruction is not a turn predicate: when a local Master Records capsule is
+materialized the turn's packet (`runtime_proof`, `tvc_route_receipt`,
+`llm_adapter_execution_receipt` -- keys unchanged) is emitted to it and the outcome is
+returned as `master_records_reconstruction` evidence with `gates_turn: false`. A
+missing capsule or failed reconstruction never withholds a closed turn. Every
+non-ALLOW turn or refusal carries `failure_code`, `failed_predicate`,
+`required_evidence_or_repair`, `retry_entrypoint`, `owning_existing_goal` and
+`next_attempt`.
+
 ## What remains incomplete
 
 Repository implementation completion is not product activation.

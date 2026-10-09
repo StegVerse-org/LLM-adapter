@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -23,6 +24,18 @@ from va_claim_assistant.route_generators import (
 )
 
 SCHEMA = "stegverse.va_claims.runtime/v1"
+OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
+RETRY_ENTRYPOINT = "POST /api/va-claims/v1/chat"
+TURN_TRANSITION_CLASS = "VA_CLAIMS_TURN_EXECUTED"
+NON_ALLOW_FIELDS = (
+    "failure_code",
+    "failed_predicate",
+    "required_evidence_or_repair",
+    "retry_entrypoint",
+    "owning_existing_goal",
+    "next_attempt",
+)
+ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_SOURCE_DOMAINS = {
     "va.gov", "www.va.gov", "benefits.va.gov", "www.benefits.va.gov",
     "uscode.house.gov", "www.ecfr.gov", "ecfr.gov", "knowva.ebenefits.va.gov",
@@ -148,7 +161,42 @@ def validate_tvc_route(route: dict[str, Any], proof: dict[str, Any]) -> str:
     return endpoint + "/v1/chat/completions"
 
 
-def _master_records_root() -> Path:
+def non_allow(failure_code: str, failed_predicate: str, required_evidence_or_repair: str, *,
+              next_attempt: str = "retry the turn once the failed predicate holds",
+              disposition: str = "FAIL_CLOSED", **detail: Any) -> dict[str, Any]:
+    """A refused or failed turn, stated as the six fields a caller can act on."""
+    return {
+        "schema": SCHEMA,
+        "disposition": disposition,
+        "failure_code": failure_code,
+        "failed_predicate": failed_predicate,
+        "required_evidence_or_repair": required_evidence_or_repair,
+        "retry_entrypoint": RETRY_ENTRYPOINT,
+        "owning_existing_goal": OWNING_EXISTING_GOAL,
+        "next_attempt": next_attempt,
+        **detail,
+        "authority_effect": False,
+        "activation_effect": False,
+    }
+
+
+def non_allow_from_exception(exc: BaseException) -> dict[str, Any]:
+    """The six-field disposition for a turn that raised before it could close."""
+    code = str(exc) or type(exc).__name__
+    return non_allow(
+        code,
+        "va_claims_turn_preconditions_hold",
+        "correct the request or runtime input named by failure_code",
+        error_class=type(exc).__name__,
+    )
+
+
+def _master_records_root() -> Path | None:
+    """The local Master Records capsule, when one is materialized.
+
+    Optional: Master Records receives the turn's packet as organization-record
+    evidence after the turn has closed. Its absence never gates a turn.
+    """
     candidates: list[Path] = []
     override = os.getenv("STEGVERSE_MASTER_RECORDS_ORCHESTRATION_ROOT", "").strip()
     if override:
@@ -161,7 +209,7 @@ def _master_records_root() -> Path:
     for candidate in candidates:
         if (candidate / required).is_file():
             return candidate
-    raise RuntimeError("master_records_local_capsule_not_materialized")
+    return None
 
 
 def _runtime_receipt_dir() -> Path:
@@ -182,12 +230,13 @@ def readiness_record() -> dict[str, Any]:
     validate_tvc_route(route_receipt, proof)
     if not registry.get("sources"):
         raise RuntimeError("va_source_registry_empty")
-    _master_records_root()
     return {
         "state": "READY",
         "schema": SCHEMA,
         "source_policy": "ADMITTED_OFFICIAL_VA_ONLY",
-        "per_turn_reconstruction": "REQUIRED",
+        "turn_closes_on": "ORGANIZATION_LEDGER_TRANSITION_RECEIPT",
+        "per_turn_reconstruction": "OPTIONAL_NON_GATING",
+        "master_records_capsule_materialized": _master_records_root() is not None,
         "credential_requirement": "NONE",
         "github_token_required": False,
         "authority_effect": False,
@@ -307,8 +356,38 @@ def _execution_receipt(*, proof: dict[str, Any], route: dict[str, Any], executio
     }
 
 
+def _reconstruction_not_passed(state: str, failure_code: str, **detail: Any) -> dict[str, Any]:
+    return {
+        "state": state,
+        "receipt_hash": None,
+        "provider_usage_custody_recorded": False,
+        "provider_usage_reconstruction_pass": False,
+        "transition_reconstruction_pass": False,
+        "same_execution": False,
+        "gates_turn": False,
+        **non_allow(
+            failure_code,
+            "master_records_same_execution_reconstruction_pass",
+            "materialize the Master Records capsule and rerun its reconstruction over the retained packet",
+            disposition="NOT_RECONSTRUCTED",
+            next_attempt="Master Records reconstructs from the retained packet; the turn is already closed",
+        ),
+        **detail,
+    }
+
+
 def _reconstruct_turn(*, proof: dict[str, Any], route: dict[str, Any], execution_receipt: dict[str, Any], session_id: str, measurement_id: str) -> dict[str, Any]:
+    """Emit the turn's Master Records packet and record what reconstruction found.
+
+    Non-gating: the turn closes on its organization-ledger transition receipt.
+    Every outcome here is evidence returned beside the response, never a reason
+    to withhold it. The packet keys are read by a Master Records script in
+    another repository and stay stable.
+    """
     root = _master_records_root()
+    if root is None:
+        return _reconstruction_not_passed(
+            "NOT_MATERIALIZED", "master_records_local_capsule_not_materialized")
     receipt_dir = _runtime_receipt_dir() / session_id
     receipt_dir.mkdir(parents=True, exist_ok=True)
     safe_measurement = re.sub(r"[^A-Za-z0-9_.-]", "_", measurement_id)[:180]
@@ -334,19 +413,22 @@ def _reconstruct_turn(*, proof: dict[str, Any], route: dict[str, Any], execution
             "LC_ALL": "C.UTF-8",
             **({"HOME": os.environ["HOME"]} if "HOME" in os.environ else {}),
         }
-        process = subprocess.run(
-            [sys.executable, str(script), "--packet", str(packet_path), "--output", str(reconstruction_path)],
-            cwd=root,
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-            env=child_env,
-        )
+        try:
+            process = subprocess.run(
+                [sys.executable, str(script), "--packet", str(packet_path), "--output", str(reconstruction_path)],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+                env=child_env,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return _reconstruction_not_passed("FAILED", "master_records_turn_reconstruction_not_run")
         try:
             result = json.loads(reconstruction_path.read_text(encoding="utf-8"))
-        except Exception as exc:
-            raise RuntimeError("master_records_turn_reconstruction_receipt_missing") from exc
+        except Exception:
+            return _reconstruction_not_passed("FAILED", "master_records_turn_reconstruction_receipt_missing")
         required = (
             result.get("state") == "PASS",
             result.get("session_id") == execution_receipt.get("session_id"),
@@ -361,9 +443,10 @@ def _reconstruct_turn(*, proof: dict[str, Any], route: dict[str, Any], execution
             result.get("authority_effect") == "NONE",
         )
         if process.returncode != 0 or not all(required):
-            raise RuntimeError("master_records_turn_reconstruction_failed")
+            return _reconstruction_not_passed("FAILED", "master_records_turn_reconstruction_failed")
         return {
             "state": "PASS",
+            "gates_turn": False,
             "receipt_hash": result.get("reconstruction_receipt_hash"),
             "execution_receipt_path": str(execution_path),
             "reconstruction_receipt_path": str(reconstruction_path),
@@ -378,6 +461,42 @@ def _reconstruct_turn(*, proof: dict[str, Any], route: dict[str, Any], execution
                 packet_path.unlink()
             except FileNotFoundError:
                 pass
+
+
+def _ledger():
+    """This repository's own transition ledger, loaded as the module it is."""
+    spec = importlib.util.spec_from_file_location(
+        "repo_transition_emit", ROOT / ".stegverse/transition-ledger/emit.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _close_turn(*, request: ChatRequest, execution_receipt: dict[str, Any], answer_record: dict[str, Any],
+                session_id: str, transition_id: str, measurement_id: str) -> dict[str, Any]:
+    """Append the turn's transition receipt; the turn closes on this receipt."""
+    evidence = {
+        "schema": "stegverse.va_claims.turn-transition/v1",
+        "session_id": session_id,
+        "transition_id": transition_id,
+        "measurement_id": measurement_id,
+        "intended_action": "ANSWER_VA_CLAIMS_TURN",
+        "disposition": "ALLOW",
+        "transition_is_the_disposition_of_the_intended_action": True,
+        "answer_receipt_hash": answer_record["receipt_hash"],
+        "execution_receipt_hash": stable_hash(execution_receipt),
+        "provider_usage_event": execution_receipt.get("provider_usage_event"),
+        "master_records_gates_turn": False,
+        "authority_effect": "NONE",
+    }
+    return _ledger().append(
+        TURN_TRANSITION_CLASS + ":" + transition_id,
+        TURN_TRANSITION_CLASS,
+        "sha256:" + stable_hash(request.model_dump()),
+        "sha256:" + stable_hash(execution_receipt),
+        evidence,
+        "NONE",
+    )
 
 
 def _render_response(route: str, answer_record: dict[str, Any], model_text: str, *, reference_model_only: bool) -> str:
@@ -419,7 +538,13 @@ def execute_chat(request: ChatRequest) -> dict[str, Any]:
     )
     model_text = execution.response.output.strip()
     if not model_text:
-        raise RuntimeError("model_response_empty")
+        return non_allow(
+            "model_response_empty",
+            "sovereign_local_model_returned_output",
+            "the TVC-routed local model must return non-empty output for this turn",
+            session_id=session_id,
+            transition_id=transition_id,
+        )
     binding = dict(execution.binding_receipt)
     execution_receipt = _execution_receipt(
         proof=proof,
@@ -429,6 +554,24 @@ def execute_chat(request: ChatRequest) -> dict[str, Any]:
         transition_id=transition_id,
         measurement_id=measurement_id,
     )
+    try:
+        transition_receipt = _close_turn(
+            request=request,
+            execution_receipt=execution_receipt,
+            answer_record=answer_record,
+            session_id=session_id,
+            transition_id=transition_id,
+            measurement_id=measurement_id,
+        )
+    except (OSError, SystemExit, ValueError) as exc:
+        return non_allow(
+            "organization_ledger_transition_receipt_not_appended",
+            "va_claims_turn_transition_receipt_appended",
+            "the transition ledger at STEGVERSE_REPO_LEDGER_ROOT must accept the turn's receipt",
+            session_id=session_id,
+            transition_id=transition_id,
+            ledger_error=str(exc),
+        )
     reconstruction = _reconstruct_turn(
         proof=proof,
         route=route_receipt,
@@ -455,11 +598,20 @@ def execute_chat(request: ChatRequest) -> dict[str, Any]:
         "citations": citations[:4],
         "answer_receipt_hash": answer_record["receipt_hash"],
         "execution_receipt_hash": stable_hash(execution_receipt),
-        "reconstruction_receipt_hash": reconstruction["receipt_hash"],
-        "provider_usage_custody_recorded": True,
-        "provider_usage_reconstruction_pass": True,
-        "transition_reconstruction_pass": True,
-        "same_execution": True,
+        "disposition": "ALLOW",
+        "transition_id": transition_id,
+        "transition_receipt_sha256": transition_receipt["receipt_sha256"],
+        "turn_closed_on": "ORGANIZATION_LEDGER_TRANSITION_RECEIPT",
+        "master_records_reconstruction": {
+            key: reconstruction.get(key)
+            for key in ("state", "gates_turn", *NON_ALLOW_FIELDS)
+            if key in reconstruction
+        },
+        "reconstruction_receipt_hash": reconstruction.get("receipt_hash"),
+        "provider_usage_custody_recorded": reconstruction.get("provider_usage_custody_recorded") is True,
+        "provider_usage_reconstruction_pass": reconstruction.get("provider_usage_reconstruction_pass") is True,
+        "transition_reconstruction_pass": reconstruction.get("transition_reconstruction_pass") is True,
+        "same_execution": reconstruction.get("same_execution") is True,
         "authority_effect": False,
         "activation_effect": False,
         "filing_active": False,

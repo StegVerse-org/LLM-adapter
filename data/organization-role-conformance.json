@@ -81,6 +81,12 @@
       "source_change": "branch chatgpt/368-r2-f14-manifest-processing"
     },
     {
+      "surface": "llm_adapter/va_claims_runtime_core.py",
+      "findings": ["F7 (VA claims turn)"],
+      "statement": "A turn closes on its VA_CLAIMS_TURN_EXECUTED transition receipt; Master Records packet emission and reconstruction are optional, non-gating evidence with stable packet keys; failures are six-field non-ALLOW.",
+      "source_change": "branch claude/368-r2-va-claims"
+    },
+    {
       "surface": "scripts/verify_authorized_provider_activation.py, scripts/verify_live_ecosystem_chat_activation.py, scripts/write_live_activation_status.py, scripts/write_ecosystem_chat_destination_activation_state.py",
       "findings": ["F4 (CONNECTED predicate)"],
       "statement": "Read the provider usage record and the organization-ledger transition receipt; no Master Records usage submission, custody or reconstruction predicate; every unverified result carries the six non-ALLOW fields.",
@@ -88,17 +94,6 @@
     }
   ],
   "open_repairs": [
-    {
-      "surface": "llm_adapter/va_claims_runtime_core.py:_reconstruct_turn",
-      "finding": "F7 (adjacent; not named in the review)",
-      "disposition": "REVIEW",
-      "failure_code": "PER_TURN_MASTER_RECORDS_RECONSTRUCTION_IN_RESPONSE_PATH",
-      "failed_predicate": "no_master_records_reconstruction_gates_a_va_claims_turn",
-      "required_evidence_or_repair": "owner decision; the packet is read by a Master Records script in another repository",
-      "retry_entrypoint": "StegVerse-org/LLM-adapter#368",
-      "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
-      "next_attempt": "after the owner rules on the cross-repository packet"
-    }
   ],
   "exemptions_requested": [],
   "exemption_register": "StegVerse-org/.github:data/organization-role-exemption-register.json",

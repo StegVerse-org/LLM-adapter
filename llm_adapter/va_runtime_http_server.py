@@ -5,7 +5,7 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
-from .va_claims_runtime_core import ChatRequest, execute_chat, readiness_record
+from .va_claims_runtime_core import ChatRequest, execute_chat, non_allow_from_exception, readiness_record
 
 ALLOWED_ORIGINS = {
     "https://stegverse.org",
@@ -50,13 +50,13 @@ class Handler(BaseHTTPRequestHandler):
                 ready = readiness_record()
                 self._reply(200, {"state": "READY", "healthy": True, "va_runtime": ready})
             except Exception as exc:
-                self._reply(503, {"state": "FAIL_CLOSED", "healthy": False, "detail": str(exc)})
+                self._reply(503, {"state": "FAIL_CLOSED", "healthy": False, "detail": str(exc), **non_allow_from_exception(exc)})
             return
         if self.path == "/api/va-claims/v1/readiness":
             try:
                 self._reply(200, readiness_record())
             except Exception as exc:
-                self._reply(503, {"state": "FAIL_CLOSED", "detail": str(exc)})
+                self._reply(503, {"state": "FAIL_CLOSED", "detail": str(exc), **non_allow_from_exception(exc)})
             return
         self._reply(404, {"detail": "not_found"})
 
@@ -79,9 +79,9 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("request_must_be_object")
             request = ChatRequest.model_validate(value)
             result = execute_chat(request)
-            self._reply(200, result)
+            self._reply(200 if result.get("disposition") == "ALLOW" else 503, result)
         except Exception as exc:
-            self._reply(503, {"state": "FAIL_CLOSED", "detail": str(exc), "authority_effect": False, "activation_effect": False})
+            self._reply(503, {"state": "FAIL_CLOSED", "detail": str(exc), **non_allow_from_exception(exc)})
 
     def log_message(self, format: str, *args: Any) -> None:
         return

@@ -10,6 +10,7 @@ from .va_claims_runtime_core import (
     ChatRequest,
     classify_route,
     execute_chat,
+    non_allow_from_exception,
     readiness_record,
 )
 from va_claim_assistant.route_generators import AuthorityResolutionRequired, RouteGenerationError
@@ -22,15 +23,18 @@ def readiness() -> dict[str, Any]:
     try:
         return readiness_record()
     except Exception as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+        raise HTTPException(status_code=503, detail=non_allow_from_exception(exc)) from exc
 
 
 @router.post("/chat")
 def chat(request: ChatRequest) -> dict[str, Any]:
     try:
-        return execute_chat(request)
+        result = execute_chat(request)
     except (AuthorityResolutionRequired, RouteGenerationError, SovereignLocalModelBindingError, RuntimeError, OSError, ValueError) as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+        raise HTTPException(status_code=503, detail=non_allow_from_exception(exc)) from exc
+    if result.get("disposition") != "ALLOW":
+        raise HTTPException(status_code=503, detail=result)
+    return result
 
 
 app.include_router(router)

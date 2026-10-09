@@ -1,0 +1,73 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github:orchestration/task-registry.json#LLMA-DECLARED-PATH-CONFORMANCE-368"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "receipts/work-safety/MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002-organization-record-boundary.json",
+      "data/organization-role-conformance.json"
+    ]
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/LLM-adapter#368",
+      "StegVerse-org/.github:docs/ORGANIZATION_ROLE_RUNTIME_REALITY_DEPLOYMENT.md"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "llm_adapter/va_claims_runtime_core.py",
+      ".stegverse/transition-ledger/emit.py",
+      "llm_adapter/sdk_boundary.py",
+      "tests/test_va_claims_runtime_gateway.py"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md#va-claims-turn-closure-llma-368"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/va_claims_runtime_core.py",
+    "llm_adapter/va_claims_runtime_gateway.py",
+    "llm_adapter/va_runtime_http_server.py",
+    "tests/test_va_claims_runtime_gateway.py",
+    "data/organization-role-conformance.json",
+    "README.md",
+    "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-va-claims-turn-closure.json"
+  ],
+  "new_files": [
+    {
+      "path": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-va-claims-turn-closure.json",
+      "semantic_responsibility": "Document the VA claims turn-closure mutation: org-ledger transition receipt closes the turn; Master Records reconstruction optional and non-gating",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-master-records-decoupling.json",
+      "justification": "Fresh manifest required for this functional diff",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#368"
+      ]
+    }
+  ]
+}
