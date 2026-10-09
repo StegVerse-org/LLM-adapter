@@ -9,7 +9,7 @@ from .http_provider_clients import StegVerseLocalHTTPProviderClient
 from .provider_client import ProviderResponse
 from .provider_request import ProviderMessage, ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
-from .master_records_usage_record import record_provider_usage_in_master_records
+from .provider_usage_submission import record_provider_usage_event_locally, record_usage_non_gating
 
 
 class SovereignLocalModelBindingError(RuntimeError):
@@ -30,7 +30,7 @@ MEASURED_USAGE_KEYS = ("prompt_tokens", "completion_tokens", "total_tokens", "la
 class SovereignLocalModelExecution:
     response: ProviderResponse
     usage_event: dict[str, Any]
-    master_records_usage: dict[str, Any]
+    provider_usage_record: dict[str, Any]
     binding_receipt: dict[str, Any]
 
 
@@ -134,7 +134,7 @@ def execute_verified_local_model(
     messages: Sequence[Mapping[str, str] | ProviderMessage],
     origin_entry_point: str = "ecosystem_chat",
     interaction_type: str = "sovereign_local_model_inference",
-    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_in_master_records,
+    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_event_locally,
 ) -> SovereignLocalModelExecution:
     proof = validate_runtime_proof(runtime_proof)
     model_id = str(proof.get("model_id", "")).strip()
@@ -178,15 +178,14 @@ def execute_verified_local_model(
         metrics=_measured_metrics(response),
         receipt_refs=[f"local-runtime-proof:{proof['proof_hash']}", f"provider-response:{response.response_hash}"],
     )
-    mr_usage = usage_submitter(usage_event)
+    usage_record = record_usage_non_gating(usage_submitter, usage_event)
     production_scale = bool(proof.get("production_llm_equivalent", False)) and bool(proof.get("qualifies_as_large_production_llm", False))
-    custody = mr_usage.get("custody_recorded") is True
-    reconstructed = mr_usage.get("reconstructability") == "PASS"
+    # Usage is recorded in the local ledger; a Master Records organization
+    # record is not an activation predicate of this optional local route.
+    usage_recorded = usage_record.get("status") == "LOCAL_USAGE_RECORDED"
     remaining = []
-    if not custody:
-        remaining.append("provider_usage_master_records_organization_record")
-    if not reconstructed:
-        remaining.append("provider_usage_master_records_reconstruction_pass")
+    if not usage_recorded:
+        remaining.append("provider_usage_recorded_locally")
     if not production_scale:
         remaining.append("production_scale_sovereign_llm")
     remaining.append("same_execution_transition_reconstruction_pass")
@@ -205,8 +204,8 @@ def execute_verified_local_model(
         "response_hash": response.response_hash,
         "provider_usage_event_sha256": usage_event["event_sha256"],
         "measured_usage": {name: usage_event["metrics"][name] for name in MEASURED_USAGE_KEYS},
-        "provider_usage_custody_recorded": custody,
-        "provider_usage_reconstruction_pass": reconstructed,
+        "provider_usage_recorded_locally": usage_recorded,
+        "provider_usage_record_gates_execution": False,
         "production_scale_llm_observed": production_scale,
         "reference_model_only": not production_scale,
         "activation_complete": False,
@@ -217,7 +216,7 @@ def execute_verified_local_model(
             "binding_receipt_grants_authority": False,
         },
     }
-    return SovereignLocalModelExecution(response, usage_event, mr_usage, binding_receipt)
+    return SovereignLocalModelExecution(response, usage_event, usage_record, binding_receipt)
 
 
 __all__ = ["SovereignLocalModelBindingError", "SovereignLocalModelExecution", "execute_verified_local_model", "validate_runtime_proof"]

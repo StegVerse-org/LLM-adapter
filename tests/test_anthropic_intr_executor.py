@@ -57,6 +57,40 @@ class AnthropicExecutorTests(unittest.TestCase):
         durable = str(result.durable_artifacts())
         self.assertNotIn("test-secret-value", durable)
 
+    def _run(self, master_records=None, **extra):
+        req = make_request()
+        ingress = IngressDecision("ALLOW", req.request_hash, req.transition_id, "a" * 64, "carrier://exec")
+
+        def transport(method, url, headers, body):
+            return 200, {"id": "msg_1", "model": req.model,
+                         "content": [{"type": "text", "text": "pong"}],
+                         "usage": {"input_tokens": 5, "output_tokens": 2}}
+
+        kwargs = {} if master_records is None else {"master_records": master_records}
+        return execute_governed_transaction(
+            provider_request=req, ingress_decision=ingress, config=TransportConfig(),
+            credential_resolver=lambda _: "test-secret-value", transport=transport,
+            egress_resolver=lambda evidence: EgressDecision("ALLOW", evidence["response_hash"], "b" * 64),
+            **kwargs)
+
+    def test_usage_handoff_never_gates_egress(self):
+        # F7: no client, a refused record, or a failing client all still reach egress.
+        def unreachable(_handoff):
+            raise OSError("master records unreachable")
+        for client in (None, lambda _h: {"accepted": False, "authority_effect": "NONE"}, unreachable):
+            result = self._run(client)
+            self.assertEqual(result.state, "EGRESS_ADMITTED")
+            self.assertIs(result.master_records_receipt["gates_execution"], False)
+        refused = self._run(unreachable).master_records_receipt
+        for key in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                    "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+            self.assertTrue(refused[key], key)
+
+    def test_usage_handoff_claiming_authority_is_still_refused(self):
+        from llm_adapter.anthropic_intr_transport import AuthorityEscalation
+        with self.assertRaises(AuthorityEscalation):
+            self._run(lambda _h: {"accepted": True, "authority_effect": "GOVERNANCE"})
+
 
 if __name__ == "__main__":
     unittest.main()

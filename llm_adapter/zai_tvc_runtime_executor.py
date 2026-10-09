@@ -7,7 +7,7 @@ from typing import Any, Callable, Mapping
 
 from .zai_intr_transport import ZAIInTrEnvelope, build_zai_intr_envelope
 from .zai_tvc_broker import RUNTIME_PROFILE_ID, ZAITVCBrokerResult, execute_zai_via_tvc_broker
-from .master_records_usage_record import record_provider_usage_in_master_records
+from .provider_usage_submission import record_provider_usage_event_locally, record_usage_non_gating
 from .provider_request import ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
 
@@ -26,7 +26,7 @@ class ZAITVCRuntimeExecution:
     envelope: ZAIInTrEnvelope
     broker: ZAITVCBrokerResult
     provider_usage_event: Mapping[str, Any]
-    master_records_usage: Mapping[str, Any]
+    provider_usage_record: Mapping[str, Any]
     egress_handoff: Mapping[str, Any]
     session_id: str
     measurement_id: str
@@ -48,7 +48,7 @@ class ZAITVCRuntimeEgressAdmission:
     def to_dict(self) -> dict[str, Any]: return dict(self.__dict__)
 
 
-def execute_governed_zai_via_tvc_runtime(request: ProviderRequest, *, session_id: str, transition_id: str, measurement_id: str, ingress_disposition: str, ingress_receipt_hash: str, carrier_ref: str, lease_receipt: Mapping[str, Any], broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]], usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_in_master_records, max_output_tokens: int = 2048, response_format: str = "text", endpoint_profile: str = "general") -> ZAITVCRuntimeExecution:
+def execute_governed_zai_via_tvc_runtime(request: ProviderRequest, *, session_id: str, transition_id: str, measurement_id: str, ingress_disposition: str, ingress_receipt_hash: str, carrier_ref: str, lease_receipt: Mapping[str, Any], broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]], usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_event_locally, max_output_tokens: int = 2048, response_format: str = "text", endpoint_profile: str = "general") -> ZAITVCRuntimeExecution:
     for label, value in (("session_id",session_id),("transition_id",transition_id),("measurement_id",measurement_id)):
         if not isinstance(value, str) or not value.strip(): raise ZAITVCRuntimeExecutionError(f"{label}_required")
     envelope = build_zai_intr_envelope(request, transition_id=transition_id, ingress_disposition=ingress_disposition, ingress_receipt_hash=ingress_receipt_hash, carrier_ref=carrier_ref, endpoint_profile=endpoint_profile)
@@ -56,13 +56,12 @@ def execute_governed_zai_via_tvc_runtime(request: ProviderRequest, *, session_id
     usage = broker.response.metadata.get("usage"); usage_map = usage if isinstance(usage, Mapping) else {}
     source_ref = f"zai:tvc:{envelope.transport_id}"
     event = build_provider_usage_event(measurement_id=measurement_id, session_id=session_id, transition_id=transition_id, origin_entry_point="intr", interaction_type="governed_zai_inference", provider="z.ai", model=broker.response.model, metrics={"prompt_tokens":_metric(usage_map.get("prompt_tokens"),source_ref),"completion_tokens":_metric(usage_map.get("completion_tokens"),source_ref),"total_tokens":_metric(usage_map.get("total_tokens"),source_ref)}, receipt_refs=[ingress_receipt_hash,envelope.envelope_hash,broker.response.response_hash])
-    usage_record = usage_submitter(event)
-    if not isinstance(usage_record, Mapping): raise ZAITVCRuntimeExecutionError("master_records_usage_reply_malformed")
-    if usage_record.get("authority_effect") not in (None,"NONE"): raise ZAITVCRuntimeExecutionError("master_records_usage_authority_escalation")
+    usage_record = record_usage_non_gating(usage_submitter, event)
+    if usage_record.get("authority_effect") not in (None,"NONE"): raise ZAITVCRuntimeExecutionError("provider_usage_record_authority_escalation")
     for key in ("authority_granted","grants_authority","assumes_governance"):
-        if usage_record.get(key): raise ZAITVCRuntimeExecutionError(f"master_records_usage_authority_escalation:{key}")
-    handoff = {"schema":"stegverse.llm_adapter.zai_tvc_runtime_egress_handoff/v1","runtime_profile_id":RUNTIME_PROFILE_ID,"protocol_version":envelope.protocol_version,"transport_id":envelope.transport_id,"transition_id":envelope.transition_id,"request_hash":envelope.request_hash,"ingress_receipt_hash":envelope.ingress_receipt_hash,"envelope_hash":envelope.envelope_hash,"response_hash":broker.response.response_hash,"tvc_use_receipt_hash":broker.response.metadata["tvc_use_receipt_hash"],"provider_usage_event_sha256":event["event_sha256"],"master_records_usage_status":usage_record.get("status"),"requested_disposition":"ALLOW","egress_intr_required":True,"credential_material_present":False,"authority_effect":"NONE"}
-    return ZAITVCRuntimeExecution(envelope=envelope,broker=broker,provider_usage_event=event,master_records_usage=dict(usage_record),egress_handoff=handoff,session_id=session_id,measurement_id=measurement_id)
+        if usage_record.get(key): raise ZAITVCRuntimeExecutionError(f"provider_usage_record_authority_escalation:{key}")
+    handoff = {"schema":"stegverse.llm_adapter.zai_tvc_runtime_egress_handoff/v1","runtime_profile_id":RUNTIME_PROFILE_ID,"protocol_version":envelope.protocol_version,"transport_id":envelope.transport_id,"transition_id":envelope.transition_id,"request_hash":envelope.request_hash,"ingress_receipt_hash":envelope.ingress_receipt_hash,"envelope_hash":envelope.envelope_hash,"response_hash":broker.response.response_hash,"tvc_use_receipt_hash":broker.response.metadata["tvc_use_receipt_hash"],"provider_usage_event_sha256":event["event_sha256"],"provider_usage_record_status":usage_record.get("status"),"requested_disposition":"ALLOW","egress_intr_required":True,"credential_material_present":False,"authority_effect":"NONE"}
+    return ZAITVCRuntimeExecution(envelope=envelope,broker=broker,provider_usage_event=event,provider_usage_record=dict(usage_record),egress_handoff=handoff,session_id=session_id,measurement_id=measurement_id)
 
 
 def admit_zai_tvc_runtime_egress(execution: ZAITVCRuntimeExecution, *, egress_disposition: str, egress_receipt_hash: str, admitted_response_hash: str) -> ZAITVCRuntimeEgressAdmission:

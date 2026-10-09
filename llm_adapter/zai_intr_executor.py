@@ -1,7 +1,7 @@
 """Governed execution wrapper for the Z.ai Interlock/InTr transport.
 
 This module binds the optional Z.ai transport to the existing provider-usage
-recording and the Master Records organization record. It does not evaluate governance itself. Ingress and
+recording in the local usage ledger, which never gates on a Master Records reply. It does not evaluate governance itself. Ingress and
 egress decisions are supplied as already-observed Interlock/InTr evidence and are
 validated fail-closed against the exact wire request/response hashes.
 """
@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
-from .master_records_usage_record import record_provider_usage_in_master_records
+from .provider_usage_submission import record_provider_usage_event_locally, record_usage_non_gating
 from .provider_request import ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
 from .zai_intr_transport import (
@@ -38,7 +38,7 @@ class ZAIGovernedExecution:
     envelope: ZAIInTrEnvelope
     transport: ZAITransportResult
     provider_usage_event: Mapping[str, Any]
-    master_records_usage: Mapping[str, Any]
+    provider_usage_record: Mapping[str, Any]
     session_id: str
     measurement_id: str
     egress_handoff: Mapping[str, Any]
@@ -63,8 +63,8 @@ class ZAIGovernedExecution:
             "response_hash": transport_evidence["response_hash"],
             "ingress_receipt_hash": self.envelope.ingress_receipt_hash,
             "provider_usage_event_sha256": self.provider_usage_event["event_sha256"],
-            "master_records_usage_status": self.master_records_usage.get("status"),
-            "provider_usage_custody_recorded": self.master_records_usage.get("custody_recorded") is True,
+            "provider_usage_record_status": self.provider_usage_record.get("status"),
+            "provider_usage_record_gates_execution": False,
             "credential_authority": "TV/TVC",
             "credential_material_present": False,
             "egress_intr_required": True,
@@ -104,10 +104,10 @@ def _metric(value: Any, *, source_ref: str) -> ProviderMetric:
 def _verify_organization_record_reply(reply: Mapping[str, Any]) -> None:
     for key in ("authority_granted", "grants_authority", "assumes_governance"):
         if reply.get(key):
-            raise ZAIExecutionError(f"master_records_usage_authority_escalation:{key}")
+            raise ZAIExecutionError(f"provider_usage_record_authority_escalation:{key}")
     effect = reply.get("authority_effect")
     if effect is not None and effect != "NONE":
-        raise ZAIExecutionError("master_records_usage_authority_escalation:authority_effect")
+        raise ZAIExecutionError("provider_usage_record_authority_escalation:authority_effect")
 
 
 def execute_governed_zai(
@@ -122,7 +122,7 @@ def execute_governed_zai(
     credential_resolver: Callable[[], str],
     endpoint_profile: str = "general",
     transport_factory: Callable[..., ZAIHTTPTransport] = ZAIHTTPTransport,
-    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_in_master_records,
+    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_event_locally,
 ) -> ZAIGovernedExecution:
     """Execute one exact ingress-admitted Z.ai wire request and preserve evidence."""
 
@@ -162,10 +162,8 @@ def execute_governed_zai(
         },
         receipt_refs=[ingress_receipt_hash, envelope.envelope_hash, transport_result.evidence()["response_hash"]],
     )
-    master_records_usage = usage_submitter(event)
-    if not isinstance(master_records_usage, Mapping):
-        raise ZAIExecutionError("master_records_usage_reply_malformed")
-    _verify_organization_record_reply(master_records_usage)
+    provider_usage_record = record_usage_non_gating(usage_submitter, event)
+    _verify_organization_record_reply(provider_usage_record)
 
     egress_handoff = {
         "schema": "stegverse.llm_adapter.zai_egress_handoff/v1",
@@ -178,7 +176,7 @@ def execute_governed_zai(
         "envelope_hash": envelope.envelope_hash,
         "response_hash": transport_result.evidence()["response_hash"],
         "provider_usage_event_sha256": event["event_sha256"],
-        "master_records_usage_status": master_records_usage.get("status"),
+        "provider_usage_record_status": provider_usage_record.get("status"),
         "requested_disposition": "ALLOW",
         "egress_intr_required": True,
         "authority_effect": "NONE",
@@ -189,7 +187,7 @@ def execute_governed_zai(
         envelope=envelope,
         transport=transport_result,
         provider_usage_event=event,
-        master_records_usage=master_records_usage,
+        provider_usage_record=provider_usage_record,
         session_id=session_id,
         measurement_id=measurement_id,
         egress_handoff=egress_handoff,

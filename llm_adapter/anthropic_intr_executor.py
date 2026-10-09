@@ -11,7 +11,7 @@ Orchestrates exactly one governed transaction:
     -> Claude inference (injected wire transport)
     -> normalized non-authoritative ProviderResponse
     -> provider-usage evidence
-    -> Master Records organization record/reconstruction
+    -> optional, non-gating downstream usage handoff (never awaited for egress)
     -> external Interlock/InTr egress evaluation
     -> exact response-hash-bound ALLOW
     -> downstream consequence (caller's, gated on EGRESS_ADMITTED)
@@ -40,6 +40,7 @@ from .anthropic_intr_transport import (
     IngressDecision,
     ProviderRequest,
     TransportConfig,
+    AuthorityEscalation,
     assert_no_credential_material,
     build_master_records_handoff,
     build_transport_envelope,
@@ -122,8 +123,8 @@ def execute_governed_transaction(
     config: TransportConfig,
     credential_resolver: Callable[[Mapping[str, Any]], str],
     transport: HttpTransport,
-    master_records: MasterRecordsClient,
     egress_resolver: EgressResolver,
+    master_records: Optional[MasterRecordsClient] = None,
     logger: Optional[Callable[[Mapping[str, Any]], None]] = None,
 ) -> TransactionResult:
     log = logger or (lambda record: None)
@@ -176,9 +177,13 @@ def execute_governed_transaction(
             provider_response, envelope, evidence, provider_request.session_id
         )
 
-        # 9. Master Records organization record/reconstruction. A record != authorization.
+        # 9. Usage handoff. Provider usage is recorded in the organization
+        #    ledger by the transition receipt; Master Records receives only
+        #    released organization batches downstream. A supplied client is
+        #    called, but its reply never gates egress: only a reply claiming
+        #    authority is refused.
         handoff = build_master_records_handoff(envelope, evidence, provider_response, usage_event)
-        receipt = verify_master_records_receipt(master_records(handoff))
+        receipt = _non_gating_usage_receipt(master_records, handoff)
 
         # 10. Credential non-persistence check across every durable artifact,
         #     performed while the secret is still known.
@@ -214,6 +219,41 @@ def execute_governed_transaction(
         master_records_receipt=receipt,
         egress_verification=egress_verification,
     )
+
+
+def _non_gating_usage_receipt(client: Optional[MasterRecordsClient],
+                              handoff: Mapping[str, Any]) -> dict[str, Any]:
+    """Call an optional downstream usage client without letting it gate egress."""
+    if client is None:
+        return {"accepted": None, "state": "NOT_SUBMITTED_NOT_REQUIRED",
+                "gates_execution": False, "authority_effect": AUTHORITY_EFFECT}
+    try:
+        reply = client(handoff)
+    except Exception as exc:  # a downstream record never gates egress
+        return _usage_handoff_not_recorded(f"usage_handoff_raised:{type(exc).__name__}")
+    if isinstance(reply, Mapping) and reply.get("authority_effect", "NONE") != "NONE":
+        raise AuthorityEscalation("custody receipt may not grant authority")
+    if not isinstance(reply, Mapping) or reply.get("accepted") is not True:
+        return _usage_handoff_not_recorded("usage_handoff_accepted")
+    receipt = verify_master_records_receipt(reply)
+    receipt["gates_execution"] = False
+    return receipt
+
+
+def _usage_handoff_not_recorded(predicate: str) -> dict[str, Any]:
+    return {
+        "accepted": False,
+        "state": "USAGE_HANDOFF_NOT_RECORDED",
+        "disposition": "FAIL_CLOSED",
+        "failure_code": "DOWNSTREAM_USAGE_HANDOFF_NOT_RECORDED",
+        "failed_predicate": predicate,
+        "required_evidence_or_repair": "none for this execution; usage is recorded by the transition receipt",
+        "retry_entrypoint": "downstream organization batch release",
+        "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+        "next_attempt": "next released organization batch",
+        "gates_execution": False,
+        "authority_effect": AUTHORITY_EFFECT,
+    }
 
 
 def _error_type(raw: Any) -> Optional[str]:

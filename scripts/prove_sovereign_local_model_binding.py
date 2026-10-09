@@ -33,10 +33,10 @@ def prove() -> dict:
             measurement_id="llma-sovereign-local-binding-measurement",
             messages=[{"role": "user", "content": "governed inference"}],
             usage_submitter=lambda event: {
-                "schema": "stegverse.usage.master_records_submission.v1",
+                "schema": "stegverse.usage.local_provider_usage_record.v1",
                 "status": "NOT_CONFIGURED",
+                "gates_execution": False,
                 "authority_granted": False,
-                "custody_recorded": False,
             },
         )
     finally:
@@ -49,8 +49,8 @@ def prove() -> dict:
         and execution.response.metadata.get("third_party_execution_platform_required") is False
         and execution.response.metadata.get("authority_effect") == "NONE"
         and all(metrics[name]["evidence_class"] == "MEASURED" for name in ("prompt_tokens", "completion_tokens", "total_tokens", "latency_ms"))
-        and execution.binding_receipt["provider_usage_custody_recorded"] is False
-        and execution.binding_receipt["provider_usage_reconstruction_pass"] is False
+        and execution.binding_receipt["provider_usage_recorded_locally"] is False
+        and execution.binding_receipt["provider_usage_record_gates_execution"] is False
         and execution.binding_receipt["reference_model_only"] is True
         and execution.binding_receipt["activation_complete"] is False
     )
@@ -67,7 +67,7 @@ def prove() -> dict:
         "third_party_execution_platform_required": execution.response.metadata.get("third_party_execution_platform_required"),
         "provider_response_hash": execution.response.response_hash,
         "provider_usage_event": execution.usage_event,
-        "master_records_usage_submission": execution.master_records_usage,
+        "provider_usage_record": execution.provider_usage_record,
         "binding_receipt": execution.binding_receipt,
         "authority_effect": "NONE",
         "product_activation_granted": False,
