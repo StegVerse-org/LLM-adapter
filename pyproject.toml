@@ -26,7 +26,7 @@ classifiers = [
 dependencies = [
     "requests>=2.28.0",
     "pydantic>=2.0",
-    "stegverse-sdk @ git+https://github.com/StegVerse-org/StegVerse-SDK.git@c30dc3421f10f8855d85e8347c59884d8af792eb",
+    "stegverse-sdk @ git+https://github.com/StegVerse-org/StegVerse-SDK.git@ea8b8e2d64323caad4bd460edaa5e59cc870a668",
 ]
 
 [project.optional-dependencies]

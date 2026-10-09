@@ -297,20 +297,42 @@ def validate(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def installed_runtime(transfer: Mapping[str, Any]) -> dict[str, Any]:
-    """Hand the transfer's manifest to the runtime the SDK says is installed.
+CANONICAL_ENTRYPOINT = "stegverse.manifest_execution.execute_manifest"
 
-    Every published route declares `runtime_installed: true` bound to
-    `stegverse.manifest_state_transition_runtime.execute_manifest`, so the
-    receiver was never missing -- it was simply never bound. The destination is
-    not chosen here: `DESTINATION_RESOLUTION_SOURCE` is
-    `CANONICAL_CONNECTOR_CAPABILITY_OVERLAY`, so the capability overlay
-    resolves it and this boundary carries the manifest to the runtime that asks
-    the overlay.
+
+def _no_network_boundary_source(binding: Any) -> Mapping[str, Any]:
+    """Refuse to read the organization boundary over the network.
+
+    The SDK fixes the boundary's identity (repository, path and ref) in the
+    route binding; neither the caller nor the environment can name another.
+    This adapter opens no connection and carries no credential, so it has no
+    copy to serve. Refusing here is what makes the SDK return its own
+    FAIL_CLOSED `CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED`
+    rather than any endpoint being substituted.
     """
-    from stegverse.manifest_state_transition_runtime import execute_manifest
+    from stegverse.github_repository_fetcher import GitHubRepositoryFetcherError
 
-    return execute_manifest(transfer["manifest"])
+    raise GitHubRepositoryFetcherError(
+        "LLM-adapter performs no network read of the canonical organization boundary "
+        f"{getattr(binding, 'repository', '?')}:{getattr(binding, 'path', '?')}"
+        f"@{getattr(binding, 'ref', '?')}")
+
+
+def installed_runtime(transfer: Mapping[str, Any]) -> dict[str, Any]:
+    """Hand the transfer's manifest to the SDK's canonical manifest entrypoint.
+
+    `stegverse.manifest_execution.execute_manifest` resolves the route from the
+    manifest itself and, for the state-transition runtime, the organization
+    boundary from the source the route binding fixes. Only the wire manifest is
+    passed: nothing in the transfer or the request selects the runtime, the
+    route or the boundary. Without a resolvable boundary the SDK returns
+    FAIL_CLOSED `CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED` with its
+    predicate, repair and evidence; that disposition is carried, not replaced.
+    """
+    from stegverse.manifest_execution import execute_manifest
+
+    return execute_manifest(transfer["manifest"],
+                            canonical_source_fetcher=_no_network_boundary_source)
 
 
 def submit(payload: Mapping[str, Any]) -> dict[str, Any]:
@@ -346,6 +368,7 @@ def submit(payload: Mapping[str, Any]) -> dict[str, Any]:
         "result_is_a_handoff_not_a_runtime_result": True,
         "result_arrives_separately_through": "stegverse.manifest_state_transition_runtime.admit_runtime_result",
         "destination_resolution_source": "CANONICAL_CONNECTOR_CAPABILITY_OVERLAY",
+        "canonical_entrypoint": CANONICAL_ENTRYPOINT,
         "envelope": envelope,
         "authority_effect": "NONE_HANDOFF_ONLY",
     }
@@ -355,7 +378,7 @@ def submit(payload: Mapping[str, Any]) -> dict[str, Any]:
 
 
 __all__ = ["require_standing", "contract", "build", "validate", "submit",
-           "installed_runtime", "process_manifest", "record", "crossing_record",
+           "installed_runtime", "process_manifest", "CANONICAL_ENTRYPOINT", "record", "crossing_record",
            "record_standing_refusal", "standing_refusal_record",
            "ALLOW", "DENY", "BOUNDARY", "BOUNDARY_SCHEMA", "RECORD_SCHEMA",
            "REFUSED_CLASS", "REJECTION_SCHEMA", "SURFACES"]

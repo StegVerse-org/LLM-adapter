@@ -711,9 +711,13 @@ peer execution profiles. The framework helper uses existing run-manifest routing
 adapter discovery preserves its own receiving operation. External instructions
 end at canonical manifest submission and evidence retention. Local handoff is not
 receiver observation; external reciprocal Interlock/InTr remains deferred.
-SDK PR #429 was canonically merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`. This adapter now pins SDK main `c30dc3421f10f8855d85e8347c59884d8af792eb`, which contains that merge and the organization-role-conformance route (`1062d29`). See the repository's portability/canonical-standing/machine-contract mirror handoff for retained proof boundaries.
+SDK PR #429 was canonically merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`. This adapter now pins SDK main `ea8b8e2d64323caad4bd460edaa5e59cc870a668`, which contains that merge and the organization-role-conformance route (`1062d29`). See the repository's portability/canonical-standing/machine-contract mirror handoff for retained proof boundaries.
 
 
 ### Manifest authority boundary (LLMA-368 F14)
 
 LLM-adapter is transport and optional data translation only. It does not select manifest processing, infer capability routes from Ecosystem Chat descriptors, or adjudicate SDK capability entitlement. The SDK owns manifest construction, validation, processing and route resolution, and submission; Interlock/InTr governs state transitions and the Organization Ledger records the result. Descriptor metadata cannot override SDK builder arguments. Existing SDK build/validate/submit endpoints are pass-through facades, not independent execution surfaces. No external machine or second device is required.
+
+#### Generic manifest surface: canonical entrypoint (LLMA-368 F14)
+
+`sdk_boundary.submit` hands the wire manifest to `stegverse.manifest_execution.execute_manifest`, the SDK's canonical entrypoint (SDK #444/#445, pinned at `ea8b8e2`). The SDK resolves the route from the manifest, and resolves the organization boundary from the source its route binding fixes. Neither the caller, the request payload nor the environment can choose the runtime, the route or the boundary. The adapter makes no network read and carries no credential, so it serves no copy of the boundary. Until the boundary resolves, the surface returns the SDK's own `FAIL_CLOSED` `CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED`, with its predicate, repair, retry entrypoint and digests carried in `envelope.far_side_disposition`. Master Records is non-gating. A handoff is never reported as a runtime ALLOW. The five surface endpoints are unchanged here; refactoring them is deferred.
