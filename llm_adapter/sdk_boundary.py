@@ -388,19 +388,6 @@ def build(payload: Mapping[str, Any]) -> dict[str, Any]:
             }
         mapped = selection["processing"]
         declared_process = str(arguments.get("process") or "").strip().lower()
-        if declared_process and declared_process != mapped["capability"]:
-            return {
-                "schema": REJECTION_SCHEMA,
-                "accepted": False,
-                "stage": "CAPABILITY_PROCESSING_MISMATCH",
-                "sdk_rejection": "capability descriptor route may not be silently substituted",
-                "rejection_is_verbatim_from_the_sdk": False,
-                "requested_process": declared_process,
-                "mapped_process": mapped["capability"],
-                "provider_execution_performed": False,
-                "fallback_selected": False,
-                "authority_effect": "NONE_REJECTION_ONLY",
-            }
         request = arguments.get("processor_request")
         if isinstance(request, Mapping):
             if str(request.get("provider") or "").strip() not in {"", selection["provider"]}:
@@ -426,7 +413,9 @@ def build(payload: Mapping[str, Any]) -> dict[str, Any]:
                     "fallback_selected": False,
                     "authority_effect": "NONE_REJECTION_ONLY",
                 }
-        arguments["process"] = mapped["capability"]
+        # Descriptor metadata may supply a default, never override declared processing.
+        if not declared_process:
+            arguments["process"] = mapped["capability"]
     try:
         manifest = build_manifest(**arguments)
     except TypeError as exc:
@@ -443,7 +432,7 @@ def build(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
     if selection is not None:
         processing = manifest.get("processing") if isinstance(manifest, Mapping) else None
-        if processing != selection["processing"]:
+        if not str(payload.get("arguments", {}).get("process") or "").strip() and processing != selection["processing"]:
             return {
                 "schema": REJECTION_SCHEMA,
                 "accepted": False,
