@@ -329,30 +329,68 @@ if __name__ == "__main__":
 
 
 class EcosystemChatCapabilityRoutingTests(SdkBoundaryCrossingRecordTests):
+    """The adapter transports builder arguments; the SDK selects processing.
+
+    A capability descriptor is opaque to this boundary: it never supplies,
+    replaces or refuses a manifest's processing, route, provider or entitlement.
+    Every result here is the SDK builder's own, verbatim.
+    """
+
+    def sdk_built(self, args):
+        from stegverse.manifest_builder import build_manifest
+        return build_manifest(**args)
+
     def test_descriptor_cannot_select_processing_or_route(self):
         args = stegbrowser_arguments()
+        args["process"] = "stegbrowser"
         body = self.cross("/api/sdk/manifest/build", {
             "arguments": args,
             "capability_descriptor": capability_descriptor(),
         }).json()
         self.assertTrue(body["accepted"])
-        self.assertEqual(body["manifest"]["processing"]["capability"], args["process"])
+        self.assertEqual(body["manifest"], self.sdk_built(args))
+        self.assertEqual(body["manifest"]["processing"]["capability"], "stegbrowser")
         self.assertNotIn("capability_selection", body)
 
-    def test_descriptor_entitlement_does_not_override_sdk_builder(self):
+    def test_descriptor_does_not_supply_undeclared_processing(self):
+        """Without a declared process the SDK default applies; the adapter maps nothing."""
+        args = stegbrowser_arguments()
         body = self.cross("/api/sdk/manifest/build", {
-            "arguments": stegbrowser_arguments(),
+            "arguments": args,
+            "capability_descriptor": capability_descriptor(),
+        }).json()
+        self.assertFalse(body["accepted"])
+        self.assertEqual(body["stage"], "BUILD")
+        self.assertIs(body["rejection_is_verbatim_from_the_sdk"], True)
+        self.assertNotIn("capability_selection", body)
+        with self.assertRaises(ValueError) as sdk:
+            self.sdk_built(args)
+        self.assertEqual(body["sdk_rejection"], str(sdk.exception))
+
+    def test_descriptor_entitlement_does_not_override_sdk_builder(self):
+        args = stegbrowser_arguments()
+        args["process"] = "stegbrowser"
+        body = self.cross("/api/sdk/manifest/build", {
+            "arguments": args,
             "capability_descriptor": capability_descriptor(routing_disposition="UPGRADE_REQUIRED"),
         }).json()
         self.assertTrue(body["accepted"])
+        self.assertEqual(body["manifest"], self.sdk_built(args))
         self.assertNotIn("capability_selection", body)
 
-    def test_sdk_rejects_invalid_processing_without_adapter_mapping(self):
+    def test_unknown_processing_disposition_is_owned_by_the_sdk(self):
         args = stegbrowser_arguments()
         args["process"] = "not-a-published-capability"
         body = self.cross("/api/sdk/manifest/build", {
             "arguments": args,
             "capability_descriptor": capability_descriptor(),
         }).json()
-        self.assertFalse(body["accepted"])
+        self.assertEqual(body["manifest"], self.sdk_built(args))
+        resolution = body["manifest"]["capability_resolution"]
+        self.assertEqual(resolution["status"], "UNKNOWN_CAPABILITY")
         self.assertNotEqual(body.get("stage"), "CAPABILITY_PROCESSING_MISMATCH")
+        self.assertNotIn("capability_selection", body)
+
+    def test_boundary_exposes_no_processing_selector(self):
+        self.assertFalse(hasattr(sdk_boundary, "resolve_ecosystem_chat_capability_descriptor"))
+        self.assertFalse(any("CAPABILITY" in name for name in sdk_boundary.__all__))

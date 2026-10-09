@@ -358,5 +358,4 @@ __all__ = ["require_standing", "contract", "build", "validate", "submit",
            "installed_runtime", "process_manifest", "record", "crossing_record",
            "record_standing_refusal", "standing_refusal_record",
            "ALLOW", "DENY", "BOUNDARY", "BOUNDARY_SCHEMA", "RECORD_SCHEMA",
-           "REFUSED_CLASS", "REJECTION_SCHEMA", "SURFACES",
-           ]
+           "REFUSED_CLASS", "REJECTION_SCHEMA", "SURFACES"]

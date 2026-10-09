@@ -28,7 +28,8 @@
     ],
     "evidence_refs": [
       "llm_adapter/sdk_boundary.py",
-      "tests/test_sdk_boundary_crossing_record.py"
+      "tests/test_sdk_boundary_crossing_record.py",
+      "data/organization-role-conformance.json"
     ]
   },
   "reuse_decision": "REFACTOR",
@@ -49,6 +50,7 @@
     "llm_adapter/sdk_boundary.py",
     "tests/test_sdk_boundary_crossing_record.py",
     "README.md",
+    "data/organization-role-conformance.json",
     "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-f14-sdk-only-processing.json"
   ],
   "new_files": [
