@@ -329,73 +329,68 @@ if __name__ == "__main__":
 
 
 class EcosystemChatCapabilityRoutingTests(SdkBoundaryCrossingRecordTests):
-    def test_available_text_descriptor_selects_existing_stegbrowser_route(self):
+    """The adapter transports builder arguments; the SDK selects processing.
+
+    A capability descriptor is opaque to this boundary: it never supplies,
+    replaces or refuses a manifest's processing, route, provider or entitlement.
+    Every result here is the SDK builder's own, verbatim.
+    """
+
+    def sdk_built(self, args):
+        from stegverse.manifest_builder import build_manifest
+        return build_manifest(**args)
+
+    def test_descriptor_cannot_select_processing_or_route(self):
+        args = stegbrowser_arguments()
+        args["process"] = "stegbrowser"
         body = self.cross("/api/sdk/manifest/build", {
-            "arguments": stegbrowser_arguments(),
+            "arguments": args,
             "capability_descriptor": capability_descriptor(),
         }).json()
         self.assertTrue(body["accepted"])
-        self.assertEqual(body["manifest"]["processing"], {
-            "capability": "stegbrowser",
-            "route_id": "stegverse.route.stegbrowser.v1",
-        })
-        self.assertEqual(body["capability_selection"]["execution_owner"], "StegBrowser")
-        self.assertEqual(body["capability_selection"]["execution_owner_binding"],
-                         "stegbrowser.llm_browser_execution.execute_manifested_llm_browser_operation")
-        self.assertEqual(body["capability_selection"]["external_llm_connection_role"],
-                         "SEPARATE_PROVIDER_NEUTRAL_TEXT_REASONING_PRIMITIVE_NOT_SELECTED_BY_THIS_ROUTE")
-        self.assertIs(body["capability_selection"]["fallback_selected"], False)
+        self.assertEqual(body["manifest"], self.sdk_built(args))
+        self.assertEqual(body["manifest"]["processing"]["capability"], "stegbrowser")
+        self.assertNotIn("capability_selection", body)
 
-    def test_upgrade_required_is_recorded_deny_without_provider_execution(self):
+    def test_descriptor_does_not_supply_undeclared_processing(self):
+        """Without a declared process the SDK default applies; the adapter maps nothing."""
+        args = stegbrowser_arguments()
         body = self.cross("/api/sdk/manifest/build", {
-            "arguments": stegbrowser_arguments(),
-            "capability_descriptor": capability_descriptor(
-                entitlement_state="NOT_ENTITLED",
-                routing_disposition="UPGRADE_REQUIRED",
-                required_tier="pro",
-            ),
-        }).json()
-        self.assertFalse(body["accepted"])
-        self.assertEqual(body["stage"], "CAPABILITY_ENTITLEMENT")
-        self.assertEqual(body["routing_disposition"], "UPGRADE_REQUIRED")
-        self.assertIs(body["provider_execution_performed"], False)
-        self.assertIs(body["fallback_selected"], False)
-        receipt = self.receipts("SDK_MANIFEST_BUILT")[-1]
-        self.assertEqual(receipt["evidence"]["disposition"], "DENY")
-
-    def test_purchase_required_is_not_provider_unavailable(self):
-        body = self.cross("/api/sdk/manifest/build", {
-            "arguments": stegbrowser_arguments(),
-            "capability_descriptor": capability_descriptor(
-                entitlement_state="NOT_ENTITLED",
-                routing_disposition="PURCHASE_REQUIRED",
-            ),
-        }).json()
-        self.assertEqual(body["routing_disposition"], "PURCHASE_REQUIRED")
-        self.assertNotEqual(body["routing_disposition"], "PROVIDER_UNAVAILABLE")
-        self.assertIs(body["provider_execution_performed"], False)
-
-    def test_unsupported_media_class_does_not_fallback_to_text(self):
-        body = self.cross("/api/sdk/manifest/build", {
-            "arguments": stegbrowser_arguments(),
-            "capability_descriptor": capability_descriptor(
-                capability_id="image-generate",
-                work_class="image",
-                output_media=["image"],
-            ),
-        }).json()
-        self.assertFalse(body["accepted"])
-        self.assertEqual(body["stage"], "CAPABILITY_ADAPTER")
-        self.assertEqual(body["routing_disposition"], "NO_COMPATIBLE_EXECUTION_ADAPTER")
-        self.assertIs(body["fallback_selected"], False)
-
-    def test_provider_mismatch_is_denied_without_substitution(self):
-        bad = stegbrowser_arguments()
-        bad["processor_request"]["provider"] = "different-provider"
-        body = self.cross("/api/sdk/manifest/build", {
-            "arguments": bad,
+            "arguments": args,
             "capability_descriptor": capability_descriptor(),
         }).json()
         self.assertFalse(body["accepted"])
-        self.assertEqual(body["stage"], "CAPABILITY_PROVIDER_MISMATCH")
-        self.assertIs(body["fallback_selected"], False)
+        self.assertEqual(body["stage"], "BUILD")
+        self.assertIs(body["rejection_is_verbatim_from_the_sdk"], True)
+        self.assertNotIn("capability_selection", body)
+        with self.assertRaises(ValueError) as sdk:
+            self.sdk_built(args)
+        self.assertEqual(body["sdk_rejection"], str(sdk.exception))
+
+    def test_descriptor_entitlement_does_not_override_sdk_builder(self):
+        args = stegbrowser_arguments()
+        args["process"] = "stegbrowser"
+        body = self.cross("/api/sdk/manifest/build", {
+            "arguments": args,
+            "capability_descriptor": capability_descriptor(routing_disposition="UPGRADE_REQUIRED"),
+        }).json()
+        self.assertTrue(body["accepted"])
+        self.assertEqual(body["manifest"], self.sdk_built(args))
+        self.assertNotIn("capability_selection", body)
+
+    def test_unknown_processing_disposition_is_owned_by_the_sdk(self):
+        args = stegbrowser_arguments()
+        args["process"] = "not-a-published-capability"
+        body = self.cross("/api/sdk/manifest/build", {
+            "arguments": args,
+            "capability_descriptor": capability_descriptor(),
+        }).json()
+        self.assertEqual(body["manifest"], self.sdk_built(args))
+        resolution = body["manifest"]["capability_resolution"]
+        self.assertEqual(resolution["status"], "UNKNOWN_CAPABILITY")
+        self.assertNotEqual(body.get("stage"), "CAPABILITY_PROCESSING_MISMATCH")
+        self.assertNotIn("capability_selection", body)
+
+    def test_boundary_exposes_no_processing_selector(self):
+        self.assertFalse(hasattr(sdk_boundary, "resolve_ecosystem_chat_capability_descriptor"))
+        self.assertFalse(any("CAPABILITY" in name for name in sdk_boundary.__all__))
