@@ -73,5 +73,6 @@ def test_local_node_vertical_slice(monkeypatch) -> None:
     assert result["run_id"] == transition["run_id"]
     assert result["provider"]["used"] is False
     assert result["authority"]["provider_usage_grants_authority"] is False
-    assert result["authority"]["provider_usage_is_master_records_organization_record"] is False
-    assert result["master_records_usage_submission"] is None
+    # F7: no Master Records result is placed in the response or authority block.
+    assert "provider_usage_is_master_records_organization_record" not in result["authority"]
+    assert "master_records_usage_submission" not in result

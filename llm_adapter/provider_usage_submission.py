@@ -2,15 +2,24 @@
 
 This module records provider-owned measurements in the local usage-session ledger.
 Local persistence is not a Master Records organization record and grants no authority.
+
+It is also where every provider path records usage. Provider usage is recorded
+locally and in the organization ledger by the transition receipt; Master Records
+receives only released organization batches downstream. So no provider
+execution waits on, or is gated by, a Master Records reply:
+`record_usage_non_gating` turns a recording failure into a six-field non-ALLOW
+usage disposition instead of an exception.
 """
 from __future__ import annotations
 
 import json
 from hashlib import sha256
-from typing import Any
+from typing import Any, Callable, Mapping
 
 from llm_adapter.provider_usage import ProviderMetric, build_provider_usage_event
-from llm_adapter import usage_session_api
+
+LOCAL_USAGE_RECORD_SCHEMA = "stegverse.usage.local_provider_usage_record.v1"
+OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
 
 
 def _measurement_id(*, transition_id: str, run_id: str, provider_receipt_id: str | None) -> str:
@@ -62,6 +71,26 @@ def persist_provider_usage(
         timestamp=None,
     )
 
+    canonical, inserted = _persist_event(event, session_id=session_id, transition_id=transition_id)
+
+    return {
+        "schema": "stegverse.usage.internal_submission.v1",
+        "session_id": session_id,
+        "measurement_id": canonical["measurement_id"],
+        "event_sha256": canonical["event_sha256"],
+        "inserted": inserted,
+        "canonical_event": canonical,
+        "authority_granted": False,
+        "custody_recorded": False,
+    }
+
+
+def _persist_event(event: dict[str, Any], *, session_id: str, transition_id: str) -> tuple[dict[str, Any], bool]:
+    """Write one canonical usage event to the local ledger, idempotently."""
+    # Imported here so provider executors can import this module without the
+    # HTTP service stack; only recording needs the ledger.
+    from llm_adapter import usage_session_api
+
     usage_session_api._validate_session_id(session_id)
     canonical = usage_session_api._validate_event(event, session_id)
     inserted = False
@@ -87,14 +116,62 @@ def persist_provider_usage(
             )
             connection.commit()
             inserted = True
+    return canonical, inserted
 
+
+def record_provider_usage_event_locally(event: dict[str, Any]) -> dict[str, Any]:
+    """Record a provider-usage event in the local ledger. The default for every provider path."""
+    if not isinstance(event, dict):
+        raise ValueError("provider_usage_event_not_object")
+    canonical, inserted = _persist_event(
+        event, session_id=str(event.get("session_id") or ""),
+        transition_id=str(event.get("transition_id") or ""))
     return {
-        "schema": "stegverse.usage.internal_submission.v1",
-        "session_id": session_id,
+        "schema": LOCAL_USAGE_RECORD_SCHEMA,
+        "status": "LOCAL_USAGE_RECORDED",
+        "session_id": canonical["session_id"],
         "measurement_id": canonical["measurement_id"],
         "event_sha256": canonical["event_sha256"],
         "inserted": inserted,
-        "canonical_event": canonical,
+        "recorded_by": "LOCAL_PROVIDER_USAGE_LEDGER",
+        "organization_ledger_record": "TRANSITION_RECEIPT",
+        "is_master_records_organization_record": False,
+        "gates_execution": False,
         "authority_granted": False,
-        "custody_recorded": False,
+        "authority_effect": "NONE",
+    }
+
+
+def record_usage_non_gating(
+    submitter: Callable[[dict[str, Any]], Mapping[str, Any]],
+    event: dict[str, Any],
+) -> dict[str, Any]:
+    """Record usage without letting the recording gate the provider execution.
+
+    A failed or malformed recording is a non-ALLOW usage disposition carrying
+    the six standard fields; the execution it measures still proceeds.
+    """
+    try:
+        reply = submitter(event)
+    except Exception as exc:  # recording never gates execution
+        return _usage_record_failed(f"usage_submitter_raised:{type(exc).__name__}")
+    if not isinstance(reply, Mapping):
+        return _usage_record_failed("usage_submitter_reply_not_object")
+    return dict(reply)
+
+
+def _usage_record_failed(predicate: str) -> dict[str, Any]:
+    return {
+        "schema": LOCAL_USAGE_RECORD_SCHEMA,
+        "status": "USAGE_RECORD_FAILED",
+        "disposition": "FAIL_CLOSED",
+        "failure_code": "PROVIDER_USAGE_NOT_RECORDED",
+        "failed_predicate": predicate,
+        "required_evidence_or_repair": "a local provider-usage ledger write for this measurement",
+        "retry_entrypoint": "llm_adapter.provider_usage_submission.record_provider_usage_event_locally",
+        "owning_existing_goal": OWNING_EXISTING_GOAL,
+        "next_attempt": "re-record the same canonical event; the write is idempotent",
+        "gates_execution": False,
+        "authority_granted": False,
+        "authority_effect": "NONE",
     }

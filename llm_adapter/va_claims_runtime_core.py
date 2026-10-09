@@ -293,7 +293,7 @@ def _execution_receipt(*, proof: dict[str, Any], route: dict[str, Any], executio
         "response_text_sha256": hashlib.sha256(output.encode("utf-8")).hexdigest(),
         "measured_usage": binding["measured_usage"],
         "provider_usage_event": execution.usage_event,
-        "master_records_usage": execution.master_records_usage,
+        "master_records_usage": execution.provider_usage_record,
         "binding_receipt": binding,
         "provider_usage_custody_recorded": binding.get("provider_usage_custody_recorded", False),
         "provider_usage_reconstruction_pass": binding.get("provider_usage_reconstruction_pass", False),

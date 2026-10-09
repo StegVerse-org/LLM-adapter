@@ -74,15 +74,14 @@ class CanonicalSovereignRouteExecutionTests(unittest.TestCase):
         fake_execution = SimpleNamespace(
             response=SimpleNamespace(output="governed local response"),
             usage_event={"event_sha256": "usage-event", "metrics": {}},
-            master_records_usage={"status": "NOT_CONFIGURED", "custody_recorded": False},
+            provider_usage_record={"status": "NOT_CONFIGURED", "custody_recorded": False},
             binding_receipt={
                 "model_id": "stegverse-reference-lm-v1",
                 "model_hash": "model-hash",
                 "request_hash": "request-hash",
                 "response_hash": "response-hash",
                 "measured_usage": {"prompt_tokens": {}, "completion_tokens": {}, "total_tokens": {}, "latency_ms": {}},
-                "provider_usage_custody_recorded": False,
-                "provider_usage_reconstruction_pass": False,
+                "provider_usage_recorded_locally": False,
                 "reference_model_only": True,
             },
         )

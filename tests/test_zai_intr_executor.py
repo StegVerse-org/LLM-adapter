@@ -110,8 +110,8 @@ def test_executor_emits_usage_custody_and_egress_handoff_without_credential_mate
     assert result.transport.provider_request_hash != result.envelope.request_hash
     assert result.provider_usage_event["provider"] == "z.ai"
     assert result.provider_usage_event["metrics"]["total_tokens"]["value"] == "5"
-    assert result.master_records_usage["custody_recorded"] is True
-    assert evidence["provider_usage_custody_recorded"] is True
+    assert result.provider_usage_record["custody_recorded"] is True
+    assert evidence["provider_usage_record_gates_execution"] is False
     assert evidence["egress_intr_required"] is True
     assert evidence["authority_effect"] == "NONE"
     assert evidence["credential_material_present"] is False

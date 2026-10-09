@@ -152,35 +152,66 @@ def test_tvc_broker_result_is_non_authoritative_and_requires_egress():
     assert result.response.metadata["authority_effect"] == "NONE"
 
 
-def test_governed_runtime_continues_to_master_records_and_egress_handoff():
+def test_governed_runtime_records_usage_and_reaches_egress_handoff():
     execution = _execution()
     assert execution.runtime_profile_id == RUNTIME_PROFILE_ID
     assert execution.broker.response.output == "Paris"
-    assert execution.master_records_usage["custody_recorded"] is True
-    assert execution.master_records_usage["reconstructability"] == "PASS"
-    assert execution.egress_handoff["master_records_reconstructability"] == "PASS"
+    assert execution.provider_usage_record["status"] == "CUSTODY_RECORDED"
+    assert execution.egress_handoff["provider_usage_record_status"] == "CUSTODY_RECORDED"
+    assert execution.egress_handoff["provider_usage_record_gates_execution"] is False
+    assert "master_records_reconstructability" not in execution.egress_handoff
     assert execution.egress_handoff["requested_disposition"] == "ALLOW"
     assert execution.egress_handoff["egress_intr_required"] is True
     assert execution.egress_handoff["credential_material_present"] is False
     assert execution.egress_handoff["authority_effect"] == "NONE"
 
 
-def test_runtime_fails_closed_when_custody_or_reconstruction_is_not_complete():
+def _run(usage_submitter):
     req = _request(); env = _envelope(req)
-    with pytest.raises(DeepSeekTVCRuntimeExecutionError, match="organization_record_not_recorded"):
-        execute_governed_deepseek_via_tvc_runtime(
-            req, session_id="session-1", transition_id="tx-1", measurement_id="measurement-1",
-            ingress_disposition="ALLOW", ingress_receipt_hash="a" * 64, carrier_ref="carrier-1",
-            lease_receipt=_lease(env), broker_submitter=_broker,
-            usage_submitter=lambda event: {"status": "NOT_CONFIGURED", "custody_recorded": False, "reconstructability": "PENDING", "authority_granted": False, "authority_effect": "NONE"},
-        )
-    with pytest.raises(DeepSeekTVCRuntimeExecutionError, match="reconstruction_not_pass"):
-        execute_governed_deepseek_via_tvc_runtime(
-            req, session_id="session-1", transition_id="tx-1", measurement_id="measurement-1",
-            ingress_disposition="ALLOW", ingress_receipt_hash="a" * 64, carrier_ref="carrier-1",
-            lease_receipt=_lease(env), broker_submitter=_broker,
-            usage_submitter=lambda event: {"status": "CUSTODY_RECORDED", "custody_recorded": True, "reconstructability": "PENDING", "authority_granted": False, "authority_effect": "NONE"},
-        )
+    return execute_governed_deepseek_via_tvc_runtime(
+        req, session_id="session-1", transition_id="tx-1", measurement_id="measurement-1",
+        ingress_disposition="ALLOW", ingress_receipt_hash="a" * 64, carrier_ref="carrier-1",
+        lease_receipt=_lease(env), broker_submitter=_broker, usage_submitter=usage_submitter,
+    )
+
+
+def test_runtime_does_not_gate_on_master_records_custody_or_reconstruction():
+    # F6: no Master Records reply -- missing custody, pending reconstruction,
+    # an unreachable socket or a malformed reply -- stops the execution.
+    def unreachable(_event):
+        raise OSError("socket unavailable")
+    for submitter in (
+        lambda event: {"status": "NOT_CONFIGURED", "custody_recorded": False, "reconstructability": "PENDING", "authority_granted": False, "authority_effect": "NONE"},
+        lambda event: {"status": "CUSTODY_RECORDED", "custody_recorded": True, "reconstructability": "PENDING", "authority_granted": False, "authority_effect": "NONE"},
+        unreachable,
+        lambda event: None,
+    ):
+        execution = _run(submitter)
+        assert execution.broker.response.output == "Paris"
+        assert execution.egress_handoff["requested_disposition"] == "ALLOW"
+        assert execution.egress_handoff["provider_usage_record_gates_execution"] is False
+    failed = _run(unreachable).provider_usage_record
+    assert failed["status"] == "USAGE_RECORD_FAILED"
+    for key in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+        assert failed[key]
+    assert failed["owning_existing_goal"] == "LLMA-DECLARED-PATH-CONFORMANCE-368"
+
+
+def test_runtime_still_refuses_a_usage_reply_claiming_authority():
+    with pytest.raises(DeepSeekTVCRuntimeExecutionError, match="authority_escalation"):
+        _run(lambda event: {"status": "LOCAL_USAGE_RECORDED", "authority_granted": True})
+
+
+def test_default_usage_recorder_is_local_and_imports_no_master_records_module():
+    import ast, inspect
+    import llm_adapter.deepseek_tvc_runtime_executor as executor
+    from llm_adapter.provider_usage_submission import record_provider_usage_event_locally
+    default = inspect.signature(executor.execute_governed_deepseek_via_tvc_runtime).parameters["usage_submitter"].default
+    assert default is record_provider_usage_event_locally
+    tree = ast.parse(inspect.getsource(executor))
+    modules = {node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)}
+    assert not any("master_records" in (name or "") for name in modules)
 
 
 def test_tvc_runtime_egress_requires_exact_external_allow_and_response_hash():

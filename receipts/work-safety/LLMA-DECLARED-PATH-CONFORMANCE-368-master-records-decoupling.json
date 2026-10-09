@@ -1,0 +1,88 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/LLM-adapter#368 (owning_existing_goal LLMA-DECLARED-PATH-CONFORMANCE-368; owner approval comment 6084623475)",
+    "StegVerse-org/.github:docs/ORGANIZATION_ROLE_RUNTIME_REALITY_DEPLOYMENT.md#conformance-standard"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "StegVerse-org/.github:data/organization-role-runtime-reality-deployment.json#master_records_restated_role",
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368#issuecomment-6084397140"
+    ],
+    "reason": "Master Records is a downstream recorder of released organization batches. It may not gate a transition and may not be awaited by one. This change set removes or documents adapter surfaces that treated it as a gate."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/369",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/370",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/371",
+      "SVORG-MANIFEST-SELECTS-PROCESSING-001"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-org/.github"
+    ],
+    "evidence_refs": [
+      "llm_adapter/governed_manifest_ingress.py",
+      "llm_adapter/sdk_boundary.py",
+      "llm_adapter/provider_usage_submission.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/manifest_contract.py#validate_ingress_manifest"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Repairs existing adapter surfaces in place under the owner-approved #368 scope. It creates no second validator, recorder, store, route or service."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "The README change for #368 is carried by the documentation PR #371 in the same owner-approved three-PR plan. This change set repairs existing behaviour behind the README's declared path without adding a surface.",
+    "evidence_refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/371"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/anthropic_intr_executor.py",
+    "llm_adapter/anthropic_tvc_runtime_executor.py",
+    "llm_adapter/combined_gateway.py",
+    "llm_adapter/deepseek_intr_executor.py",
+    "llm_adapter/deepseek_tvc_runtime_executor.py",
+    "llm_adapter/kimi_canonical_runtime.py",
+    "llm_adapter/kimi_intr_executor.py",
+    "llm_adapter/kimi_tvc_runtime_executor.py",
+    "llm_adapter/master_records_local_usage_record.py",
+    "llm_adapter/provider_usage_submission.py",
+    "llm_adapter/sovereign_local_model_binding.py",
+    "llm_adapter/va_claims_runtime_core.py",
+    "llm_adapter/zai_intr_executor.py",
+    "llm_adapter/zai_tvc_runtime_executor.py",
+    "scripts/execute_canonical_sovereign_route.py",
+    "scripts/prove_sovereign_local_model_binding.py",
+    "tests/test_anthropic_intr_executor.py",
+    "tests/test_deepseek_intr_executor.py",
+    "tests/test_deepseek_tvc_runtime.py",
+    "tests/test_execute_canonical_sovereign_route.py",
+    "tests/test_kimi_canonical_runtime.py",
+    "tests/test_kimi_intr_executor.py",
+    "tests/test_local_node_vertical_slice.py",
+    "tests/test_master_records_local_usage_record.py",
+    "tests/test_sovereign_local_model_binding.py",
+    "tests/test_va_claims_runtime_gateway.py",
+    "tests/test_zai_intr_executor.py"
+  ],
+  "new_files": []
+}

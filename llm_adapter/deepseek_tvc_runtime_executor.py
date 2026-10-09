@@ -1,4 +1,10 @@
-"""Governed DeepSeek execution through the canonical runtime-profile/TVC broker path."""
+"""Governed DeepSeek execution through the canonical runtime-profile/TVC broker path.
+
+Provider usage is recorded in the local usage ledger and in the organization
+ledger by the transition receipt. Execution never waits on, or is gated by, a
+Master Records socket or its reconstruction result: a failed usage recording
+is a six-field non-ALLOW usage disposition, not an exception.
+"""
 from __future__ import annotations
 
 import re
@@ -7,7 +13,7 @@ from typing import Any, Callable, Mapping
 
 from .deepseek_intr_transport import DeepSeekInTrEnvelope, build_deepseek_intr_envelope
 from .deepseek_tvc_broker import RUNTIME_PROFILE_ID, DeepSeekTVCBrokerResult, execute_deepseek_via_tvc_broker
-from .master_records_local_usage_record import record_provider_usage_in_local_master_records
+from .provider_usage_submission import record_provider_usage_event_locally, record_usage_non_gating
 from .provider_request import ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
 
@@ -31,7 +37,7 @@ class DeepSeekTVCRuntimeExecution:
     envelope: DeepSeekInTrEnvelope
     broker: DeepSeekTVCBrokerResult
     provider_usage_event: Mapping[str, Any]
-    master_records_usage: Mapping[str, Any]
+    provider_usage_record: Mapping[str, Any]
     egress_handoff: Mapping[str, Any]
     session_id: str
     measurement_id: str
@@ -78,7 +84,7 @@ def execute_governed_deepseek_via_tvc_runtime(
     carrier_ref: str,
     lease_receipt: Mapping[str, Any],
     broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]],
-    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_in_local_master_records,
+    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_event_locally,
     max_output_tokens: int = 2048,
     response_format: str = "text",
 ) -> DeepSeekTVCRuntimeExecution:
@@ -119,18 +125,12 @@ def execute_governed_deepseek_via_tvc_runtime(
         },
         receipt_refs=[ingress_receipt_hash, envelope.envelope_hash, broker.response.response_hash],
     )
-    usage_record = usage_submitter(event)
-    if not isinstance(usage_record, Mapping):
-        raise DeepSeekTVCRuntimeExecutionError("master_records_usage_reply_malformed")
-    if usage_record.get("status") != "CUSTODY_RECORDED" or usage_record.get("custody_recorded") is not True:
-        raise DeepSeekTVCRuntimeExecutionError("master_records_usage_organization_record_not_recorded")
-    if usage_record.get("reconstructability") != "PASS":
-        raise DeepSeekTVCRuntimeExecutionError("master_records_usage_reconstruction_not_pass")
+    usage_record = record_usage_non_gating(usage_submitter, event)
     if usage_record.get("authority_effect") not in (None, "NONE"):
-        raise DeepSeekTVCRuntimeExecutionError("master_records_usage_authority_escalation")
+        raise DeepSeekTVCRuntimeExecutionError("provider_usage_record_authority_escalation")
     for key in ("authority_granted", "grants_authority", "assumes_governance"):
         if usage_record.get(key):
-            raise DeepSeekTVCRuntimeExecutionError(f"master_records_usage_authority_escalation:{key}")
+            raise DeepSeekTVCRuntimeExecutionError(f"provider_usage_record_authority_escalation:{key}")
 
     egress_handoff = {
         "schema": "stegverse.llm_adapter.deepseek_tvc_runtime_egress_handoff/v1",
@@ -144,8 +144,8 @@ def execute_governed_deepseek_via_tvc_runtime(
         "response_hash": broker.response.response_hash,
         "tvc_use_receipt_hash": broker.response.metadata["tvc_use_receipt_hash"],
         "provider_usage_event_sha256": event["event_sha256"],
-        "master_records_usage_status": usage_record.get("status"),
-        "master_records_reconstructability": usage_record.get("reconstructability"),
+        "provider_usage_record_status": usage_record.get("status"),
+        "provider_usage_record_gates_execution": False,
         "requested_disposition": "ALLOW",
         "egress_intr_required": True,
         "credential_material_present": False,
@@ -155,7 +155,7 @@ def execute_governed_deepseek_via_tvc_runtime(
         envelope=envelope,
         broker=broker,
         provider_usage_event=event,
-        master_records_usage=dict(usage_record),
+        provider_usage_record=dict(usage_record),
         egress_handoff=egress_handoff,
         session_id=session_id,
         measurement_id=measurement_id,

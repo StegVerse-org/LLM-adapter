@@ -1,7 +1,7 @@
 """Governed execution wrapper for optional Kimi/Moonshot InTr transport.
 
 Ingress/egress decisions are externally produced by Interlock/InTr. This module
-reuses canonical provider-usage recording and the Master Records organization record and grants no
+records provider usage in the local usage ledger, without gating on any Master Records reply, and grants no
 authority itself. Production runtime-profile execution uses the TVC broker bridge.
 """
 from __future__ import annotations
@@ -18,7 +18,7 @@ from .kimi_intr_transport import (
     KimiTransportResult,
     build_kimi_intr_envelope,
 )
-from .master_records_usage_record import record_provider_usage_in_master_records
+from .provider_usage_submission import record_provider_usage_event_locally, record_usage_non_gating
 from .provider_request import ProviderRequest
 from .provider_usage import ProviderMetric, build_provider_usage_event
 
@@ -34,7 +34,7 @@ class KimiGovernedExecution:
     envelope: KimiInTrEnvelope
     transport: KimiTransportResult
     provider_usage_event: Mapping[str, Any]
-    master_records_usage: Mapping[str, Any]
+    provider_usage_record: Mapping[str, Any]
     session_id: str
     measurement_id: str
     egress_handoff: Mapping[str, Any]
@@ -58,8 +58,8 @@ class KimiGovernedExecution:
             "response_hash": self.response_hash,
             "ingress_receipt_hash": self.envelope.ingress_receipt_hash,
             "provider_usage_event_sha256": self.provider_usage_event["event_sha256"],
-            "master_records_usage_status": self.master_records_usage.get("status"),
-            "provider_usage_custody_recorded": self.master_records_usage.get("custody_recorded") is True,
+            "provider_usage_record_status": self.provider_usage_record.get("status"),
+            "provider_usage_record_gates_execution": False,
             "credential_authority": "TV/TVC",
             "credential_material_present": False,
             "egress_intr_required": True,
@@ -99,10 +99,10 @@ def _metric(value: Any, *, source_ref: str) -> ProviderMetric:
 def _verify_organization_record_reply(reply: Mapping[str, Any]) -> None:
     for key in ("authority_granted", "grants_authority", "assumes_governance"):
         if reply.get(key):
-            raise KimiExecutionError(f"master_records_usage_authority_escalation:{key}")
+            raise KimiExecutionError(f"provider_usage_record_authority_escalation:{key}")
     effect = reply.get("authority_effect")
     if effect is not None and effect != "NONE":
-        raise KimiExecutionError("master_records_usage_authority_escalation:authority_effect")
+        raise KimiExecutionError("provider_usage_record_authority_escalation:authority_effect")
 
 
 def execute_governed_kimi(
@@ -116,7 +116,7 @@ def execute_governed_kimi(
     carrier_ref: str,
     credential_resolver: Callable[[], str],
     transport_factory: Callable[..., KimiHTTPTransport] = KimiHTTPTransport,
-    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_in_master_records,
+    usage_submitter: Callable[[dict[str, Any]], dict[str, Any]] = record_provider_usage_event_locally,
 ) -> KimiGovernedExecution:
     for label, value in (("session_id", session_id), ("transition_id", transition_id), ("measurement_id", measurement_id)):
         if not value.strip():
@@ -152,10 +152,8 @@ def execute_governed_kimi(
         },
         receipt_refs=[ingress_receipt_hash, envelope.envelope_hash, transport_result.evidence()["response_hash"]],
     )
-    master_records_usage = usage_submitter(event)
-    if not isinstance(master_records_usage, Mapping):
-        raise KimiExecutionError("master_records_usage_reply_malformed")
-    _verify_organization_record_reply(master_records_usage)
+    provider_usage_record = record_usage_non_gating(usage_submitter, event)
+    _verify_organization_record_reply(provider_usage_record)
 
     egress_handoff = {
         "schema": "stegverse.llm_adapter.kimi_egress_handoff/v1",
@@ -168,7 +166,7 @@ def execute_governed_kimi(
         "envelope_hash": envelope.envelope_hash,
         "response_hash": transport_result.evidence()["response_hash"],
         "provider_usage_event_sha256": event["event_sha256"],
-        "master_records_usage_status": master_records_usage.get("status"),
+        "provider_usage_record_status": provider_usage_record.get("status"),
         "requested_disposition": "ALLOW",
         "egress_intr_required": True,
         "authority_effect": "NONE",
@@ -178,7 +176,7 @@ def execute_governed_kimi(
         envelope=envelope,
         transport=transport_result,
         provider_usage_event=event,
-        master_records_usage=master_records_usage,
+        provider_usage_record=provider_usage_record,
         session_id=session_id,
         measurement_id=measurement_id,
         egress_handoff=egress_handoff,

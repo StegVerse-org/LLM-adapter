@@ -66,7 +66,7 @@ class VAClaimsRuntimeGatewayTests(unittest.TestCase):
             fake_execution = SimpleNamespace(
                 response=SimpleNamespace(output="reference model text"),
                 usage_event={"event_sha256": "u" * 64},
-                master_records_usage={"status": "NOT_CONFIGURED"},
+                provider_usage_record={"status": "NOT_CONFIGURED"},
                 binding_receipt={
                     "model_id": "stegverse-reference-lm-v1",
                     "model_hash": "m" * 64,

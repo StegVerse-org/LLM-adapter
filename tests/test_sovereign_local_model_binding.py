@@ -94,15 +94,13 @@ def test_executes_private_runtime_and_binds_exact_measured_usage(monkeypatch):
     def submit_usage(event):
         captured["event"] = event
         return {
-            "schema": "stegverse.usage.master_records_submission.v1",
-            "status": "CUSTODY_RECORDED",
-            "receipt_id": "mr-usage-1",
+            "schema": "stegverse.usage.local_provider_usage_record.v1",
+            "receipt_id": "usage-1",
             "session_id": event["session_id"],
             "measurement_id": event["measurement_id"],
             "event_sha256": event["event_sha256"],
-            "reconstructability": "PASS",
+            "status": "LOCAL_USAGE_RECORDED",
             "authority_granted": False,
-            "custody_recorded": True,
         }
 
     result = execute_verified_local_model(
@@ -122,8 +120,9 @@ def test_executes_private_runtime_and_binds_exact_measured_usage(monkeypatch):
     assert captured["event"]["metrics"]["total_tokens"]["value"] == "22"
     assert captured["event"]["metrics"]["latency_ms"]["value"] == "6.25"
     assert all(metric["evidence_class"] == "MEASURED" for metric in captured["event"]["metrics"].values())
-    assert result.binding_receipt["provider_usage_custody_recorded"] is True
-    assert result.binding_receipt["provider_usage_reconstruction_pass"] is True
+    assert result.binding_receipt["provider_usage_recorded_locally"] is True
+    assert result.binding_receipt["provider_usage_record_gates_execution"] is False
+    assert not any("master_records" in name for name in result.binding_receipt["remaining_activation_predicates"])
     assert result.binding_receipt["production_scale_llm_observed"] is False
     assert result.binding_receipt["reference_model_only"] is True
     assert result.binding_receipt["activation_complete"] is False
@@ -138,7 +137,7 @@ def test_real_released_local_runtime_crosses_sovereign_provider_seam():
     def retain_without_false_custody(event):
         captured["event"] = event
         return {
-            "schema": "stegverse.usage.master_records_submission.v1",
+            "schema": "stegverse.usage.local_provider_usage_record.v1",
             "status": "NOT_CONFIGURED",
             "authority_granted": False,
             "custody_recorded": False,
@@ -164,8 +163,8 @@ def test_real_released_local_runtime_crosses_sovereign_provider_seam():
     assert captured["event"]["metrics"]["prompt_tokens"]["evidence_class"] == "MEASURED"
     assert int(captured["event"]["metrics"]["total_tokens"]["value"]) > 0
     assert DecimalLike(captured["event"]["metrics"]["latency_ms"]["value"]) >= 0
-    assert result.binding_receipt["provider_usage_custody_recorded"] is False
-    assert result.binding_receipt["provider_usage_reconstruction_pass"] is False
+    assert result.binding_receipt["provider_usage_recorded_locally"] is False
+    assert result.binding_receipt["provider_usage_record_gates_execution"] is False
     assert result.binding_receipt["reference_model_only"] is True
     assert result.binding_receipt["activation_complete"] is False
 

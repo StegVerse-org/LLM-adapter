@@ -104,8 +104,8 @@ def test_executor_reuses_usage_custody_and_emits_egress_handoff():
     assert result.envelope.request_hash == kimi_wire_request_hash(_request())
     assert result.provider_usage_event["provider"] == "kimi"
     assert result.provider_usage_event["metrics"]["total_tokens"]["value"] == "5"
-    assert result.master_records_usage["custody_recorded"] is True
-    assert evidence["provider_usage_custody_recorded"] is True
+    assert result.provider_usage_record["custody_recorded"] is True
+    assert evidence["provider_usage_record_gates_execution"] is False
     assert result.egress_handoff["requested_disposition"] == "ALLOW"
     assert result.egress_handoff["response_hash"] == result.response_hash
     assert evidence["authority_effect"] == "NONE"
