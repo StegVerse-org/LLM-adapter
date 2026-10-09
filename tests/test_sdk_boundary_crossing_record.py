@@ -329,73 +329,30 @@ if __name__ == "__main__":
 
 
 class EcosystemChatCapabilityRoutingTests(SdkBoundaryCrossingRecordTests):
-    def test_available_text_descriptor_selects_existing_stegbrowser_route(self):
+    def test_descriptor_cannot_select_processing_or_route(self):
+        args = stegbrowser_arguments()
         body = self.cross("/api/sdk/manifest/build", {
-            "arguments": stegbrowser_arguments(),
+            "arguments": args,
             "capability_descriptor": capability_descriptor(),
         }).json()
         self.assertTrue(body["accepted"])
-        self.assertEqual(body["manifest"]["processing"], {
-            "capability": "stegbrowser",
-            "route_id": "stegverse.route.stegbrowser.v1",
-        })
-        self.assertEqual(body["capability_selection"]["execution_owner"], "StegBrowser")
-        self.assertEqual(body["capability_selection"]["execution_owner_binding"],
-                         "stegbrowser.llm_browser_execution.execute_manifested_llm_browser_operation")
-        self.assertEqual(body["capability_selection"]["external_llm_connection_role"],
-                         "SEPARATE_PROVIDER_NEUTRAL_TEXT_REASONING_PRIMITIVE_NOT_SELECTED_BY_THIS_ROUTE")
-        self.assertIs(body["capability_selection"]["fallback_selected"], False)
+        self.assertEqual(body["manifest"]["processing"]["capability"], args["process"])
+        self.assertNotIn("capability_selection", body)
 
-    def test_upgrade_required_is_recorded_deny_without_provider_execution(self):
+    def test_descriptor_entitlement_does_not_override_sdk_builder(self):
         body = self.cross("/api/sdk/manifest/build", {
             "arguments": stegbrowser_arguments(),
-            "capability_descriptor": capability_descriptor(
-                entitlement_state="NOT_ENTITLED",
-                routing_disposition="UPGRADE_REQUIRED",
-                required_tier="pro",
-            ),
+            "capability_descriptor": capability_descriptor(routing_disposition="UPGRADE_REQUIRED"),
         }).json()
-        self.assertFalse(body["accepted"])
-        self.assertEqual(body["stage"], "CAPABILITY_ENTITLEMENT")
-        self.assertEqual(body["routing_disposition"], "UPGRADE_REQUIRED")
-        self.assertIs(body["provider_execution_performed"], False)
-        self.assertIs(body["fallback_selected"], False)
-        receipt = self.receipts("SDK_MANIFEST_BUILT")[-1]
-        self.assertEqual(receipt["evidence"]["disposition"], "DENY")
+        self.assertTrue(body["accepted"])
+        self.assertNotIn("capability_selection", body)
 
-    def test_purchase_required_is_not_provider_unavailable(self):
+    def test_sdk_rejects_invalid_processing_without_adapter_mapping(self):
+        args = stegbrowser_arguments()
+        args["process"] = "not-a-published-capability"
         body = self.cross("/api/sdk/manifest/build", {
-            "arguments": stegbrowser_arguments(),
-            "capability_descriptor": capability_descriptor(
-                entitlement_state="NOT_ENTITLED",
-                routing_disposition="PURCHASE_REQUIRED",
-            ),
-        }).json()
-        self.assertEqual(body["routing_disposition"], "PURCHASE_REQUIRED")
-        self.assertNotEqual(body["routing_disposition"], "PROVIDER_UNAVAILABLE")
-        self.assertIs(body["provider_execution_performed"], False)
-
-    def test_unsupported_media_class_does_not_fallback_to_text(self):
-        body = self.cross("/api/sdk/manifest/build", {
-            "arguments": stegbrowser_arguments(),
-            "capability_descriptor": capability_descriptor(
-                capability_id="image-generate",
-                work_class="image",
-                output_media=["image"],
-            ),
-        }).json()
-        self.assertFalse(body["accepted"])
-        self.assertEqual(body["stage"], "CAPABILITY_ADAPTER")
-        self.assertEqual(body["routing_disposition"], "NO_COMPATIBLE_EXECUTION_ADAPTER")
-        self.assertIs(body["fallback_selected"], False)
-
-    def test_provider_mismatch_is_denied_without_substitution(self):
-        bad = stegbrowser_arguments()
-        bad["processor_request"]["provider"] = "different-provider"
-        body = self.cross("/api/sdk/manifest/build", {
-            "arguments": bad,
+            "arguments": args,
             "capability_descriptor": capability_descriptor(),
         }).json()
         self.assertFalse(body["accepted"])
-        self.assertEqual(body["stage"], "CAPABILITY_PROVIDER_MISMATCH")
-        self.assertIs(body["fallback_selected"], False)
+        self.assertNotEqual(body.get("stage"), "CAPABILITY_PROCESSING_MISMATCH")
