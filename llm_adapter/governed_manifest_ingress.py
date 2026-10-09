@@ -392,7 +392,9 @@ def process_manifest(
             for key in ("disposition", "state", "failed_predicate", "failure_code",
                         "required_evidence_or_repair", "next_attempt", "retry_entrypoint",
                         "destination_resolution_source", "canonical_task_id",
-                        "canonical_manifest_sha256", "wire_manifest_sha256", "request_sha256")
+                        "canonical_manifest_sha256", "wire_manifest_sha256", "request_sha256",
+                        "evaluation_boundary", "diagnostic_sha256",
+                        "canonical_organization_boundary_unavailable")
             if governed.get(key) is not None
         },
         "return_projection": projection,
