@@ -1,0 +1,90 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/LLM-adapter#368 (owning_existing_goal LLMA-DECLARED-PATH-CONFORMANCE-368; owner approval comment 6084623475)",
+    "StegVerse-org/.github:docs/ORGANIZATION_ROLE_RUNTIME_REALITY_DEPLOYMENT.md#conformance-standard"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "StegVerse-org/.github:data/organization-role-runtime-reality-deployment.json#master_records_restated_role",
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368#issuecomment-6084397140"
+    ],
+    "reason": "Master Records is a downstream recorder of released organization batches. It may not gate a transition and may not be awaited by one. This change set removes or documents adapter surfaces that treated it as a gate."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/369",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/370",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/371",
+      "SVORG-MANIFEST-SELECTS-PROCESSING-001"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-org/.github"
+    ],
+    "evidence_refs": [
+      "llm_adapter/governed_manifest_ingress.py",
+      "llm_adapter/sdk_boundary.py",
+      "llm_adapter/provider_usage_submission.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/manifest_contract.py#validate_ingress_manifest"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Repairs existing adapter surfaces in place under the owner-approved #368 scope. It creates no second validator, recorder, store, route or service."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md#canonical-declared-path"
+    ]
+  },
+  "covered_paths": [
+    "data/organization-role-conformance.json",
+    "pyproject.toml",
+    "scripts/check_ai_entry_no_manual_tasks.py",
+    "tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+    "tests/test_organization_role_conformance_declaration.py"
+  ],
+  "new_files": [
+    {
+      "path": "data/organization-role-conformance.json",
+      "semantic_responsibility": "Repository-level organization-role conformance declaration for LLM-adapter (F10).",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "StegVerse-org/.github:data/organization-role-runtime-reality-deployment.json is organization-scoped; no repository-level declaration exists in LLM-adapter",
+      "justification": "Review finding F10 records ORGANIZATION_ROLE_CONFORMANCE_NOT_DECLARED for this repository; the declaration is modeled on the organization file, not a second copy of it.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/issues/368#issuecomment-6084397140"
+      ]
+    },
+    {
+      "path": "tests/test_organization_role_conformance_declaration.py",
+      "semantic_responsibility": "Shape test for the conformance declaration.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "none; StegVerse-org/.github:tests/test_organization_role_runtime_reality_deployment.py tests the organization file",
+      "justification": "The new declaration needs its own focused validation.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "data/organization-role-conformance.json"
+      ]
+    }
+  ]
+}
