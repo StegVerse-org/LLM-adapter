@@ -1,0 +1,67 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github:orchestration/task-registry.json#LLMA-DECLARED-PATH-CONFORMANCE-368"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "No Master Records transition authority involved"
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/.github:docs/ORGANIZATION_ROLE_RUNTIME_REALITY_DEPLOYMENT.md",
+      "StegVerse-org/StegVerse-SDK:stegverse/manifest_builder.py"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-org/.github"
+    ],
+    "evidence_refs": [
+      "llm_adapter/sdk_boundary.py",
+      "tests/test_sdk_boundary_crossing_record.py"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md#manifest-authority-boundary-llma-368-f14"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/sdk_boundary.py",
+    "tests/test_sdk_boundary_crossing_record.py",
+    "README.md",
+    "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-f14-sdk-only-processing.json"
+  ],
+  "new_files": [
+    {
+      "path": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-f14-sdk-only-processing.json",
+      "semantic_responsibility": "Document bounded F14 functional mutation",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "receipts/work-safety/SHWP-ECOSYSTEM-CHAT-INFERENCE-001-capability-routing.json",
+      "justification": "Fresh manifest required for this functional diff",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#368"
+      ]
+    }
+  ]
+}
