@@ -13,9 +13,9 @@ Canonical local-model binding task: `tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-01
 Completed transport/evidence adapter: `tasks/LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019.json`  
 Completed same-carrier executor implementation: `tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json`  
 Scoped handoff: `docs/SOVEREIGN_CARRIER_EXECUTION_MIRROR_HANDOFF.md`  
-Canonical machine carrier: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001`
+Declared path: healthy node -> LLM-adapter (transport only) -> SDK (manifest build + submit) -> `StegVerse-org/.github` -> Interlock/InTr => Org Ledger. No machine carrier is awaited; `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001` owns only the optional sovereign local-model route.
 
-Live repository state, task records, scoped handoffs, heartbeat/TVC receipts, immutable receipts, and Master Records reconstruction supersede older chat summaries.
+Live repository state, task records, scoped handoffs and organization ledger transition receipts supersede older chat summaries.
 
 ## Active goal state
 
@@ -31,17 +31,61 @@ TVC credential-free route evaluator: COMPLETE_MERGED_SOURCE / live observation p
 Transport/evidence adapter task 019: COMPLETE_RELEASED
 Canonical carrier execution task 020: COMPLETE_RELEASED
 Public runtime documentation reconciliation: COMPLETE_MERGED_VALIDATED
-Real sovereign provider execution on canonical carrier: NOT YET OBSERVED
-Provider-usage custody/reconstruction: NOT YET OBSERVED
-Same-execution transition reconstruction: NOT YET OBSERVED
-Immutable zero-blocker Ecosystem Chat activation receipt: NOT YET OBSERVED
-Site ACTIVATION_COMPLETE: NOT YET OBSERVED
+Sovereign provider execution transition: FAIL_CLOSED -> LLMA-368-D1
+Provider-usage transition: FAIL_CLOSED -> LLMA-368-D2
+Same-execution transition receipt chain: FAIL_CLOSED -> LLMA-368-D3
+Ecosystem Chat activation transition: FAIL_CLOSED -> LLMA-368-D4
+Site activation transition: FAIL_CLOSED -> LLMA-368-D5
 Manual user tasks: NONE
 Repository implementation claim: RELEASED
-Session continuation role: MACHINE_OWNED_RUNTIME_OBSERVATION
+Session continuation role: NONE_AWAITED (each remaining item is a manifest-transition disposition)
 ```
 
 Repository implementation completion does not imply public Ecosystem Chat activation.
+
+### Remaining manifest-transition dispositions
+
+Measured against `StegVerse-org/.github:docs/ORGANIZATION_ROLE_RUNTIME_REALITY_DEPLOYMENT.md` (Conformance standard): no external machine, receiver or observer is awaited, every action by manifest is a state transition, and every non-`ALLOW` carries the six fields below. Master Records reconstruction is not a predicate of any of them.
+
+```json
+[
+  {"id": "LLMA-368-D1", "disposition": "FAIL_CLOSED",
+   "failure_code": "PROVIDER_EXECUTION_TRANSITION_NOT_RECORDED",
+   "failed_predicate": "org_ledger_transition_receipt_present_for_provider_execution_manifest",
+   "required_evidence_or_repair": "submit the provider-execution manifest; its organization ledger transition receipt is the evidence",
+   "retry_entrypoint": "POST /api/sdk/manifest/submit",
+   "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+   "next_attempt": "next manifest submission selecting this route"},
+  {"id": "LLMA-368-D2", "disposition": "FAIL_CLOSED",
+   "failure_code": "PROVIDER_USAGE_TRANSITION_NOT_RECORDED",
+   "failed_predicate": "provider_usage_recorded_in_local_ledger_and_transition_receipt",
+   "required_evidence_or_repair": "the local provider-usage ledger record and the transition receipt of the same execution",
+   "retry_entrypoint": "POST /api/sdk/manifest/submit",
+   "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+   "next_attempt": "recorded with the next provider-execution transition (D1)"},
+  {"id": "LLMA-368-D3", "disposition": "FAIL_CLOSED",
+   "failure_code": "SAME_EXECUTION_TRANSITION_CHAIN_NOT_RECORDED",
+   "failed_predicate": "ingress_execution_and_egress_receipts_share_one_execution_in_org_ledger",
+   "required_evidence_or_repair": "ingress ALLOW, provider execution and exact-response egress ALLOW receipts bound to one execution",
+   "retry_entrypoint": "POST /api/sdk/manifest/submit",
+   "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+   "next_attempt": "with the next provider-execution transition (D1)"},
+  {"id": "LLMA-368-D4", "disposition": "FAIL_CLOSED",
+   "failure_code": "ECOSYSTEM_CHAT_ACTIVATION_TRANSITION_NOT_RECORDED",
+   "failed_predicate": "zero_blocker_activation_manifest_transition_in_org_ledger",
+   "required_evidence_or_repair": "an activation manifest whose transition receipt cites D1-D3",
+   "retry_entrypoint": "POST /api/sdk/manifest/submit",
+   "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+   "next_attempt": "after D1-D3 are ALLOW"},
+  {"id": "LLMA-368-D5", "disposition": "FAIL_CLOSED",
+   "failure_code": "SITE_ACTIVATION_TRANSITION_NOT_RECORDED",
+   "failed_predicate": "site_activation_manifest_transition_in_org_ledger",
+   "required_evidence_or_repair": "a Site activation manifest whose transition receipt cites D4",
+   "retry_entrypoint": "POST /api/sdk/manifest/submit",
+   "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+   "next_attempt": "after D4 is ALLOW"}
+]
+```
 
 ## Installed governed path
 
@@ -175,11 +219,11 @@ repository implementation: COMPLETE
 local model/runtime implementation: COMPLETE_RELEASED
 same-carrier executor: COMPLETE_RELEASED
 public runtime documentation: COMPLETE_MERGED_VALIDATED
-real same-carrier provider execution: NOT CONFIRMED
-provider-usage custody/reconstruction: NOT CONFIRMED
-same-execution transition reconstruction: NOT CONFIRMED
-immutable VERIFIED receipt: NOT CONFIRMED
-Site activation: NOT CONFIRMED
+provider execution transition: FAIL_CLOSED -> LLMA-368-D1
+provider-usage transition: FAIL_CLOSED -> LLMA-368-D2
+same-execution transition receipt chain: FAIL_CLOSED -> LLMA-368-D3
+activation transition: FAIL_CLOSED -> LLMA-368-D4
+Site activation transition: FAIL_CLOSED -> LLMA-368-D5
 ```
 
 ## Machine-owned continuation
@@ -196,13 +240,13 @@ site activation: StegVerse-Labs/Site#239/#242
 required downstream ingestion after immutable verified activation: GCAT-BCAT-Engine/Publisher, StegVerse-Labs/admissibility-wiki, StegVerse-002/stegguardian-wiki
 ```
 
-The resident carrier has not yet been directly observed completing the recovery -> parent higher-fence -> local model -> TVC -> task-020 -> Master Records chain. That is a runtime observation gap, not an LLM-adapter implementation gap.
+No carrier, receiver or observer is awaited. Each remaining item is a manifest-transition disposition (LLMA-368-D1..D5 below) whose next attempt is a manifest submission; it is not a runtime observation gap.
 
 No workflow dispatch, artifact download, file movement, screenshot confirmation, receipt construction, blocker transcription, credential copying, or manual publication task is required.
 
 ## Downstream destinations
 
-Only after immutable verified activation:
+Only after the activation manifest transition (LLMA-368-D4) is recorded in the organization ledger; Master Records receives released organization batches:
 
 ```text
 master-records/orchestration
@@ -233,7 +277,7 @@ session archival != activation
 
 ## Release posture
 
-No release or tag is authorized while canonical same-carrier provider execution, provider-usage custody/reconstruction, same-execution transition reconstruction, immutable zero-blocker activation, Site activation, and required downstream ingestion remain incomplete.
+No release or tag is authorized while dispositions LLMA-368-D1..D5 remain non-ALLOW or required downstream ingestion is incomplete.
 
 Task 019, task 020, local-model/runtime implementation, and public-runtime-doc reconciliation claims are released. No session should reopen their implementation unless directly observed evidence creates a new bounded task.
 
@@ -253,7 +297,7 @@ The following requirements from the current session are durable in repository st
 8. public README and capability manifest reflect the canonical sovereign route;
 9. product activation remains distinct from repository implementation, CI success, and session archival.
 
-Requirements 1–9 are transferred or complete. Product activation remains machine-owned and no unique implementation, validation, integration, or propagation role from this session remains in LLM-adapter.
+Requirements 1–9 are transferred or complete. Product activation is disposition LLMA-368-D4, retried by manifest submission; nothing is awaited from a machine owner, and no unique implementation, validation, integration, or propagation role from this session remains in LLM-adapter.
 
 ## Completion accounting
 
@@ -267,9 +311,9 @@ public runtime docs developed: 3/3
 public runtime docs hosted validation: COMPLETE
 public runtime docs main integration: COMPLETE
 public runtime docs claim: RELEASED
-carrier direct runtime observation: PENDING_MACHINE_OWNED
-provider-usage reconstruction: PENDING_MACHINE_OWNED
-transition reconstruction: PENDING_MACHINE_OWNED
+provider execution transition: FAIL_CLOSED (LLMA-368-D1)
+provider-usage transition: FAIL_CLOSED (LLMA-368-D2)
+same-execution transition receipt chain: FAIL_CLOSED (LLMA-368-D3)
 Site/downstream propagation: PENDING_ACTIVATION
 repository implementation completeness: 100%
 product activation completeness: not 100%
@@ -305,7 +349,7 @@ Standard: `StegVerse-Labs/Continuity/docs/REPOSITORY_HANDOFF_STANDARD.md` / `ste
   manual_allowed_role: observation
   collision_scope: real same-carrier provider execution, runtime observation, provider-usage persistence/custody, transition reconstruction, immutable activation receipt, Site activation, downstream ingestion, service gateways, HIL runtime, Ecosystem Chat, public knowledge, VACC/governed retrieval, and any specialized task with a current owner
   release_condition: newest valid scoped handoff/task/claim/fence/lease/receipt explicitly releases or supersedes the exact collision scope
-  next_executable_action: preserve current machine owners and observe authentic runtime evidence; do not duplicate completed task 019/020 or upstream model/TVC/heartbeat authority
+  next_executable_action: submit the next manifest through POST /api/sdk/manifest/submit; every non-ALLOW carries the six standard fields; do not duplicate completed task 019/020 or upstream model/TVC/heartbeat authority
 ```
 
 ### ESCALATED / AUTHORITY-OWNED
@@ -440,7 +484,7 @@ Source surfaces:
 - `docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md`;
 - `llm_adapter/combined_gateway.py` advertisement plus bounded relay route.
 
-The relay accepts only the immutable StegBrowser nonce/count-1 custody receipt and complete exact tuple, keeps credential material server-side, and requires authoritative `RECORDED + reconstruction_status=PASS` with exact digest equality. It grants no custody, execution, transition, publication, provider, route, or governance authority. Authentic runtime custody remains separately evidence-gated.
+The relay accepts only the immutable StegBrowser nonce/count-1 custody receipt and complete exact tuple, keeps credential material server-side, and requires authoritative `RECORDED + reconstruction_status=PASS` with exact digest equality. It grants no custody, execution, transition, publication, provider, route, or governance authority. It is optional transport toward a downstream record: its reply is not a predicate of any declared-path transition, and no transition waits on it.
 
 
 ## 2026-10-04 Ecosystem Chat capability-addressed route mapping

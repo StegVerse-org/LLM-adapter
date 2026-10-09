@@ -59,7 +59,7 @@ def main() -> int:
             "reconstruction PASS for both chains",
             "## Production topology",
             "## Current evidence posture",
-            "immutable VERIFIED receipt: NOT CONFIRMED",
+            "activation transition: FAIL_CLOSED -> LLMA-368-D4",
             "## Machine-owned continuation",
             "No workflow dispatch, artifact download, file movement, screenshot confirmation, receipt construction, blocker transcription, credential copying, or manual publication task is required.",
             "## Authority boundary",

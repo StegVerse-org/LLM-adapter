@@ -79,7 +79,8 @@ sovereign local model/runtime:
   StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md
   formal local model development: COMPLETE_RELEASED
   local runtime discovery/launch/inference/proof: COMPLETE_RELEASED
-  live carrier activation: StegVerse-Labs/.github#60 + resident sovereign heartbeat
+  optional route activation: manifest transition (FAIL_CLOSED -> LLMA-368-D1, retry POST /api/sdk/manifest/submit,
+    owning_existing_goal LLMA-DECLARED-PATH-CONFORMANCE-368); no carrier or heartbeat is awaited
 
 credential/route authority:
   TV/TVC / StegVerse-Labs/TVC
@@ -90,7 +91,8 @@ Ecosystem Chat runtime binding:
 VACC sovereign provider continuation:
   StegVerse-org/LLM-adapter#142
   tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
-  resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records
+  manifest -> SDK submit -> Interlock/InTr => Org Ledger (optional local route: TVC -> LLM-adapter);
+    Master Records receives released organization batches downstream and is not awaited
 
 Master Records:
   master-records/orchestration
