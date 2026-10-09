@@ -1,14 +1,38 @@
-
-## Generic SDK manifest InTr ingress
-
-Issue #354 removes the governance-specific callable as the LLM Adapter's processing selector. Actionable external manifests now require a recognized Node endpoint plus manifest-declared `processing.capability` and `processing.route_id`; the adapter frames that unchanged declaration as non-authorizing Interlock/InTr transfer to the distributed SDK manifest endpoint. Source/provider identity is provenance only and cannot select processing. Missing Node recognition or processing declaration fails closed before endpoint invocation. This is source/CI conformance only; it does not claim authentic runtime transport, SDK execution, or Organization custody. Nor does it claim Master Records reconstruction.
 # StegVerse LLM Adapter
 
-The StegVerse LLM Adapter is the machine-readable translation and provider-boundary component between governed StegVerse requests and model/runtime execution.
+The StegVerse LLM Adapter is the machine-readable translation and provider-boundary component between governed StegVerse requests and model/runtime execution. On the declared path it is **transport only**, with optional data translation: it does not author manifests, select processing, or hold authority.
 
-Its canonical production path is sovereign and credential-neutral at the route boundary: TC/TVC owns credential semantics and route authority, and the canonical local route requires credential class `NONE`.
+## Canonical declared path
 
-## Canonical production path
+```text
+[(healthy node
+  -> LLM-adapter (TRANSPORT ONLY; optional data translation)
+  -> SDK (manifest builder and submission)
+  -> StegVerse-org/.github
+  -> Interlock/InTr) => Org Ledger] -> DECLARED PATH
+```
+
+Every action is by manifest, and every action is a state transition. A node establishes standing at `POST /api/node-standing`, then builds, validates and submits its manifest through the SDK boundary:
+
+```text
+POST /api/sdk/contract            the SDK's own machine contract
+POST /api/sdk/manifest/build      SDK build_manifest
+POST /api/sdk/manifest/validate   SDK validate_ingress_manifest (side-effect free)
+POST /api/sdk/manifest/submit     governed_manifest_ingress.process_manifest
+                                  -> installed SDK execute_manifest
+```
+
+Manifest validity is the SDK's to decide; the adapter delegates to `stegverse.manifest_contract.validate_ingress_manifest` and carries the SDK's refusal unchanged. Processing is selected by the manifest's declared `processing.capability` and `processing.route_id`, never by source or provider identity. No external machine, receiver or observer is awaited on this path. Every non-`ALLOW` disposition carries `failure_code`, `failed_predicate`, `required_evidence_or_repair`, `retry_entrypoint`, `owning_existing_goal` and `next_attempt`. The organization ledger records the transition receipt; Master Records receives only released organization batches downstream and is not a predicate of any transition here.
+
+### Generic SDK manifest InTr ingress
+
+Issue #354 removes the governance-specific callable as the LLM Adapter's processing selector. Actionable external manifests now require a recognized Node endpoint plus manifest-declared `processing.capability` and `processing.route_id`; the adapter frames that unchanged declaration as non-authorizing Interlock/InTr transfer to the distributed SDK manifest endpoint. Source/provider identity is provenance only and cannot select processing. Missing Node recognition or processing declaration fails closed before endpoint invocation. This is source/CI conformance only; it does not claim authentic runtime transport, SDK execution or an organization ledger transition.
+
+The repository's organization-role conformance declaration is `data/organization-role-conformance.json` (evidence class `SOURCE_IMPLEMENTED`; no runtime claim).
+
+## OPTIONAL sovereign local-model route
+
+The chain below is one **optional** route a manifest may select for local-model inference. It is not the canonical path, it is not required of arbitrary runtimes, and nothing on the declared path waits on it. The canonical local route requires credential class `NONE`, and TC/TVC owns credential semantics and route authority.
 
 ```text
 StegVerse request
@@ -16,20 +40,20 @@ StegVerse request
 -> canonical StegGate runtime identity validation
 -> governed transition package
 -> StegGate + coherence evaluation
--> canonical heartbeat-owned local model process
+-> heartbeat-owned local model process (optional route only)
 -> persistent local runtime proof
 -> TVC route evaluation
 -> ROUTE_ADMITTED / credential_requirement NONE
 -> private or loopback StegVerseLocalHTTPProviderClient
 -> provider response + measured usage
--> provider-usage persistence
--> Master Records organization records/reconstruction
--> same-execution transition reconstruction
+-> provider-usage persistence (local ledger)
+-> organization ledger transition receipt
+   (Master Records receives released organization batches downstream; not awaited)
 ```
 
 The adapter does not own the model process, heartbeat, route authority, or Master Records organization record.
 
-Canonical ownership:
+Ownership on this optional route:
 
 ```text
 local model/runtime: StegVerse-002/micro-node-runtime#16/#22
@@ -37,7 +61,7 @@ heartbeat/carrier lifecycle: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INF
 credential semantics: TC/TVC
 route authority: StegVerse-Labs/TVC
 provider transport/usage evidence: StegVerse-org/LLM-adapter
-organization records/reconstruction: master-records/orchestration
+downstream organization records: master-records/orchestration (receives released batches; not a runtime gate)
 ```
 
 ## KV-backed AI memory context
@@ -185,7 +209,7 @@ docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md
 
 `StegVerse-org/stegverse-demo-suite` has no production ownership, runtime, credential, custody, or connection role in this path. Demo/test surfaces may consume a governed connection but cannot become its canonical owner.
 
-Source/CI/merge are not connection evidence. `CONNECTED` requires authentic same-execution ingress ALLOW, TVC provider operation, provider response, Master Records reconstruction, and exact-response egress ALLOW.
+Source/CI/merge are not connection evidence. `CONNECTED` requires authentic same-execution ingress ALLOW, TVC provider operation, provider response, the organization ledger transition receipt, and exact-response egress ALLOW. Master Records reconstruction is not a `CONNECTED` predicate: Master Records receives released organization batches downstream.
 
 ## Z.ai Interlock/InTr transport and governed execution
 
@@ -339,7 +363,7 @@ docs/KIMI_INTR_TRANSPORT_MIRROR_HANDOFF.md
 tasks/LLMA-KIMI-INTR-RUNTIME-292.json
 ```
 
-Source/CI validation proves the implementation and authority boundaries only. A working Kimi connector is claimed only after authentic same-execution evidence proves InTr ingress, TVC Kimi lease/non-exportable provider execution, an authentic Moonshot response, Master Records organization records/reconstruction, and exact-response InTr egress.
+Source/CI validation proves the implementation and authority boundaries only. A working Kimi connector is claimed only after authentic same-execution evidence proves InTr ingress, TVC Kimi lease/non-exportable provider execution, an authentic Moonshot response, the organization ledger transition receipt, and exact-response InTr egress.
 
 ## Anthropic/Claude Interlock/InTr transport and governed execution
 
@@ -662,4 +686,4 @@ peer execution profiles. The framework helper uses existing run-manifest routing
 adapter discovery preserves its own receiving operation. External instructions
 end at canonical manifest submission and evidence retention. Local handoff is not
 receiver observation; external reciprocal Interlock/InTr remains deferred.
-SDK PR #429 is canonically merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`; this adapter pins that canonical merge. See the repository's portability/canonical-standing/machine-contract mirror handoff for retained proof boundaries.
+SDK PR #429 was canonically merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`. This adapter now pins SDK main `c30dc3421f10f8855d85e8347c59884d8af792eb`, which contains that merge and the organization-role-conformance route (`1062d29`). See the repository's portability/canonical-standing/machine-contract mirror handoff for retained proof boundaries.
