@@ -75,6 +75,12 @@
       "source_change": "branch claude/368-pr3-docs-declaration"
     },
     {
+      "surface": "llm_adapter/sdk_boundary.py:build",
+      "findings": ["F14"],
+      "statement": "Builder arguments reach stegverse.manifest_builder.build_manifest unchanged; a capability descriptor is opaque and never supplies, replaces or refuses processing, route, provider or entitlement. Processing selection and the unknown-capability disposition are the SDK's own.",
+      "source_change": "branch chatgpt/368-r2-f14-manifest-processing"
+    },
+    {
       "surface": "scripts/verify_authorized_provider_activation.py, scripts/verify_live_ecosystem_chat_activation.py, scripts/write_live_activation_status.py, scripts/write_ecosystem_chat_destination_activation_state.py",
       "findings": ["F4 (CONNECTED predicate)"],
       "statement": "Read the provider usage record and the organization-ledger transition receipt; no Master Records usage submission, custody or reconstruction predicate; every unverified result carries the six non-ALLOW fields.",
@@ -82,17 +88,6 @@
     }
   ],
   "open_repairs": [
-    {
-      "surface": "llm_adapter/sdk_boundary.py:resolve_ecosystem_chat_capability_descriptor",
-      "finding": "F14",
-      "disposition": "REVIEW",
-      "failure_code": "ADAPTER_SELECTS_PROCESSING_FROM_CAPABILITY_DESCRIPTOR",
-      "failed_predicate": "manifest_declared_processing_passed_through_unchanged",
-      "required_evidence_or_repair": "owner decision under SVORG-MANIFEST-SELECTS-PROCESSING-001; the existing tests declare the capability_descriptor -> stegbrowser mapping as contract",
-      "retry_entrypoint": "StegVerse-org/LLM-adapter#368",
-      "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
-      "next_attempt": "after the owner rules on the declared mapping"
-    },
     {
       "surface": "llm_adapter/va_claims_runtime_core.py:_reconstruct_turn",
       "finding": "F7 (adjacent; not named in the review)",
