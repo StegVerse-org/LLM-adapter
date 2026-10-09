@@ -1,0 +1,74 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github:orchestration/task-registry.json#LLMA-DECLARED-PATH-CONFORMANCE-368",
+    "tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "data/organization-role-conformance.json",
+      "receipts/work-safety/MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002-organization-record-boundary.json"
+    ]
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/LLM-adapter#368",
+      "StegVerse-org/.github:control/task-vectors/LLMA-DECLARED-PATH-CONFORMANCE-368.json"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "scripts/check_cosv_task_projection.py",
+      "data/cosv/task-vector-index.json",
+      "data/cosv/task-vectors/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+      "data/cosv/task-vectors/LLMA-ECOSYSTEM-CHAT-DESTINATION-PROJECTION-007.json"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Correctness fix to a repository validation checker and truthful task/index data; README documents no COSV projection checker semantics and no runtime behavior changes.",
+    "evidence_refs": [
+      "README.md",
+      "scripts/check_cosv_task_projection.py"
+    ]
+  },
+  "covered_paths": [
+    "scripts/check_cosv_task_projection.py",
+    "tests/test_cosv_task_projection.py",
+    "data/cosv/task-vector-index.json",
+    "data/cosv/task-vectors/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+    "tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json",
+    "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-f13-cosv-projection.json"
+  ],
+  "new_files": [
+    {
+      "path": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-f13-cosv-projection.json",
+      "semantic_responsibility": "Document the F13 COSV projection checker correctness fix and truthful task 306 entry",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-docs-declaration.json",
+      "justification": "Fresh manifest required for this functional diff",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#368"
+      ]
+    }
+  ]
+}
