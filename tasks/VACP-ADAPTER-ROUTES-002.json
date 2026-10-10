@@ -51,7 +51,7 @@
   "remaining_blockers": [
     "Site source registry lacks an admitted VA-CRISIS-LINE source, so urgent_safety remains AUTHORITY_RESOLUTION_REQUIRED.",
     "TVC capability invocation and expiry/revocation evidence are not integrated for the expanded routes.",
-    "Master Records organization record RECORDED and reconstruction PASS are not present for expanded route answers.",
+    "Expanded route answers are not yet closed on organization-ledger transition receipts (a Master Records record/reconstruction was formerly listed here; it is downstream and never a blocker, LLM-adapter#368).",
     "No deployed expanded-route request has been directly observed.",
     "Site capability projection remains SOURCE_GROUNDED_ASSISTANT until cross-repository activation evidence passes.",
     "Private document production PII, redaction, and leakage receipts remain absent."
@@ -59,7 +59,7 @@
   "next_after_release": [
     "Site#113 admits and validates an official urgent-safety source or retains the route fail-closed.",
     "TVC#9 supplies secret-free route capability invocation evidence.",
-    "master-records/orchestration imports one expanded-route answer and returns organization-record plus reconstruction receipts.",
+    "master-records/orchestration may record a released expanded-route answer receipt downstream; nothing waits on it.",
     "Site#113 imports the final receipts without overstating private upload or filing capability."
   ],
   "authority_effect": false,

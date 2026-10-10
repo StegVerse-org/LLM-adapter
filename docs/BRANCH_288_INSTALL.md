@@ -81,7 +81,7 @@ runtime capability: bounded_process_execution
 task-routing direction: INTERNAL
 credential authority: TV/TVC
 provider ingress/egress: external Interlock/InTr
-organization records/reconstruction: Master Records
+downstream released-batch recording/reconstruction (non-gating): Master Records
 ```
 
 Runtime-profile discovery must not manufacture a new provider runtime. A current authentic task-executing WorkerCoordinator remains required for a live call even though candidate discovery does not require current observation.
@@ -95,7 +95,7 @@ After source validation, record no stronger than:
 | transport/source/schema/canonicalization | INSTALLED, commit-referenced |
 | source gate | PASSING on validated commit |
 | live Claude execution | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
-| Master Records organization-record acceptance | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
+| Master Records downstream recording (formerly listed as a requirement; retired under #368) | OPTIONAL_DOWNSTREAM_NON_GATING |
 | exact-response egress ALLOW | REQUIRES_STEGVERSE_RUNTIME_EVIDENCE |
 | product activation / tag / release | NOT CLAIMED |
 

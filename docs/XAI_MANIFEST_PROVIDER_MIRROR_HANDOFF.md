@@ -27,8 +27,8 @@ existing user/ecosystem task -> exact manifest/WorkerCoordinator claim+fence
  -> existing distributed workload contribution with source/model/usage hashes
  -> required InTr egress -> org-local predecessor-linked receipt continuity
  -> observed disposable StegBrowser teardown, retaining non-secret node identity
- -> conditional organization batch / direct Master Records acknowledgement only where required
- -> exact linked Master Records reconstruction and Ecosystem Chat governed return.
+ -> organization-ledger transition receipt closes the transition (conditional organization batch released only where required)
+ -> Ecosystem Chat governed return; Master Records may record the released batch downstream (optional, non-gating, never awaited).
 ```
 
 Historical A3 source-refresh applies only to its exact invocation, not as a universal xAI or external-AI gate. Missing external ledger readback is EVIDENCE_REACHABILITY, not a synthetic DENY or proof of runtime failure. On observed DENY repair under existing owner and proceed to next authentic disposition; terminal FAIL_CLOSED is preserved. Provider output, agreement, runtime code and fixture receipts are not governance or custody proof.
@@ -37,7 +37,7 @@ Historical A3 source-refresh applies only to its exact invocation, not as a univ
 
 This branch implements source transport and deterministic unit fixtures only. Tests cover declared xAI selection, unauthorized provider mismatch, explicit scoped credential, endpoint containment, required response/usage, no leaked key, two-source local+xAI contribution, and optional xAI non-ALLOW while local succeeds. **No live xAI call, TVC operation, InTr decision, WorkerCoordinator claim/fence, authentic ephemeral lease, observed teardown, organization receipt, Master Records reconstruction or Site publication is claimed by these source changes.**
 
-The existing external-AI coordination task continues its already-declared first live OpenAI and independent Claude goals. Grok is an optional additional provider whose activation should not displace those proofs. For live Grok verification use a non-private user-facing Ecosystem Chat manifest, exact admitted scoped credential, and actual provider-side measured usage. Return first authentic non-ALLOW disposition or ALLOW with exact organization and Master Records readback. If xAI credentials/provider or resident ledger access are not currently available, preserve non-observation without creating another device or runtime.
+The existing external-AI coordination task continues its already-declared first live OpenAI and independent Claude goals. Grok is an optional additional provider whose activation should not displace those proofs. For live Grok verification use a non-private user-facing Ecosystem Chat manifest, exact admitted scoped credential, and actual provider-side measured usage. Return first authentic non-ALLOW disposition or ALLOW with exact organization-ledger transition receipt readback (Master Records readback is optional downstream evidence, never a condition of ALLOW). If xAI credentials/provider or resident ledger access are not currently available, preserve non-observation without creating another device or runtime.
 
 ## Source surfaces
 

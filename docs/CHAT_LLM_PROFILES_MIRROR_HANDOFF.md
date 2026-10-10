@@ -117,7 +117,7 @@ Required negative checks remain: missing canonical feature fails; unadmitted sou
 Ecosystem Chat runtime binding owner: StegVerse-org/LLM-adapter#18 or canonical successor
 VA Claims Chat runtime binding owner: StegVerse-org/LLM-adapter#90 or canonical successor
 Site projection owner: StegVerse-Labs/Site after machine admission
-Master Records: operational organization record only after real runtime execution under its existing owner
+Master Records: optional downstream recording of released batches only after real runtime execution closes on the organization-ledger transition receipt
 ```
 
 Profile validation is not provider execution, custody, Site activation, publication, filing, or release authority.

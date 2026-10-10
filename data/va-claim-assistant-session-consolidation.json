@@ -162,7 +162,7 @@
     },
     {
       "task_id": "VA-MASTER-RECORDS-001",
-      "originating_session_goal": "Custody and reconstruct provider, transition, document-privacy, and filing evidence without granting execution authority.",
+      "originating_session_goal": "Downstream: record released provider, transition, document-privacy, and filing evidence receipts for cross-organization reconstruction without granting execution authority; custody stays with the organization ledger.",
       "destination_repository": "master-records/orchestration",
       "branch": "main",
       "location": "master-records/orchestration#15; docs/VA_PRIVACY_CUSTODY_MIRROR_HANDOFF.md",
@@ -173,8 +173,8 @@
       "integration_state": "PII-RDY-07 and expanded-route custody incomplete",
       "archival_dependency": false,
       "evidence": "MR#15 and adapter comments 5174249863",
-      "next_executable_action": "Import only a genuine privacy-minimized operational event, record custody, and return deterministic reconstruction PASS.",
-      "release_condition": "Custody RECORDED and reconstruction PASS for exact source hashes with no prohibited content or authority escalation."
+      "next_executable_action": "Import only a genuine privacy-minimized released operational event and record it downstream; reconstruction results never gate the organization's transitions.",
+      "release_condition": "Released receipts recorded downstream for exact source hashes with no prohibited content or authority escalation; not a condition on any organization transition."
     },
     {
       "task_id": "VACP-ADAPTER-AUTHORIZED-EXECUTION-005",

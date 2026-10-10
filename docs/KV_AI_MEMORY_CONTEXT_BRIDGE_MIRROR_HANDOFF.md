@@ -76,7 +76,7 @@ LLM adapter != Interlock/InTr authority
 LLM adapter != TV/TVC credential authority
 ```
 
-The existing `GovernedExternalProviderClient` remains unchanged and continues to require exact provider-request ingress ALLOW, TV/TVC material, provider execution, Master Records usage continuation, and exact-response egress ALLOW.
+The existing `GovernedExternalProviderClient` remains unchanged and continues to require exact provider-request ingress ALLOW, TV/TVC material, provider execution, local usage recording, and exact-response egress ALLOW (Master Records records released batches downstream; nothing waits on it).
 
 ## Validation
 
@@ -131,7 +131,7 @@ Reuse the current resident/WorkerCoordinator external-LLM lane to feed one authe
 5. TV/TVC provider-operation evidence;
 6. provider response hash;
 7. egress ALLOW receipt;
-8. Master Records organization records/reconstruction evidence.
+8. organization-ledger transition receipt (Master Records downstream recording is optional and non-gating).
 
 Then, if a memory write is proposed, route the non-authorizing write proposal through target-KV admission and exact-byte readback before claiming persistent memory.
 

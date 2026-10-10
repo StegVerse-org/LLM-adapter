@@ -161,7 +161,7 @@ The bounded source task is released. Do not reopen it merely to pursue transcrip
 #132 -> consume accepted image/review state in Math Solver
 Site#240 -> public image composer after Site mutation admission
 StegVerse-002/micro-node-runtime + TVC -> develop/admit genuine math-capable visual transcription runtime
-Master Records -> existing organization record only when required by actual execution
+Master Records -> optional downstream recording of the released organization batch (never required by execution; non-gating)
 ```
 
 Source merge is not persistent public hosting, live visual-route admission, semantic math transcription, Site activation, custody, or publication.

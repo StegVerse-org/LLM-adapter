@@ -8,7 +8,7 @@ Authority effect: `NONE_METADATA_ONLY`
 
 ## Source of truth
 
-This is the scoped completion record for post-merge reconciliation of the Z.ai Interlock/InTr transport and governed executor. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, the merged task records for issues #276/#278, existing Interlock/InTr transition authority, TV/TVC credential/route authority, `master-records/orchestration` custody authority, and the canonical resident runtime authority in `StegVerse-Labs/.github`.
+This is the scoped completion record for post-merge reconciliation of the Z.ai Interlock/InTr transport and governed executor. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, the merged task records for issues #276/#278, existing Interlock/InTr transition authority, TV/TVC credential/route authority, the organization ledger (custody stays with the organization; `master-records/orchestration` is only the downstream recorder of released batch receipts), and the canonical resident runtime authority in `StegVerse-Labs/.github`.
 
 ## Verified implementation evidence
 
@@ -117,7 +117,7 @@ admitted workload
 -> externally produced Interlock/InTr ingress ALLOW
 -> TV/TVC-resolved Z.ai provider credential/route admission
 -> merged Z.ai executor
--> authentic provider-usage organization records/reconstruction in master-records/orchestration
+-> provider usage recorded in the local usage ledger and the organization-ledger transition receipt
 -> externally produced egress InTr ALLOW bound to exact provider response
 ```
 

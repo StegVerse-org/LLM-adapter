@@ -128,7 +128,7 @@ scripts/verify_goal4_full.py
 
 ## Remaining activation boundary
 
-Local source/runtime readiness is not governed product activation. Live completion still requires the canonical resident carrier, admitted TV/TVC authority where needed, same-execution evidence, Master Records reconstruction where applicable, and downstream activation receipts.
+Local source/runtime readiness is not governed product activation. Live completion still requires the canonical resident carrier, admitted TV/TVC authority where needed, same-execution evidence closed on organization-ledger transition receipts, and downstream activation receipts. Master Records reconstruction is downstream and non-gating and is never a completion requirement.
 
 MERGED INTO: `StegVerse-Labs/.github/handoffs/SHWP-HEALER-SOVEREIGN-SCHEDULER-001.json`, `StegVerse-Labs/StegVerse-Healer/docs/HEALER_MIRROR_HANDOFF.md`, and `StegVerse-org/LLM-adapter#18`.
 

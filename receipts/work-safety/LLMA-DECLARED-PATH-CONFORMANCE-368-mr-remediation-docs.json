@@ -1,0 +1,152 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/LLM-adapter#368 (owning_existing_goal LLMA-DECLARED-PATH-CONFORMANCE-368; user order: all improper instances of master-records must be remediated)"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "StegVerse-org/.github:docs/ORGANIZATION_ROLE_RUNTIME_REALITY_DEPLOYMENT.md#master-records-restated",
+      "data/master-records-role-audit.json"
+    ],
+    "reason": "Adds the machine-readable Master Records role audit and rewrites every operative doc, data, runtime-profile, capability, contract, intake and active task statement that made Master Records a gate, precondition, custodian, dependency or execution-chain step."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/380"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "data/master-records-role-audit.json",
+      "grep -rniE 'master[-_ ]?records' over all tracked files"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Edits existing declarations in place; the audit file is data only."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md#master-records-role-llma-368"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/hil-triggered-ephemeral-cycle.yml",
+    ".stegverse/repo-heartbeat.json",
+    "ADAPTER_SDK_SYSTEM_BOUNDARY_MIRROR_HANDOFF.md",
+    "LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "README.md",
+    "SYSTEM_BOUNDARY_MIRROR_HANDOFF.md",
+    "adapter.capabilities.json",
+    "capability/stegverse-intr-deepseek-transport.capability.json",
+    "capability/stegverse-intr-kimi-transport.capability.json",
+    "capability/stegverse-intr-zai-transport.capability.json",
+    "config/anthropic-runtime-profile.json",
+    "config/deepseek-runtime-profile.json",
+    "config/kimi-runtime-profile.json",
+    "config/zai-runtime-profile.json",
+    "contracts/va-claims-chat-runtime.json",
+    "data/master-records-role-audit.json",
+    "data/stegverse-public-knowledge.v1.json",
+    "data/va-claim-assistant-session-consolidation.json",
+    "docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md",
+    "docs/BRANCH_288_INSTALL.md",
+    "docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md",
+    "docs/CHAT_LLM_SESSION_BINDING_MIRROR_HANDOFF.md",
+    "docs/COSV_LLM_ADAPTER_ADOPTION_MIRROR_HANDOFF.md",
+    "docs/DEEPSEEK_INTR_TRANSPORT_MIRROR_HANDOFF.md",
+    "docs/DEEPSEEK_RUNTIME_PROFILE_TVC_BROKER_MIRROR_HANDOFF.md",
+    "docs/DISTRIBUTED_LLM_EXECUTOR_MIRROR_HANDOFF.md",
+    "docs/DISTRIBUTED_LLM_WORKLOAD_MIRROR_HANDOFF.md",
+    "docs/ECOSYSTEM_CHAT_EVIDENCE_POSTURE_MIRROR_HANDOFF.md",
+    "docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md",
+    "docs/ECOSYSTEM_CHAT_SERVICE_ADOPTION_MIRROR_HANDOFF.md",
+    "docs/ECOSYSTEM_PUBLIC_KNOWLEDGE_MIRROR_HANDOFF.md",
+    "docs/ECOSYSTEM_VA_CHAT_SESSION_ARCHIVE_MIRROR_HANDOFF.md",
+    "docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+    "docs/GOVERNED_MANIFEST_INGRESS_MIRROR_HANDOFF.md",
+    "docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md",
+    "docs/HIL_DEPLOYMENT_PROFILE.md",
+    "docs/HIL_RUNTIME_MIRROR_HANDOFF.md",
+    "docs/HPS_ADAPTER_CONSUMPTION.md",
+    "docs/KIMI_INTR_TRANSPORT_MIRROR_HANDOFF.md",
+    "docs/KV_AI_MEMORY_CONTEXT_BRIDGE_MIRROR_HANDOFF.md",
+    "docs/LEAST_STABLE_MICRONODE_MIRROR_HANDOFF.md",
+    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "docs/LLM_ADAPTER_PURPOSE_AND_CAPABILITY_SPEC.md",
+    "docs/LLM_COMMUNICATIONS_STACK.md",
+    "docs/LOCAL_RUNTIME_MODEL_MIRROR_HANDOFF.md",
+    "docs/MANIFEST_INGRESS_MIRROR_HANDOFF.md",
+    "docs/OPTIONAL_TRANSPARENCY_SURFACE_INTEROP.md",
+    "docs/REUSABLE_RESIDENT_RENDEZVOUS_GATEWAY_MIRROR_HANDOFF.md",
+    "docs/SHARED_ATTACHMENT_MATH_IMAGE_MIRROR_HANDOFF.md",
+    "docs/SOVEREIGN_CARRIER_EXECUTION_MIRROR_HANDOFF.md",
+    "docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md",
+    "docs/STEGDEPLOY_PUBLICATION_MIRROR_HANDOFF.md",
+    "docs/STEGDEPLOY_RENDER_REPLACEMENT.md",
+    "docs/UNIFIED_CHAT_SPECIALTIES_MIRROR_HANDOFF.md",
+    "docs/VA_CLAIMS_CHAT_RUNTIME_MIRROR_HANDOFF.md",
+    "docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md",
+    "docs/VA_CLAIM_ASSISTANT_PRIVACY_RUNTIME_MIRROR_HANDOFF.md",
+    "docs/VA_CLAIM_ASSISTANT_PROVIDER_PREFLIGHT_MIRROR_HANDOFF.md",
+    "docs/VA_CLAIM_ASSISTANT_SESSION_ARCHIVE_MIRROR_HANDOFF.md",
+    "docs/WORK_MUTATION_SAFETY_MIRROR_HANDOFF.md",
+    "docs/XAI_MANIFEST_PROVIDER_MIRROR_HANDOFF.md",
+    "docs/ZAI_INTR_EXECUTOR_MIRROR_HANDOFF.md",
+    "docs/ZAI_INTR_RELEASE_MIRROR_HANDOFF.md",
+    "docs/ZAI_INTR_TRANSPORT_ID_RECONCILIATION_MIRROR_HANDOFF.md",
+    "docs/ZAI_INTR_TRANSPORT_MIRROR_HANDOFF.md",
+    "docs/llm-communications-stack.json",
+    "intake/stegverse-live-baseline-execution-request-v1.json",
+    "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+    "tasks/LLMA-ANTHROPIC-INTR-TRANSPORT-288.json",
+    "tasks/LLMA-KIMI-INTR-RUNTIME-292.json",
+    "tasks/LLMA-MANIFEST-INGRESS-024.json",
+    "tasks/LLMA-ZAI-INTR-TRANSPORT-276.json",
+    "tasks/VACP-ADAPTER-ROUTES-002.json",
+    "tasks/VACP-ADAPTER-SERVICE-CONNECTION-EXEC-003.json"
+  ],
+  "new_files": [
+    {
+      "path": "data/master-records-role-audit.json",
+      "semantic_responsibility": "Per-line classification inventory of every Master Records occurrence before and after the #368 remediation",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "data/organization-role-conformance.json (role declaration, not a per-line inventory)",
+      "justification": "The user order requires a committed machine-readable inventory; no per-line audit exists",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#368"
+      ]
+    },
+    {
+      "path": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+      "semantic_responsibility": "Work-mutation-safety manifest for the #368 Master Records documentation remediation",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-docs-declaration.json",
+      "justification": "Fresh manifest required for this change set",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#368"
+      ]
+    }
+  ]
+}

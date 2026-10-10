@@ -39,7 +39,7 @@
     "runtime_profile_materialization",
     "tvc_single_use_provider_operation_allow",
     "anthropic_provider_result",
-    "master_records_provider_usage_reconstruction",
+    "organization_ledger_transition_receipt",
     "intr_egress_allow"
   ]
 }

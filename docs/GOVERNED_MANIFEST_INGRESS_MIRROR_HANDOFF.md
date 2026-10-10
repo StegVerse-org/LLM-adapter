@@ -83,6 +83,8 @@ grants_authority: false
 master_records_transition_custody_independent_of_return_projection: true
 ```
 
+The two `master_records_*` invariant names are legacy code identifiers. Custody of the transition record stays with the organization ledger; Master Records only records released organization batch receipts downstream and is not custody.
+
 If `NONE` is selected, the adapter returns no transition-detail projection, receipt refs, or verification refs to the caller through this result envelope. The canonical `manifest_receipt_id` and governed result/disposition remain available as the exact-run handle/result. `NONE` MUST NOT be interpreted as evidence that no transitions occurred or that Master Records recorded nothing.
 
 ## Cross-repository implementation now available
@@ -99,7 +101,7 @@ master-records/orchestration/services/manifest_receipt_custody.py
 master-records/orchestration/services/manifest_receipt_custody_api.py
 master-records/orchestration/services/canonical_custody_app.py
 master-records/orchestration/render-custody.yaml
-  exact-run immutable custody and authenticated lookup/reconstruction composed into the canonical custody deployment target
+  downstream exact-run recording and authenticated lookup/reconstruction of released receipts (legacy `custody` file names; custody stays with the organization ledger)
 ```
 
 ## Completed handoff tasks
@@ -109,12 +111,12 @@ master-records/orchestration/render-custody.yaml
 [done] per-unit stream identity/sequence/idempotency enforcement installed
 [done] governed model-facing result envelope installed
 [done] ALL / SELECTED / NONE caller return projection installed
-[done] explicit caller-return vs Master Records organization-record separation installed
+[done] explicit caller-return vs organization-ledger record (and downstream Master Records recording) separation installed
 [done] ALLOW/DENY/REVIEW/FAIL_CLOSED preservation installed
 [done] malformed/dependency/non-ALLOW-consequence fail-closed behavior installed
 [done] StegCore exact-run receipt semantics available
 [done] StegCore shared-backing provider contract available
-[done] Master Records exact-run organization-record routes available on canonical deployment target
+[done] Master Records exact-run downstream recording routes available (non-gating)
 ```
 
 ## Worker continuation boundary
@@ -140,7 +142,7 @@ The external LLM must never receive an ungoverned or fail-open answer presented 
 
 ## Activation boundary
 
-Master Records route composition is installed. Production use of the Master Records organization record still waits on the Master Records repository-wide persistent-storage, backup/restore, and live-authenticated round-trip readiness requirements. The adapter must not represent installed organization-record code as a live production organization record until those conditions are evidenced.
+Master Records downstream-recording route composition is installed. Production use of that downstream recorder depends on Master Records' own repository-wide persistent-storage, backup/restore, and live-authenticated round-trip readiness; this is not an adapter activation condition and nothing in the adapter waits on it (custody and the transition receipt stay with the organization ledger). The adapter must not represent installed downstream-recording code as a live production recorder until those conditions are evidenced.
 
 ## Validation status
 

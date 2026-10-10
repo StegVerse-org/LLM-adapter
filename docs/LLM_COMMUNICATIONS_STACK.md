@@ -32,7 +32,7 @@ Provider inference, collaboration, continuity, admissibility, execution, and cus
 | Validation and orchestration | `GCAT-BCAT-Engine/workflows` | Deterministic validation, proof pipelines, transition testing, and cross-repository workflow dispatch |
 | Demo test suite | StegVerse-org | Isolated public and Demo operational-surface verification |
 | Entity sandbox runner | `StegGhost/entity-sandbox-runner` | Bounded adversarial and entity-specific test execution |
-| Organization records | Master Records | Organization records, release records, replay, and reconstruction |
+| Released-batch recording (downstream) | Master Records | Downstream recording of released organization batch receipts, replay, and cross-organization reconstruction; not custody, gate or runtime authority |
 
 ## Position of this repository
 

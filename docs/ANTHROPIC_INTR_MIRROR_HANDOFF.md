@@ -27,7 +27,7 @@ exact ProviderRequest
 -> order-preserving/lossless content-block normalization
 -> response hash over blocks + normalized metadata
 -> canonical/provider-native usage evidence
--> Master Records organization-record handoff without authority escalation
+-> non-gating Master Records handoff copy built for optional downstream recording (never awaited; does not gate egress)
 -> external Interlock/InTr egress decision
 -> exact admitted response-hash verification
 -> local EGRESS_ADMITTED report with authority_effect NONE_LOCAL
@@ -57,7 +57,7 @@ live_runtime_observation_required_before_provider_call: true
 
 Candidate discovery intentionally does not require current observation. The canonical matcher otherwise removes a valid declared profile and recreates a false `runtime missing` failure. Live execution remains separately gated by WorkerCoordinator admission/claim/fence and authentic current runtime evidence.
 
-No new runtime, heartbeat, oscillator, scheduler, worker registry, route authority, transition authority, credential authority, custody authority, or third-party availability authority is created. Runtime-profile matching is selection/projection only. WorkerCoordinator admission, a current claim/fence, TV/TVC credential materialization, InTr ingress/egress decisions, and Master Records evidence remain independently required.
+No new runtime, heartbeat, oscillator, scheduler, worker registry, route authority, transition authority, credential authority, custody authority, or third-party availability authority is created. Runtime-profile matching is selection/projection only. WorkerCoordinator admission, a current claim/fence, TV/TVC credential materialization, and InTr ingress/egress decisions remain independently required; Master Records evidence is optional downstream recording and never required.
 
 Runtime-profile reconciliation is tracked in `StegVerse-Labs/.github#1121`; it records that `sovereign-runtime-worker-v1` is the correct existing profile rather than creating a parallel provider runtime.
 
@@ -130,7 +130,7 @@ Current canonical repository state records `control/heartbeat-carrier-runtime-st
 6. project the #288 runtime requirements into the canonical task-registry/runtime-resolution cycle under `.github#1121` through the existing Canonical Work coordination path;
 7. obtain authentic current WorkerCoordinator task-execution observation before any provider call;
 8. do not tag/release or propagate to Site/Publisher/wikis unless an explicit release/capability gate authorizes it;
-9. any later live provider use must enter existing WorkerCoordinator, TV/TVC, InTr, usage-evidence and Master Records paths.
+9. any later live provider use must enter existing WorkerCoordinator, TV/TVC, InTr and usage-evidence paths and close on the organization-ledger transition receipt; Master Records may record the released batch downstream (non-gating).
 
 ## Completion accounting
 

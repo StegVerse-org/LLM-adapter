@@ -48,7 +48,7 @@
     {
       "id": "what-is-stegverse",
       "triggers": ["what is stegverse", "stegverse overview", "explain stegverse", "stegverse architecture"],
-      "answer": "StegVerse is a governed AI and continuity ecosystem. Public interaction surfaces produce bounded candidates and receipts; StegGate/admissibility, TV/TVC credential and route authority, and Master Records organization record remain separate authority layers. A public chat or model response is not execution authority.",
+      "answer": "StegVerse is a governed AI and continuity ecosystem. Public interaction surfaces produce bounded candidates and receipts; StegGate/admissibility and TV/TVC credential and route authority remain separate authority layers; each organization holds its own ledger, and Master Records only records released organization batch receipts downstream, with no authority. A public chat or model response is not execution authority.",
       "source_ids": ["LLMA-PUBLIC-RUNTIME", "SITE-PUBLIC-PATHS"]
     },
     {
@@ -60,7 +60,7 @@
     {
       "id": "governance-00",
       "triggers": ["mode 00", "option 00", "governance 00", "what is 00"],
-      "answer": "Mode 00 is the optional return/explanation configuration surface. It configures permitted user-return projection without changing canonical Master Records organization record.",
+      "answer": "Mode 00 is the optional return/explanation configuration surface. It configures permitted user-return projection without changing any organization ledger record or the downstream Master Records record.",
       "source_ids": ["SDK-CONSOLE", "SDK-GOVERNANCE-NAV"]
     },
     {

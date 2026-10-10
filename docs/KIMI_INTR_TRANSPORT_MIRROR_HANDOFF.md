@@ -8,7 +8,7 @@ Exact-provider-wire issue: `#307`
 
 ## Authority and scope
 
-This scoped handoff is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md` and the canonical StegVerse Universal InTr, Governance/StegCore, TV/TVC, heartbeat/runtime, and Master Records authority boundaries.
+This scoped handoff is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md` and the canonical StegVerse Universal InTr, Governance/StegCore, TV/TVC, and heartbeat/runtime authority boundaries, and the Master Records downstream-recorder (non-authority) boundary.
 
 ```text
 provider: kimi / Moonshot AI
@@ -18,7 +18,8 @@ provider authority effect: NONE
 exact-packet transport evidence: Universal InTr / TRANSPORT_COMPLETE
 governance disposition: StegCore / ALLOW | DENY | FAIL-CLOSED
 credential/provider-operation authority: TV/TVC
-organization records/reconstruction: Master Records
+organization record / transition receipt: organization ledger (custody stays with the organization)
+downstream recording of released batches (non-gating): Master Records
 heartbeat/scheduler/worker authority: NONE
 canonical sovereign local route replaced: false
 ```
@@ -31,7 +32,7 @@ Universal InTr transport completion is not an ALLOW decision. Governance ALLOW i
 llm_adapter.provider_request.ProviderRequest
 llm_adapter.provider_client.ProviderResponse
 llm_adapter.provider_usage.build_provider_usage_event
-llm_adapter.master_records_usage_record.record_provider_usage_in_master_records
+llm_adapter.provider_usage_submission.record_usage_non_gating (local usage ledger; llm_adapter.master_records_usage_record removed under #368)
 StegVerse-Labs/StegOS external-provider-operation Universal InTr profile
 StegVerse-Labs/Governance hosted-llm-provider-operation.v1 profile
 StegCore canonical three-layer evaluator
@@ -80,7 +81,7 @@ exact TVC/Moonshot provider payload bytes
 -> https://api.moonshot.ai/v1/chat/completions / kimi-k3
 -> sanitized provider result + TVC use receipt
 -> canonical LLM-adapter provider usage event
--> canonical Master Records provider-usage organization records/reconstruction
+-> local usage ledger + organization-ledger transition receipt (usage recording is non-gating)
 -> exact response bytes through Universal InTr response transport
 -> response may return only after the complete retained evidence chain
 ```
@@ -109,8 +110,8 @@ Source integration is not live activation. Merge readiness requires exact-head C
 - TVC non-exportable Kimi operation construction;
 - lease provider/model/authority boundary validation;
 - sanitized TVC result normalization;
-- canonical provider-usage/Master Records continuation;
-- Master Records organization record required before canonical egress;
+- canonical provider-usage recording in the local usage ledger (non-gating; the former Master Records continuation was retired under #368);
+- usage-recording outcome does not gate canonical egress (a Master Records organization record is not a precondition);
 - exact egress response-hash binding;
 - validation-only GitHub Actions authority.
 
@@ -123,7 +124,7 @@ Status remains `IMPLEMENTED_PENDING_RUNTIME_PROOF` until one authentic same-exec
 3. authentic TV/TVC Kimi capability lease and non-exportable operation;
 4. authentic Moonshot/Kimi provider response for the bound request;
 5. authentic TVC use receipt with no credential export/log/retention;
-6. authentic Master Records provider-usage organization records and reconstruction PASS;
+6. authentic local usage-ledger record and organization-ledger transition receipt for the same execution (Master Records reconstruction PASS was formerly listed here; retired under #368 as downstream and non-gating);
 7. authentic Universal InTr egress transport completion bound to the exact response;
 8. common session/transition/request identifiers across retained evidence.
 
@@ -136,7 +137,7 @@ StegVerse-Labs/.github:
   existing WorkerCoordinator resident lane
   current claim/fence observation
   consume llm_adapter.kimi_tvc_provider_wire exact bytes/hash
-  compose exact InTr -> Governance -> TVC -> Master Records -> InTr execution
+  compose exact InTr -> Governance -> TVC -> InTr execution closing on the organization-ledger transition receipt
   retain authentic same-execution receipts
 
 StegVerse-Labs/TVC:
@@ -144,7 +145,7 @@ StegVerse-Labs/TVC:
   no new credential semantics
 
 master-records/orchestration:
-  authentic provider-usage custody/reconstruction
+  downstream, non-gating recording of released organization batch receipts (not custody; nothing waits on it)
 
 Post-activation projections:
   StegIndex

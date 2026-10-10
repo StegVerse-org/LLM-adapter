@@ -150,8 +150,8 @@ The validator still binds the immutable historical inventory to the current rele
 Ecosystem Chat live execution: MERGED INTO StegVerse-org/LLM-adapter#18
 VA Claims provider execution: MERGED INTO StegVerse-org/LLM-adapter#90
 VA authorized-execution task: tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json — BLOCKED, claimant null
-Master Records: MERGED INTO master-records/orchestration#15
-Master Records machine task: tasks/MR-VA-PRIVACY-ADAPTER-IMPORT-002.json — MACHINE_OWNED_BLOCKED
+Master Records (downstream, non-gating recorder): MERGED INTO master-records/orchestration#15
+Master Records machine task: tasks/MR-VA-PRIVACY-ADAPTER-IMPORT-002.json — MACHINE_OWNED_BLOCKED (downstream recording only; blocks no LLM-adapter transition)
 Site source/session projection: MERGED INTO StegVerse-Labs/Site#113
 Site document privacy/execution: MERGED INTO StegVerse-Labs/Site#116
 TVC scoped admission/expiry/revocation/credential linkage: MERGED INTO StegVerse-Labs/TVC#9
@@ -162,7 +162,7 @@ Ecosystem issue #18 remains the sole owner of authorized provider response, usag
 
 VA provider execution remains fail-closed until its machine-observable release conditions pass, including the required hosted privacy receipt and TVC/provider authority. `privacy_guarded_dispatch` remains before authority consumption, provider permission, or model input.
 
-Master Records machine-observable blockers remain:
+Master Records' own downstream recording task still reports these machine-observable conditions; they hold only that downstream recording and never block an LLM-adapter transition (non-gating under #368):
 
 ```text
 operational_privacy_event_missing
@@ -181,7 +181,7 @@ Ecosystem runtime: issue #18 is sole owner.
 VA provider execution: VACP-ADAPTER-AUTHORIZED-EXECUTION-005 / issue #90 is sole owner.
 VA route/privacy implementations: RELEASED_COMPLETE — do not fork.
 TVC admission: TVC#9 is sole authority owner.
-Organization records/reconstruction: master-records/orchestration#15 and its machine task are sole owners.
+Organization records: custody stays with each organization's ledger; master-records/orchestration#15 and its machine task only record released batch receipts downstream (non-gating).
 Site projection/document privacy: Site#113/#116 are sole owners.
 Historical PR #108: SUPERSEDED and CLOSED.
 PR #109: final archive evidence transport.

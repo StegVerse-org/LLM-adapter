@@ -238,7 +238,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SUBMISSION_ID: ${{ steps.submission.outputs.submission_id }}
         run: |
-          gh issue comment 185 --repo StegVerse-org/LLM-adapter --body "HIL ephemeral controlled cycle COMPLETE for submission \`$SUBMISSION_ID\`, run \`${{ github.run_id }}\`: public HTTPS READY observed; receipt-backed submission state recorded; receiver process restarted; exact persisted bytes re-read and SHA-256 verified unchanged after restart. Runtime/tunnel teardown follows. This is runtime/reconstruction evidence only; private review/publication/Master Records remain separate TV/TVC-governed transitions."
+          gh issue comment 185 --repo StegVerse-org/LLM-adapter --body "HIL ephemeral controlled cycle COMPLETE for submission \`$SUBMISSION_ID\`, run \`${{ github.run_id }}\`: public HTTPS READY observed; receipt-backed submission state recorded; receiver process restarted; exact persisted bytes re-read and SHA-256 verified unchanged after restart. Runtime/tunnel teardown follows. This is runtime/reconstruction evidence only; private review/publication remain separate TV/TVC-governed transitions; Master Records only records released organization batches downstream."
 
       - name: Close ephemeral tunnel and receiver
         if: always()

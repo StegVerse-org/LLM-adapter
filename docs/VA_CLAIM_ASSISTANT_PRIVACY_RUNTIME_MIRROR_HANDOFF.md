@@ -1,6 +1,6 @@
 # VA Claim Assistant Privacy Runtime Mirror Handoff
 
-This handoff is subordinate to `docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md` and `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`. It governs only `PII-RDY-06` and does not replace provider execution, Site document processing, TVC route authority, Master Records organization record, filing, or Ecosystem Chat activation lanes.
+This handoff is subordinate to `docs/VA_CLAIM_ASSISTANT_GOVERNED_RETRIEVAL_HANDOFF.md` and `docs/LLM_ADAPTER_MIRROR_HANDOFF.md`. It governs only `PII-RDY-06` and does not replace provider execution, Site document processing, TVC route authority, organization-ledger custody (with downstream, non-gating Master Records recording), filing, or Ecosystem Chat activation lanes.
 
 ## Goal identity
 
@@ -11,7 +11,7 @@ Current sovereign provider correction: StegVerse-org/LLM-adapter#142
 Current provider task: tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
 Site readiness requirement: PII-RDY-06
 Site document owner: StegVerse-Labs/Site#116
-Master Records dependency: master-records/orchestration#15
+Master Records downstream recorder (non-gating, not a dependency): master-records/orchestration#15
 Provider execution: NOT AUTHORIZED BY THIS PRIVACY SLICE
 Public activation: NOT AUTHORIZED
 credential_authority: TV/TVC
@@ -102,7 +102,7 @@ The older `VACP-ADAPTER-AUTHORIZED-EXECUTION-005` task is superseded. Current co
 ```text
 issue: StegVerse-org/LLM-adapter#142
 task: tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
-execution owner: resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records
+execution owner: resident sovereign heartbeat -> TVC -> LLM-adapter -> organization ledger (Master Records records downstream only, non-gating)
 credential_authority: TV/TVC
 credential_requirement: NONE
 github_token_required: false
@@ -117,7 +117,7 @@ The sovereign executor must invoke `privacy_guarded_dispatch.py` before any mode
 
 ```text
 StegVerse-org/LLM-adapter#90/#142: privacy gate remains required before sovereign VACC inference
-master-records/orchestration#15: genuine operational privacy organization records/reconstruction owner
+master-records/orchestration#15: optional downstream, non-gating recorder of released organization batch receipts for operational privacy events (custody stays with the organization ledger)
 StegVerse-Labs/Site#113: projection owner after immutable execution evidence
 StegVerse-Labs/Site#116: production document detection/redaction/model-leakage owner
 ```
@@ -138,4 +138,4 @@ No provider, credential, custody, filing, submission, representation, adjudicati
 
 ## Archive condition
 
-The bounded PII-RDY-06 implementation and its workflow cleanup are archive-safe. Broader project execution continues through the named sovereign provider, Master Records, and Site owners; no prior chat context is required for this privacy slice.
+The bounded PII-RDY-06 implementation and its workflow cleanup are archive-safe. Broader project execution continues through the named sovereign provider and Site owners, closing on organization-ledger transition receipts (Master Records only records released batches downstream, non-gating); no prior chat context is required for this privacy slice.

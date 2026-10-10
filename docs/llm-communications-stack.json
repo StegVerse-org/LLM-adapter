@@ -71,7 +71,7 @@
     {
       "component_id": "master-records",
       "owner": "Master Records",
-      "role": "organization_records_replay_and_reconstruction"
+      "role": "downstream_recording_of_released_organization_batch_receipts_and_reconstruction_non_gating"
     }
   ],
   "required_deployment_fields": [

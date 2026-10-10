@@ -73,7 +73,7 @@ production_activation_effect: NONE
 The following work remains under canonical continuation rather than this released tranche:
 
 - bind `governed_ingest` to the ordinary canonical manifested-ingestion transaction path;
-- persist/reconcile exact `manifest_receipt_id` through Master Records;
+- persist/reconcile exact `manifest_receipt_id` in the organization ledger (Master Records may record the released batch downstream, non-gating);
 - add durable idempotency/retry and stream-ordering state at canonical ingestion;
 - prove replay/reconstruction without external consequence re-execution;
 - add the SDK TEST/LIVE_STREAM relationship surface under `StegVerse-org/StegVerse-SDK#16`;

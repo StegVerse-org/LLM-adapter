@@ -5,9 +5,9 @@ Repository: `StegVerse-org/LLM-adapter`
 Primary source integration: `#290 / PR #291`  
 TVC-runtime egress verification: `#300 / PR #301`  
 Exact TVC lease binding: `#304 / PR #305`  
-Local Master Records organization-record client: `#310`  
+Local Master Records usage client: `#310` (removed under #368; usage closes on the local usage ledger + organization-ledger transition receipt)  
 Canonical branch: `main`  
-State: `COMPLETE_RELEASED_SOURCE + LOCAL_MASTER_RECORDS_ORGANIZATION_RECORD_CLIENT_VALIDATION_PENDING`  
+State: `COMPLETE_RELEASED_SOURCE` (former `LOCAL_MASTER_RECORDS_ORGANIZATION_RECORD_CLIENT_VALIDATION_PENDING` qualifier retired under #368)  
 Authority effect: `NONE_EXECUTION_BRIDGE_ONLY`
 
 ## Canonical connection contract
@@ -24,8 +24,7 @@ current device
 -> vault://tvc/providers/deepseek/api-key remains inside TV/TVC authority
 -> DeepSeek result without credential material
 -> canonical provider-usage event
--> Master Records local Unix-socket organization-record broker
--> authentic custody + reconstruction PASS without bearer export
+-> local usage ledger + organization-ledger transition receipt (usage recording is non-gating)
 -> separate canonical StegGate/Interlock egress ALLOW bound to exact response hash
 -> TVC-runtime exact-response egress verifier
 -> current device
@@ -33,7 +32,7 @@ current device
 
 The canonical portable StegGate micro-node creates decision evidence; InTr transports the bound request/response and does not synthesize ALLOW. The provider operation occurs only after ingress `ALLOW`, and provider output cannot pass egress without a separate exact-response `ALLOW`.
 
-Master Records organization record uses the already-merged `master-records/orchestration/services/master_records_local_provider_usage_broker.py`. The LLM-adapter client sends only the existing provider-usage event over the owner-local Unix socket, requires custody recorded plus reconstruction `PASS`, validates exact session/measurement/event identity, and never receives the Master Records bearer or receipt key.
+Provider usage closes on the local usage ledger and the organization-ledger transition receipt. The former LLM-adapter Unix-socket client for `master-records/orchestration/services/master_records_local_provider_usage_broker.py` was removed under #368; Master Records may record the released organization batch downstream, is never in this sequence, and nothing waits on it. LLM-adapter never receives the Master Records bearer or receipt key.
 
 ## Completed source evidence
 
@@ -48,23 +47,23 @@ TVC bounded DeepSeek InTr lease: TVC #343 / PR #344 / merge 7e9f73e8faace8dd2c8c
 #305 merge: 57975dd16546e1be2895ab331876c89fbdec6b97
 #305 DeepSeek validation: 34071884772 SUCCESS
 #305 repository validation: 34071884797 SUCCESS
-Master Records local organization-record broker: merged on master-records/orchestration main under issue #82
+Master Records local provider-usage broker (downstream recorder, non-gating): merged on master-records/orchestration main under issue #82
 ```
 
 ## Exact lease-binding correction
 
 The TVC lease binds `model`, `transition_id`, `request_hash`, `ingress_receipt_hash`, `carrier_ref`, and `runtime_profile_id`. `llm_adapter/deepseek_tvc_broker.py` verifies every field against the exact admitted `DeepSeekInTrEnvelope` before any broker call. It also requires `credential_authority=TV/TVC`, `credential_material_present=false`, and `second_machine_required=false`.
 
-## Local Master Records organization-record client — #310
+## Local Master Records usage client — #310 (removed under #368)
 
-Installed source:
+Formerly installed source (removed under #368; usage now closes on the local usage ledger + organization-ledger transition receipt):
 
 ```text
-llm_adapter/master_records_local_usage_record.py
-tests/test_master_records_local_usage_record.py
+llm_adapter/master_records_local_usage_record.py     (removed under #368)
+tests/test_master_records_local_usage_record.py       (removed under #368)
 ```
 
-Required success predicates:
+Former success predicates (retired under #368; usage recording never gates execution or egress):
 
 ```text
 decision = ALLOW_CUSTODY_RESULT
@@ -100,13 +99,12 @@ TVC non-exportable operation bridge: COMPLETE
 TVC bounded production lease: COMPLETE_RELEASED_SOURCE
 exact lease-to-envelope binding: COMPLETE_MERGED_VALIDATED
 provider usage event generation: COMPLETE
-Master Records local organization-record broker: COMPLETE_SOURCE_MERGED
-LLM-adapter local custody client implementation: COMPLETE
-LLM-adapter local custody client validation: PENDING
+Master Records local provider-usage broker (downstream, non-gating; not a completion predicate): COMPLETE_SOURCE_MERGED
+LLM-adapter local Master Records client: REMOVED under #368 (formerly COMPLETE / validation PENDING)
 egress handoff: COMPLETE
 TVC-runtime exact-response egress verifier: COMPLETE_MERGED_VALIDATED
 resident dispatch/consumption: ACTIVE_IN_.github#1122
 live DeepSeek execution: NOT CLAIMED
 ```
 
-Authentic operational proof still requires one same-execution cycle producing StegGate ingress ALLOW, exact-bound TVC lease/provider use, DeepSeek response, Master Records organization records/reconstruction PASS, StegGate egress ALLOW, and exact-response egress admission. Missing runtime evidence must not be converted into a second-machine or new-runtime requirement.
+Authentic operational proof still requires one same-execution cycle producing StegGate ingress ALLOW, exact-bound TVC lease/provider use, DeepSeek response, local usage-ledger record and organization-ledger transition receipt, StegGate egress ALLOW, and exact-response egress admission. Missing runtime evidence must not be converted into a second-machine or new-runtime requirement.

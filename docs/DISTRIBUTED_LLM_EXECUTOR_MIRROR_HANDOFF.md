@@ -12,7 +12,7 @@ Authority effect: `NONE_EXECUTION_ADAPTER_ONLY`
 
 This bounded lane is subordinate to `docs/ECOSYSTEM_CHAT_MIRROR_HANDOFF.md` and the completed `docs/DISTRIBUTED_LLM_WORKLOAD_MIRROR_HANDOFF.md`.
 
-It reuses `ProviderClient` / `ProviderRequest` / `ProviderResponse`, `llm_adapter/distributed_workload.py`, StegVerse-Labs/TVC route authority, TC/TVC credential semantics, existing InTr / WorkerCoordinator / heartbeat owners, and master-records/orchestration custody/reconstruction. It does not create replacements for those owners.
+It reuses `ProviderClient` / `ProviderRequest` / `ProviderResponse`, `llm_adapter/distributed_workload.py`, StegVerse-Labs/TVC route authority, TC/TVC credential semantics, existing InTr / WorkerCoordinator / heartbeat owners, and organization-ledger custody (master-records/orchestration only records released batch receipts downstream, non-gating). It does not create replacements for those owners.
 
 ## Goal
 
@@ -82,8 +82,8 @@ independent parent authorization: AUTHORIZED
 fresh fence required: >22
 resident execution request: already merged / runtime execution not observed
 canonical local/private model route: remains independently sufficient
-Master Records provider-usage organization record: waits on real provider usage
-Master Records same-execution reconstruction: waits on real execution
+provider-usage organization-ledger transition receipt: waits on real provider usage
+Master Records same-execution reconstruction: downstream, optional, non-gating (formerly listed as pending; retired under #368)
 ```
 
 The legitimate runtime continuation is to consume the existing resident request / dedicated parent executor on the existing sovereign resident surface. Do not create a duplicate runtime, scheduler, WorkerCoordinator, heartbeat, resident request, route authority, credential path, principal identity, or custody executor.
@@ -92,7 +92,7 @@ If separately admitted named `ProviderClient` instances are available during a l
 
 ## Master Records boundary
 
-`master-records/orchestration/docs/ECOSYSTEM_CHAT_CUSTODY_MIRROR_HANDOFF.md` remains authoritative for Master Records organization records/reconstruction. `MR-PROVIDER-USAGE-001` remains waiting on authentic provider usage. No second custody executor is authorized.
+`master-records/orchestration/docs/ECOSYSTEM_CHAT_CUSTODY_MIRROR_HANDOFF.md` remains authoritative only for Master Records' own downstream recording/reconstruction of released organization batch receipts; Master Records is not custody, not a gate, and nothing here waits on it. `MR-PROVIDER-USAGE-001` remains waiting on authentic provider usage as a downstream condition, not an LLM-adapter blocker. Custody stays with the organization ledger; no second custody executor is authorized.
 
 ## README impact
 

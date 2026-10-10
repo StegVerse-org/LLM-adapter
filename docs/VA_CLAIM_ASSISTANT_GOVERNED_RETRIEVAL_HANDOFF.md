@@ -46,7 +46,7 @@ The route implementation remains released and complete at source level:
 - provider/model execution is not inferred from deterministic route success;
 - service-connection execution observation remains fail closed.
 
-The observer `scripts/observe_va_service_connection_execution.py` remains authoritative for execution-readiness state. Absent real execution evidence produces `BLOCKED`; invalid evidence produces `REVIEW_REQUIRED`; only schema-valid TVC-bound evidence may produce `COMPLETE` and `READY_FOR_MASTER_RECORDS`.
+The observer `scripts/observe_va_service_connection_execution.py` remains authoritative for execution-readiness state. Absent real execution evidence produces `BLOCKED`; invalid evidence produces `REVIEW_REQUIRED`; only schema-valid TVC-bound evidence may produce `COMPLETE` with custody state `ORGANIZATION_LEDGER` and next owner `StegVerse-org/LLM-adapter#90`. Master Records recording of the released batch is downstream and non-gating (the former `READY_FOR_MASTER_RECORDS` state was retired under #368).
 
 ## Historical hosted evidence
 
@@ -93,8 +93,9 @@ StegVerse-Labs/.github resident sovereign heartbeat
 -> StegVerse-org/LLM-adapter#142
 -> tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
 -> scripts/observe_va_service_connection_execution.py
--> master-records/orchestration#15
+-> organization-ledger transition receipt (StegVerse-org/LLM-adapter#90)
 -> StegVerse-Labs/Site#113/#241 after immutable evidence
+-> (downstream, non-gating) master-records/orchestration#15 may record the released organization batch
 ```
 
 Credential rules:
@@ -111,12 +112,12 @@ third_party_runtime_authority: NONE
 
 ## Machine-observable release condition for live activation
 
-The live lane remains incomplete until a resident sovereign worker produces real service-connection execution evidence through the admitted TVC capability and canonical StegGate identity, the observer transitions to `COMPLETE`, Master Records returns organization record `RECORDED` plus reconstruction `PASS`, and Site projects only the immutable verified capability. Missing execution evidence must remain `BLOCKED`.
+The live lane remains incomplete until a resident sovereign worker produces real service-connection execution evidence through the admitted TVC capability and canonical StegGate identity, the observer transitions to `COMPLETE`, the execution receipt and TVC admission receipt close on the organization-ledger transition receipt, and Site projects only the immutable verified capability. Missing execution evidence must remain `BLOCKED`. Master Records recording/reconstruction is downstream and non-gating and is not part of this condition (formerly listed; retired under #368).
 
 ## Exact remaining product tasks
 
 - issue #142/task 023: sovereign VACC provider execution through TVC;
-- `master-records/orchestration#15`: organization records and reconstruction of genuine execution/privacy events;
+- `master-records/orchestration#15`: optional downstream, non-gating recording of released organization batch receipts for genuine execution/privacy events (not a remaining activation condition; retired under #368);
 - `StegVerse-Labs/Site#113/#241`: receipt-derived deployed capability projection;
 - `StegVerse-Labs/Site#116`: production PII detection/redaction/model-leakage and substantive document evidence;
 - admitted current `VA-CRISIS-LINE` source or continued urgent-safety fail-closed posture;
@@ -143,7 +144,7 @@ MERGED INTO: StegVerse-org/LLM-adapter#142
 MERGED INTO: StegVerse-org/LLM-adapter/tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
 MERGED INTO: StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md
 MERGED INTO: StegVerse-Labs/TVC
-MERGED INTO: master-records/orchestration#15
+DOWNSTREAM ONLY: master-records/orchestration#15 (non-gating recorder of released batch receipts; nothing awaits it)
 MERGED INTO: StegVerse-Labs/Site#113/#241
 MERGED INTO: StegVerse-Labs/Site#116
 ```

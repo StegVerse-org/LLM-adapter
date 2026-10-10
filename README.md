@@ -51,7 +51,7 @@ StegVerse request
    (Master Records receives released organization batches downstream; not awaited)
 ```
 
-The adapter does not own the model process, heartbeat, route authority, or Master Records organization record.
+The adapter does not own the model process, heartbeat, route authority, or the organization record (the organization ledger holds it; Master Records only records released batch receipts downstream).
 
 Ownership on this optional route:
 
@@ -108,7 +108,8 @@ canonical Ecosystem Chat request
 -> reconciliation request for the existing governance path
 -> governed disposition + result
 -> source-bound provenance / receipt
--> Master Records organization records/reconstruction
+-> organization-ledger transition receipt
+   (downstream, non-gating: Master Records may record the released organization batch)
 ```
 
 Supported source-level routing declarations are `single`, `parallel`, `sequential`, `challenge`, and `fallback`. These declarations describe workload execution intent only. They do not create truth by voting, grant admission, or make any model the governance authority.
@@ -170,8 +171,7 @@ ProviderRequest
 -> TVC non-exportable provider operation
 -> provider-specific transport/runtime adapter
 -> provider response / authority_effect NONE
--> provider-usage event
--> Master Records provider-usage organization records/reconstruction
+-> provider-usage event (local usage ledger; organization-ledger transition receipt)
 -> exact provider response hash
 -> external Interlock/InTr egress ALLOW bound to exact response
 -> ProviderResponse becomes available to the existing distributed executor
@@ -222,6 +222,14 @@ flag or reconstruction status. A result that is not verified is `FAIL_CLOSED` (o
 `PENDING` state name) and carries `failure_code`, `failed_predicate`, `required_evidence_or_repair`,
 `retry_entrypoint`, `owning_existing_goal` and `next_attempt`; no verifier reports a bare `BLOCKED`.
 
+### Master Records role (LLMA-368)
+
+Master Records is the recorder of released organization batch receipts: downstream evidence preservation for cross-organization reconstruction.
+It cannot create, admit, authorize, infer or repair a transition, and it is not runtime-reality authority, a gate or custody; custody and durable history stay with each Organization's ledger.
+A transition closes on its organization-ledger transition receipt; nothing awaits Master Records, and an unrecorded batch is not a blocker.
+The wiki repository mutation closes on the organization's publication transition receipt, verified locally; Master Records reconstruction is never required.
+The HTTPS usage client (`llm_adapter/master_records_usage_record.py`) was removed; provider usage closes on the local usage ledger and the organization-ledger transition receipt.
+
 ## Z.ai Interlock/InTr transport and governed execution
 
 Z.ai is supported as an **optional hosted-provider interoperability transport** through `stegverse.intr.zai.transport.v1`. It does not replace the canonical sovereign local route and does not acquire admission, route, credential, custody, heartbeat, scheduler, worker, publication, or availability authority.
@@ -241,7 +249,7 @@ canonical ProviderRequest provenance
 -> approved official Z.ai OpenAI-compatible endpoint selected from admitted endpoint_profile
 -> provider response with credential material absent and authority_effect NONE
 -> provider usage event using the existing adapter schema
--> existing Master Records provider-usage organization record
+-> local usage ledger + organization-ledger transition receipt (Master Records non-gating, downstream only)
 -> deterministic pre-egress handoff requests ALLOW but never assumes it
 -> separate Interlock/InTr egress evaluation
 -> exact egress ALLOW receipt must bind the provider response hash
@@ -252,7 +260,7 @@ The v1 `transport_id` format is `zait-` followed by a lowercase SHA-256 digest. 
 
 The implementation allowlists the official global general API base `https://api.z.ai/api/paas/v4` and Coding Plan base `https://api.z.ai/api/coding/paas/v4`. Endpoint profile selection is part of the admitted envelope; a runtime configured for one profile cannot execute an envelope admitted for the other. The production connection uses the TVC non-exportable provider-operation profile `zai` and runtime profile `stegverse:runtime-profile:llm-adapter-zai:v1`; credential plaintext remains inside TV/TVC and is prohibited from serialized transport envelopes, response metadata, evidence, task records, handoffs, provider-usage events, and egress-admission records.
 
-`execute_governed_zai_via_tvc_runtime` binds the admitted transport to the existing TVC provider-operation broker, provider-usage event, Master Records provider-usage organization record, and exact-response egress handoff. The older `execute_governed_zai` credential-resolver path remains compatibility/test-only. Neither executor evaluates or grants governance; `admit_zai_tvc_runtime_egress` verifies a separately produced Interlock/InTr `ALLOW` receipt and exact provider response hash, with local authority effect `NONE_LOCAL`.
+`execute_governed_zai_via_tvc_runtime` binds the admitted transport to the existing TVC provider-operation broker, provider-usage event (local usage ledger and organization-ledger transition receipt; Master Records is non-gating), and exact-response egress handoff. The older `execute_governed_zai` credential-resolver path remains compatibility/test-only. Neither executor evaluates or grants governance; `admit_zai_tvc_runtime_egress` verifies a separately produced Interlock/InTr `ALLOW` receipt and exact provider response hash, with local authority effect `NONE_LOCAL`.
 
 The exact outbound bytes are deterministically serialized from the canonical adapter request fields used by the Z.ai payload. Canonical `ProviderRequest` currently represents `temperature` as a numeric value; source validation therefore binds the bytes actually sent, while any future restricted-string/scaled-integer numeric canonicalization contract must be explicitly reconciled rather than silently changing provider typing.
 
@@ -276,7 +284,7 @@ tasks/LLMA-ZAI-INTR-TRANSPORT-276.json
 tasks/LLMA-ZAI-INTR-EXECUTOR-278.json
 ```
 
-Source validation proves fail-closed transport identity, exact wire-byte/hash binding, TVC non-exportable operation construction, credential non-export semantics, usage evidence, custody submission, deterministic egress handoff, and exact-response egress binding only. It is not live Z.ai execution, authentic TVC provider use, authentic Master Records organization records/reconstruction, live egress ALLOW, Ecosystem Chat activation, or Site activation evidence.
+Source validation proves fail-closed transport identity, exact wire-byte/hash binding, TVC non-exportable operation construction, credential non-export semantics, usage evidence, custody submission, deterministic egress handoff, and exact-response egress binding only. It is not live Z.ai execution, authentic TVC provider use, an authentic organization-ledger transition receipt, live egress ALLOW, Ecosystem Chat activation, or Site activation evidence.
 
 ## DeepSeek Interlock/InTr transport and governed execution
 
@@ -296,7 +304,7 @@ current device
 -> vault://tvc/providers/deepseek/api-key remains inside TV/TVC authority
 -> DeepSeek provider result with no credential material returned
 -> canonical provider-usage event
--> existing Master Records provider-usage organization record
+-> local usage ledger + organization-ledger transition receipt (Master Records non-gating, downstream only)
 -> deterministic pre-egress handoff that requests, but never assumes, ALLOW
 -> separate Interlock/InTr egress evaluation bound to exact provider response hash
 -> current device
@@ -304,7 +312,7 @@ current device
 
 The v1 transport ID remains `dsit-<sha256>`. The envelope request hash binds the exact admitted DeepSeek transport bytes rather than the broader adapter `ProviderRequest`. Current v1 source explicitly supports `deepseek-v4-flash` and `deepseek-v4-pro`; it does not silently substitute alternate endpoints or models.
 
-For production runtime-profile execution, LLM-adapter does **not** accept or resolve DeepSeek credential plaintext. `llm_adapter.deepseek_tvc_broker` constructs the already-existing TVC non-exportable operation request using only the canonical vault reference, a separately admitted single-use TVC capability lease, the admitted model/prompt bounds, and the InTr transport binding. TVC remains the credential and provider-operation authority. The sanitized TVC result is normalized into the existing `ProviderResponse` shape, provider usage continues through the canonical Master Records path, and the result still requires a separate exact-response InTr egress ALLOW before consequence.
+For production runtime-profile execution, LLM-adapter does **not** accept or resolve DeepSeek credential plaintext. `llm_adapter.deepseek_tvc_broker` constructs the already-existing TVC non-exportable operation request using only the canonical vault reference, a separately admitted single-use TVC capability lease, the admitted model/prompt bounds, and the InTr transport binding. TVC remains the credential and provider-operation authority. The sanitized TVC result is normalized into the existing `ProviderResponse` shape, provider usage closes on the local usage ledger and the organization-ledger transition receipt (Master Records is non-gating), and the result still requires a separate exact-response InTr egress ALLOW before consequence.
 
 The older `execute_governed_deepseek` direct credential-resolver path remains source-compatible for deterministic validation and compatibility only; it is not the production connection contract after the runtime-profile/TVC-broker binding. Credential material remains prohibited from LLM-adapter artifacts, envelopes, response metadata, provider-usage evidence, Master Records evidence, task records, handoffs, and egress records.
 
@@ -327,7 +335,7 @@ tasks/LLMA-DEEPSEEK-INTR-TRANSPORT-289.json
 tasks/LLMA-DEEPSEEK-RUNTIME-PROFILE-TVC-BROKER-290.json
 ```
 
-Source validation of this bridge proves runtime-profile binding, TVC non-exportable operation construction, credential non-export semantics, provider-usage continuation, Master Records integration, and egress-handoff construction only. It does not by itself prove authentic live DeepSeek execution, TVC vault readiness, authentic Master Records reconstruction, or live InTr egress ALLOW.
+Source validation of this bridge proves runtime-profile binding, TVC non-exportable operation construction, credential non-export semantics, provider-usage continuation, and egress-handoff construction only. It does not by itself prove authentic live DeepSeek execution, TVC vault readiness, an authentic organization-ledger transition receipt, or live InTr egress ALLOW. Master Records reconstruction is optional, downstream and non-gating.
 
 ## Kimi/Moonshot Interlock/InTr transport and governed execution
 
@@ -347,7 +355,7 @@ current device
 -> vault://tvc/providers/kimi/api-key remains inside TV/TVC authority
 -> Moonshot/Kimi provider result with no credential material returned
 -> canonical provider-usage event
--> existing Master Records provider-usage organization record
+-> local usage ledger + organization-ledger transition receipt (Master Records non-gating, downstream only)
 -> deterministic pre-egress handoff that requests, but never assumes, ALLOW
 -> separate Interlock/InTr egress evaluation bound to exact provider response hash
 -> current device
@@ -355,7 +363,7 @@ current device
 
 The v1 Kimi transport ID is `kmit-<sha256>`. The envelope request hash binds the exact admitted Kimi transport bytes rather than the broader adapter `ProviderRequest`. Current source explicitly admits `kimi-k3` and the existing TVC provider endpoint/profile; alternate endpoints or model aliases are not silently substituted.
 
-`llm_adapter.kimi_tvc_broker` builds the existing TVC non-exportable operation request from a separately admitted single-use TVC lease, canonical vault reference, model/prompt bounds, and exact InTr binding. The returned sanitized TVC result is normalized into `ProviderResponse`; usage continues through the existing Master Records path; and response consequence remains blocked until a separate exact-response InTr egress ALLOW exists. The direct credential-resolver Kimi transport remains compatibility/test-only and is explicitly not the production connection contract. `admit_kimi_tvc_runtime_egress` now enforces the same exact-response egress binding as the other external providers.
+`llm_adapter.kimi_tvc_broker` builds the existing TVC non-exportable operation request from a separately admitted single-use TVC lease, canonical vault reference, model/prompt bounds, and exact InTr binding. The returned sanitized TVC result is normalized into `ProviderResponse`; usage closes on the local usage ledger and the organization-ledger transition receipt (Master Records is non-gating); and response consequence remains blocked until a separate exact-response InTr egress ALLOW exists. The direct credential-resolver Kimi transport remains compatibility/test-only and is explicitly not the production connection contract. `admit_kimi_tvc_runtime_egress` now enforces the same exact-response egress binding as the other external providers.
 
 Canonical source surfaces:
 
@@ -391,7 +399,7 @@ runtime capability: bounded_process_execution
 task routing direction: INTERNAL
 credential authority: TV/TVC
 ingress/egress authority: Interlock/InTr
-organization records/reconstruction: Master Records
+organization record: organization ledger (Master Records records released batch receipts downstream; non-gating)
 ```
 
 The task-routing direction `INTERNAL` does not waive provider egress governance. The exact outbound request remains bound to an external Interlock/InTr ingress ALLOW; TV/TVC credential material is resolved only for the admitted execution and must not enter any transport envelope, evidence, usage record, custody handoff, or log; the normalized provider result has `authority_effect = "NONE"` and `egress_intr_required = true`; and consequence remains blocked until a separate external Interlock/InTr egress ALLOW binds the exact response hash.
@@ -424,7 +432,7 @@ tests/test_anthropic_adversarial.py
 tasks/LLMA-ANTHROPIC-INTR-TRANSPORT-288.json
 ```
 
-Source/CI validation proves implementation and authority boundaries only. It does not prove a current task-executing WorkerCoordinator, live Claude execution, TV/TVC credential readiness, authentic Master Records organization records/reconstruction, exact-response live egress ALLOW, or product activation.
+Source/CI validation proves implementation and authority boundaries only. It does not prove a current task-executing WorkerCoordinator, live Claude execution, TV/TVC credential readiness, an authentic organization-ledger transition receipt, exact-response live egress ALLOW, or product activation.
 
 ## No GitHub-token production dependency
 
@@ -464,7 +472,7 @@ tasks/LLMA-SOVEREIGN-CARRIER-EXECUTION-020.json
 docs/SOVEREIGN_CARRIER_EXECUTION_MIRROR_HANDOFF.md
 ```
 
-The executor requires an admitted TVC route, binds the exact canonical runtime proof and private endpoint, requires credential class `NONE`, rejects route/execution authority escalation, executes through `StegVerseLocalHTTPProviderClient`, persists request/response hashes and measured usage, and advances into Master Records reconstruction.
+The executor requires an admitted TVC route, binds the exact canonical runtime proof and private endpoint, requires credential class `NONE`, rejects route/execution authority escalation, executes through `StegVerseLocalHTTPProviderClient`, persists request/response hashes and measured usage, and closes on the organization-ledger transition receipt; Master Records reconstruction is optional, downstream and non-gating.
 
 ### VA claims turn closure (LLMA-368)
 
@@ -483,13 +491,14 @@ heartbeat recovery / current fence
 -> local model process
 -> TVC route admission
 -> LLM-adapter carrier execution
--> provider usage persistence
--> provider-usage custody/reconstruction PASS
--> transition custody/reconstruction PASS
+-> provider usage persistence (local usage ledger)
+-> organization-ledger transition receipt for the same execution
 -> immutable zero-blocker activation receipt
 -> Site activation
 -> required Publisher/wiki propagation
 ```
+
+Master Records may record the released organization batch downstream after the transition closes; it is not a step in this sequence and nothing waits on it (LLMA-368).
 
 The KV-backed memory bridge adds a pre-ingress context stage when an exact memory packet is separately admitted; it does not weaken or bypass this runtime sequence. The distributed named-source workload, bounded executor, shared external-LLM connection primitive, Z.ai transport/runtime-profile executor, DeepSeek transport/runtime-profile executor, Kimi transport/runtime-profile executor, and Anthropic transport/runtime-profile executor are additive capability implementations. Their source/fixture validation does not satisfy sovereign activation and does not prove live multi-provider execution.
 
@@ -577,11 +586,11 @@ tasks/LLMA-SERVICE-GATEWAY-QUERY-SECRET-SAFE-271.json
 
 ## StegBrowser canonical Master Records relay
 
-The existing Service Gateway can advertise a bounded, credential-nonexporting transport for the immutable StegBrowser runtime-readiness state-transition receipt, which Master Records keeps as an organization record. Site discovers the route through the existing hash/health-bound StegVerse node advertisement instead of assuming a fixed host. The browser submits only `stegverse.master-records.state-transition-submission/v1`; the gateway uses the existing TV/TVC-scoped `service_gateway_master_records` server-side credential path to write that receipt into the Master Records organization record through the sole `master-records/orchestration` state-transition route.
+The existing Service Gateway can advertise a bounded, credential-nonexporting transport for the immutable StegBrowser runtime-readiness state-transition receipt after the organization holds it; Master Records is the downstream recorder of that released receipt, not its custodian. Site discovers the route through the existing hash/health-bound StegVerse node advertisement instead of assuming a fixed host. The browser submits only `stegverse.master-records.state-transition-submission/v1`; the gateway uses the existing TV/TVC-scoped `service_gateway_master_records` server-side credential path to hand a copy of that already-closed receipt downstream to Master Records through the `master-records/orchestration` state-transition route.
 
-The relay is intentionally bound to nonce `STEG-BROWSER-MANIFEST-INTR-INGRESS-EXECUTION-001-20260915T142500Z`, sequence 1, transition `STEGBROWSER_RUNTIME_READINESS_MASTER_RECORDS_ORGANIZATION_RECORD`, COSV `40000100100000`, and the exact Node/Interlock/Receipt-1/lease/runtime/exported-bundle evidence tuple. It returns success only when Master Records returns `RECORDED`, reconstruction `PASS`, and exact canonical digest equality with no authority escalation. The browser never receives the Master Records bearer credential.
+The relay is intentionally bound to nonce `STEG-BROWSER-MANIFEST-INTR-INGRESS-EXECUTION-001-20260915T142500Z`, sequence 1, transition `STEGBROWSER_RUNTIME_READINESS_MASTER_RECORDS_ORGANIZATION_RECORD`, COSV `40000100100000`, and the exact Node/Interlock/Receipt-1/lease/runtime/exported-bundle evidence tuple. It reports downstream recording success only when Master Records returns `RECORDED`, reconstruction `PASS`, and exact canonical digest equality with no authority escalation; a failed relay is a six-field non-gating 503 and never gates the transition. The browser never receives the Master Records bearer credential.
 
-This is transport over the existing gateway, not a second record store, scheduler, runtime, or authority plane. Source and CI validate the binding only; they do not prove a reachable sovereign gateway, authentic Master Records organization record, or reconstruction for the immutable invocation. Scoped continuation: `docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md`.
+This is transport over the existing gateway, not a second record store, scheduler, runtime, or authority plane. Source and CI validate the binding only; they do not prove a reachable sovereign gateway or authentic downstream Master Records recording/reconstruction for the immutable invocation. Scoped continuation: `docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md`.
 
 
 ### Canonical resident control-root map binding — 2026-09-21
@@ -601,12 +610,12 @@ The deployed Service Gateway can project the already-running loopback HIL receiv
 
 ## Governed public-wiki publication closure
 
-`GOVERNED-WIKI-PUBLICATION-TRANSITION-001` now reuses the existing Service Gateway TV/TVC-materialized Master Records transport for the publication decision. The adapter validates the exact SDK manifest, posture-bound governed result, and a separately observed external Interlock/InTr `ALLOW` decision; it then records one canonical state-transition receipt as a Master Records organization record in `master-records/orchestration` and immediately rereads the retained reconstruction. Repository mutation requires only that canonical receipt SHA-256 as caller input and independently reconstructs it before any GitHub API operation. `DENY_PUBLICATION` and `REVIEW_REQUIRED` stop before repository mutation. This adds no custody store, local allow decision, credential path, runtime, scheduler, or direct submitter write surface. See `docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md`.
+`GOVERNED-WIKI-PUBLICATION-TRANSITION-001` closes on the organization's own publication transition receipt. The adapter validates the exact SDK manifest, posture-bound governed result, and a separately observed external Interlock/InTr `ALLOW` decision and builds one canonical state-transition receipt. Repository mutation carries that receipt (`transition_receipt` + `transition_receipt_sha256`; legacy `master_records_receipt_sha256` is accepted as the same digest) and verifies it locally with `verify_publication_transition_receipt` before any GitHub API operation; no Master Records reconstruction is required. `record_governed_publication_closure` may hand the released receipt to Master Records through the existing Service Gateway TV/TVC-materialized transport as optional downstream recording, returning six-field `NOT_RECORDED` data on failure. `DENY_PUBLICATION` and `REVIEW_REQUIRED` stop before repository mutation. This adds no custody store, local allow decision, credential path, runtime, scheduler, or direct submitter write surface. See `docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md`.
 
 
 ### Governed wiki publication runtime boundary
 
-The governed publication source chain is merged through SDK PRs #307/#308 and LLM-adapter PR #348. Repository mutation now requires canonical Master Records reconstruction of the exact governed publication decision before any GitHub operation. Authentic runtime progression remains separately evidence-gated: no retained external Interlock/InTr ALLOW or `PUBLIC_WIKI_GOVERNED_PUBLICATION_DECISION` closure has yet been observed for `GOVERNED-WIKI-PUBLICATION-TRANSITION-001`. The current state is `UNKNOWN_NOT_AUTHENTICALLY_OBSERVED`, not failure or authorization. See `docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md`.
+The governed publication source chain is merged through SDK PRs #307/#308 and LLM-adapter PR #348. Repository mutation closes on the organization's publication transition receipt, verified locally before any GitHub operation; Master Records reconstruction is not required (retired under #368). Authentic runtime progression remains separately evidence-gated: no retained external Interlock/InTr ALLOW or `PUBLIC_WIKI_GOVERNED_PUBLICATION_DECISION` closure has yet been observed for `GOVERNED-WIKI-PUBLICATION-TRANSITION-001`. The current state is `UNKNOWN_NOT_AUTHENTICALLY_OBSERVED`, not failure or authorization. See `docs/GOVERNED_WIKI_PUBLICATION_TRANSITION_MIRROR_HANDOFF.md`.
 
 
 ## Optional manifest-selected Grok/xAI
@@ -615,7 +624,7 @@ The existing distributed Ecosystem Chat workload may declare a named `provider: 
 
 This is a compatibility adapter for xAI's documented chat-completions endpoint; it preserves reported actual model identity, native measured token usage and provider-side cost ticks when supplied. It fails closed on malformed response or missing usage. The existing distributed executor can independently collect a local and an xAI response and retain an optional provider failure without disabling the sovereign route. No model contribution grants execution, route, custody or governance authority.
 
-Current source tests use deterministic HTTP fixtures only. They prove no real Grok invocation, TVC secret operation, admitted ephemeral StegBrowser lease, InTr ingress/egress, terminal session destruction, Master Records reconstruction or Site activation. xAI Responses API support and true governed challenge/sequential deliberation are separate subsequent integrations. See `docs/XAI_MANIFEST_PROVIDER_MIRROR_HANDOFF.md`.
+Current source tests use deterministic HTTP fixtures only. They prove no real Grok invocation, TVC secret operation, admitted ephemeral StegBrowser lease, InTr ingress/egress, terminal session destruction, organization-ledger transition receipt or Site activation. xAI Responses API support and true governed challenge/sequential deliberation are separate subsequent integrations. See `docs/XAI_MANIFEST_PROVIDER_MIRROR_HANDOFF.md`.
 
 
 ## Canonical node-standing ingress
@@ -668,7 +677,7 @@ Digests, not payloads. The request and result are bound by `request_sha256` and 
 
 Standing evidence no longer travels inside the manifest. `node_endpoint`, `node_standing_mode`, `generation` and `predecessor` are issued by the standing boundary as `manifest_fields` and passed to `process_manifest` as a separate `standing` argument, validated before the manifest is looked at. The manifest handed to the SDK runtime is the manifest the SDK built — `wire_manifest` strips this adapter's bookkeeping, because the runtime refuses unknown top-level fields and a caller writing `recognized: true` about itself is the fabricated-identity bypass. A live stream carries one standing for the stream; every unit still keeps its own manifest and receipt identity.
 
-An `ALLOW` result is only accepted when an organization transition receipt was observed. The organization ledger is `runtime_reality_authority` and `propagation_gates_organization_runtime_reality` is false, so the organization receipt, not a Master Records id, is what is awaited. Interlock/InTr admits the transition and the Organization owns runtime reality; Master Records keeps the organization record after propagation. A non-`ALLOW` result that claims `consequence_executed` fails closed, and the far-side disposition is preserved in the result rather than collapsed into a local verdict.
+An `ALLOW` result is only accepted when an organization transition receipt was observed. The organization ledger is `runtime_reality_authority` and `propagation_gates_organization_runtime_reality` is false, so the organization receipt, not a Master Records id, is what is awaited. Interlock/InTr admits the transition and the Organization owns runtime reality; the organization ledger holds the record (custody stays with the organization), and Master Records records the released batch receipt downstream. A non-`ALLOW` result that claims `consequence_executed` fails closed, and the far-side disposition is preserved in the result rather than collapsed into a local verdict.
 
 An `ALLOW` is structural, not authenticated. The caller still supplies its own identity, `attestation_owner_state` remains `NOT_PROVEN`, and a declared predecessor is checked against the owner's shape rather than recomputed — the SDK's binding function takes the predecessor manifest and result, while a standing request carries the digests only. Both the readiness and the disposition say so in their own fields. Source regressions exercise both standing modes and both released profiles. Authentic deployed discovery, external transport, far-side InTr admission and organization custody remain separate runtime proof.
 

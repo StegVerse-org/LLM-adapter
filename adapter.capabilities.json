@@ -12,7 +12,9 @@
     "github_actions_production_role": false,
     "hosted_provider_required": false,
     "provider_transport_owner": "StegVerse-org/LLM-adapter",
-    "record_owner": "master-records/orchestration"
+    "record_owner": "StegVerse-org/LLM-adapter:organization-ledger",
+    "downstream_recorder": "master-records/orchestration",
+    "downstream_recorder_gates_execution": false
   },
   "sovereign_local_model": {
     "implementation_state": "COMPLETE_RELEASED",
@@ -39,7 +41,8 @@
     "github_token_required": false,
     "captures_measured_usage": true,
     "persists_request_response_hashes": true,
-    "advances_to_master_records_reconstruction": true
+    "closes_on_organization_ledger_transition_receipt": true,
+    "master_records_reconstruction_gates_execution": false
   },
   "zai_intr_interoperability": {
     "state": "COMPLETE_RELEASED_SOURCE",
@@ -66,7 +69,7 @@
     "credential_authority": "TV/TVC",
     "credential_material_serialized": false,
     "provider_output_authority": "NONE",
-    "master_records_organization_record_reused": true,
+    "master_records_downstream_recording_optional_non_gating": true,
     "canonical_sovereign_route_replaced": false,
     "hosted_provider_required_for_canonical_route": false,
     "live_provider_execution_claimed": false,
@@ -103,7 +106,7 @@
     "credential_authority": "TV/TVC",
     "credential_material_serialized": false,
     "provider_output_authority": "NONE",
-    "master_records_organization_record_reused": true,
+    "master_records_downstream_recording_optional_non_gating": true,
     "canonical_sovereign_route_replaced": false,
     "hosted_provider_required_for_canonical_route": false,
     "live_provider_execution_claimed": false,
@@ -138,7 +141,7 @@
     "credential_material_serialized": false,
     "direct_credential_resolver_production_allowed": false,
     "provider_output_authority": "NONE",
-    "master_records_organization_record_reused": true,
+    "master_records_downstream_recording_optional_non_gating": true,
     "canonical_sovereign_route_replaced": false,
     "hosted_provider_required_for_canonical_route": false,
     "live_provider_execution_claimed": false,
@@ -279,7 +282,8 @@
   "machine_owned_continuation": {
     "runtime_carrier": "StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
     "tvc_route": "StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json",
-    "custody_reconstruction": "master-records/orchestration",
+    "custody_and_transition_receipt": "StegVerse-org/LLM-adapter organization ledger",
+    "downstream_recording_non_gating": "master-records/orchestration",
     "site_activation": "StegVerse-Labs/Site#239/#242"
   },
   "explicit_non_claims": [
@@ -334,5 +338,5 @@
     "kimi_intr_executor_test": "pytest tests/test_kimi_intr_executor.py -q",
     "kimi_tvc_runtime_test": "pytest tests/test_kimi_tvc_runtime.py -q"
   },
-  "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage, Master Records provider-usage and transition reconstruction PASS, immutable zero-blocker activation evidence, Site activation, and required downstream propagation. Optional Z.ai, DeepSeek or Kimi execution does not replace or satisfy that canonical activation definition."
+  "activation_definition": "Activation requires directly observed canonical same-carrier local model execution after TVC route admission, measured provider usage recorded in the local usage ledger, the organization-ledger transition receipt for the same execution, immutable zero-blocker activation evidence, Site activation, and required downstream propagation. Optional Z.ai, DeepSeek or Kimi execution does not replace or satisfy that canonical activation definition. Master Records records released organization batch receipts downstream and is never an activation predicate."
 }
