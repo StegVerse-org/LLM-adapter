@@ -730,3 +730,11 @@ SDK `0c2ce00` publishes `stegverse.route.hil-intake.v1`, `stegverse.route.ecosys
 HIL entries: `POST /api/hil/submissions` (v1.1 intake) and the Service Gateway's `POST /v1/hil/intake` and `POST /api/hil/submissions` bind the HIL manifest before anything is persisted. `POST /intr/materialization` no longer forwards to the loopback upstream or waits for it. The Service Gateway no longer reads `STEGVERSE_TVC_DECISION_RECEIPT` or `STEGVERSE_HIL_RECEIPT_KEY`, and its readiness reports `TVC_CREDENTIAL_SOURCE_NOT_BOUND`.
 
 Ecosystem Chat: `POST /api/ecosystem-chat` translates each turn into the `stegverse.route.ecosystem-chat.v1` manifest. The caller's `transition_intent` becomes `requested_topic`, which only populates the draft. The endpoint returns the SDK disposition. `requested_route` and the restricted-keyword patterns no longer select processing. The gateway generates no response, calls no provider (so no provider or Master Records token is read), and decides no local admissibility. The caller's `transition_identity` is echoed for correlation only and is never the manifest identity.
+
+## Declared-path source review closure
+
+`LLMA-DECLARED-PATH-CONFORMANCE-368` has CI_VALIDATED source evidence and a separate
+sovereign-ledger-verified read-only Registry disclosure. Canonical terminal
+coordination is recorded in StegVerse-org/.github PR #117, COSV `71000000100100`.
+See [the canonical handoff](LLM_ADAPTER_MIRROR_HANDOFF.md). Provider/product
+activation and propagation remain distinct from this source scope.

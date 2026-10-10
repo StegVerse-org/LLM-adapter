@@ -17,7 +17,28 @@ Declared path: healthy node -> LLM-adapter (transport only) -> SDK (manifest bui
 
 Live repository state, task records, scoped handoffs and organization ledger transition receipts supersede older chat summaries.
 
-## Active goal state
+## LLMA-368 terminal source reconciliation — 2026-10-10
+
+Canonical Registry: `StegVerse-org/.github:orchestration/task-registry.json`.
+Goal: `LLMA-DECLARED-PATH-CONFORMANCE-368`; source evidence class: `CI_VALIDATED`.
+Terminal source reconciliation: StegVerse-org/.github PR #117; COSV `71000000100100`.
+PR #116 merged at `3b6c75e3c7e3d0c680c0647d4d96ec1c20edc200` with 6/6 exact-head
+workflows. The second read-only Registry disclosure returned ALLOW in run
+`38031123470`; sovereign ledger commit `98738ceb6feee16a3de935319ec307c31719ba9d`
+contains receipt `sha256:01c59b58331d670d31ead504b0710ec06ef7120413c4300219469170e42c1110`.
+Fresh readback verifies both chained receipts and retained source digests.
+
+This closes source conformance and the declared-path disclosure evidence scope.
+It does not activate a provider, Ecosystem Chat, Site, or Sandbox, release a tag,
+or establish Master Records reconstruction or downstream propagation.
+The optional product/runtime observations below (D1–D5) remain separate historical
+product-lane evidence under the existing canonical continuation
+`StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001`; they do not reopen
+the completed LLMA-368 source goal. Their old owning_existing_goal fields are
+historical attribution, not a new checkout or a current source obligation.
+No further work is required for LLMA-368 absent new scoped evidence.
+
+## Separate optional product-lane state
 
 ```text
 Repository-local governed path implementation: COMPLETE
