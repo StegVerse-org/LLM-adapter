@@ -117,11 +117,14 @@ def test_portable_node_image_is_repository_owned_multi_arch_and_fail_closed() ->
         "STEGVERSE_NODE_ROOT=/var/lib/stegverse/portable-node",
         "USER stegverse",
         'VOLUME ["/var/lib/stegverse/portable-node"]',
-        'ENTRYPOINT ["python", "-m", "llm_adapter.node_service", "daemon"]',
-        "HEALTHCHECK",
+        'ENTRYPOINT ["python", "-m", "llm_adapter.node_bootstrap"]',
+        'CMD ["bootstrap", "--root", "/var/lib/stegverse/portable-node"]',
     ):
         assert required in dockerfile
     for prohibited in (
+        "node_service\", \"daemon",
+        "HEALTHCHECK",
+        "EXPOSE",
         "STEGVERSE_PROVIDER_TOKEN=",
         "STEGVERSE_MASTER_RECORDS_TOKEN=",
         "STEGVERSE_PROVIDER_ENABLED=true",

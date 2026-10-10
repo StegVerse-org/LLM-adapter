@@ -1,0 +1,103 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github:orchestration/task-registry.json#LLMA-DECLARED-PATH-CONFORMANCE-368",
+    "StegVerse-org/StegVerse-SDK#368:SDK-MANIFEST-COLLAB-INGRESS-CONFORMANCE-001",
+    "StegVerse-org/.github#98:step-6-retire-always-on-listeners"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Master Records is non-gating; no Master Records transition authority involved"
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/LLM-adapter#377",
+      "StegVerse-org/LLM-adapter#378",
+      "StegVerse-org/LLM-adapter#379",
+      "StegVerse-org/.github#98"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "llm_adapter/collab_ingress.py",
+      "llm_adapter/va_claims_runtime_gateway.py",
+      "llm_adapter/node_bootstrap.py",
+      "llm_adapter/node_service.py",
+      "llm_adapter/node_autostart.py",
+      "llm_adapter/va_runtime_http_server.py"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md#va-claims-turn-closure-llma-368"
+    ]
+  },
+  "retirement": {
+    "removed": [
+      {
+        "surface": "llm_adapter/node_autostart.py (systemd Restart=always, launchd KeepAlive, schtasks ONLOGON)",
+        "predicate": "no governed path imports or invokes it; it only installed a login-resident node_service daemon"
+      },
+      {
+        "surface": "llm_adapter/node_service.py start/daemon supervise loop, singleton lock, restart backoff",
+        "predicate": "Ecosystem Chat, HIL and VA-scoped chat are manifest-bound through collab_ingress; nothing governed calls start() or daemon()"
+      },
+      {
+        "surface": "llm_adapter/va_runtime_http_server.py (ThreadingHTTPServer.serve_forever)",
+        "predicate": "POST /api/va-claims/v1/chat is served by va_claims_runtime_gateway.router, which calls the same execute_chat; no caller, test or deploy referenced the stdlib server"
+      }
+    ],
+    "retained": [
+      {
+        "surface": "llm_adapter/node_service.py status/stop/_runtime_environment",
+        "predicate": "invocation-scoped: each command returns; stop dissolves a node root left by an earlier resident daemon; _runtime_environment is asserted by runtime contract tests"
+      }
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/capability-runtime.yml",
+    "Dockerfile.portable-node",
+    "README.md",
+    "data/master-records-role-audit.json",
+    "llm_adapter/node_autostart.py",
+    "llm_adapter/node_service.py",
+    "llm_adapter/va_runtime_http_server.py",
+    "pyproject.toml",
+    "tests/test_live_activation_automation_contract.py",
+    "tests/test_node_autostart.py",
+    "tests/test_node_service.py",
+    "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-retire-always-on-listeners.json"
+  ],
+  "new_files": [
+    {
+      "path": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-retire-always-on-listeners.json",
+      "semantic_responsibility": "Document retirement of always-on listeners (.github#98 step 6)",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-collab-vacc-manifest.json",
+      "justification": "Fresh manifest required for this functional diff",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "StegVerse-org/.github#98"
+      ]
+    }
+  ]
+}

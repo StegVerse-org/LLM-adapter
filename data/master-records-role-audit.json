@@ -3552,7 +3552,7 @@
    "line": 479,
    "classification": "PROPER",
    "reason": "downstream non-gating / not authority",
-   "text": "A VA claims chat turn (`llm_adapter/va_claims_runtime_core.py`, served by `POST /api/va-claims/v1/chat` and `va_runtime_http_server.py`) is manifest-bound transport on `stegverse.route.va-scoped-chat."
+   "text": "A VA claims chat turn (`llm_adapter/va_claims_runtime_core.py`, served by `POST /api/va-claims/v1/chat` in `va_claims_runtime_gateway.py`) is manifest-bound transport on `stegverse.route.va-scoped-cha"
   },
   {
    "file": "README.md",

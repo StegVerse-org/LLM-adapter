@@ -8,7 +8,6 @@ on:
       - 'llm_adapter/portable_node.py'
       - 'llm_adapter/node_bootstrap.py'
       - 'llm_adapter/node_service.py'
-      - 'llm_adapter/node_autostart.py'
       - 'pyproject.toml'
       - 'scripts/stegcap.py'
       - 'scripts/stegnode.py'
@@ -17,7 +16,6 @@ on:
       - 'tests/test_portable_node_bootstrap.py'
       - 'tests/test_node_bootstrap.py'
       - 'tests/test_node_service.py'
-      - 'tests/test_node_autostart.py'
       - '.github/workflows/capability-runtime.yml'
   pull_request:
     paths:
@@ -26,7 +24,6 @@ on:
       - 'llm_adapter/portable_node.py'
       - 'llm_adapter/node_bootstrap.py'
       - 'llm_adapter/node_service.py'
-      - 'llm_adapter/node_autostart.py'
       - 'pyproject.toml'
       - 'scripts/stegcap.py'
       - 'scripts/stegnode.py'
@@ -35,7 +32,6 @@ on:
       - 'tests/test_portable_node_bootstrap.py'
       - 'tests/test_node_bootstrap.py'
       - 'tests/test_node_service.py'
-      - 'tests/test_node_autostart.py'
       - '.github/workflows/capability-runtime.yml'
   workflow_dispatch:
 
@@ -135,22 +131,15 @@ jobs:
           tests/test_portable_node_bootstrap.py
           tests/test_node_bootstrap.py
           tests/test_node_service.py
-          tests/test_node_autostart.py
           -v
 
       - name: Verify installed zero-touch bootstrap command
         shell: bash
         run: "$PYTHON_BIN -m llm_adapter.node_bootstrap bootstrap --root .stegdeploy/ci-portable-node"
 
-      - name: Verify autonomous service status command
+      - name: Verify invocation-scoped node status command
         shell: bash
         run: "$PYTHON_BIN -m llm_adapter.node_service status --root .stegdeploy/ci-portable-node"
-
-      - name: Verify autostart materialization without activation
-        shell: bash
-        run: >-
-          "$PYTHON_BIN" -c
-          "from pathlib import Path; from llm_adapter.node_autostart import materialize; import platform; materialize(Path('.stegdeploy/ci-portable-node').resolve(), system=platform.system())"
 
       - name: Confirm non-authorizing validation scope
         shell: bash
