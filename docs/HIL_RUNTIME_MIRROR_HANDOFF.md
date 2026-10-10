@@ -103,7 +103,7 @@ StegVerse-Labs/TVC/docs/HIL_TVC_MIRROR_HANDOFF.md
 StegVerse-Labs/TVC/docs/EXPERIMENT_BACKEND_MIRROR_HANDOFF.md
 StegVerse-Labs/TVC#8
 StegVerse-Labs/Site#67
-master-records/orchestration#13
+master-records/orchestration#13 (downstream, non-gating recording of released batch receipts only)
 ```
 
 The next valid evidence chain is external to this released LLM-adapter source task:
@@ -139,7 +139,7 @@ The TVC backend already proves generalized controlled-cycle state, deterministic
 7 production restart/replacement exact-byte proof: PENDING
 8 TVC lifecycle admission/private review: PENDING / existing TVC lane
 9 separately authenticated publication: PENDING
-10 Site/Master Records/downstream release and verification: PENDING
+10 Site/downstream release and verification: PENDING (Master Records recording is downstream and non-gating, not an activation predicate; retired under #368)
 ```
 
 ## Collision and credential rules
@@ -230,7 +230,7 @@ ingress received != HIL custody
 HIL custody != TVC lifecycle admission
 TVC admission != private review
 private review != publication
-publication != Master Records release
+publication != Master Records downstream recording (non-gating)
 ```
 
 Source implementation on this branch does not itself prove a production transport event.
@@ -311,7 +311,7 @@ runtime_activation: false
 ```
 
 Source/CI migration does not prove a public submission, runtime activation,
-TVC admission, private review, publication, or Master Records release.
+TVC admission, private review, publication, or downstream Master Records recording.
 
 
 ### Canonical materialization generator refresh

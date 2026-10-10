@@ -11,7 +11,8 @@ canonical_model_runtime_owner: StegVerse-002/micro-node-runtime#16/#22
 canonical_binding_task: tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-018.json
 canonical_execution_owner: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
 recovery_task: RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28
-organization_records_reconstruction_owner: master-records/orchestration
+organization_record_and_transition_receipt_owner: StegVerse-org/LLM-adapter organization ledger
+downstream_recorder_non_gating: master-records/orchestration
 credential_authority: TV/TVC
 third_party_deployment_dependency: NONE_ALLOWED
 third_party_inference_platform_dependency: NONE_ALLOWED
@@ -41,7 +42,7 @@ third_party_inference_required: false
 
 ## Sovereign provider and transport/evidence path — complete and released
 
-`StegVerseLocalHTTPProviderClient` accepts loopback/private/link-local/StegVerse-local endpoints in sovereign mode without external provider credentials. Task `LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019` preserves model hash, local-training metadata, measured prompt/completion/total tokens, and measured latency through the provider boundary and into the existing Master Records usage path.
+`StegVerseLocalHTTPProviderClient` accepts loopback/private/link-local/StegVerse-local endpoints in sovereign mode without external provider credentials. Task `LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019` preserves model hash, local-training metadata, measured prompt/completion/total tokens, and measured latency through the provider boundary and into the local usage ledger and the organization-ledger transition receipt. Master Records may later record the released organization batch downstream; it is non-gating and nothing waits on it.
 
 ```text
 state: COMPLETE_RELEASED
@@ -80,7 +81,7 @@ recovery fencing token: 22
 old fencing token: 20
 old authority ended: true
 old authority reused: false
-Master Records organization-record valid: true
+organization-ledger record valid: true (registry field formerly labelled "Master Records organization-record valid"; relabelled under #368)
 successor authority granted by recovery: false
 ```
 
@@ -97,8 +98,8 @@ Recovery completion does not grant parent inference authority. Neither G18 termi
 5. LLM-adapter consumes that exact admitted endpoint through `StegVerseLocalHTTPProviderClient`.
 6. Real governed execution traverses E1 → model worker → E2.
 7. Provider/model usage is measured and persisted for that execution.
-8. `master-records/orchestration` records provider-usage reconstruction `PASS`.
-9. `master-records/orchestration` records transition reconstruction `PASS` for the same execution and binds `same_execution=true`.
+8. Provider usage is recorded in the local usage ledger for that execution.
+9. The organization ledger appends the transition receipt for the same execution and binds `same_execution=true`; the transition closes on that organization-ledger transition receipt. (Master Records may afterwards record the released batch downstream; it is not a step in this sequence and nothing waits on it.)
 10. LLM-adapter emits immutable `receipts/ecosystem-chat-live-activation.verified.json` with `state=VERIFIED`, `blockers=[]`, valid result hash, and no authority escalation.
 11. `StegVerse-Labs/Site` imports the verified receipt and reaches its Ecosystem Chat activation condition.
 12. Publisher, admissibility-wiki, and stegguardian-wiki consume the verified Site propagation under their existing contracts.
@@ -107,13 +108,13 @@ No earlier level implies the next.
 
 ## Same-carrier runtime seam
 
-`verify_sovereign_model_runtime.py` is proof-oriented and may terminate its probe process. Production activation therefore requires the canonical live model process to remain available across health/model-identity proof → TVC route admission → LLM-adapter request → E1/model/E2 evidence → usage persistence → Master Records organization records/reconstruction. The process may be retired only after the bounded same-execution evidence path completes.
+`verify_sovereign_model_runtime.py` is proof-oriented and may terminate its probe process. Production activation therefore requires the canonical live model process to remain available across health/model-identity proof → TVC route admission → LLM-adapter request → E1/model/E2 evidence → usage persistence → organization-ledger transition receipt. Downstream Master Records recording is not part of this seam. The process may be retired only after the bounded same-execution evidence path completes.
 
 ## Collision and authority boundaries
 
 - Do not restore GitHub Models, Render, Cloudflare, GitHub Actions, PATs, or private-repository checkout as production blockers or authorities.
 - Do not create another local model/runtime authority in LLM-adapter.
-- Do not create a second heartbeat, worker registry, TV/TVC route authority, governance engine, or Master Records organization-record path.
+- Do not create a second heartbeat, worker registry, TV/TVC route authority, governance engine, organization ledger, or Master Records downstream-recording path.
 - Recovery authority is continuity-only and may not execute parent inference.
 - Provider output, usage measurement, workflow success, recovery completion, custody, or reconstruction alone do not grant activation authority.
 - Activation requires the exact same-execution zero-blocker receipt and downstream verified consumption.
@@ -127,7 +128,8 @@ LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019 | LLM-adapter #18 | COMPLETE_RELEASED
 LLMA-CANONICAL-LOCAL-MODEL-BINDING-018 | MERGED_INTO_CANONICAL_WORKSTREAM | next: recovery then exact sovereign endpoint execution
 RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28 | COMPLETED | fence 22 / old authority not reused
 SHWP-ECOSYSTEM-CHAT-INFERENCE-001 | HANDOFF_READY / AUTHORIZED | next: fresh parent fence >22 and same-carrier execution
-Master Records same-execution reconstruction | WAITING_ON_REAL_EXECUTION | provider-usage + transition PASS required
+Organization-ledger same-execution transition receipt | WAITING_ON_REAL_EXECUTION | local usage record + transition receipt required
+Master Records downstream reconstruction | OPTIONAL_NON_GATING | formerly listed as provider-usage + transition PASS required; retired under #368
 Site activation | WAITING_ON_VERIFIED_RECEIPT
 Downstream propagation | WAITING_ON_VERIFIED_SITE_ACTIVATION
 ```
@@ -139,7 +141,8 @@ MERGED INTO: StegVerse-org/LLM-adapter/tasks/LLMA-CANONICAL-LOCAL-MODEL-BINDING-
 ALSO CONTINUED BY: StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001
 RECOVERY: StegVerse-Labs/.github/control/worker-registry.d/ecosystem-chat-orphan-recovery-hb28.json
 MODEL OWNER: StegVerse-002/micro-node-runtime#16/#22
-ORGANIZATION RECORD OWNER: master-records/orchestration
+ORGANIZATION RECORD OWNER: StegVerse-org/LLM-adapter organization ledger
+DOWNSTREAM RECORDER (NON-GATING): master-records/orchestration
 unique_chat_owned_work_remaining: false
 product_activation_complete: false
 ```
@@ -155,7 +158,7 @@ canonical provider/transport evidence seam: COMPLETE_RELEASED
 recovery registry admission: COMPLETE
 fresh recovery execution: COMPLETE / G22
 fresh parent sovereign execution: PENDING
-same-execution reconstruction: 0/2
+same-execution organization-ledger transition receipt: 0/1 (Master Records reconstruction 0/2 retired as a completion condition under #368)
 immutable verified activation receipt: 0/1
 Site activation: 0/1
 downstream verified ingestion: 0/3
@@ -181,7 +184,9 @@ released source/runtime contract
 !=
 observed live sovereign execution
 !=
-Master Records organization records/reconstruction
+organization-ledger transition receipt
+!=
+Master Records downstream recording/reconstruction (non-gating)
 !=
 Site activation
 ```
@@ -217,7 +222,7 @@ receipts/ecosystem-chat-sovereign-inference/llm_adapter_sovereign_execution.json
 receipts/ecosystem-chat-sovereign-inference/master_records_same_execution_reconstruction.json
 ```
 
-The projection requires all terminal parent predicates, a fresh parent fencing token strictly greater than 22, exact parent activation hash verification, TVC route receipt hash binding, provider-usage event hash binding, Master Records reconstruction hash binding, `same_execution=true`, persistent conversational runtime readiness, `credential_authority=TV/TVC`, `credential_requirement=NONE`, no GitHub activation role, and no third-party inference dependency.
+The projection requires all terminal parent predicates, a fresh parent fencing token strictly greater than 22, exact parent activation hash verification, TVC route receipt hash binding, provider-usage event hash binding, `same_execution=true`, persistent conversational runtime readiness, `credential_authority=TV/TVC`, `credential_requirement=NONE`, no GitHub activation role, and no third-party inference dependency. The `master_records_same_execution_reconstruction.json` record is optional: when present it is reported under `master_records_downstream` (and must be the record the activation names), but Master Records reconstruction is downstream and non-gating and is never an activation predicate.
 
 On success it writes the immutable local evidence surface:
 
@@ -230,7 +235,7 @@ authority_effect: NONE
 
 The destination-state writer accepts this sovereign projection as the preferred current evidence mode. The historical `stegverse.ecosystem_chat.live_activation.v1` receipt remains a compatibility input only; no hosted-gateway evidence is fabricated from the parent receipt.
 
-The projection itself grants no activation, execution, route, custody, publication, release, or repository-mutation authority. Actual parent execution remains owned by `StegVerse-Labs/.github#60`; route authority remains TV/TVC; reconstruction remains Master Records.
+The projection itself grants no activation, execution, route, custody, publication, release, or repository-mutation authority. Actual parent execution remains owned by `StegVerse-Labs/.github#60`; route authority remains TV/TVC; custody and the transition receipt remain with the organization ledger; Master Records remains only the downstream, non-gating recorder of released organization batches.
 
 ### TVC persistence boundary — source merged, runtime observation pending
 

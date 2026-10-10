@@ -86,7 +86,7 @@ The contract grants no VA, representation, medical-opinion, adjudication, rating
 
 ## Integration obligations
 
-The active adapter implementation lane must implement generators route by route. Each route remains fail-closed until it has admitted source contract, deterministic fixtures, hash-bound receipt, TVC readiness/invocation evidence, Master Records organization record `RECORDED` and reconstruction `PASS`, deployed secret-free request evidence, and exact Site capability projection. `document_organization` additionally requires sanitized derived context from Site#116; raw veteran documents must not enter this adapter.
+The active adapter implementation lane must implement generators route by route. Each route remains fail-closed until it has admitted source contract, deterministic fixtures, hash-bound receipt, TVC readiness/invocation evidence, the organization-ledger transition receipt (Master Records `RECORDED`/reconstruction `PASS` was formerly listed here; retired as a gate under #368 and now optional downstream recording), deployed secret-free request evidence, and exact Site capability projection. `document_organization` additionally requires sanitized derived context from Site#116; raw veteran documents must not enter this adapter.
 
 The filing state may not advance beyond preparation until every gate in `filing_boundary.required_before_filing_ready` verifies and an authorized VA or accredited-representative transport exists.
 

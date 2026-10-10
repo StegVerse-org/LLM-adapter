@@ -2,7 +2,7 @@
 
 ## Authority
 
-This scoped handoff is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md` and is authoritative for `LLMA-SOVEREIGN-CARRIER-EXECUTION-020`. Live repository state, the task record, TVC route receipts, heartbeat receipts, provider-usage evidence, and Master Records reconstruction supersede older descriptions of the canonical local-model binding blocker.
+This scoped handoff is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md` and is authoritative for `LLMA-SOVEREIGN-CARRIER-EXECUTION-020`. Live repository state, the task record, TVC route receipts, heartbeat receipts, provider-usage evidence, and organization-ledger transition receipts supersede older descriptions of the canonical local-model binding blocker.
 
 ## Canonical task state
 
@@ -20,7 +20,7 @@ heartbeat_owner: StegVerse-Labs/.github#60
 model_owner: StegVerse-002/micro-node-runtime#22
 route_owner: StegVerse-Labs/TVC:TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002
 credential_authority_model: TC/TVC
-organization_record_owner: master-records/orchestration
+organization_record_owner: organization ledger (custody stays with the organization; master-records/orchestration only records released batch receipts downstream, non-gating)
 remaining_role: MACHINE_OWNED_SAME_CARRIER_OBSERVATION_AND_RECONSTRUCTION
 ```
 
@@ -71,7 +71,7 @@ The executor:
 7. derives only the canonical `/v1/chat/completions` transport path from the admitted private base endpoint;
 8. calls existing `execute_verified_local_model`, which uses `StegVerseLocalHTTPProviderClient`;
 9. preserves request/response hashes and MEASURED prompt/completion/total-token and latency evidence;
-10. reuses the canonical Master Records provider-usage organization record rather than creating a second record;
+10. records provider usage in the local usage ledger and closes on the organization-ledger transition receipt rather than creating a second record (Master Records may record the released batch downstream; it is non-gating);
 11. does not claim activation when custody/reconstruction or production-scale predicates remain incomplete.
 
 ## Validation evidence
@@ -101,7 +101,7 @@ credential_authority_model: TC/TVC
 provider_output_authority: false
 route_execution_authority: false
 binding_receipt_authority: false
-master_records_organization_record_authority_duplicated: false
+master_records_gate_or_custody_authority: false
 ```
 
 Historical committed evidence may contain the older `StegVerse-Labs/TV` credential-policy label. Those references remain historical evidence only. Current credential-authority semantics are TC/TVC; `StegVerse-Labs/TVC` remains the actual canonical route-authority repository.
@@ -115,11 +115,12 @@ heartbeat TVC_LOCAL_MODEL_ROUTE_ADMITTED
 -> execute_canonical_sovereign_route.py on same carrier
 -> real StegVerseLocalHTTPProviderClient response
 -> measured provider usage persisted
--> provider-usage Master Records reconstruction PASS
+-> provider-usage organization-ledger transition receipt
 -> same-execution transition reconstruction PASS
 -> immutable zero-blocker ecosystem-chat-live-activation.verified.json
 -> Site ACTIVATION_COMPLETE
 -> Publisher/admissibility-wiki/stegguardian-wiki verified ingestion
+-> (downstream, non-gating) Master Records may record the released organization batch
 ```
 
 The reference model is a real formally developed local model and can prove this sovereign transport/evidence path. It is not represented as a production-scale foundation LLM; any product requirement for production-scale model quality remains a separate explicit predicate.
@@ -133,7 +134,7 @@ python -m unittest -v tests.test_sovereign_local_model_binding
 
 ## Integration and propagation obligations
 
-`.github#60` owns invocation of this released executor after `TVC_LOCAL_MODEL_ROUTE_ADMITTED`. Master Records keeps the same-execution organization records/reconstruction. Only after immutable activation verification may Site, Publisher, admissibility-wiki, and stegguardian-wiki claim verified ingestion.
+`.github#60` owns invocation of this released executor after `TVC_LOCAL_MODEL_ROUTE_ADMITTED`. The organization ledger holds the same-execution records (custody stays with the organization); Master Records may record the released batch receipt downstream and is never awaited. Only after immutable activation verification may Site, Publisher, admissibility-wiki, and stegguardian-wiki claim verified ingestion.
 
 ## Completion accounting
 
@@ -151,6 +152,6 @@ live same-carrier goal activation: 70%
 
 ## Session consolidation
 
-MERGED INTO: `StegVerse-Labs/.github#60` + `master-records/orchestration` for live same-carrier execution and reconstruction.
+MERGED INTO: `StegVerse-Labs/.github#60` for live same-carrier execution; closure is on the organization-ledger transition receipt, and `master-records/orchestration` only records the released batch receipt downstream (non-gating).
 
 The no-GitHub-token correction, supersession of cross-repository checkout, exact TVC route/proof/endpoint binding, measured-usage adapter, TC/TVC credential semantics, and downstream activation conditions are durable. This repository has no remaining unique implementation work for task 020; only live machine-owned observation/reconstruction remains.

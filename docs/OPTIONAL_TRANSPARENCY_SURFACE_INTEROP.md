@@ -39,7 +39,7 @@ receipt classes
 editability boundaries
 authority boundaries
 caller-return projection
-Master Records organization record
+Master Records downstream released-batch recording (non-gating)
 exact-run locator semantics
 ```
 

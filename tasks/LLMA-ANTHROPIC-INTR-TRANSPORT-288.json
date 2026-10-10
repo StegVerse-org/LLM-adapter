@@ -28,7 +28,8 @@
     "live_runtime_observation_still_required_before_provider_call": true,
     "interlock_intr_ingress_egress_still_required": true,
     "tvtvc_credential_materialization_still_required": true,
-    "master_records_reconstruction_still_required": true
+    "master_records_reconstruction_still_required": false,
+    "master_records_downstream_recording_optional_non_gating": true
   },
   "runtime_requirements": {
     "capabilities": [

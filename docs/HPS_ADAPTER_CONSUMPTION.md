@@ -28,7 +28,7 @@ Governed authority delegation evaluation is owned by:
 StegVerse-Labs/Ecosystem-Delegation
 ```
 
-Ecosystem-wide cycle records and reconstruction receipts are owned by:
+Ecosystem-wide cycle records stay in each organization ledger (custody stays with the organization); downstream recording of released batch receipts for cross-organization reconstruction is performed by:
 
 ```text
 master-records/orchestration

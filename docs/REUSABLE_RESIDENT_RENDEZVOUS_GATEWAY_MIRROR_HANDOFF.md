@@ -52,7 +52,7 @@ Source merge, CI, Site deployment, historical StegGate tunnel evidence, and GitH
 
 ## Authority
 
-KV/SKAP Vault remains sole user-verification authority. Node refs and Node Receipt provenance are routing/provenance data only. WorkerCoordinator retains claim/fence authority; Interlock/InTr retains state-transition/admission authority; TV/TVC retains credential/provider/release authority; Master Records keeps organization records/reconstruction. HeartBeat remains observability/timing/freshness only. GitHub remains source/evidence coordination only. This component grants none of those authorities.
+KV/SKAP Vault remains sole user-verification authority. Node refs and Node Receipt provenance are routing/provenance data only. WorkerCoordinator retains claim/fence authority; Interlock/InTr retains state-transition/admission authority; TV/TVC retains credential/provider/release authority; the organization ledger keeps custody and durable history, and Master Records only records released batch receipts downstream for reconstruction. HeartBeat remains observability/timing/freshness only. GitHub remains source/evidence coordination only. This component grants none of those authorities.
 
 ## Evidence boundary
 

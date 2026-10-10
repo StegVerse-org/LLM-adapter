@@ -59,7 +59,7 @@ StegVerse-002/micro-node-runtime
 -> StegVerse-Labs/.github resident sovereign heartbeat
 -> StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json
 -> StegVerse-org/LLM-adapter
--> master-records/orchestration
+-> organization-ledger transition receipt (master-records/orchestration may record the released batch downstream; non-gating)
 -> StegVerse-Labs/Site#113 after immutable activation evidence
 ```
 
@@ -119,7 +119,7 @@ privacy_guarded_dispatch PASS before model input
 admitted VA/federal grounding and provenance
 fresh TVC route admission
 bounded response generation
-Master Records organization record RECORDED
+organization-ledger transition receipt (Master Records recording is downstream and non-gating; formerly listed as a gate, retired under #368)
 same-execution reconstruction PASS
 Site projection only after immutable execution evidence
 ```
@@ -128,7 +128,7 @@ Site projection only after immutable execution evidence
 
 ```text
 current task: VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023
-execution owner: resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records
+execution owner: resident sovereign heartbeat -> TVC -> LLM-adapter -> organization ledger (Master Records records downstream only, non-gating)
 claim state: MACHINE_OWNED
 manual runtime execution allowed: false
 ```
@@ -142,7 +142,7 @@ TVC emits ROUTE_ADMITTED with credential_requirement NONE
 TVC records github_token_required=false
 VACC executes against that exact admitted private endpoint
 privacy guard PASS precedes model input
-Master Records organization record RECORDED
+organization-ledger transition receipt (Master Records recording is not a release condition; formerly listed, retired under #368)
 same-execution reconstruction PASS
 Site projection consumes immutable activation evidence
 ```
@@ -156,7 +156,7 @@ MERGED INTO: StegVerse-org/LLM-adapter#142
 MERGED INTO: StegVerse-org/LLM-adapter/tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json
 MERGED INTO: StegVerse-Labs/.github#60 resident sovereign heartbeat
 MERGED INTO: StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json
-MERGED INTO: master-records/orchestration
+DOWNSTREAM ONLY: master-records/orchestration (non-gating recorder of released batch receipts; nothing awaits it)
 MERGED INTO: StegVerse-Labs/Site#113
 ```
 

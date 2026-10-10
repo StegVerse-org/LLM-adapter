@@ -116,7 +116,7 @@
     "contract validation receipt PASS",
     "route generator has deterministic tests and hash-bound receipt",
     "TVC capability is READY and invocation evidence is present",
-    "Master Records custody is RECORDED and reconstruction is PASS",
+    "the turn's organization-ledger transition receipt is appended (Master Records reconstruction is downstream and never a release condition)",
     "deployed request produces a secret-free reconstructable receipt",
     "Site projection exactly matches verified runtime capability"
   ],

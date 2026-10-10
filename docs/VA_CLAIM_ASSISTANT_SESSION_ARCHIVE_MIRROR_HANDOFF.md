@@ -49,7 +49,7 @@ The historical inventory remains immutable evidence of 13 goal groups and 27/27 
 
 `tasks/VACP-ADAPTER-AUTHORIZED-EXECUTION-005.json` is now `SUPERSEDED`. Its GitHub Models / ephemeral GitHub Actions token route is retired because the integrated credential contract requires TV/TVC-only authority and GitHub token runtime authority `NONE`.
 
-Canonical continuation is `tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json`, which is machine-owned by the resident sovereign heartbeat -> TVC -> LLM-adapter -> Master Records lane and requires:
+Canonical continuation is `tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json`, which is machine-owned by the resident sovereign heartbeat -> TVC -> LLM-adapter lane, closing on the organization-ledger transition receipt (Master Records records the released batch downstream only; non-gating), and requires:
 
 ```text
 credential_authority: TV/TVC
@@ -61,7 +61,7 @@ hosted_provider_fallback: DISALLOWED
 model_output_authority: NONE
 ```
 
-The preserved VACC gates remain: privacy guard PASS before model input, admitted official/federal grounding, fresh TVC admission, bounded generation, Master Records organization record, same-execution reconstruction PASS, and Site projection only from verified execution evidence.
+The preserved VACC gates remain: privacy guard PASS before model input, admitted official/federal grounding, fresh TVC admission, bounded generation, closure on the organization-ledger transition receipt, and Site projection only from verified execution evidence. (A Master Records organization record and same-execution Master Records reconstruction PASS were formerly listed here; retired as gates under #368 — Master Records recording is optional, downstream and non-gating.)
 
 ## Historical release proof
 

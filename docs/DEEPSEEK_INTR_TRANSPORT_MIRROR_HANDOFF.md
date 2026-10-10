@@ -65,7 +65,7 @@ canonical ProviderRequest provenance
 -> reject any credential echo in provider body or emitted evidence
 -> provider output authority_effect NONE
 -> canonical provider-usage event
--> existing Master Records provider-usage organization record
+-> provider usage recorded in the local usage ledger (never gated on a Master Records reply)
 -> deterministic egress handoff requests ALLOW but assumes none
 -> separate Interlock/InTr egress evaluation
 -> exact egress ALLOW receipt binds exact provider response hash
@@ -133,7 +133,7 @@ adapter.capabilities.json
 
 ## Evidence semantics
 
-The merged source and exact-head validation prove deterministic transport binding, fail-closed behavior, credential non-persistence, provider-usage construction, Master Records reuse semantics, and exact-response egress verification.
+The merged source and exact-head validation prove deterministic transport binding, fail-closed behavior, credential non-persistence, provider-usage construction, non-gating local usage-ledger recording (no Master Records reply gates or grants authority), and exact-response egress verification.
 
 They do **not** prove:
 
@@ -157,7 +157,7 @@ No implementation, schema, test, README, capability-projection, validation, or m
 Separately governed future work may include:
 
 1. optional authentic runtime exercise only when a current task admits DeepSeek and TV/TVC resolves the credential;
-2. authentic provider usage through the existing Master Records organization records/reconstruction lane;
+2. authentic provider usage recorded in the local usage ledger and closed on the organization-ledger transition receipt (Master Records may record the released batch downstream; non-gating);
 3. downstream Site/Publisher/wiki projection only when an activation/release gate explicitly requires it.
 
 ## Completion accounting

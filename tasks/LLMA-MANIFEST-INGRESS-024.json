@@ -10,7 +10,7 @@
   "claim_state": "COMPLETE_RELEASED",
   "claim_created_at": "2026-08-15T18:49:00-05:00",
   "claim_released_at": "2026-08-15T18:56:00-05:00",
-  "claim_release_reason": "PR #143 merged after focused deterministic validation and all final-head repository workflow runs completed successfully. Parent issue #139 remains active for canonical ingestion/Master Records/SDK binding.",
+  "claim_release_reason": "PR #143 merged after focused deterministic validation and all final-head repository workflow runs completed successfully. Parent issue #139 remains active for canonical ingestion/organization-ledger/SDK binding.",
   "merge_evidence": {
     "pull_request": 143,
     "head_sha": "3aed03262e1946e794121e93133ca88b5dc61165",
@@ -48,7 +48,7 @@
   },
   "remaining": [
     "bind governed_ingest to canonical manifested-ingestion transaction path",
-    "persist exact manifest_receipt_id through Master Records",
+    "persist exact manifest_receipt_id in the organization ledger (Master Records may record the released batch downstream)",
     "persist idempotency and ordering state",
     "prove replay/reconstruction without external consequence re-execution",
     "integrate SDK #16 relationship surface",
@@ -64,16 +64,15 @@
     "Do not create a parallel StegGate evaluator.",
     "Do not create a demo-specific or recipient-specific evaluator route.",
     "Do not select providers or expose credentials.",
-    "Do not duplicate sovereign heartbeat, TV/TVC, model runtime, or Master Records authority.",
+    "Do not duplicate sovereign heartbeat, TV/TVC, or model runtime authority, and do not make Master Records (a downstream recorder of released organization batches, not a dependency) part of the ingestion path.",
     "Do not treat this contract tranche as production activation."
   ],
   "canonical_dependencies": [
     "StegVerse-org/StegVerse-SDK#16",
     "StegVerse-Labs/StegCore#85",
-    "master-records/orchestration",
     "StegVerse-org/stegverse-demo-suite/docs/DEMO_EVALUATOR_MIRROR_HANDOFF.md"
   ],
-  "next_executable_action": "Acquire a new nonoverlapping claim for parent #139 and bind governed_ingest to the canonical manifested-ingestion/Master Records transaction path without creating new authority.",
+  "next_executable_action": "Acquire a new nonoverlapping claim for parent #139 and bind governed_ingest to the canonical manifested-ingestion transaction path closing on the organization-ledger transition receipt, without creating new authority; Master Records is not in the transaction path.",
   "authority_effect": false,
   "activation_effect": false
 }

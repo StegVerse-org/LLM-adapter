@@ -87,7 +87,7 @@ TVC admits HIL profile/package identity
 -> authenticated private review occurs under TVC#8
 -> publication remains a separate authority boundary
 -> Site receives only admissible projection
--> Master Records assembly/release remains separately governed
+-> (downstream, non-gating) Master Records may record the released organization batch
 ```
 
 LLM-adapter compatibility code does not independently perform or authorize these production lifecycle transitions.

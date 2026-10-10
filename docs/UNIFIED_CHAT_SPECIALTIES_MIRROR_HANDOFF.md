@@ -65,7 +65,7 @@ Do not reopen or duplicate:
 - `docs/VACC_PUBLIC_INFORMATION_PROFILE_MIRROR_HANDOFF.md` broad VACC source-policy layer;
 - issue #18 provider/runtime path;
 - issue #90/#142 VACC governed retrieval/runtime;
-- Master Records organization records and reconstruction.
+- Master Records downstream (non-gating) recording and reconstruction of released batch receipts.
 
 ## Validation evidence
 

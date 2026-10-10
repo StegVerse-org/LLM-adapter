@@ -8,7 +8,7 @@ Authority effect: `NONE_EXECUTION_WRAPPER_ONLY`
 
 ## Source of truth
 
-This is the scoped completion record for `LLMA-ZAI-INTR-EXECUTOR-278`. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, the merged transport task `LLMA-ZAI-INTR-TRANSPORT-276`, the organization runtime authority in `StegVerse-Labs/.github`, existing Interlock/InTr transition authority, TV/TVC credential/route authority, and Master Records organization-record authority.
+This is the scoped completion record for `LLMA-ZAI-INTR-EXECUTOR-278`. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, the merged transport task `LLMA-ZAI-INTR-TRANSPORT-276`, the organization runtime authority in `StegVerse-Labs/.github`, existing Interlock/InTr transition authority, TV/TVC credential/route authority, and the organization ledger as runtime reality. Master Records is only the downstream, non-gating recorder of released organization batch receipts.
 
 The canonical sovereign local route remains independently sufficient and unchanged.
 
@@ -55,7 +55,7 @@ exact ProviderRequest
 -> Z.ai provider execution
 -> non-authoritative provider response
 -> provider usage event using existing provider_usage schema
--> existing Master Records provider-usage organization record
+-> provider usage recorded in the local usage ledger (never gated on a Master Records reply)
 -> execution evidence with egress_intr_required=true
 -> external egress Interlock/InTr evaluation
 -> `admit_zai_egress` verifies ALLOW + exact response hash + receipt hash
@@ -101,7 +101,7 @@ Source and CI prove deterministic binding and fail-closed behavior. They do not 
 - a live Z.ai provider request;
 - current TV/TVC credential materialization;
 - production provider route admission;
-- authentic Master Records organization records/reconstruction;
+- authentic organization-ledger transition receipts;
 - live egress InTr ALLOW;
 - canonical resident WorkerCoordinator execution;
 - Ecosystem Chat activation;
@@ -116,8 +116,9 @@ admitted workload
 -> Interlock/InTr ingress ALLOW
 -> TV/TVC provider credential/route authority
 -> merged Z.ai executor
--> authentic provider-usage organization records/reconstruction in master-records/orchestration
+-> provider usage in the local usage ledger and the organization-ledger transition receipt
 -> external egress InTr ALLOW bound to exact response
+-> (downstream, non-gating) Master Records may record the released organization batch
 ```
 
 That runtime sequence must not be fabricated or replaced by CI. It remains subject to current machine/authority ownership and credential availability.
@@ -136,7 +137,7 @@ executor source: COMPLETE_MERGED_VALIDATED
 dedicated Z.ai validation: PASS
 repository validation: PASS
 provider usage integration: COMPLETE
-Master Records organization-record reuse: COMPLETE
+Master Records gating: NONE (former organization-record reuse retired under #368)
 egress exact-response binding: COMPLETE
 README: COMPLETE
 source claim: RELEASED

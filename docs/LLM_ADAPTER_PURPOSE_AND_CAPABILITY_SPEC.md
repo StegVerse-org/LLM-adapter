@@ -190,7 +190,7 @@ Any implementation change claiming conformance with this specification must pres
 - InTr where required by the existing path;
 - TV/TVC where required by the selected capability;
 - receipt and provenance continuity;
-- Master Records organization-record behavior where applicable;
+- downstream, non-gating Master Records recording behavior where applicable;
 - exact `ALLOW` / `DENY` / `FAIL_CLOSED` semantics;
 - existing successful paths not implicated by the proposed change.
 

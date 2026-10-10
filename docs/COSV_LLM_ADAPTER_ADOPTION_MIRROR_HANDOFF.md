@@ -43,4 +43,4 @@ repository VECTOR_PRESENT claimed: false
 
 Next work: audit every current LLM-adapter task/claim/observer surface, normalize stale terminal states, project all remaining active tasks, and only then request strict repository-level VECTOR_PRESENT.
 
-Runtime activation remains machine-owned by the canonical `.github#60` parent execution + TVC + Master Records + Site chain.
+Runtime activation remains machine-owned by the canonical `.github#60` parent execution + TVC + organization-ledger transition receipt + Site chain (Master Records records released batches downstream, non-gating).

@@ -125,7 +125,7 @@ Ecosystem Chat live-provider/runtime owner: issue #18 or canonical successor
 VA Claims Chat live-provider/runtime owner: issue #90 or canonical successor
 VA Claims privacy gate: privacy_guarded_dispatch remains mandatory
 Site projection: waits for Site machine admission
-Master Records organization record: only after authorized real runtime execution under its existing owner
+Master Records downstream recording (optional, non-gating): only of released batches after authorized real runtime execution closes on the organization-ledger transition receipt
 ```
 
 No provider credentials are accessed and no provider/custody/Site/filing/publication/deployment/activation authority is granted by this validation layer.

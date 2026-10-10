@@ -42,8 +42,8 @@
     },
     {
       "owner": "master-records/orchestration#15",
-      "task": "Record the valid execution and TVC admission receipts and prove deterministic reconstruction.",
-      "release_condition": "Custody RECORDED and reconstruction PASS."
+      "task": "Downstream and optional: record the released execution and TVC admission receipts and attempt deterministic reconstruction; custody stays with the organization ledger.",
+      "release_condition": "Not a release condition of this task: the execution closes on its organization-ledger transition receipt (LLM-adapter#368)."
     }
   ],
   "collision_boundaries_preserved": [

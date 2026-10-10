@@ -10,7 +10,7 @@ Authority effect: `NONE_INTERFACE_CORRECTION_ONLY`
 
 ## Source of truth
 
-This is the completion record for reconciliation of the user-supplied Z.ai reference package with canonical `stegverse.intr.zai.transport.v1`. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, `docs/ZAI_INTR_RELEASE_MIRROR_HANDOFF.md`, existing Interlock/InTr transition authority, TV/TVC credential/route authority, Master Records organization-record authority, and canonical resident runtime authority.
+This is the completion record for reconciliation of the user-supplied Z.ai reference package with canonical `stegverse.intr.zai.transport.v1`. It is subordinate to `LLM_ADAPTER_MIRROR_HANDOFF.md`, `docs/ZAI_INTR_RELEASE_MIRROR_HANDOFF.md`, existing Interlock/InTr transition authority, TV/TVC credential/route authority, the organization ledger as runtime reality, and canonical resident runtime authority. Master Records is only the downstream, non-gating recorder of released organization batch receipts.
 
 The reconciliation did not install competing `_ref` runtime modules, create a second Z.ai lane, replace the canonical sovereign route, or create transition/route/credential/custody/runtime/publication authority.
 
@@ -125,11 +125,12 @@ admitted workload
 -> TV/TVC live provider credential/route materialization
 -> canonical Z.ai executor
 -> authentic provider response + measured usage
--> Master Records provider-usage organization records/reconstruction
+-> provider usage in the local usage ledger and the organization-ledger transition receipt
 -> external egress InTr ALLOW bound to exact response
+-> (downstream, non-gating) Master Records may record the released organization batch
 ```
 
-That goal is runtime/authority-owned under existing HB/InTr/TVC/Master Records boundaries. It must not be replaced with fabricated receipts, repository secrets, GitHub Actions runtime substitution, or a session-created monitor.
+That goal is runtime/authority-owned under existing HB/InTr/TVC boundaries and the organization ledger (Master Records only records released batches downstream, non-gating). It must not be replaced with fabricated receipts, repository secrets, GitHub Actions runtime substitution, or a session-created monitor.
 
 ## Completion accounting
 

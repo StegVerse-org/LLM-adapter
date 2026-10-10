@@ -113,7 +113,7 @@ Site request
 
 ## Production topology
 
-`StegVerse-002/micro-node-runtime` owns the model and server. `StegVerse-Labs/.github` owns heartbeat process lifecycle, claims, fences and cycle leases. `TC/TVC` owns credential semantics; this local route requires credential class `NONE`. `StegVerse-Labs/TVC` owns route authority. LLM-adapter owns private provider transport and provider-usage evidence. Master Records is limited to organization records and reconstruction. No application-specific parallel model authority, route authority, heartbeat, scheduler, worker registry, StegGate evaluator, or custody authority is authorized.
+`StegVerse-002/micro-node-runtime` owns the model and server. `StegVerse-Labs/.github` owns heartbeat process lifecycle, claims, fences and cycle leases. `TC/TVC` owns credential semantics; this local route requires credential class `NONE`. `StegVerse-Labs/TVC` owns route authority. LLM-adapter owns private provider transport and provider-usage evidence. Master Records is limited to downstream recording of released organization batch receipts for cross-organization reconstruction; the organization ledger holds the record and custody stays with the organization. No application-specific parallel model authority, route authority, heartbeat, scheduler, worker registry, StegGate evaluator, or custody authority is authorized.
 
 ## Local model development/runtime — COMPLETE_RELEASED
 
@@ -123,7 +123,7 @@ The descriptive `select a local model/runtime` boundary is superseded by real di
 
 ## Task 019 — COMPLETE_RELEASED
 
-`LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019` merged through PR #134 and released its claim. The existing `execute_verified_local_model` path validates canonical proof identity, uses `StegVerseLocalHTTPProviderClient`, captures MEASURED prompt/completion/total-token and latency evidence, and reuses canonical Master Records provider-usage submission.
+`LLMA-SOVEREIGN-LOCAL-MODEL-BINDING-019` merged through PR #134 and released its claim. The existing `execute_verified_local_model` path validates canonical proof identity, uses `StegVerseLocalHTTPProviderClient`, captures MEASURED prompt/completion/total-token and latency evidence, and records provider usage in the local usage ledger, closing on the organization-ledger transition receipt (the Master Records provider-usage submission clients it reused at merge were removed under #368).
 
 ## Task 020 — COMPLETE_RELEASED
 
@@ -152,7 +152,8 @@ TVC ROUTE_ADMITTED receipt
 -> reject route/execution authority escalation
 -> execute exact endpoint through StegVerseLocalHTTPProviderClient
 -> persist request/response hashes + MEASURED usage
--> reuse Master Records provider-usage organization record
+-> local usage ledger + organization-ledger transition receipt
+   (downstream, non-gating: Master Records may record the released organization batch)
 -> advance to same-execution transition reconstruction
 ```
 
@@ -179,7 +180,7 @@ heartbeat persistent lifecycle: COMPLETE_MERGED_VALIDATED
 heartbeat automatic TVC invocation: COMPLETE_MERGED_VALIDATED
 TVC canonical proof compatibility: COMPLETE_MERGED_SOURCE
 orphan recovery: StegVerse-Labs/.github#78 COMPLETE_RELEASED
-G20 lifecycle organization record: master-records/orchestration#27 COMPLETE_RELEASED
+G20 lifecycle downstream record (non-gating): master-records/orchestration#27 COMPLETE_RELEASED
 hosted GitHub activation/persistence retirement: StegVerse-Labs/.github#79 COMPLETE_RELEASED
 ```
 
@@ -235,7 +236,8 @@ orphan recovery: StegVerse-Labs/.github / RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-
 credential authority: TC/TVC / credential class NONE
 route authority: StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json
 provider transport/usage: StegVerse-org/LLM-adapter#18 + task 020 COMPLETE_RELEASED
-organization records/reconstruction: master-records/orchestration
+organization record: organization ledger (custody stays with the organization)
+downstream recorder of released batch receipts (non-gating): master-records/orchestration
 site activation: StegVerse-Labs/Site#239/#242
 required downstream ingestion after immutable verified activation: GCAT-BCAT-Engine/Publisher, StegVerse-Labs/admissibility-wiki, StegVerse-002/stegguardian-wiki
 ```
@@ -249,7 +251,7 @@ No workflow dispatch, artifact download, file movement, screenshot confirmation,
 Only after the activation manifest transition (LLMA-368-D4) is recorded in the organization ledger; Master Records receives released organization batches:
 
 ```text
-master-records/orchestration
+master-records/orchestration (optional non-gating downstream recording; not a release condition)
 StegVerse-Labs/Site
 GCAT-BCAT-Engine/Publisher
 StegVerse-Labs/admissibility-wiki
@@ -281,7 +283,7 @@ No release or tag is authorized while dispositions LLMA-368-D1..D5 remain non-AL
 
 Task 019, task 020, local-model/runtime implementation, and public-runtime-doc reconciliation claims are released. No session should reopen their implementation unless directly observed evidence creates a new bounded task.
 
-MERGED INTO canonical runtime continuation: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001` + `StegVerse-Labs/.github/handoffs/generated/RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28.json` + `StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json` + `master-records/orchestration`.
+MERGED INTO canonical runtime continuation: `StegVerse-Labs/.github#60 / SHWP-ECOSYSTEM-CHAT-INFERENCE-001` + `StegVerse-Labs/.github/handoffs/generated/RECOVER-SHWP-ECOSYSTEM-CHAT-INFERENCE-001-ORPHAN-HB28.json` + `StegVerse-Labs/TVC/tasks/TVC-SOVEREIGN-LOCAL-MODEL-ROUTE-002.json`; `master-records/orchestration` receives released organization batches downstream and is not part of the runtime continuation.
 
 ## Session consolidation
 
@@ -476,7 +478,7 @@ This closes only the downstream StegDeploy source-locator/materialization seam. 
 
 ## StegBrowser Master Records relay intake
 
-Canonical Goal `StegVerse-Labs/.github:MASTER-RECORDS-STEGBROWSER-ENDPOINT-BINDING-001` reuses the existing Service Gateway and TV/TVC `service_gateway_master_records` credential role as a non-authorizing transport to the sole canonical state-transition custody API in `master-records/orchestration`.
+Canonical Goal `StegVerse-Labs/.github:MASTER-RECORDS-STEGBROWSER-ENDPOINT-BINDING-001` reuses the existing Service Gateway and TV/TVC `service_gateway_master_records` credential role as a non-authorizing transport that hands already-closed, released state-transition receipts downstream to the Master Records recorder in `master-records/orchestration` (not custody; custody stays with the organization).
 
 Source surfaces:
 - `llm_adapter/stegbrowser_master_records_state_transition_relay.py`;

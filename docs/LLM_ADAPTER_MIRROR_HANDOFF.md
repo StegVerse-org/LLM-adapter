@@ -94,7 +94,7 @@ VACC sovereign provider continuation:
   manifest -> SDK submit -> Interlock/InTr => Org Ledger (optional local route: TVC -> LLM-adapter);
     Master Records receives released organization batches downstream and is not awaited
 
-Master Records:
+Master Records (downstream recorder of released organization batches; non-gating, not a runtime continuation step):
   master-records/orchestration
 
 StegFin:

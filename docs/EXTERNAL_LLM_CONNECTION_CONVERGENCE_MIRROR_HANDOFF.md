@@ -15,7 +15,7 @@ Make Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic use one provider-neutral gover
 - transition admission: existing Interlock/InTr only;
 - credential/provider-operation authority: existing TV/TVC only;
 - runtime work ownership: existing WorkerCoordinator only;
-- organization records/reconstruction: existing Master Records only;
+- organization record / transition receipt: the organization ledger (custody stays with the organization); Master Records is only the downstream, non-gating recorder of released organization batches;
 - HB/oscillator: reference/carrier only, never execution or admission authority.
 
 This lane creates none of those systems.
@@ -30,11 +30,13 @@ ProviderRequest
 -> provider-specific transport
 -> provider response / authority_effect NONE
 -> provider usage event
--> Master Records provider-usage organization record
+-> local usage ledger record (non-gating)
 -> exact response hash
 -> externally-produced egress InTr ALLOW bound to exact response
 -> downstream consequence
 ```
+
+Provider usage is recorded in the local usage ledger and in the organization ledger by the transition receipt. Master Records records released organization batches downstream and is never a step in this sequence.
 
 Provider aliases and dispatch are centralized in `llm_adapter/external_llm_connection.py`. `llm_adapter/governed_external_provider_client.py` exposes that complete sequence through the existing ProviderClient seam used by Ecosystem Chat distributed execution, and returns a provider response only after both exact ingress and exact-response egress admission validate.
 
@@ -48,7 +50,7 @@ provider handoffs:
   docs/KIMI_INTR_TRANSPORT_MIRROR_HANDOFF.md
   docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md (or current Anthropic scoped handoff where renamed)
 task registry: tasks/LLMA-EXTERNAL-LLM-CONVERGENCE-306.json
-Master Records organization records and reconstruction: master-records/orchestration
+Master Records downstream recording of released organization batches (non-gating): master-records/orchestration
 runtime owner: StegVerse-Labs/.github WorkerCoordinator resident lane
 credential/provider-operation authority: StegVerse-Labs/TVC
 cross-repo dependency: StegVerse-Labs/TVC#345 / PR #346
@@ -66,10 +68,10 @@ No duplicate Interlock/InTr, TV/TVC, WorkerCoordinator, heartbeat/oscillator, ru
 
 ## Provider state
 
-- Z.ai: existing governed InTr transport/executor is reused. This change set adds `stegverse:runtime-profile:llm-adapter-zai:v1`, a TVC non-exportable broker binding, provider-usage/Master Records continuation, and exact-response egress verification. TVC PR #346 is merged and supplies the corresponding `zai` provider-operation profile under the existing broker.
+- Z.ai: existing governed InTr transport/executor is reused. This change set adds `stegverse:runtime-profile:llm-adapter-zai:v1`, a TVC non-exportable broker binding, non-gating provider-usage recording in the local usage ledger (former Master Records continuation retired under #368), and exact-response egress verification. TVC PR #346 is merged and supplies the corresponding `zai` provider-operation profile under the existing broker.
 - DeepSeek: existing InTr transport and existing TVC runtime-profile broker path remain the canonical production path and are dispatched through the shared connection primitive.
 - Kimi/Moonshot: existing InTr transport and existing TVC runtime-profile broker path remain the canonical production path. Missing exact-response TVC runtime egress admission is repaired in this change set.
-- Anthropic: canonical task #288 now owns `stegverse.intr.anthropic.transport.v1`. This change set reuses that implementation through a provider-request bridge and the TVC non-exportable broker binding using the already-existing Anthropic provider-operation profile, provider-usage/Master Records continuation, and exact-response egress verification. The superseded direct-credential compatibility route fails closed.
+- Anthropic: canonical task #288 now owns `stegverse.intr.anthropic.transport.v1`. This change set reuses that implementation through a provider-request bridge and the TVC non-exportable broker binding using the already-existing Anthropic provider-operation profile, non-gating provider-usage recording in the local usage ledger (its optional Master Records client is non-gating), and exact-response egress verification. The superseded direct-credential compatibility route fails closed.
 
 Direct credential-resolver executors remain compatibility/test surfaces for Z.ai, DeepSeek, and Kimi. Anthropic requires its canonical TVC non-exportable path. The convergence target is TVC non-exportable provider execution for all four providers.
 
@@ -79,7 +81,7 @@ Direct credential-resolver executors remain compatibility/test surfaces for Z.ai
 
 ## Runtime proof boundary
 
-Source, CI, merge, public pages, and provider self-description are not live connection evidence. A provider is `CONNECTED` only after authentic same-execution evidence proves ingress ALLOW, TV/TVC single-use provider operation, provider response, Master Records organization records/reconstruction, and exact-response egress ALLOW.
+Source, CI, merge, public pages, and provider self-description are not live connection evidence. A provider is `CONNECTED` only after authentic same-execution evidence proves ingress ALLOW, TV/TVC single-use provider operation, provider response, local usage-ledger recording with the organization-ledger transition receipt, and exact-response egress ALLOW. Master Records downstream recording/reconstruction is not a `CONNECTED` predicate.
 
 ## Current evidence
 
@@ -118,10 +120,10 @@ This change materially affects provider/runtime semantics, interfaces, credentia
 
 ## Remaining admissibility gate
 
-The preflight resolved canonical handoffs, task registry, Master Records authority, cross-task coordination, duplicate-creation constraints, and README impact before functional mutation. PR #309 merged with the superseded Anthropic conflict side; bounded repair PR #318 restored canonical #288 and merged after all eight hosted workflows passed. PR #319 then reconciled that merged validation state without changing runtime behavior or authority semantics. This evidence-only reconciliation requires no README change because it alters no behavior, interface, authority boundary, evidence meaning, prerequisite, dependency, failure behavior, or capability meaning. No merge or validation evidence implies live provider execution, activation, custody, or downstream publication.
+The preflight resolved canonical handoffs, task registry, Master Records downstream-recorder boundary, cross-task coordination, duplicate-creation constraints, and README impact before functional mutation. PR #309 merged with the superseded Anthropic conflict side; bounded repair PR #318 restored canonical #288 and merged after all eight hosted workflows passed. PR #319 then reconciled that merged validation state without changing runtime behavior or authority semantics. This evidence-only reconciliation requires no README change because it alters no behavior, interface, authority boundary, evidence meaning, prerequisite, dependency, failure behavior, or capability meaning. No merge or validation evidence implies live provider execution, activation, custody, or downstream publication.
 
 ## Runtime continuation
 
-The source lane is closed. The canonical successor is `SHWP-ECOSYSTEM-CHAT-INFERENCE-001` in `StegVerse-Labs/.github`. That task must reuse the existing WorkerCoordinator/independent task-control resident lane, Interlock/InTr admission, TV/TVC provider-operation authority, LLM-adapter provider-neutral transport, and Master Records organization records/reconstruction. No provider is `CONNECTED` until the authentic same-execution chain produces exact ingress ALLOW, a TV/TVC single-use provider operation, an authentic provider response, Master Records organization records/reconstruction PASS, and exact-response egress ALLOW.
+The source lane is closed. The canonical successor is `SHWP-ECOSYSTEM-CHAT-INFERENCE-001` in `StegVerse-Labs/.github`. That task must reuse the existing WorkerCoordinator/independent task-control resident lane, Interlock/InTr admission, TV/TVC provider-operation authority, LLM-adapter provider-neutral transport, and the organization ledger's transition receipt (Master Records may record the released batch downstream; non-gating). No provider is `CONNECTED` until the authentic same-execution chain produces exact ingress ALLOW, a TV/TVC single-use provider operation, an authentic provider response, the local usage-ledger record with the organization-ledger transition receipt, and exact-response egress ALLOW.
 
 Do not reopen this repository's functional convergence source unless that authentic runtime proof exposes a bounded defect.

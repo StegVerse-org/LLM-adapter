@@ -15,7 +15,7 @@
   "dependencies": [
     {"repo_id": "micro-node-runtime", "required": true},
     {"repo_id": "tvc", "required": true},
-    {"repo_id": "master-records-orchestration", "required": true}
+    {"repo_id": "master-records-orchestration", "required": false, "role": "downstream_recorder_non_gating"}
   ],
   "status_source": "repository_transport_and_usage_evidence_state",
   "freshness_seconds": 300,
