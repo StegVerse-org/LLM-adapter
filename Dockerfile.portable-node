@@ -21,10 +21,9 @@ RUN useradd --create-home --uid 10001 stegverse \
 USER stegverse
 
 VOLUME ["/var/lib/stegverse/portable-node"]
-EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD python -c "import json, os, urllib.request; r=urllib.request.urlopen('http://127.0.0.1:%s/health' % os.environ.get('PORT','8000'), timeout=3); data=json.load(r); raise SystemExit(0 if r.status == 200 and data.get('status') == 'ok' else 1)"
-
-ENTRYPOINT ["python", "-m", "llm_adapter.node_service", "daemon"]
-CMD ["--root", "/var/lib/stegverse/portable-node"]
+# Invocation-scoped (LLMA-DECLARED-PATH-CONFORMANCE-368, .github#98 step 6):
+# the container reconstructs the node root and exits. It runs no resident
+# daemon, listener, supervise loop or healthcheck; governed turns arrive as
+# admitted manifests through llm_adapter.collab_ingress.
+ENTRYPOINT ["python", "-m", "llm_adapter.node_bootstrap"]
+CMD ["bootstrap", "--root", "/var/lib/stegverse/portable-node"]

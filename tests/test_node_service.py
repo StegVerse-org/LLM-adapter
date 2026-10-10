@@ -3,44 +3,37 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from types import SimpleNamespace
+
+import pytest
 
 from llm_adapter import node_service
 
 
-def test_start_bootstraps_and_records_detached_service(tmp_path: Path, monkeypatch) -> None:
-    launched: dict[str, object] = {}
+def test_node_service_is_invocation_scoped_with_no_resident_surface() -> None:
+    for retired in ("start", "daemon", "_daemon_owned", "_claim_daemon", "_release_daemon",
+                    "_lock_path", "_restart_delay", "_wait_for_health", "_health_url"):
+        assert not hasattr(node_service, retired), retired
+    assert not hasattr(node_service, "subprocess")
 
-    def fake_popen(command: list[str], **kwargs: object) -> SimpleNamespace:
-        launched["command"] = command
-        launched["kwargs"] = kwargs
-        return SimpleNamespace(pid=4321)
 
-    monkeypatch.setattr(node_service.subprocess, "Popen", fake_popen)
+def test_cli_offers_only_invocation_scoped_commands(tmp_path: Path, monkeypatch, capsys) -> None:
+    monkeypatch.setattr("sys.argv", ["stegnode", "daemon", "--root", str(tmp_path)])
+    with pytest.raises(SystemExit):
+        node_service.main()
+    capsys.readouterr()
+    monkeypatch.setattr("sys.argv", ["stegnode", "--root", str(tmp_path)])
+    assert node_service.main() == 0
+    assert json.loads(capsys.readouterr().out)["state"] == "STOPPED"
+
+
+def test_status_reports_leftover_resident_state_as_stale(tmp_path: Path, monkeypatch, capsys) -> None:
+    node_service._write_state(tmp_path, {"state": "RUNNING", "pid": 55})
     monkeypatch.setattr(node_service, "_pid_alive", lambda _pid: False)
-
-    state = node_service.start(tmp_path)
-
-    assert (tmp_path / "node-profile.json").exists()
-    assert state["state"] == "STARTING"
-    assert state["pid"] == 4321
-    assert state["manual_action_required"] is False
-    assert launched["command"][-3:] == ["daemon", "--root", str(tmp_path.resolve())]
-    receipt = json.loads((tmp_path / "receipts" / "node-runtime" / "service-start.latest.json").read_text(encoding="utf-8"))
-    assert receipt["event"] == "service-start"
-
-
-def test_start_is_idempotent_for_every_live_active_state(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr(node_service, "_pid_alive", lambda pid: pid == 99)
-    monkeypatch.setattr(node_service.subprocess, "Popen", lambda *_a, **_k: (_ for _ in ()).throw(AssertionError("must not relaunch")))
-    for state_name in ("STARTING", "RUNNING", "RECONSTRUCTING"):
-        node_service._write_state(tmp_path, {
-            "state": state_name,
-            "pid": 99,
-            "node_root": str(tmp_path),
-            "manual_action_required": False,
-        })
-        assert node_service.start(tmp_path)["pid"] == 99
+    monkeypatch.setattr("sys.argv", ["stegnode", "status", "--root", str(tmp_path)])
+    assert node_service.main() == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["state"] == "STALE"
+    assert result["running"] is False
 
 
 def test_stop_writes_dissolved_state_and_receipt(tmp_path: Path, monkeypatch) -> None:
@@ -70,34 +63,3 @@ def test_atomic_state_write_leaves_no_temporary_file(tmp_path: Path) -> None:
     assert json.loads((tmp_path / "state" / "node-service.json").read_text(encoding="utf-8"))["pid"] == 7
     assert list((tmp_path / "state").glob("*.tmp")) == []
     assert list((tmp_path / "state").glob(".*.tmp")) == []
-
-
-def test_restart_delay_is_bounded_exponential() -> None:
-    assert node_service._restart_delay(1) == 1.0
-    assert node_service._restart_delay(4) == 8.0
-    assert node_service._restart_delay(20) == 60.0
-
-
-def test_health_url_uses_loopback_for_wildcard_host() -> None:
-    manifest = {"health": {"path": "/healthz"}}
-    assert node_service._health_url({"HOST": "0.0.0.0", "PORT": "8123"}, manifest) == "http://127.0.0.1:8123/healthz"
-
-
-def test_singleton_claim_refuses_live_owner(tmp_path: Path, monkeypatch) -> None:
-    lock = node_service._lock_path(tmp_path)
-    lock.parent.mkdir(parents=True)
-    lock.write_text("77\n", encoding="utf-8")
-    monkeypatch.setattr(node_service, "_pid_alive", lambda pid: pid == 77)
-    assert node_service._claim_daemon(tmp_path) is False
-    assert lock.read_text(encoding="utf-8") == "77\n"
-
-
-def test_singleton_claim_repairs_stale_owner(tmp_path: Path, monkeypatch) -> None:
-    lock = node_service._lock_path(tmp_path)
-    lock.parent.mkdir(parents=True)
-    lock.write_text("77\n", encoding="utf-8")
-    monkeypatch.setattr(node_service, "_pid_alive", lambda _pid: False)
-    assert node_service._claim_daemon(tmp_path) is True
-    assert int(lock.read_text(encoding="utf-8")) == os.getpid()
-    node_service._release_daemon(tmp_path)
-    assert not lock.exists()
