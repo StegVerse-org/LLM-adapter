@@ -67,12 +67,18 @@ def test_local_node_vertical_slice(monkeypatch) -> None:
             "transition_identity": transition,
         },
     )
-    assert response.status_code == 200, response.text
+    # Ecosystem Chat is manifest-bound transport (SDK#368): the gateway calls
+    # no provider and returns the SDK disposition, which is FAIL_CLOSED until
+    # the canonical organization boundary resolves.
+    assert response.status_code == 503, response.text
     result = response.json()
+    assert result["disposition"] == "FAIL_CLOSED"
+    assert result["failure_code"] == "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED"
+    assert result["route_id"] == "stegverse.route.ecosystem-chat.v1"
     assert result["transition_id"] == transition["transition_id"]
     assert result["run_id"] == transition["run_id"]
-    assert result["provider"]["used"] is False
-    assert result["authority"]["provider_usage_grants_authority"] is False
+    assert result["authority"]["provider_called"] is False
+    assert "provider_usage_submission" not in result
     # F7: no Master Records result is placed in the response or authority block.
     assert "provider_usage_is_master_records_organization_record" not in result["authority"]
     assert "master_records_usage_submission" not in result
