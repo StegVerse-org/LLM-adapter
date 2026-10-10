@@ -7,9 +7,9 @@
  "canonical_role": "Master Records is the recorder of released organization batch receipts (downstream evidence preservation for cross-organization reconstruction). It cannot create, admit, authorize, infer or repair a transition; it is not runtime-reality authority, not a gate and not custody; nothing awaits it; an unrecorded batch is not a blocker. Transitions close on the organization-ledger transition receipt.",
  "scan": {
   "pattern": "(?i)master[-_ ]?records (covers MasterRecords*, master_records_*, master-records)",
-  "files": "git-tracked text files only",
+  "files": "git-tracked text files only; this audit file itself is excluded",
   "before_ref": "main@433fc81",
-  "after_ref": "main@433fc81 + PR #380 (claude/mr-remediation-runtime) + PR claude/mr-remediation-docs; line numbers in rows_after refer to that merged state"
+  "after_ref": "main@a835d65 (includes #380) + this PR (claude/mr-remediation-docs); line numbers in rows_after refer to that tree"
  },
  "classifications": {
   "PROPER": "downstream non-gating recording/reconstruction of released organization batches, or a statement that Master Records is not authority/gate/custody",
@@ -29,7 +29,7 @@
  "counts_after": {
   "PROPER": 762,
   "NAMING_ONLY": 89,
-  "HISTORICAL_EVIDENCE": 357
+  "HISTORICAL_EVIDENCE": 369
  },
  "remaining_improper": [],
  "remediated_before_rows": [
@@ -7739,6 +7739,90 @@
    "classification": "HISTORICAL_EVIDENCE",
    "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
    "text": "\"tests/test_master_records_local_usage_record.py\","
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 10,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"StegVerse-org/LLM-adapter#368 (owning_existing_goal LLMA-DECLARED-PATH-CONFORMANCE-368; user order: all improper instances of master-records must be remediated)\""
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 12,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"master_records_review\": {"
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 15,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"StegVerse-org/.github:docs/ORGANIZATION_ROLE_RUNTIME_REALITY_DEPLOYMENT.md#master-records-restated\","
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 16,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"data/master-records-role-audit.json\""
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 18,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"reason\": \"Adds the machine-readable Master Records role audit and rewrites every operative doc, data, runtime-profile, capability, contract, intake and active task statement that made Master Records "
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 33,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"data/master-records-role-audit.json\","
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 49,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"README.md#master-records-role-llma-368\""
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 68,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"data/master-records-role-audit.json\","
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 103,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"docs/STEGBROWSER_MASTER_RECORDS_STATE_TRANSITION_RELAY_MIRROR_HANDOFF.md\","
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 130,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"path\": \"data/master-records-role-audit.json\","
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 131,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"semantic_responsibility\": \"Per-line classification inventory of every Master Records occurrence before and after the #368 remediation\","
+  },
+  {
+   "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-docs.json",
+   "line": 142,
+   "classification": "HISTORICAL_EVIDENCE",
+   "reason": "immutable receipt/report/fixture/vendored snapshot of a past event; never edited; non-operative",
+   "text": "\"semantic_responsibility\": \"Work-mutation-safety manifest for the #368 Master Records documentation remediation\","
   },
   {
    "file": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-runtime.json",
