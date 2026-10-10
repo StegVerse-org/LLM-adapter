@@ -30,3 +30,39 @@ def repository_ledger_root():
                 os.environ.pop(LEDGER_ROOT, None)
             else:
                 os.environ[LEDGER_ROOT] = previous
+
+
+@pytest.fixture
+def organization_admits_manifests(monkeypatch):
+    """Stand in for an organization that admitted the manifest and recorded it.
+
+    In this repository the canonical organization boundary is never resolved,
+    so a collaborative-ingress surface correctly returns FAIL_CLOSED. Tests of
+    what a surface does *after* an organization-admitted ALLOW use this far-side
+    double. It still validates every manifest with the real SDK contract and
+    records what it was handed, so a test can prove the manifest was bound
+    before anything else ran.
+    """
+    from llm_adapter import sdk_boundary
+
+    handed: list[dict] = []
+
+    def admitted(payload):
+        manifest = dict(payload["manifest"])
+        verdict = sdk_boundary.validate({"manifest": manifest})
+        assert verdict["accepted"] is True, verdict
+        handed.append(manifest)
+        return {
+            "schema": sdk_boundary.BOUNDARY_SCHEMA,
+            "surface": "MANIFEST_SUBMIT",
+            "handed_off": True,
+            "disposition": "ALLOW",
+            "canonical_entrypoint": sdk_boundary.CANONICAL_ENTRYPOINT,
+            "envelope": {"governance_state": "ALLOW", "organization_receipt_observed": True,
+                         "reached_sdk_runtime": True, "consequence_executed": False},
+            "test_double": "ORGANIZATION_ADMITTED_FAR_SIDE",
+            "authority_effect": "NONE_HANDOFF_ONLY",
+        }
+
+    monkeypatch.setattr(sdk_boundary, "submit", admitted)
+    return handed
