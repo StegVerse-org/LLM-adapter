@@ -15,7 +15,7 @@
       "StegVerse-org/.github:docs/ORGANIZATION_ROLE_RUNTIME_REALITY_DEPLOYMENT.md#master-records-restated",
       "data/master-records-role-audit.json"
     ],
-    "reason": "Master Records is the recorder of released organization batch receipts. This change set removes every adapter code path that gated, awaited, or required it: the wiki repository mutation closes on the organization's publication transition receipt, Ecosystem Chat no longer waits on a Master Records write, the unreachable HTTPS usage client is removed, and validators no longer require Master Records reconstruction, configuration, or acceptance as a precondition."
+    "reason": "Master Records is the recorder of released organization batch receipts. This change set removes every remaining adapter code path that gated, awaited, or required it: the wiki repository mutation closes on the organization's publication transition receipt, the startup custody worker can no longer block service start, the unreachable HTTPS usage client is removed, and validators no longer require Master Records reconstruction, configuration, or acceptance as a precondition."
   },
   "cross_task_coordination": {
     "checked": true,
@@ -65,7 +65,6 @@
     "iosnoperiod/github/workflows/validate.yml",
     "llm_adapter/combined_gateway.py",
     "llm_adapter/custody_worker.py",
-    "llm_adapter/ecosystem_chat_gateway.py",
     "llm_adapter/external_llm_connection.py",
     "llm_adapter/external_publication_mutation.py",
     "llm_adapter/governed_external_provider_client.py",
@@ -73,7 +72,6 @@
     "llm_adapter/master_records_organization_record_client.py",
     "llm_adapter/master_records_usage_record.py",
     "llm_adapter/stegbrowser_master_records_state_transition_relay.py",
-    "llm_adapter/va_claims_runtime_core.py",
     "llm_adapter/wiki_publication_master_records.py",
     "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-runtime.json",
     "requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json",
@@ -94,7 +92,6 @@
     "status/stegverse-live-baseline-runtime-readiness.json",
     "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
     "tests/test_custody_worker_startup_limit.py",
-    "tests/test_ecosystem_chat_gateway.py",
     "tests/test_execute_canonical_sovereign_route.py",
     "tests/test_external_publication_mutation.py",
     "tests/test_master_records_usage_record.py",

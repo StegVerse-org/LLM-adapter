@@ -50,7 +50,28 @@ def run(limit: int = 20) -> dict[str, object]:
 
 
 def main() -> int:
-    result = run(limit=configured_limit())
+    """Run once and always exit 0: service startup never waits on Master Records.
+
+    The container entrypoint and the portable node preflight run this before the
+    gateway starts. A Master Records or configuration failure is reported as a
+    six-field non-ALLOW and never blocks startup.
+    """
+    try:
+        result = run(limit=configured_limit())
+    except Exception as exc:  # downstream recording never gates startup
+        result = {
+            "worker": "master_records_organization_record",
+            "disposition": "NOT_RECORDED",
+            "failure_code": f"downstream_recording_worker_failed:{type(exc).__name__}",
+            "failed_predicate": "master_records_downstream_recording_completed",
+            "required_evidence_or_repair": "correct the Master Records recorder or STEGVERSE_CUSTODY_WORKER_LIMIT configuration named by the error",
+            "retry_entrypoint": "python -m llm_adapter.custody_worker",
+            "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+            "next_attempt": "rerun the worker; queued transitions are already closed and stay queued",
+            "error": str(exc)[:200],
+            "gates_startup": False,
+            "authority_effect": "NONE_DOWNSTREAM_RECORDING_ONLY",
+        }
     print(json.dumps(result, sort_keys=True))
     return 0
 
