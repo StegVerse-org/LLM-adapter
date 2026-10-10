@@ -1,4 +1,11 @@
-"""Transport-only shared Service Gateway adapter for HIL Universal InTr."""
+"""Transport-only shared Service Gateway adapter for HIL Universal InTr.
+
+`POST /intr/materialization` is manifest-bound: it translates the trigger into
+the SDK's `stegverse.route.hil-intake.v1` manifest and returns the SDK's
+disposition, with no upstream request and no wait. The KV result and
+control-plane source-package proxies below are separate surfaces with their own
+owner tasks and still forward to the loopback upstream.
+"""
 from __future__ import annotations
 
 import hashlib
@@ -9,9 +16,12 @@ from urllib import request as urlrequest
 from urllib.parse import urlsplit, urlunsplit
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
+
+from . import collab_ingress
 
 router = APIRouter()
+HIL_INTR_SURFACE = "service-gateway-hil-intr-materialization"
 MAX_BODY = 512 * 1024
 SOURCE_PACKAGE_MAX_BODY = 8 * 1024 * 1024
 ALLOWED_ORIGINS = {"https://stegverse.org", "https://www.stegverse.org"}
@@ -177,8 +187,34 @@ def _forward_to(target: str, body: bytes, headers: dict[str, str], *, response_l
         raise HTTPException(status_code=503, detail=f"universal_intr_runtime_unavailable:{type(exc).__name__}") from exc
 
 
-def _forward(body: bytes, headers: dict[str, str]) -> tuple[int, bytes, str]:
-    return _forward_to(_upstream(), body, headers)
+def _hil_materialization_disposition(body: bytes, headers: dict[str, str]) -> dict:
+    """Bind the HIL intake manifest for one InTr materialization and return the SDK disposition.
+
+    This used to forward the request to the loopback upstream and wait up to 15
+    seconds for its answer. The manifest's route now selects processing, the
+    SDK's disposition is the answer, and no connection is opened. The trigger
+    body is carried by digest only.
+    """
+    payload_sha256 = "sha256:" + _hash_body(body)
+    origin = headers.get("x-stegverse-transport-origin", "")
+    context_refs = ["intr-transport-origin:" + origin]
+    authorization_id = headers.get("x-stegverse-authorization-id")
+    if authorization_id:
+        context_refs.append("tvc-authorization-id:" + authorization_id)
+    return collab_ingress.execute(
+        collab_ingress.HIL_INTAKE,
+        {
+            "schema": collab_ingress.ROUTES[collab_ingress.HIL_INTAKE]["request_schema"],
+            "session_ref": f"intr-materialization:{payload_sha256}",
+            "subject_ref": payload_sha256,
+            "requested_decision": "HIL_INGRESS_MATERIALIZATION_REVIEW",
+            "context_refs": context_refs,
+        },
+        surface=HIL_INTR_SURFACE,
+        source_output_id=f"{HIL_INTR_SURFACE}:{payload_sha256}",
+        data={"payload_sha256": payload_sha256, "transport_origin": origin,
+              "content_type": headers.get("content-type")},
+    )
 
 
 @router.get("/intr/profile")
@@ -212,6 +248,8 @@ def hil_intr_readiness() -> dict:
         "universal_intr_enabled": _enabled(),
         "device_kv_result_path": "/intr/device-kv/result",
         "control_plane_source_package_path": "/intr/source-package",
+        "materialization_disposition_source": "SDK_MANIFEST_ROUTE:stegverse.route.hil-intake.v1",
+        "materialization_waits_on_upstream": False,
         "state": "READY" if _enabled() and configured else "NOT_READY",
         "transport": "InTr",
         "supported_origins": ["STEGOS_NODE_OUTBOX", "TVC_RELAY_EGRESS"],
@@ -235,8 +273,9 @@ async def hil_intr_proxy(request: Request) -> Response:
         raise HTTPException(status_code=503, detail="hil_intr_disabled")
     body = await request.body()
     headers = _validate_request(request, body)
-    status, raw, content_type = _forward(body, headers)
-    return Response(content=raw, status_code=status, media_type=content_type or "application/json", headers={"Cache-Control": "no-store"})
+    disposition = _hil_materialization_disposition(body, headers)
+    return JSONResponse(content=disposition, status_code=collab_ingress.http_status(disposition),
+                        headers={"Cache-Control": "no-store"})
 
 
 @router.post("/intr/source-package")

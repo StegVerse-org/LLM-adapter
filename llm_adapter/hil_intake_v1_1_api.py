@@ -11,9 +11,10 @@ from pathlib import Path
 from typing import Any, Mapping
 from uuid import uuid4
 
+from llm_adapter import collab_ingress
 from llm_adapter.generated_intr import hil_submission_connector as canonical_intr
 from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 
 router = APIRouter(prefix="/api/hil", tags=["hil-intake-v1.1"])
 PRIMARY_SHA256 = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
@@ -30,6 +31,27 @@ PUBLICATION_CONSENTS = {"public", "anonymous", "private", "not_provided"}
 
 HIL_INTR_CHAIN_SCHEMA = "stegverse.hil.intr_receipt_chain/v2"
 HIL_TVC_QUEUE_SCHEMA = "stegverse.hil.tvc_interlock_queue/v1"
+HIL_SURFACE = "hil-intake-v1.1"
+#: What the human reviewer is asked to decide. The decision itself belongs to
+#: the receiving organization; the manifest only names it.
+HIL_REQUESTED_DECISION = "HIL_PRIVATE_REVIEW:" + "|".join(sorted(REVIEW_DECISIONS))
+
+
+def hil_intake_request(*, operation_id: str, payload_hash: str,
+                       payload_binding: Mapping[str, Any]) -> dict[str, Any]:
+    """Translate one submission into the SDK's HIL intake processor request.
+
+    Digests only: no PDF bytes, provenance body or participant metadata enters
+    the manifest.
+    """
+    return {
+        "schema": collab_ingress.ROUTES[collab_ingress.HIL_INTAKE]["request_schema"],
+        "session_ref": operation_id,
+        "subject_ref": payload_hash,
+        "requested_decision": HIL_REQUESTED_DECISION,
+        "context_refs": [str(payload_binding[key]) for key in
+                         ("response_sha256", "provenance_sha256", "primary_sha256", "prompt_sha256")],
+    }
 
 
 def _canonical_json_bytes(value: Any) -> bytes:
@@ -411,6 +433,21 @@ async def submit_response(
         expected_payload_binding=payload_binding,
     )
 
+    # The manifest is bound before anything is persisted. Its route, not this
+    # endpoint, selects processing, and nothing below runs unless the SDK
+    # carried back an ALLOW.
+    sdk_disposition = collab_ingress.execute(
+        collab_ingress.HIL_INTAKE,
+        hil_intake_request(operation_id=ingress_intent["operation_id"],
+                           payload_hash=payload_hash, payload_binding=payload_binding),
+        surface=HIL_SURFACE,
+        source_output_id=f"hil-intake:{ingress_intent['operation_id']}",
+        data=payload_binding,
+    )
+    if sdk_disposition["disposition"] != "ALLOW":
+        return JSONResponse(status_code=collab_ingress.http_status(sdk_disposition),
+                            content=sdk_disposition, headers={"Cache-Control": "no-store"})
+
     signature_state = manifest["producer_signature"]["state"]
     chain_state = "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED"
     if signature_state == "VERIFIED":
@@ -484,6 +521,13 @@ async def submit_response(
         "previous_receipt_sha256": None,
         "intr_receipt_chain": intr_lineage["chain"],
         "intr_tvc_queue_hash": intr_lineage["queue_hash"],
+        "sdk_manifest_disposition": {
+            "route_id": sdk_disposition["route_id"],
+            "disposition": sdk_disposition["disposition"],
+            "manifest_sha256": sdk_disposition["manifest_sha256"],
+            "disposition_sha256": sdk_disposition["disposition_sha256"],
+        },
+        "receipt_is_organization_observation": False,
         "next_required_transition": "HIL_CUSTODY_TVC_INTERLOCK_ADMISSION",
         "transport_initiated_by_submission": True,
         "always_on_application_receiver_required": False,
@@ -496,6 +540,8 @@ async def submit_response(
             "Missing optional metadata does not imply consent, attribution, or publication authority.",
             "Review, acceptance, publication, and Master Record append remain pending.",
             "Submit initiated the canonical DEVICE_SYSTEM -> STEGOS_ECOSYSTEM Interlock/InTr transport.",
+            "Custody was persisted only after the SDK carried back ALLOW for the stegverse.route.hil-intake.v1 manifest.",
+            "This is the receiver's local receipt, not an Organization observation.",
             "The receiver persisted a chained HIL custody Interlock receipt and queued the next TVC lifecycle Interlock intent.",
         ],
     }

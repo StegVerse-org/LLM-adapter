@@ -13,6 +13,9 @@ from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from . import collab_ingress
 
 SCHEMA = "HIL-RECEIVER-RECEIPT-v2"
 NOTIFICATION_SCHEMA = "HIL-ATTEMPT-NOTIFICATION-v1"
@@ -31,6 +34,9 @@ PROMPT_VERSION = "HIL-PROMPT-v1.1"
 PROMPT_SHA256 = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c"
 PROVENANCE_SCHEMA = "HIL-RESPONSE-PROVENANCE-v1.1"
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+TVC_CREDENTIAL_SOURCE_NOT_BOUND = collab_ingress.TVC_CREDENTIAL_SOURCE_NOT_BOUND
+HIL_REQUESTED_DECISION = "HIL_REVIEW:ACCEPT|REJECT"
+MAX_DOCUMENT_BYTES = 100 * 1024 * 1024
 
 
 def utc_now() -> str:
@@ -49,14 +55,19 @@ def sha256_tag(value: bytes) -> str:
     return "sha256:" + sha256_hex(value)
 
 
-def _load_tvc_receipt() -> Dict[str, Any]:
-    raw = os.getenv("STEGVERSE_TVC_DECISION_RECEIPT", "").strip()
-    receipt_path = os.getenv("STEGVERSE_TVC_DECISION_RECEIPT_FILE", "").strip()
-    if not raw and receipt_path:
-        raw = Path(receipt_path).read_text(encoding="utf-8")
-    if not raw:
-        raise RuntimeError("tvc_decision_receipt_missing")
-    receipt = json.loads(raw)
+class TvcCredentialSourceNotBound(RuntimeError):
+    """A credential this gateway needs has no TV/TVC-sourced binding."""
+
+
+#: The credentials the HIL intake gateway would need after an admitted
+#: manifest: the TVC intake decision receipt and the receipt-signing key. Both
+#: used to be read from the environment. Neither has a TV/TVC-sourced path in
+#: this repository, so the gateway fails closed instead of falling back.
+UNBOUND_CREDENTIALS = ("service-gateway/hil-intake/tvc-decision-receipt",
+                       "service-gateway/hil-intake/receipt-key")
+
+
+def _validate_tvc_receipt(receipt: Dict[str, Any]) -> Dict[str, Any]:
     if receipt.get("role") != INTAKE_ROLE:
         raise RuntimeError("tvc_role_mismatch")
     if receipt.get("admissible") is not True or receipt.get("binding_matched") is not True:
@@ -68,12 +79,22 @@ def _load_tvc_receipt() -> Dict[str, Any]:
     return receipt
 
 
+def _tvc_credentials() -> Dict[str, Any]:
+    """Resolve the TVC decision receipt and receipt key from a TV/TVC source.
+
+    No such source is bound in this repository. Environment variables are not
+    read: a credential that arrived that way would have no TV/TVC provenance.
+    """
+    raise TvcCredentialSourceNotBound(TVC_CREDENTIAL_SOURCE_NOT_BOUND)
+
+
 def _runtime() -> Dict[str, Any]:
-    tvc = _load_tvc_receipt()
-    root = Path(os.environ["STEGVERSE_HIL_STORAGE_ROOT"]).expanduser().resolve()
-    key = os.environ["STEGVERSE_HIL_RECEIPT_KEY"].encode("utf-8")
+    credentials = _tvc_credentials()
+    tvc = _validate_tvc_receipt(credentials["tvc"])
+    key = credentials["key"]
     if len(key) < 32:
         raise RuntimeError("receipt_key_too_short")
+    root = Path(credentials["storage_root"]).expanduser().resolve()
     for directory in (
         "packets",
         "receipts",
@@ -83,6 +104,42 @@ def _runtime() -> Dict[str, Any]:
     ):
         (root / directory).mkdir(parents=True, exist_ok=True)
     return {"root": root, "key": key, "tvc": tvc}
+
+
+def _admit_hil_manifest(*, surface: str, session_ref: str, subject_ref: str,
+                        context_refs: list[str], data: Dict[str, Any]) -> Dict[str, Any]:
+    """Bind the HIL intake manifest and return the SDK disposition.
+
+    Nothing has been persisted when this runs. Processing is selected by the
+    manifest's route; this gateway only translates the upload into it.
+    """
+    return collab_ingress.execute(
+        collab_ingress.HIL_INTAKE,
+        {
+            "schema": collab_ingress.ROUTES[collab_ingress.HIL_INTAKE]["request_schema"],
+            "session_ref": session_ref,
+            "subject_ref": subject_ref,
+            "requested_decision": HIL_REQUESTED_DECISION,
+            "context_refs": context_refs,
+        },
+        surface=surface,
+        source_output_id=f"{surface}:{session_ref}",
+        data=data,
+    )
+
+
+def _admitted_runtime(admitted: Dict[str, Any]) -> tuple[Optional[Dict[str, Any]], Optional[JSONResponse]]:
+    """After an ALLOW, resolve the runtime or fail closed on the unbound credential."""
+    try:
+        return _runtime(), None
+    except TvcCredentialSourceNotBound:
+        body = collab_ingress.credential_not_bound(admitted, credential=",".join(UNBOUND_CREDENTIALS))
+        return None, _disposition_response(body)
+
+
+def _disposition_response(body: Dict[str, Any]) -> JSONResponse:
+    return JSONResponse(status_code=collab_ingress.http_status(body), content=body,
+                        headers={"Cache-Control": "no-store"})
 
 
 def _sign_receipt(receipt: Dict[str, Any], key: bytes) -> Dict[str, Any]:
@@ -233,6 +290,28 @@ def hil_readiness() -> Dict[str, Any]:
     }
 
 
+async def _document_digest(upload: UploadFile, metadata: Dict[str, Any]) -> str:
+    """Hash the upload in memory, before anything is persisted, then rewind it."""
+    digest = hashlib.sha256()
+    size = 0
+    first = b""
+    while chunk := await upload.read(1024 * 1024):
+        if not first:
+            first = chunk[:5]
+        size += len(chunk)
+        if size > MAX_DOCUMENT_BYTES:
+            raise HTTPException(status_code=413, detail="document_too_large")
+        digest.update(chunk)
+    await upload.seek(0)
+    if first != b"%PDF-":
+        raise HTTPException(status_code=422, detail="invalid_pdf_signature")
+    document_hash = digest.hexdigest()
+    declared_hash = metadata.get("response_sha256") or metadata.get("document_hash") or metadata.get("content_hash")
+    if declared_hash and str(declared_hash).removeprefix("sha256:") != document_hash:
+        raise HTTPException(status_code=422, detail="document_hash_mismatch")
+    return document_hash
+
+
 async def _persist_packet(
     *, runtime: Dict[str, Any], packet_id: str, upload: UploadFile, metadata: Dict[str, Any]
 ) -> tuple[str, int, Path]:
@@ -275,13 +354,27 @@ async def _persist_packet(
 
 
 @app.post("/v1/hil/intake")
-async def hil_intake(document: UploadFile = File(...), metadata: str = Form(...)) -> Dict[str, Any]:
+async def hil_intake(document: UploadFile = File(...), metadata: str = Form(...)) -> Any:
     try:
-        runtime = _runtime()
         meta = json.loads(metadata)
     except Exception as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+        raise HTTPException(status_code=422, detail="metadata_json_invalid") from exc
+    if not isinstance(meta, dict):
+        raise HTTPException(status_code=422, detail="metadata_object_required")
     packet_id = str(meta.get("packet_id") or uuid.uuid4())
+    document_hash = await _document_digest(document, meta)
+    admitted = _admit_hil_manifest(
+        surface="service-gateway-hil-intake",
+        session_ref=packet_id,
+        subject_ref="sha256:" + document_hash,
+        context_refs=[sha256_tag(canonical_json(meta))],
+        data={"document_hash": "sha256:" + document_hash, "metadata_hash": sha256_tag(canonical_json(meta))},
+    )
+    if admitted["disposition"] != "ALLOW":
+        return _disposition_response(admitted)
+    runtime, refusal = _admitted_runtime(admitted)
+    if refusal is not None:
+        return refusal
     result, size, receipt_path = await _persist_packet(
         runtime=runtime, packet_id=packet_id, upload=document, metadata=meta
     )
@@ -323,38 +416,58 @@ async def site_hil_submission(
     participant_notification_requested: str = Form("false"),
     participant_notification_email: str = Form("not_provided"),
     participant_notification_scope: str = Form("NONE"),
-) -> Dict[str, Any]:
+) -> Any:
     attempt_id = f"HIL-ATTEMPT-{uuid.uuid4().hex[:20].upper()}"
     runtime: Optional[Dict[str, Any]] = None
     participant_email: Optional[str] = None
     submission_id: Optional[str] = None
     response_hash: Optional[str] = None
     manifest_hash: Optional[str] = None
+    # Translation only, before anything is persisted: validate the chain,
+    # bind the HIL intake manifest and carry back the SDK disposition.
+    participant_email = _normalize_participant_email(
+        participant_notification_requested,
+        participant_notification_email,
+        participant_notification_scope,
+    )
     try:
-        runtime = _runtime()
-        participant_email = _normalize_participant_email(
-            participant_notification_requested,
-            participant_notification_email,
-            participant_notification_scope,
-        )
         manifest = json.loads((await provenance_manifest.read()).decode("utf-8"))
-        manifest_hash = sha256_hex(canonical_json(manifest))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=422, detail="provenance_manifest_json_invalid") from exc
+    if not isinstance(manifest, dict):
+        raise HTTPException(status_code=422, detail="provenance_manifest_object_required")
+    manifest_hash = sha256_hex(canonical_json(manifest))
+    if primary_sha256 != PRIMARY_SHA256 or prompt_sha256 != PROMPT_SHA256:
+        raise HTTPException(status_code=422, detail="primary_or_prompt_hash_mismatch")
+    if manifest.get("schema_version") != PROVENANCE_SCHEMA:
+        raise HTTPException(status_code=422, detail="provenance_schema_mismatch")
+    if manifest.get("primary_sha256") != PRIMARY_SHA256 or manifest.get("prompt_sha256") != PROMPT_SHA256:
+        raise HTTPException(status_code=422, detail="provenance_chain_mismatch")
+    response_hash = str(manifest.get("response_sha256") or "")
+    if len(response_hash) != 64:
+        raise HTTPException(status_code=422, detail="response_hash_missing")
+    submission_id = f"HIL-SUBMISSION-{response_hash[:16].upper()}"
+    await _document_digest(response_pdf, {"response_sha256": response_hash})
+    admitted = _admit_hil_manifest(
+        surface="service-gateway-hil-submissions",
+        session_ref=submission_id,
+        subject_ref="sha256:" + response_hash,
+        context_refs=["sha256:" + manifest_hash, "sha256:" + PRIMARY_SHA256, "sha256:" + PROMPT_SHA256],
+        data={"response_sha256": "sha256:" + response_hash,
+              "provenance_manifest_sha256": "sha256:" + manifest_hash},
+    )
+    if admitted["disposition"] != "ALLOW":
+        return _disposition_response(admitted)
+    runtime, refusal = _admitted_runtime(admitted)
+    if refusal is not None:
+        return refusal
+    try:
         _persist_attempt_state(runtime, attempt_id, {
             "attempt_id": attempt_id,
             "state": "ATTEMPT_CREATED",
             "created_at": utc_now(),
             "participant_copy_requested": participant_email is not None,
         })
-        if primary_sha256 != PRIMARY_SHA256 or prompt_sha256 != PROMPT_SHA256:
-            raise HTTPException(status_code=422, detail="primary_or_prompt_hash_mismatch")
-        if manifest.get("schema_version") != PROVENANCE_SCHEMA:
-            raise HTTPException(status_code=422, detail="provenance_schema_mismatch")
-        if manifest.get("primary_sha256") != PRIMARY_SHA256 or manifest.get("prompt_sha256") != PROMPT_SHA256:
-            raise HTTPException(status_code=422, detail="provenance_chain_mismatch")
-        response_hash = str(manifest.get("response_sha256") or "")
-        if len(response_hash) != 64:
-            raise HTTPException(status_code=422, detail="response_hash_missing")
-        submission_id = f"HIL-SUBMISSION-{response_hash[:16].upper()}"
         result, size, receipt_path = await _persist_packet(
             runtime=runtime,
             packet_id=submission_id,

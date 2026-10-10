@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib
+import json
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -129,23 +130,38 @@ def test_readiness_preserves_non_authority(monkeypatch):
     assert payload["second_user_device_required"] is False
 
 
-def test_node_trigger_forwards_exact_bytes_and_headers(monkeypatch):
+def test_node_trigger_returns_sdk_disposition_without_upstream_wait(monkeypatch):
     body = b'{"schema":"stegos.node_intr_materialization_trigger.v1"}'
-    observed = {}
 
-    def fake_forward(raw, forwarded):
-        observed["body"] = raw
-        observed["headers"] = forwarded
-        return 202, b'{"state":"INGRESS_ADMITTED"}', "application/json"
+    def refuse(*_args, **_kwargs):
+        raise AssertionError("materialization must not wait on an upstream connection")
 
-    monkeypatch.setattr(mod, "_forward", fake_forward)
+    monkeypatch.setattr("urllib.request.urlopen", refuse)
+    monkeypatch.setattr(mod.urlrequest, "urlopen", refuse)
     client = app_client(monkeypatch)
     response = client.post("/intr/materialization", content=body, headers=headers(body))
-    assert response.status_code == 202
-    assert observed["body"] == body
-    assert observed["headers"]["x-stegverse-transport"] == "InTr"
-    assert observed["headers"]["x-stegverse-transport-origin"] == "STEGOS_NODE_OUTBOX"
-    assert "x-stegverse-authorization-id" not in observed["headers"]
+    assert response.status_code == 503
+    payload = response.json()
+    assert payload["disposition"] == "FAIL_CLOSED"
+    assert payload["failure_code"] == "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED"
+    assert payload["route_id"] == "stegverse.route.hil-intake.v1"
+    assert payload["canonical_entrypoint"] == "stegverse.manifest_execution.execute_manifest"
+    assert payload["network_call_performed_by_adapter"] is False
+    assert payload["sdk_boundary"]["envelope"]["consequence_executed"] is False
+
+
+def test_node_trigger_binds_manifest_by_digest(monkeypatch, organization_admits_manifests):
+    body = b'{"schema":"stegos.node_intr_materialization_trigger.v1"}'
+    client = app_client(monkeypatch)
+    response = client.post("/intr/materialization", content=body,
+                           headers=headers(body, "TVC_RELAY_EGRESS"))
+    assert response.status_code == 200
+    assert response.json()["disposition"] == "ALLOW"
+    [manifest] = organization_admits_manifests
+    request = manifest["extensions"]["stegverse_hil_intake_request"]
+    assert request["subject_ref"] == "sha256:" + hashlib.sha256(body).hexdigest()
+    assert "tvc-authorization-id:TVC-AUTH-TEST" in request["context_refs"]
+    assert body.decode() not in json.dumps(manifest)
 
 
 def test_node_cannot_smuggle_authorization(monkeypatch):

@@ -217,7 +217,7 @@ async def site_hil_submission(
     model_response_declared_unedited: str = Form("false"), participant_consent_authority_acknowledged: str = Form("false"),
     participant_notification_requested: str = Form("false"), participant_notification_email: str = Form("not_provided"),
     participant_notification_scope: str = Form("NONE"),
-) -> Dict[str, Any]:
+) -> Any:
     receipt = await gateway.site_hil_submission(
         response_pdf=response_pdf, provenance_manifest=provenance_manifest,
         participant_identifier=participant_identifier, publication_consent=publication_consent,
@@ -228,6 +228,10 @@ async def site_hil_submission(
         participant_notification_email=participant_notification_email,
         participant_notification_scope=participant_notification_scope,
     )
+    if isinstance(receipt, Response):
+        # The SDK disposition (or the unbound-credential FAIL_CLOSED) is
+        # returned as the gateway produced it; no local receipt exists.
+        return receipt
     unsigned = dict(receipt)
     unsigned.pop("receipt_sha256", None)
     receipt["receipt_sha256"] = gateway.sha256_hex(gateway.canonical_json(unsigned))
@@ -241,7 +245,10 @@ async def site_hil_submission(
 def site_hil_submission_status(submission_id: str, receipt_id: str = Query(..., min_length=16, max_length=64)) -> Dict[str, Any]:
     if not submission_id.startswith("HIL-SUBMISSION-") or len(submission_id) > 64:
         raise HTTPException(status_code=404, detail="submission_status_not_found")
-    runtime = gateway._runtime()
+    try:
+        runtime = gateway._runtime()
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     receipt_path = runtime["root"] / "receipts" / f"{submission_id}.json"
     if not receipt_path.exists():
         raise HTTPException(status_code=404, detail="submission_status_not_found")
