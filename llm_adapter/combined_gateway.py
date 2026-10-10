@@ -362,6 +362,14 @@ async def record_provider_usage_after_ecosystem_chat(request: Request, call_next
             request_payload = json.loads(request_body.decode("utf-8"))
             response_payload = json.loads(raw_body.decode("utf-8"))
             provider = response_payload.get("provider") or {}
+            if not provider:
+                # Ecosystem Chat is manifest-bound transport: the gateway calls
+                # no provider, so there is no usage of its own to record.
+                return Response(content=raw_body, status_code=response.status_code,
+                                headers={key: value for key, value in response.headers.items()
+                                         if key.lower() not in {"content-length", "content-type"}},
+                                media_type=response.media_type or "application/json",
+                                background=response.background)
             local_submission = persist_provider_usage(
                 session_id=str(request_payload["session_id"]),
                 transition_id=str(response_payload["transition_id"]),

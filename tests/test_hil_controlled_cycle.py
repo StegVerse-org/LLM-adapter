@@ -4,6 +4,7 @@ import hashlib
 import json
 import sqlite3
 
+import pytest
 from fastapi.testclient import TestClient
 
 from llm_adapter.combined_gateway import app
@@ -16,6 +17,17 @@ from llm_adapter.hil_intake_v1_1_api import (
 
 PRIMARY = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
 PROMPT = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c"
+
+
+
+@pytest.fixture(autouse=True)
+def _organization_admitted(organization_admits_manifests):
+    """Custody is exercised after an organization-admitted HIL manifest.
+
+    The un-admitted path (FAIL_CLOSED, nothing persisted) is covered in
+    tests/test_hil_intake_manifest_conformance.py.
+    """
+    return organization_admits_manifests
 
 
 def _manifest(pdf: bytes) -> dict:

@@ -1,9 +1,13 @@
 import hashlib
 import json
 
+import pytest
 from fastapi.testclient import TestClient
 
+from llm_adapter import service_gateway
 from llm_adapter.service_gateway import app
+
+HIL_ROUTE = "stegverse.route.hil-intake.v1"
 
 
 def _tvc_receipt():
@@ -21,60 +25,39 @@ def _tvc_receipt():
     }
 
 
-def _configure(monkeypatch, tmp_path):
+def _plant_env_credentials(monkeypatch, tmp_path):
+    """What used to configure the gateway. It must now be ignored."""
     monkeypatch.setenv("STEGVERSE_TVC_DECISION_RECEIPT", json.dumps(_tvc_receipt()))
     monkeypatch.setenv("STEGVERSE_HIL_STORAGE_ROOT", str(tmp_path))
     monkeypatch.setenv("STEGVERSE_HIL_RECEIPT_KEY", "x" * 64)
 
 
-def test_ready_requires_tvc_and_storage(monkeypatch, tmp_path):
-    _configure(monkeypatch, tmp_path)
-    client = TestClient(app)
-    response = client.get("/ready")
-    assert response.status_code == 200
-    assert response.json()["status"] == "ready"
-    assert response.json()["protocol"] == "HIL-RECEIVER-RECEIPT-v2"
-
-    site_ready = client.get("/api/hil/readiness")
-    assert site_ready.status_code == 200
-    payload = site_ready.json()
-    assert payload["state"] == "READY"
-    assert payload["primary_version"] == "v1.1"
-    assert payload["provenance_manifest_schema"] == "HIL-RESPONSE-PROVENANCE-v1.1"
+def _bind_tvc_source(monkeypatch, tmp_path):
+    """A TV/TVC-sourced credential binding, which this repository does not have."""
+    monkeypatch.setattr(service_gateway, "_tvc_credentials", lambda: {
+        "tvc": _tvc_receipt(), "key": b"x" * 64, "storage_root": str(tmp_path)})
 
 
-def test_pdf_intake_is_durable_and_idempotent(monkeypatch, tmp_path):
-    _configure(monkeypatch, tmp_path)
-    client = TestClient(app)
-    pdf = b"%PDF-1.7\nfixture\n%%EOF\n"
-    document_hash = "sha256:" + hashlib.sha256(pdf).hexdigest()
+def _no_network(monkeypatch):
+    def refuse(*_args, **_kwargs):
+        raise AssertionError("the HIL gateway must not open a network connection")
+    monkeypatch.setattr("urllib.request.urlopen", refuse)
+
+
+PDF = b"%PDF-1.7\nfixture\n%%EOF\n"
+
+
+def _intake(client, pdf=PDF):
     metadata = {
         "packet_id": "research-packet-001",
-        "document_hash": document_hash,
+        "document_hash": "sha256:" + hashlib.sha256(pdf).hexdigest(),
         "protocol": "HIL-RESPONSE-PACKET-v1",
     }
-    files = {"document": ("experiment.pdf", pdf, "application/pdf")}
-    data = {"metadata": json.dumps(metadata)}
-
-    first = client.post("/v1/hil/intake", files=files, data=data)
-    assert first.status_code == 200
-    receipt = first.json()
-    assert receipt["status"] == "SUBMISSION_ACCEPTED"
-    assert receipt["document_hash"] == document_hash
-    assert receipt["signature"].startswith("hmac-sha256:")
-    assert (tmp_path / "packets" / "research-packet-001" / "document.pdf").read_bytes() == pdf
-    assert (tmp_path / "receipts" / "research-packet-001.json").exists()
-
-    duplicate = client.post("/v1/hil/intake", files=files, data=data)
-    assert duplicate.status_code == 200
-    assert duplicate.json() == receipt
+    return client.post("/v1/hil/intake", files={"document": ("experiment.pdf", pdf, "application/pdf")},
+                       data={"metadata": json.dumps(metadata)})
 
 
-def test_site_submission_contract(monkeypatch, tmp_path):
-    _configure(monkeypatch, tmp_path)
-    client = TestClient(app)
-    pdf = b"%PDF-1.7\nsite fixture\n%%EOF\n"
-    response_hash = hashlib.sha256(pdf).hexdigest()
+def _site_submission(client, pdf=b"%PDF-1.7\nsite fixture\n%%EOF\n"):
     manifest = {
         "schema_version": "HIL-RESPONSE-PROVENANCE-v1.1",
         "primary_version": "v1.1",
@@ -82,9 +65,9 @@ def test_site_submission_contract(monkeypatch, tmp_path):
         "protocol_version": "HIL-PROTOCOL-v1.1",
         "prompt_version": "HIL-PROMPT-v1.1",
         "prompt_sha256": "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c",
-        "response_sha256": response_hash,
+        "response_sha256": hashlib.sha256(pdf).hexdigest(),
     }
-    response = client.post(
+    return client.post(
         "/api/hil/submissions",
         files={
             "response_pdf": ("response.pdf", pdf, "application/pdf"),
@@ -98,11 +81,79 @@ def test_site_submission_contract(monkeypatch, tmp_path):
             "model_response_declared_unedited": "true",
             "participant_consent_authority_acknowledged": "true",
         },
-    )
+    ), manifest
+
+
+def test_readiness_fails_closed_without_tvc_credential_source(monkeypatch, tmp_path):
+    _plant_env_credentials(monkeypatch, tmp_path)
+    client = TestClient(app)
+    for path in ("/ready", "/api/hil/readiness"):
+        response = client.get(path)
+        assert response.status_code == 503
+        assert response.json()["detail"] == "TVC_CREDENTIAL_SOURCE_NOT_BOUND"
+
+
+@pytest.mark.parametrize("submit", ["intake", "site"])
+def test_without_canonical_boundary_the_sdk_disposition_is_returned_and_nothing_persists(monkeypatch, tmp_path, submit):
+    _plant_env_credentials(monkeypatch, tmp_path)
+    _no_network(monkeypatch)
+    client = TestClient(app)
+    response = _intake(client) if submit == "intake" else _site_submission(client)[0]
+    assert response.status_code == 503
+    body = response.json()
+    assert body["disposition"] == "FAIL_CLOSED"
+    assert body["failure_code"] == "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED"
+    assert body["route_id"] == HIL_ROUTE
+    assert body["handed_off"] is True
+    assert body["canonical_entrypoint"] == "stegverse.manifest_execution.execute_manifest"
+    assert body["credential_read_from_environment"] is False
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("submit", ["intake", "site"])
+def test_admitted_manifest_still_fails_closed_without_tvc_credential_source(
+        monkeypatch, tmp_path, organization_admits_manifests, submit):
+    _plant_env_credentials(monkeypatch, tmp_path)
+    _no_network(monkeypatch)
+    client = TestClient(app)
+    response = _intake(client) if submit == "intake" else _site_submission(client)[0]
+    assert response.status_code == 503
+    body = response.json()
+    assert body["disposition"] == "FAIL_CLOSED"
+    assert body["failure_code"] == "TVC_CREDENTIAL_SOURCE_NOT_BOUND"
+    assert body["sdk_disposition"] == "ALLOW"
+    assert "x" * 64 not in response.text
+    assert list(tmp_path.iterdir()) == []
+    [manifest] = organization_admits_manifests
+    assert manifest["processing"]["route_id"] == HIL_ROUTE
+
+
+def test_pdf_intake_is_durable_and_idempotent_once_admitted_and_tvc_bound(
+        monkeypatch, tmp_path, organization_admits_manifests):
+    _bind_tvc_source(monkeypatch, tmp_path)
+    client = TestClient(app)
+    first = _intake(client)
+    assert first.status_code == 200
+    receipt = first.json()
+    assert receipt["status"] == "SUBMISSION_ACCEPTED"
+    assert receipt["document_hash"] == "sha256:" + hashlib.sha256(PDF).hexdigest()
+    assert receipt["signature"].startswith("hmac-sha256:")
+    assert (tmp_path / "packets" / "research-packet-001" / "document.pdf").read_bytes() == PDF
+    assert (tmp_path / "receipts" / "research-packet-001.json").exists()
+
+    duplicate = _intake(client)
+    assert duplicate.status_code == 200
+    assert duplicate.json() == receipt
+    assert len(organization_admits_manifests) == 2
+
+
+def test_site_submission_contract_once_admitted_and_tvc_bound(monkeypatch, tmp_path, organization_admits_manifests):
+    _bind_tvc_source(monkeypatch, tmp_path)
+    response, manifest = _site_submission(TestClient(app))
     assert response.status_code == 200
     receipt = response.json()
     assert receipt["schema_version"] == "HIL-RECEIVER-RECEIPT-v2"
-    assert receipt["submitted_file_sha256"] == response_hash
+    assert receipt["submitted_file_sha256"] == manifest["response_sha256"]
     assert receipt["chain_validation_state"] == "PRIMARY_PROMPT_RESPONSE_CHAIN_VERIFIED"
     assert receipt["receiver_signature"].startswith("hmac-sha256:")
     material = dict(receipt)
@@ -112,13 +163,9 @@ def test_site_submission_contract(monkeypatch, tmp_path):
     ).hexdigest()
 
 
-def test_intake_scope_cannot_use_provider_keys(monkeypatch, tmp_path):
+def test_intake_scope_cannot_use_provider_keys():
     receipt = _tvc_receipt()
     receipt["allowed_keys"].append("service-gateway/provider/token")
     receipt["denied_keys"] = ["service-gateway/provider/token"]
-    monkeypatch.setenv("STEGVERSE_TVC_DECISION_RECEIPT", json.dumps(receipt))
-    monkeypatch.setenv("STEGVERSE_HIL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("STEGVERSE_HIL_RECEIPT_KEY", "x" * 64)
-    response = TestClient(app).get("/ready")
-    assert response.status_code == 503
-    assert "tvc_intake_scope_invalid" in response.text
+    with pytest.raises(RuntimeError, match="tvc_intake_scope_invalid"):
+        service_gateway._validate_tvc_receipt(receipt)

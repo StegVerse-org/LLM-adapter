@@ -468,15 +468,7 @@ The executor requires an admitted TVC route, binds the exact canonical runtime p
 
 ### VA claims turn closure (LLMA-368)
 
-A VA claims chat turn (`llm_adapter/va_claims_runtime_core.py`) closes on its own
-transition receipt, appended to this repository's transition ledger
-(`.stegverse/transition-ledger/emit.py`) as `VA_CLAIMS_TURN_EXECUTED`. Master Records
-reconstruction is not a turn predicate: when a local Master Records capsule is
-materialized the turn's packet (`runtime_proof`, `tvc_route_receipt`,
-`llm_adapter_execution_receipt` -- keys unchanged) is emitted to it and the outcome is
-returned as `master_records_reconstruction` evidence with `gates_turn: false`. A
-missing capsule or failed reconstruction never withholds a closed turn. Every
-non-ALLOW turn or refusal carries `failure_code`, `failed_predicate`,
+A VA claims chat turn (`llm_adapter/va_claims_runtime_core.py`, served by `POST /api/va-claims/v1/chat` and `va_runtime_http_server.py`) is manifest-bound transport on `stegverse.route.va-scoped-chat.v1` (SDK#368). VACC is a VA-scoped specialization of Ecosystem Chat. The deployment's VA scope (`policy_id`, `va_ref`, `allowed_topics`) is declared as manifest policy, and the SDK evaluates it. A topic outside the scope is a governed `DENY` (HTTP 403) before any handoff. Otherwise the turn returns the SDK disposition, which is `FAIL_CLOSED` `CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED` until the canonical organization boundary resolves. The keyword classifier only fills the draft's `requested_topic`, and a caller may name the topic with `requested_topic`. The turn does not generate a local answer, call a local model, read the TVC route receipt file or other environment inputs, or attribute usage. It also appends no repo-local receipt, so nothing local is labelled as an Organization observation. Master Records is non-gating. Every non-ALLOW turn or refusal carries `failure_code`, `failed_predicate`,
 `required_evidence_or_repair`, `retry_entrypoint`, `owning_existing_goal` and
 `next_attempt`.
 
@@ -711,7 +703,7 @@ peer execution profiles. The framework helper uses existing run-manifest routing
 adapter discovery preserves its own receiving operation. External instructions
 end at canonical manifest submission and evidence retention. Local handoff is not
 receiver observation; external reciprocal Interlock/InTr remains deferred.
-SDK PR #429 was canonically merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`. This adapter now pins SDK main `ea8b8e2d64323caad4bd460edaa5e59cc870a668`, which contains that merge and the organization-role-conformance route (`1062d29`). See the repository's portability/canonical-standing/machine-contract mirror handoff for retained proof boundaries.
+SDK PR #429 was canonically merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`. This adapter now pins SDK main `0c2ce009d9ddcd3e614768c297beef2255c69e73`, which contains that merge, the organization-role-conformance route (`1062d29`) and the collaborative-ingress routes (`stegverse.route.ecosystem-chat.v1`, `stegverse.route.va-scoped-chat.v1`, `stegverse.route.hil-intake.v1`, #447). See the repository's portability/canonical-standing/machine-contract mirror handoff for retained proof boundaries.
 
 
 ### Manifest authority boundary (LLMA-368 F14)
@@ -720,4 +712,12 @@ LLM-adapter is transport and optional data translation only. It does not select 
 
 #### Generic manifest surface: canonical entrypoint (LLMA-368 F14)
 
-`sdk_boundary.submit` hands the wire manifest to `stegverse.manifest_execution.execute_manifest`, the SDK's canonical entrypoint (SDK #444/#445, pinned at `ea8b8e2`). The SDK resolves the route from the manifest, and resolves the organization boundary from the source its route binding fixes. Neither the caller, the request payload nor the environment can choose the runtime, the route or the boundary. The adapter makes no network read and carries no credential, so it serves no copy of the boundary. Until the boundary resolves, the surface returns the SDK's own `FAIL_CLOSED` `CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED`, with its predicate, repair, retry entrypoint and digests carried in `envelope.far_side_disposition`. Master Records is non-gating. A handoff is never reported as a runtime ALLOW. The five surface endpoints are unchanged here; refactoring them is deferred.
+`sdk_boundary.submit` hands the wire manifest to `stegverse.manifest_execution.execute_manifest`, the SDK's canonical entrypoint (SDK #444/#445; pinned at `0c2ce00`). The SDK resolves the route from the manifest, and resolves the organization boundary from the source its route binding fixes. Neither the caller, the request payload nor the environment can choose the runtime, the route or the boundary. The adapter makes no network read and carries no credential, so it serves no copy of the boundary. Until the boundary resolves, the surface returns the SDK's own `FAIL_CLOSED` `CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED`, with its predicate, repair, retry entrypoint and digests carried in `envelope.far_side_disposition`. Master Records is non-gating. A handoff is never reported as a runtime ALLOW. The five surface endpoints are unchanged here; refactoring them is deferred.
+
+#### Collaborative-ingress surfaces are manifest-bound (SDK#368)
+
+SDK `0c2ce00` publishes `stegverse.route.hil-intake.v1`, `stegverse.route.ecosystem-chat.v1` and `stegverse.route.va-scoped-chat.v1` (owner task `SDK-MANIFEST-COLLAB-INGRESS-CONFORMANCE-001`). `llm_adapter/collab_ingress.py` translates a surface request into the SDK processor request for one of those routes, builds the manifest with the SDK builder, and submits it through `sdk_boundary` to `execute_manifest`. The manifest's route is the only thing that selects processing. The surface returns the SDK disposition (`stegverse.collab-ingress-disposition.v1`) with HTTP 200 for ALLOW, 202 for REVIEW, 403 for DENY and 503 for FAIL_CLOSED. Without the canonical organization boundary, the disposition is `FAIL_CLOSED` `CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED`. No credential is read from the environment. Where a credential would be needed after an admitted manifest and no TV/TVC-sourced binding exists, the surface returns `FAIL_CLOSED` `TVC_CREDENTIAL_SOURCE_NOT_BOUND`.
+
+HIL entries: `POST /api/hil/submissions` (v1.1 intake) and the Service Gateway's `POST /v1/hil/intake` and `POST /api/hil/submissions` bind the HIL manifest before anything is persisted. `POST /intr/materialization` no longer forwards to the loopback upstream or waits for it. The Service Gateway no longer reads `STEGVERSE_TVC_DECISION_RECEIPT` or `STEGVERSE_HIL_RECEIPT_KEY`, and its readiness reports `TVC_CREDENTIAL_SOURCE_NOT_BOUND`.
+
+Ecosystem Chat: `POST /api/ecosystem-chat` translates each turn into the `stegverse.route.ecosystem-chat.v1` manifest. The caller's `transition_intent` becomes `requested_topic`, which only populates the draft. The endpoint returns the SDK disposition. `requested_route` and the restricted-keyword patterns no longer select processing. The gateway generates no response, calls no provider (so no provider or Master Records token is read), and decides no local admissibility. The caller's `transition_identity` is echoed for correlation only and is never the manifest identity.

@@ -1,0 +1,107 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github:orchestration/task-registry.json#LLMA-DECLARED-PATH-CONFORMANCE-368",
+    "StegVerse-org/StegVerse-SDK#368:SDK-MANIFEST-COLLAB-INGRESS-CONFORMANCE-001"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Master Records is non-gating; no Master Records transition authority involved"
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-org/StegVerse-SDK:stegverse/collab_ingress_processor.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/route_resolution.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/manifest_execution.py",
+      "StegVerse-org/StegVerse-SDK#447",
+      "StegVerse-org/.github#98"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK"
+    ],
+    "evidence_refs": [
+      "llm_adapter/sdk_boundary.py",
+      "llm_adapter/governed_manifest_ingress.py",
+      "llm_adapter/hil_intake_v1_1_api.py",
+      "llm_adapter/service_gateway.py",
+      "llm_adapter/service_gateway_hil_intr.py"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md#collaborative-ingress-surfaces-are-manifest-bound-sdk368"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/collab_ingress.py",
+    "llm_adapter/hil_intake_v1_1_api.py",
+    "llm_adapter/service_gateway.py",
+    "llm_adapter/service_gateway_hil_intr.py",
+    "llm_adapter/service_gateway_site.py",
+    "pyproject.toml",
+    "README.md",
+    "tests/conftest.py",
+    "tests/test_hil_controlled_cycle.py",
+    "tests/test_hil_intake_api.py",
+    "tests/test_hil_intake_manifest_conformance.py",
+    "tests/test_hil_provenance_chain.py",
+    "tests/test_hil_publication_api.py",
+    "tests/test_service_gateway.py",
+    "tests/test_service_gateway_hil_intr.py",
+    "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-collab-hil-intake-manifest.json"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/collab_ingress.py",
+      "semantic_responsibility": "Translate collaborative-ingress surface requests into SDK manifests on the published HIL, Ecosystem Chat and VA-scoped chat routes and carry the SDK disposition",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "llm_adapter/sdk_boundary.py",
+      "justification": "sdk_boundary builds and submits caller-supplied manifests; surfaces need one shared translation onto the three published routes, reused by the HIL, Ecosystem Chat and VACC changes",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "StegVerse-org/StegVerse-SDK#368"
+      ]
+    },
+    {
+      "path": "tests/test_hil_intake_manifest_conformance.py",
+      "semantic_responsibility": "Prove HIL intake binds the hil-intake manifest before processing, fails closed without an admitted manifest, uses execute_manifest, reads no environment credential and opens no network connection",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_sdk_boundary_canonical_manifest_execution.py",
+      "justification": "Surface conformance tests are distinct from the generic manifest surface tests",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "StegVerse-org/StegVerse-SDK#368"
+      ]
+    },
+    {
+      "path": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-collab-hil-intake-manifest.json",
+      "semantic_responsibility": "Document bounded HIL collaborative-ingress functional mutation",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-f14-canonical-manifest-execution.json",
+      "justification": "Fresh manifest required for this functional diff",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "StegVerse-org/StegVerse-SDK#368"
+      ]
+    }
+  ]
+}
