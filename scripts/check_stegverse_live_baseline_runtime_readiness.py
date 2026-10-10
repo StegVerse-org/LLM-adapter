@@ -20,13 +20,17 @@ RUNTIME_PREREQUISITES = {
     "authorized_provider_configuration_receipt",
     "persistent_endpoint_activation_receipt",
     "provider_usage_persistence_contract",
-    "master_records_organization_record_acceptance",
+    "organization_ledger_transition_receipt_append",
     "transition_custody_acceptance",
     "immutable_adapter_receipt_contract",
 }
-# Prerequisite naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): readiness
-# written before the rename names this prerequisite by its legacy key; it is accepted.
-LEGACY_ORGANIZATION_RECORD_ACCEPTANCE_KEY = "master_records_custody_acceptance"
+# Master Records is the downstream recorder of released organization batch receipts
+# (LLM-adapter#368). Its acceptance was once a runtime prerequisite under either key;
+# readiness written that way is still read, but the key never gates readiness.
+NON_GATING_MASTER_RECORDS_KEYS = (
+    "master_records_organization_record_acceptance",
+    "master_records_custody_acceptance",
+)
 
 
 def require(value: object, message: str) -> None:
@@ -47,11 +51,9 @@ def main() -> int:
     require(readiness.get("authority") == NO_AUTHORITY, "readiness authority boundary changed")
 
     prerequisites = dict(readiness.get("prerequisites") or {})
-    if LEGACY_ORGANIZATION_RECORD_ACCEPTANCE_KEY in prerequisites:
-        prerequisites.setdefault(
-            "master_records_organization_record_acceptance",
-            prerequisites.pop(LEGACY_ORGANIZATION_RECORD_ACCEPTANCE_KEY),
-        )
+    for key in NON_GATING_MASTER_RECORDS_KEYS:
+        prerequisites.pop(key, None)
+    require(not RUNTIME_PREREQUISITES.intersection(NON_GATING_MASTER_RECORDS_KEYS), "Master Records cannot be a runtime prerequisite")
     require(prerequisites.get("intake_received") is True, "intake receipt regressed")
     require(RUNTIME_PREREQUISITES <= set(prerequisites), "missing runtime prerequisite")
     all_ready = all(prerequisites.get(key) is True for key in RUNTIME_PREREQUISITES)

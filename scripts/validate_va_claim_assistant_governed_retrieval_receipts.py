@@ -92,7 +92,11 @@ def main() -> int:
         assert execution["provider_execution_observed"] is False
     elif execution["state"] == "COMPLETE":
         assert execution["provider_execution_observed"] is True
-        assert execution["custody_state"] == "READY_FOR_MASTER_RECORDS"
+        # Receipts observed before LLM-adapter#368 name Master Records as the next
+        # custody step; custody stays with the organization ledger either way, and
+        # Master Records never gates completion.
+        assert execution["custody_state"] in {"ORGANIZATION_LEDGER", "READY_FOR_MASTER_RECORDS"}
+        assert execution.get("master_records_gates_completion", False) is False
 
     print(f"VA_GOVERNED_RETRIEVAL_VALIDATION_PASS:{execution['state']}")
     return 0

@@ -21,7 +21,7 @@ def test_main_uses_configured_limit_without_inventing_custody(monkeypatch, capsy
             "processed": 0,
             "recorded": 0,
             "retry": 0,
-            "authority_effect": "REMOTE_CUSTODY_ONLY_WHEN_RECEIPTED",
+            "authority_effect": "NONE_DOWNSTREAM_RECORDING_ONLY",
         }
 
     monkeypatch.setattr(custody_worker, "run", fake_run)
@@ -40,3 +40,22 @@ def test_configured_limit_rejects_invalid_values(monkeypatch):
             pass
         else:
             raise AssertionError(f"invalid custody worker limit accepted: {value}")
+
+
+def test_worker_failure_never_blocks_service_startup(monkeypatch, capsys):
+    monkeypatch.setenv("STEGVERSE_CUSTODY_WORKER_LIMIT", "not-an-int")
+    assert custody_worker.main() == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["gates_startup"] is False
+    for field in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                  "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+        assert payload[field]
+
+    monkeypatch.setenv("STEGVERSE_CUSTODY_WORKER_LIMIT", "1")
+
+    def unreachable(limit=20):
+        raise ConnectionError("master records unreachable")
+
+    monkeypatch.setattr(custody_worker, "run", unreachable)
+    assert custody_worker.main() == 0
+    assert json.loads(capsys.readouterr().out)["disposition"] == "NOT_RECORDED"

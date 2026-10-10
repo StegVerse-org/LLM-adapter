@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.2.0",
+  "schema_version": "1.3.0",
   "binding_id": "stegverse-live-baseline-provider-authority-binding-v1",
   "intake_id": "llm-adapter-intake-stegverse-live-baseline-v1",
   "requested_transition": "RUN_STEGVERSE_LIVE_BASELINE",
@@ -8,7 +8,9 @@
     "authority_owner": "StegVerse-Labs/TVC",
     "runtime_owner": "StegVerse-002/micro-node-runtime",
     "transport_executor": "StegVerse-org/LLM-adapter",
-    "record_owner": "master-records/orchestration",
+    "record_owner": "StegVerse-org/LLM-adapter:organization-ledger",
+    "downstream_recorder": "master-records/orchestration",
+    "downstream_recorder_gates_dispatch": false,
     "organization_handoff": "StegVerse-Labs/.github/docs/ORG_MIRROR_HANDOFF.md",
     "local_model_handoff": "StegVerse-002/micro-node-runtime/docs/SOVEREIGN_LOCAL_MODEL_RUNTIME_MIRROR_HANDOFF.md",
     "github_hosted_provider_workflow": null
@@ -23,12 +25,14 @@
     "single_execution": true
   },
   "custody_binding": {
-    "mode": "same_execution_master_records",
-    "owner_repository": "master-records/orchestration",
+    "mode": "organization_ledger_transition_receipt",
+    "owner_repository": "StegVerse-org/LLM-adapter",
     "authority_owner": "TV/TVC",
     "preprovisioned_non_tvc_token_required": false,
     "github_token_required": false,
-    "reconstruction_required": true
+    "transition_closes_on": "ORGANIZATION_LEDGER_TRANSITION_RECEIPT",
+    "master_records_recording": "OPTIONAL_DOWNSTREAM_NON_GATING",
+    "master_records_gates_dispatch": false
   },
   "current_state": {
     "authority_request_present": false,
@@ -44,14 +48,14 @@
     "eligible resident StegVerse carrier",
     "TVC admitted route or credential_requirement NONE",
     "private local model process observed",
-    "same-execution Master Records reconstruction path available"
+    "organization ledger transition receipt append available"
   ],
   "runtime_preconditions_before_authority_consumption": [
     "resident sovereign carrier active",
     "fresh authorized claim/fence",
     "TVC route admission resolved",
     "exact LLM-adapter route available",
-    "Master Records same-execution reconstruction available"
+    "organization ledger lock and manifest-directed append available"
   ],
   "prohibited_inferences": [
     "repository workflow existence is not provider authorization",
@@ -59,7 +63,8 @@
     "third-party provider availability is not a release condition",
     "source completion is not live same-carrier activation",
     "provider output is not execution authority",
-    "provider execution is not independent framework validation"
+    "provider execution is not independent framework validation",
+    "Master Records recording or reconstruction is not a dispatch or activation precondition"
   ],
   "authority": {
     "comparison": false,
@@ -69,5 +74,5 @@
     "custody": false,
     "parentage": false
   },
-  "updated_at": "2026-08-16T02:28:00Z"
+  "updated_at": "2026-10-10T00:00:00Z"
 }

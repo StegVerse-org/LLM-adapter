@@ -95,7 +95,7 @@ def execute(
         "third_party_execution_platform_required": False,
         "execution_authority": False,
         "authority_effect": "NONE",
-        "next_transition": "MASTER_RECORDS_SAME_EXECUTION_TRANSITION_RECONSTRUCTION",
+        "next_transition": "ORGANIZATION_LEDGER_TRANSITION_RECEIPT",
     }
     return result
 

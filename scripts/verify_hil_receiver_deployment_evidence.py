@@ -69,9 +69,14 @@ def main() -> None:
 
     require(data["site"].get("canonical_upload_url") == "https://stegverse.org/hil/upload/", "canonical Site URL mismatch")
     require(data["site"].get("upload_enabled_observed") is True, "public upload control not observed enabled")
-    require(data["master_records"].get("custody_state") == "RECORDED", "Master Records organization record not recorded")
-    require(data["master_records"].get("reconstruction_state") == "PASS", "Master-Records reconstruction not PASS")
-    require(is_sha256(data["master_records"].get("receipt_sha256")), "Master-Records receipt hash missing")
+    ledger = data.get("organization_ledger") or {}
+    require(ledger.get("transition_receipt_appended") is True, "organization-ledger transition receipt not appended")
+    require(is_sha256(ledger.get("transition_receipt_sha256")), "organization-ledger transition receipt hash missing")
+    # Master Records is the downstream recorder of released organization batch
+    # receipts (LLM-adapter#368). Its state is reported when present and never
+    # gates deployment evidence.
+    downstream = data.get("master_records")
+    require(downstream is None or isinstance(downstream, dict), "Master Records downstream block must be an object when present")
     require(all(value is False for value in data["authority"].values()), "deployment evidence must not grant authority")
 
     print("HIL_RECEIVER_DEPLOYMENT_EVIDENCE=PASS")

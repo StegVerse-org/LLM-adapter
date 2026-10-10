@@ -23,7 +23,7 @@
   "single_execution": true,
   "maximum_provider_requests": 1,
   "maximum_request_cost_usd_ceiling": 0.1,
-  "master_records_configuration_required": true,
+  "master_records_configuration_required": false,
   "tvc_execution_time_admission_required": true,
   "request_is_execution_authority": false,
   "credential_presence_is_execution_authority": false,

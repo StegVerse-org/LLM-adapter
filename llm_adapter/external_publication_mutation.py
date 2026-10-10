@@ -4,6 +4,10 @@ Consumes only stored ALLOW_PUBLICATION_CANDIDATE transitions. The adapter is
 disabled by default and can mutate only StegVerse-Labs/admissibility-wiki paths
 under docs/external-frameworks after commit-time authority, delegation, policy,
 freshness, source-head, target-blob, and receipt identity checks pass.
+
+The mutation closes on the organization's own publication transition receipt,
+verified locally. Master Records, the downstream recorder of released
+organization batch receipts, is never consulted, awaited, or required here.
 """
 from __future__ import annotations
 
@@ -25,13 +29,15 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from llm_adapter.external_review_store import now_iso
 from llm_adapter.wiki_publication_master_records import (
     PublicationCustodyError,
-    require_publication_master_records_organization_record,
+    verify_publication_transition_receipt,
 )
 
 router = APIRouter(prefix="/api/external-review", tags=["external-chat-mutation"])
 
 ALLOWED_REPOSITORY = "StegVerse-Labs/admissibility-wiki"
 ALLOWED_PREFIX = "docs/external-frameworks/"
+OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
+RETRY_ENTRYPOINT = "POST /api/external-review/repository-mutations"
 
 
 def _db_path() -> str:
@@ -139,7 +145,12 @@ class RepositoryMutationRequest(BaseModel):
     schema_version: Literal["1.0.0"]
     request_type: Literal["external_framework_repository_mutation_request"]
     publication_transition_id: str = Field(min_length=1, max_length=256)
-    master_records_receipt_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    transition_receipt: dict[str, Any]
+    transition_receipt_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    # Deprecated spelling of ``transition_receipt_sha256``: the same canonical digest
+    # of the organization receipt. Accepted for existing callers; never a Master
+    # Records lookup.
+    master_records_receipt_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
     actor_ref: str = Field(min_length=1, max_length=256)
     repository_full_name: Literal["StegVerse-Labs/admissibility-wiki"]
     target_path: str = Field(min_length=1, max_length=512)
@@ -159,7 +170,14 @@ class RepositoryMutationRequest(BaseModel):
             raise ValueError("target path outside External Chat wiki boundary")
         if _parse_time(self.freshness_valid_until) <= datetime.now(timezone.utc):
             raise ValueError("freshness window expired")
+        digests = {d for d in (self.transition_receipt_sha256, self.master_records_receipt_sha256) if d}
+        if len(digests) != 1:
+            raise ValueError("exactly one transition receipt digest required")
         return self
+
+    @property
+    def receipt_sha256(self) -> str:
+        return str(self.transition_receipt_sha256 or self.master_records_receipt_sha256)
 
 
 @router.get("/repository-mutation/health")
@@ -173,6 +191,8 @@ def mutation_health() -> dict[str, Any]:
         "allowed_path_prefix": ALLOWED_PREFIX,
         "commit_time_revalidation_required": True,
         "publication_transition_is_mutation_authority": False,
+        "closes_on": "ORGANIZATION_TRANSITION_RECEIPT",
+        "master_records_gates_mutation": False,
     }
 
 
@@ -214,8 +234,9 @@ def mutate_repository(payload: RepositoryMutationRequest, authorization: str | N
         raise HTTPException(status_code=403, detail={"reason": "commit_time_authority_missing"})
 
     try:
-        publication_record = require_publication_master_records_organization_record(
-            receipt_sha256=payload.master_records_receipt_sha256,
+        verify_publication_transition_receipt(
+            transition_receipt=payload.transition_receipt,
+            receipt_sha256=payload.receipt_sha256,
             publication_transition_id=payload.publication_transition_id,
             publication_transition=publication_payload,
         )
@@ -223,8 +244,15 @@ def mutate_repository(payload: RepositoryMutationRequest, authorization: str | N
         raise HTTPException(
             status_code=409,
             detail={
-                "reason": "governed_publication_master_records_organization_record_invalid",
+                "reason": "governed_publication_transition_receipt_invalid",
                 "detail": str(exc),
+                "disposition": "DENY",
+                "failure_code": str(exc),
+                "failed_predicate": "organization_publication_transition_receipt_verified",
+                "required_evidence_or_repair": "submit the organization's canonical publication transition receipt bound to this publication transition and its external Interlock/InTr ALLOW",
+                "retry_entrypoint": RETRY_ENTRYPOINT,
+                "owning_existing_goal": OWNING_EXISTING_GOAL,
+                "next_attempt": "resubmit with a transition_receipt whose canonical digest matches transition_receipt_sha256",
                 "repository_mutation_performed": False,
             },
         ) from exc
@@ -287,7 +315,7 @@ def mutate_repository(payload: RepositoryMutationRequest, authorization: str | N
         "commit_time_revalidation": {
             "authority": "PASS", "delegation": "PASS", "policy": "PASS", "freshness": "PASS",
             "repository_head": "PASS", "target_blob": "PASS", "publication_identity": "PASS",
-            "governed_master_records_organization_record": "PASS",
+            "organization_transition_receipt": "PASS",
         },
         "boundary": {
             "mutation_receipt_is_certification": False,

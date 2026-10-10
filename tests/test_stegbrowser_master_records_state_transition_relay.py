@@ -181,3 +181,22 @@ def test_relay_rejects_response_for_a_different_transition_spelling(monkeypatch)
     response["transition_id"] = TRANSITION_ID
     with pytest.raises(StegBrowserMasterRecordsRelayError, match="identity_mismatch"):
         relay_stegbrowser_state_transition(body, post=lambda *a, **k: Response(response))
+
+
+def test_relay_failure_is_six_field_non_allow_and_never_gates(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from llm_adapter import combined_gateway
+
+    def refuse(_payload):
+        raise StegBrowserMasterRecordsRelayError("master_records_state_transition_relay_not_configured")
+
+    monkeypatch.setattr(combined_gateway, "relay_stegbrowser_state_transition", refuse)
+    response = TestClient(combined_gateway.app).post("/api/master-records/state-transitions", json={})
+    assert response.status_code == 503
+    detail = response.json()["detail"]
+    for field in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                  "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+        assert detail[field]
+    assert detail["gates_transition"] is False
+    assert detail["custody_recorded"] is False

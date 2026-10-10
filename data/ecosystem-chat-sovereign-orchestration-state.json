@@ -24,7 +24,7 @@
     "state": "BLOCKED",
     "blocker": "LLM-adapter Actions credential cannot read private StegVerse-002/micro-node-runtime",
     "release_condition": "repository-native lane with access to both private repositories executes the canonical contract, or the sovereign carrier presents the canonical private endpoint directly",
-    "next_action": "consume the already released canonical micro-node private endpoint through StegVerseLocalHTTPProviderClient and execute E1 -> model worker -> E2 with same-execution custody/reconstruction evidence"
+    "next_action": "consume the already released canonical micro-node private endpoint through StegVerseLocalHTTPProviderClient and execute E1 -> model worker -> E2 with the same-execution organization-ledger transition receipt"
   },
   "adapter_local_runtime": {
     "task_id": "LLMA-LOCAL-RUNTIME-MODEL-017",
@@ -56,8 +56,8 @@
       "canonical micro-node model endpoint is consumed by StegVerseLocalHTTPProviderClient on a sovereign carrier",
       "private provider execution traverses E1 -> model worker -> E2",
       "provider/model usage is MEASURED in that execution",
-      "provider-usage Master Records reconstruction PASS",
-      "transition Master Records reconstruction PASS for the same execution",
+      "provider usage recorded in the local usage ledger for that execution",
+      "organization-ledger transition receipt appended for the same execution",
       "immutable zero-blocker ecosystem-chat-live-activation.verified.json exists"
     ]
   },
@@ -73,7 +73,8 @@
     "canonical_binding": "LLMA-CANONICAL-LOCAL-MODEL-BINDING-018",
     "inference_observation_recheck": "StegVerse-Labs/.github#60",
     "heartbeat_authority": "StegVerse-Labs/.github#12",
-    "custody_and_reconstruction": "master-records/orchestration",
+    "custody_and_transition_receipt": "StegVerse-org/LLM-adapter organization ledger",
+    "downstream_recording_non_gating": "master-records/orchestration",
     "site_activation": "StegVerse-Labs/Site",
     "downstream_propagation": [
       "GCAT-BCAT-Engine/Publisher",
@@ -87,6 +88,7 @@
     "adapter_local_model_is_noncanonical_fixture": true,
     "reference_model_is_not_production_scale": true,
     "missing_custody_or_reconstruction_is_not_success": true,
+    "master_records_recording_gates_activation": false,
     "third_party_hosted_inference_is_not_production_authority": true,
     "provider_output_grants_authority": false,
     "runtime_proof_grants_authority": false,

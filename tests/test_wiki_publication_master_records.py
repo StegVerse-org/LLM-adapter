@@ -156,7 +156,7 @@ def test_local_or_detached_intr_allow_is_rejected():
         )
 
 
-def test_record_requires_recorded_pass_evidence_pass_digest_equality_and_retained_reconstruction(monkeypatch):
+def test_downstream_recording_reports_recorded_only_on_pass_evidence_digest_and_reconstruction(monkeypatch):
     value = transition()
     monkeypatch.setattr(mod, "master_records_transport_enabled", lambda: True)
     monkeypatch.setattr(mod, "_master_records_configuration", lambda: ("https://master-records.example/api/master-records/state-transitions", "server-token", 10.0, set(), False))
@@ -206,33 +206,90 @@ def test_record_requires_recorded_pass_evidence_pass_digest_equality_and_retaine
     assert observed["post"][1]["record_requested"] is True
     assert "custody_requested" not in observed["post"][1]
     assert observed["get"][0].endswith(f"/{digest}/reconstruction")
+    assert closure["gates_publication"] is False
 
-def test_mutation_gate_reconstructs_exact_publication_closure(monkeypatch):
-    value = transition()
-    receipt = mod.build_publication_state_receipt(
+def _receipt(value):
+    return mod.build_publication_state_receipt(
         publication_transition_id="publication:test",
         publication_transition=value,
         sdk_manifest=manifest(value),
         governed_result=governed(value),
         intr_allow_decision=decision(),
     )
+
+
+def test_mutation_closes_on_organization_receipt_without_master_records(monkeypatch):
+    value = transition()
+    receipt = _receipt(value)
     digest = mod.canonical_sha256(receipt)
-    monkeypatch.setattr(mod, "master_records_transport_enabled", lambda: True)
-    monkeypatch.setattr(mod, "_master_records_configuration", lambda: ("https://master-records.example/api/master-records/state-transitions", "server-token", 10.0, set(), False))
-    def get(url, headers, timeout):
-        return FakeResponse({
-            "state": "PASS",
-            "required_evidence_validation_status": "PASS",
-            "receipt_sha256": digest,
-            "reconstructed_receipt_sha256": digest,
-            "receipt": receipt,
-            "master_records_grants_transition_authority": False,
-        })
-    closure = mod.require_publication_master_records_organization_record(
+
+    def unreachable(*_args, **_kwargs):
+        raise AssertionError("verification must not consult Master Records")
+
+    monkeypatch.setattr(mod, "master_records_transport_enabled", unreachable)
+    monkeypatch.setattr(mod, "_master_records_configuration", unreachable)
+    verified = mod.verify_publication_transition_receipt(
+        transition_receipt=receipt,
         receipt_sha256=digest,
         publication_transition_id="publication:test",
         publication_transition=value,
-        get=get,
     )
-    assert closure["state"] == "RECORDED"
-    assert closure["required_evidence_validation_status"] == "PASS"
+    assert verified["state"] == "VERIFIED"
+    assert verified["verified_on"] == "ORGANIZATION_TRANSITION_RECEIPT"
+    assert verified["master_records_gates_publication"] is False
+
+
+def test_organization_receipt_verification_rejects_tampering():
+    value = transition()
+    receipt = _receipt(value)
+    digest = mod.canonical_sha256(receipt)
+    with pytest.raises(mod.PublicationCustodyError, match="digest_mismatch"):
+        mod.verify_publication_transition_receipt(
+            transition_receipt=receipt, receipt_sha256="0" * 64,
+            publication_transition_id="publication:test", publication_transition=value)
+    with pytest.raises(mod.PublicationCustodyError, match="subject_mismatch"):
+        mod.verify_publication_transition_receipt(
+            transition_receipt=receipt, receipt_sha256=digest,
+            publication_transition_id="publication:other", publication_transition=value)
+    forged = deepcopy(receipt)
+    forged["transition_evidence"]["locally_generated_allow"] = True
+    with pytest.raises(mod.PublicationCustodyError, match="local_allow_rejected"):
+        mod.verify_publication_transition_receipt(
+            transition_receipt=forged, receipt_sha256=mod.canonical_sha256(forged),
+            publication_transition_id="publication:test", publication_transition=value)
+
+
+def test_master_records_recording_is_optional_and_non_gating(monkeypatch):
+    value = transition()
+    monkeypatch.setattr(mod, "master_records_transport_enabled", lambda: False)
+    monkeypatch.setattr(mod, "_master_records_configuration", lambda: ("", "", 10.0, set(), False))
+    result = mod.record_governed_publication_closure(
+        publication_transition_id="publication:test",
+        publication_transition=value,
+        sdk_manifest=manifest(value),
+        governed_result=governed(value),
+        intr_allow_decision=decision(),
+    )
+    assert result["state"] == "NOT_RECORDED"
+    assert result["gates_publication"] is False
+    for field in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                  "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+        assert result[field]
+    assert result["receipt_sha256"] == mod.canonical_sha256(result["receipt"])
+
+
+def test_master_records_rejection_is_reported_not_raised(monkeypatch):
+    value = transition()
+    monkeypatch.setattr(mod, "master_records_transport_enabled", lambda: True)
+    monkeypatch.setattr(mod, "_master_records_configuration", lambda: ("https://master-records.example/api/master-records/state-transitions", "server-token", 10.0, set(), False))
+    result = mod.record_governed_publication_closure(
+        publication_transition_id="publication:test",
+        publication_transition=value,
+        sdk_manifest=manifest(value),
+        governed_result=governed(value),
+        intr_allow_decision=decision(),
+        post=lambda *a, **k: FakeResponse({"state": "PENDING"}),
+    )
+    assert result["state"] == "NOT_RECORDED"
+    assert result["failure_code"].startswith("master_records_recording_failed")
+    assert result["gates_publication"] is False
