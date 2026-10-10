@@ -80,7 +80,9 @@ def validate(payload: Any, *, now: datetime | None = None) -> dict[str, Any]:
         "caller_repository": CALLER,
         "single_execution": True,
         "maximum_provider_requests": 1,
-        "master_records_configuration_required": True,
+        # Master Records records released organization batches downstream; its
+        # configuration can never be an execution precondition (LLM-adapter#368).
+        "master_records_configuration_required": False,
         "tvc_execution_time_admission_required": True,
     }
     for field, expected in exact.items():

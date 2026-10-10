@@ -40,7 +40,7 @@
   },
   "evidence": {
     "provider_usage": "reuse canonical llm_adapter.provider_usage",
-    "master_records_submission": "reuse canonical llm_adapter.master_records_usage_record",
+    "master_records_submission": "NONE: provider usage closes on the local usage ledger and the organization-ledger transition receipt; Master Records records released organization batches downstream and is never awaited",
     "tvc_use_receipt_hash_binding": true,
     "egress_response_hash_binding": true
   },

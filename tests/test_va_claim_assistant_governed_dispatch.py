@@ -49,9 +49,9 @@ for route, question in questions.items():
     assert record["answer"]["route"] == route
     assert record["next_required_evidence"] == [
         "tvc_capability_receipt",
-        "master_records_organization_record_receipt",
-        "reconstruction_receipt",
+        "organization_ledger_transition_receipt",
     ]
+    assert not any("master_records" in item for item in record["next_required_evidence"])
     assert record["document_context_refs"] is None
     assert not any(record["authority_flags"].values())
     answer_ready_hashes[route] = record["receipt_hash"]
@@ -124,8 +124,7 @@ assert document_ready["next_required_evidence"] == [
     "pii_redaction_manifest",
     "model_leakage_receipt",
     "tvc_capability_receipt",
-    "master_records_organization_record_receipt",
-    "reconstruction_receipt",
+    "organization_ledger_transition_receipt",
 ]
 assert not any(document_ready["authority_flags"].values())
 
@@ -173,15 +172,16 @@ except ValueError as exc:
 else:
     raise AssertionError("dispatch authority escalation was not rejected")
 
-# A record written before the organization-record evidence rename still validates.
-legacy_named = copy.deepcopy(document_ready)
-legacy_named["next_required_evidence"] = [
-    module.LEGACY_ORGANIZATION_RECORD_RECEIPT if item == module.ORGANIZATION_RECORD_RECEIPT else item
-    for item in legacy_named["next_required_evidence"]
-]
-assert "master_records_custody_receipt" in legacy_named["next_required_evidence"]
-legacy_named["receipt_hash"] = module.canonical_hash({k: v for k, v in legacy_named.items() if k != "receipt_hash"})
-module.validate_dispatch(legacy_named, registry)
+# Records written before LLM-adapter#368 (either Master Records spelling plus a
+# reconstruction receipt) are still read; new records never name Master Records.
+for historical_name in module.HISTORICAL_MASTER_RECORDS_RECEIPTS:
+    legacy_named = copy.deepcopy(document_ready)
+    legacy_named["next_required_evidence"] = [
+        historical_name if item == module.ORGANIZATION_RECORD_RECEIPT else item
+        for item in legacy_named["next_required_evidence"]
+    ] + [module.HISTORICAL_RECONSTRUCTION_RECEIPT]
+    legacy_named["receipt_hash"] = module.canonical_hash({k: v for k, v in legacy_named.items() if k != "receipt_hash"})
+    module.validate_dispatch(legacy_named, registry)
 
 Path("receipts").mkdir(exist_ok=True)
 receipt = {

@@ -34,9 +34,15 @@ ALLOWED_SOVEREIGN_PROVIDER_STATES = {
 }
 
 
+ORGANIZATION_LEDGER_GATE = "organization-ledger transition receipt"
+# Master Records was once a preserved VACC gate under either name. It is the downstream
+# recorder of released organization batch receipts and gates nothing (LLM-adapter#368).
+RETIRED_MASTER_RECORDS_GATES = {"Master Records organization record", LEGACY_ORGANIZATION_RECORD_REQUIREMENT, "same-execution reconstruction PASS"}
+
+
 def organization_record_requirement_present(gates: set[str]) -> bool:
-    # LEGACY_ORGANIZATION_RECORD_REQUIREMENT is the pre-rename name of this gate (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002).
-    return bool(gates & {"Master Records organization record", LEGACY_ORGANIZATION_RECORD_REQUIREMENT})
+    """The turn closes on its organization-ledger receipt; a Master Records gate is refused."""
+    return ORGANIZATION_LEDGER_GATE in gates and not gates & RETIRED_MASTER_RECORDS_GATES
 
 
 def fail(message: str) -> None:

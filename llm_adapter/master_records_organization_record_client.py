@@ -1,11 +1,14 @@
-"""Master Records organization-record client for completed chat transitions.
+"""Downstream Master Records recording client for completed chat transitions.
 
-The client fails closed. Interlock/InTr admits each transition; this client only
-writes the completed transition into the Master Records organization record. It accepts either an
-explicit HTTPS service URL or an authenticated Render private-network host and port.
-A record is marked RECORDED only when the remote response preserves
-transition/run/final-receipt identity and returns both an organization-record
-receipt and a Master Records reference.
+Interlock/InTr admits each transition and the transition closes on its final
+receipt before this client runs; custody stays with the organization. Master
+Records is the downstream recorder of released organization batch receipts, so
+this client only hands a completed record to it, from the custody worker, and its
+outcome never gates or reopens the transition. It accepts either an explicit HTTPS
+service URL or an authenticated Render private-network host and port. A queue
+entry is marked RECORDED only when the remote response preserves
+transition/run/final-receipt identity and returns both a recording receipt and a
+Master Records reference; otherwise it stays queued for retry.
 """
 from __future__ import annotations
 

@@ -48,8 +48,9 @@ class StegVerseLocalHTTPProviderClient:
     external execution platform from the adapter/provider seam.
 
     Exact usage/model evidence returned by a sovereign runtime is retained in
-    response metadata so the canonical provider-usage and Master Records paths
-    can consume measured evidence without re-estimating it.
+    response metadata so the canonical provider-usage path can consume measured
+    evidence without re-estimating it; Master Records may later record the released
+    batch downstream, and nothing here waits on it.
     """
 
     base_url: str = "http://127.0.0.1:11434/v1/chat/completions"

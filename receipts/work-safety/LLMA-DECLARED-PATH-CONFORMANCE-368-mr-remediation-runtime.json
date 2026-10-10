@@ -1,0 +1,119 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/LLM-adapter#368 (owning_existing_goal LLMA-DECLARED-PATH-CONFORMANCE-368; user order: all improper instances of master-records must be remediated)"
+  ],
+  "master_records_review": {
+    "applicable": true,
+    "refs": [
+      "StegVerse-org/.github:docs/ORGANIZATION_ROLE_RUNTIME_REALITY_DEPLOYMENT.md#master-records-restated",
+      "data/master-records-role-audit.json"
+    ],
+    "reason": "Master Records is the recorder of released organization batch receipts. This change set removes every remaining adapter code path that gated, awaited, or required it: the wiki repository mutation closes on the organization's publication transition receipt, the startup custody worker can no longer block service start, the unreachable HTTPS usage client is removed, and validators no longer require Master Records reconstruction, configuration, or acceptance as a precondition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-master-records-decoupling.json",
+      "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-va-claims-turn-closure.json"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "grep -rniE 'master[-_ ]?records|MasterRecords' over the whole repository",
+      "llm_adapter/wiki_publication_master_records.py",
+      "llm_adapter/external_publication_mutation.py",
+      "llm_adapter/ecosystem_chat_gateway.py",
+      "llm_adapter/master_records_usage_record.py (no caller outside its own test)",
+      "llm_adapter/va_claims_runtime_core.py#_close_turn"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Repairs existing surfaces in place under #368; no new validator, recorder, store, route or service is introduced, and one unreachable client module is removed."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "The README restatement of the Master Records role is carried by the companion documentation PR of this remediation (branch claude/mr-remediation-docs); this change set repairs behaviour behind already-declared paths without adding a surface.",
+    "evidence_refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/validate.yml",
+    "capability/stegverse-intr-deepseek-transport.capability.json",
+    "capability/stegverse-intr-kimi-transport.capability.json",
+    "data/ecosystem-chat-sovereign-orchestration-state.json",
+    "data/llm-adapter-orchestration-state.json",
+    "docs/HIL_RECEIVER_DEPLOYMENT_EVIDENCE.md",
+    "evidence/hil-receiver-deployment.example.json",
+    "examples/reference_transaction.py",
+    "iosnoperiod/github/workflows/validate.yml",
+    "llm_adapter/combined_gateway.py",
+    "llm_adapter/custody_worker.py",
+    "llm_adapter/external_llm_connection.py",
+    "llm_adapter/external_publication_mutation.py",
+    "llm_adapter/governed_external_provider_client.py",
+    "llm_adapter/http_provider_clients.py",
+    "llm_adapter/master_records_organization_record_client.py",
+    "llm_adapter/master_records_usage_record.py",
+    "llm_adapter/stegbrowser_master_records_state_transition_relay.py",
+    "llm_adapter/wiki_publication_master_records.py",
+    "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-runtime.json",
+    "requests/va-claim-assistant-provider-execution-authority-request.github-models.v1.json",
+    "scripts/check_ecosystem_chat_sovereign_orchestration_state.py",
+    "scripts/check_llm_adapter_orchestration_state.py",
+    "scripts/check_stegverse_live_baseline_provider_authority_binding.py",
+    "scripts/check_stegverse_live_baseline_runtime_readiness.py",
+    "scripts/execute_canonical_sovereign_route.py",
+    "scripts/observe_va_provider_execution_preflight.py",
+    "scripts/observe_va_service_connection_execution.py",
+    "scripts/project_independent_parent_activation.py",
+    "scripts/validate_ecosystem_va_chat_session_consolidation.py",
+    "scripts/validate_va_claim_assistant_governed_retrieval_receipts.py",
+    "scripts/validate_va_claim_assistant_session_consolidation.py",
+    "scripts/validate_va_provider_execution_authority.py",
+    "scripts/verify_hil_receiver_deployment_evidence.py",
+    "status/stegverse-live-baseline-provider-authority-binding.json",
+    "status/stegverse-live-baseline-runtime-readiness.json",
+    "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-023.json",
+    "tests/test_custody_worker_startup_limit.py",
+    "tests/test_execute_canonical_sovereign_route.py",
+    "tests/test_external_publication_mutation.py",
+    "tests/test_master_records_usage_record.py",
+    "tests/test_organization_record_legacy_names.py",
+    "tests/test_parent_activation_projection.py",
+    "tests/test_stegbrowser_master_records_state_transition_relay.py",
+    "tests/test_va_claim_assistant_governed_dispatch.py",
+    "tests/test_wiki_publication_master_records.py",
+    "va_claim_assistant/governed_retrieval.py",
+    "web_runtime/execute_canonical_sovereign_route.js"
+  ],
+  "new_files": [
+    {
+      "path": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-mr-remediation-runtime.json",
+      "semantic_responsibility": "Work-mutation-safety manifest for the #368 Master Records runtime remediation",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "receipts/work-safety/LLMA-DECLARED-PATH-CONFORMANCE-368-master-records-decoupling.json",
+      "justification": "A fresh manifest is required for this functional diff",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#368"
+      ]
+    }
+  ]
+}

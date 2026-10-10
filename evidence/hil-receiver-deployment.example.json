@@ -41,7 +41,12 @@
     "canonical_upload_url": "https://stegverse.org/hil/upload/",
     "upload_enabled_observed": false
   },
+  "organization_ledger": {
+    "transition_receipt_appended": false,
+    "transition_receipt_sha256": null
+  },
   "master_records": {
+    "role": "DOWNSTREAM_RECORDER_NON_GATING",
     "custody_state": "NOT_OBSERVED",
     "reconstruction_state": "NOT_OBSERVED",
     "receipt_sha256": null

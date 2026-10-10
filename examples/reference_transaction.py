@@ -2,7 +2,8 @@
 """Offline reference transaction for stegverse.intr.anthropic.transport.v1.
 
 No network access and no real credential. Demonstrates exact ingress binding,
-provider normalization, Master Records handoff, and exact-response egress check.
+provider normalization, the optional non-gating downstream Master Records usage
+handoff, and exact-response egress check.
 """
 from __future__ import annotations
 

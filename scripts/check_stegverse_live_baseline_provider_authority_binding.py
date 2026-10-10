@@ -31,8 +31,10 @@ def require(value: object, message: str) -> None:
 
 
 RECORD_OWNER_FIELD = "record_owner"
-# Legacy field name (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): the Master Records owner used to be
-# written as "custody_owner". Accepted when reading a binding, never written.
+# Legacy field name (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): the record owner used to be
+# written as "custody_owner". Accepted when reading a binding, never written. The record owner is
+# the organization holding the ledger; Master Records is only the downstream recorder (#368).
+ORGANIZATION_RECORD_OWNER = "StegVerse-org/LLM-adapter:organization-ledger"
 LEGACY_RECORD_OWNER_FIELD = "custody_owner"
 
 
@@ -51,7 +53,7 @@ def main() -> int:
     intake = json.loads(INTAKE.read_text(encoding="utf-8"))
     handoff = WORKFLOW_HANDOFF.read_text(encoding="utf-8")
 
-    require(binding.get("schema_version") == "1.2.0", "unsupported schema_version")
+    require(binding.get("schema_version") == "1.3.0", "unsupported schema_version")
     require(binding.get("intake_id") == intake.get("intake_id"), "intake binding mismatch")
     require(binding.get("requested_transition") == intake.get("requested_transition"), "transition mismatch")
     require(binding.get("reuse_first") is True, "binding must preserve reuse-first decision")
@@ -60,7 +62,9 @@ def main() -> int:
     require(path.get("authority_owner") == "StegVerse-Labs/TVC", "TVC authority owner mismatch")
     require(path.get("runtime_owner") == "StegVerse-002/micro-node-runtime", "local runtime owner mismatch")
     require(path.get("transport_executor") == "StegVerse-org/LLM-adapter", "transport executor mismatch")
-    require(record_owner(path) == "master-records/orchestration", "Master Records record owner mismatch")
+    require(record_owner(path) == ORGANIZATION_RECORD_OWNER, "organization ledger record owner mismatch")
+    require(path.get("downstream_recorder") == "master-records/orchestration", "downstream recorder mismatch")
+    require(path.get("downstream_recorder_gates_dispatch") is False, "Master Records cannot gate dispatch")
     require(path.get("github_hosted_provider_workflow") is None, "GitHub-hosted provider workflow cannot remain authoritative")
 
     contract = binding.get("provider_contract") or {}
@@ -72,19 +76,22 @@ def main() -> int:
     require(contract.get("single_execution") is True, "single-execution contract changed")
 
     custody = binding.get("custody_binding") or {}
-    require(custody.get("mode") == "same_execution_master_records", "custody mode mismatch")
-    require(custody.get("owner_repository") == "master-records/orchestration", "custody owner mismatch")
+    require(custody.get("mode") == "organization_ledger_transition_receipt", "custody mode mismatch")
+    require(custody.get("owner_repository") == "StegVerse-org/LLM-adapter", "custody stays with the organization")
     require(custody.get("authority_owner") == "TV/TVC", "custody authority owner mismatch")
     require(custody.get("preprovisioned_non_tvc_token_required") is False, "non-TV/TVC token cannot be required")
     require(custody.get("github_token_required") is False, "GitHub token cannot be required")
-    require(custody.get("reconstruction_required") is True, "same-execution reconstruction must remain required")
+    require(custody.get("transition_closes_on") == "ORGANIZATION_LEDGER_TRANSITION_RECEIPT", "transition must close on the organization ledger receipt")
+    require(custody.get("master_records_recording") == "OPTIONAL_DOWNSTREAM_NON_GATING", "Master Records recording must stay optional and downstream")
+    require(custody.get("master_records_gates_dispatch") is False, "Master Records cannot gate dispatch")
+    require("reconstruction_required" not in custody, "Master Records reconstruction cannot be a required precondition")
 
     required_before_dispatch = binding.get("required_before_dispatch") or []
     require(required_before_dispatch == [
         "eligible resident StegVerse carrier",
         "TVC admitted route or credential_requirement NONE",
         "private local model process observed",
-        "same-execution Master Records reconstruction path available",
+        "organization ledger transition receipt append available",
     ], "dispatch preconditions mismatch")
 
     runtime_preconditions = binding.get("runtime_preconditions_before_authority_consumption") or []
@@ -93,7 +100,7 @@ def main() -> int:
         "fresh authorized claim/fence",
         "TVC route admission resolved",
         "exact LLM-adapter route available",
-        "Master Records same-execution reconstruction available",
+        "organization ledger lock and manifest-directed append available",
     ], "runtime preconditions mismatch")
 
     state = binding.get("current_state") or {}

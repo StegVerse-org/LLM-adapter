@@ -1,8 +1,10 @@
-"""Write pending completed transitions into the Master Records organization record.
+"""Hand completed, already-closed transitions downstream to Master Records.
 
-The worker is safe to run at service startup or on a schedule. It writes nothing
-when the Master Records organization-record service is disabled and never invents
-record state.
+Each transition closed on its final receipt before it was queued; Master Records is
+the downstream recorder of released organization batch receipts, so this worker is
+optional and never gates, reopens, or delays a transition. It is safe to run at
+service startup or on a schedule, writes nothing when the Master Records recorder is
+disabled, and never invents record state.
 """
 from __future__ import annotations
 
@@ -43,12 +45,33 @@ def run(limit: int = 20) -> dict[str, object]:
         "processed": len(results),
         "recorded": sum(1 for item in results if item.get("state") == "RECORDED"),
         "retry": sum(1 for item in results if item.get("state") == "RETRY"),
-        "authority_effect": "REMOTE_CUSTODY_ONLY_WHEN_RECEIPTED",
+        "authority_effect": "NONE_DOWNSTREAM_RECORDING_ONLY",
     }
 
 
 def main() -> int:
-    result = run(limit=configured_limit())
+    """Run once and always exit 0: service startup never waits on Master Records.
+
+    The container entrypoint and the portable node preflight run this before the
+    gateway starts. A Master Records or configuration failure is reported as a
+    six-field non-ALLOW and never blocks startup.
+    """
+    try:
+        result = run(limit=configured_limit())
+    except Exception as exc:  # downstream recording never gates startup
+        result = {
+            "worker": "master_records_organization_record",
+            "disposition": "NOT_RECORDED",
+            "failure_code": f"downstream_recording_worker_failed:{type(exc).__name__}",
+            "failed_predicate": "master_records_downstream_recording_completed",
+            "required_evidence_or_repair": "correct the Master Records recorder or STEGVERSE_CUSTODY_WORKER_LIMIT configuration named by the error",
+            "retry_entrypoint": "python -m llm_adapter.custody_worker",
+            "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+            "next_attempt": "rerun the worker; queued transitions are already closed and stay queued",
+            "error": str(exc)[:200],
+            "gates_startup": False,
+            "authority_effect": "NONE_DOWNSTREAM_RECORDING_ONLY",
+        }
     print(json.dumps(result, sort_keys=True))
     return 0
 

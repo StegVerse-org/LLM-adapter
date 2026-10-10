@@ -9,7 +9,7 @@
     "authorized_provider_configuration_receipt": false,
     "persistent_endpoint_activation_receipt": false,
     "provider_usage_persistence_contract": false,
-    "master_records_organization_record_acceptance": false,
+    "organization_ledger_transition_receipt_append": false,
     "transition_custody_acceptance": false,
     "immutable_adapter_receipt_contract": false
   },
@@ -17,7 +17,7 @@
     "authorized provider configuration receipt not observed",
     "persistent endpoint activation receipt not observed",
     "provider usage persistence contract not observed",
-    "Master Records organization-record acceptance not observed",
+    "organization ledger transition receipt append not observed",
     "transition custody acceptance not observed",
     "immutable adapter receipt contract not observed"
   ],
@@ -37,7 +37,7 @@
     "canonical governed event stream",
     "provider response event",
     "provider usage persistence receipt",
-    "Master Records organization-record receipt",
+    "organization ledger transition receipt",
     "transition custody receipt",
     "immutable adapter VERIFIED receipt",
     "post-execution reconstruction report",
@@ -51,5 +51,9 @@
     "custody": false,
     "parentage": false
   },
-  "updated_at": "2026-07-22T15:00:00Z"
+  "updated_at": "2026-10-10T00:00:00Z",
+  "downstream_recording": {
+    "master_records": "OPTIONAL_DOWNSTREAM_NON_GATING",
+    "master_records_is_a_prerequisite": false
+  }
 }

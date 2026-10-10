@@ -99,7 +99,7 @@ class CanonicalSovereignRouteExecutionTests(unittest.TestCase):
         self.assertEqual(result["credential_requirement"], "NONE")
         self.assertFalse(result["github_token_required"])
         self.assertFalse(result["execution_authority"])
-        self.assertEqual(result["next_transition"], "MASTER_RECORDS_SAME_EXECUTION_TRANSITION_RECONSTRUCTION")
+        self.assertEqual(result["next_transition"], "ORGANIZATION_LEDGER_TRANSITION_RECEIPT")
         self.assertEqual(execute.call_args.kwargs["endpoint"], "http://127.0.0.1:31415/v1/chat/completions")
 
 

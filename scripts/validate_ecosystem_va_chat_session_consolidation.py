@@ -19,9 +19,13 @@ SOVEREIGN_VA_PROVIDER_TASK = ROOT / "tasks/VACP-SOVEREIGN-PROVIDER-REALIGNMENT-0
 ECOSYSTEM_RECEIPT = ROOT / "receipts/ecosystem-chat-authorized-provider-activation.latest.json"
 CONSOLIDATION_TASK = ROOT / "tasks/LLMA-ECOSYSTEM-VA-CHAT-CONSOLIDATION-011.json"
 OUTPUT = ROOT / "receipts/ecosystem-va-chat-session-consolidation-validation.json"
-# Gate naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): task records
-# written before the rename name this gate by its legacy text; it is accepted.
+# Master Records was once preserved as a VACC gate (as "Master Records custody", then
+# "Master Records organization record"). It is the downstream recorder of released
+# organization batch receipts and gates nothing (LLM-adapter#368); the turn closes on
+# its organization-ledger transition receipt.
 LEGACY_ORGANIZATION_RECORD_REQUIREMENT = "Master Records custody"
+RETIRED_MASTER_RECORDS_GATES = {"Master Records organization record", LEGACY_ORGANIZATION_RECORD_REQUIREMENT, "same-execution reconstruction PASS"}
+ORGANIZATION_LEDGER_GATE = "organization-ledger transition receipt"
 
 REQUIRED_ITEM_FIELDS = {
     "task_id", "originating_session_goal", "destination_repository", "branch",
@@ -49,7 +53,7 @@ ALLOWED_SOVEREIGN_PROVIDER_STATES = {
 }
 EXPECTED_SOVEREIGN_EXECUTION_OWNER_PREFIX = (
     "resident sovereign heartbeat -> StegVerse-Labs/TVC -> "
-    "StegVerse-org/LLM-adapter -> master-records/orchestration"
+    "StegVerse-org/LLM-adapter organization ledger"
 )
 
 
@@ -242,13 +246,14 @@ def validate_provider_continuation() -> tuple[dict[str, Any], dict[str, Any]]:
     required_gates = {
         "privacy guarded dispatch before model input",
         "fresh TVC route admission",
-        "same-execution reconstruction PASS",
+        ORGANIZATION_LEDGER_GATE,
         "Site projection only after verified activation evidence",
     }
     preserved_gates = set(sovereign.get("preserved_vacc_gates") or [])
-    organization_record_names = {"Master Records organization record", LEGACY_ORGANIZATION_RECORD_REQUIREMENT}
-    if not required_gates.issubset(preserved_gates) or not preserved_gates & organization_record_names:
+    if not required_gates.issubset(preserved_gates):
         fail("sovereign_vacc_gates_incomplete")
+    if preserved_gates & RETIRED_MASTER_RECORDS_GATES:
+        fail("master_records_cannot_be_a_vacc_gate")
     release_conditions = sovereign.get("machine_observable_release_condition")
     if release_conditions is None:
         release_conditions = sovereign.get("remaining_activation_conditions")

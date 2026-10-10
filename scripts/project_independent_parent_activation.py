@@ -22,6 +22,10 @@ ACTIVATION = REL / "independent_parent_activation.latest.json"
 BASE = REL / "SHWP-ECOSYSTEM-CHAT-INFERENCE-001.json"
 ROUTE = REL / "tvc_local_model_route.json"
 EXECUTION = REL / "llm_adapter_sovereign_execution.json"
+# Master Records is the downstream recorder of released organization batch receipts
+# (LLM-adapter#368). Its same-execution reconstruction is read when present and
+# reported, but it is never an activation predicate: the projection closes on the
+# organization's own hash-bound parent activation receipt.
 RECONSTRUCTION = REL / "master_records_same_execution_reconstruction.json"
 
 REQUIRED_TRUE = (
@@ -29,8 +33,6 @@ REQUIRED_TRUE = (
     "private_endpoint_only",
     "ephemeral_e1_e2_execution_observed",
     "measured_usage_persisted",
-    "provider_usage_reconstruction_pass",
-    "transition_reconstruction_pass",
     "same_execution",
     "persistent_conversational_runtime_ready",
 )
@@ -54,7 +56,8 @@ def verify_chain(control_root: Path) -> dict[str, Any]:
     base = load(control_root / BASE)
     route = load(control_root / ROUTE)
     execution = load(control_root / EXECUTION)
-    reconstruction = load(control_root / RECONSTRUCTION)
+    reconstruction_path = control_root / RECONSTRUCTION
+    reconstruction = load(reconstruction_path) if reconstruction_path.is_file() else None
 
     errors: list[str] = []
     if activation.get("schema") != "stegverse.ecosystem-chat-independent-parent-activation/v1":
@@ -98,14 +101,11 @@ def verify_chain(control_root: Path) -> dict[str, Any]:
         errors.append("provider_usage_binding")
     if execution.get("state") != "EXECUTED":
         errors.append("execution_state")
-    if reconstruction.get("reconstruction_receipt_hash") != activation.get("reconstruction_receipt_hash"):
-        errors.append("reconstruction_hash_binding")
-    if reconstruction.get("provider_usage_reconstruction_pass") is not True:
-        errors.append("provider_usage_reconstruction")
-    if reconstruction.get("transition_reconstruction_pass") is not True:
-        errors.append("transition_reconstruction")
-    if reconstruction.get("same_execution") is not True:
-        errors.append("reconstruction_same_execution")
+    # A downstream reconstruction record, when present, must at least be the one the
+    # activation names; whether it passed is reported, never required.
+    if reconstruction is not None and activation.get("reconstruction_receipt_hash") is not None:
+        if reconstruction.get("reconstruction_receipt_hash") != activation.get("reconstruction_receipt_hash"):
+            errors.append("reconstruction_hash_binding")
 
     if errors:
         raise ValueError("terminal parent chain rejected: " + ",".join(sorted(set(errors))))
@@ -122,7 +122,12 @@ def verify_chain(control_root: Path) -> dict[str, Any]:
 def build_projection(chain: dict[str, Any]) -> dict[str, Any]:
     activation = chain["activation"]
     execution = chain["execution"]
-    reconstruction = chain["reconstruction"]
+    reconstruction = chain["reconstruction"] or {}
+    reconstructed = (
+        reconstruction.get("provider_usage_reconstruction_pass") is True
+        and reconstruction.get("transition_reconstruction_pass") is True
+        and reconstruction.get("same_execution") is True
+    )
     usage = execution.get("provider_usage_event") or {}
     projection: dict[str, Any] = {
         "schema": "stegverse.ecosystem_chat.sovereign_activation_projection.v1",
@@ -142,14 +147,18 @@ def build_projection(chain: dict[str, Any]) -> dict[str, Any]:
         "provider_usage": {
             "measured": isinstance(execution.get("measured_usage"), dict),
             "event_sha256": usage.get("event_sha256"),
-            "custody_recorded": reconstruction.get("provider_usage_reconstruction_pass") is True,
-            "reconstructability": "PASS",
+            "recorded_locally": activation.get("measured_usage_persisted") is True,
             "authority_granted": False,
         },
         "transition": {
-            "custody_recorded": True,
-            "reconstructability": "PASS",
+            "closes_on": "ORGANIZATION_PARENT_ACTIVATION_RECEIPT",
             "same_execution": True,
+        },
+        "master_records_downstream": {
+            "role": "DOWNSTREAM_RECORDER_OF_RELEASED_ORGANIZATION_BATCHES",
+            "reconstruction_present": bool(chain["reconstruction"]),
+            "reconstruction_pass": reconstructed,
+            "gates_activation": False,
         },
         "runtime": {
             "private_endpoint_only": True,
