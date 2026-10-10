@@ -4,8 +4,8 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
+from . import collab_ingress
 from .service_gateway_site import app
-from .sovereign_local_model_binding import SovereignLocalModelBindingError
 from .va_claims_runtime_core import (
     ChatRequest,
     classify_route,
@@ -13,7 +13,6 @@ from .va_claims_runtime_core import (
     non_allow_from_exception,
     readiness_record,
 )
-from va_claim_assistant.route_generators import AuthorityResolutionRequired, RouteGenerationError
 
 router = APIRouter(prefix="/api/va-claims/v1", tags=["va-claims"])
 
@@ -28,12 +27,13 @@ def readiness() -> dict[str, Any]:
 
 @router.post("/chat")
 def chat(request: ChatRequest) -> dict[str, Any]:
+    """Manifest-bound transport: return the SDK disposition for the VA-scoped chat manifest."""
     try:
         result = execute_chat(request)
-    except (AuthorityResolutionRequired, RouteGenerationError, SovereignLocalModelBindingError, RuntimeError, OSError, ValueError) as exc:
+    except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=503, detail=non_allow_from_exception(exc)) from exc
     if result.get("disposition") != "ALLOW":
-        raise HTTPException(status_code=503, detail=result)
+        raise HTTPException(status_code=collab_ingress.http_status(result), detail=result)
     return result
 
 

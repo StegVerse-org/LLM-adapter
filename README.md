@@ -468,15 +468,7 @@ The executor requires an admitted TVC route, binds the exact canonical runtime p
 
 ### VA claims turn closure (LLMA-368)
 
-A VA claims chat turn (`llm_adapter/va_claims_runtime_core.py`) closes on its own
-transition receipt, appended to this repository's transition ledger
-(`.stegverse/transition-ledger/emit.py`) as `VA_CLAIMS_TURN_EXECUTED`. Master Records
-reconstruction is not a turn predicate: when a local Master Records capsule is
-materialized the turn's packet (`runtime_proof`, `tvc_route_receipt`,
-`llm_adapter_execution_receipt` -- keys unchanged) is emitted to it and the outcome is
-returned as `master_records_reconstruction` evidence with `gates_turn: false`. A
-missing capsule or failed reconstruction never withholds a closed turn. Every
-non-ALLOW turn or refusal carries `failure_code`, `failed_predicate`,
+A VA claims chat turn (`llm_adapter/va_claims_runtime_core.py`, served by `POST /api/va-claims/v1/chat` and `va_runtime_http_server.py`) is manifest-bound transport on `stegverse.route.va-scoped-chat.v1` (SDK#368). VACC is a VA-scoped specialization of Ecosystem Chat. The deployment's VA scope (`policy_id`, `va_ref`, `allowed_topics`) is declared as manifest policy, and the SDK evaluates it. A topic outside the scope is a governed `DENY` (HTTP 403) before any handoff. Otherwise the turn returns the SDK disposition, which is `FAIL_CLOSED` `CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED` until the canonical organization boundary resolves. The keyword classifier only fills the draft's `requested_topic`, and a caller may name the topic with `requested_topic`. The turn does not generate a local answer, call a local model, read the TVC route receipt file or other environment inputs, or attribute usage. It also appends no repo-local receipt, so nothing local is labelled as an Organization observation. Master Records is non-gating. Every non-ALLOW turn or refusal carries `failure_code`, `failed_predicate`,
 `required_evidence_or_repair`, `retry_entrypoint`, `owning_existing_goal` and
 `next_attempt`.
 

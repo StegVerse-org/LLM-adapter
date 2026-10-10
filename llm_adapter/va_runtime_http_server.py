@@ -5,6 +5,7 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
+from . import collab_ingress
 from .va_claims_runtime_core import ChatRequest, execute_chat, non_allow_from_exception, readiness_record
 
 ALLOWED_ORIGINS = {
@@ -48,7 +49,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/health":
             try:
                 ready = readiness_record()
-                self._reply(200, {"state": "READY", "healthy": True, "va_runtime": ready})
+                self._reply(200, {"state": ready["state"], "healthy": True, "va_runtime": ready})
             except Exception as exc:
                 self._reply(503, {"state": "FAIL_CLOSED", "healthy": False, "detail": str(exc), **non_allow_from_exception(exc)})
             return
@@ -79,7 +80,7 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("request_must_be_object")
             request = ChatRequest.model_validate(value)
             result = execute_chat(request)
-            self._reply(200 if result.get("disposition") == "ALLOW" else 503, result)
+            self._reply(collab_ingress.http_status(result), result)
         except Exception as exc:
             self._reply(503, {"state": "FAIL_CLOSED", "detail": str(exc), **non_allow_from_exception(exc)})
 
