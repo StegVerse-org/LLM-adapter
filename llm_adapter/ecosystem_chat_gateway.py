@@ -1,37 +1,34 @@
 """Deployable governed HTTP gateway for StegVerse Ecosystem Chat.
 
-The service preserves canonical transition identity, rejects restricted requests,
-applies bounded rate and provider policies, persists lifecycle state, and writes
-completed records into the Master Records organization record, marking them RECORDED
-only after an identity-matched organization-record receipt.
+`POST /api/ecosystem-chat` is manifest-bound transport. It translates a chat
+turn into the SDK's `stegverse.route.ecosystem-chat.v1` manifest, hands it to
+`stegverse.manifest_execution.execute_manifest` through `sdk_boundary`, and
+returns the SDK disposition. The manifest's route selects processing; the
+caller's `requested_route` and keyword patterns do not. The gateway generates
+no response, calls no provider, decides no admissibility, reads no provider or
+Master Records credential, and writes no Master Records record (Master Records
+is non-gating).
 """
 from __future__ import annotations
 
 import os
-import re
 import time
 from collections import defaultdict, deque
-from hashlib import sha256
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from llm_adapter.ai_entry_backend_service import build_ai_entry_backend_response
-from llm_adapter.governed_chat_pipeline import build_relationship, get_transition_status, progress_bounded_response
-from llm_adapter.governed_provider import enabled as provider_enabled
-from llm_adapter.governed_provider import generate as generate_provider_response
-from llm_adapter.master_records_organization_record_client import enabled as master_records_enabled
-from llm_adapter.master_records_organization_record_client import write_organization_record
+from llm_adapter import collab_ingress
+from llm_adapter.governed_chat_pipeline import get_transition_status
 from llm_adapter.transition_store import store
 
-RESTRICTED_PATTERNS = (
-    re.compile(r"\b(secret|token|credential|password|api[_ -]?key|deploy key|private key)\b", re.I),
-    re.compile(r"\b(rm\s+-rf|git\s+push|force[- ]?push|delete\s+(repo|repository|branch|workflow|release|tag))\b", re.I),
-    re.compile(r"\b(permission|collaborator|webhook|branch protection|dns|infrastructure setting)\b", re.I),
-)
+SURFACE = "ecosystem-chat-gateway"
 
+#: Accepted for request-shape compatibility. Not consulted: the manifest route
+#: selects processing.
 ALLOWED_ROUTES = {
     "Site", "repo-standards", "StegVerse-002", "formalism-tests", "Continuity",
     "Publisher", "Solver", "Restricted admin", "Unknown",
@@ -126,19 +123,18 @@ app.add_middleware(
 )
 
 
-def is_restricted(message: str, requested_route: str) -> bool:
-    return requested_route == "Restricted admin" or any(pattern.search(message) for pattern in RESTRICTED_PATTERNS)
+def ecosystem_chat_request(payload: "EcosystemChatRequest") -> dict[str, Any]:
+    """The SDK's Ecosystem Chat processor request for one turn.
 
-
-def gateway_receipt_id(payload: EcosystemChatRequest, status: str) -> str:
-    material = "\n".join([
-        payload.transition_identity.transition_id,
-        payload.transition_identity.run_id,
-        payload.session_id,
-        status,
-        payload.message,
-    ])
-    return "gateway-receipt:sha256:" + sha256(material.encode("utf-8")).hexdigest()
+    `requested_topic` is the caller's declared intent. It only populates the
+    manifest draft; the route is fixed by the manifest, not by the topic.
+    """
+    return {
+        "schema": collab_ingress.ROUTES[collab_ingress.ECOSYSTEM_CHAT]["request_schema"],
+        "session_ref": payload.session_id,
+        "message": payload.message,
+        "requested_topic": payload.transition_intent,
+    }
 
 
 @app.get("/health")
@@ -148,20 +144,22 @@ def health() -> dict[str, Any]:
         "service": "stegverse-ecosystem-chat-gateway",
         "schema_version": "1.3.0",
         "native_executor": "STEGVERSE_AI_ENTITY",
-        "native_executor_status": "ACTIVE",
-        "bounded_response_pipeline": True,
+        "native_executor_status": "MANIFEST_BOUND_TRANSPORT",
+        "bounded_response_pipeline": False,
+        "manifest_route": collab_ingress.ROUTES[collab_ingress.ECOSYSTEM_CHAT]["route_id"],
+        "processing_selected_by": "MANIFEST_DECLARED_ROUTE",
         "transition_status_lookup": True,
         "sqlite_transition_store": True,
         "storage_durable_across_restarts": STORAGE_DURABLE_ACROSS_RESTARTS,
         "local_persistence_is_master_records_organization_record": False,
-        "custody_queue": True,
-        "master_records_submission_enabled": master_records_enabled(),
-        "governed_provider_enabled": provider_enabled(),
+        "custody_queue": False,
+        "master_records_submission_enabled": False,
+        "governed_provider_enabled": False,
         "provider_output_is_authority": False,
-        "provider_failure_falls_back": True,
+        "provider_failure_falls_back": False,
         "execution_authority": False,
         "repository_mutation_authority": False,
-        "final_response_receipt_authority": True,
+        "final_response_receipt_authority": False,
         "master_records_authority": False,
     }
 
@@ -192,7 +190,18 @@ def transition_status(transition_id: str) -> dict[str, Any]:
 
 
 @app.post("/api/ecosystem-chat")
-def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str, Any]:
+def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> JSONResponse:
+    """Translate one chat turn into the Ecosystem Chat manifest and return the SDK disposition.
+
+    The manifest's route (`stegverse.route.ecosystem-chat.v1`) selects
+    processing. `requested_route` is not consulted and no keyword pattern is
+    evaluated: neither may select processing. This gateway generates no
+    response, calls no provider, decides no admissibility, and writes no
+    transition or Master Records record; the receiving organization does the
+    processing once the manifest is admitted. Without the canonical
+    organization boundary the disposition is FAIL_CLOSED
+    CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED.
+    """
     client_key = request.client.host if request.client else payload.session_id
     allowed, retry_after = limiter.allow(f"{client_key}:{payload.session_id}")
     if not allowed:
@@ -201,114 +210,40 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
             detail={"task_status": "rejected", "reason": "rate_limit", "retry_after_seconds": retry_after},
             headers={"Retry-After": str(retry_after)},
         )
-
     identity = payload.transition_identity.model_dump()
-    restricted = is_restricted(payload.message, payload.requested_route)
-    backend = build_ai_entry_backend_response(payload.message).to_dict()
-    provider_result = None
-
-    if restricted:
-        task_status = "pending_authority"
-        response_text = (
-            "This request contains restricted administration or credential-shaped content. "
-            "The public gateway performed no execution and routed the request to separate authority review."
-        )
-        routed_module = "Restricted admin"
-        next_action = "Create a separately authorized governed task with bounded scope and receipt requirements."
-    else:
-        provider_result = generate_provider_response(
-            message=payload.message,
-            transition_id=identity["transition_id"],
-            run_id=identity["run_id"],
-        )
-        response_text = provider_result.text if provider_result.used and provider_result.text else backend["stegverse_response"]
-        task_status = "completed_bounded_response"
-        routed_module = payload.requested_route if payload.requested_route != "Unknown" else backend["primary_route"]
-        next_action = "Inspect lifecycle, provider posture, final response receipt, and custody status; no repository mutation occurred."
-
-    intake_receipt_id = gateway_receipt_id(payload, task_status)
-    candidate = {
-        "schema_version": "1.0.0",
-        "record_type": "governed_transition_relationship",
+    disposition = collab_ingress.execute(
+        collab_ingress.ECOSYSTEM_CHAT,
+        ecosystem_chat_request(payload),
+        surface=SURFACE,
+        source_output_id=f"{SURFACE}:{payload.session_id}:{collab_ingress.digest(identity)}",
+        data={"message_sha256": collab_ingress.digest(payload.message.encode("utf-8")),
+              "caller_transition_identity_sha256": collab_ingress.digest(identity)},
+    )
+    body = {
+        **disposition,
+        # Kept for clients of the previous shape. None of these is decided
+        # here: there is no locally generated response and no local receipt.
+        "response": None,
+        "routed_module": collab_ingress.ECOSYSTEM_CHAT,
+        "task_status": "manifest_" + disposition["disposition"].lower(),
+        "receipt_id": None,
+        "final_receipt": False,
+        "final_receipt_id": None,
         "transition_id": identity["transition_id"],
         "run_id": identity["run_id"],
-        "lifecycle_state": "DECLARED",
-        "origin": {
-            "origin_class": "SITE_INPUT",
-            "event_id": identity["event_id"],
-            "origin_manifest_id": identity["origin_manifest_id"],
-            "observed_at": None,
-            "source_ref": "StegVerse-Labs/Site/ecosystem-chat.html",
-        },
-        "relationships": {
-            "parent_transition_id": identity.get("parent_transition_id"),
-            "previous_receipt_id": identity.get("previous_receipt_id"),
-            "actor_ref": f"site-session:{payload.session_id}",
-            "target_ref": "repository:StegVerse-Labs/hybrid-collab-bridge",
-            "repository_ref": "StegVerse-Labs/Site",
-            "handoff_ref": "docs/SITE_MIRROR_HANDOFF.md",
-            "task_ref": f"task:ecosystem-chat:{payload.transition_intent}",
-            "next_task_ref": None,
-        },
-    }
-    relationship = build_relationship(
-        candidate=candidate,
-        message=payload.message,
-        gateway_receipt_id=intake_receipt_id,
-    )
-    if provider_result is not None:
-        provider_record = provider_result.to_dict()
-        relationship["provider"] = provider_record
-        relationship["governance"]["evidence_refs"].append(f"provider-status:{provider_result.status}")
-        if provider_result.provider_receipt_id:
-            relationship["governance"]["evidence_refs"].append(provider_result.provider_receipt_id)
-
-    progressed = progress_bounded_response(
-        relationship=relationship,
-        response_text=response_text,
-        restricted=restricted,
-    )
-
-    custody_result: dict[str, Any] | None = None
-    if progressed["lifecycle_state"] == "COMPLETED":
-        custody_result = write_organization_record(progressed)
-        progressed = get_transition_status(progressed["transition_id"]) or progressed
-
-    return {
-        "response": response_text,
-        "routed_module": routed_module,
-        "task_status": task_status,
-        "receipt_id": intake_receipt_id,
-        "receipt_class": "GATEWAY_INTAKE_RECEIPT",
-        "final_receipt": progressed["continuity"]["final_receipt_id"] is not None,
-        "final_receipt_id": progressed["continuity"]["final_receipt_id"],
-        "next_action": next_action,
-        "transition_id": progressed["transition_id"],
-        "run_id": progressed["run_id"],
-        "event_id": progressed["origin"]["event_id"],
-        "origin_manifest_id": progressed["origin"]["origin_manifest_id"],
-        "lifecycle_state": progressed["lifecycle_state"],
-        "admissibility_result": progressed["governance"]["admissibility_result"],
-        "commit_time_validity": progressed["governance"]["commit_time_validity"],
-        "master_record_status": progressed["continuity"]["master_record_status"],
-        "master_record_ref": progressed["continuity"].get("master_record_ref"),
-        "reconstruction_status": progressed["continuity"]["reconstruction_status"],
-        "provider": progressed.get("provider"),
-        "sqlite_persisted": True,
-        "storage_durable_across_restarts": STORAGE_DURABLE_ACROSS_RESTARTS,
-        "custody_submission": custody_result,
-        "transition_candidate": progressed,
+        "event_id": identity["event_id"],
+        "caller_transition_identity_is_manifest_identity": False,
         "interaction_profile": payload.interaction_profile,
         "authority": {
-            "native_executor_active": True,
-            "bounded_response_generation_allowed": not restricted,
+            "local_response_generated": False,
+            "provider_called": False,
+            "local_admissibility_decided": False,
             "provider_output_is_authority": False,
             "repository_mutation_allowed": False,
             "publication_allowed": False,
-            "gateway_receipt_is_final": False,
-            "final_response_receipt_is_repository_execution_authority": False,
-            "local_persistence_is_master_records_organization_record": False,
             "site_grants_admissibility": False,
-            "organization_record_installed": progressed["continuity"]["master_record_status"] == "RECORDED",
+            "master_records_gating": False,
         },
     }
+    return JSONResponse(status_code=collab_ingress.http_status(disposition), content=body,
+                        headers={"Cache-Control": "no-store"})
