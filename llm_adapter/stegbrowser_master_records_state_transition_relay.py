@@ -1,11 +1,13 @@
-"""Credential-nonexporting relay that records the immutable StegBrowser state-transition receipt.
+"""Credential-nonexporting relay of a released StegBrowser state-transition receipt.
 
-Interlock/InTr has already admitted the StegBrowser transition; Master Records keeps
-the organization record of it. The browser supplies only the canonical non-secret
+Interlock/InTr has already admitted the StegBrowser transition and the organization
+holds its receipt. Master Records is the downstream recorder of released
+organization batch receipts for cross-organization reconstruction; it is not the
+custodian and nothing awaits it. The browser supplies only the canonical non-secret
 state-transition receipt. This module uses the existing service-gateway Master Records
 configuration materialized under TV/TVC authority, forwards the unchanged request to
-the Master Records organization-record service, and returns only the canonical
-organization-record result after exact reconstruction validation.
+the Master Records recorder, and reports its result after exact reconstruction
+validation. A failed relay is a recording outcome only; it never gates the transition.
 
 This is transport only. It grants no transition, execution, credential, record,
 publication, or governance authority and does not implement a second record store.

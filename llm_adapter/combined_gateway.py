@@ -306,9 +306,10 @@ def stegverse_node_advertisement(request: Request) -> dict:
 
 @app.post("/api/master-records/state-transitions")
 def stegbrowser_master_records_state_transition_relay(payload: dict) -> dict:
-    """Relay the one immutable StegBrowser state-transition receipt to the Master Records
-    organization record without exporting credentials. Interlock/InTr admitted the
-    transition; this route only carries the receipt to be recorded."""
+    """Relay one released StegBrowser state-transition receipt downstream to Master
+    Records without exporting credentials. Interlock/InTr admitted the transition and
+    the organization holds its receipt; this route only carries a copy to the
+    downstream recorder. A relay failure never reopens or blocks the transition."""
     try:
         return relay_stegbrowser_state_transition(payload)
     except StegBrowserMasterRecordsRelayError as exc:
@@ -316,6 +317,14 @@ def stegbrowser_master_records_state_transition_relay(payload: dict) -> dict:
             status_code=503,
             detail={
                 "reason": str(exc),
+                "disposition": "NOT_RECORDED",
+                "failure_code": str(exc),
+                "failed_predicate": "master_records_downstream_recording_completed",
+                "required_evidence_or_repair": "configure the Master Records recorder or correct the released receipt named by failure_code",
+                "retry_entrypoint": "POST /api/master-records/state-transitions",
+                "owning_existing_goal": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+                "next_attempt": "resubmit the same released receipt; the StegBrowser transition is already closed by its organization receipt",
+                "gates_transition": False,
                 "custody_recorded": False,
                 "credential_material_returned": False,
                 "credential_authority": "TV/TVC",

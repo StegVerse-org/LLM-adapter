@@ -207,10 +207,11 @@ def main() -> None:
                 "execution_receipt_hash": evidence["receipt_hash"],
                 "source_domains_used": evidence["source_domains_used"],
                 "cost_usd": evidence["cost_usd"],
-                "custody_state": "READY_FOR_MASTER_RECORDS",
-                "reconstruction_state": "READY_FOR_MASTER_RECORDS",
-                "next_executable_action": "Record the execution receipt and the TVC admission receipt through master-records/orchestration#15; Master Records keeps them as organization records.",
-                "next_owner": "master-records/orchestration#15",
+                "custody_state": "ORGANIZATION_LEDGER",
+                "reconstruction_state": "DOWNSTREAM_OPTIONAL",
+                "next_executable_action": "Append the execution receipt and the TVC admission receipt to the organization ledger; Master Records may record the released batch downstream, and nothing waits on it.",
+                "next_owner": "StegVerse-org/LLM-adapter#90",
+                "master_records_gates_completion": False,
             }
 
     receipt["receipt_hash"] = canonical_hash(receipt)

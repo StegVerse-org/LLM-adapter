@@ -1,9 +1,11 @@
 """Deployable governed HTTP gateway for StegVerse Ecosystem Chat.
 
 The service preserves canonical transition identity, rejects restricted requests,
-applies bounded rate and provider policies, persists lifecycle state, and writes
-completed records into the Master Records organization record, marking them RECORDED
-only after an identity-matched organization-record receipt.
+applies bounded rate and provider policies, persists lifecycle state, and closes
+each turn on its final response receipt. Completed records are queued for Master
+Records, the downstream recorder of released organization batch receipts; the
+custody worker submits them later. No response waits on, or is gated by, a Master
+Records reply.
 """
 from __future__ import annotations
 
@@ -23,7 +25,6 @@ from llm_adapter.governed_chat_pipeline import build_relationship, get_transitio
 from llm_adapter.governed_provider import enabled as provider_enabled
 from llm_adapter.governed_provider import generate as generate_provider_response
 from llm_adapter.master_records_organization_record_client import enabled as master_records_enabled
-from llm_adapter.master_records_organization_record_client import write_organization_record
 from llm_adapter.transition_store import store
 
 RESTRICTED_PATTERNS = (
@@ -163,6 +164,8 @@ def health() -> dict[str, Any]:
         "repository_mutation_authority": False,
         "final_response_receipt_authority": True,
         "master_records_authority": False,
+        "master_records_gates_response": False,
+        "master_records_submission_mode": "DOWNSTREAM_WORKER_NON_GATING",
     }
 
 
@@ -269,10 +272,11 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> dict[str,
         restricted=restricted,
     )
 
+    # The turn is closed on its final response receipt. A completed record is only
+    # queued for downstream Master Records recording; the response never waits on it.
     custody_result: dict[str, Any] | None = None
     if progressed["lifecycle_state"] == "COMPLETED":
-        custody_result = write_organization_record(progressed)
-        progressed = get_transition_status(progressed["transition_id"]) or progressed
+        custody_result = store.custody_status(progressed["transition_id"])
 
     return {
         "response": response_text,

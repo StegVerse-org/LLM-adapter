@@ -1,11 +1,17 @@
-"""Master Records organization record of a governed wiki-publication decision.
+"""Organization transition receipt of a governed wiki-publication decision.
 
 Interlock/InTr admits the publication transition. This module validates the
-already-produced SDK and Interlock/InTr evidence, writes one canonical
-state-transition receipt into the Master Records organization record through
-master-records/orchestration, and reconstructs it before returning the governed
-publication result. It creates no governance, transition, credential, record,
-publication, or execution authority.
+already-produced SDK and Interlock/InTr evidence and builds the one canonical
+state-transition receipt the organization holds for it. The repository mutation
+closes on that organization receipt, verified locally by
+``verify_publication_transition_receipt``; nothing here waits on Master Records.
+
+Master Records is the downstream recorder of released organization batch
+receipts. ``record_governed_publication_closure`` may hand it a released receipt
+for cross-organization reconstruction; that recording is optional, never gates
+the publication, and reports a failure as a six-field non-ALLOW instead of
+raising. It creates no governance, transition, credential, record, publication,
+or execution authority.
 """
 from __future__ import annotations
 
@@ -28,6 +34,8 @@ RECEIPT_SCHEMA = "stegverse.canonical-state-transition-receipt/v1"
 SUBMISSION_SCHEMA = "stegverse.master-records.state-transition-submission/v1"
 CLOSURE_SCHEMA = "stegverse.external-framework-wiki-publication-governed-closure/v1"
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
+OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
+RECORDING_RETRY_ENTRYPOINT = "llm_adapter.wiki_publication_master_records.record_governed_publication_closure"
 
 
 class PublicationCustodyError(RuntimeError):
@@ -249,6 +257,26 @@ def _validate_reconstruction(response: Mapping[str, Any], receipt_sha256: str, *
     return dict(receipt)
 
 
+def _recording_not_completed(failure_code: str, receipt_sha256: str | None, **detail: Any) -> dict[str, Any]:
+    """A downstream recording that did not complete, as six fields; never a gate."""
+    return {
+        "schema": CLOSURE_SCHEMA,
+        "state": "NOT_RECORDED",
+        "disposition": "NOT_RECORDED",
+        "failure_code": failure_code,
+        "failed_predicate": "master_records_downstream_recording_completed",
+        "required_evidence_or_repair": "configure the Master Records recorder and resubmit the released organization receipt",
+        "retry_entrypoint": RECORDING_RETRY_ENTRYPOINT,
+        "owning_existing_goal": OWNING_EXISTING_GOAL,
+        "next_attempt": "resubmit the released receipt downstream; the publication transition is already closed on the organization receipt",
+        "receipt_sha256": receipt_sha256,
+        "gates_publication": False,
+        "master_records_grants_transition_authority": False,
+        "authority_effect": "NONE",
+        **detail,
+    }
+
+
 def record_governed_publication_closure(
     *,
     publication_transition_id: str,
@@ -259,6 +287,12 @@ def record_governed_publication_closure(
     post: Callable[..., Any] = requests.post,
     get: Callable[..., Any] = requests.get,
 ) -> dict[str, Any]:
+    """Hand the released organization receipt to Master Records downstream.
+
+    Optional and non-gating: invalid transition evidence still raises, because no
+    organization receipt exists, but every Master Records outcome is returned as
+    data and never blocks or reverses the publication.
+    """
     receipt = build_publication_state_receipt(
         publication_transition_id=publication_transition_id,
         publication_transition=publication_transition,
@@ -266,9 +300,10 @@ def record_governed_publication_closure(
         governed_result=governed_result,
         intr_allow_decision=intr_allow_decision,
     )
+    receipt_sha256 = canonical_sha256(receipt)
     endpoint, token, timeout, _allowed_hosts, _private_network = _master_records_configuration()
     if not master_records_transport_enabled():
-        raise PublicationCustodyError("canonical_master_records_transport_not_configured")
+        return _recording_not_completed("master_records_recorder_not_configured", receipt_sha256, receipt=receipt)
     body = {
         "schema": SUBMISSION_SCHEMA,
         "receipt": receipt,
@@ -281,9 +316,10 @@ def record_governed_publication_closure(
         recorded_response = post(endpoint, json=body, headers=_headers(token), timeout=timeout)
         recorded_response.raise_for_status()
         recorded = recorded_response.json()
+        _validate_recorded(recorded, receipt)
     except Exception as exc:
-        raise PublicationCustodyError(f"master_records_organization_record_write_failed:{type(exc).__name__}") from exc
-    receipt_sha256 = _validate_recorded(recorded, receipt)
+        return _recording_not_completed(
+            f"master_records_recording_failed:{type(exc).__name__}", receipt_sha256, detail=str(exc)[:200], receipt=receipt)
     try:
         reconstruction_response = get(
             endpoint.rstrip("/") + f"/{receipt_sha256}/reconstruction",
@@ -291,10 +327,10 @@ def record_governed_publication_closure(
             timeout=timeout,
         )
         reconstruction_response.raise_for_status()
-        reconstruction = reconstruction_response.json()
+        rebuilt = _validate_reconstruction(reconstruction_response.json(), receipt_sha256, expected_receipt=receipt)
     except Exception as exc:
-        raise PublicationCustodyError(f"master_records_reconstruction_failed:{type(exc).__name__}") from exc
-    rebuilt = _validate_reconstruction(reconstruction, receipt_sha256, expected_receipt=receipt)
+        return _recording_not_completed(
+            f"master_records_reconstruction_failed:{type(exc).__name__}", receipt_sha256, detail=str(exc)[:200], receipt=receipt)
     return {
         "schema": CLOSURE_SCHEMA,
         "state": "RECORDED",
@@ -307,63 +343,69 @@ def record_governed_publication_closure(
         "reconstruction_status": "PASS",
         "required_evidence_validation_status": "PASS",
         "receipt": rebuilt,
+        "gates_publication": False,
         "master_records_grants_transition_authority": False,
-        "authority_effect": "NONE_CUSTODY_RECONSTRUCTION_ONLY",
+        "authority_effect": "NONE_DOWNSTREAM_RECORDING_ONLY",
     }
 
 
-def require_publication_master_records_organization_record(
+def verify_publication_transition_receipt(
     *,
+    transition_receipt: Mapping[str, Any],
     receipt_sha256: str,
     publication_transition_id: str,
     publication_transition: Mapping[str, Any],
-    get: Callable[..., Any] = requests.get,
 ) -> dict[str, Any]:
-    receipt_sha256 = _require_sha256(receipt_sha256, "master_records_receipt_sha256")
-    endpoint, token, timeout, _allowed_hosts, _private_network = _master_records_configuration()
-    if not master_records_transport_enabled():
-        raise PublicationCustodyError("canonical_master_records_transport_not_configured")
-    try:
-        response = get(
-            endpoint.rstrip("/") + f"/{receipt_sha256}/reconstruction",
-            headers=_headers(token),
-            timeout=timeout,
-        )
-        response.raise_for_status()
-        reconstructed = response.json()
-    except Exception as exc:
-        raise PublicationCustodyError(f"master_records_reconstruction_failed:{type(exc).__name__}") from exc
-    receipt = _validate_reconstruction(reconstructed, receipt_sha256)
+    """Verify the organization's own publication transition receipt locally.
+
+    The repository mutation closes on this receipt. No Master Records reply,
+    reconstruction or reference is consulted or awaited.
+    """
+    receipt_sha256 = _require_sha256(receipt_sha256, "transition_receipt_sha256")
+    if not isinstance(transition_receipt, Mapping):
+        raise PublicationCustodyError("publication_transition_receipt_missing")
+    receipt = dict(transition_receipt)
+    if canonical_sha256(receipt) != receipt_sha256:
+        raise PublicationCustodyError("publication_transition_receipt_digest_mismatch")
+    if receipt.get("schema") != RECEIPT_SCHEMA:
+        raise PublicationCustodyError("publication_transition_receipt_schema_mismatch")
     if receipt.get("transition_id") != TRANSITION_ID or receipt.get("transition_sequence") != 1:
-        raise PublicationCustodyError("publication_master_records_transition_identity_mismatch")
+        raise PublicationCustodyError("publication_transition_identity_mismatch")
     if receipt.get("subject_or_correlation_id") != publication_transition_id:
-        raise PublicationCustodyError("publication_master_records_subject_mismatch")
+        raise PublicationCustodyError("publication_transition_subject_mismatch")
     if receipt.get("transition_outcome") != "ALLOW":
-        raise PublicationCustodyError("publication_master_records_outcome_not_allow")
+        raise PublicationCustodyError("publication_transition_outcome_not_allow")
     evidence = receipt.get("transition_evidence")
     if not isinstance(evidence, Mapping):
-        raise PublicationCustodyError("publication_master_records_evidence_missing")
+        raise PublicationCustodyError("publication_transition_evidence_missing")
     if evidence.get("publication_transition_id") != publication_transition_id:
-        raise PublicationCustodyError("publication_master_records_publication_id_mismatch")
+        raise PublicationCustodyError("publication_transition_publication_id_mismatch")
     expected_transition_sha = canonical_sha256(publication_transition)
     if evidence.get("publication_transition_sha256") != expected_transition_sha:
-        raise PublicationCustodyError("publication_master_records_transition_digest_mismatch")
+        raise PublicationCustodyError("publication_transition_digest_mismatch")
     if evidence.get("target_repository") != "StegVerse-Labs/admissibility-wiki":
-        raise PublicationCustodyError("publication_master_records_repository_mismatch")
+        raise PublicationCustodyError("publication_transition_repository_mismatch")
     if evidence.get("target_path") != publication_transition.get("target_path"):
-        raise PublicationCustodyError("publication_master_records_target_path_mismatch")
+        raise PublicationCustodyError("publication_transition_target_path_mismatch")
     if evidence.get("intr_governance_decision") != "ALLOW" or evidence.get("intr_decision_origin") != "external_interlock_intr":
-        raise PublicationCustodyError("publication_master_records_intr_allow_missing")
+        raise PublicationCustodyError("publication_transition_intr_allow_missing")
     if evidence.get("locally_generated_allow") is not False:
-        raise PublicationCustodyError("publication_master_records_local_allow_rejected")
+        raise PublicationCustodyError("publication_transition_local_allow_rejected")
+    manifest = receipt.get("required_evidence_manifest")
+    if not isinstance(manifest, list) or not manifest:
+        raise PublicationCustodyError("publication_transition_required_evidence_missing")
+    for item in manifest:
+        if not isinstance(item, Mapping) or item.get("sha256") != canonical_sha256(item.get("content")):
+            raise PublicationCustodyError("publication_transition_required_evidence_digest_mismatch")
+    if receipt.get("master_records_may_grant_transition_authority") is not False:
+        raise PublicationCustodyError("publication_transition_master_records_authority_escalation")
     return {
-        "state": "RECORDED",
-        "reconstruction_status": "PASS",
-        "required_evidence_validation_status": "PASS",
+        "state": "VERIFIED",
+        "verified_on": "ORGANIZATION_TRANSITION_RECEIPT",
         "receipt_sha256": receipt_sha256,
-        "reconstructed_receipt_sha256": receipt_sha256,
         "receipt": receipt,
-        "authority_effect": "NONE_CUSTODY_RECONSTRUCTION_ONLY",
+        "master_records_gates_publication": False,
+        "authority_effect": "NONE_VERIFICATION_ONLY",
     }
 
 
@@ -373,5 +415,5 @@ __all__ = [
     "TRANSITION_ID",
     "build_publication_state_receipt",
     "record_governed_publication_closure",
-    "require_publication_master_records_organization_record",
+    "verify_publication_transition_receipt",
 ]

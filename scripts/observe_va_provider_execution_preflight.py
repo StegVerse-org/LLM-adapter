@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Derive fail-closed VA provider execution preflight state.
 
-This observer consumes a fresh TVC admission artifact, optional validated explicit
-provider authority, and presence-only Master Records configuration signals. It
-never reads credential values and never calls a provider.
+This observer consumes a fresh TVC admission artifact and optional validated explicit
+provider authority. Presence-only Master Records configuration signals are reported
+as downstream recording posture and never block: Master Records records released
+organization batches after the fact (LLM-adapter#368). It never reads credential
+values and never calls a provider.
 """
 from __future__ import annotations
 
@@ -180,14 +182,12 @@ def main() -> int:
             )
         )
 
-    config = {
+    downstream_recording = {
         "master_records_endpoint_configured": present("STEGVERSE_MASTER_RECORDS_ENDPOINT"),
         "master_records_allowed_hosts_configured": present("STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS"),
         "master_records_token_configured": present("STEGVERSE_MASTER_RECORDS_TOKEN"),
+        "gates_execution": False,
     }
-    for field, configured in config.items():
-        if not configured:
-            blockers.append("authorized_configuration_missing:" + field.replace("_configured", "").upper())
 
     authority_path = Path(args.authority_validation)
     try:
@@ -213,7 +213,6 @@ def main() -> int:
         or blocker.startswith("fresh_tvc_")
         for blocker in blockers
     )
-    config_ready = all(config.values())
     authority_ready = authority is not None and not any(
         blocker.startswith("provider_execution_authority") for blocker in blockers
     )
@@ -221,9 +220,6 @@ def main() -> int:
     if not admission_valid:
         state = "REVIEW_REQUIRED"
         next_action = "Repair the TVC reusable admission binding before any provider authority or configuration can be consumed."
-    elif not config_ready:
-        state = "CONFIGURATION_REQUIRED"
-        next_action = "Configure the authorized Master Records organization-record service URL, allowed hosts, and token in the protected GitHub execution environment."
     elif not authority_ready:
         state = "AUTHORITY_REQUIRED"
         next_action = "A separately authorized owner must commit a valid, unexpired VA-specific provider-execution authority receipt for this exact caller commit."
@@ -256,7 +252,7 @@ def main() -> int:
             "expires_at": (admission.get("validity") or {}).get("expires_at"),
             "single_use": (admission.get("validity") or {}).get("single_use"),
         },
-        "configuration": config,
+        "downstream_recording_configuration": downstream_recording,
         "explicit_provider_authority": {
             "present_and_valid": authority_ready,
             "authority_sha256": authority.get("authority_sha256") if authority else None,

@@ -2,7 +2,9 @@
 
 No governance, runtime, credential, worker, heartbeat, route, or custody authority
 is created here. This module selects existing provider adapters behind one common
-Interlock/InTr -> TV/TVC -> provider -> Master Records -> InTr sequence.
+Interlock/InTr -> TV/TVC -> provider -> InTr sequence. Provider usage is recorded in
+the local usage ledger and the organization ledger by the transition receipt; Master
+Records records released organization batches downstream and is never in the sequence.
 """
 from __future__ import annotations
 

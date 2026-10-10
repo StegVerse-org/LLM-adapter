@@ -164,7 +164,7 @@ jobs:
         run: "$PYTHON_BIN -m pytest tests/test_recursive_comparison.py -v"
       - name: Test adapter role and provider usage
         run: "$PYTHON_BIN -m pytest tests/test_provider_usage.py -v"
-      - name: Test Master Records provider-usage organization record
+      - name: Test Master Records provider-usage client stays removed
         run: "$PYTHON_BIN -m pytest tests/test_master_records_usage_record.py -v"
       - name: Test live activation automation contract without executing activation
         run: >-

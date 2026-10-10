@@ -1,8 +1,10 @@
-"""Write pending completed transitions into the Master Records organization record.
+"""Hand completed, already-closed transitions downstream to Master Records.
 
-The worker is safe to run at service startup or on a schedule. It writes nothing
-when the Master Records organization-record service is disabled and never invents
-record state.
+Each transition closed on its final receipt before it was queued; Master Records is
+the downstream recorder of released organization batch receipts, so this worker is
+optional and never gates, reopens, or delays a transition. It is safe to run at
+service startup or on a schedule, writes nothing when the Master Records recorder is
+disabled, and never invents record state.
 """
 from __future__ import annotations
 
@@ -43,7 +45,7 @@ def run(limit: int = 20) -> dict[str, object]:
         "processed": len(results),
         "recorded": sum(1 for item in results if item.get("state") == "RECORDED"),
         "retry": sum(1 for item in results if item.get("state") == "RETRY"),
-        "authority_effect": "REMOTE_CUSTODY_ONLY_WHEN_RECEIPTED",
+        "authority_effect": "NONE_DOWNSTREAM_RECORDING_ONLY",
     }
 
 

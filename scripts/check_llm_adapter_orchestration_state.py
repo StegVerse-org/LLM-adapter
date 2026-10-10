@@ -32,14 +32,19 @@ COMMITTED_RECEIPT = "a04c192cbc89933d02dcb51517fbb56de88c0ab4bb4384df296519516f1
 # v2 receipt and READY projection supersede the older Aug-4 digest snapshot.
 IMAGE_DIGEST = "sha256:a599fc154f4bde14ab9adc140feb1285b43af3da4ea9214804b007fb9ff38f19"
 IMAGE_RECEIPT = "67feb640e7be9489ca52438c9c7c609eeeae90c8e1e5409ea5c8fac6a38ef122"
-BLOCKERS = {"authorized provider configuration and scoped execution grant", "persistent endpoint", "authenticated Master Records organization-record configuration"}
-# Blocker naming migration (MASTER-RECORDS-BULK-SEMANTIC-REMEDIATION-002): state written
-# before the rename names the third blocker by its legacy text; it is accepted.
-LEGACY_BLOCKERS = {"authorized provider configuration and scoped execution grant", "persistent endpoint", "authenticated Master Records custody configuration"}
+BLOCKERS = {"authorized provider configuration and scoped execution grant", "persistent endpoint"}
+# Master Records configuration was once listed as a third blocker (under an
+# organization-record and, earlier, a custody spelling). Master Records is the
+# downstream recorder of released organization batch receipts; an unrecorded batch
+# blocks nothing (LLM-adapter#368), so a blocker set naming it is rejected.
+RETIRED_MASTER_RECORDS_BLOCKERS = {
+    "authenticated Master Records organization-record configuration",
+    "authenticated Master Records custody configuration",
+}
 
 
 def external_blockers_valid(values: Any) -> bool:
-    return set(values or []) in (BLOCKERS, LEGACY_BLOCKERS)
+    return set(values or []) == BLOCKERS
 
 
 def fail(message: str) -> None:

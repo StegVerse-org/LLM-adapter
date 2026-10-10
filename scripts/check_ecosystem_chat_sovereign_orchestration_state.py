@@ -63,8 +63,8 @@ def main() -> int:
         "canonical micro-node model endpoint is consumed by StegVerseLocalHTTPProviderClient on a sovereign carrier",
         "private provider execution traverses E1 -> model worker -> E2",
         "provider/model usage is MEASURED in that execution",
-        "provider-usage Master Records reconstruction PASS",
-        "transition Master Records reconstruction PASS for the same execution",
+        "provider usage recorded in the local usage ledger for that execution",
+        "organization-ledger transition receipt appended for the same execution",
         "immutable zero-blocker ecosystem-chat-live-activation.verified.json exists",
     }
     if set(blocker.get("release_conditions") or []) != required: fail("release condition set mismatch")
@@ -79,7 +79,8 @@ def main() -> int:
         "canonical_binding": "LLMA-CANONICAL-LOCAL-MODEL-BINDING-018",
         "inference_observation_recheck": "StegVerse-Labs/.github#60",
         "heartbeat_authority": "StegVerse-Labs/.github#12",
-        "custody_and_reconstruction": "master-records/orchestration",
+        "custody_and_transition_receipt": "StegVerse-org/LLM-adapter organization ledger",
+        "downstream_recording_non_gating": "master-records/orchestration",
         "site_activation": "StegVerse-Labs/Site",
     }
     for key, value in expected.items():
@@ -88,7 +89,7 @@ def main() -> int:
     invariants = state.get("invariants") or {}
     for key in ("adapter_local_model_is_noncanonical_fixture", "reference_model_is_not_production_scale", "missing_custody_or_reconstruction_is_not_success"):
         if invariants.get(key) is not True: fail(f"missing invariant: {key}")
-    for key in ("provider_output_grants_authority", "runtime_proof_grants_authority", "session_archive_grants_activation"):
+    for key in ("provider_output_grants_authority", "runtime_proof_grants_authority", "session_archive_grants_activation", "master_records_recording_gates_activation"):
         if invariants.get(key) is not False: fail(f"authority escalation: {key}")
 
     consolidation = state.get("session_consolidation") or {}

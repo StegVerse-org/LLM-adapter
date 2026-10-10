@@ -123,3 +123,20 @@ def test_unknown_fields_are_rejected() -> None:
     request["unexpected"] = "value"
     response = client.post("/api/ecosystem-chat", json=request)
     assert response.status_code == 422
+
+
+def test_completed_turn_never_waits_on_master_records(monkeypatch) -> None:
+    from llm_adapter import master_records_organization_record_client as recorder
+
+    def unreachable(*_args, **_kwargs):
+        raise AssertionError("the response path must not call Master Records")
+
+    monkeypatch.setattr(recorder, "write_organization_record", unreachable)
+    monkeypatch.setattr(recorder.requests, "post", unreachable)
+    response = client.post("/api/ecosystem-chat", json=payload())
+    assert response.status_code == 200
+    body = response.json()
+    assert body["lifecycle_state"] == "COMPLETED"
+    assert body["final_receipt"] is True
+    assert body["custody_submission"]["state"] in {"PENDING", "RETRY", "RECORDED"}
+    assert client.get("/health").json()["master_records_gates_response"] is False

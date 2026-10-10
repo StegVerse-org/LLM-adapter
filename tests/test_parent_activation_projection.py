@@ -105,6 +105,23 @@ class ParentActivationProjectionTests(unittest.TestCase):
             self.m.stable_hash({k: v for k, v in projection.items() if k != "projection_sha256"}),
         )
 
+    def test_master_records_reconstruction_is_optional_and_never_gates(self):
+        path = self.receipts / "master_records_same_execution_reconstruction.json"
+        failed = json.loads(path.read_text())
+        failed["provider_usage_reconstruction_pass"] = False
+        failed["transition_reconstruction_pass"] = False
+        path.write_text(json.dumps(failed))
+        projection = self.m.build_projection(self.m.verify_chain(self.root))
+        self.assertEqual(projection["state"], "VERIFIED")
+        self.assertFalse(projection["master_records_downstream"]["reconstruction_pass"])
+        self.assertFalse(projection["master_records_downstream"]["gates_activation"])
+        path.unlink()
+        projection = self.m.build_projection(self.m.verify_chain(self.root))
+        self.assertEqual(projection["state"], "VERIFIED")
+        self.assertFalse(projection["master_records_downstream"]["reconstruction_present"])
+        self.assertNotIn("provider_usage_reconstruction_pass", self.m.REQUIRED_TRUE)
+        self.assertNotIn("transition_reconstruction_pass", self.m.REQUIRED_TRUE)
+
     def test_old_or_reused_fence_is_rejected(self):
         path = self.receipts / "independent_parent_activation.latest.json"
         value = json.loads(path.read_text())

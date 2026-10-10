@@ -21,7 +21,7 @@ def test_main_uses_configured_limit_without_inventing_custody(monkeypatch, capsy
             "processed": 0,
             "recorded": 0,
             "retry": 0,
-            "authority_effect": "REMOTE_CUSTODY_ONLY_WHEN_RECEIPTED",
+            "authority_effect": "NONE_DOWNSTREAM_RECORDING_ONLY",
         }
 
     monkeypatch.setattr(custody_worker, "run", fake_run)

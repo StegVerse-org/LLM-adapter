@@ -85,14 +85,12 @@ def configure(monkeypatch, tmp_path):
     monkeypatch.setenv("STEGVERSE_EXTERNAL_MUTATION_POLICY_REF", "policy:external-wiki:v1")
     monkeypatch.setattr(
         mutation,
-        "require_publication_master_records_organization_record",
+        "verify_publication_transition_receipt",
         lambda **kwargs: {
-            "state": "RECORDED",
-            "reconstruction_status": "PASS",
-            "required_evidence_validation_status": "PASS",
+            "state": "VERIFIED",
+            "verified_on": "ORGANIZATION_TRANSITION_RECEIPT",
             "receipt_sha256": kwargs["receipt_sha256"],
-            "reconstructed_receipt_sha256": kwargs["receipt_sha256"],
-            "authority_effect": "NONE_CUSTODY_RECONSTRUCTION_ONLY",
+            "master_records_gates_publication": False,
         },
     )
     monkeypatch.setenv(
@@ -120,7 +118,8 @@ def request(publication_id: str) -> dict:
         "schema_version": "1.0.0",
         "request_type": "external_framework_repository_mutation_request",
         "publication_transition_id": publication_id,
-        "master_records_receipt_sha256": "9" * 64,
+        "transition_receipt": {"schema": "stegverse.canonical-state-transition-receipt/v1"},
+        "transition_receipt_sha256": "9" * 64,
         "actor_ref": "mutator:test",
         "repository_full_name": "StegVerse-Labs/admissibility-wiki",
         "target_path": "docs/external-frameworks/reports/decisionassure-reviewed.md",
@@ -217,12 +216,12 @@ def test_wrong_policy_and_path_fail_closed(monkeypatch, tmp_path):
     assert response.status_code == 422
 
 
-def test_invalid_governed_master_records_organization_record_blocks_before_github(monkeypatch, tmp_path):
+def test_invalid_organization_transition_receipt_blocks_before_github(monkeypatch, tmp_path):
     publication_id, token = configure(monkeypatch, tmp_path)
     calls = []
     monkeypatch.setattr(
         mutation,
-        "require_publication_master_records_organization_record",
+        "verify_publication_transition_receipt",
         lambda **kwargs: (_ for _ in ()).throw(mutation.PublicationCustodyError("closure_missing")),
     )
     monkeypatch.setattr(mutation, "_github_json", lambda *args, **kwargs: calls.append(args) or {})
@@ -232,8 +231,40 @@ def test_invalid_governed_master_records_organization_record_blocks_before_githu
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 409
-    assert response.json()["detail"]["reason"] == "governed_publication_master_records_organization_record_invalid"
+    detail = response.json()["detail"]
+    assert detail["reason"] == "governed_publication_transition_receipt_invalid"
+    for field in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                  "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+        assert detail[field]
     assert calls == []
+
+
+def test_mutation_never_consults_master_records(monkeypatch, tmp_path):
+    publication_id, token = configure(monkeypatch, tmp_path)
+    from llm_adapter import wiki_publication_master_records as wiki
+
+    def unreachable(*_args, **_kwargs):
+        raise AssertionError("repository mutation must not consult Master Records")
+
+    monkeypatch.setattr(wiki, "master_records_transport_enabled", unreachable)
+    monkeypatch.setattr(wiki, "_master_records_configuration", unreachable)
+    seen = {}
+    monkeypatch.setattr(
+        mutation,
+        "verify_publication_transition_receipt",
+        lambda **kwargs: seen.update(kwargs) or {"state": "VERIFIED"},
+    )
+    body = request(publication_id)
+    body["master_records_receipt_sha256"] = body.pop("transition_receipt_sha256")
+    monkeypatch.setattr(mutation, "_github_json", lambda *args, **kwargs: (_ for _ in ()).throw(
+        mutation.HTTPException(status_code=409, detail={"reason": "stop_after_receipt_check"})))
+    response = TestClient(app).post(
+        "/api/external-review/repository-mutations",
+        json=body,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.json()["detail"]["reason"] == "stop_after_receipt_check"
+    assert seen["receipt_sha256"] == "9" * 64
 
 
 def test_deny_and_review_required_produce_zero_repository_mutation(monkeypatch, tmp_path):

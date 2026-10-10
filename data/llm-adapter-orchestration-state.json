@@ -140,9 +140,9 @@
       "blocked_until": "all authority-bound blockers are cleared",
       "external_blockers": [
         "authorized provider configuration and scoped execution grant",
-        "persistent endpoint",
-        "authenticated Master Records organization-record configuration"
+        "persistent endpoint"
       ],
+      "non_blocking_downstream_recording": "Master Records records released organization batch receipts downstream; it is not a blocker and nothing awaits it",
       "completed_dependency_evidence": [
         "published-package consumer access: READY",
         "stable image digest: sha256:ae309681c4b1411c39860bcb349acc5cf727b70f8876a9e61fccfbb9e767a901",
@@ -213,7 +213,7 @@
       "PR #63 remains REVIEW_REQUIRED and unclaimed rather than falsely classified complete or obsolete.",
       "PRs #36, #58, and #85 remain distinct, open, and unclaimed.",
       "HIL full-cycle, provider usage validation, stable image publication, and Service Gateway ephemeral proof remain complete.",
-      "The Render gateway is live but authorized provider and Master Records configuration remain absent.",
+      "The Render gateway is live but authorized provider configuration remains absent; Master Records configuration is downstream recording only and blocks nothing.",
       "Authorized live-provider execution remains blocked and durably owned by issue #18."
     ]
   },
