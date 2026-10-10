@@ -83,8 +83,8 @@
     {
       "surface": "llm_adapter/va_claims_runtime_core.py",
       "findings": ["F7 (VA claims turn)"],
-      "statement": "A turn closes on its VA_CLAIMS_TURN_EXECUTED transition receipt; Master Records packet emission and reconstruction are optional, non-gating evidence with stable packet keys; failures are six-field non-ALLOW.",
-      "source_change": "branch claude/368-r2-va-claims"
+      "statement": "A turn is manifest-bound transport on stegverse.route.va-scoped-chat.v1 with the VA scope declared as manifest policy; the SDK disposition (DENY out of scope, otherwise FAIL_CLOSED until the canonical organization boundary resolves) is returned; no local answer, model call, environment input or repo-local receipt; Master Records is non-gating; failures are six-field non-ALLOW.",
+      "source_change": "branch claude/368-collab-vacc-manifest"
     },
     {
       "surface": "scripts/verify_authorized_provider_activation.py, scripts/verify_live_ecosystem_chat_activation.py, scripts/write_live_activation_status.py, scripts/write_ecosystem_chat_destination_activation_state.py",
