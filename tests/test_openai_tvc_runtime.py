@@ -126,3 +126,12 @@ def test_usage_record_authority_escalation_fails_closed():
             req, session_id="s", transition_id="tx-1", measurement_id="m", ingress_disposition="ALLOW",
             ingress_receipt_hash="a" * 64, carrier_ref="carrier-1", lease_receipt=_lease(env), broker_submitter=_broker(),
             usage_submitter=lambda event: {"status": "recorded", "authority_effect": "GRANTED"})
+
+
+@pytest.mark.parametrize("secret_field", ["api_key", "access_token", "refresh_token", "secret", "secret_value", "credential_material", "authorization", "API_KEY"])
+def test_broker_refuses_secret_bearing_result_even_with_clean_use_receipt(secret_field):
+    req = _request()
+    env = _envelope(req)
+    submitter = _broker(**{secret_field: "should-not-leave-tvc"})
+    with pytest.raises(OpenAITVCBrokerError, match="result contains credential material"):
+        execute_openai_via_tvc_broker(env, req, lease_receipt=_lease(env), broker_submitter=submitter)
