@@ -1,6 +1,7 @@
 """Non-exportable TVC broker binding for admitted Anthropic InTr execution."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
@@ -53,7 +54,29 @@ class AnthropicTVCBrokerResult:
     credential_material_present: bool = False
 
 
-_CREDENTIAL_RESULT_KEYS = {"api_key", "access_token", "refresh_token", "secret", "secret_value", "credential_material", "authorization", "x-api-key"}
+# Keys are compared after lowercasing and dropping non-alphanumerics, so spelling
+# variants (apiKey, x-api-key, openai_api_key) cannot slip past the guard.
+_CREDENTIAL_RESULT_KEYS = {"apikey", "xapikey", "accesstoken", "refreshtoken", "bearertoken", "secret", "secretvalue",
+                           "credentialmaterial", "authorization", "password"}
+_MAX_RESULT_DEPTH = 64
+
+
+def _credential_key(key: Any) -> bool:
+    if not isinstance(key, str):
+        return False
+    normalized = re.sub(r"[^a-z0-9]", "", key.lower())
+    return normalized in _CREDENTIAL_RESULT_KEYS or normalized.endswith("apikey")
+
+
+def _contains_credential_field(value: Any, depth: int = 0) -> bool:
+    """True when any mapping key at any depth names credential material."""
+    if depth > _MAX_RESULT_DEPTH:
+        raise AnthropicTVCBrokerError("TVC Anthropic result exceeds nesting limit")
+    if isinstance(value, Mapping):
+        return any(_credential_key(k) or _contains_credential_field(v, depth + 1) for k, v in value.items())
+    if isinstance(value, (list, tuple)):
+        return any(_contains_credential_field(v, depth + 1) for v in value)
+    return False
 USAGE_KEYS = ("input_tokens", "output_tokens")
 
 
@@ -76,7 +99,7 @@ def execute_anthropic_via_tvc_broker(envelope: AnthropicConvergenceEnvelope, req
     for key, expected in {"secret_material_returned":False,"secret_material_logged":False,"secret_material_retained":False,"single_use_consumed":True}.items():
         if receipt.get(key) != expected: raise AnthropicTVCBrokerError(f"TVC use receipt boundary mismatch: {key}")
     # A clean use receipt cannot override credential material embedded in the result.
-    if any(isinstance(key, str) and key.lower() in _CREDENTIAL_RESULT_KEYS for key in result):
+    if _contains_credential_field(result):
         raise AnthropicTVCBrokerError("TVC Anthropic result contains credential material")
     output = result.get("output") or result.get("content")
     if not isinstance(output, str) or not output.strip(): raise AnthropicTVCBrokerError("TVC Anthropic result missing text output")
