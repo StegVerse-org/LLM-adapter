@@ -108,6 +108,11 @@ def execute_openai_via_tvc_broker(envelope: OpenAIInTrEnvelope, request: Provide
     for key, expected in {"secret_material_returned": False, "secret_material_logged": False, "secret_material_retained": False, "single_use_consumed": True}.items():
         if receipt.get(key) != expected:
             raise OpenAITVCBrokerError(f"TVC use receipt boundary mismatch: {key}")
+    # A clean use receipt cannot override credential material embedded in the result.
+    # Reject known secret-bearing fields before creating any downstream response or usage event.
+    forbidden = {"api_key", "access_token", "refresh_token", "secret", "secret_value", "credential_material", "authorization"}
+    if any(isinstance(key, str) and key.lower() in forbidden for key in result):
+        raise OpenAITVCBrokerError("TVC OpenAI result contains credential material")
     output = result.get("output") or result.get("content")
     if not isinstance(output, str) or not output.strip():
         raise OpenAITVCBrokerError("TVC OpenAI result missing text output")
