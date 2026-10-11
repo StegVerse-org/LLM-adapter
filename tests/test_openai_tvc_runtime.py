@@ -135,3 +135,28 @@ def test_broker_refuses_secret_bearing_result_even_with_clean_use_receipt(secret
     submitter = _broker(**{secret_field: "should-not-leave-tvc"})
     with pytest.raises(OpenAITVCBrokerError, match="result contains credential material"):
         execute_openai_via_tvc_broker(env, req, lease_receipt=_lease(env), broker_submitter=submitter)
+
+
+@pytest.mark.parametrize("nested_result", [
+    {"metadata": {"api_key": "secret"}},
+    {"metadata": [{"safe": True}, {"authorization": "secret"}]},
+    {"metadata": ({"access_token": "secret"},)},
+    {"metadata": {"deep": {"refresh_token": "secret"}}},
+])
+def test_broker_refuses_nested_credential_fields(nested_result):
+    req = _request()
+    env = _envelope(req)
+    with pytest.raises(OpenAITVCBrokerError, match="result contains credential material"):
+        execute_openai_via_tvc_broker(
+            env, req, lease_receipt=_lease(env), broker_submitter=_broker(**nested_result)
+        )
+
+
+def test_broker_accepts_nested_nonsecret_metadata():
+    req = _request()
+    env = _envelope(req)
+    result = execute_openai_via_tvc_broker(
+        env, req, lease_receipt=_lease(env),
+        broker_submitter=_broker(metadata={"details": [{"safe": True}]}),
+    )
+    assert result.response.output == "ok"
