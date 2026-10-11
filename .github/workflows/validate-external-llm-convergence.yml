@@ -50,6 +50,9 @@ jobs:
           llm_adapter/anthropic_tvc_runtime_executor.py
           llm_adapter/zai_tvc_broker.py
           llm_adapter/zai_tvc_runtime_executor.py
+          llm_adapter/deepseek_tvc_broker.py
+          llm_adapter/kimi_tvc_broker.py
+          llm_adapter/tvc_result_boundary.py
           llm_adapter/openai_intr_transport.py
           llm_adapter/openai_tvc_broker.py
           llm_adapter/openai_tvc_runtime_executor.py

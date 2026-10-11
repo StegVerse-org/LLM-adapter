@@ -39,3 +39,20 @@ def test_broker_result_and_runtime_require_egress():
     admission=admit_zai_tvc_runtime_egress(execution,egress_disposition="ALLOW",egress_receipt_hash="c"*64,admitted_response_hash=execution.response_hash)
     assert admission.state=="EGRESS_ADMITTED"
     with pytest.raises(ZAITVCRuntimeExecutionError): admit_zai_tvc_runtime_egress(execution,egress_disposition="DENY",egress_receipt_hash="c"*64,admitted_response_hash=execution.response_hash)
+
+@pytest.mark.parametrize("result", [
+    {"output":"ok","api_key":"sk-leak"},
+    {"output":"ok","usage":{"total_tokens":3,"zai_api_key":"sk-leak"}},
+    {"output":"ok","metadata":[{"x-api-key":"sk-leak"}]},
+    {"output":"ok","usage":{"Authorization":"Bearer sk-leak"}},
+])
+def test_broker_refuses_credential_material_in_result_despite_clean_receipt(result):
+    req=_request(); env=_envelope(req)
+    def broker(_): return dict(_broker(_), result=result)
+    with pytest.raises(ZAITVCBrokerError,match="contains credential material"): execute_zai_via_tvc_broker(env,req,lease_receipt=_lease(env),broker_submitter=broker)
+
+def test_broker_refuses_result_past_nesting_limit():
+    req=_request(); env=_envelope(req); deep={"output":"ok"}
+    for _ in range(80): deep={"output":"ok","nested":deep}
+    def broker(_): return dict(_broker(_), result=deep)
+    with pytest.raises(ZAITVCBrokerError,match="exceeds nesting limit"): execute_zai_via_tvc_broker(env,req,lease_receipt=_lease(env),broker_submitter=broker)

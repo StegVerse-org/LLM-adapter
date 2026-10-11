@@ -14,6 +14,7 @@ from typing import Any, Callable, Mapping
 from .kimi_intr_transport import KimiInTrEnvelope, KimiTransportAdmissionError
 from .provider_client import ProviderResponse
 from .provider_request import ProviderRequest, stable_hash
+from .tvc_result_boundary import reject_credential_fields
 
 RUNTIME_PROFILE_ID = "stegverse:runtime-profile:llm-adapter-kimi:v1"
 BASE_RUNTIME_PROFILE_ID = "stegverse:runtime-profile:hb-intr-resident:v1"
@@ -179,6 +180,10 @@ def execute_kimi_via_tvc_broker(
     }.items():
         if receipt.get(key) != expected:
             raise KimiTVCBrokerError(f"TVC use receipt boundary mismatch: {key}")
+    # A clean use receipt cannot override credential material embedded in the result
+    # or in the measurement evidence whose usage is copied into response metadata.
+    reject_credential_fields(result, error=KimiTVCBrokerError, label="TVC Kimi result")
+    reject_credential_fields(reply.get("measurement_evidence"), error=KimiTVCBrokerError, label="TVC Kimi measurement evidence")
 
     measurement_evidence = _canonical_measurement_evidence(reply, request)
     output = str(measurement_evidence["candidate_output"])

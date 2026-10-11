@@ -237,3 +237,23 @@ def test_tvc_runtime_egress_fails_closed_on_deny_bad_receipt_or_response_drift()
         admit_deepseek_tvc_runtime_egress(execution, egress_disposition="ALLOW", egress_receipt_hash="bad", admitted_response_hash=execution.response_hash)
     with pytest.raises(DeepSeekTVCRuntimeExecutionError, match="does not match exact provider response"):
         admit_deepseek_tvc_runtime_egress(execution, egress_disposition="ALLOW", egress_receipt_hash="c" * 64, admitted_response_hash="d" * 64)
+
+
+@pytest.mark.parametrize(
+    "result",
+    [
+        {"output": "Paris", "apiKey": "sk-leak"},
+        {"output": "Paris", "usage": {"total_tokens": 6, "deepseek_api_key": "sk-leak"}},
+        {"output": "Paris", "metadata": ({"access_token": "leak"},)},
+        {"output": "Paris", "usage": {"nested": {"password": "leak"}}},
+    ],
+)
+def test_tvc_broker_refuses_credential_material_in_result_despite_clean_receipt(result):
+    req = _request()
+    env = _envelope(req)
+
+    def broker(_request):
+        return dict(_broker(_request), result=result)
+
+    with pytest.raises(DeepSeekTVCBrokerError, match="contains credential material"):
+        execute_deepseek_via_tvc_broker(env, req, lease_receipt=_lease(env), broker_submitter=broker)

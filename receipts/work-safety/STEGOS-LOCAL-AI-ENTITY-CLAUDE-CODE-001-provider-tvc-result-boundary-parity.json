@@ -1,0 +1,81 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "STEGOS-LOCAL-AI-ENTITY-CLAUDE-CODE-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/StegOS:docs/STEGOS_LOCAL_AI_ENTITY_CLAUDE_CODE_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/ECOSYSTEM_ECONOMIC_WHITEPAPER_GATED_ROADMAP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/StegOS:data/canonical-task-registration-proposals/STEGOS-LOCAL-AI-ENTITY-CLAUDE-CODE-001.json",
+    "StegVerse-Labs/.github:data/canonical-task-records/ECOSYSTEM-ECONOMIC-WHITEPAPER-GATED-ROADMAP-001.json",
+    "StegVerse-Labs/Site:data/economy/public-release-benchmarks.v1.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Source-only governed provider route. No provider call, organization record, custody transition or Master Records reconstruction is performed or claimed; the existing provider-usage path and organization ledger remain the recorders and Master Records stays downstream and non-gating."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-Labs/.github/issues/3107",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/386",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/389",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/390"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/StegOS",
+      "StegVerse-Labs/TVC",
+      "StegVerse-Labs/StegBrowser"
+    ],
+    "evidence_refs": [
+      "llm_adapter/anthropic_tvc_broker.py#_contains_credential_field",
+      "llm_adapter/openai_tvc_broker.py credential-result guard (#386, #389)",
+      "llm_adapter/zai_tvc_broker.py",
+      "llm_adapter/deepseek_tvc_broker.py",
+      "llm_adapter/kimi_tvc_broker.py#_canonical_measurement_evidence"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Parity hardening of the Z.ai, DeepSeek and Kimi TVC brokers, which forwarded result usage into response metadata without any credential-key guard. Open PR #389 touches only openai_tvc_broker.py; anthropic_tvc_broker.py keeps its merged guard. No open PR touches the files changed here."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Adds fail-closed refusal of credential-bearing result keys (nested, spelling-normalized, depth-capped) to existing brokers; no new entrypoint, configuration, credential or success-path contract change.",
+    "evidence_refs": [
+      "llm_adapter/tvc_result_boundary.py",
+      "tests/test_zai_tvc_runtime.py",
+      "tests/test_deepseek_tvc_runtime.py",
+      "tests/test_kimi_tvc_runtime.py"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/validate-external-llm-convergence.yml",
+    "llm_adapter/tvc_result_boundary.py",
+    "llm_adapter/zai_tvc_broker.py",
+    "llm_adapter/deepseek_tvc_broker.py",
+    "llm_adapter/kimi_tvc_broker.py",
+    "tests/test_zai_tvc_runtime.py",
+    "tests/test_deepseek_tvc_runtime.py",
+    "tests/test_kimi_tvc_runtime.py",
+    "receipts/work-safety/STEGOS-LOCAL-AI-ENTITY-CLAUDE-CODE-001-provider-tvc-result-boundary-parity.json"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/tvc_result_boundary.py",
+      "semantic_responsibility": "Shared fail-closed refusal of TVC provider operation results whose mapping keys name credential material at any depth (spelling-normalized, depth-capped).",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter:llm_adapter/anthropic_tvc_broker.py#_contains_credential_field",
+      "decision": "EXTEND"
+    }
+  ]
+}
