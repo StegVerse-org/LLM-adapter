@@ -37,3 +37,37 @@ def test_broker_result_and_runtime_require_egress():
     admission=admit_anthropic_tvc_runtime_egress(execution,egress_disposition="ALLOW",egress_receipt_hash="c"*64,admitted_response_hash=execution.response_hash)
     assert admission.state=="EGRESS_ADMITTED"
     with pytest.raises(AnthropicTVCRuntimeExecutionError): admit_anthropic_tvc_runtime_egress(execution,egress_disposition="ALLOW",egress_receipt_hash="bad",admitted_response_hash=execution.response_hash)
+
+
+
+def _broker_with(result_extra=None, usage=None):
+    result = {"output": "ok", "model": "claude-runtime-fixture", "usage": {"input_tokens": 2, "output_tokens": 1} if usage is None else usage}
+    result.update(result_extra or {})
+    receipt = {"secret_material_returned": False, "secret_material_logged": False, "secret_material_retained": False, "single_use_consumed": True}
+    return lambda operation: {"decision": "ALLOW_OPERATION_RESULT", "result": result, "use_receipt": receipt}
+
+
+@pytest.mark.parametrize("secret_field", ["api_key", "access_token", "refresh_token", "secret", "secret_value", "credential_material", "authorization", "x-api-key", "API_KEY"])
+def test_broker_refuses_secret_bearing_result_even_with_clean_use_receipt(secret_field):
+    req = _request(); env = _envelope(req)
+    with pytest.raises(AnthropicTVCBrokerError, match="result contains credential material"):
+        execute_anthropic_via_tvc_broker(env, req, lease_receipt=_lease(env), broker_submitter=_broker_with({secret_field: "should-not-leave-tvc"}))
+
+
+def test_broker_retains_measured_usage_and_runtime_model():
+    req = _request(); env = _envelope(req)
+    meta = execute_anthropic_via_tvc_broker(env, req, lease_receipt=_lease(env), broker_submitter=_broker_with()).response.metadata
+    assert meta["usage"] == {"input_tokens": 2, "output_tokens": 1}
+    assert meta["usage_measured"] is True and meta["runtime_model"] == "claude-runtime-fixture"
+
+
+@pytest.mark.parametrize("usage", [{}, {"input_tokens": -5, "output_tokens": 1}, {"input_tokens": 2.5, "output_tokens": 1}, {"input_tokens": True, "output_tokens": 1}, {"input_tokens": "2", "output_tokens": 1}])
+def test_negative_fractional_or_malformed_usage_is_unavailable_not_measured(usage):
+    req = _request(); env = _envelope(req)
+    execution = execute_governed_anthropic_via_tvc_runtime(
+        req, session_id="s", transition_id="tx-1", measurement_id="m", ingress_disposition="ALLOW",
+        ingress_receipt_hash="a" * 64, carrier_ref="carrier-1", lease_receipt=_lease(env),
+        broker_submitter=_broker_with(usage=usage), usage_submitter=lambda event: {"status": "recorded", "authority_effect": "NONE"})
+    assert execution.broker.response.metadata["usage_measured"] is False
+    metrics = execution.provider_usage_event["metrics"]
+    assert all(metrics[k]["evidence_class"] == "UNAVAILABLE" for k in ("prompt_tokens", "completion_tokens", "total_tokens"))
