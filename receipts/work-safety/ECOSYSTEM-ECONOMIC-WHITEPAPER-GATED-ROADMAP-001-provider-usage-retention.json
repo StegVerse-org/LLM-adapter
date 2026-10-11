@@ -1,0 +1,62 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "ECOSYSTEM-ECONOMIC-WHITEPAPER-GATED-ROADMAP-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/XAI_MANIFEST_PROVIDER_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/ECOSYSTEM_ECONOMIC_WHITEPAPER_GATED_ROADMAP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/ECOSYSTEM-ECONOMIC-WHITEPAPER-GATED-ROADMAP-001.json",
+    "StegVerse-Labs/Site:data/economy/public-release-benchmarks.v1.json#S1_CHATGPT",
+    "StegVerse-Labs/Site:data/economy/public-release-benchmarks.v1.json#S1_CLAUDE"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Source-only metadata retention in two HTTP provider clients. No provider call, organization record, custody transition or Master Records reconstruction is performed or claimed; the existing provider-usage path remains the consumer."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-Labs/.github/issues/3107",
+      "https://github.com/StegVerse-Labs/StegBrowser/pull/51",
+      "https://github.com/StegVerse-Labs/Site/pull/1532"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/StegBrowser"
+    ],
+    "evidence_refs": [
+      "llm_adapter/http_provider_clients.py#XAIHTTPProviderClient (existing measured-usage validation reused as the pattern)",
+      "llm_adapter/anthropic_intr_transport.py#project_usage",
+      "llm_adapter/provider_usage.py",
+      "llm_adapter/deepseek_intr_transport.py",
+      "StegVerse-Labs/StegBrowser:src/stegbrowser/llm_browser_execution.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Extends the existing OpenAI and Anthropic HTTP clients in place, mirroring the xAI client's measured-usage check in the same module; no open LLM-adapter PR touches http_provider_clients.py."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Additive response metadata (runtime_model, usage, usage_measured) on existing clients; no new entrypoint, configuration, credential, failure mode or caller-visible behaviour change.",
+    "evidence_refs": [
+      "llm_adapter/http_provider_clients.py",
+      "tests/test_http_provider_clients.py"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/http_provider_clients.py",
+    "tests/test_http_provider_clients.py"
+  ],
+  "new_files": []
+}

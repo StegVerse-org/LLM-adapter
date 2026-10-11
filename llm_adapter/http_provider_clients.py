@@ -101,6 +101,27 @@ class StegVerseLocalHTTPProviderClient:
         )
 
 
+
+def _measured_usage(body: Any, keys: tuple[str, ...]) -> Optional[dict[str, int]]:
+    """Return the provider's native token usage only when every key is a measured count."""
+    usage = body.get("usage") if isinstance(body, dict) else None
+    if not isinstance(usage, dict):
+        return None
+    if not all(isinstance(usage.get(k), int) and not isinstance(usage[k], bool) and usage[k] >= 0 for k in keys):
+        return None
+    return {k: usage[k] for k in keys}
+
+
+def _usage_metadata(body: Any, keys: tuple[str, ...]) -> dict[str, Any]:
+    usage = _measured_usage(body, keys)
+    runtime_model = body.get("model") if isinstance(body, dict) else None
+    return {
+        "runtime_model": runtime_model if isinstance(runtime_model, str) and runtime_model else None,
+        "usage": usage,
+        "usage_measured": usage is not None,
+    }
+
+
 @dataclass(frozen=True)
 class OpenAIHTTPProviderClient:
     api_key: Optional[str] = None
@@ -114,7 +135,7 @@ class OpenAIHTTPProviderClient:
         payload = {"model": request.model, "messages": [m.to_dict() for m in request.messages], "temperature": request.temperature}
         response = requests.post(self.base_url, headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, json=payload, timeout=self.timeout_seconds)
         response.raise_for_status(); body = response.json(); output = body["choices"][0]["message"]["content"]
-        return ProviderResponse(provider=request.provider, model=request.model, output=output, request_hash=request.request_hash, metadata={"provider_mode":"openai_http","response_id":body.get("id","unresolved"),"finish_reason":body.get("choices",[{}])[0].get("finish_reason","unresolved")})
+        return ProviderResponse(provider=request.provider, model=request.model, output=output, request_hash=request.request_hash, metadata={"provider_mode":"openai_http","response_id":body.get("id","unresolved"),"finish_reason":body.get("choices",[{}])[0].get("finish_reason","unresolved"),**_usage_metadata(body,("prompt_tokens","completion_tokens","total_tokens"))})
 
 
 @dataclass(frozen=True)
@@ -134,7 +155,7 @@ class AnthropicHTTPProviderClient:
         if system_messages: payload["system"]="\n".join(system_messages)
         response=requests.post(self.base_url,headers={"x-api-key":api_key,"anthropic-version":self.anthropic_version,"Content-Type":"application/json"},json=payload,timeout=self.timeout_seconds)
         response.raise_for_status(); body=response.json(); output="".join(b.get("text","") for b in body.get("content",[]) if b.get("type")=="text")
-        return ProviderResponse(provider=request.provider,model=request.model,output=output,request_hash=request.request_hash,metadata={"provider_mode":"anthropic_http","response_id":body.get("id","unresolved"),"stop_reason":body.get("stop_reason","unresolved")})
+        return ProviderResponse(provider=request.provider,model=request.model,output=output,request_hash=request.request_hash,metadata={"provider_mode":"anthropic_http","response_id":body.get("id","unresolved"),"stop_reason":body.get("stop_reason","unresolved"),**_usage_metadata(body,("input_tokens","output_tokens"))})
 
 
 

@@ -157,3 +157,61 @@ def test_xai_provider_mismatch_is_actionable():
     request = build_provider_request(provider="openai", model="grok-fixture", messages=[{"role": "user", "content": "Hello"}])
     with pytest.raises(ProviderConfigurationError, match="XAI_PROVIDER_MISMATCH"):
         XAIHTTPProviderClient(api_key="scoped-fixture-key").complete(request)
+
+
+def _fake_post(body):
+    class FakeResponse:
+        def raise_for_status(self): return None
+        def json(self): return body
+    return lambda *args, **kwargs: FakeResponse()
+
+
+def test_openai_http_provider_retains_measured_usage_and_runtime_model(monkeypatch):
+    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", _fake_post({
+        "id": "openai-response-id", "model": "gpt-runtime-fixture",
+        "choices": [{"message": {"content": "fixture output"}, "finish_reason": "stop"}],
+        "usage": {"prompt_tokens": 9, "completion_tokens": 3, "total_tokens": 12, "prompt_tokens_details": {"cached_tokens": 0}},
+    }))
+    request = build_provider_request(provider="openai", model="test-model", messages=[{"role": "user", "content": "Hello"}])
+    response = OpenAIHTTPProviderClient(api_key="test-key").complete(request)
+    assert response.metadata["usage"] == {"prompt_tokens": 9, "completion_tokens": 3, "total_tokens": 12}
+    assert response.metadata["usage_measured"] is True
+    assert response.metadata["runtime_model"] == "gpt-runtime-fixture"
+
+
+@pytest.mark.parametrize("usage", [None, {}, {"prompt_tokens": 9, "completion_tokens": "3", "total_tokens": 12},
+                                   {"prompt_tokens": True, "completion_tokens": 3, "total_tokens": 12},
+                                   {"prompt_tokens": -1, "completion_tokens": 3, "total_tokens": 12}])
+def test_openai_http_provider_marks_missing_or_malformed_usage_unmeasured(monkeypatch, usage):
+    body = {"id": "openai-response-id", "choices": [{"message": {"content": "fixture output"}, "finish_reason": "stop"}]}
+    if usage is not None:
+        body["usage"] = usage
+    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", _fake_post(body))
+    request = build_provider_request(provider="openai", model="test-model", messages=[{"role": "user", "content": "Hello"}])
+    response = OpenAIHTTPProviderClient(api_key="test-key").complete(request)
+    assert response.metadata["usage"] is None
+    assert response.metadata["usage_measured"] is False
+    assert response.metadata["runtime_model"] is None
+
+
+def test_anthropic_http_provider_retains_measured_usage_and_runtime_model(monkeypatch):
+    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", _fake_post({
+        "id": "anthropic-response-id", "model": "claude-runtime-fixture",
+        "content": [{"type": "text", "text": "fixture output"}], "stop_reason": "end_turn",
+        "usage": {"input_tokens": 11, "output_tokens": 4},
+    }))
+    request = build_provider_request(provider="anthropic", model="test-model", messages=[{"role": "user", "content": "Hello"}])
+    response = AnthropicHTTPProviderClient(api_key="test-key").complete(request)
+    assert response.metadata["usage"] == {"input_tokens": 11, "output_tokens": 4}
+    assert response.metadata["usage_measured"] is True
+    assert response.metadata["runtime_model"] == "claude-runtime-fixture"
+
+
+def test_anthropic_http_provider_marks_missing_usage_unmeasured(monkeypatch):
+    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", _fake_post({
+        "id": "anthropic-response-id", "content": [{"type": "text", "text": "fixture output"}], "stop_reason": "end_turn",
+    }))
+    request = build_provider_request(provider="anthropic", model="test-model", messages=[{"role": "user", "content": "Hello"}])
+    response = AnthropicHTTPProviderClient(api_key="test-key").complete(request)
+    assert response.metadata["usage"] is None
+    assert response.metadata["usage_measured"] is False
