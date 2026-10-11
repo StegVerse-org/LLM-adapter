@@ -1,3 +1,5 @@
+import pytest
+
 from llm_adapter.kimi_intr_transport import build_kimi_intr_envelope
 from llm_adapter.kimi_tvc_broker import (
     RUNTIME_PROFILE_ID,
@@ -205,3 +207,34 @@ def test_governed_runtime_continues_to_master_records_and_egress_handoff():
     assert execution.egress_handoff["egress_intr_required"] is True
     assert execution.egress_handoff["credential_material_present"] is False
     assert execution.egress_handoff["authority_effect"] == "NONE"
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("result", {"id": "kimi-response-1", "choices": [{"message": {"content": "Paris"}}], "kimi_api_key": "sk-leak"}),
+        ("result", {"id": "kimi-response-1", "usage": {"total_tokens": 6, "Authorization": "Bearer sk-leak"}}),
+    ],
+)
+def test_tvc_broker_refuses_credential_material_in_result_despite_clean_receipt(field, value):
+    req = _request()
+
+    def broker(_request):
+        return dict(_broker(_request), **{field: value})
+
+    with pytest.raises(KimiTVCBrokerError, match="TVC Kimi result contains credential material"):
+        execute_kimi_via_tvc_broker(_envelope(req), req, lease_receipt=_lease(), broker_submitter=broker)
+
+
+@pytest.mark.parametrize("leak", [{"api_key": "sk-leak"}, {"refresh-token": "leak"}])
+def test_tvc_broker_refuses_credential_material_in_measurement_usage(leak):
+    req = _request()
+
+    def broker(_request):
+        reply = _broker(_request)
+        evidence = dict(reply["measurement_evidence"])
+        evidence["provider_usage"] = dict(evidence["provider_usage"], **leak)
+        return dict(reply, measurement_evidence=evidence)
+
+    with pytest.raises(KimiTVCBrokerError, match="measurement evidence contains credential material"):
+        execute_kimi_via_tvc_broker(_envelope(req), req, lease_receipt=_lease(), broker_submitter=broker)

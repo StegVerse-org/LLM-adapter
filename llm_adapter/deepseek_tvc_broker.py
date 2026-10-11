@@ -13,6 +13,7 @@ from typing import Any, Callable, Mapping
 from .deepseek_intr_transport import DeepSeekInTrEnvelope, DeepSeekTransportAdmissionError
 from .provider_client import ProviderResponse
 from .provider_request import ProviderRequest, stable_hash
+from .tvc_result_boundary import reject_credential_fields
 
 RUNTIME_PROFILE_ID = "stegverse:runtime-profile:llm-adapter-deepseek:v1"
 BASE_RUNTIME_PROFILE_ID = "stegverse:runtime-profile:hb-intr-resident:v1"
@@ -155,6 +156,8 @@ def execute_deepseek_via_tvc_broker(
     }.items():
         if receipt.get(key) != expected:
             raise DeepSeekTVCBrokerError(f"TVC use receipt boundary mismatch: {key}")
+    # A clean use receipt cannot override credential material embedded in the result.
+    reject_credential_fields(result, error=DeepSeekTVCBrokerError, label="TVC DeepSeek result")
 
     output = result.get("output")
     if not isinstance(output, str) or not output.strip():

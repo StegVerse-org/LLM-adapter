@@ -7,6 +7,7 @@ from typing import Any, Callable, Mapping
 from .zai_intr_transport import ZAIInTrEnvelope, ZAITransportAdmissionError
 from .provider_client import ProviderResponse
 from .provider_request import ProviderRequest, stable_hash
+from .tvc_result_boundary import reject_credential_fields
 
 RUNTIME_PROFILE_ID = "stegverse:runtime-profile:llm-adapter-zai:v1"
 BASE_RUNTIME_PROFILE_ID = "stegverse:runtime-profile:hb-intr-resident:v1"
@@ -61,6 +62,7 @@ def execute_zai_via_tvc_broker(envelope: ZAIInTrEnvelope, request: ProviderReque
     if not isinstance(result, Mapping) or not isinstance(receipt, Mapping): raise ZAITVCBrokerError("TVC broker result malformed")
     for key, expected in {"secret_material_returned":False,"secret_material_logged":False,"secret_material_retained":False,"single_use_consumed":True}.items():
         if receipt.get(key) != expected: raise ZAITVCBrokerError(f"TVC use receipt boundary mismatch: {key}")
+    reject_credential_fields(result, error=ZAITVCBrokerError, label="TVC Z.ai result")
     output = result.get("output") or result.get("content")
     if not isinstance(output, str) or not output.strip(): raise ZAITVCBrokerError("TVC Z.ai result missing text output")
     usage = result.get("usage") if isinstance(result.get("usage"), Mapping) else None
