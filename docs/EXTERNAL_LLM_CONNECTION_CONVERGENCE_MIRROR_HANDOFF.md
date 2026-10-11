@@ -127,3 +127,24 @@ The preflight resolved canonical handoffs, task registry, Master Records downstr
 The source lane is closed. The canonical successor is `SHWP-ECOSYSTEM-CHAT-INFERENCE-001` in `StegVerse-Labs/.github`. That task must reuse the existing WorkerCoordinator/independent task-control resident lane, Interlock/InTr admission, TV/TVC provider-operation authority, LLM-adapter provider-neutral transport, and the organization ledger's transition receipt (Master Records may record the released batch downstream; non-gating). No provider is `CONNECTED` until the authentic same-execution chain produces exact ingress ALLOW, a TV/TVC single-use provider operation, an authentic provider response, the local usage-ledger record with the organization-ledger transition receipt, and exact-response egress ALLOW.
 
 Do not reopen this repository's functional convergence source unless that authentic runtime proof exposes a bounded defect.
+
+## 2026-10-11 OpenAI (ChatGPT) governed route — S1_CHATGPT source prerequisite
+
+The economic roadmap benchmark `S1_CHATGPT` (owner `STEGOS-LOCAL-AI-ENTITY-CHATGPT-001`; coordination `StegVerse-Labs/.github#3107` WP-04) requires a real OpenAI result through governed ingress/egress with usage attribution. Before this change the only OpenAI surface was the ungoverned `OpenAIHTTPProviderClient`; no InTr/TVC route existed, unlike Z.ai, DeepSeek, Kimi and Anthropic.
+
+This change adds the same converged route for OpenAI, mirroring the Z.ai/Anthropic TVC path exactly and adding no new authority:
+
+```text
+llm_adapter/openai_intr_transport.py        ingress envelope only (protocol stegverse.intr.openai.transport.v1, transport ids oait-*)
+llm_adapter/openai_tvc_broker.py            non-exportable TVC operation (vault://tvc/providers/openai/api-key)
+llm_adapter/openai_tvc_runtime_executor.py  usage event + egress handoff + egress ALLOW admission
+config/openai-runtime-profile.json          stegverse:runtime-profile:llm-adapter-openai:v1
+tests/test_openai_tvc_runtime.py
+```
+
+OpenAI is TVC-only like Anthropic: there is no direct credential transport, and compatibility execution/egress are refused in `external_llm_connection.py`. Usage metrics are `MEASURED` only for integer `prompt_tokens`/`completion_tokens`/`total_tokens` returned by the provider through TVC, otherwise `UNAVAILABLE`.
+
+```text
+live OpenAI execution: NOT CLAIMED
+S1_CHATGPT: NOT_VERIFIED
+```

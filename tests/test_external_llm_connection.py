@@ -9,7 +9,7 @@ class DummyExecution:
     def evidence(self): return {"authority_effect": "NONE", "egress_intr_required": True}
 
 @pytest.mark.parametrize("name,canonical", [
-    ("z.ai","zai"),("zai","zai"),("deepseek","deepseek"),("kimi","kimi"),("moonshot","kimi"),("anthropic","anthropic"),("claude","anthropic")
+    ("z.ai","zai"),("zai","zai"),("deepseek","deepseek"),("kimi","kimi"),("moonshot","kimi"),("anthropic","anthropic"),("claude","anthropic"),("openai","openai"),("chatgpt","openai")
 ])
 def test_normalize_provider(name, canonical):
     assert mod.normalize_provider(name) == canonical
@@ -38,6 +38,7 @@ def test_compatibility_execution_dispatch(monkeypatch, provider, target_name):
     ("deepseek","execute_governed_deepseek_via_tvc_runtime"),
     ("kimi","execute_governed_kimi_via_tvc_runtime"),
     ("anthropic","execute_governed_anthropic_via_tvc_runtime"),
+    ("openai","execute_governed_openai_via_tvc_runtime"),
 ])
 def test_tvc_runtime_execution_dispatch(monkeypatch, provider, target_name):
     seen = {}
@@ -83,3 +84,16 @@ def test_tvc_egress_dispatch(monkeypatch, provider, target_name):
     sentinel = object()
     monkeypatch.setattr(mod, target_name, lambda **kwargs: sentinel)
     assert mod.admit_external_llm_egress(result, egress_disposition="ALLOW", egress_receipt_hash="c"*64, admitted_response_hash="a"*64) is sentinel
+
+
+@pytest.mark.parametrize("provider", ["openai", "chatgpt"])
+def test_openai_refuses_direct_credential_compatibility_path(provider):
+    request = SimpleNamespace(provider=provider)
+    with pytest.raises(mod.ExternalLLMConnectionError, match="OpenAI requires the canonical TVC"):
+        mod.execute_governed_external_llm(request, session_id="s", transition_id="t", measurement_id="m", ingress_disposition="ALLOW", ingress_receipt_hash="b"*64, carrier_ref="hb32:x", credential_resolver=lambda: "secret")
+
+
+def test_openai_compatibility_egress_is_refused():
+    result = mod.GovernedConnectionResult("openai", DummyExecution(), "TV_TVC_RESOLVER_COMPATIBILITY")
+    with pytest.raises(mod.ExternalLLMConnectionError, match="OpenAI compatibility egress"):
+        mod.admit_external_llm_egress(result, egress_disposition="ALLOW", egress_receipt_hash="c"*64, admitted_response_hash="a"*64)

@@ -161,7 +161,7 @@ tasks/LLMA-DISTRIBUTED-LLM-EXECUTOR-274.json
 
 ## Governed external LLM connection convergence
 
-Z.ai, DeepSeek, Kimi/Moonshot, and Anthropic now share one provider-neutral connection primitive instead of separate orchestration semantics. `llm_adapter/external_llm_connection.py` selects only provider-specific transport/runtime adapters. `llm_adapter/governed_external_provider_client.py` implements the existing `ProviderClient` seam used by distributed Ecosystem Chat execution and does not return a provider response until both the exact request and exact response have passed the existing external Interlock/InTr evaluations.
+Z.ai, DeepSeek, Kimi/Moonshot, Anthropic, and OpenAI (ChatGPT) now share one provider-neutral connection primitive instead of separate orchestration semantics. `llm_adapter/external_llm_connection.py` selects only provider-specific transport/runtime adapters. `llm_adapter/governed_external_provider_client.py` implements the existing `ProviderClient` seam used by distributed Ecosystem Chat execution and does not return a provider response until both the exact request and exact response have passed the existing external Interlock/InTr evaluations.
 
 ```text
 ProviderRequest
@@ -177,7 +177,7 @@ ProviderRequest
 -> ProviderResponse becomes available to the existing distributed executor
 ```
 
-Production external-provider execution uses TVC non-exportable operations for all four providers. Provider plaintext is not supplied to LLM-adapter in this path. Direct credential-resolver executors remain compatibility/test surfaces and are not the converged production contract. The shared connection module creates no Interlock/InTr, TVC, WorkerCoordinator, heartbeat, route, custody, or governance authority and does not turn provider success into an admissibility decision.
+Production external-provider execution uses TVC non-exportable operations for all five providers. OpenAI, like Anthropic, has no direct credential-resolver path: compatibility execution and egress are refused, and the TVC broker result carries measured `usage` and `runtime_model` only when the provider returns them (`usage_measured=false` otherwise, recorded as `UNAVAILABLE` usage metrics, never guessed). Provider plaintext is not supplied to LLM-adapter in this path. Direct credential-resolver executors remain compatibility/test surfaces and are not the converged production contract. The shared connection module creates no Interlock/InTr, TVC, WorkerCoordinator, heartbeat, route, custody, or governance authority and does not turn provider success into an admissibility decision.
 
 Canonical convergence source surfaces:
 
@@ -194,16 +194,21 @@ llm_adapter/anthropic_intr_transport.py
 llm_adapter/anthropic_intr_executor.py
 llm_adapter/anthropic_tvc_broker.py
 llm_adapter/anthropic_tvc_runtime_executor.py
+llm_adapter/openai_intr_transport.py
+llm_adapter/openai_tvc_broker.py
+llm_adapter/openai_tvc_runtime_executor.py
 config/zai-runtime-profile.json
 config/deepseek-runtime-profile.json
 config/kimi-runtime-profile.json
 config/anthropic-runtime-profile.json
+config/openai-runtime-profile.json
 tests/test_external_llm_connection.py
 tests/test_governed_external_provider_client.py
 tests/test_zai_tvc_runtime.py
 tests/test_deepseek_tvc_runtime.py
 tests/test_kimi_tvc_runtime.py
 tests/test_external_anthropic_tvc_runtime.py
+tests/test_openai_tvc_runtime.py
 docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md
 ```
 

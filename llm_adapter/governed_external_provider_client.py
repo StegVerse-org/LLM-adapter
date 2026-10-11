@@ -18,6 +18,7 @@ from .zai_intr_transport import zai_wire_request_hash
 from .deepseek_intr_transport import deepseek_wire_request_hash
 from .kimi_intr_transport import kimi_wire_request_hash
 from .anthropic_convergence_bridge import anthropic_wire_request_hash
+from .openai_intr_transport import openai_wire_request_hash
 
 class GovernedExternalProviderClientError(RuntimeError): pass
 
@@ -28,6 +29,7 @@ def external_wire_request_hash(request: ProviderRequest) -> str:
     if provider == "deepseek": return deepseek_wire_request_hash(request)
     if provider == "kimi": return kimi_wire_request_hash(request)
     if provider == "anthropic": return anthropic_wire_request_hash(request)
+    if provider == "openai": return openai_wire_request_hash(request)
     raise GovernedExternalProviderClientError("unsupported provider wire hash")
 
 
