@@ -50,6 +50,9 @@ jobs:
           llm_adapter/anthropic_tvc_runtime_executor.py
           llm_adapter/zai_tvc_broker.py
           llm_adapter/zai_tvc_runtime_executor.py
+          llm_adapter/openai_intr_transport.py
+          llm_adapter/openai_tvc_broker.py
+          llm_adapter/openai_tvc_runtime_executor.py
           llm_adapter/external_llm_connection.py
           llm_adapter/governed_external_provider_client.py
       - name: Run governed connection tests
@@ -60,6 +63,7 @@ jobs:
           tests/test_zai_tvc_runtime.py
           tests/test_deepseek_tvc_runtime.py
           tests/test_kimi_tvc_runtime.py
+          tests/test_openai_tvc_runtime.py
           tests/test_external_llm_connection.py
           tests/test_governed_external_provider_client.py
       - name: Confirm validation-only posture

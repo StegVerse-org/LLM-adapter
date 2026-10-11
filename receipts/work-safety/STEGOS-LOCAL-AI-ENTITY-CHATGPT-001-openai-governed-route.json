@@ -1,0 +1,107 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "STEGOS-LOCAL-AI-ENTITY-CHATGPT-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/ZAI_INTR_TRANSPORT_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/StegOS:docs/STEGOS_LOCAL_AI_ENTITY_CHATGPT_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/ECOSYSTEM_ECONOMIC_WHITEPAPER_GATED_ROADMAP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/StegOS:data/canonical-task-registration-proposals/STEGOS-LOCAL-AI-ENTITY-CHATGPT-001.json",
+    "StegVerse-Labs/.github:data/canonical-task-records/ECOSYSTEM-ECONOMIC-WHITEPAPER-GATED-ROADMAP-001.json",
+    "StegVerse-Labs/Site:data/economy/public-release-benchmarks.v1.json#S1_CHATGPT"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Source-only governed provider route. No provider call, organization record, custody transition or Master Records reconstruction is performed or claimed; the existing provider-usage path and organization ledger remain the recorders and Master Records stays downstream and non-gating."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-Labs/.github/issues/3107",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/384",
+      "https://github.com/StegVerse-Labs/StegBrowser/pull/51"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/StegOS",
+      "StegVerse-Labs/TVC",
+      "StegVerse-Labs/StegBrowser"
+    ],
+    "evidence_refs": [
+      "llm_adapter/zai_intr_transport.py",
+      "llm_adapter/zai_tvc_broker.py",
+      "llm_adapter/zai_tvc_runtime_executor.py",
+      "llm_adapter/anthropic_tvc_runtime_executor.py",
+      "llm_adapter/external_llm_connection.py",
+      "llm_adapter/http_provider_clients.py#OpenAIHTTPProviderClient (ungoverned; no InTr/TVC route existed for OpenAI)"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No open LLM-adapter PR adds an OpenAI governed route; the change extends the existing provider-neutral connection primitive with a fifth provider using the converged Z.ai/Anthropic TVC pattern and creates no second runtime, broker, ledger or authority."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "llm_adapter/external_llm_connection.py",
+      "docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/validate-external-llm-convergence.yml",
+    "README.md",
+    "config/openai-runtime-profile.json",
+    "llm_adapter/external_llm_connection.py",
+    "llm_adapter/governed_external_provider_client.py",
+    "llm_adapter/openai_intr_transport.py",
+    "llm_adapter/openai_tvc_broker.py",
+    "llm_adapter/openai_tvc_runtime_executor.py",
+    "tests/test_external_llm_connection.py",
+    "tests/test_openai_tvc_runtime.py"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/openai_intr_transport.py",
+      "semantic_responsibility": "Bind an OpenAI ProviderRequest to a contemporaneous ingress InTr ALLOW receipt and the exact outbound wire hash; no transport or credential path.",
+      "closest_existing_implementation": "llm_adapter/zai_intr_transport.py (envelope portion)",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "llm_adapter/openai_tvc_broker.py",
+      "semantic_responsibility": "Build and validate the non-exportable TVC provider operation for an admitted OpenAI envelope and bind the broker result with measured usage only.",
+      "closest_existing_implementation": "llm_adapter/zai_tvc_broker.py",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "llm_adapter/openai_tvc_runtime_executor.py",
+      "semantic_responsibility": "Run the admitted OpenAI TVC operation, emit the provider-usage event, build the egress handoff and admit only an exact-response egress InTr ALLOW.",
+      "closest_existing_implementation": "llm_adapter/zai_tvc_runtime_executor.py",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "config/openai-runtime-profile.json",
+      "semantic_responsibility": "Declare the OpenAI runtime profile under the existing hb-intr-resident base profile with TV/TVC credential delivery.",
+      "closest_existing_implementation": "config/zai-runtime-profile.json",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "tests/test_openai_tvc_runtime.py",
+      "semantic_responsibility": "Prove ingress/lease exact binding, non-exportable operation, measured-or-unavailable usage, secret-leak and authority-escalation refusal, and egress ALLOW requirement for the OpenAI route.",
+      "closest_existing_implementation": "tests/test_zai_tvc_runtime.py",
+      "decision": "EXTEND"
+    }
+  ]
+}
