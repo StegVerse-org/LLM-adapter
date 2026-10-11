@@ -71,3 +71,33 @@ def test_negative_fractional_or_malformed_usage_is_unavailable_not_measured(usag
     assert execution.broker.response.metadata["usage_measured"] is False
     metrics = execution.provider_usage_event["metrics"]
     assert all(metrics[k]["evidence_class"] == "UNAVAILABLE" for k in ("prompt_tokens", "completion_tokens", "total_tokens"))
+
+
+
+@pytest.mark.parametrize("result_extra", [
+    {"apiKey": "s"}, {"openai_api_key": "s"}, {"X-Api-Key": "s"}, {"bearer_token": "s"}, {"password": "s"},
+    {"metadata": {"api_key": "s"}},
+    {"metadata": [{"safe": True}, {"Authorization": "s"}]},
+    {"metadata": ({"access_token": "s"},)},
+    {"metadata": {"deep": {"refresh-token": "s"}}},
+])
+def test_broker_refuses_nested_and_variant_credential_keys(result_extra):
+    req = _request(); env = _envelope(req)
+    with pytest.raises(AnthropicTVCBrokerError, match="result contains credential material"):
+        execute_anthropic_via_tvc_broker(env, req, lease_receipt=_lease(env), broker_submitter=_broker_with(result_extra))
+
+
+def test_broker_accepts_nested_nonsecret_metadata_and_usage_token_keys():
+    req = _request(); env = _envelope(req)
+    result = execute_anthropic_via_tvc_broker(env, req, lease_receipt=_lease(env),
+        broker_submitter=_broker_with({"metadata": {"details": [{"safe": True}], "prompt_tokens": 3, "cache_read_input_tokens": 0}}))
+    assert result.response.output == "ok"
+
+
+def test_pathologically_deep_result_fails_closed_with_broker_error():
+    req = _request(); env = _envelope(req)
+    deep = {}; cur = deep
+    for _ in range(2000):
+        cur["n"] = {}; cur = cur["n"]
+    with pytest.raises(AnthropicTVCBrokerError, match="result exceeds nesting limit"):
+        execute_anthropic_via_tvc_broker(env, req, lease_receipt=_lease(env), broker_submitter=_broker_with({"metadata": deep}))
