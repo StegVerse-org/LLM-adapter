@@ -1,0 +1,63 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "STEGOS-LOCAL-AI-ENTITY-CLAUDE-CODE-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/StegOS:docs/STEGOS_LOCAL_AI_ENTITY_CLAUDE_CODE_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/ECOSYSTEM_ECONOMIC_WHITEPAPER_GATED_ROADMAP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/StegOS:data/canonical-task-registration-proposals/STEGOS-LOCAL-AI-ENTITY-CLAUDE-CODE-001.json",
+    "StegVerse-Labs/.github:data/canonical-task-records/ECOSYSTEM-ECONOMIC-WHITEPAPER-GATED-ROADMAP-001.json",
+    "StegVerse-Labs/Site:data/economy/public-release-benchmarks.v1.json#S1_CLAUDE"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Source-only governed provider route. No provider call, organization record, custody transition or Master Records reconstruction is performed or claimed; the existing provider-usage path and organization ledger remain the recorders and Master Records stays downstream and non-gating."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-Labs/.github/issues/3107",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/385",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/386"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/StegOS",
+      "StegVerse-Labs/TVC",
+      "StegVerse-Labs/StegBrowser"
+    ],
+    "evidence_refs": [
+      "llm_adapter/anthropic_tvc_broker.py",
+      "llm_adapter/anthropic_tvc_runtime_executor.py#_metric",
+      "llm_adapter/openai_tvc_broker.py#_measured_usage",
+      "StegVerse-org/LLM-adapter#386 credential-result guard"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Bounded parity hardening of the existing Anthropic TVC broker; #386 touches only openai_tvc_broker.py and no open PR touches anthropic_tvc_broker.py."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Adds fail-closed refusal of credential-bearing result keys and reports only validated usage; no new entrypoint, configuration, credential or success-path contract change.",
+    "evidence_refs": [
+      "llm_adapter/anthropic_tvc_broker.py",
+      "tests/test_external_anthropic_tvc_runtime.py"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/anthropic_tvc_broker.py",
+    "tests/test_external_anthropic_tvc_runtime.py"
+  ],
+  "new_files": []
+}

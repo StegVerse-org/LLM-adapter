@@ -53,6 +53,20 @@ class AnthropicTVCBrokerResult:
     credential_material_present: bool = False
 
 
+_CREDENTIAL_RESULT_KEYS = {"api_key", "access_token", "refresh_token", "secret", "secret_value", "credential_material", "authorization", "x-api-key"}
+USAGE_KEYS = ("input_tokens", "output_tokens")
+
+
+def _measured_usage(result: Mapping[str, Any]) -> dict[str, int] | None:
+    """Native Anthropic token usage, only when every count is a measured non-negative int."""
+    usage = result.get("usage")
+    if not isinstance(usage, Mapping):
+        return None
+    if not all(isinstance(usage.get(k), int) and not isinstance(usage[k], bool) and usage[k] >= 0 for k in USAGE_KEYS):
+        return None
+    return {k: usage[k] for k in USAGE_KEYS}
+
+
 def execute_anthropic_via_tvc_broker(envelope: AnthropicConvergenceEnvelope, request: ProviderRequest, *, lease_receipt: Mapping[str, Any], broker_submitter: Callable[[Mapping[str, Any]], Mapping[str, Any]], max_output_tokens: int = 2048, response_format: str = "text") -> AnthropicTVCBrokerResult:
     if not callable(broker_submitter): raise AnthropicTVCBrokerError("TVC broker submitter required")
     reply = broker_submitter(build_tvc_anthropic_operation_request(envelope, request, lease_receipt=lease_receipt, max_output_tokens=max_output_tokens, response_format=response_format))
@@ -61,10 +75,14 @@ def execute_anthropic_via_tvc_broker(envelope: AnthropicConvergenceEnvelope, req
     if not isinstance(result, Mapping) or not isinstance(receipt, Mapping): raise AnthropicTVCBrokerError("TVC broker result malformed")
     for key, expected in {"secret_material_returned":False,"secret_material_logged":False,"secret_material_retained":False,"single_use_consumed":True}.items():
         if receipt.get(key) != expected: raise AnthropicTVCBrokerError(f"TVC use receipt boundary mismatch: {key}")
+    # A clean use receipt cannot override credential material embedded in the result.
+    if any(isinstance(key, str) and key.lower() in _CREDENTIAL_RESULT_KEYS for key in result):
+        raise AnthropicTVCBrokerError("TVC Anthropic result contains credential material")
     output = result.get("output") or result.get("content")
     if not isinstance(output, str) or not output.strip(): raise AnthropicTVCBrokerError("TVC Anthropic result missing text output")
-    usage = result.get("usage") if isinstance(result.get("usage"), Mapping) else None
-    response = ProviderResponse(provider="anthropic", model=request.model, output=output, request_hash=envelope.request_hash, metadata={"provider_mode":"anthropic_tvc_non_exportable_operation","runtime_profile_id":RUNTIME_PROFILE_ID,"base_runtime_profile_id":BASE_RUNTIME_PROFILE_ID,"transport_id":envelope.transport_id,"ingress_receipt_hash":envelope.ingress_receipt_hash,"usage":dict(usage) if usage is not None else None,"tvc_use_receipt_hash":stable_hash(dict(receipt)),"credential_authority":"TV/TVC","credential_material_present":False,"egress_intr_required":True,"authority_effect":"NONE"})
+    usage = _measured_usage(result)
+    runtime_model = result.get("model")
+    response = ProviderResponse(provider="anthropic", model=request.model, output=output, request_hash=envelope.request_hash, metadata={"provider_mode":"anthropic_tvc_non_exportable_operation","runtime_profile_id":RUNTIME_PROFILE_ID,"base_runtime_profile_id":BASE_RUNTIME_PROFILE_ID,"transport_id":envelope.transport_id,"ingress_receipt_hash":envelope.ingress_receipt_hash,"runtime_model":runtime_model if isinstance(runtime_model, str) and runtime_model else None,"usage":usage,"usage_measured":usage is not None,"tvc_use_receipt_hash":stable_hash(dict(receipt)),"credential_authority":"TV/TVC","credential_material_present":False,"egress_intr_required":True,"authority_effect":"NONE"})
     return AnthropicTVCBrokerResult(response=response,use_receipt=dict(receipt),broker_response_hash=stable_hash(dict(reply)))
 
 __all__=["RUNTIME_PROFILE_ID","BASE_RUNTIME_PROFILE_ID","TVC_REQUEST_SCHEMA","TVC_SECRET_REF","TVC_OPERATION","AnthropicTVCBrokerError","AnthropicTVCBrokerResult","build_tvc_anthropic_operation_request","execute_anthropic_via_tvc_broker"]
