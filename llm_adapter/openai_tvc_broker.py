@@ -111,7 +111,18 @@ def execute_openai_via_tvc_broker(envelope: OpenAIInTrEnvelope, request: Provide
     # A clean use receipt cannot override credential material embedded in the result.
     # Reject known secret-bearing fields before creating any downstream response or usage event.
     forbidden = {"api_key", "access_token", "refresh_token", "secret", "secret_value", "credential_material", "authorization"}
-    if any(isinstance(key, str) and key.lower() in forbidden for key in result):
+    def contains_secret_field(value: Any) -> bool:
+        if isinstance(value, Mapping):
+            return any(
+                (isinstance(key, str) and key.lower() in forbidden)
+                or contains_secret_field(child)
+                for key, child in value.items()
+            )
+        if isinstance(value, (list, tuple)):
+            return any(contains_secret_field(child) for child in value)
+        return False
+
+    if contains_secret_field(result):
         raise OpenAITVCBrokerError("TVC OpenAI result contains credential material")
     output = result.get("output") or result.get("content")
     if not isinstance(output, str) or not output.strip():
