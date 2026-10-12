@@ -1,4 +1,5 @@
-from llm_adapter import build_commitment_request, run_governed_session
+from llm_adapter.commitment_request import build_commitment_request
+from llm_adapter.governed_session import run_governed_session
 
 
 def test_read_only_session_needs_no_commitment_request():

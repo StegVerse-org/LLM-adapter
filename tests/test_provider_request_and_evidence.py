@@ -1,9 +1,6 @@
-from llm_adapter import (
-    GovernedLLMAdapter,
-    build_provider_request,
-    evidence_from_fixture,
-    evidence_from_payload,
-)
+from llm_adapter.governed_adapter import GovernedLLMAdapter
+from llm_adapter.provider_request import build_provider_request
+from llm_adapter.retrieval_evidence import evidence_from_fixture, evidence_from_payload
 
 
 def test_provider_request_is_hashable_and_extracts_user_query():

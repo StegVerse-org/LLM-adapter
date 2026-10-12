@@ -1,4 +1,4 @@
-from llm_adapter import GovernedLLMAdapter
+from llm_adapter.governed_adapter import GovernedLLMAdapter
 
 
 def test_read_only_candidate_is_allowed():

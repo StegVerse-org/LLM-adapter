@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from llm_adapter import run_fixture_file
+from llm_adapter.fixture_runner import run_fixture_file
 
 
 def test_fixture_runner_quarantines_stale_fixture():

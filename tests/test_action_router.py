@@ -1,4 +1,5 @@
-from llm_adapter import build_action_route_packet, run_governed_session
+from llm_adapter.action_router import build_action_route_packet
+from llm_adapter.governed_session import run_governed_session
 
 
 def test_action_router_skips_low_risk_read_only_output():
