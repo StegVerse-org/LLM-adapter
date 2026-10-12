@@ -38,7 +38,7 @@ the completed LLMA-368 source goal. Their old owning_existing_goal fields are
 historical attribution, not a new checkout or a current source obligation.
 No further work is required for LLMA-368 absent new scoped evidence.
 
-## Separate optional product-lane state
+## Active goal state (separate optional product lane)
 
 ```text
 Repository-local governed path implementation: COMPLETE
