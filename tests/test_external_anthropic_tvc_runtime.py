@@ -101,3 +101,16 @@ def test_pathologically_deep_result_fails_closed_with_broker_error():
         cur["n"] = {}; cur = cur["n"]
     with pytest.raises(AnthropicTVCBrokerError, match="result exceeds nesting limit"):
         execute_anthropic_via_tvc_broker(env, req, lease_receipt=_lease(env), broker_submitter=_broker_with({"metadata": deep}))
+
+
+@pytest.mark.parametrize("model,expected", [("claude-runtime-fixture", "claude-runtime-fixture"), (None, None), ("", None)])
+def test_egress_handoff_carries_requested_and_provider_reported_model(model, expected):
+    req = _request(); env = _envelope(req)
+    execution = execute_governed_anthropic_via_tvc_runtime(
+        req, session_id="s", transition_id="tx-1", measurement_id="m", ingress_disposition="ALLOW",
+        ingress_receipt_hash="a" * 64, carrier_ref="carrier-1", lease_receipt=_lease(env),
+        broker_submitter=_broker_with({"model": model}), usage_submitter=lambda event: {"status": "recorded", "authority_effect": "NONE"})
+    handoff = execution.egress_handoff
+    assert handoff["requested_model"] == req.model
+    assert handoff["runtime_model"] == expected
+    assert handoff["usage_measured"] is True

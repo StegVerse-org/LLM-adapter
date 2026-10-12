@@ -160,3 +160,10 @@ def test_broker_accepts_nested_nonsecret_metadata():
         broker_submitter=_broker(metadata={"details": [{"safe": True}]}),
     )
     assert result.response.output == "ok"
+
+
+@pytest.mark.parametrize("model,expected", [("gpt-runtime-fixture", "gpt-runtime-fixture"), (None, None), (7, None)])
+def test_egress_handoff_carries_requested_and_provider_reported_model(model, expected):
+    handoff = _execution(_broker(model=model)).egress_handoff
+    assert handoff["requested_model"] == _request().model
+    assert handoff["runtime_model"] == expected
