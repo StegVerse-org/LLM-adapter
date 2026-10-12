@@ -60,7 +60,8 @@
   "covered_paths": [
     "llm_adapter/s1_lease_provider_call.py",
     "tests/test_s1_lease_provider_call.py",
-    "receipts/work-safety/STEGOS-LOCAL-AI-ENTITY-CLAUDE-CODE-001-s1-lease-provider-call.json"
+    "receipts/work-safety/STEGOS-LOCAL-AI-ENTITY-CLAUDE-CODE-001-s1-lease-provider-call.json",
+    ".github/workflows/validate-external-llm-convergence.yml"
   ],
   "new_files": [
     {
