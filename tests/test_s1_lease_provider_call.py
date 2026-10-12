@@ -114,3 +114,16 @@ def test_malformed_inputs_fail_closed():
         build_s1_provider_call(build_provider_request(provider="kimi", model="k", messages=[{"role": "user", "content": "x"}]),
                                session_id="s", measurement_id="m", lease_receipt={}, broker_submitter=lambda _: {},
                                egress_decider=lambda _: {}, **INGRESS)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("transition_id", "tx-other"),
+    ("request_hash", "f" * 64),
+    ("response_hash", "f" * 64),
+])
+def test_egress_decision_cannot_name_another_transition_or_response(field, value):
+    decision = {"disposition": "ALLOW", "egress_receipt_hash": EGRESS_RECEIPT, field: value}
+    call, governed, calls = _call("openai", decision=decision)
+    with pytest.raises(PermissionError, match="egress InTr " + field + " binding mismatch"):
+        call(governed)
+    assert len(calls) == 1
