@@ -1,0 +1,79 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "STEGOS-LOCAL-AI-ENTITY-CLAUDE-CODE-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/ANTHROPIC_INTR_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/StegOS:docs/STEGOS_LOCAL_AI_ENTITY_CLAUDE_CODE_MIRROR_HANDOFF.md",
+    "StegVerse-Labs/.github:docs/ECOSYSTEM_ECONOMIC_WHITEPAPER_GATED_ROADMAP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/StegOS:data/canonical-task-registration-proposals/STEGOS-LOCAL-AI-ENTITY-CLAUDE-CODE-001.json",
+    "StegVerse-Labs/.github:data/canonical-task-records/ECOSYSTEM-ECONOMIC-WHITEPAPER-GATED-ROADMAP-001.json",
+    "StegVerse-Labs/Site:data/economy/public-release-benchmarks.v1.json#S1_CHATGPT",
+    "StegVerse-Labs/Site:data/economy/public-release-benchmarks.v1.json#S1_CLAUDE"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Source-only governed provider route. No provider call, organization record, custody transition or Master Records reconstruction is performed or claimed; the existing provider-usage path and organization ledger remain the recorders and Master Records stays downstream and non-gating."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-Labs/.github/issues/3107",
+      "https://github.com/StegVerse-Labs/StegBrowser/pull/54",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/392"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/StegOS",
+      "StegVerse-Labs/TVC",
+      "StegVerse-Labs/StegBrowser"
+    ],
+    "evidence_refs": [
+      "llm_adapter/external_llm_connection.py#execute_governed_external_llm",
+      "llm_adapter/external_llm_connection.py#admit_external_llm_egress",
+      "StegVerse-Labs/StegBrowser:src/stegbrowser/governed_provider_transition.py#execute_governed_provider_lease_transition",
+      "llm_adapter/openai_intr_transport.py#build_openai_intr_envelope",
+      "llm_adapter/anthropic_convergence_bridge.py#build_anthropic_convergence_envelope"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "New S1 composition module; the only open LLM-adapter PR (#383) touches docs only."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Adds an injectable provider_call builder over existing governed route functions; no new route, entrypoint, credential, decision or authority.",
+    "evidence_refs": [
+      "llm_adapter/s1_lease_provider_call.py",
+      "tests/test_s1_lease_provider_call.py"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/s1_lease_provider_call.py",
+    "tests/test_s1_lease_provider_call.py",
+    "receipts/work-safety/STEGOS-LOCAL-AI-ENTITY-CLAUDE-CODE-001-s1-lease-provider-call.json"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/s1_lease_provider_call.py",
+      "semantic_responsibility": "Build the provider_call StegBrowser's S1 lease transition injects: refuse a lease naming another request or route before any provider call, then run the existing governed route and exact-response egress admission.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter:llm_adapter/external_llm_connection.py#execute_governed_external_llm",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "tests/test_s1_lease_provider_call.py",
+      "semantic_responsibility": "Positive and negative tests for the S1 provider_call builder (OpenAI and Anthropic).",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter:tests/test_openai_tvc_runtime.py",
+      "decision": "EXTEND"
+    }
+  ]
+}
