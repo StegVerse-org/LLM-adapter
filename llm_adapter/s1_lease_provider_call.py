@@ -96,6 +96,11 @@ def build_s1_provider_call(
             raise S1LeaseProviderCallError("egress decision malformed")
         if decision.get("disposition") != "ALLOW":
             raise PermissionError("egress InTr " + str(decision.get("disposition")))
+        # An egress authority cannot approve a different transition or response.
+        for field, expected in (("transition_id", transition_id), ("request_hash", expected),
+                                ("response_hash", result.response_hash)):
+            if field in decision and decision[field] != expected:
+                raise PermissionError("egress InTr " + field + " binding mismatch")
         admission = admit_external_llm_egress(result, egress_disposition="ALLOW",
                                               egress_receipt_hash=str(decision.get("egress_receipt_hash")),
                                               admitted_response_hash=result.response_hash)
