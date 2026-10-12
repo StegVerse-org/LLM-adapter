@@ -52,7 +52,5 @@
     "llm_adapter/s1_lease_provider_call.py",
     "tests/test_s1_lease_provider_call.py"
   ],
-  "new_files": [
-    "receipts/work-safety/ECOSYSTEM-ECONOMIC-WHITEPAPER-GATED-ROADMAP-001-s1-egress-binding-20261012.json"
-  ]
+  "new_files": []
 }
