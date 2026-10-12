@@ -1,4 +1,4 @@
-from llm_adapter import run_governed_session
+from llm_adapter.governed_session import run_governed_session
 
 
 def test_governed_session_allows_current_read_only_evidence():

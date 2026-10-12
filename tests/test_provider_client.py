@@ -1,12 +1,8 @@
 import pytest
 
-from llm_adapter import (
-    FixtureProviderClient,
-    ProviderResponse,
-    build_provider_request,
-    run_governed_request_session,
-    run_governed_response_session,
-)
+from llm_adapter.governed_session import run_governed_request_session, run_governed_response_session
+from llm_adapter.provider_client import FixtureProviderClient, ProviderResponse
+from llm_adapter.provider_request import build_provider_request
 
 
 def test_fixture_provider_response_binds_to_request_hash():

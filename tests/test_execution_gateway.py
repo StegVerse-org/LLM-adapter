@@ -1,4 +1,6 @@
-from llm_adapter import FixtureAuthorityClient, prepare_execution_handoff, run_governed_session
+from llm_adapter.authority_client import FixtureAuthorityClient
+from llm_adapter.execution_gateway import prepare_execution_handoff
+from llm_adapter.governed_session import run_governed_session
 
 
 def test_default_execution_handoff_is_not_executable_for_fail_closed():

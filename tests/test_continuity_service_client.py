@@ -1,13 +1,9 @@
 import pytest
 
-from llm_adapter import (
-    ContinuityServiceClient,
-    ContinuityServiceConfigurationError,
-    FixtureProviderClient,
-    build_provider_request,
-    continuity_result_from_service_body,
-    run_governed_request_session,
-)
+from llm_adapter.continuity_service_client import ContinuityServiceClient, ContinuityServiceConfigurationError, continuity_result_from_service_body
+from llm_adapter.governed_session import run_governed_request_session
+from llm_adapter.provider_client import FixtureProviderClient
+from llm_adapter.provider_request import build_provider_request
 
 
 def test_continuity_service_fails_closed_without_endpoint(monkeypatch):

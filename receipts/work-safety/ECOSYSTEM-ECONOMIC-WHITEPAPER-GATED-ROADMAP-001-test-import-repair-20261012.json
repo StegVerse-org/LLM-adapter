@@ -1,0 +1,70 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "ECOSYSTEM-ECONOMIC-WHITEPAPER-GATED-ROADMAP-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-Labs/.github:docs/ECOSYSTEM_ECONOMIC_WHITEPAPER_GATED_ROADMAP_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/EXTERNAL_LLM_CONNECTION_CONVERGENCE_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github:data/canonical-task-records/ECOSYSTEM-ECONOMIC-WHITEPAPER-GATED-ROADMAP-001.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-only import repair; no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-Labs/.github/issues/3107"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "llm_adapter/__init__.py",
+      "tests/test_action_router.py",
+      "tests/test_authority_client.py",
+      "tests/test_commitment_request.py",
+      "tests/test_continuity_search.py",
+      "tests/test_continuity_service_client.py",
+      "tests/test_execution_gateway.py",
+      "tests/test_fixture_runner.py",
+      "tests/test_governed_adapter.py",
+      "tests/test_governed_session.py",
+      "tests/test_provider_client.py",
+      "tests/test_provider_request_and_evidence.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No open LLM-adapter PR touches these test modules."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Tests now import from implementation modules as llm_adapter/__init__.py documents; no package behaviour or exports change.",
+    "evidence_refs": [
+      "llm_adapter/__init__.py"
+    ]
+  },
+  "covered_paths": [
+    "tests/test_action_router.py",
+    "tests/test_authority_client.py",
+    "tests/test_commitment_request.py",
+    "tests/test_continuity_search.py",
+    "tests/test_continuity_service_client.py",
+    "tests/test_execution_gateway.py",
+    "tests/test_fixture_runner.py",
+    "tests/test_governed_adapter.py",
+    "tests/test_governed_session.py",
+    "tests/test_provider_client.py",
+    "tests/test_provider_request_and_evidence.py"
+  ],
+  "new_files": []
+}

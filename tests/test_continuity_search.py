@@ -1,4 +1,5 @@
-from llm_adapter import FixtureContinuitySearch, GovernedLLMAdapter
+from llm_adapter.continuity_search import FixtureContinuitySearch
+from llm_adapter.governed_adapter import GovernedLLMAdapter
 
 
 def test_fixture_continuity_search_returns_stale_status_and_evidence():

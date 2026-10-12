@@ -1,4 +1,5 @@
-from llm_adapter import FixtureAuthorityClient, evaluate_commitment_request, run_governed_session
+from llm_adapter.authority_client import FixtureAuthorityClient, evaluate_commitment_request
+from llm_adapter.governed_session import run_governed_session
 
 
 def test_read_only_session_authority_decision_not_required():
