@@ -84,6 +84,9 @@ def execute_governed_openai_via_tvc_runtime(request: ProviderRequest, *, session
         "request_hash": envelope.request_hash, "ingress_receipt_hash": envelope.ingress_receipt_hash,
         "envelope_hash": envelope.envelope_hash, "response_hash": broker.response.response_hash,
         "tvc_use_receipt_hash": broker.response.metadata["tvc_use_receipt_hash"],
+        # S1 attribution: the model asked for and the model the provider reported serving.
+        "requested_model": broker.response.model,
+        "runtime_model": broker.response.metadata["runtime_model"],
         "usage_measured": broker.response.metadata["usage_measured"],
         "provider_usage_event_sha256": event["event_sha256"],
         "provider_usage_record_status": usage_record.get("status"),
