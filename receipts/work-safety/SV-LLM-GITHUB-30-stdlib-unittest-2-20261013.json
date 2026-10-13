@@ -1,0 +1,70 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-STDLIB-UNITTEST-2",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/SOUTHBOUND_SDK_RETURN_EGRESS.md",
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-harness change only: nine test files move from pytest to the standard-library unittest and the southbound validation workflow stops installing pytest; no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/399"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "tests/test_southbound_sdk_return.py",
+      "tests/test_provider_client.py",
+      "tests/test_recursive_comparison.py",
+      "tests/test_system_boundary_receipt.py",
+      "tests/test_system_boundary_binding.py",
+      "tests/test_system_boundary.py",
+      "tests/test_system_boundary_lifecycle.py",
+      "tests/test_user_llm_client.py",
+      "tests/test_chat_session_binding.py",
+      ".github/workflows/southbound-sdk-return-validation.yml",
+      "tests/conftest.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches these nine test files or the southbound workflow."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Package behaviour is unchanged and no README verification command names these files.",
+    "evidence_refs": [
+      "README.md",
+      "README.southbound-sdk-return.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/southbound-sdk-return-validation.yml",
+    "tests/test_southbound_sdk_return.py",
+    "tests/test_provider_client.py",
+    "tests/test_recursive_comparison.py",
+    "tests/test_system_boundary_receipt.py",
+    "tests/test_system_boundary_binding.py",
+    "tests/test_system_boundary.py",
+    "tests/test_system_boundary_lifecycle.py",
+    "tests/test_user_llm_client.py",
+    "tests/test_chat_session_binding.py"
+  ],
+  "new_files": []
+}
