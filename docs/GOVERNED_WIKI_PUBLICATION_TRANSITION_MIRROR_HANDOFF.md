@@ -151,3 +151,28 @@ No existing source surface was found that both:
 Therefore no caller is connected between `create_publication_transition(...)` and the SDK publication execution path in this pass. No runtime, scheduler, dispatcher, WorkerCoordinator, custody, credential, mutation, or authority surface is changed.
 
 The next progression condition is authentic retained evidence from an already-existing Interlock/InTr decision surface that satisfies the exact decision contract above. Until then, absence remains `UNKNOWN_NOT_AUTHENTICALLY_OBSERVED`, not DENY, failure, or authorization.
+
+## Organization governance decision path (2026-10-13)
+
+Every ACTION is by manifest, and the Organization holds runtime/observed reality (Task Registry canonical invariants). No external machine, surface or host is awaited. The publication decision is therefore the organization's own governance decision, not a response from a separate surface. The path:
+
+1. **Build.** The SDK's `prepare_wiki_publication_manifest(...)` builds the publication manifest. It already declares process `governance`.
+2. **Decide.** The manifest is submitted by committed request through StegVerse-org/.github's Interlock/InTr ingress on the existing governance route. The organization that owns StegCore decides it. This is the route that decided SDK-MR-A.
+3. **Read back.** The decision returns through InTr. `organization-governance-return.yml` reads it back from both organization ledgers. Each readback row names the decided manifest's `wire_manifest_sha256` and `request_sha256` (StegVerse-org/.github#158).
+4. **Verify.** The SDK's `verify_governance_decision_return(...)` judges that evidence.
+5. **Build the receipt.** `build_publication_state_receipt_from_organization_decision(...)` builds the `PUBLIC_WIKI_GOVERNED_PUBLICATION_DECISION` receipt. It requires all of the following:
+   - the accepted return is ALLOW, and so is the governance disposition;
+   - the crossing is closed (`ORGANIZATION_EGRESS_CLOSED`);
+   - the packet, closure receipt and deciding receipt are the same in the return and in the acceptance;
+   - the decision's `wire_manifest_sha256` equals the canonical digest of this exact publication manifest.
+
+   Its `intr_decision_origin` is `organization_governance_return`, with `locally_generated_allow=false`.
+6. **Verify the receipt.** `verify_publication_transition_receipt(...)` accepts that origin. For it, the receipt must carry the packet, request, closure and deciding-organization references, and `governance_decision_ref_where_applicable` must name the deciding organization's receipt.
+
+This path needs no local SDK governance run, no StegOS posture resolver and no externally supplied InTr response. The earlier contract that needs `AUTHENTIC_EXTERNAL_INTR_ALLOW` is superseded as the progression condition.
+
+What is still unobserved is that runtime transition itself: the publication manifest decided on the governance route and read back. Until then:
+
+```text
+ORGANIZATION_GOVERNANCE_PUBLICATION_DECISION = UNKNOWN_NOT_AUTHENTICALLY_OBSERVED
+```
