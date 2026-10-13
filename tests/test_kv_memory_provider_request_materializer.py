@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-
-import pytest
+import unittest
 
 from llm_adapter.kv_memory_context_bridge import memory_packet_sha256
 from scripts.materialize_kv_memory_provider_request import materialize
@@ -71,41 +70,46 @@ def request_input():
     }
 
 
-def test_materialization_is_exact_and_replay_stable():
-    p = packet()
-    first = materialize(p, admission(p), request_input())
-    second = materialize(p, admission(p), request_input())
-    assert first == second
-    assert first["state"] == "PROVIDER_REQUEST_MATERIALIZED"
-    assert first["provider_request_hash"]
-    assert first["memory_packet_sha256"] == memory_packet_sha256(p)
-    assert first["provider_ingress_admission_observed"] is False
-    assert first["provider_execution_observed"] is False
-    assert first["provider_egress_admission_observed"] is False
-    assert first["kv_writeback_observed"] is False
-    assert first["credential_material_present"] is False
-    assert first["authority_effect"] == "NONE_MATERIALIZATION_ONLY"
+class KVMemoryProviderRequestMaterializerTests(unittest.TestCase):
+    def test_materialization_is_exact_and_replay_stable(self):
+        p = packet()
+        first = materialize(p, admission(p), request_input())
+        second = materialize(p, admission(p), request_input())
+        assert first == second
+        assert first["state"] == "PROVIDER_REQUEST_MATERIALIZED"
+        assert first["provider_request_hash"]
+        assert first["memory_packet_sha256"] == memory_packet_sha256(p)
+        assert first["provider_ingress_admission_observed"] is False
+        assert first["provider_execution_observed"] is False
+        assert first["provider_egress_admission_observed"] is False
+        assert first["kv_writeback_observed"] is False
+        assert first["credential_material_present"] is False
+        assert first["authority_effect"] == "NONE_MATERIALIZATION_ONLY"
 
 
-def test_materialization_rejects_credential_like_input():
-    p = packet()
-    bad = request_input()
-    bad["metadata"]["api_key"] = "forbidden"
-    with pytest.raises(ValueError, match="credential-like field forbidden"):
-        materialize(p, admission(p), bad)
+    def test_materialization_rejects_credential_like_input(self):
+        p = packet()
+        bad = request_input()
+        bad["metadata"]["api_key"] = "forbidden"
+        with self.assertRaisesRegex(ValueError, "credential-like field forbidden"):
+            materialize(p, admission(p), bad)
 
 
-def test_materialization_requires_replay_timestamp():
-    p = packet()
-    bad = request_input()
-    bad.pop("created_at")
-    with pytest.raises(ValueError, match="created_at required"):
-        materialize(p, admission(p), bad)
+    def test_materialization_requires_replay_timestamp(self):
+        p = packet()
+        bad = request_input()
+        bad.pop("created_at")
+        with self.assertRaisesRegex(ValueError, "created_at required"):
+            materialize(p, admission(p), bad)
 
 
-def test_materialization_rejects_tampered_memory_admission():
-    p = packet()
-    bad_admission = admission(p)
-    bad_admission["packet_sha256"] = "0" * 64
-    with pytest.raises(Exception, match="exact hash mismatch"):
-        materialize(p, bad_admission, request_input())
+    def test_materialization_rejects_tampered_memory_admission(self):
+        p = packet()
+        bad_admission = admission(p)
+        bad_admission["packet_sha256"] = "0" * 64
+        with self.assertRaisesRegex(Exception, "exact hash mismatch"):
+            materialize(p, bad_admission, request_input())
+
+
+if __name__ == "__main__":
+    unittest.main()

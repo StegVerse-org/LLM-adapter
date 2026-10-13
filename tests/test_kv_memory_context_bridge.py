@@ -3,8 +3,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
-
-import pytest
+import unittest
 
 from llm_adapter.kv_memory_context_bridge import (
     KVMemoryContextBridgeError,
@@ -62,94 +61,99 @@ def make_admission(packet):
     }
 
 
-def test_bridge_requires_exact_packet_admission_and_binds_metadata():
-    packet = make_packet()
-    request = build_provider_request_with_kv_memory(
-        provider="deepseek",
-        model="deepseek-chat",
-        messages=[{"role": "user", "content": "What did we establish about the ERL funding lane?"}],
-        memory_packet=packet,
-        memory_packet_admission=make_admission(packet),
-    )
-    assert request.allowed_sources == ("model_knowledge", "kv_memory_context")
-    assert request.messages[0].role == "system"
-    assert "STEGVERSE_KV_MEMORY_CONTEXT" in request.messages[0].content
-    metadata = request.metadata["kv_memory_context"]
-    assert metadata["packet_id"] == packet["packet_id"]
-    assert metadata["packet_sha256"] == memory_packet_sha256(packet)
-    assert metadata["intr_receipt_hash"] == "sha256:" + ("a" * 64)
-    assert metadata["context_transfers_authority"] is False
-    assert metadata["model_is_authority"] is False
-    assert metadata["authority_effect"] == "NONE_CONTEXT_ONLY"
-
-
-def test_bridge_rejects_denied_memory_packet():
-    packet = make_packet()
-    admission = make_admission(packet)
-    admission["disposition"] = "DENY"
-    with pytest.raises(KVMemoryContextBridgeError, match="did not ALLOW"):
-        build_provider_request_with_kv_memory(
+class KVMemoryContextBridgeTests(unittest.TestCase):
+    def test_bridge_requires_exact_packet_admission_and_binds_metadata(self):
+        packet = make_packet()
+        request = build_provider_request_with_kv_memory(
             provider="deepseek",
             model="deepseek-chat",
-            messages=[{"role": "user", "content": "test"}],
+            messages=[{"role": "user", "content": "What did we establish about the ERL funding lane?"}],
             memory_packet=packet,
-            memory_packet_admission=admission,
+            memory_packet_admission=make_admission(packet),
         )
+        assert request.allowed_sources == ("model_knowledge", "kv_memory_context")
+        assert request.messages[0].role == "system"
+        assert "STEGVERSE_KV_MEMORY_CONTEXT" in request.messages[0].content
+        metadata = request.metadata["kv_memory_context"]
+        assert metadata["packet_id"] == packet["packet_id"]
+        assert metadata["packet_sha256"] == memory_packet_sha256(packet)
+        assert metadata["intr_receipt_hash"] == "sha256:" + ("a" * 64)
+        assert metadata["context_transfers_authority"] is False
+        assert metadata["model_is_authority"] is False
+        assert metadata["authority_effect"] == "NONE_CONTEXT_ONLY"
 
 
-def test_bridge_rejects_tampered_packet_after_admission():
-    packet = make_packet()
-    admission = make_admission(packet)
-    packet["purpose"] = "tampered purpose"
-    with pytest.raises(KVMemoryContextBridgeError, match="exact hash mismatch"):
-        build_provider_request_with_kv_memory(
-            provider="deepseek",
-            model="deepseek-chat",
-            messages=[{"role": "user", "content": "test"}],
-            memory_packet=packet,
-            memory_packet_admission=admission,
-        )
+    def test_bridge_rejects_denied_memory_packet(self):
+        packet = make_packet()
+        admission = make_admission(packet)
+        admission["disposition"] = "DENY"
+        with self.assertRaisesRegex(KVMemoryContextBridgeError, "did not ALLOW"):
+            build_provider_request_with_kv_memory(
+                provider="deepseek",
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": "test"}],
+                memory_packet=packet,
+                memory_packet_admission=admission,
+            )
 
 
-def test_bridge_rejects_tampered_entry_content():
-    packet = make_packet()
-    packet["entries"][0]["content"] = "tampered"
-    admission = make_admission(packet)
-    with pytest.raises(KVMemoryContextBridgeError, match="content hash mismatch"):
-        build_provider_request_with_kv_memory(
-            provider="deepseek",
-            model="deepseek-chat",
-            messages=[{"role": "user", "content": "test"}],
-            memory_packet=packet,
-            memory_packet_admission=admission,
-        )
+    def test_bridge_rejects_tampered_packet_after_admission(self):
+        packet = make_packet()
+        admission = make_admission(packet)
+        packet["purpose"] = "tampered purpose"
+        with self.assertRaisesRegex(KVMemoryContextBridgeError, "exact hash mismatch"):
+            build_provider_request_with_kv_memory(
+                provider="deepseek",
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": "test"}],
+                memory_packet=packet,
+                memory_packet_admission=admission,
+            )
 
 
-def test_bridge_rejects_cross_authority_profile():
-    packet = make_packet()
-    packet["kv_class"] = "ORGANIZATIONAL_KV"
-    packet["authority_domain"] = "ORGANIZATION"
-    packet["consumer_ai_role"] = "ORGANIZATIONAL_AI"
-    admission = make_admission(packet)
-    with pytest.raises(KVMemoryContextBridgeError, match="requires PERSONAL_KV"):
-        build_provider_request_with_kv_memory(
-            provider="deepseek",
-            model="deepseek-chat",
-            messages=[{"role": "user", "content": "test"}],
-            memory_packet=packet,
-            memory_packet_admission=admission,
-        )
+    def test_bridge_rejects_tampered_entry_content(self):
+        packet = make_packet()
+        packet["entries"][0]["content"] = "tampered"
+        admission = make_admission(packet)
+        with self.assertRaisesRegex(KVMemoryContextBridgeError, "content hash mismatch"):
+            build_provider_request_with_kv_memory(
+                provider="deepseek",
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": "test"}],
+                memory_packet=packet,
+                memory_packet_admission=admission,
+            )
 
 
-def test_bridge_rejects_secret_flag():
-    packet = make_packet()
-    packet["secret_material_included"] = True
-    admission = make_admission(packet)
-    with pytest.raises(KVMemoryContextBridgeError, match="secret material"):
-        build_provider_request_with_kv_memory(
-            provider="deepseek",
-            model="deepseek-chat",
-            messages=[{"role": "user", "content": "test"}],
-            memory_packet=packet,
-            memory_packet_admission=admission,
-        )
+    def test_bridge_rejects_cross_authority_profile(self):
+        packet = make_packet()
+        packet["kv_class"] = "ORGANIZATIONAL_KV"
+        packet["authority_domain"] = "ORGANIZATION"
+        packet["consumer_ai_role"] = "ORGANIZATIONAL_AI"
+        admission = make_admission(packet)
+        with self.assertRaisesRegex(KVMemoryContextBridgeError, "requires PERSONAL_KV"):
+            build_provider_request_with_kv_memory(
+                provider="deepseek",
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": "test"}],
+                memory_packet=packet,
+                memory_packet_admission=admission,
+            )
+
+
+    def test_bridge_rejects_secret_flag(self):
+        packet = make_packet()
+        packet["secret_material_included"] = True
+        admission = make_admission(packet)
+        with self.assertRaisesRegex(KVMemoryContextBridgeError, "secret material"):
+            build_provider_request_with_kv_memory(
+                provider="deepseek",
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": "test"}],
+                memory_packet=packet,
+                memory_packet_admission=admission,
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()

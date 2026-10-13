@@ -538,12 +538,12 @@ pytest
 python scripts/smoke_governed_session.py
 python scripts/verify_goal4.py
 pytest tests/test_execute_canonical_sovereign_route.py -v
-pytest tests/test_distributed_workload.py -q
+python -m unittest tests/test_distributed_workload.py
 python scripts/check_distributed_llm_workload.py
-pytest tests/test_distributed_executor.py -q
+python -m unittest tests/test_distributed_executor.py
 python scripts/check_distributed_llm_executor.py
-pytest tests/test_kv_memory_context_bridge.py -q
-pytest tests/test_kv_memory_provider_request_materializer.py -q
+python -m unittest tests/test_kv_memory_context_bridge.py
+python -m unittest tests/test_kv_memory_provider_request_materializer.py
 pytest tests/test_zai_intr_transport.py -q
 pytest tests/test_zai_intr_executor.py -q
 pytest tests/test_zai_tvc_runtime.py -q
