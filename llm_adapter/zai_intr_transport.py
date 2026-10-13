@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 from urllib.parse import urljoin
 
-import requests
+from . import _stdlib_http as _http
 
 from .provider_client import ProviderResponse
 from .provider_request import ProviderRequest, stable_hash, stable_json
@@ -224,7 +224,7 @@ class ZAIHTTPTransport:
 
         credential = self.credential_resolver()
         assert_no_secret_material(credential, envelope=envelope.to_dict(), outbound_payload=zai_wire_payload(request))
-        response = requests.post(
+        response = _http.post(
             urljoin(self.base_url + "/", "chat/completions"),
             headers={"Authorization": f"Bearer {credential}", "Content-Type": "application/json", "Accept": "application/json"},
             data=zai_wire_bytes(request),

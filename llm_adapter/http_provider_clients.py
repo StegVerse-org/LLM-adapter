@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any, Optional, Union
 from urllib.parse import urlparse
 
-import requests
+from . import _stdlib_http as _http
 
 from .provider_client import ProviderResponse
 from .provider_request import ProviderRequest
@@ -68,7 +68,7 @@ class StegVerseLocalHTTPProviderClient:
             "messages": [message.to_dict() for message in request.messages],
             "temperature": request.temperature,
         }
-        response = requests.post(
+        response = _http.post(
             self.base_url,
             headers={"Content-Type": "application/json"},
             json=payload,
@@ -133,7 +133,7 @@ class OpenAIHTTPProviderClient:
         if not api_key:
             raise ProviderConfigurationError("OPENAI_API_KEY is required for OpenAIHTTPProviderClient")
         payload = {"model": request.model, "messages": [m.to_dict() for m in request.messages], "temperature": request.temperature}
-        response = requests.post(self.base_url, headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, json=payload, timeout=self.timeout_seconds)
+        response = _http.post(self.base_url, headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, json=payload, timeout=self.timeout_seconds)
         response.raise_for_status(); body = response.json(); output = body["choices"][0]["message"]["content"]
         return ProviderResponse(provider=request.provider, model=request.model, output=output, request_hash=request.request_hash, metadata={"provider_mode":"openai_http","response_id":body.get("id","unresolved"),"finish_reason":body.get("choices",[{}])[0].get("finish_reason","unresolved"),**_usage_metadata(body,("prompt_tokens","completion_tokens","total_tokens"))})
 
@@ -153,7 +153,7 @@ class AnthropicHTTPProviderClient:
         system_messages=[m.content for m in request.messages if m.role=="system"]; conversation=[m.to_dict() for m in request.messages if m.role!="system"]
         payload:dict[str,Any]={"model":request.model,"messages":conversation,"temperature":request.temperature,"max_tokens":self.max_tokens}
         if system_messages: payload["system"]="\n".join(system_messages)
-        response=requests.post(self.base_url,headers={"x-api-key":api_key,"anthropic-version":self.anthropic_version,"Content-Type":"application/json"},json=payload,timeout=self.timeout_seconds)
+        response=_http.post(self.base_url,headers={"x-api-key":api_key,"anthropic-version":self.anthropic_version,"Content-Type":"application/json"},json=payload,timeout=self.timeout_seconds)
         response.raise_for_status(); body=response.json(); output="".join(b.get("text","") for b in body.get("content",[]) if b.get("type")=="text")
         return ProviderResponse(provider=request.provider,model=request.model,output=output,request_hash=request.request_hash,metadata={"provider_mode":"anthropic_http","response_id":body.get("id","unresolved"),"stop_reason":body.get("stop_reason","unresolved"),**_usage_metadata(body,("input_tokens","output_tokens"))})
 
@@ -186,7 +186,7 @@ class XAIHTTPProviderClient:
             "messages": [message.to_dict() for message in request.messages],
             "stream": False,
         }
-        response = requests.post(
+        response = _http.post(
             self.base_url,
             headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
             json=payload,

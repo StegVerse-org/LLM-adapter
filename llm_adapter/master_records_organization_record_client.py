@@ -16,7 +16,7 @@ import os
 from typing import Any
 from urllib.parse import urlparse
 
-import requests
+from . import _stdlib_http as _http
 
 from llm_adapter.transition_store import TransitionStore, store
 
@@ -107,7 +107,7 @@ def write_organization_record(record: dict[str, Any], *, transition_store: Trans
         return {"submitted": False, "state": "PENDING", "reason": "endpoint_not_enabled"}
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
     try:
-        response = requests.post(endpoint, json=build_organization_record_request(record), headers=headers, timeout=timeout)
+        response = _http.post(endpoint, json=build_organization_record_request(record), headers=headers, timeout=timeout)
         response.raise_for_status()
         payload = response.json()
         custody_receipt_id, master_record_ref = validate_response(record, payload)

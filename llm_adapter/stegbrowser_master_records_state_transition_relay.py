@@ -21,7 +21,7 @@ import re
 from typing import Any, Callable, Mapping
 from urllib.parse import urlparse
 
-import requests
+from . import _stdlib_http as _http
 
 SUBMISSION_SCHEMA = "stegverse.master-records.state-transition-submission/v1"
 RECEIPT_SCHEMA = "stegverse.canonical-state-transition-receipt/v1"
@@ -172,7 +172,7 @@ def _validate_response(response: Mapping[str, Any], receipt: Mapping[str, Any]) 
 def relay_stegbrowser_state_transition(
     payload: Mapping[str, Any],
     *,
-    post: Callable[..., Any] = requests.post,
+    post: Callable[..., Any] = _http.post,
 ) -> dict[str, Any]:
     receipt = _validate_submission(payload)
     endpoint, token, timeout, _allowed_hosts, _private_network = _configuration()

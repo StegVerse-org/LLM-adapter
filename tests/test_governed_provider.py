@@ -15,7 +15,7 @@ class FakeResponse:
 
     def raise_for_status(self) -> None:
         if self.status_code >= 400:
-            raise governed_provider.requests.HTTPError(f"HTTP {self.status_code}")
+            raise governed_provider._http.HTTPError(f"HTTP {self.status_code}")
 
     def json(self) -> dict:
         return self._payload
@@ -61,7 +61,7 @@ def test_provider_call_preserves_identity_and_writes_receipt(monkeypatch: pytest
             "metadata": {"transition_id": "transition-1", "run_id": "run-1"},
         })
 
-    monkeypatch.setattr(governed_provider.requests, "post", fake_post)
+    monkeypatch.setattr(governed_provider._http, "post", fake_post)
     result = governed_provider.generate(
         message="Explain current state",
         transition_id="transition-1",
@@ -106,7 +106,7 @@ def test_openai_compatible_profile_translates_request_and_response(
             "usage": {"prompt_tokens": 5, "completion_tokens": 4, "total_tokens": 9},
         })
 
-    monkeypatch.setattr(governed_provider.requests, "post", fake_post)
+    monkeypatch.setattr(governed_provider._http, "post", fake_post)
     result = governed_provider.generate(
         message="Explain current state",
         transition_id="transition-1",
@@ -129,7 +129,7 @@ def test_openai_compatible_profile_missing_choice_fails_closed(
     configure(monkeypatch, tmp_path)
     monkeypatch.setenv("STEGVERSE_PROVIDER_PROTOCOL", "openai-chat-completions-v1")
     monkeypatch.setattr(
-        governed_provider.requests,
+        governed_provider._http,
         "post",
         lambda *args, **kwargs: FakeResponse({"id": "request-without-choice", "choices": []}),
     )
@@ -152,7 +152,7 @@ def test_unsupported_protocol_fails_closed(monkeypatch: pytest.MonkeyPatch, tmp_
 def test_identity_mismatch_fails_closed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     configure(monkeypatch, tmp_path)
     monkeypatch.setattr(
-        governed_provider.requests,
+        governed_provider._http,
         "post",
         lambda *args, **kwargs: FakeResponse({
             "text": "Wrong identity response",
@@ -218,7 +218,7 @@ def test_cost_ceiling_blocks_before_transport(monkeypatch: pytest.MonkeyPatch, t
         called = True
         return FakeResponse({"text": "should not happen"})
 
-    monkeypatch.setattr(governed_provider.requests, "post", fake_post)
+    monkeypatch.setattr(governed_provider._http, "post", fake_post)
     result = governed_provider.generate(message="hello", transition_id="t", run_id="r")
     assert result.status == "COST_BLOCKED"
     assert called is False

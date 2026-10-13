@@ -11,7 +11,7 @@ import os
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional, Sequence
 
-import requests
+from . import _stdlib_http as _http
 
 from .continuity_search import ContinuitySearchResult
 from .retrieval_evidence import evidence_list_from_fixtures
@@ -60,7 +60,7 @@ class ContinuityServiceClient:
         if api_key:
             headers["Authorization"] = "Bearer {}".format(api_key)
 
-        response = requests.post(
+        response = _http.post(
             endpoint,
             headers=headers,
             json={"query": query},

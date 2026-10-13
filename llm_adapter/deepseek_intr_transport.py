@@ -11,7 +11,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
-import requests
+from . import _stdlib_http as _http
 
 from .provider_client import ProviderResponse
 from .provider_request import ProviderRequest, stable_hash, stable_json
@@ -204,7 +204,7 @@ class DeepSeekHTTPTransport:
         credential = self.credential_resolver()
         payload = deepseek_wire_payload(request)
         assert_no_deepseek_secret_material(credential, envelope=envelope.to_dict(), outbound_payload=payload)
-        response = requests.post(
+        response = _http.post(
             DEEPSEEK_CHAT_URL,
             headers={"Authorization": f"Bearer {credential}", "Content-Type": "application/json", "Accept": "application/json"},
             data=deepseek_wire_bytes(request),

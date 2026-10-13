@@ -49,7 +49,7 @@ def test_sovereign_provider_accepts_loopback_without_credential(monkeypatch):
         captured["headers"] = kwargs.get("headers") or {}
         return FakeResponse()
 
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", fake_post)
+    monkeypatch.setattr("llm_adapter.http_provider_clients._http.post", fake_post)
     request = build_provider_request(provider="stegverse-local", model="stegverse-local-model", messages=[{"role":"user","content":"Hello"}])
     response = StegVerseLocalHTTPProviderClient().complete(request)
     assert captured["url"].startswith("http://127.0.0.1:")
@@ -70,7 +70,7 @@ def test_openai_http_provider_response_is_request_bound(monkeypatch):
     class FakeResponse:
         def raise_for_status(self): return None
         def json(self): return {"id":"openai-response-id","choices":[{"message":{"content":"fixture output"},"finish_reason":"stop"}]}
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", lambda *args, **kwargs: FakeResponse())
+    monkeypatch.setattr("llm_adapter.http_provider_clients._http.post", lambda *args, **kwargs: FakeResponse())
     request = build_provider_request(provider="openai", model="test-model", messages=[{"role":"user","content":"Hello"}])
     response = OpenAIHTTPProviderClient(api_key="test-key").complete(request)
     assert response.request_hash == request.request_hash
@@ -82,7 +82,7 @@ def test_anthropic_http_provider_response_is_request_bound(monkeypatch):
     class FakeResponse:
         def raise_for_status(self): return None
         def json(self): return {"id":"anthropic-response-id","content":[{"type":"text","text":"fixture output"}],"stop_reason":"end_turn"}
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", lambda *args, **kwargs: FakeResponse())
+    monkeypatch.setattr("llm_adapter.http_provider_clients._http.post", lambda *args, **kwargs: FakeResponse())
     request = build_provider_request(provider="anthropic", model="test-model", messages=[{"role":"user","content":"Hello"}])
     response = AnthropicHTTPProviderClient(api_key="test-key").complete(request)
     assert response.request_hash == request.request_hash
@@ -127,7 +127,7 @@ def test_xai_returns_real_response_metadata_and_native_usage(monkeypatch):
     def fake_post(url, **kwargs):
         captured.update({"url": url, **kwargs})
         return FakeResponse()
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", fake_post, raising=False)
+    monkeypatch.setattr("llm_adapter.http_provider_clients._http.post", fake_post, raising=False)
     request = build_provider_request(provider="xai", model="grok-fixture", messages=[{"role": "user", "content": "Hello"}])
     response = XAIHTTPProviderClient(api_key="scoped-fixture-key").complete(request)
     assert response.request_hash == request.request_hash
@@ -147,7 +147,7 @@ def test_xai_fails_closed_on_missing_measured_usage(monkeypatch):
             "id": "fixture-xai-response", "model": "grok-fixture",
             "choices": [{"message": {"content": "unattributed"}}],
         }
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", lambda *a, **k: FakeResponse(), raising=False)
+    monkeypatch.setattr("llm_adapter.http_provider_clients._http.post", lambda *a, **k: FakeResponse(), raising=False)
     request = build_provider_request(provider="xai", model="grok-fixture", messages=[{"role": "user", "content": "Hello"}])
     with pytest.raises(ProviderConfigurationError, match="XAI_RESPONSE_INVALID"):
         XAIHTTPProviderClient(api_key="scoped-fixture-key").complete(request)
@@ -167,7 +167,7 @@ def _fake_post(body):
 
 
 def test_openai_http_provider_retains_measured_usage_and_runtime_model(monkeypatch):
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", _fake_post({
+    monkeypatch.setattr("llm_adapter.http_provider_clients._http.post", _fake_post({
         "id": "openai-response-id", "model": "gpt-runtime-fixture",
         "choices": [{"message": {"content": "fixture output"}, "finish_reason": "stop"}],
         "usage": {"prompt_tokens": 9, "completion_tokens": 3, "total_tokens": 12, "prompt_tokens_details": {"cached_tokens": 0}},
@@ -186,7 +186,7 @@ def test_openai_http_provider_marks_missing_or_malformed_usage_unmeasured(monkey
     body = {"id": "openai-response-id", "choices": [{"message": {"content": "fixture output"}, "finish_reason": "stop"}]}
     if usage is not None:
         body["usage"] = usage
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", _fake_post(body))
+    monkeypatch.setattr("llm_adapter.http_provider_clients._http.post", _fake_post(body))
     request = build_provider_request(provider="openai", model="test-model", messages=[{"role": "user", "content": "Hello"}])
     response = OpenAIHTTPProviderClient(api_key="test-key").complete(request)
     assert response.metadata["usage"] is None
@@ -195,7 +195,7 @@ def test_openai_http_provider_marks_missing_or_malformed_usage_unmeasured(monkey
 
 
 def test_anthropic_http_provider_retains_measured_usage_and_runtime_model(monkeypatch):
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", _fake_post({
+    monkeypatch.setattr("llm_adapter.http_provider_clients._http.post", _fake_post({
         "id": "anthropic-response-id", "model": "claude-runtime-fixture",
         "content": [{"type": "text", "text": "fixture output"}], "stop_reason": "end_turn",
         "usage": {"input_tokens": 11, "output_tokens": 4},
@@ -208,7 +208,7 @@ def test_anthropic_http_provider_retains_measured_usage_and_runtime_model(monkey
 
 
 def test_anthropic_http_provider_marks_missing_usage_unmeasured(monkeypatch):
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", _fake_post({
+    monkeypatch.setattr("llm_adapter.http_provider_clients._http.post", _fake_post({
         "id": "anthropic-response-id", "content": [{"type": "text", "text": "fixture output"}], "stop_reason": "end_turn",
     }))
     request = build_provider_request(provider="anthropic", model="test-model", messages=[{"role": "user", "content": "Hello"}])

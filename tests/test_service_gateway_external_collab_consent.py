@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from email.message import Message
 from types import SimpleNamespace
 
-import requests
 from fastapi.testclient import TestClient
 
 from llm_adapter import runtime_gateway
@@ -10,11 +10,10 @@ from llm_adapter import service_gateway_external_collab_consent as consent_route
 
 
 def _response(*, status_code=200, content=b"{}", headers=None):
-    return SimpleNamespace(
-        status_code=status_code,
-        content=content,
-        headers=requests.structures.CaseInsensitiveDict(headers or {"content-type": "application/json"}),
-    )
+    message = Message()
+    for key, value in (headers or {"content-type": "application/json"}).items():
+        message[key] = value
+    return SimpleNamespace(status_code=status_code, content=content, headers=message)
 
 
 def test_begin_forbids_query_without_contacting_listener(monkeypatch):
@@ -88,7 +87,7 @@ def test_callback_rejects_uncontracted_query_key(monkeypatch):
 
 def test_listener_unreachable_fails_closed(monkeypatch):
     def unavailable(*args, **kwargs):
-        raise requests.ConnectionError("loopback unavailable")
+        raise consent_routes._http.RequestException("loopback unavailable")
 
     monkeypatch.setattr(consent_routes, "_direct_loopback_get", unavailable)
     response = TestClient(runtime_gateway.app).get(
@@ -147,7 +146,7 @@ def test_direct_loopback_transport_ignores_environment_proxy(monkeypatch):
         def close(self):
             observed["closed"] = True
 
-    monkeypatch.setattr(consent_routes.requests, "Session", FakeSession)
+    monkeypatch.setattr(consent_routes._http, "Session", FakeSession)
     result = consent_routes._direct_loopback_get(
         "http://127.0.0.1:8786/tvc/external-collaboration/google-drive/consent/health"
     )
