@@ -63,8 +63,24 @@ def test_reconstruction_closes_on_spawn_and_never_waits_on_health(monkeypatch: p
 
     receipts = []
     monkeypatch.setattr(mod.urllib.request, "urlopen", refuse)
-    monkeypatch.setattr(mod.subprocess, "Popen", lambda *a, **k: Process())
-    monkeypatch.setattr(mod.subprocess, "run", lambda *a, **k: None)
+    real_popen = mod.subprocess.Popen
+
+    def spawn(args, *rest, **kwargs):
+        # Only the capability entrypoint is faked; anything else (e.g. the
+        # platform module on Windows) gets a real process.
+        if kwargs.get("cwd") == mod.ROOT and isinstance(args, list):
+            return Process()
+        return real_popen(args, *rest, **kwargs)
+
+    monkeypatch.setattr(mod.subprocess, "Popen", spawn)
+    real_load = mod.load_manifest
+
+    def load_without_preflight(path):
+        manifest = real_load(path)
+        manifest["preflight"] = []
+        return manifest
+
+    monkeypatch.setattr(mod, "load_manifest", load_without_preflight)
     monkeypatch.setattr(mod, "write_receipt", lambda manifest, payload: receipts.append(payload))
     process = mod.reconstruct_process(MANIFEST, {"STEGVERSE_DATA_DIR": str(tmp_path), "PORT": "9123",
                                                  "STEGVERSE_EXECUTION_BACKEND": "process"})
