@@ -1,5 +1,5 @@
-import pytest
 
+import unittest
 from llm_adapter.kimi_intr_transport import build_kimi_intr_envelope
 from llm_adapter.kimi_tvc_broker import (
     RUNTIME_PROFILE_ID,
@@ -83,158 +83,162 @@ def _broker(_request):
     }
 
 
-def test_builds_non_exportable_tvc_operation_without_secret_material_and_preserves_prompt():
-    req = _request()
-    operation = build_tvc_kimi_operation_request(_envelope(req), req, lease_receipt=_lease())
-    assert operation["secret_ref"] == TVC_SECRET_REF
-    assert operation["runtime_profile_id"] == RUNTIME_PROFILE_ID
-    assert operation["intr_binding"]["transition_id"] == "tx-1"
-    assert operation["operation"]["prompt"] == "What is the capital of France?"
-    assert operation["credential_material_present"] is False
-    assert operation["export_allowed"] is False
-    assert operation["return_secret_material"] is False
-    text = repr(operation).lower()
-    assert "authorization" not in text
-    assert "bearer " not in text
-    assert "api_key" not in text
+class KimiTvcRuntimeTests(unittest.TestCase):
+    def test_builds_non_exportable_tvc_operation_without_secret_material_and_preserves_prompt(self):
+        req = _request()
+        operation = build_tvc_kimi_operation_request(_envelope(req), req, lease_receipt=_lease())
+        assert operation["secret_ref"] == TVC_SECRET_REF
+        assert operation["runtime_profile_id"] == RUNTIME_PROFILE_ID
+        assert operation["intr_binding"]["transition_id"] == "tx-1"
+        assert operation["operation"]["prompt"] == "What is the capital of France?"
+        assert operation["credential_material_present"] is False
+        assert operation["export_allowed"] is False
+        assert operation["return_secret_material"] is False
+        text = repr(operation).lower()
+        assert "authorization" not in text
+        assert "bearer " not in text
+        assert "api_key" not in text
 
 
-def test_tvc_v1_rejects_unrepresentable_multi_message_or_non_user_chat():
-    invalid_requests = [
-        build_provider_request(
-            provider="kimi",
-            model="kimi-k3",
-            messages=[
-                {"role": "system", "content": "Be concise."},
-                {"role": "user", "content": "Hello"},
-            ],
-        ),
-        build_provider_request(
-            provider="kimi",
-            model="kimi-k3",
-            messages=[{"role": "system", "content": "Hello"}],
-        ),
-    ]
-    for req in invalid_requests:
+    def test_tvc_v1_rejects_unrepresentable_multi_message_or_non_user_chat(self):
+        invalid_requests = [
+            build_provider_request(
+                provider="kimi",
+                model="kimi-k3",
+                messages=[
+                    {"role": "system", "content": "Be concise."},
+                    {"role": "user", "content": "Hello"},
+                ],
+            ),
+            build_provider_request(
+                provider="kimi",
+                model="kimi-k3",
+                messages=[{"role": "system", "content": "Hello"}],
+            ),
+        ]
+        for req in invalid_requests:
+            try:
+                build_tvc_kimi_operation_request(_envelope(req), req, lease_receipt=_lease())
+                assert False, "TVC v1 must not execute a transformed chat request"
+            except KimiTVCBrokerError:
+                pass
+
+
+    def test_rejects_lease_for_wrong_provider_or_model(self):
+        req = _request()
+        wrong_provider = dict(_lease(), provider="deepseek")
         try:
-            build_tvc_kimi_operation_request(_envelope(req), req, lease_receipt=_lease())
-            assert False, "TVC v1 must not execute a transformed chat request"
+            build_tvc_kimi_operation_request(_envelope(req), req, lease_receipt=wrong_provider)
+            assert False, "wrong provider lease must fail closed"
+        except KimiTVCBrokerError:
+            pass
+        wrong_model = dict(_lease(), model="other")
+        try:
+            build_tvc_kimi_operation_request(_envelope(req), req, lease_receipt=wrong_model)
+            assert False, "wrong model lease must fail closed"
         except KimiTVCBrokerError:
             pass
 
 
-def test_rejects_lease_for_wrong_provider_or_model():
-    req = _request()
-    wrong_provider = dict(_lease(), provider="deepseek")
-    try:
-        build_tvc_kimi_operation_request(_envelope(req), req, lease_receipt=wrong_provider)
-        assert False, "wrong provider lease must fail closed"
-    except KimiTVCBrokerError:
-        pass
-    wrong_model = dict(_lease(), model="other")
-    try:
-        build_tvc_kimi_operation_request(_envelope(req), req, lease_receipt=wrong_model)
-        assert False, "wrong model lease must fail closed"
-    except KimiTVCBrokerError:
-        pass
+    def test_tvc_broker_consumes_canonical_measurement_evidence(self):
+        req = _request()
+        result = execute_kimi_via_tvc_broker(_envelope(req), req, lease_receipt=_lease(), broker_submitter=_broker)
+        assert result.response.output == "Paris"
+        assert result.response.metadata["provider_response_id"] == "kimi-response-1"
+        assert result.response.metadata["usage"]["total_tokens"] == 6
+        assert result.response.metadata["normalized_usage"]["total_tokens"] == 6
+        assert result.measurement_evidence["schema"] == TVC_MEASUREMENT_EVIDENCE_SCHEMA
+        assert result.response.metadata["credential_material_present"] is False
+        assert result.response.metadata["egress_intr_required"] is True
+        assert result.response.metadata["authority_effect"] == "NONE"
 
 
-def test_tvc_broker_consumes_canonical_measurement_evidence():
-    req = _request()
-    result = execute_kimi_via_tvc_broker(_envelope(req), req, lease_receipt=_lease(), broker_submitter=_broker)
-    assert result.response.output == "Paris"
-    assert result.response.metadata["provider_response_id"] == "kimi-response-1"
-    assert result.response.metadata["usage"]["total_tokens"] == 6
-    assert result.response.metadata["normalized_usage"]["total_tokens"] == 6
-    assert result.measurement_evidence["schema"] == TVC_MEASUREMENT_EVIDENCE_SCHEMA
-    assert result.response.metadata["credential_material_present"] is False
-    assert result.response.metadata["egress_intr_required"] is True
-    assert result.response.metadata["authority_effect"] == "NONE"
-
-
-def test_raw_result_without_canonical_measurement_evidence_fails_closed():
-    req = _request()
-    raw_only = _broker({})
-    raw_only.pop("measurement_evidence")
-    try:
-        execute_kimi_via_tvc_broker(
-            _envelope(req),
-            req,
-            lease_receipt=_lease(),
-            broker_submitter=lambda request: raw_only,
-        )
-        assert False, "raw provider result must not bypass canonical TVC normalization"
-    except KimiTVCBrokerError:
-        pass
-
-
-def test_measurement_evidence_provider_or_model_drift_fails_closed():
-    req = _request()
-    for key, value in (("provider", "deepseek"), ("model", "other")):
-        reply = _broker({})
-        reply["measurement_evidence"] = dict(reply["measurement_evidence"], **{key: value})
+    def test_raw_result_without_canonical_measurement_evidence_fails_closed(self):
+        req = _request()
+        raw_only = _broker({})
+        raw_only.pop("measurement_evidence")
         try:
             execute_kimi_via_tvc_broker(
                 _envelope(req),
                 req,
                 lease_receipt=_lease(),
-                broker_submitter=lambda request, reply=reply: reply,
+                broker_submitter=lambda request: raw_only,
             )
-            assert False, f"measurement evidence {key} drift must fail closed"
+            assert False, "raw provider result must not bypass canonical TVC normalization"
         except KimiTVCBrokerError:
             pass
 
 
-def test_governed_runtime_continues_to_master_records_and_egress_handoff():
-    req = _request()
-    execution = execute_governed_kimi_via_tvc_runtime(
-        req,
-        session_id="session-1",
-        transition_id="tx-1",
-        measurement_id="measurement-1",
-        ingress_disposition="ALLOW",
-        ingress_receipt_hash="a" * 64,
-        carrier_ref="carrier-1",
-        lease_receipt=_lease(),
-        broker_submitter=_broker,
-        usage_submitter=lambda event: {"status": "CUSTODY_RECORDED", "custody_recorded": True, "authority_granted": False, "authority_effect": "NONE", "event_sha256": event["event_sha256"]},
-    )
-    assert execution.runtime_profile_id == RUNTIME_PROFILE_ID
-    assert execution.broker.response.output == "Paris"
-    assert execution.provider_usage_event["provider"] == "kimi"
-    assert execution.provider_usage_event["metrics"]["total_tokens"]["value"] == "6"
-    assert execution.egress_handoff["requested_disposition"] == "ALLOW"
-    assert execution.egress_handoff["egress_intr_required"] is True
-    assert execution.egress_handoff["credential_material_present"] is False
-    assert execution.egress_handoff["authority_effect"] == "NONE"
+    def test_measurement_evidence_provider_or_model_drift_fails_closed(self):
+        req = _request()
+        for key, value in (("provider", "deepseek"), ("model", "other")):
+            reply = _broker({})
+            reply["measurement_evidence"] = dict(reply["measurement_evidence"], **{key: value})
+            try:
+                execute_kimi_via_tvc_broker(
+                    _envelope(req),
+                    req,
+                    lease_receipt=_lease(),
+                    broker_submitter=lambda request, reply=reply: reply,
+                )
+                assert False, f"measurement evidence {key} drift must fail closed"
+            except KimiTVCBrokerError:
+                pass
 
 
-@pytest.mark.parametrize(
-    "field,value",
-    [
-        ("result", {"id": "kimi-response-1", "choices": [{"message": {"content": "Paris"}}], "kimi_api_key": "sk-leak"}),
-        ("result", {"id": "kimi-response-1", "usage": {"total_tokens": 6, "Authorization": "Bearer sk-leak"}}),
-    ],
-)
-def test_tvc_broker_refuses_credential_material_in_result_despite_clean_receipt(field, value):
-    req = _request()
+    def test_governed_runtime_continues_to_master_records_and_egress_handoff(self):
+        req = _request()
+        execution = execute_governed_kimi_via_tvc_runtime(
+            req,
+            session_id="session-1",
+            transition_id="tx-1",
+            measurement_id="measurement-1",
+            ingress_disposition="ALLOW",
+            ingress_receipt_hash="a" * 64,
+            carrier_ref="carrier-1",
+            lease_receipt=_lease(),
+            broker_submitter=_broker,
+            usage_submitter=lambda event: {"status": "CUSTODY_RECORDED", "custody_recorded": True, "authority_granted": False, "authority_effect": "NONE", "event_sha256": event["event_sha256"]},
+        )
+        assert execution.runtime_profile_id == RUNTIME_PROFILE_ID
+        assert execution.broker.response.output == "Paris"
+        assert execution.provider_usage_event["provider"] == "kimi"
+        assert execution.provider_usage_event["metrics"]["total_tokens"]["value"] == "6"
+        assert execution.egress_handoff["requested_disposition"] == "ALLOW"
+        assert execution.egress_handoff["egress_intr_required"] is True
+        assert execution.egress_handoff["credential_material_present"] is False
+        assert execution.egress_handoff["authority_effect"] == "NONE"
 
-    def broker(_request):
-        return dict(_broker(_request), **{field: value})
 
-    with pytest.raises(KimiTVCBrokerError, match="TVC Kimi result contains credential material"):
-        execute_kimi_via_tvc_broker(_envelope(req), req, lease_receipt=_lease(), broker_submitter=broker)
+    def test_tvc_broker_refuses_credential_material_in_result_despite_clean_receipt(self):
+        for field, value in [
+            ("result", {"id": "kimi-response-1", "choices": [{"message": {"content": "Paris"}}], "kimi_api_key": "sk-leak"}),
+            ("result", {"id": "kimi-response-1", "usage": {"total_tokens": 6, "Authorization": "Bearer sk-leak"}}),
+        ]:
+            with self.subTest(field=field, value=value):
+                req = _request()
+
+                def broker(_request):
+                    return dict(_broker(_request), **{field: value})
+
+                with self.assertRaisesRegex(KimiTVCBrokerError, "TVC Kimi result contains credential material"):
+                    execute_kimi_via_tvc_broker(_envelope(req), req, lease_receipt=_lease(), broker_submitter=broker)
 
 
-@pytest.mark.parametrize("leak", [{"api_key": "sk-leak"}, {"refresh-token": "leak"}])
-def test_tvc_broker_refuses_credential_material_in_measurement_usage(leak):
-    req = _request()
+    def test_tvc_broker_refuses_credential_material_in_measurement_usage(self):
+        for leak in [{"api_key": "sk-leak"}, {"refresh-token": "leak"}]:
+            with self.subTest(leak=leak):
+                req = _request()
 
-    def broker(_request):
-        reply = _broker(_request)
-        evidence = dict(reply["measurement_evidence"])
-        evidence["provider_usage"] = dict(evidence["provider_usage"], **leak)
-        return dict(reply, measurement_evidence=evidence)
+                def broker(_request):
+                    reply = _broker(_request)
+                    evidence = dict(reply["measurement_evidence"])
+                    evidence["provider_usage"] = dict(evidence["provider_usage"], **leak)
+                    return dict(reply, measurement_evidence=evidence)
 
-    with pytest.raises(KimiTVCBrokerError, match="measurement evidence contains credential material"):
-        execute_kimi_via_tvc_broker(_envelope(req), req, lease_receipt=_lease(), broker_submitter=broker)
+                with self.assertRaisesRegex(KimiTVCBrokerError, "measurement evidence contains credential material"):
+                    execute_kimi_via_tvc_broker(_envelope(req), req, lease_receipt=_lease(), broker_submitter=broker)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -544,15 +544,15 @@ python -m unittest tests/test_distributed_executor.py
 python scripts/check_distributed_llm_executor.py
 python -m unittest tests/test_kv_memory_context_bridge.py
 python -m unittest tests/test_kv_memory_provider_request_materializer.py
-pytest tests/test_zai_intr_transport.py -q
-pytest tests/test_zai_intr_executor.py -q
-pytest tests/test_zai_tvc_runtime.py -q
-pytest tests/test_deepseek_intr_transport.py -q
-pytest tests/test_deepseek_intr_executor.py -q
-pytest tests/test_deepseek_tvc_runtime.py -q
-pytest tests/test_kimi_intr_transport.py -q
-pytest tests/test_kimi_intr_executor.py -q
-pytest tests/test_kimi_tvc_runtime.py -q
+python -m unittest tests/test_zai_intr_transport.py
+python -m unittest tests/test_zai_intr_executor.py
+python -m unittest tests/test_zai_tvc_runtime.py
+python -m unittest tests/test_deepseek_intr_transport.py
+python -m unittest tests/test_deepseek_intr_executor.py
+python -m unittest tests/test_deepseek_tvc_runtime.py
+python -m unittest tests/test_kimi_intr_transport.py
+python -m unittest tests/test_kimi_intr_executor.py
+python -m unittest tests/test_kimi_tvc_runtime.py
 pytest tests/test_anthropic_intr_transport.py -q
 pytest tests/test_external_anthropic_tvc_runtime.py -q
 pytest tests/test_external_llm_connection.py -q

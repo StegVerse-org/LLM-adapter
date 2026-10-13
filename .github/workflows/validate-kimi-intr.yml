@@ -78,16 +78,16 @@ jobs:
           "$selected" --version
 
       - name: Install validation dependencies
-        run: "$PYTHON_BIN -m pip install -e '.[dev]'"
+        run: "$PYTHON_BIN -m pip install -e ."
 
       - name: Test Kimi Interlock/InTr transport
-        run: "$PYTHON_BIN -m pytest tests/test_kimi_intr_transport.py -q"
+        run: "$PYTHON_BIN -m unittest tests/test_kimi_intr_transport.py"
 
       - name: Test governed Kimi executor and egress binding
-        run: "$PYTHON_BIN -m pytest tests/test_kimi_intr_executor.py -q"
+        run: "$PYTHON_BIN -m unittest tests/test_kimi_intr_executor.py"
 
       - name: Test Kimi runtime-profile TVC broker bridge
-        run: "$PYTHON_BIN -m pytest tests/test_kimi_tvc_runtime.py -q"
+        run: "$PYTHON_BIN -m unittest tests/test_kimi_tvc_runtime.py"
 
       - name: Validate Kimi capability, schema and runtime profile
         shell: bash
