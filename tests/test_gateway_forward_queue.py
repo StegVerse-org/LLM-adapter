@@ -56,6 +56,8 @@ def test_unreachable_evaluator_receiver_queues_instead_of_503(monkeypatch, tmp_p
     assert body["receiver_unavailable_disposition"] == "DURABLE_QUEUE"
     assert body["destination_liveness_is_transition_predicate"] is False
     assert body["external_machine_awaited"] is False
+    assert body["consequence_observation"] == "NOT_AUTHENTICALLY_OBSERVED"
+    assert body["reconciliation_entrypoint"] == "GET " + body["status_path"]
     assert body["authority_effect"] == "NONE_TRANSPORT_ONLY"
     status = TestClient(app).get(body["status_path"]).json()
     assert status["state"] == "QUEUED"

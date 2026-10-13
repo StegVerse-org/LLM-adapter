@@ -48,7 +48,7 @@ def test_start_receipt_is_local_only_and_docker_free(monkeypatch, tmp_path: Path
     data = tmp_path / "data"
     monkeypatch.setenv("STEGVERSE_SERVICE_GATEWAY_NATIVE_STATE_ROOT", str(state))
     monkeypatch.setattr(mod, "reject_hosted", lambda: None)
-    monkeypatch.setattr(mod, "local_health", lambda port, tls: {"url":"http://127.0.0.1:8000/health","status":200,"body":{"status":"ok"}})
+    monkeypatch.setattr(mod, "observe_health", lambda *a: (_ for _ in ()).throw(AssertionError("start must not wait on health")))
 
     class P:
         pid = 4242
@@ -62,7 +62,11 @@ def test_start_receipt_is_local_only_and_docker_free(monkeypatch, tmp_path: Path
         evaluator_enabled=True,
         evaluator_upstream="http://127.0.0.1:8765/intr/evaluator",
     )
-    assert receipt["state"] == "LOCAL_NATIVE_GATEWAY_READY"
+    assert receipt["state"] == "LOCAL_NATIVE_GATEWAY_STARTED"
+    assert receipt["destination_liveness_is_transition_predicate"] is False
+    assert receipt["health"]["consequence_observation"] == "NOT_AUTHENTICALLY_OBSERVED"
+    assert receipt["health"]["reconciliation_entrypoint"] == mod.RECONCILIATION_ENTRYPOINT
+    assert receipt["health"]["gates_transition"] is False
     assert receipt["runtime"] == "HOST_NATIVE_PYTHON_UVICORN"
     assert receipt["same_host_evaluator_loopback"] is True
     assert receipt["docker_required"] is False
@@ -84,7 +88,7 @@ def test_native_tls_receipt_never_serializes_key_path(monkeypatch, tmp_path: Pat
     monkeypatch.setenv("STEGVERSE_SERVICE_GATEWAY_NATIVE_STATE_ROOT", str(state))
     monkeypatch.setattr(mod, "reject_hosted", lambda: None)
     monkeypatch.setattr(mod, "validate_tls", lambda c, k: "sha256:" + "a"*64)
-    monkeypatch.setattr(mod, "local_health", lambda port, tls: {"url":"https://127.0.0.1:443/health","status":200,"body":{"status":"ok"}})
+    monkeypatch.setattr(mod, "observe_health", lambda *a: (_ for _ in ()).throw(AssertionError("start must not wait on health")))
 
     class P:
         pid = 4243
@@ -111,3 +115,25 @@ def test_source_has_no_docker_dependency() -> None:
     assert '"docker"' not in source
     assert "docker compose" not in source.lower()
     assert "uvicorn.run(" in source
+
+
+def test_health_observation_is_single_attempt_and_never_raises(monkeypatch) -> None:
+    calls = []
+
+    def refuse(*args, **kwargs):
+        calls.append(args)
+        raise mod.urllib.error.URLError(ConnectionRefusedError(111, "refused"))
+
+    monkeypatch.setattr(mod.urllib.request, "urlopen", refuse)
+    observed = mod.observe_health(8000, None)
+    assert len(calls) == 1
+    assert observed["consequence_observation"] == "NOT_AUTHENTICALLY_OBSERVED"
+    assert observed["reason"] == "native_gateway_health_not_observed:ConnectionRefusedError"
+    assert observed["reconciliation_entrypoint"] == mod.RECONCILIATION_ENTRYPOINT
+    assert observed["gates_transition"] is False
+
+
+def test_source_has_no_unverified_tls_or_health_wait_loop() -> None:
+    source = Path(mod.__file__).read_text(encoding="utf-8")
+    assert "_create_unverified_context" not in source
+    assert "native_gateway_health_failed" not in source

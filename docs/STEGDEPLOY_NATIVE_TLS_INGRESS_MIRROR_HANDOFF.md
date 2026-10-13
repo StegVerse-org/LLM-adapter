@@ -157,11 +157,13 @@ DOCKER_COMPOSE + native Uvicorn TLS
 The host-native receipt remains local-only:
 
 ```text
-state=LOCAL_NATIVE_GATEWAY_READY
+state=LOCAL_NATIVE_GATEWAY_STARTED
+destination_liveness_is_transition_predicate=false
+health.consequence_observation=NOT_AUTHENTICALLY_OBSERVED  (observed afterwards by `status`, never awaited)
 production_public_route_observed=false
 public_certificate_hostname_verified=false
 credential_authority=TV/TVC
 github_token_runtime_authority=NONE
 ```
 
-Public reachability and hostname verification remain separately observed runtime predicates.
+Public reachability and hostname verification are separate observations; none of them, nor local health, gates the start transition (Task Registry global invariants: `destination_liveness_is_transition_predicate=false`, `external_machine_awaiting_allowed=false`). `status` makes one health observation, verifying TLS against the gateway's own certificate file.

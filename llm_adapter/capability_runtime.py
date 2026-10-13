@@ -6,7 +6,6 @@ import json
 import os
 from pathlib import Path
 import subprocess
-import time
 from typing import Any
 import urllib.request
 
@@ -60,17 +59,23 @@ def _command(parts: list[str], env: dict[str, str]) -> list[str]:
     return [_expand(str(part), env) for part in parts]
 
 
-def _health(url: str, attempts: int, timeout: int) -> dict[str, Any]:
-    last_error = "unknown"
-    for _ in range(attempts):
-        try:
-            with urllib.request.urlopen(url, timeout=timeout) as response:
-                body = response.read().decode("utf-8")
-                return {"status": response.status, "body": json.loads(body)}
-        except Exception as exc:  # noqa: BLE001
-            last_error = str(exc)
-            time.sleep(1)
-    raise CapabilityError(f"capability health check failed: {last_error}")
+def _observe_health(url: str, timeout: int, reconciliation_entrypoint: str) -> dict[str, Any]:
+    """One health observation of a reconstructed capability; never a predicate.
+
+    Destination liveness is not a transition predicate and no process is awaited
+    (Task Registry global invariants): reconstruction closes on the spawned
+    process and this records what a single attempt saw.
+    """
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as response:
+            body = response.read().decode("utf-8")
+            return {"observation": "OBSERVED", "status": response.status, "body": json.loads(body),
+                    "gates_transition": False}
+    except Exception as exc:  # noqa: BLE001
+        reason = getattr(exc, "reason", exc)
+        return {"consequence_observation": "NOT_AUTHENTICALLY_OBSERVED",
+                "reason": "capability_health_not_observed:" + type(reason).__name__,
+                "reconciliation_entrypoint": reconciliation_entrypoint, "gates_transition": False}
 
 
 def write_receipt(manifest: dict[str, Any], payload: dict[str, Any]) -> Path:
@@ -101,12 +106,7 @@ def reconstruct_process(manifest_path: str | Path, overrides: dict[str, str] | N
     )
     health = manifest["health"]
     url = f"http://127.0.0.1:{env['PORT']}{health['path']}"
-    try:
-        health_result = _health(url, int(health["attempts"]), int(health["timeout_seconds"]))
-    except Exception:
-        process.terminate()
-        process.wait(timeout=10)
-        raise
+    health_result = _observe_health(url, int(health["timeout_seconds"]), f"GET {url}")
     write_receipt(
         manifest,
         {
@@ -119,6 +119,7 @@ def reconstruct_process(manifest_path: str | Path, overrides: dict[str, str] | N
             "manual_action_required": resolution.manual_action_required,
             "pid": process.pid,
             "health": health_result,
+            "destination_liveness_is_transition_predicate": False,
             "durable_root": env["STEGVERSE_DATA_DIR"],
             "ephemeral_execution": True,
             "authority_effect": manifest["authority_effect"],
