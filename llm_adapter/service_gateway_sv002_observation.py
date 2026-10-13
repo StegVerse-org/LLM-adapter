@@ -6,6 +6,7 @@ from urllib import request as urlrequest
 from urllib.parse import urlsplit
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
+from . import gateway_forward_queue
 
 router=APIRouter()
 MAX_BODY=2*1024*1024
@@ -52,7 +53,7 @@ def _forward(body:bytes,headers:dict[str,str])->tuple[int,bytes,str]:
     except urlerror.HTTPError as exc:
         return exc.code,exc.read(MAX_BODY+1),exc.headers.get_content_type()
     except Exception as exc:
-        raise HTTPException(status_code=503,detail=f"sv002_observation_runtime_unavailable:{type(exc).__name__}") from exc
+        raise gateway_forward_queue.ReceiverUnavailable(exc) from exc
 
 @router.get("/intr/sv002-observe/readiness")
 def readiness()->dict:
@@ -92,5 +93,8 @@ def readiness()->dict:
 @router.post("/intr/sv002-observe")
 async def proxy(request:Request)->Response:
     if not _enabled(): raise HTTPException(status_code=503,detail="sv002_observation_disabled")
-    body=await request.body(); headers=_validate_browser_request(request,body); status,raw,content_type=_forward(body,headers)
+    body=await request.body(); headers=_validate_browser_request(request,body)
+    try: status,raw,content_type=_forward(body,headers)
+    except gateway_forward_queue.ReceiverUnavailable as exc: return gateway_forward_queue.queued_response("sv002_observation",_upstream(),body,headers,exc)
+    gateway_forward_queue.drain_after_live_event("sv002_observation")
     return Response(content=raw,status_code=status,media_type=content_type or "application/json",headers={"Cache-Control":"no-store"})

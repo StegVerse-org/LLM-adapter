@@ -18,7 +18,7 @@ from urllib.parse import urlsplit, urlunsplit
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 
-from . import collab_ingress
+from . import collab_ingress, gateway_forward_queue
 
 router = APIRouter()
 HIL_INTR_SURFACE = "service-gateway-hil-intr-materialization"
@@ -184,7 +184,7 @@ def _forward_to(target: str, body: bytes, headers: dict[str, str], *, response_l
         raw = exc.read(response_limit + 1)
         return exc.code, raw, exc.headers.get_content_type()
     except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"universal_intr_runtime_unavailable:{type(exc).__name__}") from exc
+        raise gateway_forward_queue.ReceiverUnavailable(exc) from exc
 
 
 def _hil_materialization_disposition(body: bytes, headers: dict[str, str]) -> dict:
@@ -291,7 +291,12 @@ async def control_plane_source_package_proxy(request: Request) -> Response:
         raise HTTPException(status_code=503, detail="control_plane_source_package_path_unavailable")
     body = await request.body()
     headers = _validate_request(request, body, max_body=SOURCE_PACKAGE_MAX_BODY, relay_only=True)
-    status, raw, content_type = _forward_to(_source_package_upstream(), body, headers)
+    target = _source_package_upstream()
+    try:
+        status, raw, content_type = _forward_to(target, body, headers)
+    except gateway_forward_queue.ReceiverUnavailable as exc:
+        return gateway_forward_queue.queued_response("intr_source_package", target, body, headers, exc)
+    gateway_forward_queue.drain_after_live_event("intr_source_package")
     return Response(content=raw, status_code=status, media_type=content_type or "application/json", headers={"Cache-Control": "no-store"})
 
 
@@ -306,5 +311,10 @@ async def device_kv_result_proxy(request: Request) -> Response:
     _require_profile_capability(profile, "KV:KnowledgeVaultInterlock")
     body = await request.body()
     headers = _validate_request(request, body)
-    status, raw, content_type = _forward_to(_device_kv_result_upstream(), body, headers)
+    target = _device_kv_result_upstream()
+    try:
+        status, raw, content_type = _forward_to(target, body, headers)
+    except gateway_forward_queue.ReceiverUnavailable as exc:
+        return gateway_forward_queue.queued_response("intr_device_kv_result", target, body, headers, exc)
+    gateway_forward_queue.drain_after_live_event("intr_device_kv_result")
     return Response(content=raw, status_code=status, media_type=content_type or "application/json", headers={"Cache-Control": "no-store"})

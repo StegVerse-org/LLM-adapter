@@ -10,6 +10,8 @@ from fastapi import Request
 from fastapi.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from . import gateway_forward_queue
+
 ENABLED_ENV = "STEGVERSE_HIL_RECEIVER_PROXY_ENABLED"
 UPSTREAM_ENV = "STEGVERSE_HIL_RECEIVER_UPSTREAM"
 MAX_REQUEST_BYTES = 16 * 1024 * 1024
@@ -88,11 +90,27 @@ class HILMachineReceiverProxyMiddleware(BaseHTTPMiddleware):
             if name in request.headers
         }
         try:
+            target = target_url(path, request.url.query)
             status, raw, content_type, upstream_headers = _forward(
                 request.method,
-                target_url(path, request.url.query),
+                target,
                 body,
                 headers,
+            )
+        except (urlerror.URLError, OSError) as exc:
+            if request.method == "POST":
+                # A POST is an action: queue the exact bytes rather than refuse on
+                # receiver liveness. A GET is a read with nothing to queue.
+                return gateway_forward_queue.queued_response(
+                    "hil_receiver", target, body, headers, gateway_forward_queue.ReceiverUnavailable(exc))
+            return Response(
+                content=(
+                    '{"detail":"hil_machine_receiver_unavailable","error_class":"'
+                    + type(exc).__name__ + '"}'
+                ).encode("utf-8"),
+                status_code=503,
+                media_type="application/json",
+                headers={"Cache-Control":"no-store"},
             )
         except Exception as exc:
             return Response(
@@ -104,6 +122,8 @@ class HILMachineReceiverProxyMiddleware(BaseHTTPMiddleware):
                 media_type="application/json",
                 headers={"Cache-Control":"no-store"},
             )
+        if request.method == "POST":
+            gateway_forward_queue.drain_after_live_event("hil_receiver")
         response_headers = {
             name: upstream_headers[name]
             for name in FORWARDED_RESPONSE_HEADERS

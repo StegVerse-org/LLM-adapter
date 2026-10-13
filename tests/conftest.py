@@ -32,6 +32,22 @@ def repository_ledger_root():
                 os.environ[LEDGER_ROOT] = previous
 
 
+@pytest.fixture(scope="session", autouse=True)
+def gateway_forward_queue_db():
+    """Keep queued gateway forwards out of a deployed node's queue database."""
+    with tempfile.TemporaryDirectory(prefix="llm-adapter-test-forward-queue-") as root:
+        name = "STEGVERSE_GATEWAY_FORWARD_DB"
+        previous = os.environ.get(name)
+        os.environ[name] = os.path.join(root, "gateway-forward.db")
+        try:
+            yield os.environ[name]
+        finally:
+            if previous is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = previous
+
+
 @pytest.fixture
 def organization_admits_manifests(monkeypatch):
     """Stand in for an organization that admitted the manifest and recorded it.
