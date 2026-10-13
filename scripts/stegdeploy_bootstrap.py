@@ -66,17 +66,29 @@ def _compose(*args: str, tls: bool = False, env: dict[str, str] | None = None) -
     return _run(*command, env=env)
 
 
-def _health(url: str, attempts: int = 30, *, local_tls_probe: bool = False) -> dict[str, object]:
-    last_error = "unknown"
-    context = ssl._create_unverified_context() if local_tls_probe else None
-    for _ in range(attempts):
-        try:
-            with urllib.request.urlopen(url, timeout=3, context=context) as response:
-                return {"status": response.status, "body": json.loads(response.read().decode("utf-8"))}
-        except Exception as exc:
-            last_error = str(exc)
-            time.sleep(2)
-    raise RuntimeError(f"health check failed: {last_error}")
+def _observe_health(url: str, *, cert_file: Path | None = None) -> dict[str, object]:
+    """One health observation of the deployed gateway; never a predicate, never awaited.
+
+    The deploy transition closes when the containers are up. Destination liveness
+    is not a transition predicate and no machine is awaited (Task Registry global
+    invariants), so this makes a single attempt and records what it saw. For TLS
+    the deploy's own certificate file is the only trust anchor (loopback, so no
+    hostname check).
+    """
+    context = None
+    if cert_file is not None:
+        context = ssl.create_default_context(cafile=str(cert_file))
+        context.check_hostname = False
+        context.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN
+    try:
+        with urllib.request.urlopen(url, timeout=3, context=context) as response:
+            return {"observation": "OBSERVED", "status": response.status,
+                    "body": json.loads(response.read().decode("utf-8")), "gates_transition": False}
+    except Exception as exc:
+        reason = getattr(exc, "reason", exc)
+        return {"consequence_observation": "NOT_AUTHENTICALLY_OBSERVED",
+                "reason": "stegdeploy_health_not_observed:" + type(reason).__name__,
+                "reconciliation_entrypoint": f"GET {url}", "gates_transition": False}
 
 
 def _write_receipt(receipt: dict[str, object]) -> None:
@@ -408,7 +420,7 @@ def deploy(url: str) -> None:
     _prepare_env_file()
     _compose("build")
     _compose("up", "--detach", "--remove-orphans")
-    health = _health(url)
+    health = _observe_health(url)
     resident_bootstrap = _activate_resident_control_plane()
     receipt: dict[str, object] = {
         "schema": "stegdeploy.deployment-receipt.v2",
@@ -419,6 +431,7 @@ def deploy(url: str) -> None:
         "registry_pull_required": False,
         "health_url": url,
         "health": health,
+        "destination_liveness_is_transition_predicate": False,
         "durable_storage": True,
         "render_dependency": False,
         "manual_build_required": False,
@@ -451,7 +464,7 @@ def deploy_tls(*, cert_file: Path, key_file: Path, bind_address: str, port: int)
     _compose("build", tls=True, env=compose_env)
     _compose("up", "--detach", "--remove-orphans", tls=True, env=compose_env)
     local_health_url = f"https://127.0.0.1:{port}/health"
-    health = _health(local_health_url, local_tls_probe=True)
+    health = _observe_health(local_health_url, cert_file=cert_file.expanduser().resolve())
     resident_bootstrap = _activate_resident_control_plane()
 
     receipt: dict[str, object] = {
@@ -463,6 +476,7 @@ def deploy_tls(*, cert_file: Path, key_file: Path, bind_address: str, port: int)
         "registry_pull_required": False,
         "health_url": local_health_url,
         "health": health,
+        "destination_liveness_is_transition_predicate": False,
         "durable_storage": True,
         "render_dependency": False,
         "cloudflare_dependency": False,
@@ -482,7 +496,7 @@ def deploy_tls(*, cert_file: Path, key_file: Path, bind_address: str, port: int)
         "tls_compose_delivery": "DOCKER_COMPOSE_SECRETS",
         "bind_address": bind_address,
         "public_port": port,
-        "local_tls_transport_observed": True,
+        "local_tls_transport_observed": health.get("observation") == "OBSERVED",
         "public_certificate_hostname_verified": False,
         "production_public_route_observed": False,
         "resident_control_plane_bootstrap": resident_bootstrap,

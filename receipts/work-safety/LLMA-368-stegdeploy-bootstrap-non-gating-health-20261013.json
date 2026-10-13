@@ -1,0 +1,56 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368-STEGDEPLOY-BOOTSTRAP-NON-GATING-HEALTH",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/STEGDEPLOY_NATIVE_TLS_INGRESS_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+    "StegVerse-Labs/.github:data/task-registry-global-invariants.json",
+    "StegVerse-Labs/.github:docs/ECOSYSTEM_STATE_TRANSITION_DISPOSITION_INVARIANT.md"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Local deploy health observation only; no Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/400",
+      "StegVerse-Labs/.github:scripts/activate_resident_stack.py"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "scripts/stegdeploy_bootstrap.py",
+      "scripts/stegdeploy_native_gateway.py",
+      "StegVerse-Labs/.github:scripts/activate_resident_stack.py"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches scripts/stegdeploy_bootstrap.py."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "README already states the start/reconstruct rule (#400); the Docker bootstrap now follows it with the same receipt fields.",
+    "evidence_refs": [
+      "README.md#service-gateway-durable-forward-queue"
+    ]
+  },
+  "covered_paths": [
+    "scripts/stegdeploy_bootstrap.py",
+    "tests/test_stegdeploy_native_tls.py"
+  ],
+  "new_files": []
+}
