@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Native sovereign Service Gateway launcher.
 
-This is the host-native primary topology for deployment-local StegVerse runtime
-composition. Docker Compose remains a compatibility/fallback method.
+This is the host-native topology for deployment-local StegVerse runtime
+composition; it needs no container framework.
 
-The launcher never turns local process start or local TLS health into a public
-route claim. TV/TVC retains credential authority.
+The start transition closes on the spawned process; health is observed
+afterwards (`status`) and never awaited. The launcher never turns local process
+start or local TLS health into a public route claim. TV/TVC retains credential
+authority.
 """
 from __future__ import annotations
 
@@ -19,6 +21,7 @@ import ssl
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -126,18 +129,32 @@ def child_env(
     return values
 
 
-def local_health(port: int, tls: bool) -> dict:
-    url = ("https" if tls else "http") + f"://127.0.0.1:{port}/health"
-    context = ssl._create_unverified_context() if tls else None
-    last = "not_attempted"
-    for _ in range(30):
-        try:
-            with urllib.request.urlopen(url, timeout=3, context=context) as response:
-                return {"url": url, "status": response.status, "body": json.loads(response.read().decode("utf-8"))}
-        except Exception as exc:
-            last = str(exc)
-            time.sleep(1)
-    raise RuntimeError("native_gateway_health_failed:" + last)
+RECONCILIATION_ENTRYPOINT = "python scripts/stegdeploy_native_gateway.py status"
+
+
+def observe_health(port: int, tls_cert: Path | None) -> dict:
+    """One health observation of the local gateway. Never a predicate, never awaited.
+
+    Destination liveness is not a transition predicate and no machine is awaited
+    (Task Registry global invariants), so this makes a single attempt and
+    reports what it saw. TLS is verified against the gateway's own certificate
+    file as the only trust anchor (loopback, so no hostname check).
+    """
+    url = ("https" if tls_cert else "http") + f"://127.0.0.1:{port}/health"
+    context = None
+    if tls_cert:
+        context = ssl.create_default_context(cafile=str(tls_cert))
+        context.check_hostname = False
+        context.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN
+    try:
+        with urllib.request.urlopen(url, timeout=3, context=context) as response:
+            return {"url": url, "observation": "OBSERVED", "status": response.status,
+                    "body": json.loads(response.read().decode("utf-8")), "gates_transition": False}
+    except Exception as exc:
+        reason = getattr(exc, "reason", exc)
+        return {"url": url, "consequence_observation": "NOT_AUTHENTICALLY_OBSERVED",
+                "reason": "native_gateway_health_not_observed:" + type(reason).__name__,
+                "reconciliation_entrypoint": RECONCILIATION_ENTRYPOINT, "gates_transition": False}
 
 
 def write_receipt(path: Path, value: dict) -> None:
@@ -210,22 +227,22 @@ def start(
         close_fds=True,
     )
     pid_file.write_text(str(process.pid) + "\n", encoding="utf-8")
-    try:
-        health = local_health(port, bool(tls_cert))
-    except Exception:
-        try:
-            os.kill(process.pid, signal.SIGTERM)
-        except OSError:
-            pass
-        raise
+    # The start transition closes on the spawned process. Health is observed
+    # afterwards through `status`; the deploy never waits on it.
     receipt = {
         "schema": "stegdeploy.native-sovereign-gateway-receipt/v1",
-        "state": "LOCAL_NATIVE_GATEWAY_READY",
+        "state": "LOCAL_NATIVE_GATEWAY_STARTED",
         "runtime": "HOST_NATIVE_PYTHON_UVICORN",
         "process_id": process.pid,
         "host": host,
         "port": port,
-        "health": health,
+        "health": {
+            "consequence_observation": "NOT_AUTHENTICALLY_OBSERVED",
+            "reason": "health_is_observed_after_start_not_awaited",
+            "reconciliation_entrypoint": RECONCILIATION_ENTRYPOINT,
+            "gates_transition": False,
+        },
+        "destination_liveness_is_transition_predicate": False,
         "durable_storage": True,
         "durable_root": str(durable_root),
         "resident_rendezvous_enabled": True,
@@ -239,6 +256,7 @@ def start(
         "same_host_evaluator_loopback": evaluator_enabled and evaluator_upstream.startswith("http://127.0.0.1:"),
         "tls_enabled": bool(tls_cert),
         "tls_certificate_sha256": fingerprint,
+        "tls_certificate_file": str(tls_cert) if tls_cert else None,
         "tls_private_key_material_recorded": False,
         "tls_private_key_path_recorded": False,
         "credential_authority": "TV/TVC",
@@ -277,7 +295,11 @@ def status() -> dict:
         receipt = json.loads(receipt_file.read_text(encoding="utf-8"))
     except Exception:
         pass
-    return {"state":"RUNNING" if pid else "STOPPED","pid":pid,"log_ref":str(log_file),"receipt":receipt}
+    health = None
+    if pid and isinstance(receipt, dict) and isinstance(receipt.get("port"), int):
+        cert = receipt.get("tls_certificate_file")
+        health = observe_health(receipt["port"], Path(cert) if cert else None)
+    return {"state":"RUNNING" if pid else "STOPPED","pid":pid,"log_ref":str(log_file),"receipt":receipt,"health":health}
 
 
 def serve(host: str, port: int) -> None:
