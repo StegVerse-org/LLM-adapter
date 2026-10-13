@@ -198,9 +198,9 @@ def ecosystem_chat(payload: EcosystemChatRequest, request: Request) -> JSONRespo
     evaluated: neither may select processing. This gateway generates no
     response, calls no provider, decides no admissibility, and writes no
     transition or Master Records record; the receiving organization does the
-    processing once the manifest is admitted. Without the canonical
-    organization boundary the disposition is FAIL_CLOSED
-    CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED.
+    processing once the manifest is admitted. Until an organization transition
+    receipt is admitted the disposition is FAIL_CLOSED
+    SDK_RUNTIME_RESULT_NOT_ADMISSIBLE (organization_transition_receipt_not_observed).
     """
     client_key = request.client.host if request.client else payload.session_id
     allowed, retry_after = limiter.allow(f"{client_key}:{payload.session_id}")

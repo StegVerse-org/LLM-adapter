@@ -73,7 +73,7 @@ def test_local_node_vertical_slice(monkeypatch) -> None:
     assert response.status_code == 503, response.text
     result = response.json()
     assert result["disposition"] == "FAIL_CLOSED"
-    assert result["failure_code"] == "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED"
+    assert result["failure_code"] == "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE"
     assert result["route_id"] == "stegverse.route.ecosystem-chat.v1"
     assert result["transition_id"] == transition["transition_id"]
     assert result["run_id"] == transition["run_id"]

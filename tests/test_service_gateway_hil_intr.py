@@ -143,7 +143,7 @@ def test_node_trigger_returns_sdk_disposition_without_upstream_wait(monkeypatch)
     assert response.status_code == 503
     payload = response.json()
     assert payload["disposition"] == "FAIL_CLOSED"
-    assert payload["failure_code"] == "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED"
+    assert payload["failure_code"] == "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE"
     assert payload["route_id"] == "stegverse.route.hil-intake.v1"
     assert payload["canonical_entrypoint"] == "stegverse.manifest_execution.execute_manifest"
     assert payload["network_call_performed_by_adapter"] is False

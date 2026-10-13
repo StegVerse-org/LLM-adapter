@@ -88,7 +88,7 @@ def test_refused_without_an_admitted_manifest() -> None:
     assert response.status_code == 503
     body = response.json()
     assert body["disposition"] == "FAIL_CLOSED"
-    assert body["failure_code"] == "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED"
+    assert body["failure_code"] == "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE"
     for key in ("failed_predicate", "required_evidence_or_repair", "retry_entrypoint",
                 "next_attempt", "owning_existing_goal"):
         assert body[key], key

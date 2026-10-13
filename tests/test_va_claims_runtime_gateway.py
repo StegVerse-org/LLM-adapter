@@ -74,7 +74,7 @@ class VAClaimsManifestBindingTests(_Isolated):
     def test_refused_without_an_admitted_manifest(self):
         result = execute_chat(ChatRequest(message="How do I get a VA home loan?", session_id="session-1"))
         self.assertEqual(result["disposition"], "FAIL_CLOSED")
-        self.assertEqual(result["failure_code"], "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED")
+        self.assertEqual(result["failure_code"], "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE")
         for key in SIX:
             self.assertTrue(result[key], key)
         self.assertEqual(result["route_id"], VA_ROUTE)
@@ -166,7 +166,7 @@ class VAClaimsManifestBindingTests(_Isolated):
             chat(ChatRequest(message="How do I get a VA home loan?"))
         self.assertEqual(refused.exception.status_code, 503)
         self.assertEqual(refused.exception.detail["failure_code"],
-                         "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED")
+                         "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE")
 
     def test_fails_closed_for_unadmitted_source_policy(self):
         with self.assertRaisesRegex(RuntimeError, "source_policy_not_admitted"):

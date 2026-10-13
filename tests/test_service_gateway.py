@@ -102,7 +102,7 @@ def test_without_canonical_boundary_the_sdk_disposition_is_returned_and_nothing_
     assert response.status_code == 503
     body = response.json()
     assert body["disposition"] == "FAIL_CLOSED"
-    assert body["failure_code"] == "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED"
+    assert body["failure_code"] == "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE"
     assert body["route_id"] == HIL_ROUTE
     assert body["handed_off"] is True
     assert body["canonical_entrypoint"] == "stegverse.manifest_execution.execute_manifest"
