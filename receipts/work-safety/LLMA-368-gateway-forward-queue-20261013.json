@@ -1,0 +1,78 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368-GATEWAY-FORWARD-QUEUE",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/EVALUATOR_INTR_SERVICE_GATEWAY_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/HIL_INTR_SERVICE_GATEWAY_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/HIL_TRIGGERED_EPHEMERAL_RUNTIME_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+    "StegVerse-Labs/.github:data/task-registry-global-invariants.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Transport-only gateway forwards; no Organization append, Master Records transition or custody record is created or changed. The existing custody worker is untouched."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/398"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "llm_adapter/transition_store.py",
+      "llm_adapter/custody_worker.py",
+      "llm_adapter/collab_ingress.py",
+      "llm_adapter/service_gateway_hil_intr.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches the Service Gateway forward modules."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md#service-gateway-durable-forward-queue"
+    ]
+  },
+  "covered_paths": [
+    "README.md",
+    "llm_adapter/gateway_forward_queue.py",
+    "llm_adapter/deployed_gateway.py",
+    "llm_adapter/service_gateway_evaluator_intr.py",
+    "llm_adapter/service_gateway_hil_intr.py",
+    "llm_adapter/service_gateway_hil_receiver_proxy.py",
+    "llm_adapter/service_gateway_sv002_observation.py",
+    "scripts/container-entrypoint.sh",
+    "tests/conftest.py",
+    "tests/test_gateway_forward_queue.py"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/gateway_forward_queue.py",
+      "semantic_responsibility": "Durable queue for transport-only gateway POST forwards whose same-host receiver is unreachable; drained at startup and on the next live event.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "llm_adapter/transition_store.py custody_queue drained by llm_adapter/custody_worker.py (custody-record specific; not a transport forward queue)"
+    },
+    {
+      "path": "tests/test_gateway_forward_queue.py",
+      "semantic_responsibility": "Tests that unreachable receivers queue rather than 503 and that drains deliver exact bytes.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "tests/test_service_gateway_evaluator_intr.py, tests/test_custody_worker_startup_limit.py"
+    }
+  ]
+}

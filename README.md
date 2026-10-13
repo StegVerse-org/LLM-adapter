@@ -589,6 +589,11 @@ tasks/LLMA-SERVICE-GATEWAY-QUERY-SECRET-SAFE-271.json
 ```
 
 
+## Service Gateway durable forward queue
+
+The transport-only Service Gateway POST forwards (`/intr/evaluator`, `/intr/sv002-observe`, `/intr/source-package`, `/intr/device-kv/result` and the HIL receiver projection POST under `/api/hil`) never refuse on receiver liveness. Per the Task Registry global invariants (`destination_liveness_is_transition_predicate=false`, `external_machine_awaiting_allowed=false`, `receiver_unavailable_disposition=DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION`), an unreachable same-host receiver is answered `202` `stegverse.gateway-forward-queued/v1` `QUEUED` with a `forward_id`, and the exact admitted bytes are held in `llm_adapter/gateway_forward_queue.py` (stdlib `sqlite3`, `STEGVERSE_GATEWAY_FORWARD_DB`). The queue drains at service startup (`python -m llm_adapter.gateway_forward_queue`, beside the custody worker) and on the next event that reaches a live receiver of the same gateway. `GET /intr/forward-queue/{forward_id}` returns the state and, once delivered, the receiver's answer. GET reads have nothing to queue and are unchanged. The queue carries no authority and mints no receipt.
+
+
 ## StegBrowser canonical Master Records relay
 
 The existing Service Gateway can advertise a bounded, credential-nonexporting transport for the immutable StegBrowser runtime-readiness state-transition receipt after the organization holds it; Master Records is the downstream recorder of that released receipt, not its custodian. Site discovers the route through the existing hash/health-bound StegVerse node advertisement instead of assuming a fixed host. The browser submits only `stegverse.master-records.state-transition-submission/v1`; the gateway uses the existing TV/TVC-scoped `service_gateway_master_records` server-side credential path to hand a copy of that already-closed receipt downstream to Master Records through the `master-records/orchestration` state-transition route.
