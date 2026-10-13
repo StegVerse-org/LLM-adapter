@@ -8,9 +8,9 @@ the SDK's `stegverse.va-scoped-chat-request/v1` with this deployment's VA scope
 policy declared in the manifest (`policy_id`, `va_ref`, `allowed_topics`), built
 with the SDK builder and handed to `stegverse.manifest_execution.execute_manifest`
 through `sdk_boundary`. The SDK evaluates the scope: a topic outside
-`allowed_topics` is a governed DENY before any handoff. Otherwise, until the
-canonical organization boundary resolves, the disposition is FAIL_CLOSED
-`CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED`.
+`allowed_topics` is a governed DENY before any handoff. Otherwise the manifest
+is handed off and, until an organization transition receipt is admitted, the
+disposition is FAIL_CLOSED `SDK_RUNTIME_RESULT_NOT_ADMISSIBLE`.
 
 The keyword classifier only populates the draft's `requested_topic`. No local
 answer is generated, no local model is called, no TVC route receipt file or

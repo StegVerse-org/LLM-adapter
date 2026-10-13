@@ -306,9 +306,9 @@ def _no_network_boundary_source(binding: Any) -> Mapping[str, Any]:
     The SDK fixes the boundary's identity (repository, path and ref) in the
     route binding; neither the caller nor the environment can name another.
     This adapter opens no connection and carries no credential, so it has no
-    copy to serve. Refusing here is what makes the SDK return its own
-    FAIL_CLOSED `CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED`
-    rather than any endpoint being substituted.
+    copy to serve. Refusing here means no endpoint is ever substituted: the SDK
+    resolves the boundary only from its own canonical connector capability
+    overlay, or fails closed.
     """
     from stegverse.github_repository_fetcher import GitHubRepositoryFetcherError
 
@@ -325,9 +325,9 @@ def installed_runtime(transfer: Mapping[str, Any]) -> dict[str, Any]:
     manifest itself and, for the state-transition runtime, the organization
     boundary from the source the route binding fixes. Only the wire manifest is
     passed: nothing in the transfer or the request selects the runtime, the
-    route or the boundary. Without a resolvable boundary the SDK returns
-    FAIL_CLOSED `CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED` with its
-    predicate, repair and evidence; that disposition is carried, not replaced.
+    route or the boundary. The SDK hands the manifest off and returns FAIL_CLOSED
+    `SDK_RUNTIME_RESULT_NOT_ADMISSIBLE` until an organization transition receipt
+    is admitted; that disposition is carried, not replaced.
     """
     from stegverse.manifest_execution import execute_manifest
 

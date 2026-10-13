@@ -11,9 +11,11 @@ manifest with the SDK builder, and hands that manifest to
 route the manifest declares is the only thing that selects processing: a
 caller's route field, a keyword hint or this adapter cannot.
 
-What comes back is the SDK's disposition, carried rather than replaced. Until
-the canonical organization boundary resolves, that disposition is FAIL_CLOSED
-`CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED`, and that is the correct
+What comes back is the SDK's disposition, carried rather than replaced. The SDK
+resolves the organization boundary from its canonical connector capability
+overlay and hands the manifest off; until an organization transition receipt
+is admitted the disposition is FAIL_CLOSED `SDK_RUNTIME_RESULT_NOT_ADMISSIBLE`
+(`organization_transition_receipt_not_observed`), and that is the correct
 answer: this module never manufactures an ALLOW. A VA-scoped request outside
 its manifest-declared scope is refused by the SDK as DENY before any handoff.
 
@@ -55,6 +57,11 @@ ROUTES: Mapping[str, Mapping[str, str]] = {
 }
 
 CANONICAL_BOUNDARY_NOT_RESOLVED = "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED"
+#: The SDK resolves the organization boundary from its canonical connector
+#: capability overlay and hands the manifest off; the disposition stays
+#: FAIL_CLOSED until an organization transition receipt is admitted.
+ORGANIZATION_RECEIPT_NOT_OBSERVED = "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE"
+ORGANIZATION_RECEIPT_NOT_OBSERVED_PREDICATE = "organization_transition_receipt_not_observed"
 TVC_CREDENTIAL_SOURCE_NOT_BOUND = "TVC_CREDENTIAL_SOURCE_NOT_BOUND"
 MANIFEST_NOT_ADMITTED = "COLLAB_INGRESS_MANIFEST_NOT_ADMITTED"
 
@@ -201,7 +208,9 @@ def http_status(body: Mapping[str, Any]) -> int:
 __all__ = [
     "OWNER_TASK_ID", "OWNING_EXISTING_GOAL", "DISPOSITION_SCHEMA", "ROUTES",
     "HIL_INTAKE", "ECOSYSTEM_CHAT", "VA_SCOPED_CHAT",
-    "CANONICAL_BOUNDARY_NOT_RESOLVED", "TVC_CREDENTIAL_SOURCE_NOT_BOUND", "MANIFEST_NOT_ADMITTED",
+    "CANONICAL_BOUNDARY_NOT_RESOLVED", "ORGANIZATION_RECEIPT_NOT_OBSERVED",
+    "ORGANIZATION_RECEIPT_NOT_OBSERVED_PREDICATE",
+    "TVC_CREDENTIAL_SOURCE_NOT_BOUND", "MANIFEST_NOT_ADMITTED",
     "ManifestNotAdmitted", "build", "submit", "execute", "refused", "credential_not_bound",
     "surface_standing", "http_status", "digest",
 ]

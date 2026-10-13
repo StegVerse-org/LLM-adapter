@@ -68,25 +68,23 @@ class CanonicalManifestExecutionTests(unittest.TestCase):
         self.assertIn("from stegverse.manifest_execution import execute_manifest", source)
         self.assertNotIn("manifest_state_transition_runtime import", source)
 
-    def test_no_boundary_fails_closed_with_evidence(self):
+    def test_handoff_fails_closed_until_an_organization_receipt_is_admitted(self):
+        # The SDK resolves the organization boundary from its canonical
+        # connector capability overlay (no network read by this adapter) and
+        # hands the manifest off. Without an admitted organization transition
+        # receipt the result is FAIL_CLOSED, never ALLOW.
         body = sdk_boundary.submit(submit_payload(self.manifest))
         self.assertEqual(body["disposition"], "FAIL_CLOSED")
-        self.assertEqual(body["failure_code"],
-                         "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED")
-        self.assertEqual(body["failed_predicate"],
-                         "REGISTERED_CAPABILITY_RESOLVES_TO_CANONICAL_ORGANIZATION_GITHUB_INGRESS_ENDPOINT")
+        self.assertIs(body["handed_off"], True)
+        self.assertEqual(body["failure_code"], "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE")
+        self.assertEqual(body["failed_predicate"], "organization_transition_receipt_not_observed")
         for key in ("required_evidence_or_repair", "retry_entrypoint", "next_attempt",
                     "owning_existing_goal"):
             self.assertTrue(body[key], key)
-        evidence = body["envelope"]["far_side_disposition"]
-        self.assertIn("LLM-adapter performs no network read",
-                      evidence["canonical_organization_boundary_unavailable"])
-        self.assertEqual(evidence["evaluation_boundary"],
-                         "SDK_ORGANIZATION_DESTINATION_RESOLUTION")
-        for key in ("canonical_manifest_sha256", "wire_manifest_sha256", "request_sha256",
-                    "diagnostic_sha256"):
-            self.assertTrue(evidence[key], key)
-        self.assertIs(body["envelope"]["consequence_executed"], False)
+        envelope = body["envelope"]
+        self.assertIs(envelope["consequence_executed"], False)
+        self.assertIs(envelope["adapter_is_governance_authority"], False)
+        self.assertEqual(envelope["governance_state"], "FAIL_CLOSED")
         self.assertNotEqual(body["disposition"], "ALLOW")
 
     def test_caller_cannot_select_the_runtime_or_boundary(self):
@@ -108,8 +106,7 @@ class CanonicalManifestExecutionTests(unittest.TestCase):
         }
         with mock.patch.object(canonical, "execute_manifest", spy):
             body = sdk_boundary.submit(submit_payload(self.manifest, **chosen))
-        self.assertEqual(body["failure_code"],
-                         "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED")
+        self.assertEqual(body["failure_code"], "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE")
         manifest, kwargs = seen[0]
         self.assertEqual(set(kwargs), {"canonical_source_fetcher"})
         self.assertIs(kwargs["canonical_source_fetcher"],
@@ -124,8 +121,7 @@ class CanonicalManifestExecutionTests(unittest.TestCase):
                    "STEGVERSE_ORGANIZATION_BOUNDARY": '{"ingress_endpoint": "https://env.example"}'}
         with mock.patch.dict(os.environ, planted):
             body = sdk_boundary.submit(submit_payload(self.manifest))
-        self.assertEqual(body["failure_code"],
-                         "CANONICAL_ORGANIZATION_INGRESS_ENDPOINT_NOT_RESOLVED")
+        self.assertEqual(body["failure_code"], "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE")
         self.assertNotIn("env.example", repr(body))
         self.assertNotIn("planted", repr(body))
         for function in (sdk_boundary.installed_runtime,

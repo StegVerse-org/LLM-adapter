@@ -88,9 +88,8 @@ def test_refused_without_an_admitted_manifest_and_nothing_persists(environment):
     assert response.status_code == 503
     body = response.json()
     assert body["disposition"] == "FAIL_CLOSED"
-    assert body["failure_code"] == collab_ingress.CANONICAL_BOUNDARY_NOT_RESOLVED
-    assert body["failed_predicate"] == (
-        "REGISTERED_CAPABILITY_RESOLVES_TO_CANONICAL_ORGANIZATION_GITHUB_INGRESS_ENDPOINT")
+    assert body["failure_code"] == collab_ingress.ORGANIZATION_RECEIPT_NOT_OBSERVED
+    assert body["failed_predicate"] == collab_ingress.ORGANIZATION_RECEIPT_NOT_OBSERVED_PREDICATE
     for key in ("required_evidence_or_repair", "retry_entrypoint", "next_attempt", "owning_existing_goal"):
         assert body[key], key
     assert body["route_id"] == HIL_ROUTE
