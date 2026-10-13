@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Mapping
 from urllib.parse import parse_qsl
 
-import requests
+from . import _stdlib_http as _http
 from fastapi import HTTPException, Request, Response
 
 from llm_adapter.math_solver_gateway import app
@@ -51,7 +51,7 @@ def _validate_query(*, path: str, raw_query: str) -> None:
         raise HTTPException(status_code=400, detail="callback_query_key_not_admitted")
 
 
-def _forward_headers(headers: requests.structures.CaseInsensitiveDict) -> Dict[str, str]:
+def _forward_headers(headers: Mapping[str, str]) -> Dict[str, str]:
     return {
         key: value
         for key, value in headers.items()
@@ -59,8 +59,8 @@ def _forward_headers(headers: requests.structures.CaseInsensitiveDict) -> Dict[s
     }
 
 
-def _direct_loopback_get(url: str) -> requests.Response:
-    session = requests.Session()
+def _direct_loopback_get(url: str) -> _http.Response:
+    session = _http.Session()
     session.trust_env = False
     try:
         return session.get(
@@ -79,7 +79,7 @@ def _forward_get(*, request: Request, path: str) -> Response:
 
     try:
         upstream = _direct_loopback_get(upstream_url)
-    except requests.RequestException as exc:
+    except _http.RequestException as exc:
         raise HTTPException(status_code=503, detail="external_collaboration_listener_unreachable") from exc
 
     return Response(

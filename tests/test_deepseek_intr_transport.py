@@ -139,7 +139,7 @@ class DeepseekIntrTransportTests(unittest.TestCase):
             calls.update(url=url, headers=headers, data=data, timeout=timeout)
             return _FakeResponse()
 
-        self._setattr("llm_adapter.deepseek_intr_transport.requests.post", fake_post)
+        self._setattr("llm_adapter.deepseek_intr_transport._http.post", fake_post)
         result = DeepSeekHTTPTransport(credential_resolver=resolver).complete(envelope, request)
         assert calls["url"] == DEEPSEEK_CHAT_URL
         assert calls["data"] == deepseek_wire_bytes(request)
@@ -161,7 +161,7 @@ class DeepseekIntrTransportTests(unittest.TestCase):
             "echo": secret,
         }
         self._setattr(
-            "llm_adapter.deepseek_intr_transport.requests.post",
+            "llm_adapter.deepseek_intr_transport._http.post",
             lambda *args, **kwargs: _FakeResponse(body),
         )
         try:

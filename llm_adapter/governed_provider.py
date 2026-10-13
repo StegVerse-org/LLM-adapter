@@ -18,7 +18,7 @@ from threading import RLock
 from typing import Any
 from urllib.parse import urlparse
 
-import requests
+from . import _stdlib_http as _http
 
 _LOCK = RLock()
 _SUPPORTED_PROTOCOLS = {"stegverse-v1", "openai-chat-completions-v1"}
@@ -306,7 +306,7 @@ def generate(*, message: str, transition_id: str, run_id: str) -> ProviderResult
         run_id=run_id,
     )
     try:
-        response = requests.post(
+        response = _http.post(
             endpoint,
             headers={
                 "Authorization": f"Bearer {os.environ['STEGVERSE_PROVIDER_TOKEN']}",
@@ -317,7 +317,7 @@ def generate(*, message: str, transition_id: str, run_id: str) -> ProviderResult
         )
         response.raise_for_status()
         payload = response.json()
-    except (requests.RequestException, ValueError, TypeError) as exc:
+    except (_http.RequestException, ValueError, TypeError) as exc:
         return _fallback("TRANSPORT_FAILED", type(exc).__name__)
 
     text, request_id, input_units, output_units, metadata = _response_fields(

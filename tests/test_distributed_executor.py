@@ -282,7 +282,7 @@ class DistributedExecutorTests(unittest.TestCase):
         def fake_post(url, **kwargs):
             captured.append(url)
             return FakeResponse()
-        with mock.patch("llm_adapter.http_provider_clients.requests.post", fake_post, create=True):
+        with mock.patch("llm_adapter.http_provider_clients._http.post", fake_post, create=True):
             workload = build(
                 sources=(
                     src("local", "stegverse-local", "stegverse-reference-lm-v1", required=True),

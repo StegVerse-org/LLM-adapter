@@ -156,7 +156,7 @@ class ZaiIntrTransportTests(unittest.TestCase):
             calls["timeout"] = timeout
             return _FakeResponse()
 
-        self._setattr("llm_adapter.zai_intr_transport.requests.post", fake_post)
+        self._setattr("llm_adapter.zai_intr_transport._http.post", fake_post)
         transport = ZAIHTTPTransport(credential_resolver=resolver)
         result = transport.complete(envelope, request)
 
@@ -187,7 +187,7 @@ class ZaiIntrTransportTests(unittest.TestCase):
         def fake_post(url, *, headers, data, timeout):
             return _FakeResponse(leaked)
 
-        self._setattr("llm_adapter.zai_intr_transport.requests.post", fake_post)
+        self._setattr("llm_adapter.zai_intr_transport._http.post", fake_post)
         try:
             ZAIHTTPTransport(credential_resolver=lambda: secret).complete(_envelope(_request()), _request())
             assert False, "provider credential echo must fail closed"
@@ -213,7 +213,7 @@ class ZaiIntrTransportTests(unittest.TestCase):
         }
 
         self._setattr(
-            "llm_adapter.zai_intr_transport.requests.post",
+            "llm_adapter.zai_intr_transport._http.post",
             lambda url, *, headers, data, timeout: _FakeResponse(malformed),
         )
         try:

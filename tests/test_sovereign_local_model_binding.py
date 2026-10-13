@@ -88,7 +88,7 @@ def test_executes_private_runtime_and_binds_exact_measured_usage(monkeypatch):
                 },
             }
 
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", lambda *args, **kwargs: FakeResponse())
+    monkeypatch.setattr("llm_adapter.http_provider_clients._http.post", lambda *args, **kwargs: FakeResponse())
     captured = {}
 
     def submit_usage(event):
@@ -187,7 +187,7 @@ def test_rejects_response_from_different_model_hash(monkeypatch):
                 "stegverse": {"model_hash": "wrong-hash", "third_party_inference_required": False, "authority_effect": "NONE"},
             }
 
-    monkeypatch.setattr("llm_adapter.http_provider_clients.requests.post", lambda *args, **kwargs: FakeResponse())
+    monkeypatch.setattr("llm_adapter.http_provider_clients._http.post", lambda *args, **kwargs: FakeResponse())
     with pytest.raises(SovereignLocalModelBindingError, match="runtime_model_hash_mismatch"):
         execute_verified_local_model(
             runtime_proof=_micro_proof(),

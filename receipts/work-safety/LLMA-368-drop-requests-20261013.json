@@ -1,0 +1,89 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368-DROP-REQUESTS",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+    "https://github.com/StegVerse-org/StegVerse-SDK/pull/520"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "HTTP client library swap only; the downstream Master Records recording clients keep their non-gating behaviour and payloads."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "https://github.com/StegVerse-org/StegVerse-SDK/pull/520",
+      "https://github.com/SV-LLM/.github/issues/30"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/StegVerse-SDK:stegverse/_stdlib_http.py",
+      "llm_adapter/service_gateway_evaluator_intr.py",
+      "llm_adapter/gateway_forward_queue.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches these modules."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Same HTTP behaviour through a standard-library client; no route, payload or documented usage changes.",
+    "evidence_refs": [
+      "llm_adapter/_stdlib_http.py",
+      "tests/test_stdlib_http.py"
+    ]
+  },
+  "covered_paths": [
+    "pyproject.toml",
+    "llm_adapter/_stdlib_http.py",
+    "llm_adapter/continuity_service_client.py",
+    "llm_adapter/deepseek_intr_transport.py",
+    "llm_adapter/governed_provider.py",
+    "llm_adapter/http_provider_clients.py",
+    "llm_adapter/kimi_intr_transport.py",
+    "llm_adapter/master_records_organization_record_client.py",
+    "llm_adapter/service_gateway_external_collab_consent.py",
+    "llm_adapter/stegbrowser_master_records_state_transition_relay.py",
+    "llm_adapter/user_llm_client.py",
+    "llm_adapter/wiki_publication_master_records.py",
+    "llm_adapter/zai_intr_transport.py",
+    "tests/test_deepseek_intr_transport.py",
+    "tests/test_distributed_executor.py",
+    "tests/test_governed_provider.py",
+    "tests/test_http_provider_clients.py",
+    "tests/test_kimi_intr_transport.py",
+    "tests/test_service_gateway_external_collab_consent.py",
+    "tests/test_sovereign_local_model_binding.py",
+    "tests/test_stdlib_http.py",
+    "tests/test_zai_intr_transport.py"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/_stdlib_http.py",
+      "semantic_responsibility": "Standard-library JSON-over-HTTP client replacing requests for this repository's call shapes.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "StegVerse-org/StegVerse-SDK:stegverse/_stdlib_http.py (not importable here: the pinned SDK 0c2ce00 predates it)"
+    },
+    {
+      "path": "tests/test_stdlib_http.py",
+      "semantic_responsibility": "Loopback tests for the standard-library HTTP client.",
+      "decision": "EXTEND",
+      "closest_existing_implementation": "tests/test_http_provider_clients.py"
+    }
+  ]
+}

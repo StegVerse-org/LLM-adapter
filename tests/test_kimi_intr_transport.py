@@ -138,7 +138,7 @@ class KimiIntrTransportTests(unittest.TestCase):
             calls.update(url=url, headers=headers, data=data, timeout=timeout)
             return _FakeResponse()
 
-        self._setattr("llm_adapter.kimi_intr_transport.requests.post", fake_post)
+        self._setattr("llm_adapter.kimi_intr_transport._http.post", fake_post)
         result = KimiHTTPTransport(credential_resolver=resolver).complete(envelope, request)
         assert calls["url"] == KIMI_CHAT_URL
         assert calls["data"] == kimi_wire_bytes(request)
@@ -160,7 +160,7 @@ class KimiIntrTransportTests(unittest.TestCase):
             "echo": secret,
         }
         self._setattr(
-            "llm_adapter.kimi_intr_transport.requests.post",
+            "llm_adapter.kimi_intr_transport._http.post",
             lambda *args, **kwargs: _FakeResponse(body),
         )
         try:

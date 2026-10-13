@@ -21,7 +21,7 @@ import json
 import re
 from typing import Any, Callable, Mapping
 
-import requests
+from . import _stdlib_http as _http
 
 from llm_adapter.stegbrowser_master_records_state_transition_relay import (
     _configuration as _master_records_configuration,
@@ -284,8 +284,8 @@ def record_governed_publication_closure(
     sdk_manifest: Mapping[str, Any],
     governed_result: Mapping[str, Any],
     intr_allow_decision: Mapping[str, Any],
-    post: Callable[..., Any] = requests.post,
-    get: Callable[..., Any] = requests.get,
+    post: Callable[..., Any] = _http.post,
+    get: Callable[..., Any] = _http.get,
 ) -> dict[str, Any]:
     """Hand the released organization receipt to Master Records downstream.
 

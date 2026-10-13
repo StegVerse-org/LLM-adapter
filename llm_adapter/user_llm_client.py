@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping, Protocol
 
-import requests
+from . import _stdlib_http as _http
 
 from .user_llm_access import UserLLMIdentity
 
@@ -46,7 +46,7 @@ class UserLLMClient:
     ) -> None:
         self.config = config
         self.identity = identity
-        self._session = session or requests.Session()
+        self._session = session or _http.Session()
 
     def capabilities(self) -> tuple[dict[str, Any], ...]:
         response = self._request("GET", "/v1/user-llm/capabilities")
