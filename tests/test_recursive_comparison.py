@@ -1,7 +1,6 @@
+import unittest
 from hashlib import sha256
 import json
-
-import pytest
 
 from llm_adapter.recursive_comparison import (
     RecursiveComparisonError,
@@ -45,29 +44,34 @@ def _metrics() -> dict:
     }
 
 
-def test_emits_external_recursive_result() -> None:
-    result = emit_external_recursive_result(
-        _package(), RecursiveTrace(output={"answer": "ok"}, metrics=_metrics())
-    )
-    assert result["route_result"]["route_id"] == "recursive"
-    assert result["route_result"]["task_identity"] == "shared-task"
-    assert result["invariants"]["adapter_observation_is_admissibility"] is False
-    assert len(result["result_sha256"]) == 64
-
-
-def test_rejects_package_hash_drift() -> None:
-    package = _package()
-    package["task_identity"] = "changed"
-    with pytest.raises(RecursiveComparisonError, match="SHA-256 mismatch"):
-        emit_external_recursive_result(
-            package, RecursiveTrace(output={"answer": "ok"}, metrics=_metrics())
+class RecursiveComparisonTests(unittest.TestCase):
+    def test_emits_external_recursive_result(self) -> None:
+        result = emit_external_recursive_result(
+            _package(), RecursiveTrace(output={"answer": "ok"}, metrics=_metrics())
         )
+        assert result["route_result"]["route_id"] == "recursive"
+        assert result["route_result"]["task_identity"] == "shared-task"
+        assert result["invariants"]["adapter_observation_is_admissibility"] is False
+        assert len(result["result_sha256"]) == 64
 
 
-def test_rejects_missing_telemetry() -> None:
-    metrics = _metrics()
-    metrics.pop("latency_ms")
-    with pytest.raises(RecursiveComparisonError, match="missing required metrics"):
-        emit_external_recursive_result(
-            _package(), RecursiveTrace(output={"answer": "ok"}, metrics=metrics)
-        )
+    def test_rejects_package_hash_drift(self) -> None:
+        package = _package()
+        package["task_identity"] = "changed"
+        with self.assertRaisesRegex(RecursiveComparisonError, "SHA-256 mismatch"):
+            emit_external_recursive_result(
+                package, RecursiveTrace(output={"answer": "ok"}, metrics=_metrics())
+            )
+
+
+    def test_rejects_missing_telemetry(self) -> None:
+        metrics = _metrics()
+        metrics.pop("latency_ms")
+        with self.assertRaisesRegex(RecursiveComparisonError, "missing required metrics"):
+            emit_external_recursive_result(
+                _package(), RecursiveTrace(output={"answer": "ok"}, metrics=metrics)
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()

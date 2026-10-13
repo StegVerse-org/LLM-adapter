@@ -1,6 +1,5 @@
+import unittest
 from copy import deepcopy
-
-import pytest
 
 from llm_adapter.system_boundary import (
     build_system_boundary_declaration,
@@ -26,58 +25,63 @@ def _declaration():
     return provisional
 
 
-def test_declaration_identity_ignores_observation_time():
-    first = _declaration()
-    second = deepcopy(first)
-    second["generated_at"] = "2026-07-14T13:00:00Z"
+class SystemBoundaryReceiptTests(unittest.TestCase):
+    def test_declaration_identity_ignores_observation_time(self):
+        first = _declaration()
+        second = deepcopy(first)
+        second["generated_at"] = "2026-07-14T13:00:00Z"
 
-    assert derive_declaration_id(first) == derive_declaration_id(second)
-
-
-def test_declaration_identity_changes_with_runtime_boundary():
-    first = _declaration()
-    second = deepcopy(first)
-    second["surfaces"]["memory"]["storage_refs"] = ["memory://different-store"]
-
-    assert derive_declaration_id(first) != derive_declaration_id(second)
+        assert derive_declaration_id(first) == derive_declaration_id(second)
 
 
-def test_receipt_reconstructs_deterministically():
-    declaration = _declaration()
-    first = build_system_boundary_receipt(
-        declaration,
-        source_commit="c5100464159c3e15119400bf4ba4748011ee2fc8",
-    )
-    second = build_system_boundary_receipt(
-        declaration,
-        source_commit="c5100464159c3e15119400bf4ba4748011ee2fc8",
-    )
+    def test_declaration_identity_changes_with_runtime_boundary(self):
+        first = _declaration()
+        second = deepcopy(first)
+        second["surfaces"]["memory"]["storage_refs"] = ["memory://different-store"]
 
-    assert first == second
-    assert verify_system_boundary_receipt(declaration, first) is True
-    assert first["authority_boundary"]["receipt_is_execution_authority"] is False
-    assert first["authority_boundary"]["declaration_proves_consciousness"] is False
+        assert derive_declaration_id(first) != derive_declaration_id(second)
 
 
-def test_receipt_rejects_noncanonical_supplied_identifier():
-    declaration = _declaration()
-    declaration["declaration_id"] = "sbd:incorrect"
+    def test_receipt_reconstructs_deterministically(self):
+        declaration = _declaration()
+        first = build_system_boundary_receipt(
+            declaration,
+            source_commit="c5100464159c3e15119400bf4ba4748011ee2fc8",
+        )
+        second = build_system_boundary_receipt(
+            declaration,
+            source_commit="c5100464159c3e15119400bf4ba4748011ee2fc8",
+        )
 
-    with pytest.raises(ValueError, match="does not match canonical content"):
-        build_system_boundary_receipt(declaration)
+        assert first == second
+        assert verify_system_boundary_receipt(declaration, first) is True
+        assert first["authority_boundary"]["receipt_is_execution_authority"] is False
+        assert first["authority_boundary"]["declaration_proves_consciousness"] is False
 
 
-def test_receipt_rejects_authority_escalation():
-    declaration = _declaration()
-    declaration["authority"]["model_has_execution_authority"] = True
+    def test_receipt_rejects_noncanonical_supplied_identifier(self):
+        declaration = _declaration()
+        declaration["declaration_id"] = "sbd:incorrect"
 
-    with pytest.raises(ValueError, match="model_has_execution_authority=false"):
-        build_system_boundary_receipt(declaration)
+        with self.assertRaisesRegex(ValueError, "does not match canonical content"):
+            build_system_boundary_receipt(declaration)
 
 
-def test_receipt_rejects_consciousness_reclassification():
-    declaration = _declaration()
-    declaration["claims_boundary"]["consciousness_claim"] = "confirmed"
+    def test_receipt_rejects_authority_escalation(self):
+        declaration = _declaration()
+        declaration["authority"]["model_has_execution_authority"] = True
 
-    with pytest.raises(ValueError, match="consciousness_claim=not_evaluated"):
-        build_system_boundary_receipt(declaration)
+        with self.assertRaisesRegex(ValueError, "model_has_execution_authority=false"):
+            build_system_boundary_receipt(declaration)
+
+
+    def test_receipt_rejects_consciousness_reclassification(self):
+        declaration = _declaration()
+        declaration["claims_boundary"]["consciousness_claim"] = "confirmed"
+
+        with self.assertRaisesRegex(ValueError, "consciousness_claim=not_evaluated"):
+            build_system_boundary_receipt(declaration)
+
+
+if __name__ == "__main__":
+    unittest.main()
