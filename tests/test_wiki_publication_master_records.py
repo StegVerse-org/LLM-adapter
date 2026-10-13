@@ -293,3 +293,112 @@ def test_master_records_rejection_is_reported_not_raised(monkeypatch):
     assert result["state"] == "NOT_RECORDED"
     assert result["failure_code"].startswith("master_records_recording_failed")
     assert result["gates_publication"] is False
+
+
+# The organization's own read-back governance decision (StegVerse-org/.github
+# organization-governance-return.yml row, judged by the SDK's
+# verify_governance_decision_return). No external surface is consulted.
+
+def organization_return(value, **overrides):
+    row = {
+        "disposition": "ALLOW",
+        "decision_returned": True,
+        "governance_disposition": "ALLOW",
+        "governance_failed_predicate": None,
+        "closure_transition_class": "ORGANIZATION_EGRESS_CLOSED",
+        "closure_organization_receipt_sha256": "sha256:" + "c" * 64,
+        "deciding_organization_receipt_sha256": "sha256:" + "d" * 64,
+        "governance_request_packet_id": "pkt-publication",
+        "response_packet_id": "pkt-publication-answer",
+        "request_sha256": "e" * 64,
+        "wire_manifest_sha256": mod.canonical_sha256(manifest(value)),
+        "failed_predicate": None,
+    }
+    row.update(overrides)
+    return row
+
+
+def organization_acceptance(**overrides):
+    accepted = {
+        "schema": "stegverse.sdk.governance-return-acceptance/v1",
+        "disposition": "ALLOW",
+        "end_to_end_acceptance": True,
+        "governance_request_packet_id": "pkt-publication",
+        "governance_disposition": "ALLOW",
+        "closure_organization_receipt_sha256": "sha256:" + "c" * 64,
+        "deciding_organization_receipt_sha256": "sha256:" + "d" * 64,
+        "master_records_gating": False,
+        "authority_effect": "NONE_VERIFICATION_ONLY",
+    }
+    accepted.update(overrides)
+    return accepted
+
+
+def organization_receipt(value, **kwargs):
+    return mod.build_publication_state_receipt_from_organization_decision(
+        publication_transition_id="publication:test",
+        publication_transition=value,
+        sdk_manifest=manifest(value),
+        governance_return=kwargs.pop("governance_return", organization_return(value)),
+        governance_acceptance=kwargs.pop("governance_acceptance", organization_acceptance()),
+        recorded_at="2026-10-13T00:00:00Z",
+    )
+
+
+def test_organization_decision_builds_the_receipt_without_local_governance_or_external_intr():
+    value = transition()
+    receipt = organization_receipt(value)
+    evidence = receipt["transition_evidence"]
+    assert receipt["transition_outcome"] == "ALLOW"
+    assert evidence["intr_decision_origin"] == "organization_governance_return"
+    assert evidence["locally_generated_allow"] is False
+    assert evidence["governance_request_packet_id"] == "pkt-publication"
+    assert evidence["governance_request_sha256"] == "sha256:" + "e" * 64
+    assert receipt["governance_decision_ref_where_applicable"] == "sha256:" + "d" * 64
+    assert evidence["target_repository"] == "StegVerse-Labs/admissibility-wiki"
+    assert {item["evidence_type"] for item in receipt["required_evidence_manifest"]} == {
+        "PUBLICATION_TRANSITION_CANDIDATE", "SDK_INGRESS_MANIFEST",
+        "ORGANIZATION_GOVERNANCE_RETURN", "SDK_GOVERNANCE_RETURN_ACCEPTANCE"}
+    verified = mod.verify_publication_transition_receipt(
+        transition_receipt=receipt, receipt_sha256=mod.canonical_sha256(receipt),
+        publication_transition_id="publication:test", publication_transition=value)
+    assert verified["state"] == "VERIFIED"
+
+
+@pytest.mark.parametrize("ret, acc, code", [
+    ({"governance_disposition": "DENY"}, {}, "organization_governance_did_not_allow_publication"),
+    ({}, {"governance_disposition": "DENY"}, "organization_governance_did_not_allow_publication"),
+    ({}, {"disposition": "FAIL_CLOSED", "end_to_end_acceptance": False}, "organization_governance_return_not_accepted"),
+    ({"decision_returned": False}, {}, "organization_governance_return_not_admitted"),
+    ({"closure_transition_class": "ORGANIZATION_EGRESS_CLOSURE_REFUSED"}, {}, "organization_governance_crossing_not_closed"),
+    ({"governance_request_packet_id": "pkt-other"}, {}, "organization_governance_packet_mismatch"),
+    ({"deciding_organization_receipt_sha256": "sha256:" + "f" * 64}, {}, "organization_governance_receipt_mismatch"),
+    ({"wire_manifest_sha256": "0" * 64}, {}, "organization_governance_decided_a_different_manifest"),
+    ({}, {"schema": "something-else"}, "organization_governance_acceptance_schema_invalid"),
+])
+def test_organization_decision_refuses_anything_but_an_accepted_allow_for_this_manifest(ret, acc, code):
+    value = transition()
+    with pytest.raises(mod.PublicationCustodyError, match=code):
+        organization_receipt(value, governance_return=organization_return(value, **ret),
+                             governance_acceptance=organization_acceptance(**acc))
+
+
+def test_organization_decision_still_requires_the_exact_publication_manifest():
+    value = transition()
+    other = transition()
+    other["target_path"] = "docs/external-frameworks/reports/other.md"
+    with pytest.raises(mod.PublicationCustodyError, match="sdk_manifest_publication_payload_mismatch"):
+        mod.build_publication_state_receipt_from_organization_decision(
+            publication_transition_id="publication:test", publication_transition=value,
+            sdk_manifest=manifest(other), governance_return=organization_return(value),
+            governance_acceptance=organization_acceptance())
+
+
+def test_an_organization_origin_receipt_without_its_decision_references_does_not_verify():
+    value = transition()
+    receipt = organization_receipt(value)
+    receipt["governance_decision_ref_where_applicable"] = "sha256:" + "9" * 64
+    with pytest.raises(mod.PublicationCustodyError, match="organization_decision_missing"):
+        mod.verify_publication_transition_receipt(
+            transition_receipt=receipt, receipt_sha256=mod.canonical_sha256(receipt),
+            publication_transition_id="publication:test", publication_transition=value)

@@ -2,7 +2,10 @@
 
 Interlock/InTr admits the publication transition. This module validates the
 already-produced SDK and Interlock/InTr evidence and builds the one canonical
-state-transition receipt the organization holds for it. The repository mutation
+state-transition receipt the organization holds for it. The decision it closes
+on is the organization's own governance decision, read back from its ledgers
+(``build_publication_state_receipt_from_organization_decision``): every ACTION
+is by manifest and nothing waits on a surface outside that path. The repository mutation
 closes on that organization receipt, verified locally by
 ``verify_publication_transition_receipt``; nothing here waits on Master Records.
 
@@ -36,6 +39,10 @@ CLOSURE_SCHEMA = "stegverse.external-framework-wiki-publication-governed-closure
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
 RECORDING_RETRY_ENTRYPOINT = "llm_adapter.wiki_publication_master_records.record_governed_publication_closure"
+GOVERNANCE_ACCEPTANCE_SCHEMA = "stegverse.sdk.governance-return-acceptance/v1"
+EXTERNAL_DECISION_ORIGIN = "external_interlock_intr"
+# The organization's own InTr governance route, read back from its ledgers.
+ORGANIZATION_DECISION_ORIGIN = "organization_governance_return"
 
 
 class PublicationCustodyError(RuntimeError):
@@ -69,14 +76,13 @@ def _require_sha256(value: Any, label: str) -> str:
     return text
 
 
-def _validate_exact_bindings(
+def _validate_publication_manifest(
     *,
     publication_transition_id: str,
     publication_transition: Mapping[str, Any],
     sdk_manifest: Mapping[str, Any],
-    governed_result: Mapping[str, Any],
-    intr_allow_decision: Mapping[str, Any],
-) -> dict[str, Any]:
+) -> tuple[str, dict[str, Any], Mapping[str, Any]]:
+    """The publication transition and the SDK manifest that carries it, bound exactly."""
     if not publication_transition_id:
         raise PublicationCustodyError("publication_transition_id_required")
     transition = dict(publication_transition)
@@ -117,6 +123,22 @@ def _validate_exact_bindings(
     egress = completion.get("egress") if isinstance(completion, Mapping) else None
     if not isinstance(egress, Mapping) or egress.get("transport") != "INTERLOCK_INTR":
         raise PublicationCustodyError("sdk_manifest_intr_completion_binding_missing")
+    return transition_sha, manifest, params
+
+
+def _validate_exact_bindings(
+    *,
+    publication_transition_id: str,
+    publication_transition: Mapping[str, Any],
+    sdk_manifest: Mapping[str, Any],
+    governed_result: Mapping[str, Any],
+    intr_allow_decision: Mapping[str, Any],
+) -> dict[str, Any]:
+    transition_sha, manifest, params = _validate_publication_manifest(
+        publication_transition_id=publication_transition_id,
+        publication_transition=publication_transition,
+        sdk_manifest=sdk_manifest,
+    )
 
     governed = dict(governed_result)
     if governed.get("governance_state") != "ALLOW":
@@ -209,6 +231,125 @@ def build_publication_state_receipt(
         "prior_state_ref_or_hash": None,
         "resulting_state_ref_or_hash": "sha256:" + bindings["sdk_governed_result_sha256"],
         "governance_decision_ref_where_applicable": "sha256:" + bindings["intr_ingress_receipt_hash"],
+        "transition_evidence": transition_evidence,
+        "required_evidence_manifest": evidence,
+        "recorded_at": recorded_at or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "transition_outcome": "ALLOW",
+        "authority_effect": "NONE_STATE_RECEIPT_ONLY",
+        "proof_scope": "THIS_TRANSITION_ONLY",
+        "proof_ceiling": "OBSERVED_GOVERNED_PUBLICATION_DECISION_AND_CUSTODY_ONLY",
+        "master_records_may_grant_transition_authority": False,
+        "master_records_may_grant_execution_authority": False,
+    }
+
+
+def _receipt_digest(value: Any, label: str) -> str:
+    text = str(value or "")
+    return "sha256:" + _require_sha256(text[len("sha256:"):] if text.startswith("sha256:") else text, label)
+
+
+def _validate_organization_decision(
+    *,
+    sdk_manifest: Mapping[str, Any],
+    governance_return: Mapping[str, Any],
+    governance_acceptance: Mapping[str, Any],
+) -> dict[str, Any]:
+    """The organization's read-back governance ALLOW for exactly this manifest.
+
+    The manifest went in through the organization's Interlock/InTr ingress on the
+    governance route; the deciding organization's decision came back through
+    InTr and was read back from both organization ledgers
+    (StegVerse-org/.github ``organization-governance-return.yml``). The SDK's
+    ``verify_governance_decision_return`` judged that evidence. Nothing here
+    waits on, or is told by, a surface outside that manifest path.
+    """
+    acceptance = dict(governance_acceptance)
+    if acceptance.get("schema") != GOVERNANCE_ACCEPTANCE_SCHEMA:
+        raise PublicationCustodyError("organization_governance_acceptance_schema_invalid")
+    if acceptance.get("disposition") != "ALLOW" or acceptance.get("end_to_end_acceptance") is not True:
+        raise PublicationCustodyError("organization_governance_return_not_accepted")
+    if acceptance.get("governance_disposition") != "ALLOW":
+        raise PublicationCustodyError("organization_governance_did_not_allow_publication")
+    returned = dict(governance_return)
+    if returned.get("disposition") != "ALLOW" or returned.get("decision_returned") is not True:
+        raise PublicationCustodyError("organization_governance_return_not_admitted")
+    if returned.get("governance_disposition") != "ALLOW":
+        raise PublicationCustodyError("organization_governance_did_not_allow_publication")
+    if returned.get("closure_transition_class") != "ORGANIZATION_EGRESS_CLOSED":
+        raise PublicationCustodyError("organization_governance_crossing_not_closed")
+    packet = str(returned.get("governance_request_packet_id") or "")
+    if not packet or packet != acceptance.get("governance_request_packet_id"):
+        raise PublicationCustodyError("organization_governance_packet_mismatch")
+    closure = _receipt_digest(returned.get("closure_organization_receipt_sha256"), "organization_closure_receipt")
+    deciding = _receipt_digest(returned.get("deciding_organization_receipt_sha256"), "deciding_organization_receipt")
+    if (closure != _receipt_digest(acceptance.get("closure_organization_receipt_sha256"), "accepted_closure_receipt")
+            or deciding != _receipt_digest(acceptance.get("deciding_organization_receipt_sha256"),
+                                           "accepted_deciding_receipt")):
+        raise PublicationCustodyError("organization_governance_receipt_mismatch")
+    if returned.get("wire_manifest_sha256") != canonical_sha256(dict(sdk_manifest)):
+        raise PublicationCustodyError("organization_governance_decided_a_different_manifest")
+    request_sha = _receipt_digest(returned.get("request_sha256"), "organization_governance_request")
+    return {
+        "governance_request_packet_id": packet,
+        "governance_request_sha256": request_sha,
+        "closure_organization_receipt_sha256": closure,
+        "deciding_organization_receipt_sha256": deciding,
+    }
+
+
+def build_publication_state_receipt_from_organization_decision(
+    *,
+    publication_transition_id: str,
+    publication_transition: Mapping[str, Any],
+    sdk_manifest: Mapping[str, Any],
+    governance_return: Mapping[str, Any],
+    governance_acceptance: Mapping[str, Any],
+    recorded_at: str | None = None,
+) -> dict[str, Any]:
+    """The organization's publication receipt, on its own read-back governance decision.
+
+    The publication manifest (SDK ``prepare_wiki_publication_manifest``, process
+    ``governance``) is submitted like every ACTION, by manifest, through the
+    organization's InTr ingress, and the deciding organization decides it. This
+    receipt closes on that decision: no local governance run, posture resolver or
+    externally supplied InTr response is required or consulted.
+    """
+    transition_sha, manifest, params = _validate_publication_manifest(
+        publication_transition_id=publication_transition_id,
+        publication_transition=publication_transition,
+        sdk_manifest=sdk_manifest,
+    )
+    decision = _validate_organization_decision(
+        sdk_manifest=manifest, governance_return=governance_return,
+        governance_acceptance=governance_acceptance)
+    evidence = [
+        _evidence(TRANSITION_ID, "publication-transition-candidate", "PUBLICATION_TRANSITION_CANDIDATE", publication_transition),
+        _evidence(TRANSITION_ID, "sdk-ingress-manifest", "SDK_INGRESS_MANIFEST", manifest),
+        _evidence(TRANSITION_ID, "organization-governance-return", "ORGANIZATION_GOVERNANCE_RETURN", governance_return),
+        _evidence(TRANSITION_ID, "organization-governance-acceptance", "SDK_GOVERNANCE_RETURN_ACCEPTANCE",
+                  governance_acceptance),
+    ]
+    transition_evidence = {
+        "canonical_task": TASK_ID,
+        "publication_transition_id": publication_transition_id,
+        "publication_transition_sha256": transition_sha,
+        "sdk_manifest_sha256": canonical_sha256(manifest),
+        **decision,
+        "target_repository": params["target_repository"],
+        "target_path": params["target_path"],
+        "intr_governance_decision": "ALLOW",
+        "intr_decision_origin": ORGANIZATION_DECISION_ORIGIN,
+        "locally_generated_allow": False,
+        "publication_mutation_executed": False,
+    }
+    return {
+        "schema": RECEIPT_SCHEMA,
+        "transition_id": TRANSITION_ID,
+        "transition_sequence": 1,
+        "subject_or_correlation_id": publication_transition_id,
+        "prior_state_ref_or_hash": None,
+        "resulting_state_ref_or_hash": decision["closure_organization_receipt_sha256"],
+        "governance_decision_ref_where_applicable": decision["deciding_organization_receipt_sha256"],
         "transition_evidence": transition_evidence,
         "required_evidence_manifest": evidence,
         "recorded_at": recorded_at or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -387,8 +528,18 @@ def verify_publication_transition_receipt(
         raise PublicationCustodyError("publication_transition_repository_mismatch")
     if evidence.get("target_path") != publication_transition.get("target_path"):
         raise PublicationCustodyError("publication_transition_target_path_mismatch")
-    if evidence.get("intr_governance_decision") != "ALLOW" or evidence.get("intr_decision_origin") != "external_interlock_intr":
+    origin = evidence.get("intr_decision_origin")
+    if evidence.get("intr_governance_decision") != "ALLOW" or origin not in (
+            EXTERNAL_DECISION_ORIGIN, ORGANIZATION_DECISION_ORIGIN):
         raise PublicationCustodyError("publication_transition_intr_allow_missing")
+    if origin == ORGANIZATION_DECISION_ORIGIN:
+        if not evidence.get("governance_request_packet_id"):
+            raise PublicationCustodyError("publication_transition_organization_decision_missing")
+        for key in ("governance_request_sha256", "closure_organization_receipt_sha256",
+                    "deciding_organization_receipt_sha256"):
+            _receipt_digest(evidence.get(key), "publication_transition_" + key)
+        if receipt.get("governance_decision_ref_where_applicable") != evidence["deciding_organization_receipt_sha256"]:
+            raise PublicationCustodyError("publication_transition_organization_decision_missing")
     if evidence.get("locally_generated_allow") is not False:
         raise PublicationCustodyError("publication_transition_local_allow_rejected")
     manifest = receipt.get("required_evidence_manifest")
@@ -414,6 +565,7 @@ __all__ = [
     "TASK_ID",
     "TRANSITION_ID",
     "build_publication_state_receipt",
+    "build_publication_state_receipt_from_organization_decision",
     "record_governed_publication_closure",
     "verify_publication_transition_receipt",
 ]
