@@ -1,0 +1,54 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-DROP-SETUP-PYTHON",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "CI-only removal of the actions/setup-python step from one workflow; no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/397"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      ".github/workflows/internal-governed-reference.yml",
+      "internal_tests/run_governed_reference_suite.py",
+      "tests/test_live_activation_automation_contract.py",
+      "scripts/check_ecosystem_chat_verified_receipt_contract.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches .github/workflows/internal-governed-reference.yml."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "The workflow runs the same stdlib-only suite on the runner's built-in python; no package behaviour, exports or documented usage change.",
+    "evidence_refs": [
+      "internal_tests/run_governed_reference_suite.py",
+      "internal_tests/README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/internal-governed-reference.yml"
+  ],
+  "new_files": []
+}
