@@ -33,7 +33,7 @@ def main()->int:
         schema=json.loads(schema_path.read_text())
         if ((schema.get("properties") or {}).get("schema_version") or {}).get("const") != "stegverse.ecosystem_chat.distributed_llm_execution.v1": failures.append("execution schema version mismatch")
     if not failures:
-        p=subprocess.run([sys.executable,"-m","pytest","tests/test_distributed_executor.py","-q"],cwd=ROOT,text=True,capture_output=True)
+        p=subprocess.run([sys.executable,"-m","unittest","tests/test_distributed_executor.py"],cwd=ROOT,text=True,capture_output=True)
         if p.returncode: failures.append("executor tests failed:\n"+p.stdout+p.stderr)
     if failures:
         print("DISTRIBUTED_LLM_EXECUTOR_FAIL")

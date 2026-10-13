@@ -1,0 +1,66 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-STDLIB-UNITTEST",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/DISTRIBUTED_LLM_EXECUTOR_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/DISTRIBUTED_LLM_WORKLOAD_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/KV_AI_MEMORY_CONTEXT_BRIDGE_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-harness change only: four test files move from pytest to the standard-library unittest and three workflows stop installing pytest and Python; no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/397"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "tests/test_distributed_executor.py",
+      "tests/test_distributed_workload.py",
+      "tests/test_kv_memory_context_bridge.py",
+      "tests/test_kv_memory_provider_request_materializer.py",
+      "scripts/check_distributed_llm_executor.py",
+      "scripts/check_distributed_llm_workload.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches these tests, check scripts or workflows."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Package behaviour is unchanged; the README verification commands for these four files are updated to python -m unittest in the same change set.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/distributed-llm-executor-validate.yml",
+    ".github/workflows/distributed-llm-workload-validate.yml",
+    ".github/workflows/validate-kv-memory-context-bridge.yml",
+    "scripts/check_distributed_llm_executor.py",
+    "scripts/check_distributed_llm_workload.py",
+    "tests/test_distributed_executor.py",
+    "tests/test_distributed_workload.py",
+    "tests/test_kv_memory_context_bridge.py",
+    "tests/test_kv_memory_provider_request_materializer.py",
+    "README.md"
+  ],
+  "new_files": []
+}

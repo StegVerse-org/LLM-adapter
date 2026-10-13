@@ -134,7 +134,7 @@ def main() -> int:
 
     if not failures:
         process = subprocess.run(
-            [sys.executable, "-m", "pytest", "tests/test_distributed_workload.py", "-q"],
+            [sys.executable, "-m", "unittest", "tests/test_distributed_workload.py"],
             cwd=ROOT,
             text=True,
             capture_output=True,
