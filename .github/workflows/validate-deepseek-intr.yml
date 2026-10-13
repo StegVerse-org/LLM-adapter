@@ -82,16 +82,16 @@ jobs:
           "$selected" --version
 
       - name: Install validation dependencies
-        run: "$PYTHON_BIN -m pip install -e '.[dev]'"
+        run: "$PYTHON_BIN -m pip install -e ."
 
       - name: Test DeepSeek Interlock/InTr transport
-        run: "$PYTHON_BIN -m pytest tests/test_deepseek_intr_transport.py -q"
+        run: "$PYTHON_BIN -m unittest tests/test_deepseek_intr_transport.py"
 
       - name: Test governed DeepSeek executor and egress binding
-        run: "$PYTHON_BIN -m pytest tests/test_deepseek_intr_executor.py -q"
+        run: "$PYTHON_BIN -m unittest tests/test_deepseek_intr_executor.py"
 
       - name: Test DeepSeek runtime-profile TVC broker bridge
-        run: "$PYTHON_BIN -m pytest tests/test_deepseek_tvc_runtime.py -q"
+        run: "$PYTHON_BIN -m unittest tests/test_deepseek_tvc_runtime.py"
 
       - name: Validate capability declaration and envelope schema
         shell: bash

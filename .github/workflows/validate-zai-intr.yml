@@ -68,13 +68,13 @@ jobs:
           "$selected" --version
 
       - name: Install validation dependencies
-        run: "$PYTHON_BIN -m pip install -e '.[dev]'"
+        run: "$PYTHON_BIN -m pip install -e ."
 
       - name: Test Z.ai Interlock/InTr transport
-        run: "$PYTHON_BIN -m pytest tests/test_zai_intr_transport.py -q"
+        run: "$PYTHON_BIN -m unittest tests/test_zai_intr_transport.py"
 
       - name: Test governed Z.ai executor and egress binding
-        run: "$PYTHON_BIN -m pytest tests/test_zai_intr_executor.py -q"
+        run: "$PYTHON_BIN -m unittest tests/test_zai_intr_executor.py"
 
       - name: Validate capability declaration and envelope schema
         shell: bash

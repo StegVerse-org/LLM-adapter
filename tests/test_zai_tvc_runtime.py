@@ -1,4 +1,4 @@
-import pytest
+import unittest
 from llm_adapter.provider_request import build_provider_request
 from llm_adapter.zai_intr_transport import build_zai_intr_envelope
 from llm_adapter.zai_tvc_broker import RUNTIME_PROFILE_ID, TVC_SECRET_REF, ZAITVCBrokerError, build_tvc_zai_operation_request, execute_zai_via_tvc_broker
@@ -21,38 +21,45 @@ def _execution():
     req=_request(); env=_envelope(req)
     return execute_governed_zai_via_tvc_runtime(req,session_id="s",transition_id="tx-1",measurement_id="m",ingress_disposition="ALLOW",ingress_receipt_hash="a"*64,carrier_ref="carrier-1",lease_receipt=_lease(env),broker_submitter=_broker,usage_submitter=lambda event:{"status":"custodied","authority_effect":"NONE","custody_recorded":True})
 
-def test_tvc_operation_is_non_exportable_and_exact_bound():
-    req=_request(); env=_envelope(req); op=build_tvc_zai_operation_request(env,req,lease_receipt=_lease(env))
-    assert op["secret_ref"]==TVC_SECRET_REF
-    assert op["runtime_profile_id"]==RUNTIME_PROFILE_ID
-    assert op["credential_material_present"] is False
-    assert op["export_allowed"] is False
-    bad=_lease(env); bad["request_hash"]="f"*64
-    with pytest.raises(ZAITVCBrokerError,match="exact binding mismatch: request_hash"): build_tvc_zai_operation_request(env,req,lease_receipt=bad)
 
-def test_broker_result_and_runtime_require_egress():
-    req=_request(); env=_envelope(req); result=execute_zai_via_tvc_broker(env,req,lease_receipt=_lease(env),broker_submitter=_broker)
-    assert result.response.output=="ok"
-    assert result.response.metadata["credential_material_present"] is False
-    assert result.response.metadata["egress_intr_required"] is True
-    execution=_execution()
-    admission=admit_zai_tvc_runtime_egress(execution,egress_disposition="ALLOW",egress_receipt_hash="c"*64,admitted_response_hash=execution.response_hash)
-    assert admission.state=="EGRESS_ADMITTED"
-    with pytest.raises(ZAITVCRuntimeExecutionError): admit_zai_tvc_runtime_egress(execution,egress_disposition="DENY",egress_receipt_hash="c"*64,admitted_response_hash=execution.response_hash)
+class ZaiTvcRuntimeTests(unittest.TestCase):
+    def test_tvc_operation_is_non_exportable_and_exact_bound(self):
+        req=_request(); env=_envelope(req); op=build_tvc_zai_operation_request(env,req,lease_receipt=_lease(env))
+        assert op["secret_ref"]==TVC_SECRET_REF
+        assert op["runtime_profile_id"]==RUNTIME_PROFILE_ID
+        assert op["credential_material_present"] is False
+        assert op["export_allowed"] is False
+        bad=_lease(env); bad["request_hash"]="f"*64
+        with self.assertRaisesRegex(ZAITVCBrokerError, "exact binding mismatch: request_hash"): build_tvc_zai_operation_request(env,req,lease_receipt=bad)
 
-@pytest.mark.parametrize("result", [
-    {"output":"ok","api_key":"sk-leak"},
-    {"output":"ok","usage":{"total_tokens":3,"zai_api_key":"sk-leak"}},
-    {"output":"ok","metadata":[{"x-api-key":"sk-leak"}]},
-    {"output":"ok","usage":{"Authorization":"Bearer sk-leak"}},
-])
-def test_broker_refuses_credential_material_in_result_despite_clean_receipt(result):
-    req=_request(); env=_envelope(req)
-    def broker(_): return dict(_broker(_), result=result)
-    with pytest.raises(ZAITVCBrokerError,match="contains credential material"): execute_zai_via_tvc_broker(env,req,lease_receipt=_lease(env),broker_submitter=broker)
+    def test_broker_result_and_runtime_require_egress(self):
+        req=_request(); env=_envelope(req); result=execute_zai_via_tvc_broker(env,req,lease_receipt=_lease(env),broker_submitter=_broker)
+        assert result.response.output=="ok"
+        assert result.response.metadata["credential_material_present"] is False
+        assert result.response.metadata["egress_intr_required"] is True
+        execution=_execution()
+        admission=admit_zai_tvc_runtime_egress(execution,egress_disposition="ALLOW",egress_receipt_hash="c"*64,admitted_response_hash=execution.response_hash)
+        assert admission.state=="EGRESS_ADMITTED"
+        with self.assertRaises(ZAITVCRuntimeExecutionError): admit_zai_tvc_runtime_egress(execution,egress_disposition="DENY",egress_receipt_hash="c"*64,admitted_response_hash=execution.response_hash)
 
-def test_broker_refuses_result_past_nesting_limit():
-    req=_request(); env=_envelope(req); deep={"output":"ok"}
-    for _ in range(80): deep={"output":"ok","nested":deep}
-    def broker(_): return dict(_broker(_), result=deep)
-    with pytest.raises(ZAITVCBrokerError,match="exceeds nesting limit"): execute_zai_via_tvc_broker(env,req,lease_receipt=_lease(env),broker_submitter=broker)
+    def test_broker_refuses_credential_material_in_result_despite_clean_receipt(self):
+        for result in [
+        {"output":"ok","api_key":"sk-leak"},
+        {"output":"ok","usage":{"total_tokens":3,"zai_api_key":"sk-leak"}},
+        {"output":"ok","metadata":[{"x-api-key":"sk-leak"}]},
+        {"output":"ok","usage":{"Authorization":"Bearer sk-leak"}},
+    ]:
+            with self.subTest(result=result):
+                req=_request(); env=_envelope(req)
+                def broker(_): return dict(_broker(_), result=result)
+                with self.assertRaisesRegex(ZAITVCBrokerError, "contains credential material"): execute_zai_via_tvc_broker(env,req,lease_receipt=_lease(env),broker_submitter=broker)
+
+    def test_broker_refuses_result_past_nesting_limit(self):
+        req=_request(); env=_envelope(req); deep={"output":"ok"}
+        for _ in range(80): deep={"output":"ok","nested":deep}
+        def broker(_): return dict(_broker(_), result=deep)
+        with self.assertRaisesRegex(ZAITVCBrokerError, "exceeds nesting limit"): execute_zai_via_tvc_broker(env,req,lease_receipt=_lease(env),broker_submitter=broker)
+
+
+if __name__ == "__main__":
+    unittest.main()
