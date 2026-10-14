@@ -1,20 +1,21 @@
 # Platform-agnostic user-LLM capability test
 
-Render is not part of the activation or test path.
+Render is not part of the activation or test path, and neither is a container framework.
 
-The bounded user-LLM surface is exercised through the repository-owned Dockerfile and `compose.yaml` contract.
+The canonical sovereign local-model discovery, launch, inference and proof live in `StegVerse-002/micro-node-runtime`. This repository keeps the bounded user-LLM surface and its smoke test.
 
 ## Start
 
-Set required local HIL tokens and start the portable node:
+Set the local HIL tokens and the explicit non-authoritative user-LLM fixture transport, then start the gateway on the host-native launcher:
 
 ```bash
 export STEGVERSE_HIL_REVIEW_TOKEN=local-review-token
 export STEGVERSE_HIL_PUBLICATION_TOKEN=local-publication-token
-docker compose up --build -d
+export STEGVERSE_USER_LLM_TEST_MODE=true
+python scripts/stegdeploy_native_gateway.py start --port 8000
 ```
 
-The compose service enables the explicit non-authoritative user-LLM fixture transport and exposes the mounted surface at:
+The mounted surface is:
 
 - `http://127.0.0.1:8000/user-llm/healthz`
 - `http://127.0.0.1:8000/user-llm/readyz`

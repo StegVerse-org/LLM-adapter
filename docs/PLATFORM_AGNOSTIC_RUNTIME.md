@@ -8,7 +8,7 @@
 
 A conforming runtime provides:
 
-1. OCI-compatible container execution or an equivalent Python process runtime.
+1. A Python process runtime (the host-native launcher; no container framework).
 2. A configurable listening port through `PORT`.
 3. A durable mount at `/var/lib/stegverse`, or an equivalent path supplied through `STEGVERSE_DATA_DIR`.
 4. Runtime environment and secret injection without committing secrets to GitHub.
@@ -19,22 +19,21 @@ A conforming runtime provides:
 
 No application code may depend on a provider API, provider metadata endpoint, provider filesystem convention, or provider-specific manifest.
 
-## Canonical container execution
+## Canonical native execution
 
 ```sh
 cp docs/runtime-environment.example .env
 # Replace both example credentials with distinct secret values.
-docker compose up --build -d
-curl -fsS http://127.0.0.1:8000/health
-curl -fsS http://127.0.0.1:8000/api/hil/readiness
-curl -fsS http://127.0.0.1:8000/api/hil/publication-readiness
+set -a; . ./.env; set +a
+python scripts/stegdeploy_native_gateway.py start --port 8000
+python scripts/stegdeploy_native_gateway.py status
 ```
 
-Podman may use the same image and environment contract. Kubernetes, Nomad, a generic VM, or self-hosted infrastructure may translate the container, volume, port, and secret declarations without changing application code.
+`start` closes when the gateway process is spawned. `status` observes health once; an unanswered probe is recorded as `NOT_AUTHENTICALLY_OBSERVED` with a reconciliation entrypoint and never gates the start. Before the gateway serves, the launcher runs the downstream-recording worker and the gateway forward-queue drain once each; neither waits on a receiver.
 
 ## Durable state
 
-The entrypoint maps persistent state beneath `STEGVERSE_DATA_DIR`:
+The launcher maps persistent state beneath its durable root (`STEGVERSE_DATA_DIR`), unless an operator names a store explicitly:
 
 ```text
 /var/lib/stegverse/
@@ -63,15 +62,14 @@ They must be injected by the runtime and never persisted in repository files, im
 
 A runtime tranche passes portability only when:
 
-1. the same repository revision builds as an OCI image;
-2. the image starts with only the documented environment contract;
-3. readiness reports the expected Primary and prompt hashes;
-4. state survives container replacement while retaining the same mounted volume;
-5. no provider-specific code or configuration is necessary;
-6. the resulting evidence identifies the repository revision, image digest, runtime contract version, storage persistence test, and readiness output.
+1. the same repository revision starts on the native launcher with only the documented environment contract;
+2. readiness reports the expected Primary and prompt hashes;
+3. state survives a stop and start with the same durable root;
+4. no provider-specific or container-framework code or configuration is necessary;
+5. the resulting evidence identifies the repository revision, runtime contract version, storage persistence test, and readiness output.
 
-PR validation may execute this contract in GitHub Actions, but the portability result is produced by the repository-owned OCI image, environment variables, health/readiness endpoints, and mounted volume rather than any hosting-provider service.
+PR validation may execute this contract in GitHub Actions, but the portability result is produced by the repository source, environment variables, health/readiness endpoints, and durable root rather than any hosting-provider service.
 
 ## Authority boundary
 
-Container build success is not deployment. Deployment is not durable-state proof. Readiness is not activation authority. A receiver receipt is not private acceptance. Private acceptance is not publication. Publication is not Master Record custody.
+Process start is not deployment. Deployment is not durable-state proof. Readiness is not activation authority. A receiver receipt is not private acceptance. Private acceptance is not publication. Publication is not Master Record custody.

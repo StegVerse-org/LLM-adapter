@@ -167,3 +167,15 @@ github_token_runtime_authority=NONE
 ```
 
 Public reachability and hostname verification are separate observations; none of them, nor local health, gates the start transition (Task Registry global invariants: `destination_liveness_is_transition_predicate=false`, `external_machine_awaiting_allowed=false`). `status` makes one health observation, verifying TLS against the gateway's own certificate file.
+
+## Container path retired (LLMA-368)
+
+StegVerse-Labs/.github#3182 moved resident-stack activation to `scripts/stegdeploy_native_gateway.py` and carried the control-bundle materialization into `scripts/activate_resident_stack.py`, so nothing invokes the Docker path any more. It is removed: `Dockerfile`, `Dockerfile.portable-node`, `Dockerfile.service-gateway`, `compose.yaml`, `compose.stegdeploy.yaml`, `compose.stegdeploy.tls.yaml`, `scripts/stegdeploy_bootstrap.py`, `scripts/container-entrypoint.sh` and `scripts/run_user_llm_portable_test.sh`.
+
+What the container entrypoint did now happens in the native launcher:
+
+- durable stores (`STEGVERSE_TRANSITION_DB`, `STEGVERSE_EXTERNAL_REVIEW_DB`, `STEGVERSE_HIL_DATA_DIR`, `STEGVERSE_GATEWAY_FORWARD_DB`) default beneath the durable root unless the operator names them;
+- `serve` runs `python -m llm_adapter.custody_worker` and the gateway forward-queue drain once each (both always return) and then serves with `access_log=False`.
+
+TLS material validation is the launcher's `validate_tls` (key outside the repository, owner-only permissions, matching pair). `scripts/start-hil-runtime.sh` starts the HIL receiver on the launcher and observes readiness once, non-gating.
+

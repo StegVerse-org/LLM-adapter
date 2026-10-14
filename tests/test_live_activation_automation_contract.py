@@ -109,29 +109,6 @@ def test_portable_node_runtime_preserves_tvc_authorized_environment(monkeypatch,
     assert env["STEGVERSE_NODE_ROOT"] == str(tmp_path)
 
 
-def test_portable_node_image_is_repository_owned_multi_arch_and_fail_closed() -> None:
-    dockerfile = (ROOT / "Dockerfile.portable-node").read_text()
-    for required in (
-        "FROM python:3.12-slim",
-        "STEGVERSE_BIND_HOST=0.0.0.0",
-        "STEGVERSE_NODE_ROOT=/var/lib/stegverse/portable-node",
-        "USER stegverse",
-        'VOLUME ["/var/lib/stegverse/portable-node"]',
-        'ENTRYPOINT ["python", "-m", "llm_adapter.node_bootstrap"]',
-        'CMD ["bootstrap", "--root", "/var/lib/stegverse/portable-node"]',
-    ):
-        assert required in dockerfile
-    for prohibited in (
-        "node_service\", \"daemon",
-        "HEALTHCHECK",
-        "EXPOSE",
-        "STEGVERSE_PROVIDER_TOKEN=",
-        "STEGVERSE_MASTER_RECORDS_TOKEN=",
-        "STEGVERSE_PROVIDER_ENABLED=true",
-    ):
-        assert prohibited not in dockerfile
-
-
 def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing() -> None:
     source = (ROOT / "scripts/write_live_activation_status.py").read_text()
     for required in (

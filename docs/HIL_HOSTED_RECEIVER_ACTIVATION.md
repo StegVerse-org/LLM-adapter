@@ -4,7 +4,7 @@
 
 This path resolves the public Site `NOT READY` state without participant-owned continuously live hardware.
 
-The receiver remains provider-neutral. `render.yaml` is a managed-host blueprint for the existing OCI runtime, not an architectural dependency. Any host satisfying the same HTTPS, secret-injection, durable-storage, restart, and evidence contract may replace it.
+Historical record: `render.yaml` and the repository container image it built have both been retired; the receiver now starts on the host-native launcher (`docs/HIL_RUNTIME_QUICKSTART.md`). The receiver remains provider-neutral. Any host satisfying the same HTTPS, secret-injection, durable-storage, restart, and evidence contract may replace it.
 
 ## Required outcome
 

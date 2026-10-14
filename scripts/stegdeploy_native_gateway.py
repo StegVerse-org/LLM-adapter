@@ -120,6 +120,11 @@ def child_env(
         "STEGVERSE_EVALUATOR_INTR_ENABLED": "true" if evaluator_enabled else "false",
         "STEGVERSE_EVALUATOR_INTR_UPSTREAM": evaluator_upstream if evaluator_enabled else "",
     })
+    # Durable stores default under the durable root unless the operator named them.
+    values.setdefault("STEGVERSE_TRANSITION_DB", str(durable_root / "stegverse-ecosystem-chat.db"))
+    values.setdefault("STEGVERSE_EXTERNAL_REVIEW_DB", str(durable_root / "stegverse-external-review.db"))
+    values.setdefault("STEGVERSE_HIL_DATA_DIR", str(durable_root / "hil"))
+    values.setdefault("STEGVERSE_GATEWAY_FORWARD_DB", str(durable_root / "stegverse-gateway-forward.db"))
     if tls_cert and tls_key:
         values["STEGDEPLOY_NATIVE_TLS_CERT_FILE"] = str(tls_cert.expanduser().resolve())
         values["STEGDEPLOY_NATIVE_TLS_KEY_FILE"] = str(tls_key.expanduser().resolve())
@@ -303,7 +308,20 @@ def status() -> dict:
 
 
 def serve(host: str, port: int) -> None:
+    """Run the startup workers once, then the gateway.
+
+    The workers record downstream and drain queued forwards; each always
+    returns, so startup never waits on a receiver. Uvicorn's own access log is
+    off because it records the raw request target; the gateway's query-safe
+    middleware logs instead.
+    """
     import uvicorn
+    from llm_adapter import custody_worker, gateway_forward_queue
+    hil_root = os.environ.get("STEGVERSE_HIL_DATA_DIR")
+    if hil_root:
+        Path(hil_root).mkdir(parents=True, exist_ok=True)
+    custody_worker.main()
+    gateway_forward_queue.main()
     cert = os.environ.get("STEGDEPLOY_NATIVE_TLS_CERT_FILE")
     key = os.environ.get("STEGDEPLOY_NATIVE_TLS_KEY_FILE")
     uvicorn.run(
@@ -314,6 +332,7 @@ def serve(host: str, port: int) -> None:
         ssl_keyfile=key,
         proxy_headers=False,
         server_header=False,
+        access_log=False,
     )
 
 
