@@ -18,7 +18,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter import collab_ingress, hil_intake_v1_1_api, service_gateway, service_gateway_hil_intr
 from llm_adapter.combined_gateway import app

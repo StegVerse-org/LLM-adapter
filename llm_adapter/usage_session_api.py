@@ -17,8 +17,8 @@ from pathlib import Path
 from threading import RLock
 from typing import Any
 
-from fastapi import APIRouter, Cookie, Header, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from llm_adapter.web import APIRouter, Cookie, Header, HTTPException
+from llm_adapter.web.model import BaseModel, ConfigDict, Field
 
 router = APIRouter()
 DB_PATH = os.getenv("STEGVERSE_USAGE_SESSION_DB", "/tmp/stegverse-usage-sessions.db")

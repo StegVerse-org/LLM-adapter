@@ -1,4 +1,4 @@
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter.math_solver_gateway import app, governed_solve, solve_expression
 

@@ -68,11 +68,7 @@ def create_app(
     transports: RouteTransports | None = None,
     load_environment: bool = True,
 ):
-    try:
-        from fastapi import FastAPI
-        from fastapi.responses import JSONResponse
-    except ImportError as exc:  # pragma: no cover
-        raise RuntimeError("FastAPI service dependencies are not installed") from exc
+    from llm_adapter.web import FastAPI, JSONResponse
 
     resolved = resolve_route_transports(transports, load_environment=load_environment)
     app = FastAPI(
@@ -133,10 +129,7 @@ def create_app(
 
 
 def main() -> int:
-    try:
-        import uvicorn
-    except ImportError as exc:  # pragma: no cover
-        raise RuntimeError("Uvicorn is not installed; install the service extra") from exc
+    from llm_adapter.web import server as web_server
     host = os.getenv("STEGVERSE_USER_LLM_HOST", "127.0.0.1")
     try:
         port = int(os.getenv("STEGVERSE_USER_LLM_PORT", "8080"))
@@ -144,7 +137,7 @@ def main() -> int:
         raise RuntimeError("STEGVERSE_USER_LLM_PORT must be an integer") from exc
     if not 1 <= port <= 65535:
         raise RuntimeError("STEGVERSE_USER_LLM_PORT must be between 1 and 65535")
-    uvicorn.run(
+    web_server.run(
         create_app(),
         host=host,
         port=port,

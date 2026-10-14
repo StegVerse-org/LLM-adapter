@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter import service_gateway_kv_onboarding as kv_gateway
 from llm_adapter.runtime_gateway import app

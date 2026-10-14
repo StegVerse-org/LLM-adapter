@@ -20,14 +20,16 @@ class ServicePackagingCredentialFreeTests(unittest.TestCase):
         assert any("stegcore @ git+https://github.com/StegVerse-Labs/StegCore.git@" in dependency for dependency in stegcore)
 
     def test_core_install_carries_no_third_party_package(self):
-        """pydantic is used only by the FastAPI service surfaces, so it lives in the
-        service/dev extras; a plain install carries only the pinned StegVerse SDK."""
+        """A plain install carries only the pinned StegVerse SDK, and no extra
+        brings back a web framework: the service surfaces run on llm_adapter/web."""
         data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
         core = data["project"]["dependencies"]
         assert len(core) == 1 and core[0].startswith("stegverse-sdk @ git+https://github.com/StegVerse-org/StegVerse-SDK.git@")
         extras = data["project"]["optional-dependencies"]
-        assert any(d.startswith("pydantic") for d in extras["service"])
-        assert any(d.startswith("pydantic") for d in extras["dev"])
+        frameworks = ("fastapi", "starlette", "pydantic", "uvicorn", "httpx", "python-multipart", "requests")
+        for name, packages in extras.items():
+            for package in packages:
+                assert not package.lower().startswith(frameworks), (name, package)
 
     def test_package_import_does_not_load_pydantic(self):
         probe = "import sys, llm_adapter; sys.exit(1 if 'pydantic' in sys.modules else 0)"

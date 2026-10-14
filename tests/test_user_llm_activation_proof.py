@@ -5,7 +5,7 @@ import unittest
 from hashlib import sha256
 from unittest import mock
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter.user_llm_activation import build_activation_proof
 from llm_adapter.user_llm_http_transport import HTTPRouteConfig

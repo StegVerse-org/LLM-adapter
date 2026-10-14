@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import unittest
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter.user_llm_deployment import evaluate_endpoint_readiness
 from llm_adapter.user_llm_http_transport import HTTPRouteConfig

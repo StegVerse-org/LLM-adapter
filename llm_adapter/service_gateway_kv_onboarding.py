@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict
 
-from fastapi import HTTPException, Request
+from llm_adapter.web import HTTPException, Request
 
 from llm_adapter.service_gateway import app
 

@@ -5,8 +5,8 @@ import re
 import stat
 from pathlib import Path
 
-from fastapi import HTTPException
-from fastapi.responses import PlainTextResponse
+from llm_adapter.web import HTTPException
+from llm_adapter.web import PlainTextResponse
 
 DEFAULT_CHALLENGE_ROOT = Path("/var/lib/stegverse/tvc/http01")
 TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{1,128}$")

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from llm_adapter.web import APIRouter, HTTPException
 
 from . import collab_ingress
 from .service_gateway_site import app

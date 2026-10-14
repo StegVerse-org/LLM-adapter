@@ -45,7 +45,7 @@ def bootstrap(root: Path | None = None) -> dict[str, Any]:
         "lifecycle": "reconstruct-on-demand",
         "authority_effect": "RUNTIME_ONLY",
         "entrypoint": [
-            "python", "-m", "uvicorn", "llm_adapter.deployed_gateway:app",
+            "python", "-m", "llm_adapter.web.server", "llm_adapter.deployed_gateway:app",
             "--host", "${HOST}", "--port", "${PORT}"
         ],
         "health": {"path": "/health", "timeout_seconds": 3, "attempts": 30},

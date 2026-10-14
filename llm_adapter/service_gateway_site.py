@@ -6,8 +6,8 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from fastapi import File, Form, HTTPException, Query, UploadFile
-from fastapi.responses import Response
+from llm_adapter.web import File, Form, HTTPException, Query, UploadFile
+from llm_adapter.web import Response
 
 from . import service_gateway as gateway
 app = gateway.app
@@ -273,8 +273,8 @@ def site_hil_submission_status(submission_id: str, receipt_id: str = Query(..., 
 
 
 def main() -> None:
-    import uvicorn
-    uvicorn.run("llm_adapter.service_gateway_site:app", host=os.getenv("HOST", "0.0.0.0"), port=int(os.getenv("PORT", "8080")))
+    from llm_adapter.web import server as web_server
+    web_server.run("llm_adapter.service_gateway_site:app", host=os.getenv("HOST", "0.0.0.0"), port=int(os.getenv("PORT", "8080")))
 
 
 if __name__ == "__main__":

@@ -11,8 +11,8 @@ from io import BytesIO
 from pathlib import Path
 from unittest import mock
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from llm_adapter.web import FastAPI
+from llm_adapter.web.testclient import TestClient
 from PIL import Image, ImageDraw
 
 from llm_adapter.attachment_intake import (

@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import unittest
 from unittest import mock
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 
 class UserLlmDeployedTestModeTests(unittest.TestCase):

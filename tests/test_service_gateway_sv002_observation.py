@@ -8,7 +8,7 @@ import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from unittest.mock import patch
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter.deployed_gateway import app
 from llm_adapter import service_gateway_sv002_observation as mod

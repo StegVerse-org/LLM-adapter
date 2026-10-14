@@ -13,8 +13,8 @@ from uuid import uuid4
 
 from llm_adapter import collab_ingress
 from llm_adapter.generated_intr import hil_submission_connector as canonical_intr
-from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
-from fastapi.responses import JSONResponse, Response
+from llm_adapter.web import APIRouter, File, Form, Header, HTTPException, UploadFile
+from llm_adapter.web import JSONResponse, Response
 
 router = APIRouter(prefix="/api/hil", tags=["hil-intake-v1.1"])
 PRIMARY_SHA256 = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"

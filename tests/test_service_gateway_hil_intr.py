@@ -11,8 +11,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from llm_adapter.web import FastAPI
+from llm_adapter.web.testclient import TestClient
 
 mod = importlib.import_module("llm_adapter.service_gateway_hil_intr")
 profile_mod = importlib.import_module("llm_adapter.hil_sovereign_receiver_profile")

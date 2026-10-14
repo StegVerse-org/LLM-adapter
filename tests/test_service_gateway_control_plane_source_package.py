@@ -9,8 +9,8 @@ import types
 import unittest
 from unittest import mock
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from llm_adapter.web import FastAPI
+from llm_adapter.web.testclient import TestClient
 
 mod = importlib.import_module("llm_adapter.service_gateway_hil_intr")
 

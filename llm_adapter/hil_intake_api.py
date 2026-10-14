@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
+from llm_adapter.web import APIRouter, File, Form, Header, HTTPException, UploadFile
 
 router = APIRouter(prefix="/api/hil", tags=["hil-intake"])
 PRIMARY_SHA256 = "52102cccb9ba9016c76434a64e22031b6a8c3edd3b8806e7b664e609216b2946"

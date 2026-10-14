@@ -26,7 +26,7 @@ import re
 import uuid
 from typing import Any
 
-from pydantic import BaseModel, Field
+from llm_adapter.web.model import BaseModel, Field
 
 from . import collab_ingress
 

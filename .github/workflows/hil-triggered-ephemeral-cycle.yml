@@ -38,7 +38,7 @@ jobs:
       - name: Install receiver source and bounded service runtime
         run: |
           python -m pip install -e .
-          python -m pip install "fastapi>=0.115" "uvicorn[standard]>=0.30" "python-multipart>=0.0.9" "pillow>=10.0" "pillow-heif>=0.16"
+          python -m pip install "pillow>=10.0" "pillow-heif>=0.16"
 
       - name: Record trigger binding
         run: |
@@ -69,7 +69,7 @@ jobs:
       - name: Start ephemeral HIL receiver
         run: |
           mkdir -p .hil-runtime/state .hil-runtime/sovereign-state .hil-runtime/evidence
-          nohup uvicorn llm_adapter.combined_gateway:app --host 127.0.0.1 --port 8765 > .hil-runtime/evidence/receiver.log 2>&1 &
+          nohup python -m llm_adapter.web.server llm_adapter.combined_gateway:app --host 127.0.0.1 --port 8765 > .hil-runtime/evidence/receiver.log 2>&1 &
           echo $! > .hil-runtime/evidence/receiver.pid
           READY=''
           for attempt in $(seq 1 40); do
@@ -191,7 +191,7 @@ jobs:
             ! kill -0 "$(cat .hil-runtime/evidence/receiver.pid)" 2>/dev/null && break
             sleep 1
           done
-          nohup uvicorn llm_adapter.combined_gateway:app --host 127.0.0.1 --port 8765 > .hil-runtime/evidence/receiver-restart.log 2>&1 &
+          nohup python -m llm_adapter.web.server llm_adapter.combined_gateway:app --host 127.0.0.1 --port 8765 > .hil-runtime/evidence/receiver-restart.log 2>&1 &
           echo $! > .hil-runtime/evidence/receiver-restart.pid
           for attempt in $(seq 1 40); do
             curl --fail --silent http://127.0.0.1:8765/api/hil/readiness >/dev/null && break

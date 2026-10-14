@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from typing import Any, Mapping
 
-from fastapi import APIRouter, HTTPException, Request
+from llm_adapter.web import APIRouter, HTTPException, Request
 
 router = APIRouter()
 

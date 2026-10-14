@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict
 
-from fastapi import HTTPException, Request
+from llm_adapter.web import HTTPException, Request
 
 from llm_adapter.service_gateway import app
 from llm_adapter.canonical_device_kv_stage import build_device_kv_stage_transport, canonical_json

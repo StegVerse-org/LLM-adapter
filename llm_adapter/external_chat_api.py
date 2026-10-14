@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from llm_adapter.web import APIRouter, HTTPException
+from llm_adapter.web.model import BaseModel, ConfigDict, Field
 
 from llm_adapter.external_framework_compatibility import evaluate_submission
 

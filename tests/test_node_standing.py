@@ -67,7 +67,7 @@ class HealthyNodeGrantsTypedIngressTests(unittest.TestCase):
     """A device registers, is told it is a healthy node, and gets its own instructions."""
 
     def setUp(self):
-        from fastapi.testclient import TestClient
+        from llm_adapter.web.testclient import TestClient
         from llm_adapter.combined_gateway import app
         self.client = TestClient(app)
 

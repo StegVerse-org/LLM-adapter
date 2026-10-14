@@ -17,8 +17,8 @@ from pathlib import Path
 from unittest import mock
 from urllib import error as urlerror
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from llm_adapter.web import FastAPI
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter import gateway_forward_queue as queue
 from llm_adapter.deployed_gateway import app

@@ -16,8 +16,8 @@ import os
 import uuid
 from typing import Any, Callable
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from llm_adapter.web import APIRouter, HTTPException
+from llm_adapter.web.model import BaseModel, Field
 
 from .service_gateway_site import app
 from .steggate_portable_consumer import (
@@ -276,9 +276,8 @@ app.include_router(router)
 
 
 def main() -> None:
-    import uvicorn
-
-    uvicorn.run(
+    from llm_adapter.web import server as web_server
+    web_server.run(
         "llm_adapter.math_solver_gateway:app",
         host=os.getenv("HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "8080")),

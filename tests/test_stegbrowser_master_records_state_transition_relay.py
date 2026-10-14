@@ -226,7 +226,7 @@ class StegbrowserMasterRecordsStateTransitionRelayTests(unittest.TestCase):
             relay_stegbrowser_state_transition(body, post=lambda *a, **k: Response(response))
 
     def test_relay_failure_is_six_field_non_allow_and_never_gates(self):
-        from fastapi.testclient import TestClient
+        from llm_adapter.web.testclient import TestClient
 
         from llm_adapter import combined_gateway
 

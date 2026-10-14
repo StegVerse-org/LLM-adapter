@@ -10,7 +10,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
-from fastapi import APIRouter, Form, Header, HTTPException
+from llm_adapter.web import APIRouter, Form, Header, HTTPException
 
 router = APIRouter(prefix="/api/hil", tags=["hil-publication"])
 RESPONSE_ID = re.compile(r"^HIL-RESP-[A-Z0-9-]+$")

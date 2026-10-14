@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter.combined_gateway import app
 from llm_adapter.generated_intr import hil_submission_connector as canonical_intr
