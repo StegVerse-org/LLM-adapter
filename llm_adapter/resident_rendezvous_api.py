@@ -245,7 +245,7 @@ def _validate_legacy_resident_request(value: Mapping[str, Any]) -> dict[str, Any
             raise ResidentRendezvousError("resident_request steps mismatch")
     elif steps != CURRENT_ALLOWED_STEPS:
         raise ResidentRendezvousError("resident_request steps mismatch")
-    allowed = set(expected) | {"request_id", "note"}
+    allowed = set(expected) | {"request_id", "steps", "note"}
     if set(value) - allowed:
         raise ResidentRendezvousError("resident_request contains unsupported fields")
     if "note" in value and (not isinstance(value["note"], str) or len(value["note"]) > 1000):

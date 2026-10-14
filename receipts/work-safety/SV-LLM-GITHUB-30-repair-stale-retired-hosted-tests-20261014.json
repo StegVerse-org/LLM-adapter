@@ -10,7 +10,7 @@
   ],
   "master_records_review": {
     "applicable": false,
-    "reason": "Test-only repair: tests that read retired Render blueprints now assert their retirement, and the portable-node manifest version expectation follows the deliberate 1.4.0 bump (cca4225); no runtime, Organization append or Master Records transition."
+    "reason": "Test-only repair: tests that read retired Render blueprints now assert their retirement, and the portable-node manifest version expectation follows the deliberate 1.4.0 bump (cca4225); no runtime, Organization append or Master Records transition. Also a one-line runtime fix: resident_rendezvous_api accepted no 'steps' field although the legacy validator requires and allowlists it, so every legacy/current resident request failed 'unsupported fields'."
   },
   "cross_task_coordination": {
     "checked": true,
@@ -29,7 +29,11 @@
       "tests/test_production_gateway_blueprint.py",
       "tests/test_portable_node_runtime_contract.py",
       "tests/test_destination_activation_state_sovereign.py",
-      "llm_adapter/node_bootstrap.py"
+      "llm_adapter/node_bootstrap.py",
+      "llm_adapter/resident_rendezvous_api.py",
+      "tests/test_resident_rendezvous_api.py",
+      "tests/test_sdk_extcollab_resident_rendezvous_profiles.py",
+      "tests/test_reusable_resident_rendezvous_gadi.py"
     ]
   },
   "reuse_decision": "EXTEND",
@@ -41,7 +45,7 @@
   },
   "readme_impact": {
     "material_function_change": false,
-    "no_readme_update_reason": "Test-only change; no package behaviour or documented usage changes.",
+    "no_readme_update_reason": "Bug fix restoring the documented resident-request contract (steps are required and exactly allowlisted); tests otherwise only. No API or documented usage change.",
     "evidence_refs": [
       "tests/test_render_blueprint_contract.py"
     ]
@@ -49,7 +53,8 @@
   "covered_paths": [
     "tests/test_render_blueprint_contract.py",
     "tests/test_production_gateway_blueprint.py",
-    "tests/test_portable_node_runtime_contract.py"
+    "tests/test_portable_node_runtime_contract.py",
+    "llm_adapter/resident_rendezvous_api.py"
   ],
   "new_files": []
 }
