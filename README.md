@@ -537,7 +537,7 @@ Repository verification remains available through the existing test and verifica
 pytest
 python scripts/smoke_governed_session.py
 python scripts/verify_goal4.py
-pytest tests/test_execute_canonical_sovereign_route.py -v
+python -m unittest -v tests/test_execute_canonical_sovereign_route.py
 python -m unittest tests/test_distributed_workload.py
 python scripts/check_distributed_llm_workload.py
 python -m unittest tests/test_distributed_executor.py

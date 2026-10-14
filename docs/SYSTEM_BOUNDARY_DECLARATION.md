@@ -133,8 +133,8 @@ The declaration identifies a commit boundary and decision source, but does not p
 Run:
 
 ```bash
-pytest tests/test_system_boundary.py
-pytest tests/test_system_boundary_binding.py
+python -m unittest tests/test_system_boundary.py
+python -m unittest tests/test_system_boundary_binding.py
 ```
 
 The tests cover:

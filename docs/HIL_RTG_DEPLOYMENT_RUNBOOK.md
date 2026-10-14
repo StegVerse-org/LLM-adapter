@@ -107,7 +107,7 @@ Verify contracts and tests:
 
 ```bash
 python scripts/verify_hil_rtg_notification_contract.py
-pytest -q tests/test_hil_notification_delivery.py tests/test_hil_gateway_attempt_contract.py tests/test_hil_submission_status.py
+python -m unittest tests/test_hil_notification_delivery.py tests/test_hil_gateway_attempt_contract.py tests/test_hil_submission_status.py
 ```
 
 ## Attempt outcomes
