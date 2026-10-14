@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import unittest
 from pathlib import Path
 from unittest.mock import patch
 
@@ -28,37 +29,39 @@ def evidence() -> dict:
     return service_gateway_site._authority_evidence(TVC)
 
 
-def test_runtime_authority_evidence_conforms_to_schema() -> None:
-    jsonschema.validate(evidence(), SCHEMA)
+class HilAuthorityEvidenceSchemaTests(unittest.TestCase):
+    def test_runtime_authority_evidence_conforms_to_schema(self) -> None:
+        jsonschema.validate(evidence(), SCHEMA)
 
+    def test_live_schema_endpoint_matches_readiness_binding(self) -> None:
+        with patch.object(service_gateway_site.gateway, "_runtime", return_value={"tvc": TVC}):
+            readiness = service_gateway_site.site_hil_readiness()
+        response = service_gateway_site.hil_authority_evidence_schema()
+        assert response.media_type == "application/schema+json"
+        assert readiness["authority_evidence_schema_path"] == service_gateway_site.AUTHORITY_EVIDENCE_SCHEMA_PATH
+        assert readiness["authority_evidence_schema_sha256"] == service_gateway_site._schema_sha256(
+            service_gateway_site.AUTHORITY_EVIDENCE_SCHEMA_PATH
+        )
 
-def test_live_schema_endpoint_matches_readiness_binding() -> None:
-    with patch.object(service_gateway_site.gateway, "_runtime", return_value={"tvc": TVC}):
-        readiness = service_gateway_site.site_hil_readiness()
-    response = service_gateway_site.hil_authority_evidence_schema()
-    assert response.media_type == "application/schema+json"
-    assert readiness["authority_evidence_schema_path"] == service_gateway_site.AUTHORITY_EVIDENCE_SCHEMA_PATH
-    assert readiness["authority_evidence_schema_sha256"] == service_gateway_site._schema_sha256(
-        service_gateway_site.AUTHORITY_EVIDENCE_SCHEMA_PATH
-    )
-
-
-def test_schema_rejects_extra_or_restricted_fields() -> None:
-    payload = evidence()
-    payload["allowed_keys"] = ["secret/name"]
-    try:
-        jsonschema.validate(payload, SCHEMA)
-    except jsonschema.ValidationError:
-        return
-    raise AssertionError("authority evidence schema accepted restricted field exposure")
-
-
-def test_schema_rejects_denied_scope_or_wrong_allowed_count() -> None:
-    for field, value in (("denied_key_count", 1), ("allowed_key_count", 3)):
+    def test_schema_rejects_extra_or_restricted_fields(self) -> None:
         payload = evidence()
-        payload[field] = value
+        payload["allowed_keys"] = ["secret/name"]
         try:
             jsonschema.validate(payload, SCHEMA)
         except jsonschema.ValidationError:
-            continue
-        raise AssertionError(f"authority evidence schema accepted invalid {field}")
+            return
+        raise AssertionError("authority evidence schema accepted restricted field exposure")
+
+    def test_schema_rejects_denied_scope_or_wrong_allowed_count(self) -> None:
+        for field, value in (("denied_key_count", 1), ("allowed_key_count", 3)):
+            payload = evidence()
+            payload[field] = value
+            try:
+                jsonschema.validate(payload, SCHEMA)
+            except jsonschema.ValidationError:
+                continue
+            raise AssertionError(f"authority evidence schema accepted invalid {field}")
+
+
+if __name__ == "__main__":
+    unittest.main()

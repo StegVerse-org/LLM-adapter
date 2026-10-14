@@ -1,0 +1,77 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-STDLIB-UNITTEST-8",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-harness change only: fourteen HIL custody, provenance, publication, receiver-probe, readiness/authority schema and Service Gateway test files move from pytest to the standard-library unittest, and scripts/verify_hil_compatibility_full.py runs its suites with python -m unittest; no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/412"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "scripts/verify_hil_compatibility_full.py",
+      "tests/test_generated_hil_intr_connector.py",
+      "tests/test_hil_authority_evidence.py",
+      "tests/test_hil_authority_evidence_schema.py",
+      "tests/test_hil_controlled_cycle.py",
+      "tests/test_hil_gateway_attempt_contract.py",
+      "tests/test_hil_https_receiver_probe.py",
+      "tests/test_hil_intake_manifest_conformance.py",
+      "tests/test_hil_provenance_chain.py",
+      "tests/test_hil_publication_api.py",
+      "tests/test_hil_readiness_schema.py",
+      "tests/test_hil_storage_consistency.py",
+      "tests/test_service_gateway.py",
+      "tests/test_service_gateway_hil_receiver_proxy.py",
+      "tests/test_stegdeploy_sovereign_hil_profile.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches these test files or scripts/verify_hil_compatibility_full.py."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Package behaviour is unchanged and no README verification command names these files; only test harness, workflow steps and verification scripts change.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    "scripts/verify_hil_compatibility_full.py",
+    "tests/test_generated_hil_intr_connector.py",
+    "tests/test_hil_authority_evidence.py",
+    "tests/test_hil_authority_evidence_schema.py",
+    "tests/test_hil_controlled_cycle.py",
+    "tests/test_hil_gateway_attempt_contract.py",
+    "tests/test_hil_https_receiver_probe.py",
+    "tests/test_hil_intake_manifest_conformance.py",
+    "tests/test_hil_provenance_chain.py",
+    "tests/test_hil_publication_api.py",
+    "tests/test_hil_readiness_schema.py",
+    "tests/test_hil_storage_consistency.py",
+    "tests/test_service_gateway.py",
+    "tests/test_service_gateway_hil_receiver_proxy.py",
+    "tests/test_stegdeploy_sovereign_hil_profile.py"
+  ],
+  "new_files": []
+}

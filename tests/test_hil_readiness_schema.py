@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import unittest
 from pathlib import Path
 from unittest.mock import patch
 
@@ -40,42 +41,42 @@ def rejects(payload: dict) -> bool:
     return False
 
 
-def test_runtime_readiness_conforms_to_schema() -> None:
-    jsonschema.validate(readiness_payload(), SCHEMA)
+class HilReadinessSchemaTests(unittest.TestCase):
+    def test_runtime_readiness_conforms_to_schema(self) -> None:
+        jsonschema.validate(readiness_payload(), SCHEMA)
 
-
-def test_readiness_rejects_unknown_fields() -> None:
-    payload = readiness_payload()
-    payload["internal_storage_path"] = "/private/runtime"
-    assert rejects(payload), "readiness schema accepted undeclared internal field"
-
-
-def test_readiness_rejects_unbounded_retry_authority() -> None:
-    payload = readiness_payload()
-    payload["notification_max_attempts"] = 21
-    assert rejects(payload), "readiness schema accepted retry authority above governed bound"
-
-
-def test_readiness_rejects_address_retention_claim() -> None:
-    payload = readiness_payload()
-    payload["expired_recipient_addresses_retained"] = True
-    assert rejects(payload), "readiness schema accepted expired-address retention"
-
-
-def test_readiness_requires_receipt_bound_status_authority() -> None:
-    payload = readiness_payload()
-    payload["submission_status_authorization"] = "SUBMISSION_ID_ONLY"
-    assert rejects(payload), "readiness schema accepted weaker status authority"
-
-
-def test_readiness_rejects_unbound_or_inadmissible_tvc_authority() -> None:
-    for field, invalid in (
-        ("tvc_authority_role", "other_role"),
-        ("tvc_admissible", False),
-        ("tvc_binding_matched", False),
-        ("tvc_decision_receipt_sha256", "not-a-digest"),
-        ("tvc_policy_hash", "not-a-policy-hash"),
-    ):
+    def test_readiness_rejects_unknown_fields(self) -> None:
         payload = readiness_payload()
-        payload[field] = invalid
-        assert rejects(payload), f"readiness schema accepted invalid {field}"
+        payload["internal_storage_path"] = "/private/runtime"
+        assert rejects(payload), "readiness schema accepted undeclared internal field"
+
+    def test_readiness_rejects_unbounded_retry_authority(self) -> None:
+        payload = readiness_payload()
+        payload["notification_max_attempts"] = 21
+        assert rejects(payload), "readiness schema accepted retry authority above governed bound"
+
+    def test_readiness_rejects_address_retention_claim(self) -> None:
+        payload = readiness_payload()
+        payload["expired_recipient_addresses_retained"] = True
+        assert rejects(payload), "readiness schema accepted expired-address retention"
+
+    def test_readiness_requires_receipt_bound_status_authority(self) -> None:
+        payload = readiness_payload()
+        payload["submission_status_authorization"] = "SUBMISSION_ID_ONLY"
+        assert rejects(payload), "readiness schema accepted weaker status authority"
+
+    def test_readiness_rejects_unbound_or_inadmissible_tvc_authority(self) -> None:
+        for field, invalid in (
+            ("tvc_authority_role", "other_role"),
+            ("tvc_admissible", False),
+            ("tvc_binding_matched", False),
+            ("tvc_decision_receipt_sha256", "not-a-digest"),
+            ("tvc_policy_hash", "not-a-policy-hash"),
+        ):
+            payload = readiness_payload()
+            payload[field] = invalid
+            assert rejects(payload), f"readiness schema accepted invalid {field}"
+
+
+if __name__ == "__main__":
+    unittest.main()

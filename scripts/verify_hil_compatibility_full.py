@@ -11,12 +11,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 COMMANDS: tuple[tuple[str, ...], ...] = (
     (sys.executable, "scripts/verify_hil_deployment_profile.py"),
-    (sys.executable, "-m", "pytest", "tests/test_hil_storage_consistency.py", "-v"),
-    (sys.executable, "-m", "pytest", "tests/test_hil_https_receiver_probe.py", "-v"),
-    (sys.executable, "-m", "pytest", "-q", "tests/test_hil_intake_api.py", "tests/test_hil_provenance_chain.py", "tests/test_hil_publication_api.py", "tests/test_hil_controlled_cycle.py"),
+    (sys.executable, "-m", "unittest", "-v", "tests/test_hil_storage_consistency.py"),
+    (sys.executable, "-m", "unittest", "-v", "tests/test_hil_https_receiver_probe.py"),
+    (sys.executable, "-m", "unittest", "tests/test_hil_intake_api.py", "tests/test_hil_provenance_chain.py", "tests/test_hil_publication_api.py", "tests/test_hil_controlled_cycle.py"),
     (sys.executable, "scripts/verify_hil_rtg_notification_contract.py"),
-    (sys.executable, "-m", "pytest", "-q", "tests/test_hil_notification_delivery.py", "tests/test_hil_gateway_attempt_contract.py", "tests/test_hil_submission_status.py", "tests/test_hil_notification_schema.py", "tests/test_hil_submission_status_schema.py", "tests/test_hil_readiness_contract.py", "tests/test_hil_readiness_schema.py", "tests/test_hil_authority_evidence.py", "tests/test_hil_authority_evidence_schema.py"),
-    (sys.executable, "-m", "pytest", "-q", "tests/test_service_gateway.py"),
+    (sys.executable, "-m", "unittest", "tests/test_hil_notification_delivery.py", "tests/test_hil_gateway_attempt_contract.py", "tests/test_hil_submission_status.py", "tests/test_hil_notification_schema.py", "tests/test_hil_submission_status_schema.py", "tests/test_hil_readiness_contract.py", "tests/test_hil_readiness_schema.py", "tests/test_hil_authority_evidence.py", "tests/test_hil_authority_evidence_schema.py"),
+    (sys.executable, "-m", "unittest", "tests/test_service_gateway.py"),
 )
 
 
