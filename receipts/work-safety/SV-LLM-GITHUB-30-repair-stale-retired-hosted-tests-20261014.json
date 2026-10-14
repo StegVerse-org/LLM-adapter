@@ -1,0 +1,60 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-REPAIR-STALE-RETIRED-HOSTED-TESTS",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-only repair: tests that read retired Render blueprints now assert their retirement, and the portable-node manifest version expectation follows the deliberate 1.4.0 bump (cca4225); no runtime, Organization append or Master Records transition. Also a one-line runtime fix: resident_rendezvous_api accepted no 'steps' field although the legacy validator requires and allowlists it, so every legacy/current resident request failed 'unsupported fields'."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/SV-LLM/.github/issues/30#issuecomment-6138797322"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "tests/test_render_blueprint_contract.py",
+      "tests/test_production_gateway_blueprint.py",
+      "tests/test_portable_node_runtime_contract.py",
+      "tests/test_destination_activation_state_sovereign.py",
+      "llm_adapter/node_bootstrap.py",
+      "llm_adapter/resident_rendezvous_api.py",
+      "tests/test_resident_rendezvous_api.py",
+      "tests/test_sdk_extcollab_resident_rendezvous_profiles.py",
+      "tests/test_reusable_resident_rendezvous_gadi.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches these test files."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Bug fix restoring the documented resident-request contract (steps are required and exactly allowlisted); tests otherwise only. No API or documented usage change.",
+    "evidence_refs": [
+      "tests/test_render_blueprint_contract.py"
+    ]
+  },
+  "covered_paths": [
+    "tests/test_render_blueprint_contract.py",
+    "tests/test_production_gateway_blueprint.py",
+    "tests/test_portable_node_runtime_contract.py",
+    "llm_adapter/resident_rendezvous_api.py"
+  ],
+  "new_files": []
+}
