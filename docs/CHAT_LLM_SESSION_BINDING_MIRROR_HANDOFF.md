@@ -112,7 +112,7 @@ activation effect: NONE
 The shared dispatcher runs:
 
 ```bash
-$PYTHON_BIN -m pytest tests/test_chat_session_binding.py -q
+$PYTHON_BIN -m unittest tests/test_chat_session_binding.py
 $PYTHON_BIN scripts/verify_chat_session_binding.py --write-receipt
 ```
 

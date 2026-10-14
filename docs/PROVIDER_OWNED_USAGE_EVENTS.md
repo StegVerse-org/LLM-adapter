@@ -43,7 +43,7 @@ Each event binds:
 
 ```bash
 python scripts/verify_provider_usage_event.py
-python -m pytest -q tests/test_provider_usage_event.py
+python -m unittest tests/test_provider_usage_event.py
 ```
 
 The canonical fixture is:

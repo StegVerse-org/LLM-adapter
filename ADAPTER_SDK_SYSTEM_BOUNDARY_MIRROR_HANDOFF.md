@@ -54,7 +54,7 @@ Fixture acceptance, SDK serialization, receipt handoff, and hash preservation do
 
 ```bash
 # LLM-adapter
-pytest tests/test_system_boundary_sdk_fixture.py -v
+python -m unittest -v tests/test_system_boundary_sdk_fixture.py
 
 # StegVerse-SDK
 pytest tests/test_adapter_system_boundary_fixture.py -v

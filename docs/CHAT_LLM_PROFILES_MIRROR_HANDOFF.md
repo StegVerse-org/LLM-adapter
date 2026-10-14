@@ -103,7 +103,7 @@ activation effect: NONE
 The shared dispatcher runs:
 
 ```bash
-$PYTHON_BIN -m pytest tests/test_chat_llm_profiles.py -q
+$PYTHON_BIN -m unittest tests/test_chat_llm_profiles.py
 $PYTHON_BIN scripts/verify_chat_llm_profiles.py --write-receipt
 ```
 

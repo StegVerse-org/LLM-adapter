@@ -1,0 +1,67 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-STDLIB-UNITTEST-12",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-harness and documentation change only: tests/test_transition_store_and_custody.py moves from pytest to the standard-library unittest, and the verification commands in README.md and eight documents that name suites now on unittest are updated to python -m unittest; no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/417"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "ADAPTER_SDK_SYSTEM_BOUNDARY_MIRROR_HANDOFF.md",
+      "README.md",
+      "docs/ACTIVATION_STATUS.md",
+      "docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md",
+      "docs/CHAT_LLM_SESSION_BINDING_MIRROR_HANDOFF.md",
+      "docs/HIL_RTG_DEPLOYMENT_RUNBOOK.md",
+      "docs/PROVIDER_OWNED_USAGE_EVENTS.md",
+      "docs/SERVICE_GATEWAY_HIL_INTAKE.md",
+      "docs/SYSTEM_BOUNDARY_DECLARATION.md",
+      "tests/test_transition_store_and_custody.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches this test file or these documents."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Package behaviour is unchanged; README verification commands that name these files are updated to python -m unittest in the same change set.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    "ADAPTER_SDK_SYSTEM_BOUNDARY_MIRROR_HANDOFF.md",
+    "README.md",
+    "docs/ACTIVATION_STATUS.md",
+    "docs/CHAT_LLM_PROFILES_MIRROR_HANDOFF.md",
+    "docs/CHAT_LLM_SESSION_BINDING_MIRROR_HANDOFF.md",
+    "docs/HIL_RTG_DEPLOYMENT_RUNBOOK.md",
+    "docs/PROVIDER_OWNED_USAGE_EVENTS.md",
+    "docs/SERVICE_GATEWAY_HIL_INTAKE.md",
+    "docs/SYSTEM_BOUNDARY_DECLARATION.md",
+    "tests/test_transition_store_and_custody.py"
+  ],
+  "new_files": []
+}

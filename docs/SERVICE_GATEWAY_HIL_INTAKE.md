@@ -71,7 +71,7 @@ Duplicate submission of the same `packet_id` restores the durable receipt instea
 ## Verification
 
 ```bash
-pytest tests/test_service_gateway.py -v
+python -m unittest -v tests/test_service_gateway.py
 ```
 
 The tests cover readiness, durable PDF intake, hash binding, receipt generation, duplicate recovery, and denial of mixed intake/provider scope.

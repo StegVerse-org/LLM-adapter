@@ -97,9 +97,9 @@ Run free-tier checks directly:
 python scripts/verify_free_tier_quota.py
 python scripts/verify_free_tier_limits.py
 python scripts/verify_ai_entry_free_tier_metadata.py
-python -m pytest tests/test_free_tier_quota.py -v
-python -m pytest tests/test_free_tier_limits.py -v
-python -m pytest tests/test_ai_entry_free_tier_trust_metadata.py -v
+python -m unittest -v tests/test_free_tier_quota.py
+python -m unittest -v tests/test_free_tier_limits.py
+python -m unittest -v tests/test_ai_entry_free_tier_trust_metadata.py
 ```
 
 Expected smoke result:
