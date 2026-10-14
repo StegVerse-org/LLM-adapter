@@ -7,23 +7,28 @@ execution may submit to, wait on, or be gated by a Master Records usage endpoint
 """
 import ast
 import importlib.util
+import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_master_records_usage_client_module_is_gone():
-    assert importlib.util.find_spec("llm_adapter.master_records_usage_record") is None
-    assert not (ROOT / "llm_adapter" / "master_records_usage_record.py").exists()
+class MasterRecordsUsageRecordTests(unittest.TestCase):
+    def test_master_records_usage_client_module_is_gone(self):
+        assert importlib.util.find_spec("llm_adapter.master_records_usage_record") is None
+        assert not (ROOT / "llm_adapter" / "master_records_usage_record.py").exists()
+
+    def test_no_adapter_module_imports_or_calls_the_master_records_usage_client(self):
+        for path in (ROOT / "llm_adapter").rglob("*.py"):
+            text = path.read_text(encoding="utf-8")
+            assert "record_provider_usage_in_master_records" not in text, path
+            assert "STEGVERSE_MASTER_RECORDS_USAGE_URL" not in text, path
+            for node in ast.walk(ast.parse(text)):
+                if isinstance(node, ast.ImportFrom) and node.module:
+                    assert not node.module.endswith("master_records_usage_record"), path
+                if isinstance(node, ast.Import):
+                    assert all(not a.name.endswith("master_records_usage_record") for a in node.names), path
 
 
-def test_no_adapter_module_imports_or_calls_the_master_records_usage_client():
-    for path in (ROOT / "llm_adapter").rglob("*.py"):
-        text = path.read_text(encoding="utf-8")
-        assert "record_provider_usage_in_master_records" not in text, path
-        assert "STEGVERSE_MASTER_RECORDS_USAGE_URL" not in text, path
-        for node in ast.walk(ast.parse(text)):
-            if isinstance(node, ast.ImportFrom) and node.module:
-                assert not node.module.endswith("master_records_usage_record"), path
-            if isinstance(node, ast.Import):
-                assert all(not a.name.endswith("master_records_usage_record") for a in node.names), path
+if __name__ == "__main__":
+    unittest.main()

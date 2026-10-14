@@ -1,0 +1,81 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-STDLIB-UNITTEST-4",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-harness change only: fourteen AI Entry, free-tier, provider-usage and Chat-profile test files move from pytest to the standard-library unittest, and the validate.yml steps (and its iOS mirror) plus scripts/verify_goal4.py run them with python -m unittest; no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/402"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      ".github/workflows/validate.yml",
+      "iosnoperiod/github/workflows/validate.yml",
+      "scripts/verify_goal4.py",
+      "tests/test_ai_entry_backend_preview_marker.py",
+      "tests/test_ai_entry_backend_service.py",
+      "tests/test_ai_entry_endpoint.py",
+      "tests/test_ai_entry_free_tier_trust_metadata.py",
+      "tests/test_ai_entry_provider_boundary.py",
+      "tests/test_ai_entry_service_wrapper.py",
+      "tests/test_chat_llm_profiles.py",
+      "tests/test_free_tier_limits.py",
+      "tests/test_free_tier_quota.py",
+      "tests/test_governed_provider_tls_transport.py",
+      "tests/test_master_records_usage_record.py",
+      "tests/test_micro_node_return_path.py",
+      "tests/test_provider_usage.py",
+      "tests/test_provider_usage_event.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches these test files, the validate.yml test steps or scripts/verify_goal4.py."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Package behaviour is unchanged and no README verification command names these files; only test harness, workflow steps and verification scripts change.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "scripts/verify_goal4.py",
+    "tests/test_ai_entry_backend_preview_marker.py",
+    "tests/test_ai_entry_backend_service.py",
+    "tests/test_ai_entry_endpoint.py",
+    "tests/test_ai_entry_free_tier_trust_metadata.py",
+    "tests/test_ai_entry_provider_boundary.py",
+    "tests/test_ai_entry_service_wrapper.py",
+    "tests/test_chat_llm_profiles.py",
+    "tests/test_free_tier_limits.py",
+    "tests/test_free_tier_quota.py",
+    "tests/test_governed_provider_tls_transport.py",
+    "tests/test_master_records_usage_record.py",
+    "tests/test_micro_node_return_path.py",
+    "tests/test_provider_usage.py",
+    "tests/test_provider_usage_event.py"
+  ],
+  "new_files": []
+}

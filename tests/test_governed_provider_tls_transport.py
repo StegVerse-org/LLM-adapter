@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import ssl
 import subprocess
+import tempfile
 import threading
+import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from unittest import mock
 
 from llm_adapter import governed_provider
 
@@ -73,48 +77,67 @@ def generate_certificate(directory: Path) -> tuple[Path, Path]:
     return cert, key
 
 
-def test_tls_transport_auth_identity_receipt_and_ledger(monkeypatch, tmp_path: Path) -> None:
-    cert, key = generate_certificate(tmp_path)
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.load_cert_chain(certfile=cert, keyfile=key)
-    server = ThreadingHTTPServer(("127.0.0.1", 0), ProviderFixture)
-    server.socket = context.wrap_socket(server.socket, server_side=True)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    port = server.server_address[1]
+class GovernedProviderTlsTransportTests(unittest.TestCase):
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
 
-    monkeypatch.setenv("STEGVERSE_PROVIDER_ENABLED", "true")
-    monkeypatch.setenv("STEGVERSE_PROVIDER_ENDPOINT", f"https://localhost:{port}/generate")
-    monkeypatch.setenv("STEGVERSE_PROVIDER_ALLOWED_HOSTS", "localhost")
-    monkeypatch.setenv("STEGVERSE_PROVIDER_TOKEN", ProviderFixture.token)
-    monkeypatch.setenv("STEGVERSE_PROVIDER_MODEL", "stegverse-transport-fixture")
-    monkeypatch.setenv("STEGVERSE_PROVIDER_NAME", "stegverse-owned-provider")
-    monkeypatch.setenv("STEGVERSE_TRANSITION_DB", str(tmp_path / "provider-ledger.db"))
-    monkeypatch.setenv("STEGVERSE_PROVIDER_MAX_INPUT_CHARS", "12000")
-    monkeypatch.setenv("STEGVERSE_PROVIDER_MAX_OUTPUT_CHARS", "6000")
-    monkeypatch.setenv("STEGVERSE_PROVIDER_DAILY_REQUEST_LIMIT", "10")
-    monkeypatch.setenv("STEGVERSE_PROVIDER_DAILY_COST_LIMIT_USD", "5")
-    monkeypatch.setenv("STEGVERSE_PROVIDER_MAX_REQUEST_COST_USD", "1")
-    monkeypatch.setenv("REQUESTS_CA_BUNDLE", str(cert))
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
-    try:
-        result = governed_provider.generate(
-            message="Verify the StegVerse-owned provider transport.",
-            transition_id="transition.transport.0001",
-            run_id="run.transport.0001",
-        )
-    finally:
-        server.shutdown()
-        thread.join(timeout=5)
+    def test_tls_transport_auth_identity_receipt_and_ledger(self) -> None:
+        tmp_path = self._tmp_path()
+        cert, key = generate_certificate(tmp_path)
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(certfile=cert, keyfile=key)
+        server = ThreadingHTTPServer(("127.0.0.1", 0), ProviderFixture)
+        server.socket = context.wrap_socket(server.socket, server_side=True)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        port = server.server_address[1]
 
-    assert result.used is True
-    assert result.status == "USED"
-    assert result.provider_name == "stegverse-owned-provider"
-    assert result.model == "stegverse-transport-fixture"
-    assert result.provider_request_id == "fixture-provider-request-1"
-    assert result.provider_receipt_id.startswith("provider-response-receipt:sha256:")
-    assert result.fallback_required is False
-    assert result.text == "StegVerse TLS provider transport verified."
-    count, spent = governed_provider.ProviderUsageLedger().current("stegverse-owned-provider")
-    assert count == 1
-    assert spent > 0
+        self._setenv("STEGVERSE_PROVIDER_ENABLED", "true")
+        self._setenv("STEGVERSE_PROVIDER_ENDPOINT", f"https://localhost:{port}/generate")
+        self._setenv("STEGVERSE_PROVIDER_ALLOWED_HOSTS", "localhost")
+        self._setenv("STEGVERSE_PROVIDER_TOKEN", ProviderFixture.token)
+        self._setenv("STEGVERSE_PROVIDER_MODEL", "stegverse-transport-fixture")
+        self._setenv("STEGVERSE_PROVIDER_NAME", "stegverse-owned-provider")
+        self._setenv("STEGVERSE_TRANSITION_DB", str(tmp_path / "provider-ledger.db"))
+        self._setenv("STEGVERSE_PROVIDER_MAX_INPUT_CHARS", "12000")
+        self._setenv("STEGVERSE_PROVIDER_MAX_OUTPUT_CHARS", "6000")
+        self._setenv("STEGVERSE_PROVIDER_DAILY_REQUEST_LIMIT", "10")
+        self._setenv("STEGVERSE_PROVIDER_DAILY_COST_LIMIT_USD", "5")
+        self._setenv("STEGVERSE_PROVIDER_MAX_REQUEST_COST_USD", "1")
+        self._setenv("REQUESTS_CA_BUNDLE", str(cert))
+
+        try:
+            result = governed_provider.generate(
+                message="Verify the StegVerse-owned provider transport.",
+                transition_id="transition.transport.0001",
+                run_id="run.transport.0001",
+            )
+        finally:
+            server.shutdown()
+            thread.join(timeout=5)
+
+        assert result.used is True
+        assert result.status == "USED"
+        assert result.provider_name == "stegverse-owned-provider"
+        assert result.model == "stegverse-transport-fixture"
+        assert result.provider_request_id == "fixture-provider-request-1"
+        assert result.provider_receipt_id.startswith("provider-response-receipt:sha256:")
+        assert result.fallback_required is False
+        assert result.text == "StegVerse TLS provider transport verified."
+        count, spent = governed_provider.ProviderUsageLedger().current("stegverse-owned-provider")
+        assert count == 1
+        assert spent > 0
+
+
+if __name__ == "__main__":
+    unittest.main()
