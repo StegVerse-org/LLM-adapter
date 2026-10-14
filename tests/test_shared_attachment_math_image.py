@@ -2,8 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import shutil
+import tempfile
+import types
+import unittest
 from io import BytesIO
 from pathlib import Path
+from unittest import mock
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -38,171 +44,199 @@ def _client(tmp_path: Path, monkeypatch) -> TestClient:
     return TestClient(app)
 
 
-def test_real_png_decode_and_canonical_feature_vector() -> None:
-    data = _png_bytes()
-    decoded = decode_math_image(data)
-    assert decoded.media_type == "image/png"
-    assert (decoded.width, decoded.height) == (320, 200)
-    features = extract_normalized_visual_features(decoded.image)
-    assert tuple(features) == FEATURE_NAMES
-    assert all(0.0 <= value <= 1.0 for value in features.values())
-    assert features["edge_density"] > 0.0
+class SharedAttachmentMathImageTests(unittest.TestCase):
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
+
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _monkeypatch(self):
+        """The monkeypatch methods the module helpers call, each undone after the test."""
+        return types.SimpleNamespace(setenv=self._setenv)
+
+    def test_real_png_decode_and_canonical_feature_vector(self) -> None:
+        data = _png_bytes()
+        decoded = decode_math_image(data)
+        assert decoded.media_type == "image/png"
+        assert (decoded.width, decoded.height) == (320, 200)
+        features = extract_normalized_visual_features(decoded.image)
+        assert tuple(features) == FEATURE_NAMES
+        assert all(0.0 <= value <= 1.0 for value in features.values())
+        assert features["edge_density"] > 0.0
+
+    def test_review_keeps_source_image_distinct_from_transcription(self) -> None:
+        data = _png_bytes()
+        digest = hashlib.sha256(data).hexdigest()
+        review = review_math_image_bytes(data, attachment_id="math-image-test", content_hash=digest)
+        assert review["source_image"]["state"] == "source_image"
+        assert review["source_image"]["content_hash"] == f"sha256:{digest}"
+        assert review["visual_features"]["schema"] == FEATURE_SCHEMA
+        transcription = review["interpreted_mathematical_transcription"]
+        assert transcription["state"] == "NOT_PRODUCED"
+        assert transcription["content"] is None
+        assert transcription["is_source_fact"] is False
+        assert transcription["source_image_remains_immutable"] is True
+        assert review["vision_runtime_binding"]["reference_model_math_transcription_capable"] is False
+        assert review["next_stage"] == "MATH_CAPABLE_VISUAL_TRANSCRIPTION_REQUIRED"
+        assert all(value is False for value in review["authority"].values())
+
+    def test_shared_intake_persists_exact_bytes_and_review_is_idempotent(self) -> None:
+        tmp_path = self._tmp_path()
+        monkeypatch = self._monkeypatch()
+        client = _client(tmp_path, monkeypatch)
+        data = _png_bytes()
+        digest = hashlib.sha256(data).hexdigest()
+
+        response = client.post(
+            "/api/attachments/v1/intake",
+            data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-001", "declared_sha256": digest},
+            files={"artifact": ("equation.png", data, "image/png")},
+        )
+        assert response.status_code == 200, response.text
+        receipt = response.json()
+        assert receipt["state"] == "ACCEPTED"
+        assert receipt["content_hash"] == f"sha256:{digest}"
+        assert receipt["artifact_state"] == "EXACT_BYTES_PRESERVED"
+        assert receipt["authority"] == {
+            "execution": False,
+            "provider": False,
+            "publication": False,
+            "custody": False,
+        }
+
+        stored = tmp_path / "attachments" / "MATH-IMG-001" / receipt["artifact_name"]
+        assert stored.read_bytes() == data
+
+        duplicate = client.post(
+            "/api/attachments/v1/intake",
+            data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-001", "declared_sha256": digest},
+            files={"artifact": ("same-image.png", data, "image/jpeg")},
+        )
+        assert duplicate.status_code == 200
+        assert duplicate.json() == receipt
+
+        review_response = client.post(
+            "/api/math-solver/v1/image-review", json={"attachment_id": "MATH-IMG-001"}
+        )
+        assert review_response.status_code == 200, review_response.text
+        review = review_response.json()
+        assert review["source_image"]["content_hash"] == receipt["content_hash"]
+        assert review["interpreted_mathematical_transcription"]["state"] == "NOT_PRODUCED"
+
+        second = client.post(
+            "/api/math-solver/v1/image-review", json={"attachment_id": "MATH-IMG-001"}
+        )
+        assert second.status_code == 200
+        assert second.json() == review
+
+    def test_duplicate_attachment_id_with_different_bytes_fails_closed(self) -> None:
+        tmp_path = self._tmp_path()
+        monkeypatch = self._monkeypatch()
+        client = _client(tmp_path, monkeypatch)
+        first = _png_bytes(marker="x + 1 = 2")
+        second = _png_bytes(marker="x + 2 = 9")
+        response = client.post(
+            "/api/attachments/v1/intake",
+            data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-CONFLICT"},
+            files={"artifact": ("first.png", first, "image/png")},
+        )
+        assert response.status_code == 200
+        conflict = client.post(
+            "/api/attachments/v1/intake",
+            data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-CONFLICT"},
+            files={"artifact": ("second.png", second, "image/png")},
+        )
+        assert conflict.status_code == 409
+        assert conflict.json()["detail"] == "attachment_id_content_conflict"
+
+    def test_declared_hash_mismatch_fails_before_persistence(self) -> None:
+        tmp_path = self._tmp_path()
+        monkeypatch = self._monkeypatch()
+        client = _client(tmp_path, monkeypatch)
+        data = _png_bytes()
+        response = client.post(
+            "/api/attachments/v1/intake",
+            data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-002", "declared_sha256": "0" * 64},
+            files={"artifact": ("equation.png", data, "image/png")},
+        )
+        assert response.status_code == 422
+        assert response.json()["detail"] == "attachment_hash_mismatch"
+        assert not (tmp_path / "attachments" / "MATH-IMG-002").exists()
+
+    def test_content_type_spoof_does_not_override_real_decode(self) -> None:
+        tmp_path = self._tmp_path()
+        monkeypatch = self._monkeypatch()
+        client = _client(tmp_path, monkeypatch)
+        data = _png_bytes()
+        response = client.post(
+            "/api/attachments/v1/intake",
+            data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-003"},
+            files={"artifact": ("fake.jpg", data, "image/jpeg")},
+        )
+        assert response.status_code == 200
+        assert response.json()["media_type"] == "image/png"
+
+    def test_non_image_and_unknown_profile_fail_closed(self) -> None:
+        tmp_path = self._tmp_path()
+        monkeypatch = self._monkeypatch()
+        client = _client(tmp_path, monkeypatch)
+        response = client.post(
+            "/api/attachments/v1/intake",
+            data={"profile": MATH_IMAGE_PROFILE},
+            files={"artifact": ("not-image.png", b"not an image", "image/png")},
+        )
+        assert response.status_code == 422
+
+        response = client.post(
+            "/api/attachments/v1/intake",
+            data={"profile": "unowned-profile-v1"},
+            files={"artifact": ("equation.png", _png_bytes(), "image/png")},
+        )
+        assert response.status_code == 422
+        assert response.json()["detail"] == "attachment_profile_unsupported"
+
+    def test_readiness_exposes_shared_profile_without_claiming_authority(self) -> None:
+        tmp_path = self._tmp_path()
+        monkeypatch = self._monkeypatch()
+        client = _client(tmp_path, monkeypatch)
+        response = client.get("/api/attachments/v1/readiness")
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["state"] == "READY"
+        assert MATH_IMAGE_PROFILE in payload["profiles"]
+        assert payload["profiles"][MATH_IMAGE_PROFILE]["maximum_decoded_pixels"] == 80_000_000
+        assert payload["hil_legacy_intake_remains_compatible"] is True
+        assert payload["credential_authority"] == "TV/TVC"
+        assert payload["github_token_runtime_authority"] == "NONE"
+        assert payload["authority_granted"] is False
+
+    def test_persisted_receipt_reconstructs_hash(self) -> None:
+        tmp_path = self._tmp_path()
+        monkeypatch = self._monkeypatch()
+        client = _client(tmp_path, monkeypatch)
+        data = _png_bytes()
+        response = client.post(
+            "/api/attachments/v1/intake",
+            data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-004"},
+            files={"artifact": ("equation.png", data, "image/png")},
+        )
+        receipt = response.json()
+        receipt_path = tmp_path / "attachment-receipts" / "MATH-IMG-004.json"
+        persisted = json.loads(receipt_path.read_text(encoding="utf-8"))
+        assert persisted == receipt
+        without_hash = dict(persisted)
+        receipt_hash = without_hash.pop("receipt_sha256")
+        canonical = json.dumps(without_hash, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        assert receipt_hash == hashlib.sha256(canonical).hexdigest()
 
 
-def test_review_keeps_source_image_distinct_from_transcription() -> None:
-    data = _png_bytes()
-    digest = hashlib.sha256(data).hexdigest()
-    review = review_math_image_bytes(data, attachment_id="math-image-test", content_hash=digest)
-    assert review["source_image"]["state"] == "source_image"
-    assert review["source_image"]["content_hash"] == f"sha256:{digest}"
-    assert review["visual_features"]["schema"] == FEATURE_SCHEMA
-    transcription = review["interpreted_mathematical_transcription"]
-    assert transcription["state"] == "NOT_PRODUCED"
-    assert transcription["content"] is None
-    assert transcription["is_source_fact"] is False
-    assert transcription["source_image_remains_immutable"] is True
-    assert review["vision_runtime_binding"]["reference_model_math_transcription_capable"] is False
-    assert review["next_stage"] == "MATH_CAPABLE_VISUAL_TRANSCRIPTION_REQUIRED"
-    assert all(value is False for value in review["authority"].values())
-
-
-def test_shared_intake_persists_exact_bytes_and_review_is_idempotent(tmp_path: Path, monkeypatch) -> None:
-    client = _client(tmp_path, monkeypatch)
-    data = _png_bytes()
-    digest = hashlib.sha256(data).hexdigest()
-
-    response = client.post(
-        "/api/attachments/v1/intake",
-        data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-001", "declared_sha256": digest},
-        files={"artifact": ("equation.png", data, "image/png")},
-    )
-    assert response.status_code == 200, response.text
-    receipt = response.json()
-    assert receipt["state"] == "ACCEPTED"
-    assert receipt["content_hash"] == f"sha256:{digest}"
-    assert receipt["artifact_state"] == "EXACT_BYTES_PRESERVED"
-    assert receipt["authority"] == {
-        "execution": False,
-        "provider": False,
-        "publication": False,
-        "custody": False,
-    }
-
-    stored = tmp_path / "attachments" / "MATH-IMG-001" / receipt["artifact_name"]
-    assert stored.read_bytes() == data
-
-    duplicate = client.post(
-        "/api/attachments/v1/intake",
-        data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-001", "declared_sha256": digest},
-        files={"artifact": ("same-image.png", data, "image/jpeg")},
-    )
-    assert duplicate.status_code == 200
-    assert duplicate.json() == receipt
-
-    review_response = client.post(
-        "/api/math-solver/v1/image-review", json={"attachment_id": "MATH-IMG-001"}
-    )
-    assert review_response.status_code == 200, review_response.text
-    review = review_response.json()
-    assert review["source_image"]["content_hash"] == receipt["content_hash"]
-    assert review["interpreted_mathematical_transcription"]["state"] == "NOT_PRODUCED"
-
-    second = client.post(
-        "/api/math-solver/v1/image-review", json={"attachment_id": "MATH-IMG-001"}
-    )
-    assert second.status_code == 200
-    assert second.json() == review
-
-
-def test_duplicate_attachment_id_with_different_bytes_fails_closed(tmp_path: Path, monkeypatch) -> None:
-    client = _client(tmp_path, monkeypatch)
-    first = _png_bytes(marker="x + 1 = 2")
-    second = _png_bytes(marker="x + 2 = 9")
-    response = client.post(
-        "/api/attachments/v1/intake",
-        data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-CONFLICT"},
-        files={"artifact": ("first.png", first, "image/png")},
-    )
-    assert response.status_code == 200
-    conflict = client.post(
-        "/api/attachments/v1/intake",
-        data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-CONFLICT"},
-        files={"artifact": ("second.png", second, "image/png")},
-    )
-    assert conflict.status_code == 409
-    assert conflict.json()["detail"] == "attachment_id_content_conflict"
-
-
-def test_declared_hash_mismatch_fails_before_persistence(tmp_path: Path, monkeypatch) -> None:
-    client = _client(tmp_path, monkeypatch)
-    data = _png_bytes()
-    response = client.post(
-        "/api/attachments/v1/intake",
-        data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-002", "declared_sha256": "0" * 64},
-        files={"artifact": ("equation.png", data, "image/png")},
-    )
-    assert response.status_code == 422
-    assert response.json()["detail"] == "attachment_hash_mismatch"
-    assert not (tmp_path / "attachments" / "MATH-IMG-002").exists()
-
-
-def test_content_type_spoof_does_not_override_real_decode(tmp_path: Path, monkeypatch) -> None:
-    client = _client(tmp_path, monkeypatch)
-    data = _png_bytes()
-    response = client.post(
-        "/api/attachments/v1/intake",
-        data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-003"},
-        files={"artifact": ("fake.jpg", data, "image/jpeg")},
-    )
-    assert response.status_code == 200
-    assert response.json()["media_type"] == "image/png"
-
-
-def test_non_image_and_unknown_profile_fail_closed(tmp_path: Path, monkeypatch) -> None:
-    client = _client(tmp_path, monkeypatch)
-    response = client.post(
-        "/api/attachments/v1/intake",
-        data={"profile": MATH_IMAGE_PROFILE},
-        files={"artifact": ("not-image.png", b"not an image", "image/png")},
-    )
-    assert response.status_code == 422
-
-    response = client.post(
-        "/api/attachments/v1/intake",
-        data={"profile": "unowned-profile-v1"},
-        files={"artifact": ("equation.png", _png_bytes(), "image/png")},
-    )
-    assert response.status_code == 422
-    assert response.json()["detail"] == "attachment_profile_unsupported"
-
-
-def test_readiness_exposes_shared_profile_without_claiming_authority(tmp_path: Path, monkeypatch) -> None:
-    client = _client(tmp_path, monkeypatch)
-    response = client.get("/api/attachments/v1/readiness")
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["state"] == "READY"
-    assert MATH_IMAGE_PROFILE in payload["profiles"]
-    assert payload["profiles"][MATH_IMAGE_PROFILE]["maximum_decoded_pixels"] == 80_000_000
-    assert payload["hil_legacy_intake_remains_compatible"] is True
-    assert payload["credential_authority"] == "TV/TVC"
-    assert payload["github_token_runtime_authority"] == "NONE"
-    assert payload["authority_granted"] is False
-
-
-def test_persisted_receipt_reconstructs_hash(tmp_path: Path, monkeypatch) -> None:
-    client = _client(tmp_path, monkeypatch)
-    data = _png_bytes()
-    response = client.post(
-        "/api/attachments/v1/intake",
-        data={"profile": MATH_IMAGE_PROFILE, "attachment_id": "MATH-IMG-004"},
-        files={"artifact": ("equation.png", data, "image/png")},
-    )
-    receipt = response.json()
-    receipt_path = tmp_path / "attachment-receipts" / "MATH-IMG-004.json"
-    persisted = json.loads(receipt_path.read_text(encoding="utf-8"))
-    assert persisted == receipt
-    without_hash = dict(persisted)
-    receipt_hash = without_hash.pop("receipt_sha256")
-    canonical = json.dumps(without_hash, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-    assert receipt_hash == hashlib.sha256(canonical).hexdigest()
+if __name__ == "__main__":
+    unittest.main()

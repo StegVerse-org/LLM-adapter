@@ -1,7 +1,10 @@
+import contextlib
 import hashlib
 import json
-
-import pytest
+import os
+import types
+import unittest
+from unittest import mock
 
 from llm_adapter.stegbrowser_master_records_state_transition_relay import (
     LEGACY_TRANSITION_ID,
@@ -105,98 +108,141 @@ def _configure(monkeypatch):
     monkeypatch.setenv("STEGVERSE_MASTER_RECORDS_ALLOWED_HOSTS", "master-records.example")
 
 
-def test_relay_uses_server_side_tvtvc_credential_and_returns_exact_canonical_result(monkeypatch):
-    _configure(monkeypatch)
-    observed = {}
-    body = submission()
-    def post(url, data=None, headers=None, timeout=None):
-        observed.update(url=url, data=data, headers=headers, timeout=timeout)
-        return Response(recorded(body["receipt"]))
-    result = relay_stegbrowser_state_transition(body, post=post)
-    assert observed["url"] == "https://master-records.example/api/master-records/state-transitions"
-    assert observed["headers"]["Authorization"] == "Bearer server-only-token"
-    assert b"server-only-token" not in observed["data"]
-    assert "server-only-token" not in repr(result)
-    assert result["state"] == "RECORDED"
-    assert result["reconstruction_status"] == "PASS"
-    assert result["receipt_sha256"] == result["reconstructed_receipt_sha256"]
+class StegbrowserMasterRecordsStateTransitionRelayTests(unittest.TestCase):
+    @contextlib.contextmanager
+    def _case(self):
+        """A fresh tmp_path and cleanups for each parametrized case."""
+        with contextlib.ExitStack() as stack:
+            self._stack, self._tmp = stack, None
+            try:
+                yield
+            finally:
+                self._stack, self._tmp = None, None
+
+    def _cleanup(self, function, *args, **kwargs):
+        stack = getattr(self, "_stack", None)
+        if stack is not None:
+            stack.callback(function, *args, **kwargs)
+        else:
+            self.addCleanup(function, *args, **kwargs)
+
+    def _setattr(self, target, *args, raising=True):
+        """monkeypatch.setattr equivalent: dotted-path or (object, name) form, undone after the test."""
+        if isinstance(target, str):
+            patcher = mock.patch(target, *args, create=not raising)
+        else:
+            patcher = mock.patch.object(target, *args, create=not raising)
+        patcher.start()
+        self._cleanup(patcher.stop)
+
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self._cleanup(patcher.stop)
+
+    def _monkeypatch(self):
+        """The monkeypatch methods the module helpers call, each undone after the test."""
+        return types.SimpleNamespace(setattr=self._setattr, setenv=self._setenv)
+
+    def test_relay_uses_server_side_tvtvc_credential_and_returns_exact_canonical_result(self):
+        monkeypatch = self._monkeypatch()
+        _configure(monkeypatch)
+        observed = {}
+        body = submission()
+        def post(url, data=None, headers=None, timeout=None):
+            observed.update(url=url, data=data, headers=headers, timeout=timeout)
+            return Response(recorded(body["receipt"]))
+        result = relay_stegbrowser_state_transition(body, post=post)
+        assert observed["url"] == "https://master-records.example/api/master-records/state-transitions"
+        assert observed["headers"]["Authorization"] == "Bearer server-only-token"
+        assert b"server-only-token" not in observed["data"]
+        assert "server-only-token" not in repr(result)
+        assert result["state"] == "RECORDED"
+        assert result["reconstruction_status"] == "PASS"
+        assert result["receipt_sha256"] == result["reconstructed_receipt_sha256"]
+
+    def test_relay_fails_closed_on_boundary_or_immutable_identity_drift(self):
+        for mutate in [
+            lambda p: p.update(authority_requested=True),
+            lambda p: p["receipt"].update(subject_or_correlation_id="different"),
+            lambda p: p["receipt"].update(transition_sequence=2),
+            lambda p: p["receipt"].update(transition_outcome="INGRESS_ADMITTED"),
+            lambda p: p["receipt"]["transition_evidence"].update(intr_governance_decision="DENY"),
+        ]:
+            with self.subTest(mutate=mutate), self._case():
+                monkeypatch = self._monkeypatch()
+                _configure(monkeypatch)
+                body = submission()
+                mutate(body)
+                with self.assertRaises(StegBrowserMasterRecordsRelayError):
+                    relay_stegbrowser_state_transition(body, post=lambda *a, **k: None)
+
+    def test_relay_requires_exact_reconstruction_digest(self):
+        monkeypatch = self._monkeypatch()
+        _configure(monkeypatch)
+        body = submission()
+        bad = recorded(body["receipt"])
+        bad["reconstructed_receipt_sha256"] = "0" * 64
+        with self.assertRaisesRegex(StegBrowserMasterRecordsRelayError, "digest_mismatch"):
+            relay_stegbrowser_state_transition(body, post=lambda *a, **k: Response(bad))
+
+    def test_relay_accepts_organization_record_and_legacy_names(self):
+        for transition_id, record_field, schema in [
+            (TRANSITION_ID, "record_requested", "stegverse.master-records.state-transition-organization-record-receipt/v1"),
+            (LEGACY_TRANSITION_ID, "custody_requested", "stegverse.master-records.state-transition-custody-receipt/v1"),
+            (LEGACY_TRANSITION_ID, "record_requested", "stegverse.master-records.state-transition-organization-record-receipt/v1"),
+        ]:
+            with self.subTest(transition_id=transition_id, record_field=record_field, schema=schema), self._case():
+                monkeypatch = self._monkeypatch()
+                _configure(monkeypatch)
+                body = submission(transition_id, record_field)
+                observed = {}
+
+                def post(url, data=None, headers=None, timeout=None):
+                    observed["data"] = json.loads(data.decode("utf-8"))
+                    return Response(recorded(body["receipt"], schema))
+
+                result = relay_stegbrowser_state_transition(body, post=post)
+                assert result["state"] == "RECORDED"
+                assert result["transition_id"] == transition_id
+                assert observed["data"] == body
+
+    def test_relay_rejects_both_record_request_spellings_at_once(self):
+        monkeypatch = self._monkeypatch()
+        _configure(monkeypatch)
+        body = submission()
+        body["custody_requested"] = True
+        with self.assertRaisesRegex(StegBrowserMasterRecordsRelayError, "field_set_invalid"):
+            relay_stegbrowser_state_transition(body, post=lambda *a, **k: None)
+
+    def test_relay_rejects_response_for_a_different_transition_spelling(self):
+        monkeypatch = self._monkeypatch()
+        _configure(monkeypatch)
+        body = submission(LEGACY_TRANSITION_ID, "custody_requested")
+        response = recorded(body["receipt"])
+        response["transition_id"] = TRANSITION_ID
+        with self.assertRaisesRegex(StegBrowserMasterRecordsRelayError, "identity_mismatch"):
+            relay_stegbrowser_state_transition(body, post=lambda *a, **k: Response(response))
+
+    def test_relay_failure_is_six_field_non_allow_and_never_gates(self):
+        from fastapi.testclient import TestClient
+
+        from llm_adapter import combined_gateway
+
+        def refuse(_payload):
+            raise StegBrowserMasterRecordsRelayError("master_records_state_transition_relay_not_configured")
+
+        self._setattr(combined_gateway, "relay_stegbrowser_state_transition", refuse)
+        response = TestClient(combined_gateway.app).post("/api/master-records/state-transitions", json={})
+        assert response.status_code == 503
+        detail = response.json()["detail"]
+        for field in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                      "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+            assert detail[field]
+        assert detail["gates_transition"] is False
+        assert detail["custody_recorded"] is False
 
 
-@pytest.mark.parametrize("mutate", [
-    lambda p: p.update(authority_requested=True),
-    lambda p: p["receipt"].update(subject_or_correlation_id="different"),
-    lambda p: p["receipt"].update(transition_sequence=2),
-    lambda p: p["receipt"].update(transition_outcome="INGRESS_ADMITTED"),
-    lambda p: p["receipt"]["transition_evidence"].update(intr_governance_decision="DENY"),
-])
-def test_relay_fails_closed_on_boundary_or_immutable_identity_drift(monkeypatch, mutate):
-    _configure(monkeypatch)
-    body = submission()
-    mutate(body)
-    with pytest.raises(StegBrowserMasterRecordsRelayError):
-        relay_stegbrowser_state_transition(body, post=lambda *a, **k: None)
-
-
-def test_relay_requires_exact_reconstruction_digest(monkeypatch):
-    _configure(monkeypatch)
-    body = submission()
-    bad = recorded(body["receipt"])
-    bad["reconstructed_receipt_sha256"] = "0" * 64
-    with pytest.raises(StegBrowserMasterRecordsRelayError, match="digest_mismatch"):
-        relay_stegbrowser_state_transition(body, post=lambda *a, **k: Response(bad))
-
-
-@pytest.mark.parametrize("transition_id, record_field, schema", [
-    (TRANSITION_ID, "record_requested", "stegverse.master-records.state-transition-organization-record-receipt/v1"),
-    (LEGACY_TRANSITION_ID, "custody_requested", "stegverse.master-records.state-transition-custody-receipt/v1"),
-    (LEGACY_TRANSITION_ID, "record_requested", "stegverse.master-records.state-transition-organization-record-receipt/v1"),
-])
-def test_relay_accepts_organization_record_and_legacy_names(monkeypatch, transition_id, record_field, schema):
-    _configure(monkeypatch)
-    body = submission(transition_id, record_field)
-    observed = {}
-
-    def post(url, data=None, headers=None, timeout=None):
-        observed["data"] = json.loads(data.decode("utf-8"))
-        return Response(recorded(body["receipt"], schema))
-
-    result = relay_stegbrowser_state_transition(body, post=post)
-    assert result["state"] == "RECORDED"
-    assert result["transition_id"] == transition_id
-    assert observed["data"] == body
-
-
-def test_relay_rejects_both_record_request_spellings_at_once(monkeypatch):
-    _configure(monkeypatch)
-    body = submission()
-    body["custody_requested"] = True
-    with pytest.raises(StegBrowserMasterRecordsRelayError, match="field_set_invalid"):
-        relay_stegbrowser_state_transition(body, post=lambda *a, **k: None)
-
-
-def test_relay_rejects_response_for_a_different_transition_spelling(monkeypatch):
-    _configure(monkeypatch)
-    body = submission(LEGACY_TRANSITION_ID, "custody_requested")
-    response = recorded(body["receipt"])
-    response["transition_id"] = TRANSITION_ID
-    with pytest.raises(StegBrowserMasterRecordsRelayError, match="identity_mismatch"):
-        relay_stegbrowser_state_transition(body, post=lambda *a, **k: Response(response))
-
-
-def test_relay_failure_is_six_field_non_allow_and_never_gates(monkeypatch):
-    from fastapi.testclient import TestClient
-
-    from llm_adapter import combined_gateway
-
-    def refuse(_payload):
-        raise StegBrowserMasterRecordsRelayError("master_records_state_transition_relay_not_configured")
-
-    monkeypatch.setattr(combined_gateway, "relay_stegbrowser_state_transition", refuse)
-    response = TestClient(combined_gateway.app).post("/api/master-records/state-transitions", json={})
-    assert response.status_code == 503
-    detail = response.json()["detail"]
-    for field in ("failure_code", "failed_predicate", "required_evidence_or_repair",
-                  "retry_entrypoint", "owning_existing_goal", "next_attempt"):
-        assert detail[field]
-    assert detail["gates_transition"] is False
-    assert detail["custody_recorded"] is False
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,79 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-STDLIB-UNITTEST-9",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-harness change only: fourteen credential-free packaging, custody worker, local node, Service Gateway, user-LLM, Ecosystem Chat, gateway forward queue and StegBrowser relay test files move from pytest to the standard-library unittest, and scripts/verify_goal4_credential_free.py and scripts/verify_goal4_full.py run the converted suites with python -m unittest; no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/413"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "scripts/verify_goal4_credential_free.py",
+      "scripts/verify_goal4_full.py",
+      "tests/test_custody_worker_startup_limit.py",
+      "tests/test_ecosystem_chat_gateway.py",
+      "tests/test_gateway_forward_queue.py",
+      "tests/test_local_node_vertical_slice.py",
+      "tests/test_service_gateway_control_plane_source_package.py",
+      "tests/test_service_gateway_personal_origin.py",
+      "tests/test_service_packaging_credential_free.py",
+      "tests/test_shared_attachment_math_image.py",
+      "tests/test_stegbrowser_master_records_state_transition_relay.py",
+      "tests/test_user_llm_activation_proof.py",
+      "tests/test_user_llm_deployed_test_mode.py",
+      "tests/test_user_llm_endpoint_readiness.py",
+      "tests/test_user_llm_runtime_v3.py",
+      "tests/test_user_llm_smoke_test.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches these test files or the Goal 4 verification scripts."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Package behaviour is unchanged and no README verification command names these files; only test harness, workflow steps and verification scripts change.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    "scripts/verify_goal4_credential_free.py",
+    "scripts/verify_goal4_full.py",
+    "tests/test_custody_worker_startup_limit.py",
+    "tests/test_ecosystem_chat_gateway.py",
+    "tests/test_gateway_forward_queue.py",
+    "tests/test_local_node_vertical_slice.py",
+    "tests/test_service_gateway_control_plane_source_package.py",
+    "tests/test_service_gateway_personal_origin.py",
+    "tests/test_service_packaging_credential_free.py",
+    "tests/test_shared_attachment_math_image.py",
+    "tests/test_stegbrowser_master_records_state_transition_relay.py",
+    "tests/test_user_llm_activation_proof.py",
+    "tests/test_user_llm_deployed_test_mode.py",
+    "tests/test_user_llm_endpoint_readiness.py",
+    "tests/test_user_llm_runtime_v3.py",
+    "tests/test_user_llm_smoke_test.py"
+  ],
+  "new_files": []
+}

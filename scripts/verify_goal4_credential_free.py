@@ -16,11 +16,11 @@ from typing import Sequence
 ROOT = Path(__file__).resolve().parents[1]
 
 COMMANDS: tuple[tuple[str, ...], ...] = (
-    (sys.executable, "-m", "pytest", "tests/test_service_packaging_credential_free.py", "-v"),
-    (sys.executable, "-m", "pytest", "tests/test_custody_worker_startup_limit.py", "-v"),
+    (sys.executable, "-m", "unittest", "-v", "tests/test_service_packaging_credential_free.py"),
+    (sys.executable, "-m", "unittest", "-v", "tests/test_custody_worker_startup_limit.py"),
     (sys.executable, "scripts/verify_goal4.py"),
     (sys.executable, "scripts/check_architecture_guard.py"),
-    (sys.executable, "-m", "pytest", "tests/test_local_node_vertical_slice.py", "-v"),
+    (sys.executable, "-m", "unittest", "-v", "tests/test_local_node_vertical_slice.py"),
     (sys.executable, "scripts/check_stegverse_live_baseline_runtime_readiness.py"),
     (sys.executable, "scripts/check_stegverse_live_baseline_provider_authority_binding.py"),
     (sys.executable, "scripts/check_stegdeploy_image_publication_readiness.py"),
