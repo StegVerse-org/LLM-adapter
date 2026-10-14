@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import unittest
 from copy import deepcopy
 from types import SimpleNamespace
-
-import pytest
+from unittest import mock
 
 from llm_adapter import wiki_publication_master_records as mod
 
@@ -99,115 +99,6 @@ class FakeResponse:
         return self.body
 
 
-def test_build_receipt_binds_exact_publication_manifest_intr_and_sdk_result():
-    value = transition()
-    receipt = mod.build_publication_state_receipt(
-        publication_transition_id="publication:test",
-        publication_transition=value,
-        sdk_manifest=manifest(value),
-        governed_result=governed(value),
-        intr_allow_decision=decision(),
-        recorded_at="2026-09-21T20:00:00Z",
-    )
-    evidence = receipt["transition_evidence"]
-    assert receipt["transition_id"] == mod.TRANSITION_ID
-    assert receipt["transition_outcome"] == "ALLOW"
-    assert evidence["publication_transition_sha256"] == mod.canonical_sha256(value)
-    assert evidence["sdk_manifest_sha256"] == mod.canonical_sha256(manifest(value))
-    assert evidence["intr_transition_request_sha256"] == "a" * 64
-    assert evidence["intr_ingress_receipt_hash"] == "b" * 64
-    assert evidence["locally_generated_allow"] is False
-    assert len(receipt["required_evidence_manifest"]) == 4
-
-
-def test_non_allow_publication_never_builds_allow_closure():
-    value = transition("DENY_PUBLICATION")
-    with pytest.raises(mod.PublicationCustodyError, match="not_allow_candidate"):
-        mod.build_publication_state_receipt(
-            publication_transition_id="publication:test",
-            publication_transition=value,
-            sdk_manifest=manifest(value),
-            governed_result=governed(value),
-            intr_allow_decision=decision(),
-        )
-
-
-def test_local_or_detached_intr_allow_is_rejected():
-    value = transition()
-    local = decision()
-    local["locally_generated_allow"] = True
-    with pytest.raises(mod.PublicationCustodyError, match="locally_generated"):
-        mod.build_publication_state_receipt(
-            publication_transition_id="publication:test",
-            publication_transition=value,
-            sdk_manifest=manifest(value),
-            governed_result=governed(value),
-            intr_allow_decision=local,
-        )
-    detached = decision()
-    detached["request_hash"] = "c" * 64
-    with pytest.raises(mod.PublicationCustodyError, match="request_hash_mismatch"):
-        mod.build_publication_state_receipt(
-            publication_transition_id="publication:test",
-            publication_transition=value,
-            sdk_manifest=manifest(value),
-            governed_result=governed(value),
-            intr_allow_decision=detached,
-        )
-
-
-def test_downstream_recording_reports_recorded_only_on_pass_evidence_digest_and_reconstruction(monkeypatch):
-    value = transition()
-    monkeypatch.setattr(mod, "master_records_transport_enabled", lambda: True)
-    monkeypatch.setattr(mod, "_master_records_configuration", lambda: ("https://master-records.example/api/master-records/state-transitions", "server-token", 10.0, set(), False))
-    observed = {}
-    def post(url, json, headers, timeout):
-        submitted_receipt = json["receipt"]
-        digest = mod.canonical_sha256(submitted_receipt)
-        observed["post"] = (url, json, headers, timeout)
-        observed["receipt"] = submitted_receipt
-        observed["digest"] = digest
-        return FakeResponse({
-            "state": "RECORDED",
-            "reconstruction_status": "PASS",
-            "required_evidence_validation_status": "PASS",
-            "receipt_sha256": digest,
-            "reconstructed_receipt_sha256": digest,
-            "master_record_ref": "master-record:test",
-            "custody_receipt_id": "custody:test",
-            "master_records_grants_transition_authority": False,
-        })
-    def get(url, headers, timeout):
-        observed["get"] = (url, headers, timeout)
-        digest = observed["digest"]
-        return FakeResponse({
-            "state": "PASS",
-            "required_evidence_validation_status": "PASS",
-            "receipt_sha256": digest,
-            "reconstructed_receipt_sha256": digest,
-            "receipt": observed["receipt"],
-            "master_records_grants_transition_authority": False,
-        })
-    closure = mod.record_governed_publication_closure(
-        publication_transition_id="publication:test",
-        publication_transition=value,
-        sdk_manifest=manifest(value),
-        governed_result=governed(value),
-        intr_allow_decision=decision(),
-        post=post,
-        get=get,
-    )
-    digest = observed["digest"]
-    assert closure["state"] == "RECORDED"
-    assert closure["reconstruction_status"] == "PASS"
-    assert closure["required_evidence_validation_status"] == "PASS"
-    assert closure["receipt_sha256"] == closure["reconstructed_receipt_sha256"] == digest
-    assert observed["post"][2]["Authorization"] == "Bearer server-token"
-    assert observed["post"][1]["record_requested"] is True
-    assert "custody_requested" not in observed["post"][1]
-    assert observed["get"][0].endswith(f"/{digest}/reconstruction")
-    assert closure["gates_publication"] is False
-
 def _receipt(value):
     return mod.build_publication_state_receipt(
         publication_transition_id="publication:test",
@@ -216,83 +107,6 @@ def _receipt(value):
         governed_result=governed(value),
         intr_allow_decision=decision(),
     )
-
-
-def test_mutation_closes_on_organization_receipt_without_master_records(monkeypatch):
-    value = transition()
-    receipt = _receipt(value)
-    digest = mod.canonical_sha256(receipt)
-
-    def unreachable(*_args, **_kwargs):
-        raise AssertionError("verification must not consult Master Records")
-
-    monkeypatch.setattr(mod, "master_records_transport_enabled", unreachable)
-    monkeypatch.setattr(mod, "_master_records_configuration", unreachable)
-    verified = mod.verify_publication_transition_receipt(
-        transition_receipt=receipt,
-        receipt_sha256=digest,
-        publication_transition_id="publication:test",
-        publication_transition=value,
-    )
-    assert verified["state"] == "VERIFIED"
-    assert verified["verified_on"] == "ORGANIZATION_TRANSITION_RECEIPT"
-    assert verified["master_records_gates_publication"] is False
-
-
-def test_organization_receipt_verification_rejects_tampering():
-    value = transition()
-    receipt = _receipt(value)
-    digest = mod.canonical_sha256(receipt)
-    with pytest.raises(mod.PublicationCustodyError, match="digest_mismatch"):
-        mod.verify_publication_transition_receipt(
-            transition_receipt=receipt, receipt_sha256="0" * 64,
-            publication_transition_id="publication:test", publication_transition=value)
-    with pytest.raises(mod.PublicationCustodyError, match="subject_mismatch"):
-        mod.verify_publication_transition_receipt(
-            transition_receipt=receipt, receipt_sha256=digest,
-            publication_transition_id="publication:other", publication_transition=value)
-    forged = deepcopy(receipt)
-    forged["transition_evidence"]["locally_generated_allow"] = True
-    with pytest.raises(mod.PublicationCustodyError, match="local_allow_rejected"):
-        mod.verify_publication_transition_receipt(
-            transition_receipt=forged, receipt_sha256=mod.canonical_sha256(forged),
-            publication_transition_id="publication:test", publication_transition=value)
-
-
-def test_master_records_recording_is_optional_and_non_gating(monkeypatch):
-    value = transition()
-    monkeypatch.setattr(mod, "master_records_transport_enabled", lambda: False)
-    monkeypatch.setattr(mod, "_master_records_configuration", lambda: ("", "", 10.0, set(), False))
-    result = mod.record_governed_publication_closure(
-        publication_transition_id="publication:test",
-        publication_transition=value,
-        sdk_manifest=manifest(value),
-        governed_result=governed(value),
-        intr_allow_decision=decision(),
-    )
-    assert result["state"] == "NOT_RECORDED"
-    assert result["gates_publication"] is False
-    for field in ("failure_code", "failed_predicate", "required_evidence_or_repair",
-                  "retry_entrypoint", "owning_existing_goal", "next_attempt"):
-        assert result[field]
-    assert result["receipt_sha256"] == mod.canonical_sha256(result["receipt"])
-
-
-def test_master_records_rejection_is_reported_not_raised(monkeypatch):
-    value = transition()
-    monkeypatch.setattr(mod, "master_records_transport_enabled", lambda: True)
-    monkeypatch.setattr(mod, "_master_records_configuration", lambda: ("https://master-records.example/api/master-records/state-transitions", "server-token", 10.0, set(), False))
-    result = mod.record_governed_publication_closure(
-        publication_transition_id="publication:test",
-        publication_transition=value,
-        sdk_manifest=manifest(value),
-        governed_result=governed(value),
-        intr_allow_decision=decision(),
-        post=lambda *a, **k: FakeResponse({"state": "PENDING"}),
-    )
-    assert result["state"] == "NOT_RECORDED"
-    assert result["failure_code"].startswith("master_records_recording_failed")
-    assert result["gates_publication"] is False
 
 
 # The organization's own read-back governance decision (StegVerse-org/.github
@@ -345,60 +159,251 @@ def organization_receipt(value, **kwargs):
     )
 
 
-def test_organization_decision_builds_the_receipt_without_local_governance_or_external_intr():
-    value = transition()
-    receipt = organization_receipt(value)
-    evidence = receipt["transition_evidence"]
-    assert receipt["transition_outcome"] == "ALLOW"
-    assert evidence["intr_decision_origin"] == "organization_governance_return"
-    assert evidence["locally_generated_allow"] is False
-    assert evidence["governance_request_packet_id"] == "pkt-publication"
-    assert evidence["governance_request_sha256"] == "sha256:" + "e" * 64
-    assert receipt["governance_decision_ref_where_applicable"] == "sha256:" + "d" * 64
-    assert evidence["target_repository"] == "StegVerse-Labs/admissibility-wiki"
-    assert {item["evidence_type"] for item in receipt["required_evidence_manifest"]} == {
-        "PUBLICATION_TRANSITION_CANDIDATE", "SDK_INGRESS_MANIFEST",
-        "ORGANIZATION_GOVERNANCE_RETURN", "SDK_GOVERNANCE_RETURN_ACCEPTANCE"}
-    verified = mod.verify_publication_transition_receipt(
-        transition_receipt=receipt, receipt_sha256=mod.canonical_sha256(receipt),
-        publication_transition_id="publication:test", publication_transition=value)
-    assert verified["state"] == "VERIFIED"
+class WikiPublicationMasterRecordsTests(unittest.TestCase):
+    def _setattr(self, target, *args, raising=True):
+        """monkeypatch.setattr equivalent: dotted-path or (object, name) form, undone after the test."""
+        if isinstance(target, str):
+            patcher = mock.patch(target, *args, create=not raising)
+        else:
+            patcher = mock.patch.object(target, *args, create=not raising)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
+    def test_build_receipt_binds_exact_publication_manifest_intr_and_sdk_result(self):
+        value = transition()
+        receipt = mod.build_publication_state_receipt(
+            publication_transition_id="publication:test",
+            publication_transition=value,
+            sdk_manifest=manifest(value),
+            governed_result=governed(value),
+            intr_allow_decision=decision(),
+            recorded_at="2026-09-21T20:00:00Z",
+        )
+        evidence = receipt["transition_evidence"]
+        assert receipt["transition_id"] == mod.TRANSITION_ID
+        assert receipt["transition_outcome"] == "ALLOW"
+        assert evidence["publication_transition_sha256"] == mod.canonical_sha256(value)
+        assert evidence["sdk_manifest_sha256"] == mod.canonical_sha256(manifest(value))
+        assert evidence["intr_transition_request_sha256"] == "a" * 64
+        assert evidence["intr_ingress_receipt_hash"] == "b" * 64
+        assert evidence["locally_generated_allow"] is False
+        assert len(receipt["required_evidence_manifest"]) == 4
 
-@pytest.mark.parametrize("ret, acc, code", [
-    ({"governance_disposition": "DENY"}, {}, "organization_governance_did_not_allow_publication"),
-    ({}, {"governance_disposition": "DENY"}, "organization_governance_did_not_allow_publication"),
-    ({}, {"disposition": "FAIL_CLOSED", "end_to_end_acceptance": False}, "organization_governance_return_not_accepted"),
-    ({"decision_returned": False}, {}, "organization_governance_return_not_admitted"),
-    ({"closure_transition_class": "ORGANIZATION_EGRESS_CLOSURE_REFUSED"}, {}, "organization_governance_crossing_not_closed"),
-    ({"governance_request_packet_id": "pkt-other"}, {}, "organization_governance_packet_mismatch"),
-    ({"deciding_organization_receipt_sha256": "sha256:" + "f" * 64}, {}, "organization_governance_receipt_mismatch"),
-    ({"wire_manifest_sha256": "0" * 64}, {}, "organization_governance_decided_a_different_manifest"),
-    ({}, {"schema": "something-else"}, "organization_governance_acceptance_schema_invalid"),
-])
-def test_organization_decision_refuses_anything_but_an_accepted_allow_for_this_manifest(ret, acc, code):
-    value = transition()
-    with pytest.raises(mod.PublicationCustodyError, match=code):
-        organization_receipt(value, governance_return=organization_return(value, **ret),
-                             governance_acceptance=organization_acceptance(**acc))
+    def test_non_allow_publication_never_builds_allow_closure(self):
+        value = transition("DENY_PUBLICATION")
+        with self.assertRaisesRegex(mod.PublicationCustodyError, "not_allow_candidate"):
+            mod.build_publication_state_receipt(
+                publication_transition_id="publication:test",
+                publication_transition=value,
+                sdk_manifest=manifest(value),
+                governed_result=governed(value),
+                intr_allow_decision=decision(),
+            )
 
+    def test_local_or_detached_intr_allow_is_rejected(self):
+        value = transition()
+        local = decision()
+        local["locally_generated_allow"] = True
+        with self.assertRaisesRegex(mod.PublicationCustodyError, "locally_generated"):
+            mod.build_publication_state_receipt(
+                publication_transition_id="publication:test",
+                publication_transition=value,
+                sdk_manifest=manifest(value),
+                governed_result=governed(value),
+                intr_allow_decision=local,
+            )
+        detached = decision()
+        detached["request_hash"] = "c" * 64
+        with self.assertRaisesRegex(mod.PublicationCustodyError, "request_hash_mismatch"):
+            mod.build_publication_state_receipt(
+                publication_transition_id="publication:test",
+                publication_transition=value,
+                sdk_manifest=manifest(value),
+                governed_result=governed(value),
+                intr_allow_decision=detached,
+            )
 
-def test_organization_decision_still_requires_the_exact_publication_manifest():
-    value = transition()
-    other = transition()
-    other["target_path"] = "docs/external-frameworks/reports/other.md"
-    with pytest.raises(mod.PublicationCustodyError, match="sdk_manifest_publication_payload_mismatch"):
-        mod.build_publication_state_receipt_from_organization_decision(
-            publication_transition_id="publication:test", publication_transition=value,
-            sdk_manifest=manifest(other), governance_return=organization_return(value),
-            governance_acceptance=organization_acceptance())
+    def test_downstream_recording_reports_recorded_only_on_pass_evidence_digest_and_reconstruction(self):
+        value = transition()
+        self._setattr(mod, "master_records_transport_enabled", lambda: True)
+        self._setattr(mod, "_master_records_configuration", lambda: ("https://master-records.example/api/master-records/state-transitions", "server-token", 10.0, set(), False))
+        observed = {}
+        def post(url, json, headers, timeout):
+            submitted_receipt = json["receipt"]
+            digest = mod.canonical_sha256(submitted_receipt)
+            observed["post"] = (url, json, headers, timeout)
+            observed["receipt"] = submitted_receipt
+            observed["digest"] = digest
+            return FakeResponse({
+                "state": "RECORDED",
+                "reconstruction_status": "PASS",
+                "required_evidence_validation_status": "PASS",
+                "receipt_sha256": digest,
+                "reconstructed_receipt_sha256": digest,
+                "master_record_ref": "master-record:test",
+                "custody_receipt_id": "custody:test",
+                "master_records_grants_transition_authority": False,
+            })
+        def get(url, headers, timeout):
+            observed["get"] = (url, headers, timeout)
+            digest = observed["digest"]
+            return FakeResponse({
+                "state": "PASS",
+                "required_evidence_validation_status": "PASS",
+                "receipt_sha256": digest,
+                "reconstructed_receipt_sha256": digest,
+                "receipt": observed["receipt"],
+                "master_records_grants_transition_authority": False,
+            })
+        closure = mod.record_governed_publication_closure(
+            publication_transition_id="publication:test",
+            publication_transition=value,
+            sdk_manifest=manifest(value),
+            governed_result=governed(value),
+            intr_allow_decision=decision(),
+            post=post,
+            get=get,
+        )
+        digest = observed["digest"]
+        assert closure["state"] == "RECORDED"
+        assert closure["reconstruction_status"] == "PASS"
+        assert closure["required_evidence_validation_status"] == "PASS"
+        assert closure["receipt_sha256"] == closure["reconstructed_receipt_sha256"] == digest
+        assert observed["post"][2]["Authorization"] == "Bearer server-token"
+        assert observed["post"][1]["record_requested"] is True
+        assert "custody_requested" not in observed["post"][1]
+        assert observed["get"][0].endswith(f"/{digest}/reconstruction")
+        assert closure["gates_publication"] is False
 
+    def test_mutation_closes_on_organization_receipt_without_master_records(self):
+        value = transition()
+        receipt = _receipt(value)
+        digest = mod.canonical_sha256(receipt)
 
-def test_an_organization_origin_receipt_without_its_decision_references_does_not_verify():
-    value = transition()
-    receipt = organization_receipt(value)
-    receipt["governance_decision_ref_where_applicable"] = "sha256:" + "9" * 64
-    with pytest.raises(mod.PublicationCustodyError, match="organization_decision_missing"):
-        mod.verify_publication_transition_receipt(
+        def unreachable(*_args, **_kwargs):
+            raise AssertionError("verification must not consult Master Records")
+
+        self._setattr(mod, "master_records_transport_enabled", unreachable)
+        self._setattr(mod, "_master_records_configuration", unreachable)
+        verified = mod.verify_publication_transition_receipt(
+            transition_receipt=receipt,
+            receipt_sha256=digest,
+            publication_transition_id="publication:test",
+            publication_transition=value,
+        )
+        assert verified["state"] == "VERIFIED"
+        assert verified["verified_on"] == "ORGANIZATION_TRANSITION_RECEIPT"
+        assert verified["master_records_gates_publication"] is False
+
+    def test_organization_receipt_verification_rejects_tampering(self):
+        value = transition()
+        receipt = _receipt(value)
+        digest = mod.canonical_sha256(receipt)
+        with self.assertRaisesRegex(mod.PublicationCustodyError, "digest_mismatch"):
+            mod.verify_publication_transition_receipt(
+                transition_receipt=receipt, receipt_sha256="0" * 64,
+                publication_transition_id="publication:test", publication_transition=value)
+        with self.assertRaisesRegex(mod.PublicationCustodyError, "subject_mismatch"):
+            mod.verify_publication_transition_receipt(
+                transition_receipt=receipt, receipt_sha256=digest,
+                publication_transition_id="publication:other", publication_transition=value)
+        forged = deepcopy(receipt)
+        forged["transition_evidence"]["locally_generated_allow"] = True
+        with self.assertRaisesRegex(mod.PublicationCustodyError, "local_allow_rejected"):
+            mod.verify_publication_transition_receipt(
+                transition_receipt=forged, receipt_sha256=mod.canonical_sha256(forged),
+                publication_transition_id="publication:test", publication_transition=value)
+
+    def test_master_records_recording_is_optional_and_non_gating(self):
+        value = transition()
+        self._setattr(mod, "master_records_transport_enabled", lambda: False)
+        self._setattr(mod, "_master_records_configuration", lambda: ("", "", 10.0, set(), False))
+        result = mod.record_governed_publication_closure(
+            publication_transition_id="publication:test",
+            publication_transition=value,
+            sdk_manifest=manifest(value),
+            governed_result=governed(value),
+            intr_allow_decision=decision(),
+        )
+        assert result["state"] == "NOT_RECORDED"
+        assert result["gates_publication"] is False
+        for field in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                      "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+            assert result[field]
+        assert result["receipt_sha256"] == mod.canonical_sha256(result["receipt"])
+
+    def test_master_records_rejection_is_reported_not_raised(self):
+        value = transition()
+        self._setattr(mod, "master_records_transport_enabled", lambda: True)
+        self._setattr(mod, "_master_records_configuration", lambda: ("https://master-records.example/api/master-records/state-transitions", "server-token", 10.0, set(), False))
+        result = mod.record_governed_publication_closure(
+            publication_transition_id="publication:test",
+            publication_transition=value,
+            sdk_manifest=manifest(value),
+            governed_result=governed(value),
+            intr_allow_decision=decision(),
+            post=lambda *a, **k: FakeResponse({"state": "PENDING"}),
+        )
+        assert result["state"] == "NOT_RECORDED"
+        assert result["failure_code"].startswith("master_records_recording_failed")
+        assert result["gates_publication"] is False
+
+    def test_organization_decision_builds_the_receipt_without_local_governance_or_external_intr(self):
+        value = transition()
+        receipt = organization_receipt(value)
+        evidence = receipt["transition_evidence"]
+        assert receipt["transition_outcome"] == "ALLOW"
+        assert evidence["intr_decision_origin"] == "organization_governance_return"
+        assert evidence["locally_generated_allow"] is False
+        assert evidence["governance_request_packet_id"] == "pkt-publication"
+        assert evidence["governance_request_sha256"] == "sha256:" + "e" * 64
+        assert receipt["governance_decision_ref_where_applicable"] == "sha256:" + "d" * 64
+        assert evidence["target_repository"] == "StegVerse-Labs/admissibility-wiki"
+        assert {item["evidence_type"] for item in receipt["required_evidence_manifest"]} == {
+            "PUBLICATION_TRANSITION_CANDIDATE", "SDK_INGRESS_MANIFEST",
+            "ORGANIZATION_GOVERNANCE_RETURN", "SDK_GOVERNANCE_RETURN_ACCEPTANCE"}
+        verified = mod.verify_publication_transition_receipt(
             transition_receipt=receipt, receipt_sha256=mod.canonical_sha256(receipt),
             publication_transition_id="publication:test", publication_transition=value)
+        assert verified["state"] == "VERIFIED"
+
+    def test_organization_decision_refuses_anything_but_an_accepted_allow_for_this_manifest(self):
+        for ret, acc, code in [
+            ({"governance_disposition": "DENY"}, {}, "organization_governance_did_not_allow_publication"),
+            ({}, {"governance_disposition": "DENY"}, "organization_governance_did_not_allow_publication"),
+            ({}, {"disposition": "FAIL_CLOSED", "end_to_end_acceptance": False}, "organization_governance_return_not_accepted"),
+            ({"decision_returned": False}, {}, "organization_governance_return_not_admitted"),
+            ({"closure_transition_class": "ORGANIZATION_EGRESS_CLOSURE_REFUSED"}, {}, "organization_governance_crossing_not_closed"),
+            ({"governance_request_packet_id": "pkt-other"}, {}, "organization_governance_packet_mismatch"),
+            ({"deciding_organization_receipt_sha256": "sha256:" + "f" * 64}, {}, "organization_governance_receipt_mismatch"),
+            ({"wire_manifest_sha256": "0" * 64}, {}, "organization_governance_decided_a_different_manifest"),
+            ({}, {"schema": "something-else"}, "organization_governance_acceptance_schema_invalid"),
+        ]:
+            with self.subTest(ret=ret, acc=acc, code=code):
+                value = transition()
+                with self.assertRaisesRegex(mod.PublicationCustodyError, code):
+                    organization_receipt(value, governance_return=organization_return(value, **ret),
+                                         governance_acceptance=organization_acceptance(**acc))
+
+    def test_organization_decision_still_requires_the_exact_publication_manifest(self):
+        value = transition()
+        other = transition()
+        other["target_path"] = "docs/external-frameworks/reports/other.md"
+        with self.assertRaisesRegex(mod.PublicationCustodyError, "sdk_manifest_publication_payload_mismatch"):
+            mod.build_publication_state_receipt_from_organization_decision(
+                publication_transition_id="publication:test", publication_transition=value,
+                sdk_manifest=manifest(other), governance_return=organization_return(value),
+                governance_acceptance=organization_acceptance())
+
+    def test_an_organization_origin_receipt_without_its_decision_references_does_not_verify(self):
+        value = transition()
+        receipt = organization_receipt(value)
+        receipt["governance_decision_ref_where_applicable"] = "sha256:" + "9" * 64
+        with self.assertRaisesRegex(mod.PublicationCustodyError, "organization_decision_missing"):
+            mod.verify_publication_transition_receipt(
+                transition_receipt=receipt, receipt_sha256=mod.canonical_sha256(receipt),
+                publication_transition_id="publication:test", publication_transition=value)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import shutil
+import tempfile
+import types
+import unittest
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from unittest import mock
 
 from fastapi.testclient import TestClient
 
@@ -79,84 +86,119 @@ def correction(package_id: str) -> dict:
     }
 
 
-def test_reviewer_lookup_requires_delegated_read_scope(monkeypatch, tmp_path):
-    client = configure(monkeypatch, tmp_path)
-    created = client.post("/api/external-review/packages", json=review_package(), headers={"Authorization": "Bearer submit-secret"})
-    package_id = created.json()["package_id"]
-    response = client.get(
-        f"/api/external-review/reviewer/packages/{package_id}?reviewer_ref=reviewer:test",
-        headers={"Authorization": "Bearer reviewer-secret"},
-    )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["reviewer_identity_verified"] is True
-    assert body["raw_submission_stored"] is False
-    assert body["publication_authorized"] is False
+class ExternalReviewPublicationTests(unittest.TestCase):
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
+
+    def _setattr(self, target, *args, raising=True):
+        """monkeypatch.setattr equivalent: dotted-path or (object, name) form, undone after the test."""
+        if isinstance(target, str):
+            patcher = mock.patch(target, *args, create=not raising)
+        else:
+            patcher = mock.patch.object(target, *args, create=not raising)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _monkeypatch(self):
+        """The monkeypatch methods the module helpers call, each undone after the test."""
+        return types.SimpleNamespace(setattr=self._setattr, setenv=self._setenv)
+
+    def test_reviewer_lookup_requires_delegated_read_scope(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        client = configure(monkeypatch, tmp_path)
+        created = client.post("/api/external-review/packages", json=review_package(), headers={"Authorization": "Bearer submit-secret"})
+        package_id = created.json()["package_id"]
+        response = client.get(
+            f"/api/external-review/reviewer/packages/{package_id}?reviewer_ref=reviewer:test",
+            headers={"Authorization": "Bearer reviewer-secret"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["reviewer_identity_verified"] is True
+        assert body["raw_submission_stored"] is False
+        assert body["publication_authorized"] is False
+
+    def test_publication_transition_requires_separate_publisher_and_does_not_write(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        client = configure(monkeypatch, tmp_path)
+        package_id = client.post("/api/external-review/packages", json=review_package(), headers={"Authorization": "Bearer submit-secret"}).json()["package_id"]
+        correction_receipt_id = client.post(
+            "/api/external-review/corrections",
+            json=correction(package_id),
+            headers={"Authorization": "Bearer reviewer-secret"},
+        ).json()["correction_receipt_id"]
+        payload = {
+            "schema_version": "1.0.0",
+            "transition_type": "external_framework_wiki_publication_transition",
+            "package_id": package_id,
+            "correction_receipt_id": correction_receipt_id,
+            "publisher_ref": "publisher:test",
+            "target_path": "docs/external-frameworks/reports/decisionassure.compatibility.json",
+            "decision": "ALLOW_PUBLICATION_CANDIDATE",
+            "source_commit_ref": "commit:reviewed-source",
+            "evidence_references": [correction_receipt_id],
+            "publication_executed": False,
+            "boundary": {
+                "transition_is_not_repository_write": True,
+                "transition_is_not_certification": True,
+                "transition_creates_no_standing": True,
+                "separate_repository_mutation_required": True,
+            },
+        }
+        unauthorized = client.post("/api/external-review/publication-transitions", json=payload, headers={"Authorization": "Bearer reviewer-secret"})
+        assert unauthorized.status_code == 403
+        accepted = client.post("/api/external-review/publication-transitions", json=payload, headers={"Authorization": "Bearer publisher-secret"})
+        assert accepted.status_code == 200
+        body = accepted.json()
+        assert body["publisher_identity_verified"] is True
+        assert body["publisher_delegation_verified"] is True
+        assert body["publication_scope_verified"] is True
+        assert body["publication_executed"] is False
+        assert body["repository_mutation_authorized"] is False
+        assert body["required_next_transition"] == "separately_authorized_repository_mutation"
+
+    def test_publication_identity_conflict_fails_closed(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        client = configure(monkeypatch, tmp_path)
+        package_id = client.post("/api/external-review/packages", json=review_package(), headers={"Authorization": "Bearer submit-secret"}).json()["package_id"]
+        correction_receipt_id = client.post("/api/external-review/corrections", json=correction(package_id), headers={"Authorization": "Bearer reviewer-secret"}).json()["correction_receipt_id"]
+        payload = {
+            "schema_version": "1.0.0",
+            "transition_type": "external_framework_wiki_publication_transition",
+            "package_id": package_id,
+            "correction_receipt_id": correction_receipt_id,
+            "publisher_ref": "publisher:test",
+            "target_path": "docs/external-frameworks/reports/decisionassure.compatibility.json",
+            "decision": "REVIEW_REQUIRED",
+            "source_commit_ref": "commit:one",
+            "evidence_references": [correction_receipt_id],
+            "publication_executed": False,
+            "boundary": {
+                "transition_is_not_repository_write": True,
+                "transition_is_not_certification": True,
+                "transition_creates_no_standing": True,
+                "separate_repository_mutation_required": True,
+            },
+        }
+        assert client.post("/api/external-review/publication-transitions", json=payload, headers={"Authorization": "Bearer publisher-secret"}).status_code == 200
+        payload["source_commit_ref"] = "commit:two"
+        conflict = client.post("/api/external-review/publication-transitions", json=payload, headers={"Authorization": "Bearer publisher-secret"})
+        assert conflict.status_code == 409
+        assert conflict.json()["detail"]["reason"] == "publication_transition_conflict"
 
 
-def test_publication_transition_requires_separate_publisher_and_does_not_write(monkeypatch, tmp_path):
-    client = configure(monkeypatch, tmp_path)
-    package_id = client.post("/api/external-review/packages", json=review_package(), headers={"Authorization": "Bearer submit-secret"}).json()["package_id"]
-    correction_receipt_id = client.post(
-        "/api/external-review/corrections",
-        json=correction(package_id),
-        headers={"Authorization": "Bearer reviewer-secret"},
-    ).json()["correction_receipt_id"]
-    payload = {
-        "schema_version": "1.0.0",
-        "transition_type": "external_framework_wiki_publication_transition",
-        "package_id": package_id,
-        "correction_receipt_id": correction_receipt_id,
-        "publisher_ref": "publisher:test",
-        "target_path": "docs/external-frameworks/reports/decisionassure.compatibility.json",
-        "decision": "ALLOW_PUBLICATION_CANDIDATE",
-        "source_commit_ref": "commit:reviewed-source",
-        "evidence_references": [correction_receipt_id],
-        "publication_executed": False,
-        "boundary": {
-            "transition_is_not_repository_write": True,
-            "transition_is_not_certification": True,
-            "transition_creates_no_standing": True,
-            "separate_repository_mutation_required": True,
-        },
-    }
-    unauthorized = client.post("/api/external-review/publication-transitions", json=payload, headers={"Authorization": "Bearer reviewer-secret"})
-    assert unauthorized.status_code == 403
-    accepted = client.post("/api/external-review/publication-transitions", json=payload, headers={"Authorization": "Bearer publisher-secret"})
-    assert accepted.status_code == 200
-    body = accepted.json()
-    assert body["publisher_identity_verified"] is True
-    assert body["publisher_delegation_verified"] is True
-    assert body["publication_scope_verified"] is True
-    assert body["publication_executed"] is False
-    assert body["repository_mutation_authorized"] is False
-    assert body["required_next_transition"] == "separately_authorized_repository_mutation"
-
-
-def test_publication_identity_conflict_fails_closed(monkeypatch, tmp_path):
-    client = configure(monkeypatch, tmp_path)
-    package_id = client.post("/api/external-review/packages", json=review_package(), headers={"Authorization": "Bearer submit-secret"}).json()["package_id"]
-    correction_receipt_id = client.post("/api/external-review/corrections", json=correction(package_id), headers={"Authorization": "Bearer reviewer-secret"}).json()["correction_receipt_id"]
-    payload = {
-        "schema_version": "1.0.0",
-        "transition_type": "external_framework_wiki_publication_transition",
-        "package_id": package_id,
-        "correction_receipt_id": correction_receipt_id,
-        "publisher_ref": "publisher:test",
-        "target_path": "docs/external-frameworks/reports/decisionassure.compatibility.json",
-        "decision": "REVIEW_REQUIRED",
-        "source_commit_ref": "commit:one",
-        "evidence_references": [correction_receipt_id],
-        "publication_executed": False,
-        "boundary": {
-            "transition_is_not_repository_write": True,
-            "transition_is_not_certification": True,
-            "transition_creates_no_standing": True,
-            "separate_repository_mutation_required": True,
-        },
-    }
-    assert client.post("/api/external-review/publication-transitions", json=payload, headers={"Authorization": "Bearer publisher-secret"}).status_code == 200
-    payload["source_commit_ref"] = "commit:two"
-    conflict = client.post("/api/external-review/publication-transitions", json=payload, headers={"Authorization": "Bearer publisher-secret"})
-    assert conflict.status_code == 409
-    assert conflict.json()["detail"]["reason"] == "publication_transition_conflict"
+if __name__ == "__main__":
+    unittest.main()
