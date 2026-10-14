@@ -116,7 +116,7 @@ jobs:
 
       - name: Install runtime dependencies
         shell: bash
-        run: "$PYTHON_BIN -m pip install -e '.[dev]'"
+        run: "$PYTHON_BIN -m pip install -e ."
 
       - name: Validate capability manifest
         shell: bash
@@ -125,13 +125,12 @@ jobs:
       - name: Test capability reconstruction and portable resolution
         shell: bash
         run: >-
-          "$PYTHON_BIN" -m pytest
+          "$PYTHON_BIN" -m unittest -v
           tests/test_capability_runtime.py
           tests/test_portable_node.py
           tests/test_portable_node_bootstrap.py
           tests/test_node_bootstrap.py
           tests/test_node_service.py
-          -v
 
       - name: Verify installed zero-touch bootstrap command
         shell: bash

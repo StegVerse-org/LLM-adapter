@@ -41,7 +41,7 @@ jobs:
           git -c http.extraheader= fetch --depth 1 origin "$SOURCE_SHA"
           git checkout --detach FETCH_HEAD
       - name: Install source validation dependencies
-        run: python3 -m pip install -e '.[dev]'
+        run: python3 -m pip install -e .
       - name: Compile convergence modules
         run: >-
           python3 -m py_compile
@@ -63,7 +63,7 @@ jobs:
           llm_adapter/s1_lease_provider_call.py
       - name: Run governed connection tests
         run: >-
-          python3 -m pytest -q
+          python3 -m unittest
           tests/test_anthropic_intr_transport.py
           tests/test_external_anthropic_tvc_runtime.py
           tests/test_zai_tvc_runtime.py
