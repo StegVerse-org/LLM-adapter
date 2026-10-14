@@ -1,5 +1,8 @@
 import hashlib
 import json
+import os
+import unittest
+from unittest import mock
 
 from fastapi.testclient import TestClient
 
@@ -14,71 +17,82 @@ def _advertisement_digest(payload: dict) -> str:
     ).hexdigest()
 
 
-def test_local_node_vertical_slice(monkeypatch) -> None:
-    monkeypatch.setenv("STEGVERSE_NODE_ID", "vertical-slice-node")
-    monkeypatch.setenv("STEGVERSE_PROVIDER_ENABLED", "false")
-    client = TestClient(app, base_url="http://127.0.0.1:8000")
+class LocalNodeVerticalSliceTests(unittest.TestCase):
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
-    advertisement_response = client.get("/api/stegverse-node")
-    assert advertisement_response.status_code == 200
-    advertisement = advertisement_response.json()
-    assert advertisement["schema"] == "stegverse.node.endpoint-advertisement.v1"
-    assert advertisement["node_id"] == "vertical-slice-node"
-    assert advertisement["advertisement_sha256"] == _advertisement_digest(advertisement)
-    assert advertisement["health_bound"] is True
-    assert advertisement["authority_granted"] is False
-    assert advertisement["execution_authority"] is False
-    assert advertisement["publication_authority"] is False
+    def test_local_node_vertical_slice(self) -> None:
+        self._setenv("STEGVERSE_NODE_ID", "vertical-slice-node")
+        self._setenv("STEGVERSE_PROVIDER_ENABLED", "false")
+        client = TestClient(app, base_url="http://127.0.0.1:8000")
 
-    health_response = client.get("/health")
-    assert health_response.status_code == 200
-    health = health_response.json()
-    assert health["status"] == "ok"
-    assert health["governed_provider_enabled"] is False
-    assert health["local_persistence_is_master_records_organization_record"] is False
-    assert health["provider_output_is_authority"] is False
+        advertisement_response = client.get("/api/stegverse-node")
+        assert advertisement_response.status_code == 200
+        advertisement = advertisement_response.json()
+        assert advertisement["schema"] == "stegverse.node.endpoint-advertisement.v1"
+        assert advertisement["node_id"] == "vertical-slice-node"
+        assert advertisement["advertisement_sha256"] == _advertisement_digest(advertisement)
+        assert advertisement["health_bound"] is True
+        assert advertisement["authority_granted"] is False
+        assert advertisement["execution_authority"] is False
+        assert advertisement["publication_authority"] is False
 
-    transition = {
-        "transition_id": "site-transition-local-slice",
-        "run_id": "site-run-local-slice",
-        "event_id": "site-event-local-slice",
-        "origin_manifest_id": "site-origin-local-slice",
-        "parent_transition_id": None,
-        "previous_receipt_id": None,
-    }
-    response = client.post(
-        "/api/ecosystem-chat",
-        headers={"X-SteGVerse-Session": "site-local-slice-session"},
-        json={
-            "message": "Verify the local portable-node request path.",
-            "session_id": "site-local-slice-session",
-            "requested_route": "Site",
-            "transition_intent": "bounded_information_request",
-            "transition_destination": "ecosystem_chat",
-            "goal": "governed Ecosystem Chat request response provider usage custody and reconstruction",
-            "execution_model": "allowlisted_task_request_only",
-            "raw_shell_allowed": False,
-            "authority_required": True,
-            "rate_limit_required": True,
-            "receipt_required_for_execution": True,
-            "interaction_profile": {},
-            "interaction_bands": [],
-            "math_solver_supported": True,
-            "transition_identity": transition,
-        },
-    )
-    # Ecosystem Chat is manifest-bound transport (SDK#368): the gateway calls
-    # no provider and returns the SDK disposition, which is FAIL_CLOSED until
-    # the canonical organization boundary resolves.
-    assert response.status_code == 503, response.text
-    result = response.json()
-    assert result["disposition"] == "FAIL_CLOSED"
-    assert result["failure_code"] == "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE"
-    assert result["route_id"] == "stegverse.route.ecosystem-chat.v1"
-    assert result["transition_id"] == transition["transition_id"]
-    assert result["run_id"] == transition["run_id"]
-    assert result["authority"]["provider_called"] is False
-    assert "provider_usage_submission" not in result
-    # F7: no Master Records result is placed in the response or authority block.
-    assert "provider_usage_is_master_records_organization_record" not in result["authority"]
-    assert "master_records_usage_submission" not in result
+        health_response = client.get("/health")
+        assert health_response.status_code == 200
+        health = health_response.json()
+        assert health["status"] == "ok"
+        assert health["governed_provider_enabled"] is False
+        assert health["local_persistence_is_master_records_organization_record"] is False
+        assert health["provider_output_is_authority"] is False
+
+        transition = {
+            "transition_id": "site-transition-local-slice",
+            "run_id": "site-run-local-slice",
+            "event_id": "site-event-local-slice",
+            "origin_manifest_id": "site-origin-local-slice",
+            "parent_transition_id": None,
+            "previous_receipt_id": None,
+        }
+        response = client.post(
+            "/api/ecosystem-chat",
+            headers={"X-SteGVerse-Session": "site-local-slice-session"},
+            json={
+                "message": "Verify the local portable-node request path.",
+                "session_id": "site-local-slice-session",
+                "requested_route": "Site",
+                "transition_intent": "bounded_information_request",
+                "transition_destination": "ecosystem_chat",
+                "goal": "governed Ecosystem Chat request response provider usage custody and reconstruction",
+                "execution_model": "allowlisted_task_request_only",
+                "raw_shell_allowed": False,
+                "authority_required": True,
+                "rate_limit_required": True,
+                "receipt_required_for_execution": True,
+                "interaction_profile": {},
+                "interaction_bands": [],
+                "math_solver_supported": True,
+                "transition_identity": transition,
+            },
+        )
+        # Ecosystem Chat is manifest-bound transport (SDK#368): the gateway calls
+        # no provider and returns the SDK disposition, which is FAIL_CLOSED until
+        # the canonical organization boundary resolves.
+        assert response.status_code == 503, response.text
+        result = response.json()
+        assert result["disposition"] == "FAIL_CLOSED"
+        assert result["failure_code"] == "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE"
+        assert result["route_id"] == "stegverse.route.ecosystem-chat.v1"
+        assert result["transition_id"] == transition["transition_id"]
+        assert result["run_id"] == transition["run_id"]
+        assert result["authority"]["provider_called"] is False
+        assert "provider_usage_submission" not in result
+        # F7: no Master Records result is placed in the response or authority block.
+        assert "provider_usage_is_master_records_organization_record" not in result["authority"]
+        assert "master_records_usage_submission" not in result
+
+
+if __name__ == "__main__":
+    unittest.main()

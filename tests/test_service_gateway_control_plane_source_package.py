@@ -2,6 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import importlib
+import os
+import shutil
+import tempfile
+import types
+import unittest
+from unittest import mock
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -47,52 +53,96 @@ def headers(body: bytes, *, relay: bool = True) -> dict[str, str]:
     return out
 
 
-def test_source_package_projects_to_same_loopback_receiver(monkeypatch):
-    monkeypatch.setattr(mod, "_read_profile", lambda: profile())
-    observed = {}
-    def forward(target, body, forwarded, **kwargs):
-        observed["target"] = target; observed["body"] = body; observed["headers"] = forwarded; observed["kwargs"] = kwargs
-        return 202, b'{"state":"SOURCE_MATERIALIZED_VERIFIED"}', "application/json"
-    monkeypatch.setattr(mod, "_forward_to", forward)
-    body = b'{"schema":"stegverse.source-package/v1"}'
-    response = client(monkeypatch).post("/intr/source-package", content=body, headers=headers(body))
-    assert response.status_code == 202
-    assert observed["target"] == "http://127.0.0.1:8765/intr/source-package"
-    assert observed["body"] == body
-    assert observed["headers"]["x-stegverse-transport-origin"] == "TVC_RELAY_EGRESS"
-    assert observed["headers"]["x-stegverse-authorization-id"] == "AUTH-SOURCE-PACKAGE-1"
+_REDIRECT = []
 
 
-def test_source_package_rejects_node_origin(monkeypatch):
-    monkeypatch.setattr(mod, "_read_profile", lambda: profile())
-    body = b"{}"
-    response = client(monkeypatch).post("/intr/source-package", content=body, headers=headers(body, relay=False))
-    assert response.status_code == 400
-    assert response.json()["detail"] == "tvc_relay_egress_required"
+def setUpModule():
+    """As tests/conftest.py does under pytest: keep runs out of the deployed ledger and forward queue."""
+    root = tempfile.mkdtemp(prefix="llm-adapter-test-ledger-")
+    patcher = mock.patch.dict(os.environ, {
+        "STEGVERSE_REPO_LEDGER_ROOT": root,
+        "STEGVERSE_GATEWAY_FORWARD_DB": os.path.join(root, "gateway-forward.db"),
+    })
+    patcher.start()
+    _REDIRECT[:] = [patcher, root]
 
 
-def test_source_package_requires_advertised_capability(monkeypatch):
-    value = profile(); value["additional_materialization_profiles"] = ["HIL:Ingress"]
-    monkeypatch.setattr(mod, "_read_profile", lambda: value)
-    body = b"{}"
-    response = client(monkeypatch).post("/intr/source-package", content=body, headers=headers(body))
-    assert response.status_code == 503
-    assert "stegverse.control-plane" in response.json()["detail"]
+def tearDownModule():
+    patcher, root = _REDIRECT
+    patcher.stop()
+    shutil.rmtree(root, ignore_errors=True)
 
 
-def test_source_package_requires_public_https(monkeypatch):
-    monkeypatch.setattr(mod, "_read_profile", lambda: profile())
-    monkeypatch.setenv("STEGVERSE_UNIVERSAL_INTR_ENABLED", "true")
-    monkeypatch.setenv("STEGVERSE_UNIVERSAL_INTR_UPSTREAM", "http://127.0.0.1:8765/intr/materialization")
-    app = FastAPI(); app.include_router(mod.router)
-    body = b"{}"
-    response = TestClient(app).post("/intr/source-package", content=body, headers=headers(body))
-    assert response.status_code == 400
-    assert response.json()["detail"] == "public_https_required"
+class ServiceGatewayControlPlaneSourcePackageTests(unittest.TestCase):
+    def _setattr(self, target, *args, raising=True):
+        """monkeypatch.setattr equivalent: dotted-path or (object, name) form, undone after the test."""
+        if isinstance(target, str):
+            patcher = mock.patch(target, *args, create=not raising)
+        else:
+            patcher = mock.patch.object(target, *args, create=not raising)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _monkeypatch(self):
+        """The monkeypatch methods the module helpers call, each undone after the test."""
+        return types.SimpleNamespace(setattr=self._setattr, setenv=self._setenv)
+
+    def test_source_package_projects_to_same_loopback_receiver(self):
+        monkeypatch = self._monkeypatch()
+        self._setattr(mod, "_read_profile", lambda: profile())
+        observed = {}
+        def forward(target, body, forwarded, **kwargs):
+            observed["target"] = target; observed["body"] = body; observed["headers"] = forwarded; observed["kwargs"] = kwargs
+            return 202, b'{"state":"SOURCE_MATERIALIZED_VERIFIED"}', "application/json"
+        self._setattr(mod, "_forward_to", forward)
+        body = b'{"schema":"stegverse.source-package/v1"}'
+        response = client(monkeypatch).post("/intr/source-package", content=body, headers=headers(body))
+        assert response.status_code == 202
+        assert observed["target"] == "http://127.0.0.1:8765/intr/source-package"
+        assert observed["body"] == body
+        assert observed["headers"]["x-stegverse-transport-origin"] == "TVC_RELAY_EGRESS"
+        assert observed["headers"]["x-stegverse-authorization-id"] == "AUTH-SOURCE-PACKAGE-1"
+
+    def test_source_package_rejects_node_origin(self):
+        monkeypatch = self._monkeypatch()
+        self._setattr(mod, "_read_profile", lambda: profile())
+        body = b"{}"
+        response = client(monkeypatch).post("/intr/source-package", content=body, headers=headers(body, relay=False))
+        assert response.status_code == 400
+        assert response.json()["detail"] == "tvc_relay_egress_required"
+
+    def test_source_package_requires_advertised_capability(self):
+        monkeypatch = self._monkeypatch()
+        value = profile(); value["additional_materialization_profiles"] = ["HIL:Ingress"]
+        self._setattr(mod, "_read_profile", lambda: value)
+        body = b"{}"
+        response = client(monkeypatch).post("/intr/source-package", content=body, headers=headers(body))
+        assert response.status_code == 503
+        assert "stegverse.control-plane" in response.json()["detail"]
+
+    def test_source_package_requires_public_https(self):
+        self._setattr(mod, "_read_profile", lambda: profile())
+        self._setenv("STEGVERSE_UNIVERSAL_INTR_ENABLED", "true")
+        self._setenv("STEGVERSE_UNIVERSAL_INTR_UPSTREAM", "http://127.0.0.1:8765/intr/materialization")
+        app = FastAPI(); app.include_router(mod.router)
+        body = b"{}"
+        response = TestClient(app).post("/intr/source-package", content=body, headers=headers(body))
+        assert response.status_code == 400
+        assert response.json()["detail"] == "public_https_required"
+
+    def test_readiness_advertises_source_package_path(self):
+        monkeypatch = self._monkeypatch()
+        payload = client(monkeypatch).get("/intr/materialization/readiness").json()
+        assert payload["control_plane_source_package_path"] == "/intr/source-package"
+        assert payload["gateway_execution_authority"] is False
+        assert payload["credential_authority"] == "TV/TVC"
 
 
-def test_readiness_advertises_source_package_path(monkeypatch):
-    payload = client(monkeypatch).get("/intr/materialization/readiness").json()
-    assert payload["control_plane_source_package_path"] == "/intr/source-package"
-    assert payload["gateway_execution_authority"] is False
-    assert payload["credential_authority"] == "TV/TVC"
+if __name__ == "__main__":
+    unittest.main()
