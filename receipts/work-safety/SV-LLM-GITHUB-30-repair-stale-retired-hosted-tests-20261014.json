@@ -1,0 +1,55 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-REPAIR-STALE-RETIRED-HOSTED-TESTS",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-only repair: tests that read retired Render blueprints now assert their retirement, and the portable-node manifest version expectation follows the deliberate 1.4.0 bump (cca4225); no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/SV-LLM/.github/issues/30#issuecomment-6138797322"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "tests/test_render_blueprint_contract.py",
+      "tests/test_production_gateway_blueprint.py",
+      "tests/test_portable_node_runtime_contract.py",
+      "tests/test_destination_activation_state_sovereign.py",
+      "llm_adapter/node_bootstrap.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches these test files."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Test-only change; no package behaviour or documented usage changes.",
+    "evidence_refs": [
+      "tests/test_render_blueprint_contract.py"
+    ]
+  },
+  "covered_paths": [
+    "tests/test_render_blueprint_contract.py",
+    "tests/test_production_gateway_blueprint.py",
+    "tests/test_portable_node_runtime_contract.py"
+  ],
+  "new_files": []
+}
