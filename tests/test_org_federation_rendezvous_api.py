@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import base64
-from datetime import datetime, timezone
 import hashlib
 import json
+import shutil
+import tempfile
+import unittest
+from datetime import datetime, timezone
+from pathlib import Path
 
 from llm_adapter.org_federation_rendezvous_api import (
     ACK_SCHEMA,
@@ -79,33 +83,46 @@ def _frame(origin: str = "StegVerse-Labs", destination: str = "Triad-Test") -> d
     return {**body, "frame_sha256": sha256_uri(body)}
 
 
-def test_store_fetch_ack_round_trip(tmp_path) -> None:
-    frame = _frame()
-    stored = store_frame(frame, root=tmp_path)
-    assert stored["state"] == "PENDING"
-    assert stored["gateway_execution_authority"] == "NONE"
+class OrgFederationRendezvousApiTests(unittest.TestCase):
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
 
-    fetched = next_frame("Triad-Test", root=tmp_path)
-    assert fetched == frame
-    assert next_frame("master-records", root=tmp_path) is None
+    def test_store_fetch_ack_round_trip(self) -> None:
+        tmp_path = self._tmp_path()
+        frame = _frame()
+        stored = store_frame(frame, root=tmp_path)
+        assert stored["state"] == "PENDING"
+        assert stored["gateway_execution_authority"] == "NONE"
 
-    ack = {
-        "schema": ACK_SCHEMA,
-        "organization": "Triad-Test",
-        "packet_id": frame["packet_id"],
-        "frame_sha256": frame["frame_sha256"],
-        "state": "CONSUMED",
-        "observed_at": datetime.now(timezone.utc).isoformat(),
-        "gateway_execution_authority": "NONE",
-        "authority_effect": "NONE_OBSERVATION_ONLY",
-    }
-    result = store_ack(ack, root=tmp_path)
-    assert result["state"] == "ACKNOWLEDGED"
-    assert next_frame("Triad-Test", root=tmp_path) is None
+        fetched = next_frame("Triad-Test", root=tmp_path)
+        assert fetched == frame
+        assert next_frame("master-records", root=tmp_path) is None
+
+        ack = {
+            "schema": ACK_SCHEMA,
+            "organization": "Triad-Test",
+            "packet_id": frame["packet_id"],
+            "frame_sha256": frame["frame_sha256"],
+            "state": "CONSUMED",
+            "observed_at": datetime.now(timezone.utc).isoformat(),
+            "gateway_execution_authority": "NONE",
+            "authority_effect": "NONE_OBSERVATION_ONLY",
+        }
+        result = store_ack(ack, root=tmp_path)
+        assert result["state"] == "ACKNOWLEDGED"
+        assert next_frame("Triad-Test", root=tmp_path) is None
+
+    def test_duplicate_same_bytes_is_idempotent(self) -> None:
+        tmp_path = self._tmp_path()
+        frame = _frame()
+        first = store_frame(frame, root=tmp_path)
+        second = store_frame(frame, root=tmp_path)
+        assert first == second
 
 
-def test_duplicate_same_bytes_is_idempotent(tmp_path) -> None:
-    frame = _frame()
-    first = store_frame(frame, root=tmp_path)
-    second = store_frame(frame, root=tmp_path)
-    assert first == second
+if __name__ == "__main__":
+    unittest.main()

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import shutil
+import tempfile
+import unittest
 from datetime import datetime, timezone
-
-import pytest
+from pathlib import Path
 
 from llm_adapter.resident_rendezvous_api import (
     GADI_CONSUMER,
@@ -51,42 +53,55 @@ def gadi_advertisement():
     }
 
 
-def test_gadi_request_uses_transport_correlation_not_node_verification(tmp_path):
-    request = gadi_envelope()
-    stored = store_request(request, root=tmp_path, now=NOW)
-    assert stored["state"] == "PENDING"
-    assert stored["gateway_execution_authority"] == "NONE"
-    fetched = next_request(NODE, root=tmp_path, now=NOW, consumer=GADI_CONSUMER)
-    assert fetched == request
+class ReusableResidentRendezvousGadiTests(unittest.TestCase):
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
+
+    def test_gadi_request_uses_transport_correlation_not_node_verification(self):
+        tmp_path = self._tmp_path()
+        request = gadi_envelope()
+        stored = store_request(request, root=tmp_path, now=NOW)
+        assert stored["state"] == "PENDING"
+        assert stored["gateway_execution_authority"] == "NONE"
+        fetched = next_request(NODE, root=tmp_path, now=NOW, consumer=GADI_CONSUMER)
+        assert fetched == request
+
+    def test_gadi_rejects_device_provenance_as_transport_correlation(self):
+        tmp_path = self._tmp_path()
+        request = gadi_envelope()
+        request["submitter_authorization_ref"] = "node-receipt-1-sha256:" + "c" * 64
+        with self.assertRaisesRegex(ResidentRendezvousError, "transport correlation reference invalid"):
+            store_request(request, root=tmp_path, now=NOW)
+
+    def test_gadi_inner_contract_drift_fails_closed(self):
+        tmp_path = self._tmp_path()
+        request = gadi_envelope()
+        request["resident_request"]["request_granted_authority"] = True
+        request["resident_request_sha256"] = sha256_uri(request["resident_request"])
+        with self.assertRaisesRegex(ResidentRendezvousError, "GADI resident_request contract mismatch"):
+            store_request(request, root=tmp_path, now=NOW)
+
+    def test_discovery_is_profile_scoped_and_non_authorizing(self):
+        tmp_path = self._tmp_path()
+        store_advertisement(gadi_advertisement(), root=tmp_path, now=NOW)
+        result = discover_resident(root=tmp_path, now=NOW, consumer=GADI_CONSUMER)
+        assert result["state"] == "AVAILABLE"
+        assert result["consumer"] == GADI_CONSUMER
+        assert result["current_resident_request_id"] == GADI_EXPECTED["request_id"]
+        assert result["target_node_ref"] == NODE
+        assert result["gateway_execution_authority"] == "NONE"
+        assert result["discovery_grants_authority"] is False
+
+    def test_profile_filter_prevents_cross_consumer_delivery(self):
+        tmp_path = self._tmp_path()
+        store_request(gadi_envelope(), root=tmp_path, now=NOW)
+        assert next_request(NODE, root=tmp_path, now=NOW, consumer="stegos_kv_intr_chain") is None
+        assert next_request(NODE, root=tmp_path, now=NOW, consumer=GADI_CONSUMER) is not None
 
 
-def test_gadi_rejects_device_provenance_as_transport_correlation(tmp_path):
-    request = gadi_envelope()
-    request["submitter_authorization_ref"] = "node-receipt-1-sha256:" + "c" * 64
-    with pytest.raises(ResidentRendezvousError, match="transport correlation reference invalid"):
-        store_request(request, root=tmp_path, now=NOW)
-
-
-def test_gadi_inner_contract_drift_fails_closed(tmp_path):
-    request = gadi_envelope()
-    request["resident_request"]["request_granted_authority"] = True
-    request["resident_request_sha256"] = sha256_uri(request["resident_request"])
-    with pytest.raises(ResidentRendezvousError, match="GADI resident_request contract mismatch"):
-        store_request(request, root=tmp_path, now=NOW)
-
-
-def test_discovery_is_profile_scoped_and_non_authorizing(tmp_path):
-    store_advertisement(gadi_advertisement(), root=tmp_path, now=NOW)
-    result = discover_resident(root=tmp_path, now=NOW, consumer=GADI_CONSUMER)
-    assert result["state"] == "AVAILABLE"
-    assert result["consumer"] == GADI_CONSUMER
-    assert result["current_resident_request_id"] == GADI_EXPECTED["request_id"]
-    assert result["target_node_ref"] == NODE
-    assert result["gateway_execution_authority"] == "NONE"
-    assert result["discovery_grants_authority"] is False
-
-
-def test_profile_filter_prevents_cross_consumer_delivery(tmp_path):
-    store_request(gadi_envelope(), root=tmp_path, now=NOW)
-    assert next_request(NODE, root=tmp_path, now=NOW, consumer="stegos_kv_intr_chain") is None
-    assert next_request(NODE, root=tmp_path, now=NOW, consumer=GADI_CONSUMER) is not None
+if __name__ == "__main__":
+    unittest.main()

@@ -1,6 +1,5 @@
+import unittest
 from datetime import datetime, timezone
-
-import pytest
 
 from llm_adapter.resident_rendezvous_api import (
     LISTENER_CONSUMER,
@@ -35,34 +34,35 @@ def envelope(consumer: str, resident_request: dict) -> dict:
     }
 
 
-def test_external_collaboration_profiles_are_exact_and_transport_only():
-    assert PROFILES[RESEAL_CONSUMER]["submitter_ref"] == "transport_correlation_only"
-    assert PROFILES[LISTENER_CONSUMER]["submitter_ref"] == "transport_correlation_only"
-    assert validate_resident_request(RESEAL_EXPECTED, consumer=RESEAL_CONSUMER) == RESEAL_EXPECTED
-    assert validate_resident_request(LISTENER_EXPECTED, consumer=LISTENER_CONSUMER) == LISTENER_EXPECTED
+class SdkExtcollabResidentRendezvousProfilesTests(unittest.TestCase):
+    def test_external_collaboration_profiles_are_exact_and_transport_only(self):
+        assert PROFILES[RESEAL_CONSUMER]["submitter_ref"] == "transport_correlation_only"
+        assert PROFILES[LISTENER_CONSUMER]["submitter_ref"] == "transport_correlation_only"
+        assert validate_resident_request(RESEAL_EXPECTED, consumer=RESEAL_CONSUMER) == RESEAL_EXPECTED
+        assert validate_resident_request(LISTENER_EXPECTED, consumer=LISTENER_CONSUMER) == LISTENER_EXPECTED
+
+    def test_reseal_mutation_fails_closed(self):
+        mutated = dict(RESEAL_EXPECTED)
+        mutated["request_granted_authority"] = True
+        with self.assertRaises(ResidentRendezvousError):
+            validate_resident_request(mutated, consumer=RESEAL_CONSUMER)
+
+    def test_listener_mutation_fails_closed(self):
+        mutated = dict(LISTENER_EXPECTED)
+        mutated["provider_contact_allowed"] = True
+        with self.assertRaises(ResidentRendezvousError):
+            validate_resident_request(mutated, consumer=LISTENER_CONSUMER)
+
+    def test_gateway_accepts_exact_reseal_and_listener_envelopes(self):
+        assert validate_rendezvous_request(envelope(RESEAL_CONSUMER, RESEAL_EXPECTED), now=NOW)["consumer"] == RESEAL_CONSUMER
+        assert validate_rendezvous_request(envelope(LISTENER_CONSUMER, LISTENER_EXPECTED), now=NOW)["consumer"] == LISTENER_CONSUMER
+
+    def test_gateway_requires_transport_correlation_not_node_receipt_identity(self):
+        value = envelope(RESEAL_CONSUMER, RESEAL_EXPECTED)
+        value["submitter_authorization_ref"] = "node-receipt-1-sha256:" + "b" * 64
+        with self.assertRaises(ResidentRendezvousError):
+            validate_rendezvous_request(value, now=NOW)
 
 
-def test_reseal_mutation_fails_closed():
-    mutated = dict(RESEAL_EXPECTED)
-    mutated["request_granted_authority"] = True
-    with pytest.raises(ResidentRendezvousError):
-        validate_resident_request(mutated, consumer=RESEAL_CONSUMER)
-
-
-def test_listener_mutation_fails_closed():
-    mutated = dict(LISTENER_EXPECTED)
-    mutated["provider_contact_allowed"] = True
-    with pytest.raises(ResidentRendezvousError):
-        validate_resident_request(mutated, consumer=LISTENER_CONSUMER)
-
-
-def test_gateway_accepts_exact_reseal_and_listener_envelopes():
-    assert validate_rendezvous_request(envelope(RESEAL_CONSUMER, RESEAL_EXPECTED), now=NOW)["consumer"] == RESEAL_CONSUMER
-    assert validate_rendezvous_request(envelope(LISTENER_CONSUMER, LISTENER_EXPECTED), now=NOW)["consumer"] == LISTENER_CONSUMER
-
-
-def test_gateway_requires_transport_correlation_not_node_receipt_identity():
-    value = envelope(RESEAL_CONSUMER, RESEAL_EXPECTED)
-    value["submitter_authorization_ref"] = "node-receipt-1-sha256:" + "b" * 64
-    with pytest.raises(ResidentRendezvousError):
-        validate_rendezvous_request(value, now=NOW)
+if __name__ == "__main__":
+    unittest.main()

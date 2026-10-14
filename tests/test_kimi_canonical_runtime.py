@@ -1,3 +1,4 @@
+import unittest
 from llm_adapter.kimi_canonical_runtime import execute_canonical_kimi_via_tvc_runtime
 from llm_adapter.kimi_governed_admission import build_governed_kimi_admission
 from llm_adapter.kimi_intr_transport import KimiTransportAdmissionError
@@ -27,48 +28,49 @@ def custody(event):
     return {"status":"CUSTODY_RECORDED","custody_recorded":True,"authority_granted":False,"authority_effect":"NONE","event_sha256":event["event_sha256"]}
 
 
-def test_transport_complete_and_governance_allow_are_separate_required_evidence():
-    admitted=build_governed_kimi_admission(request(),transition_id="tx",ingress_transport_state="TRANSPORT_COMPLETE",ingress_receipt_hash="a"*64,governance_disposition="ALLOW",governance_receipt_hash="b"*64,carrier_ref="hb:1")
-    e=admitted.evidence()
-    assert e["ingress_transport_state"]=="TRANSPORT_COMPLETE"
-    assert e["governance_disposition"]=="ALLOW"
-    assert e["transport_grants_execution_authority"] is False
-    assert e["governance_grants_execution_authority"] is False
-    assert e["provider_operation_authority"]=="TV/TVC"
+class KimiCanonicalRuntimeTests(unittest.TestCase):
+    def test_transport_complete_and_governance_allow_are_separate_required_evidence(self):
+        admitted=build_governed_kimi_admission(request(),transition_id="tx",ingress_transport_state="TRANSPORT_COMPLETE",ingress_receipt_hash="a"*64,governance_disposition="ALLOW",governance_receipt_hash="b"*64,carrier_ref="hb:1")
+        e=admitted.evidence()
+        assert e["ingress_transport_state"]=="TRANSPORT_COMPLETE"
+        assert e["governance_disposition"]=="ALLOW"
+        assert e["transport_grants_execution_authority"] is False
+        assert e["governance_grants_execution_authority"] is False
+        assert e["provider_operation_authority"]=="TV/TVC"
+
+    def test_transport_complete_cannot_substitute_for_governance_allow(self):
+        try:
+            build_governed_kimi_admission(request(),transition_id="tx",ingress_transport_state="TRANSPORT_COMPLETE",ingress_receipt_hash="a"*64,governance_disposition="DENY",governance_receipt_hash="b"*64,carrier_ref="hb:1")
+            assert False
+        except KimiTransportAdmissionError:
+            pass
+
+    def test_governance_allow_cannot_substitute_for_transport_completion(self):
+        try:
+            build_governed_kimi_admission(request(),transition_id="tx",ingress_transport_state="ALLOW",ingress_receipt_hash="a"*64,governance_disposition="ALLOW",governance_receipt_hash="b"*64,carrier_ref="hb:1")
+            assert False
+        except KimiTransportAdmissionError:
+            pass
+
+    def test_canonical_runtime_binds_both_evidence_classes_before_tvc(self):
+        result=execute_canonical_kimi_via_tvc_runtime(request(),session_id="s",transition_id="tx",measurement_id="m",ingress_transport_state="TRANSPORT_COMPLETE",ingress_receipt_hash="a"*64,governance_disposition="ALLOW",governance_receipt_hash="b"*64,carrier_ref="hb:1",lease_receipt=lease(),broker_submitter=broker,usage_submitter=custody)
+        assert result.execution.broker.response.output=="ok"
+        assert result.egress_handoff["ingress_transport_state"]=="TRANSPORT_COMPLETE"
+        assert result.egress_handoff["governance_disposition"]=="ALLOW"
+        assert result.egress_handoff["governance_receipt_hash"]=="b"*64
+        assert result.egress_handoff["provider_usage_record_gates_execution"] is False
+        assert "master_records_organization_record_recorded" not in result.egress_handoff
+        assert result.egress_handoff["provider_operation_authority"]=="TV/TVC"
+        assert result.egress_handoff["transport_grants_execution_authority"] is False
+        assert result.egress_handoff["governance_grants_credential_authority"] is False
+
+    def test_canonical_runtime_egress_does_not_require_master_records_organization_record(self):
+        # F7: usage recording never gates canonical egress.
+        result=execute_canonical_kimi_via_tvc_runtime(request(),session_id="s",transition_id="tx",measurement_id="m",ingress_transport_state="TRANSPORT_COMPLETE",ingress_receipt_hash="a"*64,governance_disposition="ALLOW",governance_receipt_hash="b"*64,carrier_ref="hb:1",lease_receipt=lease(),broker_submitter=broker,usage_submitter=lambda event:{"status":"NOT_CONFIGURED","custody_recorded":False,"authority_granted":False})
+        assert result.execution.broker.response.output=="ok"
+        assert result.egress_handoff["provider_usage_record_status"]=="NOT_CONFIGURED"
+        assert result.egress_handoff["provider_usage_record_gates_execution"] is False
 
 
-def test_transport_complete_cannot_substitute_for_governance_allow():
-    try:
-        build_governed_kimi_admission(request(),transition_id="tx",ingress_transport_state="TRANSPORT_COMPLETE",ingress_receipt_hash="a"*64,governance_disposition="DENY",governance_receipt_hash="b"*64,carrier_ref="hb:1")
-        assert False
-    except KimiTransportAdmissionError:
-        pass
-
-
-def test_governance_allow_cannot_substitute_for_transport_completion():
-    try:
-        build_governed_kimi_admission(request(),transition_id="tx",ingress_transport_state="ALLOW",ingress_receipt_hash="a"*64,governance_disposition="ALLOW",governance_receipt_hash="b"*64,carrier_ref="hb:1")
-        assert False
-    except KimiTransportAdmissionError:
-        pass
-
-
-def test_canonical_runtime_binds_both_evidence_classes_before_tvc():
-    result=execute_canonical_kimi_via_tvc_runtime(request(),session_id="s",transition_id="tx",measurement_id="m",ingress_transport_state="TRANSPORT_COMPLETE",ingress_receipt_hash="a"*64,governance_disposition="ALLOW",governance_receipt_hash="b"*64,carrier_ref="hb:1",lease_receipt=lease(),broker_submitter=broker,usage_submitter=custody)
-    assert result.execution.broker.response.output=="ok"
-    assert result.egress_handoff["ingress_transport_state"]=="TRANSPORT_COMPLETE"
-    assert result.egress_handoff["governance_disposition"]=="ALLOW"
-    assert result.egress_handoff["governance_receipt_hash"]=="b"*64
-    assert result.egress_handoff["provider_usage_record_gates_execution"] is False
-    assert "master_records_organization_record_recorded" not in result.egress_handoff
-    assert result.egress_handoff["provider_operation_authority"]=="TV/TVC"
-    assert result.egress_handoff["transport_grants_execution_authority"] is False
-    assert result.egress_handoff["governance_grants_credential_authority"] is False
-
-
-def test_canonical_runtime_egress_does_not_require_master_records_organization_record():
-    # F7: usage recording never gates canonical egress.
-    result=execute_canonical_kimi_via_tvc_runtime(request(),session_id="s",transition_id="tx",measurement_id="m",ingress_transport_state="TRANSPORT_COMPLETE",ingress_receipt_hash="a"*64,governance_disposition="ALLOW",governance_receipt_hash="b"*64,carrier_ref="hb:1",lease_receipt=lease(),broker_submitter=broker,usage_submitter=lambda event:{"status":"NOT_CONFIGURED","custody_recorded":False,"authority_granted":False})
-    assert result.execution.broker.response.output=="ok"
-    assert result.egress_handoff["provider_usage_record_status"]=="NOT_CONFIGURED"
-    assert result.egress_handoff["provider_usage_record_gates_execution"] is False
+if __name__ == "__main__":
+    unittest.main()
