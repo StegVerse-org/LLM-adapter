@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -63,76 +64,73 @@ def _response() -> dict:
     }
 
 
-def test_complete_authorized_provider_path_passes() -> None:
-    assert validate_runtime_result(_health(), _response(), _identity()) == []
+class AuthorizedProviderActivationVerifierTests(unittest.TestCase):
+    def test_complete_authorized_provider_path_passes(self) -> None:
+        assert validate_runtime_result(_health(), _response(), _identity()) == []
+
+    def test_fallback_provider_fails_closed(self) -> None:
+        response = _response()
+        response["provider"]["used"] = False
+        response["provider"]["status"] = "DISABLED"
+        response["provider"]["fallback_required"] = True
+        blockers = validate_runtime_result(_health(), response, _identity())
+        assert "real_provider_not_used" in blockers
+        assert "provider_status_not_used" in blockers
+        assert "provider_fallback_used" in blockers
+
+    def test_local_usage_cannot_self_claim_custody(self) -> None:
+        response = _response()
+        response["provider_usage_submission"]["custody_recorded"] = True
+        blockers = validate_runtime_result(_health(), response, _identity())
+        assert "local_usage_misclassified_as_custody" in blockers
+
+    def test_master_records_is_not_a_predicate(self) -> None:
+        """No Master Records health flag, usage reply, or reconstruction gates the slice."""
+        health = _health()
+        health["master_records_submission_enabled"] = False
+        response = _response()
+        response["master_records_usage_submission"] = {"status": "NOT_CONFIGURED", "custody_recorded": False}
+        response["master_record_status"] = "NOT_RECORDED"
+        response["reconstruction_status"] = "NOT_RUN"
+        assert validate_runtime_result(health, response, _identity()) == []
+
+    def test_missing_provider_usage_record_fails_closed(self) -> None:
+        response = _response()
+        response["provider_usage_submission"] = {}
+        blockers = validate_runtime_result(_health(), response, _identity())
+        assert "provider_usage_persistence_missing" in blockers
+        assert "provider_usage_identity_missing" in blockers
+
+    def test_missing_organization_ledger_transition_receipt_fails_closed(self) -> None:
+        response = _response()
+        response["final_receipt"] = False
+        response["final_receipt_id"] = None
+        blockers = validate_runtime_result(_health(), response, _identity())
+        assert "organization_ledger_transition_receipt_missing" in blockers
+
+    def test_unverified_slice_carries_the_six_non_allow_fields(self) -> None:
+        disposition = MODULE.non_allow(["organization_ledger_transition_receipt_missing"])
+        assert disposition["disposition"] == "FAIL_CLOSED"
+        for key in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                    "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+            assert disposition[key], key
+        assert disposition["owning_existing_goal"] == "LLMA-DECLARED-PATH-CONFORMANCE-368"
+        assert '"BLOCKED"' not in (ROOT / "scripts" / "verify_authorized_provider_activation.py").read_text()
+
+    def test_authority_escalation_fails_closed(self) -> None:
+        response = _response()
+        response["authority"]["publication_allowed"] = True
+        blockers = validate_runtime_result(_health(), response, _identity())
+        assert "authority_publication_allowed_must_be_false" in blockers
+
+    def test_legacy_authority_key_names_from_deployed_adapters_are_accepted(self) -> None:
+        response = _response()
+        authority = response["authority"]
+        authority["local_persistence_is_master_records_custody"] = authority.pop(
+            "local_persistence_is_master_records_organization_record"
+        )
+        assert validate_runtime_result(_health(), response, _identity()) == []
 
 
-def test_fallback_provider_fails_closed() -> None:
-    response = _response()
-    response["provider"]["used"] = False
-    response["provider"]["status"] = "DISABLED"
-    response["provider"]["fallback_required"] = True
-    blockers = validate_runtime_result(_health(), response, _identity())
-    assert "real_provider_not_used" in blockers
-    assert "provider_status_not_used" in blockers
-    assert "provider_fallback_used" in blockers
-
-
-def test_local_usage_cannot_self_claim_custody() -> None:
-    response = _response()
-    response["provider_usage_submission"]["custody_recorded"] = True
-    blockers = validate_runtime_result(_health(), response, _identity())
-    assert "local_usage_misclassified_as_custody" in blockers
-
-
-def test_master_records_is_not_a_predicate() -> None:
-    """No Master Records health flag, usage reply, or reconstruction gates the slice."""
-    health = _health()
-    health["master_records_submission_enabled"] = False
-    response = _response()
-    response["master_records_usage_submission"] = {"status": "NOT_CONFIGURED", "custody_recorded": False}
-    response["master_record_status"] = "NOT_RECORDED"
-    response["reconstruction_status"] = "NOT_RUN"
-    assert validate_runtime_result(health, response, _identity()) == []
-
-
-def test_missing_provider_usage_record_fails_closed() -> None:
-    response = _response()
-    response["provider_usage_submission"] = {}
-    blockers = validate_runtime_result(_health(), response, _identity())
-    assert "provider_usage_persistence_missing" in blockers
-    assert "provider_usage_identity_missing" in blockers
-
-
-def test_missing_organization_ledger_transition_receipt_fails_closed() -> None:
-    response = _response()
-    response["final_receipt"] = False
-    response["final_receipt_id"] = None
-    blockers = validate_runtime_result(_health(), response, _identity())
-    assert "organization_ledger_transition_receipt_missing" in blockers
-
-
-def test_unverified_slice_carries_the_six_non_allow_fields() -> None:
-    disposition = MODULE.non_allow(["organization_ledger_transition_receipt_missing"])
-    assert disposition["disposition"] == "FAIL_CLOSED"
-    for key in ("failure_code", "failed_predicate", "required_evidence_or_repair",
-                "retry_entrypoint", "owning_existing_goal", "next_attempt"):
-        assert disposition[key], key
-    assert disposition["owning_existing_goal"] == "LLMA-DECLARED-PATH-CONFORMANCE-368"
-    assert '"BLOCKED"' not in (ROOT / "scripts" / "verify_authorized_provider_activation.py").read_text()
-
-
-def test_authority_escalation_fails_closed() -> None:
-    response = _response()
-    response["authority"]["publication_allowed"] = True
-    blockers = validate_runtime_result(_health(), response, _identity())
-    assert "authority_publication_allowed_must_be_false" in blockers
-
-
-def test_legacy_authority_key_names_from_deployed_adapters_are_accepted() -> None:
-    response = _response()
-    authority = response["authority"]
-    authority["local_persistence_is_master_records_custody"] = authority.pop(
-        "local_persistence_is_master_records_organization_record"
-    )
-    assert validate_runtime_result(_health(), response, _identity()) == []
+if __name__ == "__main__":
+    unittest.main()

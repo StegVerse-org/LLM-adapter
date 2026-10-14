@@ -1,0 +1,85 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-STDLIB-UNITTEST-10",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-harness change only: sixteen action-router, authority-client, provider-activation verifier, continuity, CLI, demo, execution-policy/gateway, evidence-posture and governed adapter/chat-pipeline test files move from pytest to the standard-library unittest, and the documentation commands that run them name python -m unittest; no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/414"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "INTEGRATION_SNIPPETS.md",
+      "docs/ADMITTEDCODE_EVIDENCE_DEMO_MIRROR_HANDOFF.md",
+      "docs/END_TO_END_DEMO.md",
+      "tests/test_action_router.py",
+      "tests/test_admittedcode_review_packet_binding.py",
+      "tests/test_authority_client.py",
+      "tests/test_authorized_provider_activation_verifier.py",
+      "tests/test_canonical_device_kv_stage.py",
+      "tests/test_cli.py",
+      "tests/test_commitment_request.py",
+      "tests/test_continuity_search.py",
+      "tests/test_continuity_service_client.py",
+      "tests/test_end_to_end_demo.py",
+      "tests/test_ephemeral_execution_policy.py",
+      "tests/test_evidence_posture.py",
+      "tests/test_execution_gateway.py",
+      "tests/test_fixture_runner.py",
+      "tests/test_governed_adapter.py",
+      "tests/test_governed_chat_pipeline.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches these test files or the three documents."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Package behaviour is unchanged and README.md names none of these files; the verification commands in docs/END_TO_END_DEMO.md, docs/ADMITTEDCODE_EVIDENCE_DEMO_MIRROR_HANDOFF.md and INTEGRATION_SNIPPETS.md that do are updated to python -m unittest in the same change set.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    "INTEGRATION_SNIPPETS.md",
+    "docs/ADMITTEDCODE_EVIDENCE_DEMO_MIRROR_HANDOFF.md",
+    "docs/END_TO_END_DEMO.md",
+    "tests/test_action_router.py",
+    "tests/test_admittedcode_review_packet_binding.py",
+    "tests/test_authority_client.py",
+    "tests/test_authorized_provider_activation_verifier.py",
+    "tests/test_canonical_device_kv_stage.py",
+    "tests/test_cli.py",
+    "tests/test_commitment_request.py",
+    "tests/test_continuity_search.py",
+    "tests/test_continuity_service_client.py",
+    "tests/test_end_to_end_demo.py",
+    "tests/test_ephemeral_execution_policy.py",
+    "tests/test_evidence_posture.py",
+    "tests/test_execution_gateway.py",
+    "tests/test_fixture_runner.py",
+    "tests/test_governed_adapter.py",
+    "tests/test_governed_chat_pipeline.py"
+  ],
+  "new_files": []
+}

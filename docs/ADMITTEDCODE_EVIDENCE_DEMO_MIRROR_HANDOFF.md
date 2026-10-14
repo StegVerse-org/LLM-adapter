@@ -56,7 +56,7 @@ Canonical validation commands:
 ```bash
 python scripts/build_admittedcode_review_packets.py
 git diff --exit-code -- examples/end_to_end/admittedcode_review/
-pytest tests/test_admittedcode_review_packet_binding.py -v
+python -m unittest -v tests/test_admittedcode_review_packet_binding.py
 python scripts/verify_admittedcode_review_fixture.py
 ```
 

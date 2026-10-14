@@ -1,82 +1,96 @@
-import pytest
 
+import os
+import unittest
+from unittest import mock
 from llm_adapter.continuity_service_client import ContinuityServiceClient, ContinuityServiceConfigurationError, continuity_result_from_service_body
 from llm_adapter.governed_session import run_governed_request_session
 from llm_adapter.provider_client import FixtureProviderClient
 from llm_adapter.provider_request import build_provider_request
 
 
-def test_continuity_service_fails_closed_without_endpoint(monkeypatch):
-    monkeypatch.delenv("STEGVERSE_CONTINUITY_SEARCH_URL", raising=False)
+class ContinuityServiceClientTests(unittest.TestCase):
+    def _delenv(self, name, raising=True):
+        """monkeypatch.delenv equivalent: os.environ is restored after the test."""
+        if raising and name not in os.environ:
+            raise KeyError(name)
+        patcher = mock.patch.dict(os.environ)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        os.environ.pop(name, None)
 
-    with pytest.raises(ContinuityServiceConfigurationError):
-        ContinuityServiceClient().search("prior answer")
+    def test_continuity_service_fails_closed_without_endpoint(self):
+        self._delenv("STEGVERSE_CONTINUITY_SEARCH_URL", raising=False)
+
+        with self.assertRaises(ContinuityServiceConfigurationError):
+            ContinuityServiceClient().search("prior answer")
+
+    def test_continuity_service_body_converts_to_result(self):
+        result = continuity_result_from_service_body(
+            query="prior answer",
+            body={
+                "freshness_status": "stale",
+                "evidence": [
+                    {
+                        "source_type": "receipt",
+                        "pointer": "master-records://service/prior-answer",
+                        "content_hash": "abc123",
+                        "retrieved_at": "2026-07-01T00:00:00+00:00",
+                        "freshness": "stale",
+                        "notes": "service result",
+                    }
+                ],
+                "reconstruction_notes": ["service-backed continuity result"],
+            },
+        )
+
+        assert result.freshness_status == "stale"
+        assert result.evidence[0].content_hash == "abc123"
+        assert result.reconstruction_notes == ("service-backed continuity result",)
+
+    def test_continuity_service_response_can_drive_governed_session(self):
+        continuity = continuity_result_from_service_body(
+            query="prior answer",
+            body={
+                "freshness_status": "stale",
+                "evidence": [
+                    {
+                        "source_type": "receipt",
+                        "pointer": "master-records://service/prior-answer",
+                        "content_hash": "abc123",
+                        "retrieved_at": "2026-07-01T00:00:00+00:00",
+                        "freshness": "stale",
+                        "notes": "service result",
+                    }
+                ],
+                "reconstruction_notes": ["service-backed continuity result"],
+            },
+        )
+
+        class StaticContinuityClient:
+            def search(self, query):
+                return continuity
+
+        request = build_provider_request(
+            provider="fixture-provider",
+            model="fixture-model",
+            messages=[{"role": "user", "content": "Can the prior answer be reused?"}],
+            allowed_sources=("receipt_index",),
+        )
+
+        session = run_governed_request_session(
+            request=request,
+            provider_client=FixtureProviderClient(
+                output="The prior answer is reconstructable but requires fresh retrieval."
+            ),
+            continuity_client=StaticContinuityClient(),
+            policy={"policy": "freshness-required"},
+            delegation={"adapter": "read"},
+        ).to_dict()
+
+        assert session["continuity"]["freshness_status"] == "stale"
+        assert session["adapter_result"]["decision"] == "QUARANTINE"
+        assert session["adapter_result"]["admissibility_status"] == "requires_fresh_retrieval"
 
 
-def test_continuity_service_body_converts_to_result():
-    result = continuity_result_from_service_body(
-        query="prior answer",
-        body={
-            "freshness_status": "stale",
-            "evidence": [
-                {
-                    "source_type": "receipt",
-                    "pointer": "master-records://service/prior-answer",
-                    "content_hash": "abc123",
-                    "retrieved_at": "2026-07-01T00:00:00+00:00",
-                    "freshness": "stale",
-                    "notes": "service result",
-                }
-            ],
-            "reconstruction_notes": ["service-backed continuity result"],
-        },
-    )
-
-    assert result.freshness_status == "stale"
-    assert result.evidence[0].content_hash == "abc123"
-    assert result.reconstruction_notes == ("service-backed continuity result",)
-
-
-def test_continuity_service_response_can_drive_governed_session():
-    continuity = continuity_result_from_service_body(
-        query="prior answer",
-        body={
-            "freshness_status": "stale",
-            "evidence": [
-                {
-                    "source_type": "receipt",
-                    "pointer": "master-records://service/prior-answer",
-                    "content_hash": "abc123",
-                    "retrieved_at": "2026-07-01T00:00:00+00:00",
-                    "freshness": "stale",
-                    "notes": "service result",
-                }
-            ],
-            "reconstruction_notes": ["service-backed continuity result"],
-        },
-    )
-
-    class StaticContinuityClient:
-        def search(self, query):
-            return continuity
-
-    request = build_provider_request(
-        provider="fixture-provider",
-        model="fixture-model",
-        messages=[{"role": "user", "content": "Can the prior answer be reused?"}],
-        allowed_sources=("receipt_index",),
-    )
-
-    session = run_governed_request_session(
-        request=request,
-        provider_client=FixtureProviderClient(
-            output="The prior answer is reconstructable but requires fresh retrieval."
-        ),
-        continuity_client=StaticContinuityClient(),
-        policy={"policy": "freshness-required"},
-        delegation={"adapter": "read"},
-    ).to_dict()
-
-    assert session["continuity"]["freshness_status"] == "stale"
-    assert session["adapter_result"]["decision"] == "QUARANTINE"
-    assert session["adapter_result"]["admissibility_status"] == "requires_fresh_retrieval"
+if __name__ == "__main__":
+    unittest.main()
