@@ -85,30 +85,16 @@ def test_request_template_is_explicitly_non_authorizing() -> None:
     assert "model" in request["required_decisions"]
 
 
-def test_permission_bearing_workflow_is_receipt_triggered_and_single_use() -> None:
-    gated = (ROOT / ".github/workflows/ecosystem-chat-github-models-execution.yml").read_text()
-    scheduled = (ROOT / ".github/workflows/ecosystem-chat-live-activation.yml").read_text()
+def test_runner_hosted_provider_execution_stays_retired() -> None:
+    """The GitHub Models execution workflow ran a provider on a hosted runner.
 
-    for required in (
-        "provider-execution-authority.github-models.v1.json",
-        "branches:",
-        "- main",
-        "validate-authority:",
-        "execute-single-governed-request:",
-        "needs: validate-authority",
-        "models: read",
-        "validate_provider_execution_authority.py",
-        "Refuse reused authority receipt",
-        "Consume authority before provider execution",
-        "provider-execution-authority.github-models.consumed.json",
-        "STEGVERSE_PROVIDER_TOKEN: ${{ github.token }}",
-        "STEGVERSE_PROVIDER_DAILY_REQUEST_LIMIT: '1'",
-        "STEGVERSE_EXTERNAL_MUTATION_ENABLED: 'false'",
-        "scripts/verify_authorized_provider_activation.py",
-    ):
-        assert required in gated
-
-    assert "schedule:" not in gated
-    assert "workflow_dispatch:" not in gated
-    assert "models: read" not in scheduled
-    assert "github.token" not in scheduled
+    It is retired (scripts/check_stegverse_live_baseline_provider_authority_binding.py
+    requires its absence), so no workflow may grant model access or hand the
+    runner token to a provider.
+    """
+    assert not (ROOT / ".github/workflows/ecosystem-chat-github-models-execution.yml").exists()
+    assert not (ROOT / ".github/workflows/ecosystem-chat-live-activation.yml").exists()
+    for workflow in sorted((ROOT / ".github/workflows").glob("*.yml")):
+        text = workflow.read_text(encoding="utf-8")
+        assert "models: read" not in text, workflow.name
+        assert "STEGVERSE_PROVIDER_TOKEN: ${{ github.token }}" not in text, workflow.name

@@ -45,6 +45,16 @@ def validate_posture(posture: str) -> str:
     return normalized
 
 
+# Wording that denies evidential support ("I don't have evidence that supports
+# that claim") claims nothing. Only these explicit denials are removed before
+# matching; any other certainty wording in the same text is still detected.
+NEGATED_SUPPORT_PATTERN = (
+    r"(?:\bno|n't have|\bnot have|\bwithout|\black(?:s|ing)?)\s+(?:any\s+)?evidence\s+"
+    r"(?:that\s+)?(?:support(?:s|ing)?|indicat(?:es?|ing)|suggest(?:s|ing)?)\b"
+    r"|\b(?:does|do)(?:n't|\s+not)\s+support\b"
+)
+
+
 def strongest_certainty_claimed(text: str) -> int:
     """Return the strongest evidence rank implied by conversational wording.
 
@@ -53,6 +63,7 @@ def strongest_certainty_claimed(text: str) -> int:
     """
 
     claimed = 0
+    text = re.sub(NEGATED_SUPPORT_PATTERN, " ", text, flags=re.IGNORECASE)
     for pattern, rank in CERTAINTY_PATTERNS:
         if re.search(pattern, text, flags=re.IGNORECASE):
             claimed = max(claimed, rank)
