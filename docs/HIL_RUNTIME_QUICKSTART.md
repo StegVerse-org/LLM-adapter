@@ -1,6 +1,6 @@
 # HIL Receiver Runtime Quickstart
 
-This path starts the governed HIL v1.1 receiver without selecting a hosting provider. The same OCI image, environment contract, volume layout, readiness checks, and receipt rules apply on Docker, Podman, Kubernetes, Nomad, a generic VM, or any conforming container host.
+This path starts the governed HIL v1.1 receiver on the host-native launcher (`scripts/stegdeploy_native_gateway.py`). No container framework, image build or hosting provider is involved.
 
 ## Start locally
 
@@ -13,10 +13,8 @@ sh scripts/start-hil-runtime.sh
 The bootstrap command:
 
 - creates `.env.hil.local` with distinct review and publication secrets;
-- builds the repository-owned OCI image;
-- starts the gateway with the named `stegverse-data` volume;
-- waits for `/api/hil/readiness`;
-- verifies the v1.1 Primary and prompt hashes before reporting success.
+- starts the gateway with `scripts/stegdeploy_native_gateway.py start`, which closes when the process is spawned and keeps durable state under the launcher's durable root;
+- observes `/api/hil/readiness` once afterwards and reports whether the v1.1 Primary and prompt hashes match. That observation never gates the start; an unanswered probe is reported as `NOT_AUTHENTICALLY_OBSERVED` with the readiness URL as its reconciliation entrypoint.
 
 The generated environment file is ignored by Git and must not be committed.
 
@@ -59,18 +57,19 @@ After HTTPS readiness succeeds, update `StegVerse-Labs/Site/data/hil-receiver-co
 A durable-storage declaration is not proof. After the first controlled upload:
 
 ```sh
-docker compose --env-file .env.hil.local restart llm-adapter
+python scripts/stegdeploy_native_gateway.py stop
+sh scripts/start-hil-runtime.sh
 ```
 
-Then verify that the submission database, exact PDF bytes, provenance manifest, and receipt-linked hashes remain available from the same mounted volume. A later deployment may replace the container instead of restarting it, but it must retain the same durable volume.
+Then verify that the submission database, exact PDF bytes, provenance manifest, and receipt-linked hashes remain available from the same durable root.
 
 ## Stop without deleting custody state
 
 ```sh
-docker compose --env-file .env.hil.local down
+python scripts/stegdeploy_native_gateway.py stop
 ```
 
-Do not pass `--volumes`; removing the volume destroys the local custody copy.
+Stopping leaves the durable root in place. Deleting it destroys the local custody copy.
 
 ## Authority boundary
 

@@ -595,6 +595,8 @@ The transport-only Service Gateway POST forwards (`/intr/evaluator`, `/intr/sv00
 
 The same rule covers starting and reconstructing local runtimes. `scripts/stegdeploy_native_gateway.py start` closes on the spawned process (`LOCAL_NATIVE_GATEWAY_STARTED`) and `llm_adapter/capability_runtime.reconstruct_process` closes on the spawned capability; neither waits on `/health` or kills a process that has not answered yet. Health is a single non-gating observation: `stegdeploy_native_gateway.py status` (TLS verified against the gateway's own certificate file) and the capability receipt's `health` entry. An unanswered probe is recorded as `consequence_observation: NOT_AUTHENTICALLY_OBSERVED` with a `reconciliation_entrypoint`, never as a failed transition.
 
+The container runtime path is retired (Dockerfile, Dockerfile.portable-node, Dockerfile.service-gateway, the three Compose files, `scripts/stegdeploy_bootstrap.py` and `scripts/container-entrypoint.sh`). The host-native launcher is the only start path: its `serve` runs the downstream-recording worker and the gateway forward-queue drain once each, then serves `llm_adapter.deployed_gateway:app` with Uvicorn's raw access log off. StegVerse-Labs `scripts/activate_resident_stack.py` materializes the organization control bundle and invokes it. `scripts/verify_stegdeploy_runtime.py` fails if a retired container path returns.
+
 
 ## StegBrowser canonical Master Records relay
 

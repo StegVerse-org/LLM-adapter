@@ -52,7 +52,7 @@ def run(limit: int = 20) -> dict[str, object]:
 def main() -> int:
     """Run once and always exit 0: service startup never waits on Master Records.
 
-    The container entrypoint and the portable node preflight run this before the
+    The native gateway launcher and the portable node preflight run this before the
     gateway starts. A Master Records or configuration failure is reported as a
     six-field non-ALLOW and never blocks startup.
     """

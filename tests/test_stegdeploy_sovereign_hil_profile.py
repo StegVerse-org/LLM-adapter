@@ -44,12 +44,15 @@ def test_temporary_state_root_remains_rejected():
         raise AssertionError("temporary HIL custody root must fail closed")
 
 
-def test_stegdeploy_compose_declares_sovereign_profile_before_gateway_import():
-    text = (ROOT / "compose.stegdeploy.yaml").read_text(encoding="utf-8")
-    assert "STEGVERSE_RUNTIME_PROFILE: sovereign-carrier" in text
-    assert 'STEGVERSE_SOVEREIGN_STATE_DURABLE: "true"' in text
-    assert "STEGVERSE_SOVEREIGN_STATE_DIR: /var/lib/stegverse" in text
-    assert "stegverse_gateway_data:/var/lib/stegverse" in text
+def test_native_launcher_declares_sovereign_profile_before_gateway_import():
+    from scripts import stegdeploy_native_gateway as native
+    durable = Path("/var/lib/stegverse")
+    native_env = native.child_env(durable_root=durable, evaluator_enabled=False, evaluator_upstream="",
+                                  tls_cert=None, tls_key=None, env={})
+    assert native_env["STEGVERSE_RUNTIME_PROFILE"] == "sovereign-carrier"
+    assert native_env["STEGVERSE_SOVEREIGN_STATE_DURABLE"] == "true"
+    assert native_env["STEGVERSE_SOVEREIGN_STATE_DIR"] == str(durable)
+    assert native_env["STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT"] == str(durable)
 
 
 def test_profile_does_not_require_second_hil_public_process():

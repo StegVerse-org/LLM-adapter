@@ -33,11 +33,6 @@ pip install '.[service]'
 stegverse-service-gateway
 ```
 
-Or build:
-
-```bash
-docker build -f Dockerfile.service-gateway -t stegverse-service-gateway .
-```
 
 ## Endpoints
 

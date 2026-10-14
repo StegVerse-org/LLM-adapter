@@ -1,0 +1,83 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368-RETIRE-CONTAINER-RUNTIME",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/STEGDEPLOY_NATIVE_TLS_INGRESS_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+    "StegVerse-Labs/.github:data/task-registry-global-invariants.json",
+    "StegVerse-Labs/.github:docs/ECOSYSTEM_STATE_TRANSITION_DISPOSITION_INVARIANT.md"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Removes the container start path and moves its startup duties into the native launcher; no Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/400",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/403",
+      "https://github.com/StegVerse-Labs/.github/pull/3182"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github",
+      "StegVerse-Labs/StegVerse-Healer",
+      "StegVerse-Labs/StegHealth"
+    ],
+    "evidence_refs": [
+      "scripts/stegdeploy_native_gateway.py",
+      "StegVerse-Labs/.github:scripts/activate_resident_stack.py",
+      "StegVerse-Labs/.github:scripts/consume_one_shot_resident_stack_activation_request.py",
+      "StegVerse-Labs/StegVerse-Healer:app/coinbase_stegdeploy_gateway.py"
+    ]
+  },
+  "reuse_decision": "MOVE",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "The native launcher already owns local start; the container path had no remaining caller after StegVerse-Labs/.github#3182. No other open LLM-adapter PR touches these paths."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "scripts/stegdeploy_native_gateway.py",
+      "scripts/verify_stegdeploy_runtime.py"
+    ]
+  },
+  "covered_paths": [
+    "README.md",
+    ".github/workflows/coinbase-skap-service-gateway.yml",
+    "Dockerfile",
+    "Dockerfile.portable-node",
+    "Dockerfile.service-gateway",
+    "compose.yaml",
+    "compose.stegdeploy.yaml",
+    "compose.stegdeploy.tls.yaml",
+    "scripts/stegdeploy_bootstrap.py",
+    "scripts/container-entrypoint.sh",
+    "scripts/run_user_llm_portable_test.sh",
+    "scripts/start-hil-runtime.sh",
+    "scripts/stegdeploy_native_gateway.py",
+    "scripts/verify_stegdeploy_runtime.py",
+    "llm_adapter/custody_worker.py",
+    "tests/test_live_activation_automation_contract.py",
+    "tests/test_service_gateway_hil_intr.py",
+    "tests/test_service_gateway_query_safe_logging.py",
+    "tests/test_stegdeploy_control_bundle.py",
+    "tests/test_stegdeploy_native_gateway.py",
+    "tests/test_stegdeploy_native_tls.py",
+    "tests/test_stegdeploy_sovereign_hil_profile.py"
+  ],
+  "new_files": []
+}

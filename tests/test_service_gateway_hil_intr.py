@@ -212,11 +212,14 @@ def test_stegdeploy_gateway_activates_existing_sovereign_hil_receiver():
     assert env["STEGVERSE_HIL_DATA_DIR"] == "/var/lib/stegverse/hil-v1.1"
     assert env["STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS"] == "true"
 
-    compose = (ROOT / "compose.stegdeploy.yaml").read_text(encoding="utf-8")
-    assert "STEGVERSE_RUNTIME_PROFILE: sovereign-carrier" in compose
-    assert 'STEGVERSE_SOVEREIGN_STATE_DURABLE: "true"' in compose
-    assert "STEGVERSE_SOVEREIGN_STATE_DIR: /var/lib/stegverse" in compose
-    assert "stegverse_gateway_data:/var/lib/stegverse" in compose
+    from scripts import stegdeploy_native_gateway as native
+    durable = Path("/var/lib/stegverse")
+    native_env = native.child_env(durable_root=durable, evaluator_enabled=False, evaluator_upstream="",
+                                  tls_cert=None, tls_key=None, env={})
+    assert native_env["STEGVERSE_RUNTIME_PROFILE"] == "sovereign-carrier"
+    assert native_env["STEGVERSE_SOVEREIGN_STATE_DURABLE"] == "true"
+    assert native_env["STEGVERSE_SOVEREIGN_STATE_DIR"] == str(durable)
+    assert native_env["STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT"] == str(durable)
 
     combined = (ROOT / "llm_adapter/combined_gateway.py").read_text(encoding="utf-8")
     deployed = (ROOT / "llm_adapter/deployed_gateway.py").read_text(encoding="utf-8")

@@ -20,42 +20,18 @@ def reject(path: str, *needles: str) -> None:
 
 
 def main() -> int:
-    require(
+    for retired in (
         "Dockerfile",
-        "FROM python:3.12-slim",
-        "USER stegverse",
-        'VOLUME ["/var/lib/stegverse"]',
-        'ENTRYPOINT ["/usr/local/bin/stegverse-entrypoint"]',
-        "HEALTHCHECK",
-    )
-    require(
-        "scripts/container-entrypoint.sh",
-        "set -eu",
-        "STEGVERSE_TRANSITION_DB",
-        "STEGVERSE_EXTERNAL_REVIEW_DB",
-        "python -m llm_adapter.custody_worker",
-        "exec uvicorn llm_adapter.deployed_gateway:app",
-    )
-    require(
+        "Dockerfile.portable-node",
+        "Dockerfile.service-gateway",
+        "compose.yaml",
         "compose.stegdeploy.yaml",
-        "stegverse/llm-adapter:local",
-        "build:",
-        "dockerfile: Dockerfile",
-        "pull_policy: never",
-        "restart: unless-stopped",
-        "init: true",
-        'STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS: "true"',
-        "stegverse_gateway_data:/var/lib/stegverse",
-        "STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT: /var/lib/stegverse",
-        "STEGVERSE_RUNTIME_PROFILE: sovereign-carrier",
-        'STEGVERSE_SOVEREIGN_STATE_DURABLE: "true"',
-        "STEGVERSE_SOVEREIGN_STATE_DIR: /var/lib/stegverse",
-        "STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT: ${STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT:-}",
-        "STEGVERSE_PROVIDER_ENABLED: ${STEGVERSE_PROVIDER_ENABLED:-false}",
-        "STEGVERSE_EXTERNAL_MUTATION_ENABLED: ${STEGVERSE_EXTERNAL_MUTATION_ENABLED:-false}",
-        "healthcheck:",
-    )
-    reject("compose.stegdeploy.yaml", "ghcr.io/stegverse-org/llm-adapter:main", "pull_policy: always")
+        "compose.stegdeploy.tls.yaml",
+        "scripts/stegdeploy_bootstrap.py",
+        "scripts/container-entrypoint.sh",
+    ):
+        if (ROOT / retired).exists():
+            raise SystemExit(f"container runtime path must stay retired: {retired}")
     require(
         "llm_adapter/combined_gateway.py",
         "apply_sovereign_hil_receiver_profile",
@@ -72,20 +48,6 @@ def main() -> int:
         '"third_party_runtime_required": False',
     )
     require(
-        "scripts/stegdeploy_bootstrap.py",
-        "stegdeploy.deployment-receipt.v2",
-        '"docker", "compose"',
-        '_compose("build")',
-        '"image_source": "LOCAL_BUILD"',
-        '"registry_pull_required": False',
-        '"credential_authority": "TV/TVC"',
-        '"generated_credentials": False',
-        '"manual_build_required": False',
-        '"manual_credentials_required": False',
-        '"render_dependency": False',
-        "/health",
-    )
-    require(
         "scripts/stegdeploy_native_gateway.py",
         "HOST_NATIVE_PYTHON_UVICORN",
         "STEGVERSE_EVALUATOR_INTR_ENABLED",
@@ -100,13 +62,10 @@ def main() -> int:
         '"github_token_runtime_authority": "NONE"',
         '"org_federation_rendezvous_enabled": True',
         '"org_federation_gateway_execution_authority": "NONE"',
-    )
-    reject(
-        "scripts/stegdeploy_bootstrap.py",
-        "secrets.token_urlsafe",
-        '_compose("pull")',
-        '"STEGVERSE_MASTER_RECORDS_TOKEN": existing.get',
-        '"STEGVERSE_PROVIDER_TOKEN": existing.get',
+        "custody_worker.main()",
+        "gateway_forward_queue.main()",
+        "access_log=False",
+        '"STEGVERSE_TRANSITION_DB"',
     )
     for workflow in (
         ROOT / ".github/workflows/publish-portable-node-image.yml",

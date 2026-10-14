@@ -137,3 +137,35 @@ def test_source_has_no_unverified_tls_or_health_wait_loop() -> None:
     source = Path(mod.__file__).read_text(encoding="utf-8")
     assert "_create_unverified_context" not in source
     assert "native_gateway_health_failed" not in source
+
+
+def test_child_env_defaults_durable_stores_under_root_without_overriding(tmp_path: Path) -> None:
+    data = tmp_path / "data"
+    env = mod.child_env(durable_root=data, evaluator_enabled=False, evaluator_upstream="",
+                        tls_cert=None, tls_key=None, env={"STEGVERSE_TRANSITION_DB": "/srv/chat.db"})
+    assert env["STEGVERSE_TRANSITION_DB"] == "/srv/chat.db"
+    assert env["STEGVERSE_EXTERNAL_REVIEW_DB"] == str(data / "stegverse-external-review.db")
+    assert env["STEGVERSE_HIL_DATA_DIR"] == str(data / "hil")
+    assert env["STEGVERSE_GATEWAY_FORWARD_DB"] == str(data / "stegverse-gateway-forward.db")
+
+
+def test_serve_runs_startup_workers_once_then_gateway_without_raw_access_log(monkeypatch, tmp_path: Path) -> None:
+    import sys
+    import types
+    from llm_adapter import custody_worker, gateway_forward_queue
+
+    order = []
+    monkeypatch.setenv("STEGVERSE_HIL_DATA_DIR", str(tmp_path / "hil"))
+    monkeypatch.delenv("STEGDEPLOY_NATIVE_TLS_CERT_FILE", raising=False)
+    monkeypatch.delenv("STEGDEPLOY_NATIVE_TLS_KEY_FILE", raising=False)
+    monkeypatch.setattr(custody_worker, "main", lambda: order.append("custody") or 0)
+    monkeypatch.setattr(gateway_forward_queue, "main", lambda: order.append("forward_queue") or 0)
+    monkeypatch.setitem(sys.modules, "uvicorn", types.SimpleNamespace(run=lambda app, **kw: order.append((app, kw))))
+
+    mod.serve("127.0.0.1", 8000)
+
+    assert order[:2] == ["custody", "forward_queue"]
+    app, kwargs = order[2]
+    assert app == "llm_adapter.deployed_gateway:app"
+    assert kwargs["access_log"] is False
+    assert (tmp_path / "hil").is_dir()
