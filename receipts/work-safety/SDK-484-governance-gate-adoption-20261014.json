@@ -3,7 +3,7 @@
   "task_id": "SDK-484-GOVERNANCE-GATE-ADOPTION",
   "authority_effect": "NONE",
   "canonical_handoff_refs": [
-    "StegVerse-org/LLM-adapter:docs/COSV_LLM_ADAPTER_ADOPTION_MIRROR_HANDOFF.md"
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
   ],
   "task_registry_refs": [
     "https://github.com/StegVerse-org/StegVerse-SDK/issues/484"
