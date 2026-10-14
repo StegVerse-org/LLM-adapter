@@ -1,0 +1,59 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-PYDANTIC-TO-SERVICE-EXTRA",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Packaging change only: pydantic moves from core dependencies to the service and dev extras; no runtime behaviour, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/404",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/405"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "pyproject.toml",
+      "Dockerfile",
+      "Dockerfile.portable-node",
+      "Dockerfile.service-gateway",
+      ".github/workflows/hil-triggered-ephemeral-cycle.yml",
+      "llm_adapter/__init__.py",
+      "tests/test_service_packaging_credential_free.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches pyproject.toml dependencies."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Every service image and workflow that runs a pydantic-using FastAPI surface already installs the service or dev extra (or fastapi directly); the README documents no plain-install service command.",
+    "evidence_refs": [
+      "Dockerfile",
+      "Dockerfile.portable-node",
+      "Dockerfile.service-gateway"
+    ]
+  },
+  "covered_paths": [
+    "pyproject.toml",
+    "tests/test_service_packaging_credential_free.py"
+  ],
+  "new_files": []
+}
