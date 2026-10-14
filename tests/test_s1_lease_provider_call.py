@@ -1,5 +1,6 @@
-import pytest
 
+import unittest
+from unittest import mock
 from llm_adapter import provider_usage_submission
 from llm_adapter.anthropic_convergence_bridge import build_anthropic_convergence_envelope
 from llm_adapter.anthropic_tvc_broker import RUNTIME_PROFILE_ID as ANTHROPIC_PROFILE
@@ -10,12 +11,6 @@ from llm_adapter.s1_lease_provider_call import S1LeaseProviderCallError, build_s
 
 INGRESS = dict(ingress_disposition="ALLOW", ingress_receipt_hash="a" * 64, carrier_ref="carrier-1")
 EGRESS_RECEIPT = "e" * 64
-
-
-@pytest.fixture(autouse=True)
-def local_usage_ledger_untouched(monkeypatch):
-    monkeypatch.setattr(provider_usage_submission, "_persist_event",
-                        lambda event, **_: ({**event, "event_sha256": event.get("event_sha256", "f" * 64)}, True))
 
 
 def _request(provider):
@@ -63,67 +58,87 @@ def _call(provider, *, decision=None, calls=None):
     return call, governed, calls
 
 
-@pytest.mark.parametrize("provider", ["openai", "anthropic"])
-def test_allow_returns_admitted_egress_records_for_the_named_transition(provider):
-    call, governed, calls = _call(provider)
-    out = call(governed)
-    assert len(calls) == 1
-    assert out["egress_handoff"]["transition_id"] == "tx-s1"
-    assert out["egress_handoff"]["request_hash"] == governed["request_hash"]
-    assert out["egress_handoff"]["runtime_model"] == "runtime-fixture"
-    assert out["egress_admission"]["state"] == "EGRESS_ADMITTED"
-    assert out["egress_admission"]["transition_authority"] == "Interlock/InTr"
-    assert out["egress_admission"]["response_hash"] == out["egress_handoff"]["response_hash"]
-    assert out["egress_admission"]["egress_receipt_hash"] == EGRESS_RECEIPT
+class S1LeaseProviderCallTests(unittest.TestCase):
+    def setUp(self):
+        self._local_usage_ledger_untouched()
+
+    def _setattr(self, target, *args, raising=True):
+        """monkeypatch.setattr equivalent: dotted-path or (object, name) form, undone after the test."""
+        if isinstance(target, str):
+            patcher = mock.patch(target, *args, create=not raising)
+        else:
+            patcher = mock.patch.object(target, *args, create=not raising)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _local_usage_ledger_untouched(self):
+        self._setattr(provider_usage_submission, "_persist_event",
+                            lambda event, **_: ({**event, "event_sha256": event.get("event_sha256", "f" * 64)}, True))
+
+    def test_allow_returns_admitted_egress_records_for_the_named_transition(self):
+        for provider in ["openai", "anthropic"]:
+            with self.subTest(provider=provider):
+                call, governed, calls = _call(provider)
+                out = call(governed)
+                assert len(calls) == 1
+                assert out["egress_handoff"]["transition_id"] == "tx-s1"
+                assert out["egress_handoff"]["request_hash"] == governed["request_hash"]
+                assert out["egress_handoff"]["runtime_model"] == "runtime-fixture"
+                assert out["egress_admission"]["state"] == "EGRESS_ADMITTED"
+                assert out["egress_admission"]["transition_authority"] == "Interlock/InTr"
+                assert out["egress_admission"]["response_hash"] == out["egress_handoff"]["response_hash"]
+                assert out["egress_admission"]["egress_receipt_hash"] == EGRESS_RECEIPT
+
+    def test_lease_naming_another_request_or_route_is_refused_before_any_provider_call(self):
+        for provider in ["openai", "anthropic"]:
+            for override, message in [
+                ({"request_hash": "f" * 64}, "request_hash does not name this request"),
+                ({"runtime_profile_id": "stegverse:runtime-profile:llm-adapter-zai:v1"}, "runtime_profile_id does not name"),
+            ]:
+                with self.subTest(provider=provider, override=override, message=message):
+                    call, governed, calls = _call(provider)
+                    with self.assertRaisesRegex(PermissionError, message):
+                        call({**governed, **override})
+                    assert calls == []
+
+    def test_profiles_are_not_interchangeable_between_s1_routes(self):
+        call, governed, calls = _call("openai")
+        with self.assertRaises(PermissionError):
+            call({**governed, "runtime_profile_id": ANTHROPIC_PROFILE})
+        assert calls == []
+
+    def test_non_allow_egress_is_a_refusal(self):
+        for disposition in ["DENY", "FAIL_CLOSED", None]:
+            with self.subTest(disposition=disposition):
+                call, governed, calls = _call("openai", decision={"disposition": disposition, "egress_receipt_hash": EGRESS_RECEIPT})
+                with self.assertRaisesRegex(PermissionError, "egress InTr"):
+                    call(governed)
+                assert len(calls) == 1
+
+    def test_malformed_inputs_fail_closed(self):
+        call, governed, _ = _call("openai")
+        with self.assertRaises(S1LeaseProviderCallError):
+            call({**governed, "transition_id": ""})
+        with self.assertRaises(S1LeaseProviderCallError):
+            call(None)
+        with self.assertRaisesRegex(S1LeaseProviderCallError, "not an S1 governed provider route"):
+            build_s1_provider_call(build_provider_request(provider="kimi", model="k", messages=[{"role": "user", "content": "x"}]),
+                                   session_id="s", measurement_id="m", lease_receipt={}, broker_submitter=lambda _: {},
+                                   egress_decider=lambda _: {}, **INGRESS)
+
+    def test_egress_decision_cannot_name_another_transition_or_response(self):
+        for field, value in [
+            ("transition_id", "tx-other"),
+            ("request_hash", "f" * 64),
+            ("response_hash", "f" * 64),
+        ]:
+            with self.subTest(field=field, value=value):
+                decision = {"disposition": "ALLOW", "egress_receipt_hash": EGRESS_RECEIPT, field: value}
+                call, governed, calls = _call("openai", decision=decision)
+                with self.assertRaisesRegex(PermissionError, "egress InTr " + field + " binding mismatch"):
+                    call(governed)
+                assert len(calls) == 1
 
 
-@pytest.mark.parametrize("provider", ["openai", "anthropic"])
-@pytest.mark.parametrize("override,message", [
-    ({"request_hash": "f" * 64}, "request_hash does not name this request"),
-    ({"runtime_profile_id": "stegverse:runtime-profile:llm-adapter-zai:v1"}, "runtime_profile_id does not name"),
-])
-def test_lease_naming_another_request_or_route_is_refused_before_any_provider_call(provider, override, message):
-    call, governed, calls = _call(provider)
-    with pytest.raises(PermissionError, match=message):
-        call({**governed, **override})
-    assert calls == []
-
-
-def test_profiles_are_not_interchangeable_between_s1_routes():
-    call, governed, calls = _call("openai")
-    with pytest.raises(PermissionError):
-        call({**governed, "runtime_profile_id": ANTHROPIC_PROFILE})
-    assert calls == []
-
-
-@pytest.mark.parametrize("disposition", ["DENY", "FAIL_CLOSED", None])
-def test_non_allow_egress_is_a_refusal(disposition):
-    call, governed, calls = _call("openai", decision={"disposition": disposition, "egress_receipt_hash": EGRESS_RECEIPT})
-    with pytest.raises(PermissionError, match="egress InTr"):
-        call(governed)
-    assert len(calls) == 1
-
-
-def test_malformed_inputs_fail_closed():
-    call, governed, _ = _call("openai")
-    with pytest.raises(S1LeaseProviderCallError):
-        call({**governed, "transition_id": ""})
-    with pytest.raises(S1LeaseProviderCallError):
-        call(None)
-    with pytest.raises(S1LeaseProviderCallError, match="not an S1 governed provider route"):
-        build_s1_provider_call(build_provider_request(provider="kimi", model="k", messages=[{"role": "user", "content": "x"}]),
-                               session_id="s", measurement_id="m", lease_receipt={}, broker_submitter=lambda _: {},
-                               egress_decider=lambda _: {}, **INGRESS)
-
-
-@pytest.mark.parametrize("field,value", [
-    ("transition_id", "tx-other"),
-    ("request_hash", "f" * 64),
-    ("response_hash", "f" * 64),
-])
-def test_egress_decision_cannot_name_another_transition_or_response(field, value):
-    decision = {"disposition": "ALLOW", "egress_receipt_hash": EGRESS_RECEIPT, field: value}
-    call, governed, calls = _call("openai", decision=decision)
-    with pytest.raises(PermissionError, match="egress InTr " + field + " binding mismatch"):
-        call(governed)
-    assert len(calls) == 1
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,73 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-STDLIB-UNITTEST-6",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-harness change only: ten capability-runtime, portable-node and governed external LLM connection test files move from pytest to the standard-library unittest; capability-runtime.yml and validate-external-llm-convergence.yml run them with python -m unittest and install the package without the [dev] extras; no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/411"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      ".github/workflows/capability-runtime.yml",
+      ".github/workflows/validate-external-llm-convergence.yml",
+      "README.md",
+      "tests/test_capability_runtime.py",
+      "tests/test_external_anthropic_tvc_runtime.py",
+      "tests/test_external_llm_connection.py",
+      "tests/test_governed_external_provider_client.py",
+      "tests/test_node_bootstrap.py",
+      "tests/test_node_service.py",
+      "tests/test_openai_tvc_runtime.py",
+      "tests/test_portable_node.py",
+      "tests/test_portable_node_bootstrap.py",
+      "tests/test_s1_lease_provider_call.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches these test files or the capability-runtime and external LLM convergence workflows."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Package behaviour is unchanged; README verification commands that name these files are updated to python -m unittest in the same change set.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/capability-runtime.yml",
+    ".github/workflows/validate-external-llm-convergence.yml",
+    "README.md",
+    "tests/test_capability_runtime.py",
+    "tests/test_external_anthropic_tvc_runtime.py",
+    "tests/test_external_llm_connection.py",
+    "tests/test_governed_external_provider_client.py",
+    "tests/test_node_bootstrap.py",
+    "tests/test_node_service.py",
+    "tests/test_openai_tvc_runtime.py",
+    "tests/test_portable_node.py",
+    "tests/test_portable_node_bootstrap.py",
+    "tests/test_s1_lease_provider_call.py"
+  ],
+  "new_files": []
+}
