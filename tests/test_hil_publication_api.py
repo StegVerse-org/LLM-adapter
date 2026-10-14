@@ -2,8 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import shutil
+import tempfile
+import types
+import unittest
+from pathlib import Path
+from unittest import mock
 
-import pytest
 from fastapi.testclient import TestClient
 
 from llm_adapter.combined_gateway import app
@@ -16,17 +22,6 @@ from llm_adapter.hil_intake_v1_1_api import (
 
 PRIMARY = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
 PROMPT = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c"
-
-
-
-@pytest.fixture(autouse=True)
-def _organization_admitted(organization_admits_manifests):
-    """Custody is exercised after an organization-admitted HIL manifest.
-
-    The un-admitted path (FAIL_CLOSED, nothing persisted) is covered in
-    tests/test_hil_intake_manifest_conformance.py.
-    """
-    return organization_admits_manifests
 
 
 def _manifest(pdf: bytes) -> dict:
@@ -113,57 +108,139 @@ def _publish(client: TestClient, submission_id: str, response_id: str = "HIL-RES
     )
 
 
-def test_publication_requires_private_acceptance(monkeypatch, tmp_path):
-    _configure(monkeypatch, tmp_path)
-    client = TestClient(app)
-    submission_id = _submit(client)
-    response = _publish(client, submission_id)
-    assert response.status_code == 409
-    assert response.json()["detail"] == "hil_private_acceptance_required"
+class HilPublicationApiTests(unittest.TestCase):
+    def setUp(self):
+        self._organization_admitted()
+
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
+
+    def _setattr(self, target, *args, raising=True):
+        """monkeypatch.setattr equivalent: dotted-path or (object, name) form, undone after the test."""
+        if isinstance(target, str):
+            patcher = mock.patch(target, *args, create=not raising)
+        else:
+            patcher = mock.patch.object(target, *args, create=not raising)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _monkeypatch(self):
+        """The monkeypatch methods the module helpers call, each undone after the test."""
+        return types.SimpleNamespace(setenv=self._setenv)
+
+    def _organization_admitted(self):
+        """Custody is exercised after an organization-admitted HIL manifest.
+
+        The un-admitted path (FAIL_CLOSED, nothing persisted) is covered in
+        tests/test_hil_intake_manifest_conformance.py.
+        """
+        organization_admits_manifests = self._organization_admits_manifests()
+        return organization_admits_manifests
+
+    def _organization_admits_manifests(self):
+        """Stand in for an organization that admitted the manifest and recorded it.
+
+        In this repository the canonical organization boundary is never resolved,
+        so a collaborative-ingress surface correctly returns FAIL_CLOSED. Tests of
+        what a surface does *after* an organization-admitted ALLOW use this far-side
+        double. It still validates every manifest with the real SDK contract and
+        records what it was handed, so a test can prove the manifest was bound
+        before anything else ran.
+        """
+        from llm_adapter import sdk_boundary
+
+        handed: list[dict] = []
+
+        def admitted(payload):
+            manifest = dict(payload["manifest"])
+            verdict = sdk_boundary.validate({"manifest": manifest})
+            assert verdict["accepted"] is True, verdict
+            handed.append(manifest)
+            return {
+                "schema": sdk_boundary.BOUNDARY_SCHEMA,
+                "surface": "MANIFEST_SUBMIT",
+                "handed_off": True,
+                "disposition": "ALLOW",
+                "canonical_entrypoint": sdk_boundary.CANONICAL_ENTRYPOINT,
+                "envelope": {"governance_state": "ALLOW", "organization_receipt_observed": True,
+                             "reached_sdk_runtime": True, "consequence_executed": False},
+                "test_double": "ORGANIZATION_ADMITTED_FAR_SIDE",
+                "authority_effect": "NONE_HANDOFF_ONLY",
+            }
+
+        self._setattr(sdk_boundary, "submit", admitted)
+        return handed
+
+    def test_publication_requires_private_acceptance(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        _configure(monkeypatch, tmp_path)
+        client = TestClient(app)
+        submission_id = _submit(client)
+        response = _publish(client, submission_id)
+        assert response.status_code == 409
+        assert response.json()["detail"] == "hil_private_acceptance_required"
+
+    def test_publication_requires_public_or_anonymous_consent(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        _configure(monkeypatch, tmp_path)
+        client = TestClient(app)
+        submission_id = _submit(client, consent="private")
+        _review(client, submission_id)
+        response = _publish(client, submission_id)
+        assert response.status_code == 409
+        assert response.json()["detail"] == "hil_publication_consent_required"
+
+    def test_publication_is_append_only_and_publicly_readable(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        _configure(monkeypatch, tmp_path)
+        client = TestClient(app)
+        submission_id = _submit(client)
+        _review(client, submission_id)
+        response = _publish(client, submission_id)
+        assert response.status_code == 200, response.text
+        record = response.json()
+        assert record["schema_version"] == "HIL-PUBLICATION-RECORD-v1"
+        assert record["response_id"] == "HIL-RESP-2026-0001"
+        assert record["authority"]["public_projection_authorized"] is True
+        assert record["authority"]["execution"] is False
+        assert record["authority"]["master_record_append"] is False
+        assert record["publication_record_sha256"]
+
+        fetched = client.get("/api/hil/publications/HIL-RESP-2026-0001")
+        assert fetched.status_code == 200
+        assert fetched.json()["publication_record_sha256"] == record["publication_record_sha256"]
+
+        duplicate = _publish(client, submission_id, response_id="HIL-RESP-2026-0002")
+        assert duplicate.status_code == 409
+        reused_id_submission = _submit(client)
+        _review(client, reused_id_submission)
+        reused = _publish(client, reused_id_submission, response_id="HIL-RESP-2026-0001")
+        assert reused.status_code == 409
+
+    def test_anonymous_publication_suppresses_display_name(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        _configure(monkeypatch, tmp_path)
+        client = TestClient(app)
+        submission_id = _submit(client, consent="anonymous")
+        _review(client, submission_id)
+        response = _publish(client, submission_id)
+        assert response.status_code == 200
+        assert response.json()["participant_display_name"] is None
 
 
-def test_publication_requires_public_or_anonymous_consent(monkeypatch, tmp_path):
-    _configure(monkeypatch, tmp_path)
-    client = TestClient(app)
-    submission_id = _submit(client, consent="private")
-    _review(client, submission_id)
-    response = _publish(client, submission_id)
-    assert response.status_code == 409
-    assert response.json()["detail"] == "hil_publication_consent_required"
-
-
-def test_publication_is_append_only_and_publicly_readable(monkeypatch, tmp_path):
-    _configure(monkeypatch, tmp_path)
-    client = TestClient(app)
-    submission_id = _submit(client)
-    _review(client, submission_id)
-    response = _publish(client, submission_id)
-    assert response.status_code == 200, response.text
-    record = response.json()
-    assert record["schema_version"] == "HIL-PUBLICATION-RECORD-v1"
-    assert record["response_id"] == "HIL-RESP-2026-0001"
-    assert record["authority"]["public_projection_authorized"] is True
-    assert record["authority"]["execution"] is False
-    assert record["authority"]["master_record_append"] is False
-    assert record["publication_record_sha256"]
-
-    fetched = client.get("/api/hil/publications/HIL-RESP-2026-0001")
-    assert fetched.status_code == 200
-    assert fetched.json()["publication_record_sha256"] == record["publication_record_sha256"]
-
-    duplicate = _publish(client, submission_id, response_id="HIL-RESP-2026-0002")
-    assert duplicate.status_code == 409
-    reused_id_submission = _submit(client)
-    _review(client, reused_id_submission)
-    reused = _publish(client, reused_id_submission, response_id="HIL-RESP-2026-0001")
-    assert reused.status_code == 409
-
-
-def test_anonymous_publication_suppresses_display_name(monkeypatch, tmp_path):
-    _configure(monkeypatch, tmp_path)
-    client = TestClient(app)
-    submission_id = _submit(client, consent="anonymous")
-    _review(client, submission_id)
-    response = _publish(client, submission_id)
-    assert response.status_code == 200
-    assert response.json()["participant_display_name"] is None
+if __name__ == "__main__":
+    unittest.main()

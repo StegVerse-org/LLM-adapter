@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 import json
+import os
+import shutil
+import tempfile
+import types
+import unittest
 from pathlib import Path
-
-import pytest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -88,84 +93,135 @@ def conforming_payload(module) -> dict:
     }
 
 
-def test_probe_accepts_exact_origin_bound_contract(monkeypatch, tmp_path: Path) -> None:
-    module = load_probe_module()
-    readiness_url = "https://receiver.example/api/hil/readiness"
-    response = FakeResponse(readiness_url, conforming_payload(module))
-    opener = FakeOpener(response)
-    output = tmp_path / "probe.json"
+class HilHttpsReceiverProbeTests(unittest.TestCase):
+    @contextlib.contextmanager
+    def _case(self):
+        """A fresh tmp_path and cleanups for each parametrized case."""
+        with contextlib.ExitStack() as stack:
+            self._stack, self._tmp = stack, None
+            try:
+                yield
+            finally:
+                self._stack, self._tmp = None, None
 
-    monkeypatch.setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example/")
-    monkeypatch.setenv("HIL_PROBE_OUTPUT", str(output))
-    patch_public_dns(monkeypatch, module, "8.8.8.8")
-    monkeypatch.setattr(module, "build_opener", lambda *handlers: opener)
+    def _cleanup(self, function, *args, **kwargs):
+        stack = getattr(self, "_stack", None)
+        if stack is not None:
+            stack.callback(function, *args, **kwargs)
+        else:
+            self.addCleanup(function, *args, **kwargs)
 
-    assert module.main() == 0
-    evidence = json.loads(output.read_text(encoding="utf-8"))
-    assert evidence["receiver_origin"] == "https://receiver.example"
-    assert evidence["resolved_public_addresses"] == ["8.8.8.8"]
-    assert evidence["readiness_path"] == "/api/hil/readiness"
-    assert evidence["redirects_followed"] is False
-    assert evidence["mutation_performed"] is False
-    assert evidence["authority_effect"] == "NONE"
-    assert len(evidence["evidence_sha256"]) == 64
-    assert opener.request.full_url == readiness_url
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self._cleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
+
+    def _setattr(self, target, *args, raising=True):
+        """monkeypatch.setattr equivalent: dotted-path or (object, name) form, undone after the test."""
+        if isinstance(target, str):
+            patcher = mock.patch(target, *args, create=not raising)
+        else:
+            patcher = mock.patch.object(target, *args, create=not raising)
+        patcher.start()
+        self._cleanup(patcher.stop)
+
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self._cleanup(patcher.stop)
+
+    def _monkeypatch(self):
+        """The monkeypatch methods the module helpers call, each undone after the test."""
+        return types.SimpleNamespace(setattr=self._setattr, setenv=self._setenv)
+
+    def test_probe_accepts_exact_origin_bound_contract(self) -> None:
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        module = load_probe_module()
+        readiness_url = "https://receiver.example/api/hil/readiness"
+        response = FakeResponse(readiness_url, conforming_payload(module))
+        opener = FakeOpener(response)
+        output = tmp_path / "probe.json"
+
+        self._setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example/")
+        self._setenv("HIL_PROBE_OUTPUT", str(output))
+        patch_public_dns(monkeypatch, module, "8.8.8.8")
+        self._setattr(module, "build_opener", lambda *handlers: opener)
+
+        assert module.main() == 0
+        evidence = json.loads(output.read_text(encoding="utf-8"))
+        assert evidence["receiver_origin"] == "https://receiver.example"
+        assert evidence["resolved_public_addresses"] == ["8.8.8.8"]
+        assert evidence["readiness_path"] == "/api/hil/readiness"
+        assert evidence["redirects_followed"] is False
+        assert evidence["mutation_performed"] is False
+        assert evidence["authority_effect"] == "NONE"
+        assert len(evidence["evidence_sha256"]) == 64
+        assert opener.request.full_url == readiness_url
+
+    def test_probe_rejects_unsafe_receiver_origins(self) -> None:
+        for base_url in [
+            "http://receiver.example",
+            "https://user:secret@receiver.example",
+            "https://receiver.example/other",
+            "https://receiver.example?next=elsewhere",
+            "https://receiver.example#fragment",
+            "https://localhost",
+        ]:
+            with self.subTest(base_url=base_url), self._case():
+                tmp_path = self._tmp_path()
+                module = load_probe_module()
+                self._setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", base_url)
+                self._setenv("HIL_PROBE_OUTPUT", str(tmp_path / "probe.json"))
+                with self.assertRaises(RuntimeError):
+                    module.main()
+
+    def test_probe_rejects_non_public_resolved_addresses(self) -> None:
+        for address in ["127.0.0.1", "10.0.0.7", "169.254.169.254", "::1", "fc00::1"]:
+            with self.subTest(address=address), self._case():
+                monkeypatch = self._monkeypatch()
+                tmp_path = self._tmp_path()
+                module = load_probe_module()
+                self._setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example")
+                self._setenv("HIL_PROBE_OUTPUT", str(tmp_path / "probe.json"))
+                patch_public_dns(monkeypatch, module, address)
+                with self.assertRaisesRegex(RuntimeError, "non-public address"):
+                    module.main()
+
+    def test_probe_rejects_changed_response_url(self) -> None:
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        module = load_probe_module()
+        response = FakeResponse("https://other.example/api/hil/readiness", conforming_payload(module))
+        self._setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example")
+        self._setenv("HIL_PROBE_OUTPUT", str(tmp_path / "probe.json"))
+        patch_public_dns(monkeypatch, module, "8.8.8.8")
+        self._setattr(module, "build_opener", lambda *handlers: FakeOpener(response))
+        with self.assertRaisesRegex(RuntimeError, "origin or path changed"):
+            module.main()
+
+    def test_probe_rejects_non_json_content_type(self) -> None:
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        module = load_probe_module()
+        url = "https://receiver.example/api/hil/readiness"
+        response = FakeResponse(url, conforming_payload(module), content_type="text/html")
+        self._setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example")
+        self._setenv("HIL_PROBE_OUTPUT", str(tmp_path / "probe.json"))
+        patch_public_dns(monkeypatch, module, "8.8.8.8")
+        self._setattr(module, "build_opener", lambda *handlers: FakeOpener(response))
+        with self.assertRaisesRegex(RuntimeError, "content type mismatch"):
+            module.main()
+
+    def test_redirect_handler_fails_closed(self) -> None:
+        module = load_probe_module()
+        handler = module.RejectRedirects()
+        with self.assertRaisesRegex(RuntimeError, "redirect rejected"):
+            handler.redirect_request(None, None, 302, "Found", {}, "https://other.example")
 
 
-@pytest.mark.parametrize(
-    "base_url",
-    [
-        "http://receiver.example",
-        "https://user:secret@receiver.example",
-        "https://receiver.example/other",
-        "https://receiver.example?next=elsewhere",
-        "https://receiver.example#fragment",
-        "https://localhost",
-    ],
-)
-def test_probe_rejects_unsafe_receiver_origins(monkeypatch, tmp_path: Path, base_url: str) -> None:
-    module = load_probe_module()
-    monkeypatch.setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", base_url)
-    monkeypatch.setenv("HIL_PROBE_OUTPUT", str(tmp_path / "probe.json"))
-    with pytest.raises(RuntimeError):
-        module.main()
-
-
-@pytest.mark.parametrize("address", ["127.0.0.1", "10.0.0.7", "169.254.169.254", "::1", "fc00::1"])
-def test_probe_rejects_non_public_resolved_addresses(monkeypatch, tmp_path: Path, address: str) -> None:
-    module = load_probe_module()
-    monkeypatch.setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example")
-    monkeypatch.setenv("HIL_PROBE_OUTPUT", str(tmp_path / "probe.json"))
-    patch_public_dns(monkeypatch, module, address)
-    with pytest.raises(RuntimeError, match="non-public address"):
-        module.main()
-
-
-def test_probe_rejects_changed_response_url(monkeypatch, tmp_path: Path) -> None:
-    module = load_probe_module()
-    response = FakeResponse("https://other.example/api/hil/readiness", conforming_payload(module))
-    monkeypatch.setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example")
-    monkeypatch.setenv("HIL_PROBE_OUTPUT", str(tmp_path / "probe.json"))
-    patch_public_dns(monkeypatch, module, "8.8.8.8")
-    monkeypatch.setattr(module, "build_opener", lambda *handlers: FakeOpener(response))
-    with pytest.raises(RuntimeError, match="origin or path changed"):
-        module.main()
-
-
-def test_probe_rejects_non_json_content_type(monkeypatch, tmp_path: Path) -> None:
-    module = load_probe_module()
-    url = "https://receiver.example/api/hil/readiness"
-    response = FakeResponse(url, conforming_payload(module), content_type="text/html")
-    monkeypatch.setenv("STEGVERSE_HIL_RECEIVER_BASE_URL", "https://receiver.example")
-    monkeypatch.setenv("HIL_PROBE_OUTPUT", str(tmp_path / "probe.json"))
-    patch_public_dns(monkeypatch, module, "8.8.8.8")
-    monkeypatch.setattr(module, "build_opener", lambda *handlers: FakeOpener(response))
-    with pytest.raises(RuntimeError, match="content type mismatch"):
-        module.main()
-
-
-def test_redirect_handler_fails_closed() -> None:
-    module = load_probe_module()
-    handler = module.RejectRedirects()
-    with pytest.raises(RuntimeError, match="redirect rejected"):
-        handler.redirect_request(None, None, 302, "Found", {}, "https://other.example")
+if __name__ == "__main__":
+    unittest.main()

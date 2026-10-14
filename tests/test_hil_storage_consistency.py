@@ -3,7 +3,10 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import shutil
 import sqlite3
+import tempfile
+import unittest
 from pathlib import Path
 
 
@@ -51,33 +54,46 @@ def build_store(root: Path) -> tuple[Path, Path, Path]:
     return database, pdf_path, manifest_path
 
 
-def test_consistent_store_passes(tmp_path: Path) -> None:
-    build_store(tmp_path)
-    report = MODULE.audit(tmp_path)
-    assert report["state"] == "PASS"
-    assert report["submissions_checked"] == 1
-    assert report["orphan_files"] == []
+class HilStorageConsistencyTests(unittest.TestCase):
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
+
+    def test_consistent_store_passes(self) -> None:
+        tmp_path = self._tmp_path()
+        build_store(tmp_path)
+        report = MODULE.audit(tmp_path)
+        assert report["state"] == "PASS"
+        assert report["submissions_checked"] == 1
+        assert report["orphan_files"] == []
+
+    def test_pdf_hash_drift_fails(self) -> None:
+        tmp_path = self._tmp_path()
+        _, pdf_path, _ = build_store(tmp_path)
+        pdf_path.write_bytes(b"%PDF-1.7\nchanged\n%%EOF\n")
+        report = MODULE.audit(tmp_path)
+        assert report["state"] == "FAIL"
+        assert "HIL-INTAKE-TEST-0001:pdf_hash_mismatch" in report["failures"]
+
+    def test_orphan_artifact_fails(self) -> None:
+        tmp_path = self._tmp_path()
+        build_store(tmp_path)
+        orphan = tmp_path / "originals" / "HIL-INTAKE-ORPHAN.pdf"
+        orphan.write_bytes(b"%PDF-1.7\n%%EOF\n")
+        report = MODULE.audit(tmp_path)
+        assert report["state"] == "FAIL"
+        assert "unreferenced_artifacts_detected" in report["failures"]
+        assert str(orphan.resolve()) in report["orphan_files"]
+
+    def test_missing_database_fails_closed(self) -> None:
+        tmp_path = self._tmp_path()
+        report = MODULE.audit(tmp_path)
+        assert report["state"] == "FAIL"
+        assert report["failures"] == ["hil_intake_database_missing"]
 
 
-def test_pdf_hash_drift_fails(tmp_path: Path) -> None:
-    _, pdf_path, _ = build_store(tmp_path)
-    pdf_path.write_bytes(b"%PDF-1.7\nchanged\n%%EOF\n")
-    report = MODULE.audit(tmp_path)
-    assert report["state"] == "FAIL"
-    assert "HIL-INTAKE-TEST-0001:pdf_hash_mismatch" in report["failures"]
-
-
-def test_orphan_artifact_fails(tmp_path: Path) -> None:
-    build_store(tmp_path)
-    orphan = tmp_path / "originals" / "HIL-INTAKE-ORPHAN.pdf"
-    orphan.write_bytes(b"%PDF-1.7\n%%EOF\n")
-    report = MODULE.audit(tmp_path)
-    assert report["state"] == "FAIL"
-    assert "unreferenced_artifacts_detected" in report["failures"]
-    assert str(orphan.resolve()) in report["orphan_files"]
-
-
-def test_missing_database_fails_closed(tmp_path: Path) -> None:
-    report = MODULE.audit(tmp_path)
-    assert report["state"] == "FAIL"
-    assert report["failures"] == ["hil_intake_database_missing"]
+if __name__ == "__main__":
+    unittest.main()
