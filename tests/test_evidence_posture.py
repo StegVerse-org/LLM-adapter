@@ -6,6 +6,7 @@ from llm_adapter.evidence_posture import (
     assert_certainty_language_allowed,
     build_evidence_receipt,
     certainty_language_allowed,
+    strongest_certainty_claimed,
     suggested_conversational_lead,
     user_evidence_projection,
 )
@@ -54,6 +55,31 @@ def test_unsupported_posture_cannot_use_strong_certainty_language() -> None:
     assert not certainty_language_allowed("This is definitely proven.", "UNSUPPORTED")
     with pytest.raises(ValueError, match="certainty exceeds evidence posture"):
         assert_certainty_language_allowed("The evidence strongly supports this.", "INCOMPLETE")
+
+
+def test_denied_support_claims_nothing_but_other_certainty_is_still_detected() -> None:
+    for denial in (
+        "I don't have evidence that supports that claim.",
+        "There is no evidence that indicates this.",
+        "The record does not support that conclusion.",
+        "We lack any evidence suggesting it.",
+    ):
+        assert strongest_certainty_claimed(denial) == 0, denial
+    assert not certainty_language_allowed(
+        "I don't have evidence that supports it, but it is definitely proven.", "UNSUPPORTED"
+    )
+    assert not certainty_language_allowed("No doubt, this is definitely proven.", "UNSUPPORTED")
+    assert not certainty_language_allowed("The evidence supports this.", "UNSUPPORTED")
+
+
+def test_unsupported_receipt_accepts_its_suggested_lead() -> None:
+    receipt = build_evidence_receipt(
+        query="q",
+        final_response=suggested_conversational_lead("UNSUPPORTED"),
+        evidence_posture="UNSUPPORTED",
+        evidence_sources=[],
+    )
+    assert receipt
 
 
 def test_strong_posture_may_use_weaker_conversational_language() -> None:

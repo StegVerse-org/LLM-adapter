@@ -1,0 +1,55 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-REPAIR-FAILING-TESTS",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Repairs two test failures on main: a certainty-gate bug in llm_adapter/evidence_posture.py and a test asserting a retired workflow; no Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/SV-LLM/.github/issues/30#issuecomment-6138797322"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "llm_adapter/evidence_posture.py",
+      "tests/test_evidence_posture.py",
+      "tests/test_provider_execution_authority_gate.py",
+      "tests/test_provider_readiness_stable_projection.py",
+      "scripts/check_stegverse_live_baseline_provider_authority_binding.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches evidence_posture.py or these two tests."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Bug fix restoring the module's documented behaviour: its own UNSUPPORTED conversational lead now passes its certainty gate. No API, export or documented usage changes.",
+    "evidence_refs": [
+      "llm_adapter/evidence_posture.py"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/evidence_posture.py",
+    "tests/test_evidence_posture.py",
+    "tests/test_provider_execution_authority_gate.py"
+  ],
+  "new_files": []
+}
