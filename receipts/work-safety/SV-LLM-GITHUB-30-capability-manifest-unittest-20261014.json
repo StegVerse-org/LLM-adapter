@@ -1,0 +1,50 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-CAPABILITY-MANIFEST-UNITTEST-COMMANDS",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Documentation-level change to adapter.capabilities.json local_verification commands: nine named test files are now stdlib unittest (LLM-adapter #402, #410-#418), so their commands become python -m unittest. No capability, authority, route or runtime field changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/418"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "adapter.capabilities.json",
+      "scripts/verify_free_tier_capability_manifest.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches adapter.capabilities.json."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "README verification commands were already updated in #418; this aligns the capability manifest's local_verification block with them.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    "adapter.capabilities.json"
+  ],
+  "new_files": []
+}
