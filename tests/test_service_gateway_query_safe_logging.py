@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import io
 import logging
+import unittest
 from pathlib import Path
 
 from llm_adapter.query_safe_access_log import QuerySecretSafeAccessLogMiddleware
@@ -42,54 +43,55 @@ async def _exercise(query: bytes) -> str:
     return stream.getvalue()
 
 
-def test_oauth_callback_query_never_enters_access_log():
-    protected = b"code=oauth-auth-code-123&state=owner-state-456&other=private-value"
-    value = asyncio.run(_exercise(protected))
-    assert value.strip() == "method=GET path=/tvc/google-drive/callback status=204"
-    for prohibited in (
-        "oauth-auth-code-123",
-        "owner-state-456",
-        "private-value",
-        "code=",
-        "state=",
-        "Bearer",
-        "must-never-log",
-        "?",
-    ):
-        assert prohibited not in value
+class ServiceGatewayQuerySafeLoggingTests(unittest.TestCase):
+    def test_oauth_callback_query_never_enters_access_log(self):
+        protected = b"code=oauth-auth-code-123&state=owner-state-456&other=private-value"
+        value = asyncio.run(_exercise(protected))
+        assert value.strip() == "method=GET path=/tvc/google-drive/callback status=204"
+        for prohibited in (
+            "oauth-auth-code-123",
+            "owner-state-456",
+            "private-value",
+            "code=",
+            "state=",
+            "Bearer",
+            "must-never-log",
+            "?",
+        ):
+            assert prohibited not in value
+
+    def test_arbitrary_query_bytes_do_not_change_logged_request_identity(self):
+        one = asyncio.run(_exercise(b"a=1"))
+        two = asyncio.run(_exercise(b"authorization_code=extremely-sensitive&x=2"))
+        assert one == two
+
+    def test_runtime_disables_uvicorn_request_target_access_log(self):
+        source = (Path(__file__).resolve().parents[1] / "llm_adapter" / "runtime_gateway.py").read_text(encoding="utf-8")
+        assert "access_log=False" in source
+        assert "QuerySecretSafeAccessLogMiddleware(_base_app)" in source
+
+    def test_sovereign_deployed_gateway_uses_same_query_safe_boundary(self):
+        root = Path(__file__).resolve().parents[1]
+        deployed = (root / "llm_adapter" / "deployed_gateway.py").read_text(encoding="utf-8")
+        native = (root / "scripts" / "stegdeploy_native_gateway.py").read_text(encoding="utf-8")
+
+        assert "from llm_adapter.query_safe_access_log import QuerySecretSafeAccessLogMiddleware" in deployed
+        assert "app.add_middleware(QuerySecretSafeAccessLogMiddleware)" in deployed
+        assert "llm_adapter.deployed_gateway:app" in native
+        assert "access_log=False" in native
+
+    def test_safe_middleware_never_reads_query_or_sensitive_request_surfaces(self):
+        source = (Path(__file__).resolve().parents[1] / "llm_adapter" / "query_safe_access_log.py").read_text(encoding="utf-8")
+        for prohibited in (
+            'scope.get("query_string")',
+            "scope['query_string']",
+            'scope.get("raw_path")',
+            "scope['raw_path']",
+            'scope.get("headers")',
+            "scope['headers']",
+        ):
+            assert prohibited not in source
 
 
-def test_arbitrary_query_bytes_do_not_change_logged_request_identity():
-    one = asyncio.run(_exercise(b"a=1"))
-    two = asyncio.run(_exercise(b"authorization_code=extremely-sensitive&x=2"))
-    assert one == two
-
-
-def test_runtime_disables_uvicorn_request_target_access_log():
-    source = (Path(__file__).resolve().parents[1] / "llm_adapter" / "runtime_gateway.py").read_text(encoding="utf-8")
-    assert "access_log=False" in source
-    assert "QuerySecretSafeAccessLogMiddleware(_base_app)" in source
-
-
-def test_sovereign_deployed_gateway_uses_same_query_safe_boundary():
-    root = Path(__file__).resolve().parents[1]
-    deployed = (root / "llm_adapter" / "deployed_gateway.py").read_text(encoding="utf-8")
-    native = (root / "scripts" / "stegdeploy_native_gateway.py").read_text(encoding="utf-8")
-
-    assert "from llm_adapter.query_safe_access_log import QuerySecretSafeAccessLogMiddleware" in deployed
-    assert "app.add_middleware(QuerySecretSafeAccessLogMiddleware)" in deployed
-    assert "llm_adapter.deployed_gateway:app" in native
-    assert "access_log=False" in native
-
-
-def test_safe_middleware_never_reads_query_or_sensitive_request_surfaces():
-    source = (Path(__file__).resolve().parents[1] / "llm_adapter" / "query_safe_access_log.py").read_text(encoding="utf-8")
-    for prohibited in (
-        'scope.get("query_string")',
-        "scope['query_string']",
-        'scope.get("raw_path")',
-        "scope['raw_path']",
-        'scope.get("headers")',
-        "scope['headers']",
-    ):
-        assert prohibited not in source
+if __name__ == "__main__":
+    unittest.main()

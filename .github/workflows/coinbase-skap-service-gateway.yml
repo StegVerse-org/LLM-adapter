@@ -105,7 +105,7 @@ jobs:
 
       - name: Validate staging and mounted HTTP boundary
         run: |
-          python3 -m pytest -q \
+          python3 -m unittest \
             tests/test_service_gateway_coinbase_skap.py \
             tests/test_service_gateway_coinbase_skap_api.py \
             tests/test_deployed_gateway_coinbase_skap.py \

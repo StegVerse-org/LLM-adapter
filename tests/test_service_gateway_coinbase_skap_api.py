@@ -1,4 +1,11 @@
 import json
+import os
+import shutil
+import tempfile
+import types
+import unittest
+from pathlib import Path
+from unittest import mock
 
 from fastapi.testclient import TestClient
 
@@ -72,86 +79,112 @@ def _packet(ingress_id="coinbase-http-stage-1"):
     return {**body, "ingress_digest": digest(body)}
 
 
-def test_readiness_proves_first_interlock_no_value_no_authority_scope(monkeypatch, tmp_path):
-    _configure(monkeypatch, tmp_path)
-    response = TestClient(app).get("/api/coinbase/skap/readiness")
-    assert response.status_code == 200
-    body = response.json()
-    assert body["state"] == "READY"
-    assert body["adapter"] == "coinbase-skap-ciphertext-staging"
-    assert body["transport_protocol"] == "InTr"
-    assert body["completed_boundary"] == "DEVICE_TO_KV"
-    assert body["credential_custody_target"] == "KV_HOSTED_SKAP_VAULT"
-    assert body["gateway_credential_value_access"] is False
-    assert body["gateway_decryption_authority"] is False
-    assert body["gateway_execution_authority"] == "NONE"
-    assert body["tvc_admission_completed"] is False
-    assert body["skap_vault_admission_completed"] is False
-    assert body["next_required_transition"] == "KV_SKAP_VAULT_INTERLOCK_ADMISSION"
+class ServiceGatewayCoinbaseSkapApiTests(unittest.TestCase):
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
+
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _monkeypatch(self):
+        """The monkeypatch methods the module helpers call, each undone after the test."""
+        return types.SimpleNamespace(setenv=self._setenv)
+
+    def test_readiness_proves_first_interlock_no_value_no_authority_scope(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        _configure(monkeypatch, tmp_path)
+        response = TestClient(app).get("/api/coinbase/skap/readiness")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["state"] == "READY"
+        assert body["adapter"] == "coinbase-skap-ciphertext-staging"
+        assert body["transport_protocol"] == "InTr"
+        assert body["completed_boundary"] == "DEVICE_TO_KV"
+        assert body["credential_custody_target"] == "KV_HOSTED_SKAP_VAULT"
+        assert body["gateway_credential_value_access"] is False
+        assert body["gateway_decryption_authority"] is False
+        assert body["gateway_execution_authority"] == "NONE"
+        assert body["tvc_admission_completed"] is False
+        assert body["skap_vault_admission_completed"] is False
+        assert body["next_required_transition"] == "KV_SKAP_VAULT_INTERLOCK_ADMISSION"
+
+    def test_http_stage_persists_exact_body_and_returns_device_kv_receipt(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        _configure(monkeypatch, tmp_path)
+        packet = _packet()
+        raw = json.dumps(packet, sort_keys=True, separators=(",", ":")).encode()
+        response = TestClient(app).post(
+            "/api/coinbase/skap/ingress",
+            content=raw,
+            headers={"Origin": "https://stegverse.org", "Content-Type": "application/json"},
+        )
+        assert response.status_code == 202
+        receipt = response.json()
+        assert receipt["decision"] == "STAGED_FOR_TVC"
+        assert receipt["gateway_execution_authority"] == "NONE"
+        assert receipt["tvc_admission_completed"] is False
+        assert receipt["browser_ciphertext_mutated"] is False
+        assert receipt["next_required_transition"] == "KV_SKAP_VAULT_INTERLOCK_ADMISSION"
+        boundary = receipt["device_kv_interlock_receipt"]
+        assert boundary["connector"] == "InTr"
+        assert boundary["from_boundary"] == "DEVICE"
+        assert boundary["to_boundary"] == "KV"
+        assert boundary["credential_ref"] == packet["credential_ref"]
+        assert boundary["operation_id"] == packet["ingress_id"]
+        assert boundary["secret_plaintext_present"] is False
+        assert boundary["authority_transfer"] is False
+        assert (tmp_path / "coinbase-skap-staging" / "coinbase-http-stage-1.json").read_bytes() == raw
+        assert "ciphertext_b64" not in json.dumps(receipt)
+
+    def test_origin_auth_cookie_plaintext_and_replay_fail_closed(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        _configure(monkeypatch, tmp_path)
+        client = TestClient(app)
+        packet = _packet("deny-cases")
+        raw = json.dumps(packet).encode()
+
+        response = client.post("/api/coinbase/skap/ingress", content=raw, headers={"Origin": "https://example.com", "Content-Type": "application/json"})
+        assert response.status_code == 403
+
+        response = client.post("/api/coinbase/skap/ingress", content=raw, headers={"Origin": "https://stegverse.org", "Content-Type": "application/json", "Authorization": "forbidden"})
+        assert response.status_code == 400
+
+        response = client.post("/api/coinbase/skap/ingress", content=raw, headers={"Origin": "https://stegverse.org", "Content-Type": "application/json", "Cookie": "forbidden=1"})
+        assert response.status_code == 400
+
+        bad = _packet("plaintext-denied")
+        bad["api_private_key"] = "must-never-stage"
+        bad["ingress_digest"] = digest({k: v for k, v in bad.items() if k != "ingress_digest"})
+        response = client.post("/api/coinbase/skap/ingress", content=json.dumps(bad).encode(), headers={"Origin": "https://stegverse.org", "Content-Type": "application/json"})
+        assert response.status_code == 422
+        assert "plaintext_field_forbidden" in response.text
+
+        replay_packet = _packet("replay-denied")
+        replay_raw = json.dumps(replay_packet).encode()
+        headers = {"Origin": "https://stegverse.org", "Content-Type": "application/json"}
+        assert client.post("/api/coinbase/skap/ingress", content=replay_raw, headers=headers).status_code == 202
+        assert client.post("/api/coinbase/skap/ingress", content=replay_raw, headers=headers).status_code == 409
+
+    def test_no_value_tvc_scope_is_mandatory(self):
+        tmp_path = self._tmp_path()
+        receipt = _tvc_receipt()
+        receipt["allowed_keys"] = ["coinbase/private-key"]
+        self._setenv("STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT", json.dumps(receipt))
+        self._setenv("STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT", str(tmp_path))
+        response = TestClient(app).get("/api/coinbase/skap/readiness")
+        assert response.status_code == 503
+        assert "no_value_scope_invalid" in response.text
 
 
-def test_http_stage_persists_exact_body_and_returns_device_kv_receipt(monkeypatch, tmp_path):
-    _configure(monkeypatch, tmp_path)
-    packet = _packet()
-    raw = json.dumps(packet, sort_keys=True, separators=(",", ":")).encode()
-    response = TestClient(app).post(
-        "/api/coinbase/skap/ingress",
-        content=raw,
-        headers={"Origin": "https://stegverse.org", "Content-Type": "application/json"},
-    )
-    assert response.status_code == 202
-    receipt = response.json()
-    assert receipt["decision"] == "STAGED_FOR_TVC"
-    assert receipt["gateway_execution_authority"] == "NONE"
-    assert receipt["tvc_admission_completed"] is False
-    assert receipt["browser_ciphertext_mutated"] is False
-    assert receipt["next_required_transition"] == "KV_SKAP_VAULT_INTERLOCK_ADMISSION"
-    boundary = receipt["device_kv_interlock_receipt"]
-    assert boundary["connector"] == "InTr"
-    assert boundary["from_boundary"] == "DEVICE"
-    assert boundary["to_boundary"] == "KV"
-    assert boundary["credential_ref"] == packet["credential_ref"]
-    assert boundary["operation_id"] == packet["ingress_id"]
-    assert boundary["secret_plaintext_present"] is False
-    assert boundary["authority_transfer"] is False
-    assert (tmp_path / "coinbase-skap-staging" / "coinbase-http-stage-1.json").read_bytes() == raw
-    assert "ciphertext_b64" not in json.dumps(receipt)
-
-
-def test_origin_auth_cookie_plaintext_and_replay_fail_closed(monkeypatch, tmp_path):
-    _configure(monkeypatch, tmp_path)
-    client = TestClient(app)
-    packet = _packet("deny-cases")
-    raw = json.dumps(packet).encode()
-
-    response = client.post("/api/coinbase/skap/ingress", content=raw, headers={"Origin": "https://example.com", "Content-Type": "application/json"})
-    assert response.status_code == 403
-
-    response = client.post("/api/coinbase/skap/ingress", content=raw, headers={"Origin": "https://stegverse.org", "Content-Type": "application/json", "Authorization": "forbidden"})
-    assert response.status_code == 400
-
-    response = client.post("/api/coinbase/skap/ingress", content=raw, headers={"Origin": "https://stegverse.org", "Content-Type": "application/json", "Cookie": "forbidden=1"})
-    assert response.status_code == 400
-
-    bad = _packet("plaintext-denied")
-    bad["api_private_key"] = "must-never-stage"
-    bad["ingress_digest"] = digest({k: v for k, v in bad.items() if k != "ingress_digest"})
-    response = client.post("/api/coinbase/skap/ingress", content=json.dumps(bad).encode(), headers={"Origin": "https://stegverse.org", "Content-Type": "application/json"})
-    assert response.status_code == 422
-    assert "plaintext_field_forbidden" in response.text
-
-    replay_packet = _packet("replay-denied")
-    replay_raw = json.dumps(replay_packet).encode()
-    headers = {"Origin": "https://stegverse.org", "Content-Type": "application/json"}
-    assert client.post("/api/coinbase/skap/ingress", content=replay_raw, headers=headers).status_code == 202
-    assert client.post("/api/coinbase/skap/ingress", content=replay_raw, headers=headers).status_code == 409
-
-
-def test_no_value_tvc_scope_is_mandatory(monkeypatch, tmp_path):
-    receipt = _tvc_receipt()
-    receipt["allowed_keys"] = ["coinbase/private-key"]
-    monkeypatch.setenv("STEGVERSE_COINBASE_SKAP_TVC_DECISION_RECEIPT", json.dumps(receipt))
-    monkeypatch.setenv("STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT", str(tmp_path))
-    response = TestClient(app).get("/api/coinbase/skap/readiness")
-    assert response.status_code == 503
-    assert "no_value_scope_invalid" in response.text
+if __name__ == "__main__":
+    unittest.main()

@@ -40,7 +40,7 @@ jobs:
       - name: Run HIL receipt compatibility tests
         shell: bash
         run: |
-          python3 -m pytest -q tests/test_hil_intake_api.py
+          python3 -m unittest tests/test_hil_intake_api.py
           python3 - <<'PY'
           import json
           from pathlib import Path

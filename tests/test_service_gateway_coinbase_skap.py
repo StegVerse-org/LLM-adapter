@@ -1,7 +1,9 @@
 import copy
 import json
-
-import pytest
+import shutil
+import tempfile
+import unittest
+from pathlib import Path
 
 from llm_adapter.service_gateway_coinbase_skap import (
     BROWSER_SEALED_FORMAT,
@@ -75,92 +77,96 @@ def redigest(packet):
     return packet
 
 
-def test_valid_packet_stages_exact_bytes_with_device_kv_interlock_receipt(tmp_path):
-    packet = browser_packet()
-    body = raw(packet)
-    receipt = stage_packet(raw_body=body, packet=packet, runtime=runtime(tmp_path))
-    stored = (tmp_path / "coinbase-skap-staging" / "coinbase-stage-test-1.json").read_bytes()
-    assert stored == body
-    assert receipt["decision"] == "STAGED_FOR_TVC"
-    assert receipt["gateway_credential_value_access"] is False
-    assert receipt["gateway_decryption_authority"] is False
-    assert receipt["gateway_execution_authority"] == "NONE"
-    assert receipt["browser_ciphertext_mutated"] is False
-    assert receipt["decryption_performed"] is False
-    assert receipt["rewrap_performed"] is False
-    assert receipt["tvc_admission_completed"] is False
-    assert receipt["next_required_transition"] == "KV_SKAP_VAULT_INTERLOCK_ADMISSION"
-    assert receipt["blind_retry_allowed"] is False
-    assert "ciphertext_b64" not in json.dumps(receipt)
+class ServiceGatewayCoinbaseSkapTests(unittest.TestCase):
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
 
-    boundary = receipt["device_kv_interlock_receipt"]
-    assert boundary["schema"] == BOUNDARY_RECEIPT_SCHEMA
-    assert boundary["connector"] == "InTr"
-    assert boundary["from_boundary"] == "DEVICE"
-    assert boundary["to_boundary"] == "KV"
-    assert boundary["credential_ref"] == packet["credential_ref"]
-    assert boundary["operation_id"] == packet["ingress_id"]
-    assert boundary["prior_boundary_receipt_hash"] is None
-    assert boundary["secret_plaintext_present"] is False
-    assert boundary["authority_transfer"] is False
-    assert boundary["receipt_hash"] == digest({k: v for k, v in boundary.items() if k != "receipt_hash"})
-
-
-def test_replay_is_denied(tmp_path):
-    packet = browser_packet()
-    body = raw(packet)
-    stage_packet(raw_body=body, packet=packet, runtime=runtime(tmp_path))
-    with pytest.raises(CoinbaseSkapStageError, match="ingress_replay_denied"):
-        stage_packet(raw_body=body, packet=packet, runtime=runtime(tmp_path))
-
-
-def test_plaintext_and_private_jwk_are_denied(tmp_path):
-    packet = browser_packet("plaintext")
-    packet["api_private_key"] = "must-not-stage"
-    redigest(packet)
-    assert any(x.startswith("plaintext_field_forbidden") for x in validate_browser_packet(packet))
-    with pytest.raises(CoinbaseSkapStageError, match="browser_packet_denied"):
-        stage_packet(raw_body=raw(packet), packet=packet, runtime=runtime(tmp_path))
-
-    packet = browser_packet("private-jwk")
-    packet["sealed_material"]["ephemeral_public_jwk"]["d"] = "private"
-    redigest(packet)
-    assert "ephemeral_private_jwk_forbidden" in validate_browser_packet(packet)
-
-
-def test_owner_endpoint_and_authority_substitution_fail_closed():
-    cases = (
-        (lambda p: p["owner_authorization"].update(verified=False), "owner_verification_not_proven"),
-        (lambda p: p["owner_authorization"].update(rp_id="example.com"), "owner_rp_invalid"),
-        (lambda p: p.update(endpoint_origin="https://attacker.example"), "endpoint_origin_invalid"),
-        (lambda p: p.update(device_secret_custody_authority=True), "device_secret_custody_forbidden"),
-        (lambda p: p.update(kv_secret_resolution_authority=True), "kv_secret_resolution_forbidden"),
-        (lambda p: p.update(github_environment_secret_access=True), "github_secret_access_forbidden"),
-        (lambda p: p.update(credential_authority="GITHUB"), "credential_authority_invalid"),
-    )
-    for mutate, expected in cases:
+    def test_valid_packet_stages_exact_bytes_with_device_kv_interlock_receipt(self):
+        tmp_path = self._tmp_path()
         packet = browser_packet()
-        mutate(packet)
+        body = raw(packet)
+        receipt = stage_packet(raw_body=body, packet=packet, runtime=runtime(tmp_path))
+        stored = (tmp_path / "coinbase-skap-staging" / "coinbase-stage-test-1.json").read_bytes()
+        assert stored == body
+        assert receipt["decision"] == "STAGED_FOR_TVC"
+        assert receipt["gateway_credential_value_access"] is False
+        assert receipt["gateway_decryption_authority"] is False
+        assert receipt["gateway_execution_authority"] == "NONE"
+        assert receipt["browser_ciphertext_mutated"] is False
+        assert receipt["decryption_performed"] is False
+        assert receipt["rewrap_performed"] is False
+        assert receipt["tvc_admission_completed"] is False
+        assert receipt["next_required_transition"] == "KV_SKAP_VAULT_INTERLOCK_ADMISSION"
+        assert receipt["blind_retry_allowed"] is False
+        assert "ciphertext_b64" not in json.dumps(receipt)
+
+        boundary = receipt["device_kv_interlock_receipt"]
+        assert boundary["schema"] == BOUNDARY_RECEIPT_SCHEMA
+        assert boundary["connector"] == "InTr"
+        assert boundary["from_boundary"] == "DEVICE"
+        assert boundary["to_boundary"] == "KV"
+        assert boundary["credential_ref"] == packet["credential_ref"]
+        assert boundary["operation_id"] == packet["ingress_id"]
+        assert boundary["prior_boundary_receipt_hash"] is None
+        assert boundary["secret_plaintext_present"] is False
+        assert boundary["authority_transfer"] is False
+        assert boundary["receipt_hash"] == digest({k: v for k, v in boundary.items() if k != "receipt_hash"})
+
+    def test_replay_is_denied(self):
+        tmp_path = self._tmp_path()
+        packet = browser_packet()
+        body = raw(packet)
+        stage_packet(raw_body=body, packet=packet, runtime=runtime(tmp_path))
+        with self.assertRaisesRegex(CoinbaseSkapStageError, "ingress_replay_denied"):
+            stage_packet(raw_body=body, packet=packet, runtime=runtime(tmp_path))
+
+    def test_plaintext_and_private_jwk_are_denied(self):
+        tmp_path = self._tmp_path()
+        packet = browser_packet("plaintext")
+        packet["api_private_key"] = "must-not-stage"
         redigest(packet)
-        with pytest.subtests.test(expected=expected) if hasattr(pytest, "subtests") else _nullcontext():
+        assert any(x.startswith("plaintext_field_forbidden") for x in validate_browser_packet(packet))
+        with self.assertRaisesRegex(CoinbaseSkapStageError, "browser_packet_denied"):
+            stage_packet(raw_body=raw(packet), packet=packet, runtime=runtime(tmp_path))
+
+        packet = browser_packet("private-jwk")
+        packet["sealed_material"]["ephemeral_public_jwk"]["d"] = "private"
+        redigest(packet)
+        assert "ephemeral_private_jwk_forbidden" in validate_browser_packet(packet)
+
+    def test_owner_endpoint_and_authority_substitution_fail_closed(self):
+        cases = (
+            (lambda p: p["owner_authorization"].update(verified=False), "owner_verification_not_proven"),
+            (lambda p: p["owner_authorization"].update(rp_id="example.com"), "owner_rp_invalid"),
+            (lambda p: p.update(endpoint_origin="https://attacker.example"), "endpoint_origin_invalid"),
+            (lambda p: p.update(device_secret_custody_authority=True), "device_secret_custody_forbidden"),
+            (lambda p: p.update(kv_secret_resolution_authority=True), "kv_secret_resolution_forbidden"),
+            (lambda p: p.update(github_environment_secret_access=True), "github_secret_access_forbidden"),
+            (lambda p: p.update(credential_authority="GITHUB"), "credential_authority_invalid"),
+        )
+        for mutate, expected in cases:
+            packet = browser_packet()
+            mutate(packet)
+            redigest(packet)
+            with self.subTest(expected=expected):
+                assert expected in validate_browser_packet(packet)
+
+    def test_ciphertext_binding_substitution_fails_closed(self):
+        for field, value, expected in (
+            ("object_id", "skap://APIs/coinbase/other/1", "browser_object_binding_mismatch"),
+            ("credential_version", 2, "browser_version_binding_mismatch"),
+            ("purpose", "coinbase.advanced_trade", "browser_purpose_binding_mismatch"),
+            ("endpoint_ref", "https://attacker.example", "browser_endpoint_binding_mismatch"),
+        ):
+            packet = browser_packet()
+            packet["sealed_material"][field] = value
+            redigest(packet)
             assert expected in validate_browser_packet(packet)
 
 
-def test_ciphertext_binding_substitution_fails_closed():
-    for field, value, expected in (
-        ("object_id", "skap://APIs/coinbase/other/1", "browser_object_binding_mismatch"),
-        ("credential_version", 2, "browser_version_binding_mismatch"),
-        ("purpose", "coinbase.advanced_trade", "browser_purpose_binding_mismatch"),
-        ("endpoint_ref", "https://attacker.example", "browser_endpoint_binding_mismatch"),
-    ):
-        packet = browser_packet()
-        packet["sealed_material"][field] = value
-        redigest(packet)
-        assert expected in validate_browser_packet(packet)
-
-
-class _nullcontext:
-    def __enter__(self):
-        return None
-    def __exit__(self, *args):
-        return False
+if __name__ == "__main__":
+    unittest.main()
