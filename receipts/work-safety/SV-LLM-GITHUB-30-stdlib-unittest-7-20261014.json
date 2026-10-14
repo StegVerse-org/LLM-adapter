@@ -1,0 +1,73 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SV-LLM-GITHUB-30-STDLIB-UNITTEST-7",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/ENTERPRISE_DEPENDENCY_CLEANUP_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/SV-LLM/.github/issues/30"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-harness change only: ten Coinbase SKAP staging, HTTP-01, query-safe logging, external-collab consent, StegDeploy native gateway/TLS and HIL intake/sovereign-receiver test files move from pytest to the standard-library unittest, and the coinbase-skap-service-gateway, hil-site-receipt-compat and hil-sovereign-receiver-source workflows run them with python -m unittest; no runtime, Organization append or Master Records transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/SV-LLM/.github/issues/30",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/411"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      ".github/workflows/coinbase-skap-service-gateway.yml",
+      ".github/workflows/hil-site-receipt-compat.yml",
+      ".github/workflows/hil-sovereign-receiver-source.yml",
+      "tests/test_deployed_gateway_coinbase_skap.py",
+      "tests/test_hil_intake_api.py",
+      "tests/test_hil_sovereign_receiver_profile.py",
+      "tests/test_service_gateway_coinbase_skap.py",
+      "tests/test_service_gateway_coinbase_skap_api.py",
+      "tests/test_service_gateway_external_collab_consent.py",
+      "tests/test_service_gateway_http01.py",
+      "tests/test_service_gateway_query_safe_logging.py",
+      "tests/test_stegdeploy_native_gateway.py",
+      "tests/test_stegdeploy_native_tls.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR touches these test files or the three workflows."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Package behaviour is unchanged and no README verification command names these files; only test harness, workflow steps and verification scripts change.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/coinbase-skap-service-gateway.yml",
+    ".github/workflows/hil-site-receipt-compat.yml",
+    ".github/workflows/hil-sovereign-receiver-source.yml",
+    "tests/test_deployed_gateway_coinbase_skap.py",
+    "tests/test_hil_intake_api.py",
+    "tests/test_hil_sovereign_receiver_profile.py",
+    "tests/test_service_gateway_coinbase_skap.py",
+    "tests/test_service_gateway_coinbase_skap_api.py",
+    "tests/test_service_gateway_external_collab_consent.py",
+    "tests/test_service_gateway_http01.py",
+    "tests/test_service_gateway_query_safe_logging.py",
+    "tests/test_stegdeploy_native_gateway.py",
+    "tests/test_stegdeploy_native_tls.py"
+  ],
+  "new_files": []
+}
