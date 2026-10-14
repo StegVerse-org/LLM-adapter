@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import shutil
+import tempfile
+import types
+import unittest
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from unittest import mock
 
 from fastapi.testclient import TestClient
 
@@ -135,160 +142,199 @@ def request(publication_id: str) -> dict:
     }
 
 
-def test_mutation_disabled_fails_closed(monkeypatch, tmp_path):
-    publication_id, token = configure(monkeypatch, tmp_path)
-    monkeypatch.setenv("STEGVERSE_EXTERNAL_MUTATION_ENABLED", "false")
-    response = TestClient(app).post(
-        "/api/external-review/repository-mutations",
-        json=request(publication_id),
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert response.status_code == 503
-    assert response.json()["detail"]["reason"] == "repository_mutation_disabled"
+class ExternalPublicationMutationTests(unittest.TestCase):
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
 
+    def _setattr(self, target, *args, raising=True):
+        """monkeypatch.setattr equivalent: dotted-path or (object, name) form, undone after the test."""
+        if isinstance(target, str):
+            patcher = mock.patch(target, *args, create=not raising)
+        else:
+            patcher = mock.patch.object(target, *args, create=not raising)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
-def test_commit_time_revalidation_and_confirmed_github_receipt(monkeypatch, tmp_path):
-    publication_id, token = configure(monkeypatch, tmp_path)
-    calls = []
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
-    def fake_github(method, url, github_token, payload=None):
-        calls.append((method, url, payload))
-        if "/git/ref/heads/main" in url:
-            return {"object": {"sha": "a" * 40}}
-        if method == "GET" and "/contents/" in url:
-            raise mutation.HTTPException(status_code=502, detail={"reason": "github_api_error", "status": 404})
-        return {"commit": {"sha": "b" * 40}, "content": {"sha": "c" * 40}}
+    def _monkeypatch(self):
+        """The monkeypatch methods the module helpers call, each undone after the test."""
+        return types.SimpleNamespace(setattr=self._setattr, setenv=self._setenv)
 
-    monkeypatch.setattr(mutation, "_github_json", fake_github)
-    response = TestClient(app).post(
-        "/api/external-review/repository-mutations",
-        json=request(publication_id),
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["commit_sha"] == "b" * 40
-    assert body["new_blob_sha"] == "c" * 40
-    assert body["commit_time_revalidation"]["publication_identity"] == "PASS"
-    assert body["boundary"]["mutation_receipt_is_certification"] is False
-    assert any(call[0] == "PUT" for call in calls)
-
-
-def test_repository_head_drift_blocks_before_write(monkeypatch, tmp_path):
-    publication_id, token = configure(monkeypatch, tmp_path)
-    writes = []
-
-    def fake_github(method, url, github_token, payload=None):
-        if method == "PUT":
-            writes.append(url)
-        return {"object": {"sha": "d" * 40}}
-
-    monkeypatch.setattr(mutation, "_github_json", fake_github)
-    response = TestClient(app).post(
-        "/api/external-review/repository-mutations",
-        json=request(publication_id),
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert response.status_code == 409
-    assert response.json()["detail"]["reason"] == "repository_head_drift"
-    assert writes == []
-
-
-def test_wrong_policy_and_path_fail_closed(monkeypatch, tmp_path):
-    publication_id, token = configure(monkeypatch, tmp_path)
-    bad_policy = request(publication_id)
-    bad_policy["policy_ref"] = "policy:wrong"
-    response = TestClient(app).post(
-        "/api/external-review/repository-mutations",
-        json=bad_policy,
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert response.status_code == 403
-    assert response.json()["detail"]["reason"] == "commit_time_policy_mismatch"
-
-    bad_path = request(publication_id)
-    bad_path["target_path"] = "README.md"
-    response = TestClient(app).post(
-        "/api/external-review/repository-mutations",
-        json=bad_path,
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert response.status_code == 422
-
-
-def test_invalid_organization_transition_receipt_blocks_before_github(monkeypatch, tmp_path):
-    publication_id, token = configure(monkeypatch, tmp_path)
-    calls = []
-    monkeypatch.setattr(
-        mutation,
-        "verify_publication_transition_receipt",
-        lambda **kwargs: (_ for _ in ()).throw(mutation.PublicationCustodyError("closure_missing")),
-    )
-    monkeypatch.setattr(mutation, "_github_json", lambda *args, **kwargs: calls.append(args) or {})
-    response = TestClient(app).post(
-        "/api/external-review/repository-mutations",
-        json=request(publication_id),
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert response.status_code == 409
-    detail = response.json()["detail"]
-    assert detail["reason"] == "governed_publication_transition_receipt_invalid"
-    for field in ("failure_code", "failed_predicate", "required_evidence_or_repair",
-                  "retry_entrypoint", "owning_existing_goal", "next_attempt"):
-        assert detail[field]
-    assert calls == []
-
-
-def test_mutation_never_consults_master_records(monkeypatch, tmp_path):
-    publication_id, token = configure(monkeypatch, tmp_path)
-    from llm_adapter import wiki_publication_master_records as wiki
-
-    def unreachable(*_args, **_kwargs):
-        raise AssertionError("repository mutation must not consult Master Records")
-
-    monkeypatch.setattr(wiki, "master_records_transport_enabled", unreachable)
-    monkeypatch.setattr(wiki, "_master_records_configuration", unreachable)
-    seen = {}
-    monkeypatch.setattr(
-        mutation,
-        "verify_publication_transition_receipt",
-        lambda **kwargs: seen.update(kwargs) or {"state": "VERIFIED"},
-    )
-    body = request(publication_id)
-    body["master_records_receipt_sha256"] = body.pop("transition_receipt_sha256")
-    monkeypatch.setattr(mutation, "_github_json", lambda *args, **kwargs: (_ for _ in ()).throw(
-        mutation.HTTPException(status_code=409, detail={"reason": "stop_after_receipt_check"})))
-    response = TestClient(app).post(
-        "/api/external-review/repository-mutations",
-        json=body,
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert response.json()["detail"]["reason"] == "stop_after_receipt_check"
-    assert seen["receipt_sha256"] == "9" * 64
-
-
-def test_deny_and_review_required_produce_zero_repository_mutation(monkeypatch, tmp_path):
-    for decision in ("DENY_PUBLICATION", "REVIEW_REQUIRED"):
+    def test_mutation_disabled_fails_closed(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
         publication_id, token = configure(monkeypatch, tmp_path)
-        with mutation._connect() as db:
-            row = db.execute(
-                "SELECT payload_json FROM publication_transitions WHERE publication_transition_id = ?",
-                (publication_id,),
-            ).fetchone()
-            payload = json.loads(row["payload_json"])
-            payload["decision"] = decision
-            db.execute(
-                "UPDATE publication_transitions SET decision = ?, payload_json = ? WHERE publication_transition_id = ?",
-                (decision, json.dumps(payload), publication_id),
-            )
-            db.commit()
+        self._setenv("STEGVERSE_EXTERNAL_MUTATION_ENABLED", "false")
+        response = TestClient(app).post(
+            "/api/external-review/repository-mutations",
+            json=request(publication_id),
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 503
+        assert response.json()["detail"]["reason"] == "repository_mutation_disabled"
+
+    def test_commit_time_revalidation_and_confirmed_github_receipt(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        publication_id, token = configure(monkeypatch, tmp_path)
         calls = []
-        monkeypatch.setattr(mutation, "_github_json", lambda *args, **kwargs: calls.append(args) or {})
+
+        def fake_github(method, url, github_token, payload=None):
+            calls.append((method, url, payload))
+            if "/git/ref/heads/main" in url:
+                return {"object": {"sha": "a" * 40}}
+            if method == "GET" and "/contents/" in url:
+                raise mutation.HTTPException(status_code=502, detail={"reason": "github_api_error", "status": 404})
+            return {"commit": {"sha": "b" * 40}, "content": {"sha": "c" * 40}}
+
+        self._setattr(mutation, "_github_json", fake_github)
+        response = TestClient(app).post(
+            "/api/external-review/repository-mutations",
+            json=request(publication_id),
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["commit_sha"] == "b" * 40
+        assert body["new_blob_sha"] == "c" * 40
+        assert body["commit_time_revalidation"]["publication_identity"] == "PASS"
+        assert body["boundary"]["mutation_receipt_is_certification"] is False
+        assert any(call[0] == "PUT" for call in calls)
+
+    def test_repository_head_drift_blocks_before_write(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        publication_id, token = configure(monkeypatch, tmp_path)
+        writes = []
+
+        def fake_github(method, url, github_token, payload=None):
+            if method == "PUT":
+                writes.append(url)
+            return {"object": {"sha": "d" * 40}}
+
+        self._setattr(mutation, "_github_json", fake_github)
         response = TestClient(app).post(
             "/api/external-review/repository-mutations",
             json=request(publication_id),
             headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 409
-        assert response.json()["detail"]["reason"] == "publication_transition_not_allowed"
+        assert response.json()["detail"]["reason"] == "repository_head_drift"
+        assert writes == []
+
+    def test_wrong_policy_and_path_fail_closed(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        publication_id, token = configure(monkeypatch, tmp_path)
+        bad_policy = request(publication_id)
+        bad_policy["policy_ref"] = "policy:wrong"
+        response = TestClient(app).post(
+            "/api/external-review/repository-mutations",
+            json=bad_policy,
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 403
+        assert response.json()["detail"]["reason"] == "commit_time_policy_mismatch"
+
+        bad_path = request(publication_id)
+        bad_path["target_path"] = "README.md"
+        response = TestClient(app).post(
+            "/api/external-review/repository-mutations",
+            json=bad_path,
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 422
+
+    def test_invalid_organization_transition_receipt_blocks_before_github(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        publication_id, token = configure(monkeypatch, tmp_path)
+        calls = []
+        self._setattr(
+            mutation,
+            "verify_publication_transition_receipt",
+            lambda **kwargs: (_ for _ in ()).throw(mutation.PublicationCustodyError("closure_missing")),
+        )
+        self._setattr(mutation, "_github_json", lambda *args, **kwargs: calls.append(args) or {})
+        response = TestClient(app).post(
+            "/api/external-review/repository-mutations",
+            json=request(publication_id),
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 409
+        detail = response.json()["detail"]
+        assert detail["reason"] == "governed_publication_transition_receipt_invalid"
+        for field in ("failure_code", "failed_predicate", "required_evidence_or_repair",
+                      "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+            assert detail[field]
         assert calls == []
+
+    def test_mutation_never_consults_master_records(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        publication_id, token = configure(monkeypatch, tmp_path)
+        from llm_adapter import wiki_publication_master_records as wiki
+
+        def unreachable(*_args, **_kwargs):
+            raise AssertionError("repository mutation must not consult Master Records")
+
+        self._setattr(wiki, "master_records_transport_enabled", unreachable)
+        self._setattr(wiki, "_master_records_configuration", unreachable)
+        seen = {}
+        self._setattr(
+            mutation,
+            "verify_publication_transition_receipt",
+            lambda **kwargs: seen.update(kwargs) or {"state": "VERIFIED"},
+        )
+        body = request(publication_id)
+        body["master_records_receipt_sha256"] = body.pop("transition_receipt_sha256")
+        self._setattr(mutation, "_github_json", lambda *args, **kwargs: (_ for _ in ()).throw(
+            mutation.HTTPException(status_code=409, detail={"reason": "stop_after_receipt_check"})))
+        response = TestClient(app).post(
+            "/api/external-review/repository-mutations",
+            json=body,
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.json()["detail"]["reason"] == "stop_after_receipt_check"
+        assert seen["receipt_sha256"] == "9" * 64
+
+    def test_deny_and_review_required_produce_zero_repository_mutation(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        for decision in ("DENY_PUBLICATION", "REVIEW_REQUIRED"):
+            publication_id, token = configure(monkeypatch, tmp_path)
+            with mutation._connect() as db:
+                row = db.execute(
+                    "SELECT payload_json FROM publication_transitions WHERE publication_transition_id = ?",
+                    (publication_id,),
+                ).fetchone()
+                payload = json.loads(row["payload_json"])
+                payload["decision"] = decision
+                db.execute(
+                    "UPDATE publication_transitions SET decision = ?, payload_json = ? WHERE publication_transition_id = ?",
+                    (decision, json.dumps(payload), publication_id),
+                )
+                db.commit()
+            calls = []
+            self._setattr(mutation, "_github_json", lambda *args, **kwargs: calls.append(args) or {})
+            response = TestClient(app).post(
+                "/api/external-review/repository-mutations",
+                json=request(publication_id),
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            assert response.status_code == 409
+            assert response.json()["detail"]["reason"] == "publication_transition_not_allowed"
+            assert calls == []
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,3 +1,4 @@
+import unittest
 from pathlib import Path
 
 
@@ -7,14 +8,18 @@ SCRIPT = ROOT / "scripts/write_live_activation_monitor_status.py"
 HANDOFF = ROOT / "docs/WORKFLOW_CONSOLIDATION_MIRROR_HANDOFF.md"
 
 
-def test_hosted_activation_monitor_is_retired() -> None:
-    assert not WORKFLOW.exists()
-    assert not SCRIPT.exists()
+class LiveActivationMonitorNoDeployChurnTests(unittest.TestCase):
+    def test_hosted_activation_monitor_is_retired(self) -> None:
+        assert not WORKFLOW.exists()
+        assert not SCRIPT.exists()
+
+    def test_resident_stegverse_carrier_owns_continuity_after_retirement(self) -> None:
+        source = HANDOFF.read_text(encoding="utf-8")
+        assert "ecosystem-chat-live-activation-monitor.yml" in source
+        assert "resident carrier owns continuity" in source
+        assert "GitHub token as runtime/control-plane authority: prohibited" in source
+        assert "credential_authority: TV/TVC" in source
 
 
-def test_resident_stegverse_carrier_owns_continuity_after_retirement() -> None:
-    source = HANDOFF.read_text(encoding="utf-8")
-    assert "ecosystem-chat-live-activation-monitor.yml" in source
-    assert "resident carrier owns continuity" in source
-    assert "GitHub token as runtime/control-plane authority: prohibited" in source
-    assert "credential_authority: TV/TVC" in source
+if __name__ == "__main__":
+    unittest.main()

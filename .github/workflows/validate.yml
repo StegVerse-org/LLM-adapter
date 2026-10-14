@@ -168,19 +168,19 @@ jobs:
         run: "$PYTHON_BIN -m unittest -v tests/test_master_records_usage_record.py"
       - name: Test live activation automation contract without executing activation
         run: >-
-          "$PYTHON_BIN" -m pytest
+          "$PYTHON_BIN" -m unittest -v
           tests/test_live_activation_automation_contract.py
           tests/test_live_activation_monitor_no_deploy_churn.py
           tests/test_provider_readiness_stable_projection.py
-          tests/test_live_activation_status_persistence.py -v
+          tests/test_live_activation_status_persistence.py
       - name: Test StegVerse node advertisement contract
-        run: "$PYTHON_BIN -m pytest tests/test_node_advertisement.py tests/test_machine_discovery_submission.py tests/test_governed_manifest_ingress.py -v"
+        run: "$PYTHON_BIN -m unittest -v tests/test_node_advertisement.py tests/test_machine_discovery_submission.py tests/test_governed_manifest_ingress.py"
       - name: Test canonical node standing gates the machine continuation
-        run: "$PYTHON_BIN -m pytest tests/test_node_standing.py -v"
+        run: "$PYTHON_BIN -m unittest -v tests/test_node_standing.py"
       - name: Test the ingress boundary records establishing a healthy node
-        run: "$PYTHON_BIN -m pytest tests/test_node_ingress_boundary.py -v"
+        run: "$PYTHON_BIN -m unittest -v tests/test_node_ingress_boundary.py"
       - name: Test every SDK boundary crossing is recorded
-        run: "$PYTHON_BIN -m pytest tests/test_sdk_boundary_crossing_record.py -v"
+        run: "$PYTHON_BIN -m unittest -v tests/test_sdk_boundary_crossing_record.py"
       - name: Every front-half transition, admitted or refused, is on one chain in order
         run: |
           "$PYTHON_BIN" - <<'PY'
@@ -290,39 +290,39 @@ jobs:
       - name: Check immutable verified activation receipt contract
         run: "$PYTHON_BIN scripts/check_ecosystem_chat_verified_receipt_contract.py"
       - name: Test sovereign destination activation projection
-        run: "$PYTHON_BIN -m pytest tests/test_destination_activation_state_sovereign.py -v"
+        run: "$PYTHON_BIN -m unittest -v tests/test_destination_activation_state_sovereign.py"
       - name: Test independent parent activation projection
-        run: "$PYTHON_BIN -m pytest tests/test_parent_activation_projection.py -v"
+        run: "$PYTHON_BIN -m unittest -v tests/test_parent_activation_projection.py"
       - name: Test authenticated usage session endpoint
-        run: "$PYTHON_BIN -m pytest tests/test_usage_session_api.py -v"
+        run: "$PYTHON_BIN -m unittest -v tests/test_usage_session_api.py"
       - name: Test system-boundary declaration lifecycle, fixture provenance, and workflow evidence
         run: >-
-          "$PYTHON_BIN" -m pytest
+          "$PYTHON_BIN" -m unittest -v
           tests/test_system_boundary.py
           tests/test_system_boundary_binding.py
           tests/test_system_boundary_receipt.py
           tests/test_system_boundary_lifecycle.py
           tests/test_system_boundary_sdk_fixture.py
           tests/test_system_boundary_fixture_provenance.py
-          tests/test_system_boundary_workflow_evidence.py -v
+          tests/test_system_boundary_workflow_evidence.py
       - name: Test KnowledgeVault onboarding Service Gateway
-        run: "$PYTHON_BIN -m pytest tests/test_service_gateway_kv_onboarding.py -v"
+        run: "$PYTHON_BIN -m unittest -v tests/test_service_gateway_kv_onboarding.py"
       - name: Test HIL Universal InTr shared Service Gateway
-        run: "$PYTHON_BIN -m pytest tests/test_service_gateway_hil_intr.py -v"
+        run: "$PYTHON_BIN -m unittest -v tests/test_service_gateway_hil_intr.py"
       - name: Test External Chat compatibility
-        run: "$PYTHON_BIN -m pytest tests/test_external_framework_compatibility.py -v"
+        run: "$PYTHON_BIN -m unittest -v tests/test_external_framework_compatibility.py"
       - name: Test External Review package intake
-        run: "$PYTHON_BIN -m pytest tests/test_external_review_api.py::test_package_only_intake_is_authenticated_append_only_and_idempotent -v"
+        run: "$PYTHON_BIN -m unittest -v tests.test_external_review_api.ExternalReviewApiTests.test_package_only_intake_is_authenticated_append_only_and_idempotent"
       - name: Test External Review package conflict
-        run: "$PYTHON_BIN -m pytest tests/test_external_review_api.py::test_package_rejects_raw_submission_and_conflicting_content -v"
+        run: "$PYTHON_BIN -m unittest -v tests.test_external_review_api.ExternalReviewApiTests.test_package_rejects_raw_submission_and_conflicting_content"
       - name: Test External Review delegated receipt
-        run: "$PYTHON_BIN -m pytest tests/test_external_review_api.py::test_delegated_reviewer_can_issue_one_identity_bound_receipt -v"
+        run: "$PYTHON_BIN -m unittest -v tests.test_external_review_api.ExternalReviewApiTests.test_delegated_reviewer_can_issue_one_identity_bound_receipt"
       - name: Test External Review identity drift
-        run: "$PYTHON_BIN -m pytest tests/test_external_review_api.py::test_scope_and_identity_drift_fail_closed -v"
+        run: "$PYTHON_BIN -m unittest -v tests.test_external_review_api.ExternalReviewApiTests.test_scope_and_identity_drift_fail_closed"
       - name: Test External Review expired delegation
-        run: "$PYTHON_BIN -m pytest tests/test_external_review_api.py::test_expired_reviewer_delegation_is_rejected -v"
+        run: "$PYTHON_BIN -m unittest -v tests.test_external_review_api.ExternalReviewApiTests.test_expired_reviewer_delegation_is_rejected"
       - name: Test External Chat publication and mutation
-        run: "$PYTHON_BIN -m pytest tests/test_external_review_publication.py tests/test_wiki_publication_master_records.py tests/test_external_publication_mutation.py -v"
+        run: "$PYTHON_BIN -m unittest -v tests/test_external_review_publication.py tests/test_wiki_publication_master_records.py tests/test_external_publication_mutation.py"
       - name: Check workflow parity
         run: "$PYTHON_BIN scripts/check_workflow_parity.py"
       - name: Check authority boundary

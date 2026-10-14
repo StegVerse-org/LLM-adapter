@@ -1,7 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
+import tempfile
+import unittest
 from pathlib import Path
+from unittest import mock
 
 from llm_adapter.node_bootstrap import bootstrap
 from llm_adapter.node_service import _runtime_environment
@@ -10,136 +15,151 @@ from llm_adapter.node_service import _runtime_environment
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_live_activation_verifier_preserves_required_boundaries() -> None:
-    source = (ROOT / "scripts/verify_live_ecosystem_chat_activation.py").read_text()
-    for required in (
-        "governed_provider_enabled",
-        "provider_usage_record_missing",
-        "organization_ledger_transition_receipt_not_observed",
-        '"master_records_is_a_predicate": False',
-        '"owning_existing_goal"',
-        '"authority_granted": False',
-        '"repository_mutation_authorized": False',
-        "STEGVERSE_LIVE_ACTIVATION_ATTEMPTS",
-        "STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS",
-        "transport_retry_exhausted",
-        "RETRYABLE_HTTP",
-        '"verification_policy"',
-        "explicit_gateway_base_url_required",
-        '"implicit_third_party_gateway": False',
-        '"gateway_selection": "EXPLICIT_RUNTIME_INPUT_ONLY"',
-    ):
-        assert required in source
-    assert "STEGVERSE_PROVIDER_TOKEN" not in source
-    assert "STEGVERSE_MASTER_RECORDS_TOKEN" not in source
-    for retired in ("master_records_submission_enabled", "master_records_usage_submission",
-                    "master_record_status", "reconstruction_status"):
-        assert retired not in source, retired
-    assert "onrender.com" not in source
-    assert "vercel.app" not in source
-    assert "netlify.app" not in source
+class LiveActivationAutomationContractTests(unittest.TestCase):
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
+
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_live_activation_verifier_preserves_required_boundaries(self) -> None:
+        source = (ROOT / "scripts/verify_live_ecosystem_chat_activation.py").read_text()
+        for required in (
+            "governed_provider_enabled",
+            "provider_usage_record_missing",
+            "organization_ledger_transition_receipt_not_observed",
+            '"master_records_is_a_predicate": False',
+            '"owning_existing_goal"',
+            '"authority_granted": False',
+            '"repository_mutation_authorized": False',
+            "STEGVERSE_LIVE_ACTIVATION_ATTEMPTS",
+            "STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS",
+            "transport_retry_exhausted",
+            "RETRYABLE_HTTP",
+            '"verification_policy"',
+            "explicit_gateway_base_url_required",
+            '"implicit_third_party_gateway": False',
+            '"gateway_selection": "EXPLICIT_RUNTIME_INPUT_ONLY"',
+        ):
+            assert required in source
+        assert "STEGVERSE_PROVIDER_TOKEN" not in source
+        assert "STEGVERSE_MASTER_RECORDS_TOKEN" not in source
+        for retired in ("master_records_submission_enabled", "master_records_usage_submission",
+                        "master_record_status", "reconstruction_status"):
+            assert retired not in source, retired
+        assert "onrender.com" not in source
+        assert "vercel.app" not in source
+        assert "netlify.app" not in source
+
+    def test_validate_workflow_is_validation_only_and_credential_clean(self) -> None:
+        source = (ROOT / ".github/workflows/validate.yml").read_text()
+        for required in (
+            "Deterministic repository validation only",
+            "Live activation belongs to StegVerse resident workers + TV/TVC",
+            "permissions: {}",
+            "Refuse credential-bearing environment",
+            "Fetch exact source anonymously",
+            "git -c http.extraheader= fetch",
+            "Test live activation automation contract without executing activation",
+            "cancel-in-progress: true",
+            "GLOBAL_VALIDATE_GITHUB_TOKEN_AUTHORITY=NONE",
+            "GLOBAL_VALIDATE_ACTIVATION_EFFECT=NONE",
+        ):
+            assert required in source
+        forbidden = (
+            "secrets.",
+            "actions/" + "checkout@",
+            "actions/" + "setup-python@",
+            "actions/" + "upload-artifact@",
+            "persist-" + "credentials",
+            "verify_" + "live_ecosystem_chat_activation.py",
+            "git " + "push",
+            "schedule" + ":",
+        )
+        for marker in forbidden:
+            assert marker not in source
+
+    def test_portable_node_manifest_supports_stegverse_binding_and_fails_closed(self) -> None:
+        tmp_path = self._tmp_path()
+        receipt = bootstrap(tmp_path)
+        manifest = json.loads(Path(receipt["capability_manifest"]).read_text(encoding="utf-8"))
+
+        assert manifest["version"] == "1.4.0"
+        assert manifest["entrypoint"][3] == "llm_adapter.deployed_gateway:app"
+        assert manifest["entrypoint"][-4:] == ["--host", "${HOST}", "--port", "${PORT}"]
+        assert manifest["routes"]["math_solver_readiness"] == "/api/math-solver/v1/readiness"
+        assert manifest["routes"]["math_solver_solve"] == "/api/math-solver/v1/solve"
+        assert manifest["environment_defaults"]["HOST"] == "127.0.0.1"
+        assert manifest["environment_defaults"]["STEGVERSE_PROVIDER_ENABLED"] == "false"
+        assert manifest["environment_defaults"]["STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS"] == "true"
+        assert manifest["portability"]["authorized_host_binding_supported"] is True
+        assert manifest["credential_boundary"]["credential_authority"] == "TV/TVC"
+        assert manifest["credential_boundary"]["github_token_runtime_authority"] == "NONE"
+        assert manifest["credential_boundary"]["provider_credentials_in_manifest"] is False
+        assert receipt["manual_action_required"] is False
+
+    def test_portable_node_runtime_preserves_tvc_authorized_environment(self) -> None:
+        tmp_path = self._tmp_path()
+        receipt = bootstrap(tmp_path)
+        manifest = json.loads(Path(receipt["capability_manifest"]).read_text(encoding="utf-8"))
+
+        self._setenv("HOST", "0.0.0.0")
+        self._setenv("PORT", "9010")
+        self._setenv("STEGVERSE_PROVIDER_ENABLED", "true")
+        self._setenv("STEGVERSE_PROVIDER_ENDPOINT", "https://provider.example/v1/chat")
+        self._setenv("STEGVERSE_MASTER_RECORDS_ENDPOINT", "https://records.example/v1")
+
+        env = _runtime_environment(tmp_path, manifest)
+
+        assert env["HOST"] == "0.0.0.0"
+        assert env["PORT"] == "9010"
+        assert env["STEGVERSE_PROVIDER_ENABLED"] == "true"
+        assert env["STEGVERSE_PROVIDER_ENDPOINT"] == "https://provider.example/v1/chat"
+        assert env["STEGVERSE_MASTER_RECORDS_ENDPOINT"] == "https://records.example/v1"
+        assert env["STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS"] == "true"
+        assert env["STEGVERSE_NODE_ROOT"] == str(tmp_path)
+
+    def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing(self) -> None:
+        source = (ROOT / "scripts/write_live_activation_status.py").read_text()
+        for required in (
+            "live_activation_status.v1",
+            "live_activation_observation_file_missing",
+            "live_activation_observation_unreadable",
+            "live_activation_observation_not_object",
+            "verified_live_activation_contains_blockers",
+            '"manual_user_action_required": False',
+            '"status_is_activation_authority": False',
+            '"status_is_deployment_authority": False',
+            '"status_is_custody": False',
+            '"status_is_release_authority": False',
+            '"gateway_selection": "OBSERVATION_EXPLICIT_ONLY"',
+            '"implicit_third_party_gateway": False',
+            "sorted(set(blockers))",
+            "status_sha256",
+        ):
+            assert required in source
+        assert "DEFAULT_GATEWAY" not in source
+        assert "onrender.com" not in source
+        assert "vercel.app" not in source
+        assert "netlify.app" not in source
+        assert "observed_at" not in source
+        assert "generated_at" not in source
+
+    def test_external_staging_live_check_has_no_implicit_hosted_gateway(self) -> None:
+        source = (ROOT / "scripts/verify_external_publication_staging.py").read_text()
+        assert 'os.getenv("STEGVERSE_GATEWAY_BASE_URL", "")' in source
+        assert "live staging verification requires explicit STEGVERSE_GATEWAY_BASE_URL" in source
+        assert "onrender.com" not in source
+        assert "vercel.app" not in source
+        assert "netlify.app" not in source
 
 
-def test_validate_workflow_is_validation_only_and_credential_clean() -> None:
-    source = (ROOT / ".github/workflows/validate.yml").read_text()
-    for required in (
-        "Deterministic repository validation only",
-        "Live activation belongs to StegVerse resident workers + TV/TVC",
-        "permissions: {}",
-        "Refuse credential-bearing environment",
-        "Fetch exact source anonymously",
-        "git -c http.extraheader= fetch",
-        "Test live activation automation contract without executing activation",
-        "cancel-in-progress: true",
-        "GLOBAL_VALIDATE_GITHUB_TOKEN_AUTHORITY=NONE",
-        "GLOBAL_VALIDATE_ACTIVATION_EFFECT=NONE",
-    ):
-        assert required in source
-    forbidden = (
-        "secrets.",
-        "actions/" + "checkout@",
-        "actions/" + "setup-python@",
-        "actions/" + "upload-artifact@",
-        "persist-" + "credentials",
-        "verify_" + "live_ecosystem_chat_activation.py",
-        "git " + "push",
-        "schedule" + ":",
-    )
-    for marker in forbidden:
-        assert marker not in source
-
-
-def test_portable_node_manifest_supports_stegverse_binding_and_fails_closed(tmp_path: Path) -> None:
-    receipt = bootstrap(tmp_path)
-    manifest = json.loads(Path(receipt["capability_manifest"]).read_text(encoding="utf-8"))
-
-    assert manifest["version"] == "1.4.0"
-    assert manifest["entrypoint"][3] == "llm_adapter.deployed_gateway:app"
-    assert manifest["entrypoint"][-4:] == ["--host", "${HOST}", "--port", "${PORT}"]
-    assert manifest["routes"]["math_solver_readiness"] == "/api/math-solver/v1/readiness"
-    assert manifest["routes"]["math_solver_solve"] == "/api/math-solver/v1/solve"
-    assert manifest["environment_defaults"]["HOST"] == "127.0.0.1"
-    assert manifest["environment_defaults"]["STEGVERSE_PROVIDER_ENABLED"] == "false"
-    assert manifest["environment_defaults"]["STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS"] == "true"
-    assert manifest["portability"]["authorized_host_binding_supported"] is True
-    assert manifest["credential_boundary"]["credential_authority"] == "TV/TVC"
-    assert manifest["credential_boundary"]["github_token_runtime_authority"] == "NONE"
-    assert manifest["credential_boundary"]["provider_credentials_in_manifest"] is False
-    assert receipt["manual_action_required"] is False
-
-
-def test_portable_node_runtime_preserves_tvc_authorized_environment(monkeypatch, tmp_path: Path) -> None:
-    receipt = bootstrap(tmp_path)
-    manifest = json.loads(Path(receipt["capability_manifest"]).read_text(encoding="utf-8"))
-
-    monkeypatch.setenv("HOST", "0.0.0.0")
-    monkeypatch.setenv("PORT", "9010")
-    monkeypatch.setenv("STEGVERSE_PROVIDER_ENABLED", "true")
-    monkeypatch.setenv("STEGVERSE_PROVIDER_ENDPOINT", "https://provider.example/v1/chat")
-    monkeypatch.setenv("STEGVERSE_MASTER_RECORDS_ENDPOINT", "https://records.example/v1")
-
-    env = _runtime_environment(tmp_path, manifest)
-
-    assert env["HOST"] == "0.0.0.0"
-    assert env["PORT"] == "9010"
-    assert env["STEGVERSE_PROVIDER_ENABLED"] == "true"
-    assert env["STEGVERSE_PROVIDER_ENDPOINT"] == "https://provider.example/v1/chat"
-    assert env["STEGVERSE_MASTER_RECORDS_ENDPOINT"] == "https://records.example/v1"
-    assert env["STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS"] == "true"
-    assert env["STEGVERSE_NODE_ROOT"] == str(tmp_path)
-
-
-def test_live_activation_status_writer_is_stable_fail_closed_and_non_authorizing() -> None:
-    source = (ROOT / "scripts/write_live_activation_status.py").read_text()
-    for required in (
-        "live_activation_status.v1",
-        "live_activation_observation_file_missing",
-        "live_activation_observation_unreadable",
-        "live_activation_observation_not_object",
-        "verified_live_activation_contains_blockers",
-        '"manual_user_action_required": False',
-        '"status_is_activation_authority": False',
-        '"status_is_deployment_authority": False',
-        '"status_is_custody": False',
-        '"status_is_release_authority": False',
-        '"gateway_selection": "OBSERVATION_EXPLICIT_ONLY"',
-        '"implicit_third_party_gateway": False',
-        "sorted(set(blockers))",
-        "status_sha256",
-    ):
-        assert required in source
-    assert "DEFAULT_GATEWAY" not in source
-    assert "onrender.com" not in source
-    assert "vercel.app" not in source
-    assert "netlify.app" not in source
-    assert "observed_at" not in source
-    assert "generated_at" not in source
-
-
-def test_external_staging_live_check_has_no_implicit_hosted_gateway() -> None:
-    source = (ROOT / "scripts/verify_external_publication_staging.py").read_text()
-    assert 'os.getenv("STEGVERSE_GATEWAY_BASE_URL", "")' in source
-    assert "live staging verification requires explicit STEGVERSE_GATEWAY_BASE_URL" in source
-    assert "onrender.com" not in source
-    assert "vercel.app" not in source
-    assert "netlify.app" not in source
+if __name__ == "__main__":
+    unittest.main()

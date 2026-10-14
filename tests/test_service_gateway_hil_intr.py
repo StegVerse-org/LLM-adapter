@@ -3,7 +3,13 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+import os
+import shutil
+import tempfile
+import types
+import unittest
 from pathlib import Path
+from unittest import mock
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -35,263 +41,343 @@ def headers(body: bytes, origin: str = "STEGOS_NODE_OUTBOX") -> dict[str, str]:
     return value
 
 
-def test_public_profile_projects_exact_sovereign_capabilities_over_https(monkeypatch):
-    source = {
-        "schema": "stegverse.universal-intr-profiled-ingress/v1",
-        "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
-        "protocol": "InTr",
-        "profile_path": "/intr/profile",
-        "materialization_path": "/intr/materialization",
-        "profiles": ["HIL:Ingress", "SV002:PublicObservation"],
-        "supported_origins": ["STEGOS_NODE_OUTBOX", "TVC_RELAY_EGRESS"],
-        "event_triggered": True,
-        "always_on_application_receiver_required": False,
-        "second_user_device_required": False,
-        "g18_required": False,
-        "tls_enabled": False,
-        "credential_authority": "TV/TVC",
-        "github_token_runtime_authority": "NONE",
-        "execution_authority": "NONE",
-        "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
-    }
-    monkeypatch.setattr(mod, "_read_profile", lambda: dict(source))
-    client = app_client(monkeypatch)
-    https_client = TestClient(client.app, base_url="https://stegverse.org")
-    response = https_client.get("/intr/profile")
-    assert response.status_code == 200
-    profile = response.json()
-    assert profile["schema"] == source["schema"]
-    assert profile["profiles"] == source["profiles"]
-    assert "SV002:PublicObservation" in profile["profiles"]
-    assert profile["tls_enabled"] is True
-    assert profile["source_loopback_tls_enabled"] is False
-    assert profile["public_tls_terminated_by"] == "STEGVERSE_SHARED_SERVICE_GATEWAY"
-    assert profile["profile_projection"] == "SHARED_GATEWAY_PUBLIC_HTTPS"
-    assert profile["credential_authority"] == "TV/TVC"
-    assert profile["github_token_runtime_authority"] == "NONE"
-    assert profile["execution_authority"] == "NONE"
+_REDIRECT = []
 
 
-def test_public_profile_refuses_non_https_observation(monkeypatch):
-    source = {
-        "schema": "stegverse.universal-intr-profiled-ingress/v1",
-        "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
-        "protocol": "InTr",
-        "profile_path": "/intr/profile",
-        "materialization_path": "/intr/materialization",
-        "profiles": ["SV002:PublicObservation"],
-        "event_triggered": True,
-        "always_on_application_receiver_required": False,
-        "credential_authority": "TV/TVC",
-        "github_token_runtime_authority": "NONE",
-        "execution_authority": "NONE",
-        "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
-    }
-    monkeypatch.setattr(mod, "_read_profile", lambda: source)
-    client = app_client(monkeypatch)
-    response = client.get("/intr/profile")
-    assert response.status_code == 400
-    assert response.json()["detail"] == "public_https_required"
+def setUpModule():
+    """As tests/conftest.py does under pytest: keep runs out of the deployed ledger and forward queue."""
+    root = tempfile.mkdtemp(prefix="llm-adapter-test-ledger-")
+    patcher = mock.patch.dict(os.environ, {
+        "STEGVERSE_REPO_LEDGER_ROOT": root,
+        "STEGVERSE_GATEWAY_FORWARD_DB": os.path.join(root, "gateway-forward.db"),
+    })
+    patcher.start()
+    _REDIRECT[:] = [patcher, root]
 
 
-def test_public_profile_rejects_invented_authority(monkeypatch):
-    source = {
-        "schema": "stegverse.universal-intr-profiled-ingress/v1",
-        "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
-        "protocol": "InTr",
-        "profile_path": "/intr/profile",
-        "materialization_path": "/intr/materialization",
-        "profiles": ["SV002:PublicObservation"],
-        "event_triggered": True,
-        "always_on_application_receiver_required": False,
-        "credential_authority": "TV/TVC",
-        "github_token_runtime_authority": "FULL",
-        "execution_authority": "NONE",
-        "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
-    }
-    monkeypatch.setattr(mod, "_read_profile", lambda: source)
-    client = app_client(monkeypatch)
-    https_client = TestClient(client.app, base_url="https://stegverse.org")
-    response = https_client.get("/intr/profile")
-    assert response.status_code == 502
-    assert "github_token_runtime_authority_mismatch" in response.json()["detail"]
+def tearDownModule():
+    patcher, root = _REDIRECT
+    patcher.stop()
+    shutil.rmtree(root, ignore_errors=True)
 
 
-def test_readiness_preserves_non_authority(monkeypatch):
-    client = app_client(monkeypatch)
-    payload = client.get("/intr/materialization/readiness").json()
-    assert payload["state"] == "READY"
-    assert payload["credential_authority"] == "TV/TVC"
-    assert payload["github_token_runtime_authority"] == "NONE"
-    assert payload["gateway_receipt_authority"] is False
-    assert payload["gateway_execution_authority"] is False
-    assert payload["gateway_custody_authority"] is False
-    assert payload["g18_completion_required"] is False
-    assert payload["second_user_device_required"] is False
+class ServiceGatewayHilIntrTests(unittest.TestCase):
+    def _setattr(self, target, *args, raising=True):
+        """monkeypatch.setattr equivalent: dotted-path or (object, name) form, undone after the test."""
+        if isinstance(target, str):
+            patcher = mock.patch(target, *args, create=not raising)
+        else:
+            patcher = mock.patch.object(target, *args, create=not raising)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _monkeypatch(self):
+        """The monkeypatch methods the module helpers call, each undone after the test."""
+        return types.SimpleNamespace(setattr=self._setattr, setenv=self._setenv)
+
+    def _organization_admits_manifests(self):
+        """Stand in for an organization that admitted the manifest and recorded it.
+
+        In this repository the canonical organization boundary is never resolved,
+        so a collaborative-ingress surface correctly returns FAIL_CLOSED. Tests of
+        what a surface does *after* an organization-admitted ALLOW use this far-side
+        double. It still validates every manifest with the real SDK contract and
+        records what it was handed, so a test can prove the manifest was bound
+        before anything else ran.
+        """
+        from llm_adapter import sdk_boundary
+
+        handed: list[dict] = []
+
+        def admitted(payload):
+            manifest = dict(payload["manifest"])
+            verdict = sdk_boundary.validate({"manifest": manifest})
+            assert verdict["accepted"] is True, verdict
+            handed.append(manifest)
+            return {
+                "schema": sdk_boundary.BOUNDARY_SCHEMA,
+                "surface": "MANIFEST_SUBMIT",
+                "handed_off": True,
+                "disposition": "ALLOW",
+                "canonical_entrypoint": sdk_boundary.CANONICAL_ENTRYPOINT,
+                "envelope": {"governance_state": "ALLOW", "organization_receipt_observed": True,
+                             "reached_sdk_runtime": True, "consequence_executed": False},
+                "test_double": "ORGANIZATION_ADMITTED_FAR_SIDE",
+                "authority_effect": "NONE_HANDOFF_ONLY",
+            }
+
+        self._setattr(sdk_boundary, "submit", admitted)
+        return handed
+
+    def test_public_profile_projects_exact_sovereign_capabilities_over_https(self):
+        monkeypatch = self._monkeypatch()
+        source = {
+            "schema": "stegverse.universal-intr-profiled-ingress/v1",
+            "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+            "protocol": "InTr",
+            "profile_path": "/intr/profile",
+            "materialization_path": "/intr/materialization",
+            "profiles": ["HIL:Ingress", "SV002:PublicObservation"],
+            "supported_origins": ["STEGOS_NODE_OUTBOX", "TVC_RELAY_EGRESS"],
+            "event_triggered": True,
+            "always_on_application_receiver_required": False,
+            "second_user_device_required": False,
+            "g18_required": False,
+            "tls_enabled": False,
+            "credential_authority": "TV/TVC",
+            "github_token_runtime_authority": "NONE",
+            "execution_authority": "NONE",
+            "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+        }
+        self._setattr(mod, "_read_profile", lambda: dict(source))
+        client = app_client(monkeypatch)
+        https_client = TestClient(client.app, base_url="https://stegverse.org")
+        response = https_client.get("/intr/profile")
+        assert response.status_code == 200
+        profile = response.json()
+        assert profile["schema"] == source["schema"]
+        assert profile["profiles"] == source["profiles"]
+        assert "SV002:PublicObservation" in profile["profiles"]
+        assert profile["tls_enabled"] is True
+        assert profile["source_loopback_tls_enabled"] is False
+        assert profile["public_tls_terminated_by"] == "STEGVERSE_SHARED_SERVICE_GATEWAY"
+        assert profile["profile_projection"] == "SHARED_GATEWAY_PUBLIC_HTTPS"
+        assert profile["credential_authority"] == "TV/TVC"
+        assert profile["github_token_runtime_authority"] == "NONE"
+        assert profile["execution_authority"] == "NONE"
+
+    def test_public_profile_refuses_non_https_observation(self):
+        monkeypatch = self._monkeypatch()
+        source = {
+            "schema": "stegverse.universal-intr-profiled-ingress/v1",
+            "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+            "protocol": "InTr",
+            "profile_path": "/intr/profile",
+            "materialization_path": "/intr/materialization",
+            "profiles": ["SV002:PublicObservation"],
+            "event_triggered": True,
+            "always_on_application_receiver_required": False,
+            "credential_authority": "TV/TVC",
+            "github_token_runtime_authority": "NONE",
+            "execution_authority": "NONE",
+            "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+        }
+        self._setattr(mod, "_read_profile", lambda: source)
+        client = app_client(monkeypatch)
+        response = client.get("/intr/profile")
+        assert response.status_code == 400
+        assert response.json()["detail"] == "public_https_required"
+
+    def test_public_profile_rejects_invented_authority(self):
+        monkeypatch = self._monkeypatch()
+        source = {
+            "schema": "stegverse.universal-intr-profiled-ingress/v1",
+            "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+            "protocol": "InTr",
+            "profile_path": "/intr/profile",
+            "materialization_path": "/intr/materialization",
+            "profiles": ["SV002:PublicObservation"],
+            "event_triggered": True,
+            "always_on_application_receiver_required": False,
+            "credential_authority": "TV/TVC",
+            "github_token_runtime_authority": "FULL",
+            "execution_authority": "NONE",
+            "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+        }
+        self._setattr(mod, "_read_profile", lambda: source)
+        client = app_client(monkeypatch)
+        https_client = TestClient(client.app, base_url="https://stegverse.org")
+        response = https_client.get("/intr/profile")
+        assert response.status_code == 502
+        assert "github_token_runtime_authority_mismatch" in response.json()["detail"]
+
+    def test_readiness_preserves_non_authority(self):
+        monkeypatch = self._monkeypatch()
+        client = app_client(monkeypatch)
+        payload = client.get("/intr/materialization/readiness").json()
+        assert payload["state"] == "READY"
+        assert payload["credential_authority"] == "TV/TVC"
+        assert payload["github_token_runtime_authority"] == "NONE"
+        assert payload["gateway_receipt_authority"] is False
+        assert payload["gateway_execution_authority"] is False
+        assert payload["gateway_custody_authority"] is False
+        assert payload["g18_completion_required"] is False
+        assert payload["second_user_device_required"] is False
+
+    def test_node_trigger_returns_sdk_disposition_without_upstream_wait(self):
+        monkeypatch = self._monkeypatch()
+        body = b'{"schema":"stegos.node_intr_materialization_trigger.v1"}'
+
+        def refuse(*_args, **_kwargs):
+            raise AssertionError("materialization must not wait on an upstream connection")
+
+        self._setattr("urllib.request.urlopen", refuse)
+        self._setattr(mod.urlrequest, "urlopen", refuse)
+        client = app_client(monkeypatch)
+        response = client.post("/intr/materialization", content=body, headers=headers(body))
+        assert response.status_code == 503
+        payload = response.json()
+        assert payload["disposition"] == "FAIL_CLOSED"
+        assert payload["failure_code"] == "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE"
+        assert payload["route_id"] == "stegverse.route.hil-intake.v1"
+        assert payload["canonical_entrypoint"] == "stegverse.manifest_execution.execute_manifest"
+        assert payload["network_call_performed_by_adapter"] is False
+        assert payload["sdk_boundary"]["envelope"]["consequence_executed"] is False
+
+    def test_node_trigger_binds_manifest_by_digest(self):
+        monkeypatch = self._monkeypatch()
+        organization_admits_manifests = self._organization_admits_manifests()
+        body = b'{"schema":"stegos.node_intr_materialization_trigger.v1"}'
+        client = app_client(monkeypatch)
+        response = client.post("/intr/materialization", content=body,
+                               headers=headers(body, "TVC_RELAY_EGRESS"))
+        assert response.status_code == 200
+        assert response.json()["disposition"] == "ALLOW"
+        [manifest] = organization_admits_manifests
+        request = manifest["extensions"]["stegverse_hil_intake_request"]
+        assert request["subject_ref"] == "sha256:" + hashlib.sha256(body).hexdigest()
+        assert "tvc-authorization-id:TVC-AUTH-TEST" in request["context_refs"]
+        assert body.decode() not in json.dumps(manifest)
+
+    def test_node_cannot_smuggle_authorization(self):
+        monkeypatch = self._monkeypatch()
+        body = b"{}"
+        h = headers(body)
+        h["X-StegVerse-Authorization-Id"] = "FORBIDDEN"
+        client = app_client(monkeypatch)
+        assert client.post("/intr/materialization", content=body, headers=h).status_code == 400
+
+    def test_relay_requires_authorization(self):
+        monkeypatch = self._monkeypatch()
+        body = b"{}"
+        h = headers(body, "TVC_RELAY_EGRESS")
+        h.pop("X-StegVerse-Authorization-Id")
+        client = app_client(monkeypatch)
+        assert client.post("/intr/materialization", content=body, headers=h).status_code == 400
+
+    def test_remote_upstream_is_rejected(self):
+        monkeypatch = self._monkeypatch()
+        client = app_client(monkeypatch, upstream="https://example.com/intr/materialization")
+        payload = client.get("/intr/materialization/readiness").json()
+        assert payload["state"] == "NOT_READY"
+        assert payload["loopback_upstream_configured"] is False
+
+    def test_disabled_proxy_fails_closed(self):
+        monkeypatch = self._monkeypatch()
+        body = b"{}"
+        client = app_client(monkeypatch, enabled=False)
+        assert client.post("/intr/materialization", content=body, headers=headers(body)).status_code == 503
+
+    def test_stegdeploy_gateway_activates_existing_sovereign_hil_receiver(self):
+        durable = PRODUCTION_DURABLE_ROOT
+        env = {
+            "STEGVERSE_RUNTIME_PROFILE": "sovereign-carrier",
+            "STEGVERSE_SOVEREIGN_STATE_DURABLE": "true",
+            "STEGVERSE_SOVEREIGN_STATE_DIR": str(durable),
+        }
+        profile = profile_mod.apply_sovereign_hil_receiver_profile(env)
+        assert profile["state"] == "ACTIVE_SOVEREIGN_RECEIVER"
+        assert profile["credential_authority"] == "TV/TVC"
+        assert profile["credential_requirement"] == "NONE_FOR_PARTICIPANT_INTAKE"
+        assert profile["participant_machine_required"] is False
+        assert profile["developer_machine_required"] is False
+        assert profile["github_hosted_runtime_required"] is False
+        assert profile["third_party_runtime_required"] is False
+        assert env["STEGVERSE_HIL_INTAKE_ENABLED"] == "true"
+        assert env["STEGVERSE_HIL_DATA_DIR"] == "/var/lib/stegverse/hil-v1.1"
+        assert env["STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS"] == "true"
+
+        from scripts import stegdeploy_native_gateway as native
+        durable = Path("/var/lib/stegverse")
+        native_env = native.child_env(durable_root=durable, evaluator_enabled=False, evaluator_upstream="",
+                                      tls_cert=None, tls_key=None, env={})
+        assert native_env["STEGVERSE_RUNTIME_PROFILE"] == "sovereign-carrier"
+        assert native_env["STEGVERSE_SOVEREIGN_STATE_DURABLE"] == "true"
+        assert native_env["STEGVERSE_SOVEREIGN_STATE_DIR"] == str(durable)
+        assert native_env["STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT"] == str(durable)
+
+        combined = (ROOT / "llm_adapter/combined_gateway.py").read_text(encoding="utf-8")
+        deployed = (ROOT / "llm_adapter/deployed_gateway.py").read_text(encoding="utf-8")
+        assert "app.include_router(hil_intake_router)" in combined
+        assert "from llm_adapter.combined_gateway import app" in deployed
+
+    def test_device_kv_result_proxy_requires_kv_profile(self):
+        monkeypatch = self._monkeypatch()
+        source = {
+            "schema": "stegverse.universal-intr-profiled-ingress/v1",
+            "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+            "protocol": "InTr",
+            "profile_path": "/intr/profile",
+            "materialization_path": "/intr/materialization",
+            "device_kv_result_path": "/intr/device-kv/result",
+            "profiles": ["HIL:Ingress", "KV:KnowledgeVaultInterlock"],
+            "supported_origins": ["STEGOS_NODE_OUTBOX"],
+            "event_triggered": True,
+            "always_on_application_receiver_required": False,
+            "second_user_device_required": False,
+            "g18_required": False,
+            "tls_enabled": False,
+            "credential_authority": "TV/TVC",
+            "github_token_runtime_authority": "NONE",
+            "execution_authority": "NONE",
+            "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+        }
+        self._setattr(mod, "_read_profile", lambda: dict(source))
+        observed = {}
+        def fake_forward_to(target, raw, forwarded):
+            observed["target"] = target
+            observed["body"] = raw
+            observed["headers"] = forwarded
+            return 200, b'{"schema":"stegverse.device-kv.query-result-delivery/v1","state":"RESULT_AVAILABLE"}', "application/json"
+        self._setattr(mod, "_forward_to", fake_forward_to)
+        client = app_client(monkeypatch)
+        https_client = TestClient(client.app, base_url="https://stegverse.org")
+        body = b'{"schema":"stegverse.device-kv.query-result-request/v1"}'
+        response = https_client.post("/intr/device-kv/result", content=body, headers=headers(body))
+        assert response.status_code == 200
+        assert observed["target"] == "http://127.0.0.1:8765/intr/device-kv/result"
+        assert observed["body"] == body
+        assert observed["headers"]["x-stegverse-transport-origin"] == "STEGOS_NODE_OUTBOX"
+
+    def test_device_kv_result_proxy_fails_without_kv_profile(self):
+        monkeypatch = self._monkeypatch()
+        source = {
+            "schema": "stegverse.universal-intr-profiled-ingress/v1",
+            "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+            "protocol": "InTr",
+            "profile_path": "/intr/profile",
+            "materialization_path": "/intr/materialization",
+            "profiles": ["HIL:Ingress"],
+            "event_triggered": True,
+            "always_on_application_receiver_required": False,
+            "credential_authority": "TV/TVC",
+            "github_token_runtime_authority": "NONE",
+            "execution_authority": "NONE",
+            "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+        }
+        self._setattr(mod, "_read_profile", lambda: dict(source))
+        client = app_client(monkeypatch)
+        https_client = TestClient(client.app, base_url="https://stegverse.org")
+        body = b"{}"
+        response = https_client.post("/intr/device-kv/result", content=body, headers=headers(body))
+        assert response.status_code == 503
+        assert "KV:KnowledgeVaultInterlock" in response.json()["detail"]
+
+    def test_universal_intr_env_supersedes_legacy_hil_env(self):
+        self._setenv("STEGVERSE_HIL_INTR_ENABLED", "false")
+        self._setenv("STEGVERSE_HIL_INTR_UPSTREAM", "http://127.0.0.1:9999/intr/materialization")
+        self._setenv("STEGVERSE_UNIVERSAL_INTR_ENABLED", "true")
+        self._setenv("STEGVERSE_UNIVERSAL_INTR_UPSTREAM", "http://127.0.0.1:8765/intr/materialization")
+        assert mod._enabled() is True
+        assert mod._upstream() == "http://127.0.0.1:8765/intr/materialization"
+        assert mod._device_kv_result_upstream() == "http://127.0.0.1:8765/intr/device-kv/result"
 
 
-def test_node_trigger_returns_sdk_disposition_without_upstream_wait(monkeypatch):
-    body = b'{"schema":"stegos.node_intr_materialization_trigger.v1"}'
-
-    def refuse(*_args, **_kwargs):
-        raise AssertionError("materialization must not wait on an upstream connection")
-
-    monkeypatch.setattr("urllib.request.urlopen", refuse)
-    monkeypatch.setattr(mod.urlrequest, "urlopen", refuse)
-    client = app_client(monkeypatch)
-    response = client.post("/intr/materialization", content=body, headers=headers(body))
-    assert response.status_code == 503
-    payload = response.json()
-    assert payload["disposition"] == "FAIL_CLOSED"
-    assert payload["failure_code"] == "SDK_RUNTIME_RESULT_NOT_ADMISSIBLE"
-    assert payload["route_id"] == "stegverse.route.hil-intake.v1"
-    assert payload["canonical_entrypoint"] == "stegverse.manifest_execution.execute_manifest"
-    assert payload["network_call_performed_by_adapter"] is False
-    assert payload["sdk_boundary"]["envelope"]["consequence_executed"] is False
-
-
-def test_node_trigger_binds_manifest_by_digest(monkeypatch, organization_admits_manifests):
-    body = b'{"schema":"stegos.node_intr_materialization_trigger.v1"}'
-    client = app_client(monkeypatch)
-    response = client.post("/intr/materialization", content=body,
-                           headers=headers(body, "TVC_RELAY_EGRESS"))
-    assert response.status_code == 200
-    assert response.json()["disposition"] == "ALLOW"
-    [manifest] = organization_admits_manifests
-    request = manifest["extensions"]["stegverse_hil_intake_request"]
-    assert request["subject_ref"] == "sha256:" + hashlib.sha256(body).hexdigest()
-    assert "tvc-authorization-id:TVC-AUTH-TEST" in request["context_refs"]
-    assert body.decode() not in json.dumps(manifest)
-
-
-def test_node_cannot_smuggle_authorization(monkeypatch):
-    body = b"{}"
-    h = headers(body)
-    h["X-StegVerse-Authorization-Id"] = "FORBIDDEN"
-    client = app_client(monkeypatch)
-    assert client.post("/intr/materialization", content=body, headers=h).status_code == 400
-
-
-def test_relay_requires_authorization(monkeypatch):
-    body = b"{}"
-    h = headers(body, "TVC_RELAY_EGRESS")
-    h.pop("X-StegVerse-Authorization-Id")
-    client = app_client(monkeypatch)
-    assert client.post("/intr/materialization", content=body, headers=h).status_code == 400
-
-
-def test_remote_upstream_is_rejected(monkeypatch):
-    client = app_client(monkeypatch, upstream="https://example.com/intr/materialization")
-    payload = client.get("/intr/materialization/readiness").json()
-    assert payload["state"] == "NOT_READY"
-    assert payload["loopback_upstream_configured"] is False
-
-
-def test_disabled_proxy_fails_closed(monkeypatch):
-    body = b"{}"
-    client = app_client(monkeypatch, enabled=False)
-    assert client.post("/intr/materialization", content=body, headers=headers(body)).status_code == 503
-
-
-def test_stegdeploy_gateway_activates_existing_sovereign_hil_receiver():
-    durable = PRODUCTION_DURABLE_ROOT
-    env = {
-        "STEGVERSE_RUNTIME_PROFILE": "sovereign-carrier",
-        "STEGVERSE_SOVEREIGN_STATE_DURABLE": "true",
-        "STEGVERSE_SOVEREIGN_STATE_DIR": str(durable),
-    }
-    profile = profile_mod.apply_sovereign_hil_receiver_profile(env)
-    assert profile["state"] == "ACTIVE_SOVEREIGN_RECEIVER"
-    assert profile["credential_authority"] == "TV/TVC"
-    assert profile["credential_requirement"] == "NONE_FOR_PARTICIPANT_INTAKE"
-    assert profile["participant_machine_required"] is False
-    assert profile["developer_machine_required"] is False
-    assert profile["github_hosted_runtime_required"] is False
-    assert profile["third_party_runtime_required"] is False
-    assert env["STEGVERSE_HIL_INTAKE_ENABLED"] == "true"
-    assert env["STEGVERSE_HIL_DATA_DIR"] == "/var/lib/stegverse/hil-v1.1"
-    assert env["STEGVERSE_STORAGE_DURABLE_ACROSS_RESTARTS"] == "true"
-
-    from scripts import stegdeploy_native_gateway as native
-    durable = Path("/var/lib/stegverse")
-    native_env = native.child_env(durable_root=durable, evaluator_enabled=False, evaluator_upstream="",
-                                  tls_cert=None, tls_key=None, env={})
-    assert native_env["STEGVERSE_RUNTIME_PROFILE"] == "sovereign-carrier"
-    assert native_env["STEGVERSE_SOVEREIGN_STATE_DURABLE"] == "true"
-    assert native_env["STEGVERSE_SOVEREIGN_STATE_DIR"] == str(durable)
-    assert native_env["STEGVERSE_SERVICE_GATEWAY_STORAGE_ROOT"] == str(durable)
-
-    combined = (ROOT / "llm_adapter/combined_gateway.py").read_text(encoding="utf-8")
-    deployed = (ROOT / "llm_adapter/deployed_gateway.py").read_text(encoding="utf-8")
-    assert "app.include_router(hil_intake_router)" in combined
-    assert "from llm_adapter.combined_gateway import app" in deployed
-
-
-def test_device_kv_result_proxy_requires_kv_profile(monkeypatch):
-    source = {
-        "schema": "stegverse.universal-intr-profiled-ingress/v1",
-        "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
-        "protocol": "InTr",
-        "profile_path": "/intr/profile",
-        "materialization_path": "/intr/materialization",
-        "device_kv_result_path": "/intr/device-kv/result",
-        "profiles": ["HIL:Ingress", "KV:KnowledgeVaultInterlock"],
-        "supported_origins": ["STEGOS_NODE_OUTBOX"],
-        "event_triggered": True,
-        "always_on_application_receiver_required": False,
-        "second_user_device_required": False,
-        "g18_required": False,
-        "tls_enabled": False,
-        "credential_authority": "TV/TVC",
-        "github_token_runtime_authority": "NONE",
-        "execution_authority": "NONE",
-        "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
-    }
-    monkeypatch.setattr(mod, "_read_profile", lambda: dict(source))
-    observed = {}
-    def fake_forward_to(target, raw, forwarded):
-        observed["target"] = target
-        observed["body"] = raw
-        observed["headers"] = forwarded
-        return 200, b'{"schema":"stegverse.device-kv.query-result-delivery/v1","state":"RESULT_AVAILABLE"}', "application/json"
-    monkeypatch.setattr(mod, "_forward_to", fake_forward_to)
-    client = app_client(monkeypatch)
-    https_client = TestClient(client.app, base_url="https://stegverse.org")
-    body = b'{"schema":"stegverse.device-kv.query-result-request/v1"}'
-    response = https_client.post("/intr/device-kv/result", content=body, headers=headers(body))
-    assert response.status_code == 200
-    assert observed["target"] == "http://127.0.0.1:8765/intr/device-kv/result"
-    assert observed["body"] == body
-    assert observed["headers"]["x-stegverse-transport-origin"] == "STEGOS_NODE_OUTBOX"
-
-def test_device_kv_result_proxy_fails_without_kv_profile(monkeypatch):
-    source = {
-        "schema": "stegverse.universal-intr-profiled-ingress/v1",
-        "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
-        "protocol": "InTr",
-        "profile_path": "/intr/profile",
-        "materialization_path": "/intr/materialization",
-        "profiles": ["HIL:Ingress"],
-        "event_triggered": True,
-        "always_on_application_receiver_required": False,
-        "credential_authority": "TV/TVC",
-        "github_token_runtime_authority": "NONE",
-        "execution_authority": "NONE",
-        "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
-    }
-    monkeypatch.setattr(mod, "_read_profile", lambda: dict(source))
-    client = app_client(monkeypatch)
-    https_client = TestClient(client.app, base_url="https://stegverse.org")
-    body = b"{}"
-    response = https_client.post("/intr/device-kv/result", content=body, headers=headers(body))
-    assert response.status_code == 503
-    assert "KV:KnowledgeVaultInterlock" in response.json()["detail"]
-
-def test_universal_intr_env_supersedes_legacy_hil_env(monkeypatch):
-    monkeypatch.setenv("STEGVERSE_HIL_INTR_ENABLED", "false")
-    monkeypatch.setenv("STEGVERSE_HIL_INTR_UPSTREAM", "http://127.0.0.1:9999/intr/materialization")
-    monkeypatch.setenv("STEGVERSE_UNIVERSAL_INTR_ENABLED", "true")
-    monkeypatch.setenv("STEGVERSE_UNIVERSAL_INTR_UPSTREAM", "http://127.0.0.1:8765/intr/materialization")
-    assert mod._enabled() is True
-    assert mod._upstream() == "http://127.0.0.1:8765/intr/materialization"
-    assert mod._device_kv_result_upstream() == "http://127.0.0.1:8765/intr/device-kv/result"
+if __name__ == "__main__":
+    unittest.main()

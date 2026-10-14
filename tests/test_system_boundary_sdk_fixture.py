@@ -1,4 +1,5 @@
 import json
+import unittest
 from pathlib import Path
 
 from llm_adapter.system_boundary_lifecycle import bind_system_boundary_to_lifecycle
@@ -36,23 +37,28 @@ def _base_packet():
     }
 
 
-def test_fixture_is_exact_adapter_lifecycle_output():
-    expected = json.loads(FIXTURE.read_text(encoding="utf-8"))
-    observed = bind_system_boundary_to_lifecycle(
-        _base_packet(),
-        session_id="sdk-roundtrip-001",
-        transition_id="transition-sbd-001",
-        run_id="run-sbd-001",
-        generated_at="2026-07-14T15:00:00Z",
-        source_commit="adapter-fixture-v1",
-    )
+class SystemBoundarySdkFixtureTests(unittest.TestCase):
+    def test_fixture_is_exact_adapter_lifecycle_output(self):
+        expected = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        observed = bind_system_boundary_to_lifecycle(
+            _base_packet(),
+            session_id="sdk-roundtrip-001",
+            transition_id="transition-sbd-001",
+            run_id="run-sbd-001",
+            generated_at="2026-07-14T15:00:00Z",
+            source_commit="adapter-fixture-v1",
+        )
 
-    assert observed == expected
-    assert verify_system_boundary_receipt(
-        observed["system_boundary_declaration"],
-        observed["system_boundary_declaration_receipt"],
-    )
-    assert observed["system_boundary_declaration_ref"]["authorizing"] is False
-    assert observed["system_boundary_declaration_ref"]["custody_transferred"] is False
-    assert observed["system_boundary_declaration_ref"]["admissibility_determined"] is False
-    assert observed["system_boundary_declaration_ref"]["production_binding_enabled"] is False
+        assert observed == expected
+        assert verify_system_boundary_receipt(
+            observed["system_boundary_declaration"],
+            observed["system_boundary_declaration_receipt"],
+        )
+        assert observed["system_boundary_declaration_ref"]["authorizing"] is False
+        assert observed["system_boundary_declaration_ref"]["custody_transferred"] is False
+        assert observed["system_boundary_declaration_ref"]["admissibility_determined"] is False
+        assert observed["system_boundary_declaration_ref"]["production_binding_enabled"] is False
+
+
+if __name__ == "__main__":
+    unittest.main()

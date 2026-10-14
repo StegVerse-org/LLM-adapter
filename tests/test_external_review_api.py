@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import shutil
+import tempfile
+import types
+import unittest
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from unittest import mock
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -88,91 +95,128 @@ def configure(monkeypatch, tmp_path) -> TestClient:
     return TestClient(app)
 
 
-def test_package_only_intake_is_authenticated_append_only_and_idempotent(monkeypatch, tmp_path):
-    client = configure(monkeypatch, tmp_path)
-    assert client.post("/api/external-review/packages", json=package()).status_code == 401
-    headers = {"Authorization": "Bearer submit-secret"}
-    created = client.post("/api/external-review/packages", json=package(), headers=headers)
-    assert created.status_code == 200
-    body = created.json()
-    assert body["created"] is True
-    assert body["package_id"] == package_id()
-    assert body["review_state"] == "AWAITING_DELEGATED_REVIEW"
-    assert body["raw_submission_stored"] is False
-    assert body["wiki_record_created"] is False
-    assert body["publication_authorized"] is False
-    assert body["intake_receipt_id"].startswith("external-review-intake-receipt:hmac-sha256:")
-    repeated = client.post("/api/external-review/packages", json=package(), headers=headers)
-    assert repeated.status_code == 200
-    assert repeated.json()["created"] is False
+class ExternalReviewApiTests(unittest.TestCase):
+    def _tmp_path(self):
+        """tmp_path equivalent: a fresh directory for this test, removed afterwards."""
+        if getattr(self, "_tmp", None) is None:
+            self._tmp = Path(tempfile.mkdtemp())
+            self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        return self._tmp
+
+    def _setattr(self, target, *args, raising=True):
+        """monkeypatch.setattr equivalent: dotted-path or (object, name) form, undone after the test."""
+        if isinstance(target, str):
+            patcher = mock.patch(target, *args, create=not raising)
+        else:
+            patcher = mock.patch.object(target, *args, create=not raising)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _setenv(self, name, value):
+        """monkeypatch.setenv equivalent: os.environ is restored after the test."""
+        patcher = mock.patch.dict(os.environ, {name: str(value)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _monkeypatch(self):
+        """The monkeypatch methods the module helpers call, each undone after the test."""
+        return types.SimpleNamespace(setattr=self._setattr, setenv=self._setenv)
+
+    def test_package_only_intake_is_authenticated_append_only_and_idempotent(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        client = configure(monkeypatch, tmp_path)
+        assert client.post("/api/external-review/packages", json=package()).status_code == 401
+        headers = {"Authorization": "Bearer submit-secret"}
+        created = client.post("/api/external-review/packages", json=package(), headers=headers)
+        assert created.status_code == 200
+        body = created.json()
+        assert body["created"] is True
+        assert body["package_id"] == package_id()
+        assert body["review_state"] == "AWAITING_DELEGATED_REVIEW"
+        assert body["raw_submission_stored"] is False
+        assert body["wiki_record_created"] is False
+        assert body["publication_authorized"] is False
+        assert body["intake_receipt_id"].startswith("external-review-intake-receipt:hmac-sha256:")
+        repeated = client.post("/api/external-review/packages", json=package(), headers=headers)
+        assert repeated.status_code == 200
+        assert repeated.json()["created"] is False
+
+    def test_package_rejects_raw_submission_and_conflicting_content(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        client = configure(monkeypatch, tmp_path)
+        headers = {"Authorization": "Bearer submit-secret"}
+        raw = package()
+        raw["raw_submission_included"] = True
+        assert client.post("/api/external-review/packages", json=raw, headers=headers).status_code == 422
+        assert client.post("/api/external-review/packages", json=package(), headers=headers).status_code == 200
+        changed = package()
+        changed["review_scope"] = ["policy_or_rule_model"]
+        conflict = client.post("/api/external-review/packages", json=changed, headers=headers)
+        assert conflict.status_code == 409
+        assert conflict.json()["detail"]["reason"] == "review_package_conflict"
+
+    def test_delegated_reviewer_can_issue_one_identity_bound_receipt(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        client = configure(monkeypatch, tmp_path)
+        client.post("/api/external-review/packages", json=package(), headers={"Authorization": "Bearer submit-secret"})
+        wrong = client.post("/api/external-review/corrections", json=correction(), headers={"Authorization": "Bearer wrong"})
+        assert wrong.status_code == 403
+        accepted = client.post("/api/external-review/corrections", json=correction(), headers={"Authorization": "Bearer reviewer-secret"})
+        assert accepted.status_code == 200
+        body = accepted.json()
+        assert body["created"] is True
+        assert body["reviewer_identity_verified"] is True
+        assert body["reviewer_delegation_verified"] is True
+        assert body["review_scope_verified"] is True
+        assert body["publication_authorized"] is False
+        assert body["correction_receipt_id"].startswith("external-framework-correction-receipt:hmac-sha256:")
+        repeated = client.post("/api/external-review/corrections", json=correction(), headers={"Authorization": "Bearer reviewer-secret"})
+        assert repeated.status_code == 200
+        assert repeated.json()["created"] is False
+        changed = correction()
+        changed["rationale"] = "Conflicting rationale for the same challenged receipt."
+        conflict = client.post("/api/external-review/corrections", json=changed, headers={"Authorization": "Bearer reviewer-secret"})
+        assert conflict.status_code == 409
+        assert conflict.json()["detail"]["reason"] == "correction_conflict"
+
+    def test_scope_and_identity_drift_fail_closed(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        client = configure(monkeypatch, tmp_path)
+        client.post("/api/external-review/packages", json=package(), headers={"Authorization": "Bearer submit-secret"})
+        drift = correction()
+        drift["challenged_submission_sha256"] = "c" * 64
+        response = client.post("/api/external-review/corrections", json=drift, headers={"Authorization": "Bearer reviewer-secret"})
+        assert response.status_code == 409
+        assert response.json()["detail"]["reason"] == "challenged_submission_identity_mismatch"
+        out_of_scope = correction()
+        out_of_scope["reviewed_fields"] = ["policy_or_rule_model"]
+        response = client.post("/api/external-review/corrections", json=out_of_scope, headers={"Authorization": "Bearer reviewer-secret"})
+        assert response.status_code == 403
+        assert response.json()["detail"]["reason"] == "review_scope_not_delegated"
+
+    def test_expired_reviewer_delegation_is_rejected(self):
+        monkeypatch = self._monkeypatch()
+        tmp_path = self._tmp_path()
+        client = configure(monkeypatch, tmp_path)
+        client.post("/api/external-review/packages", json=package(), headers={"Authorization": "Bearer submit-secret"})
+        past = datetime.now(timezone.utc) - timedelta(hours=1)
+        self._setenv(
+            "STEGVERSE_EXTERNAL_REVIEWERS_JSON",
+            json.dumps({"reviewer:test": {
+                "token_sha256": hashlib.sha256(b"reviewer-secret").hexdigest(),
+                "delegation_ref": "delegation:expired",
+                "scopes": ["field:evidence_model"],
+                "valid_until": past.isoformat(),
+            }}),
+        )
+        response = client.post("/api/external-review/corrections", json=correction(), headers={"Authorization": "Bearer reviewer-secret"})
+        assert response.status_code == 403
+        assert response.json()["detail"]["reason"] == "reviewer_not_registered_delegation_expired"
 
 
-def test_package_rejects_raw_submission_and_conflicting_content(monkeypatch, tmp_path):
-    client = configure(monkeypatch, tmp_path)
-    headers = {"Authorization": "Bearer submit-secret"}
-    raw = package()
-    raw["raw_submission_included"] = True
-    assert client.post("/api/external-review/packages", json=raw, headers=headers).status_code == 422
-    assert client.post("/api/external-review/packages", json=package(), headers=headers).status_code == 200
-    changed = package()
-    changed["review_scope"] = ["policy_or_rule_model"]
-    conflict = client.post("/api/external-review/packages", json=changed, headers=headers)
-    assert conflict.status_code == 409
-    assert conflict.json()["detail"]["reason"] == "review_package_conflict"
-
-
-def test_delegated_reviewer_can_issue_one_identity_bound_receipt(monkeypatch, tmp_path):
-    client = configure(monkeypatch, tmp_path)
-    client.post("/api/external-review/packages", json=package(), headers={"Authorization": "Bearer submit-secret"})
-    wrong = client.post("/api/external-review/corrections", json=correction(), headers={"Authorization": "Bearer wrong"})
-    assert wrong.status_code == 403
-    accepted = client.post("/api/external-review/corrections", json=correction(), headers={"Authorization": "Bearer reviewer-secret"})
-    assert accepted.status_code == 200
-    body = accepted.json()
-    assert body["created"] is True
-    assert body["reviewer_identity_verified"] is True
-    assert body["reviewer_delegation_verified"] is True
-    assert body["review_scope_verified"] is True
-    assert body["publication_authorized"] is False
-    assert body["correction_receipt_id"].startswith("external-framework-correction-receipt:hmac-sha256:")
-    repeated = client.post("/api/external-review/corrections", json=correction(), headers={"Authorization": "Bearer reviewer-secret"})
-    assert repeated.status_code == 200
-    assert repeated.json()["created"] is False
-    changed = correction()
-    changed["rationale"] = "Conflicting rationale for the same challenged receipt."
-    conflict = client.post("/api/external-review/corrections", json=changed, headers={"Authorization": "Bearer reviewer-secret"})
-    assert conflict.status_code == 409
-    assert conflict.json()["detail"]["reason"] == "correction_conflict"
-
-
-def test_scope_and_identity_drift_fail_closed(monkeypatch, tmp_path):
-    client = configure(monkeypatch, tmp_path)
-    client.post("/api/external-review/packages", json=package(), headers={"Authorization": "Bearer submit-secret"})
-    drift = correction()
-    drift["challenged_submission_sha256"] = "c" * 64
-    response = client.post("/api/external-review/corrections", json=drift, headers={"Authorization": "Bearer reviewer-secret"})
-    assert response.status_code == 409
-    assert response.json()["detail"]["reason"] == "challenged_submission_identity_mismatch"
-    out_of_scope = correction()
-    out_of_scope["reviewed_fields"] = ["policy_or_rule_model"]
-    response = client.post("/api/external-review/corrections", json=out_of_scope, headers={"Authorization": "Bearer reviewer-secret"})
-    assert response.status_code == 403
-    assert response.json()["detail"]["reason"] == "review_scope_not_delegated"
-
-
-def test_expired_reviewer_delegation_is_rejected(monkeypatch, tmp_path):
-    client = configure(monkeypatch, tmp_path)
-    client.post("/api/external-review/packages", json=package(), headers={"Authorization": "Bearer submit-secret"})
-    past = datetime.now(timezone.utc) - timedelta(hours=1)
-    monkeypatch.setenv(
-        "STEGVERSE_EXTERNAL_REVIEWERS_JSON",
-        json.dumps({"reviewer:test": {
-            "token_sha256": hashlib.sha256(b"reviewer-secret").hexdigest(),
-            "delegation_ref": "delegation:expired",
-            "scopes": ["field:evidence_model"],
-            "valid_until": past.isoformat(),
-        }}),
-    )
-    response = client.post("/api/external-review/corrections", json=correction(), headers={"Authorization": "Bearer reviewer-secret"})
-    assert response.status_code == 403
-    assert response.json()["detail"]["reason"] == "reviewer_not_registered_delegation_expired"
+if __name__ == "__main__":
+    unittest.main()
