@@ -28,7 +28,7 @@ Run:
 python scripts/run_end_to_end_demo.py --fixture examples/end_to_end/simple_query.json
 python scripts/replay_demo.py --session-report examples/reports/simple_query.session.json
 python scripts/reconstruct_demo.py --session-report examples/reports/simple_query.session.json
-pytest tests/test_end_to_end_demo.py -v
+python -m unittest -v tests/test_end_to_end_demo.py
 ```
 
 See:
