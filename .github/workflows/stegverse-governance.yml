@@ -1,0 +1,7 @@
+name: StegVerse governance
+on: [pull_request, push]
+permissions:
+  contents: read
+jobs:
+  stegverse-governance:
+    uses: StegVerse-org/StegVerse-SDK/.github/workflows/governance-gate.yml@main

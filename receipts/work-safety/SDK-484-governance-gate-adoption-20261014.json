@@ -1,0 +1,59 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "SDK-484-GOVERNANCE-GATE-ADOPTION",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/StegVerse-SDK/issues/484"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "CI-only change: adds a read-only workflow calling the SDK's reusable governance gate (verifies portable governance bundles, classifies JSON Schemas). No runtime, Organization append or Master Records transition; the gate report confers no authority."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/StegVerse-SDK/issues/484",
+      "https://github.com/StegVerse-org/StegVerse-SDK/pull/523"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK"
+    ],
+    "evidence_refs": [
+      ".github/workflows/validate.yml",
+      "StegVerse-org/StegVerse-SDK:.github/workflows/governance-gate.yml",
+      "StegVerse-org/StegVerse-SDK:docs/GOVERNANCE_GATE.md"
+    ]
+  },
+  "reuse_decision": "REUSE",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR adds a StegVerse governance gate workflow."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Package behaviour is unchanged; only an additional read-only CI check is added.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/stegverse-governance.yml"
+  ],
+  "new_files": [
+    {
+      "path": ".github/workflows/stegverse-governance.yml",
+      "semantic_responsibility": "Invoke the SDK-owned reusable governance gate workflow; contains no logic of its own.",
+      "decision": "REUSE",
+      "closest_existing_implementation": "StegVerse-org/StegVerse-SDK:.github/workflows/governance-gate.yml (reused by workflow_call)"
+    }
+  ]
+}
