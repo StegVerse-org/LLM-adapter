@@ -8,8 +8,8 @@ import os
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from fastapi import APIRouter, Header, HTTPException, Query
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from llm_adapter.web import APIRouter, Header, HTTPException, Query
+from llm_adapter.web.model import BaseModel, ConfigDict, Field, model_validator
 
 from llm_adapter.external_review_store import ReviewConflict, now_iso, store
 

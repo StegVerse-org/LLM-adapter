@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter.deployed_gateway import app
 from llm_adapter.service_gateway_http01 import HTTP01ProjectionError, read_http01_challenge

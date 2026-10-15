@@ -6,8 +6,8 @@ import importlib
 import os
 import tempfile
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from llm_adapter.web import FastAPI
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter.provider_usage import ProviderMetric, build_provider_usage_event
 

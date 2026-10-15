@@ -16,10 +16,10 @@ import time
 from collections import defaultdict, deque
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from llm_adapter.web import FastAPI, HTTPException, Request
+from llm_adapter.web import CORSMiddleware
+from llm_adapter.web import JSONResponse
+from llm_adapter.web.model import BaseModel, ConfigDict, Field, field_validator
 
 from llm_adapter import collab_ingress
 from llm_adapter.governed_chat_pipeline import get_transition_status

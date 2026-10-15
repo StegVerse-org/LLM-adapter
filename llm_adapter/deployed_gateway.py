@@ -61,6 +61,6 @@ app.middleware("http")(personal_origin_middleware)
 # The sovereign StegDeploy entrypoint must carry the same query-secret-safe
 # observability boundary as runtime_gateway. This middleware logs only method,
 # canonical path, and response status and never reads query_string/raw_path or
-# credential-bearing request surfaces. Uvicorn request-target logging is
-# separately disabled by every StegDeploy launch surface.
+# credential-bearing request surfaces. The standard-library server
+# (llm_adapter/web/server.py) writes no request-target log of its own.
 app.add_middleware(QuerySecretSafeAccessLogMiddleware)

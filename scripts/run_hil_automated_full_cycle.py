@@ -13,7 +13,19 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-import httpx
+from urllib.parse import urlencode
+
+from llm_adapter import _stdlib_http as http
+from llm_adapter.web.testclient import encode_multipart
+
+
+def _post_form(url: str, *, data: dict, files: dict | None = None, headers: dict | None = None, timeout: float = 10):
+    """POST a form (multipart when files are given) with the standard-library client."""
+    if files:
+        body, content_type = encode_multipart(data, files)
+    else:
+        body, content_type = urlencode(data).encode(), "application/x-www-form-urlencoded"
+    return http.post(url, data=body, headers={**(headers or {}), "Content-Type": content_type}, timeout=timeout)
 
 PRIMARY = "a7b1c62e336b4e244ecf7fdcd10af195401f6c44328de32615b073d2a5c3c462"
 PROMPT = "cdff8d2266bb3eefbb6e5d28d9adc548e6c8dfc039debd72fe404f1d0249912c"
@@ -27,14 +39,14 @@ def canonical_hash(value: dict) -> str:
 def start_gateway(log_path: Path) -> subprocess.Popen:
     handle = log_path.open("wb")
     proc = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "llm_adapter.combined_gateway:app", "--host", "127.0.0.1", "--port", "8000"],
+        [sys.executable, "-m", "llm_adapter.web.server", "llm_adapter.combined_gateway:app", "--host", "127.0.0.1", "--port", "8000"],
         stdout=handle,
         stderr=subprocess.STDOUT,
         env=os.environ.copy(),
     )
     for _ in range(40):
         try:
-            response = httpx.get(f"{BASE}/api/hil/readiness", timeout=1.0)
+            response = http.get(f"{BASE}/api/hil/readiness", timeout=1.0)
             if response.status_code == 200:
                 return proc
         except Exception:
@@ -84,8 +96,8 @@ def main() -> None:
 
     first = start_gateway(reports / "gateway-first.log")
     try:
-        readiness_before = httpx.get(f"{BASE}/api/hil/readiness", timeout=10).json()
-        submitted = httpx.post(
+        readiness_before = http.get(f"{BASE}/api/hil/readiness", timeout=10).json()
+        submitted = _post_form(
             f"{BASE}/api/hil/submissions",
             files={
                 "response_pdf": ("response.pdf", pdf, "application/pdf"),
@@ -110,8 +122,8 @@ def main() -> None:
 
     second = start_gateway(reports / "gateway-restart.log")
     try:
-        readiness_after = httpx.get(f"{BASE}/api/hil/readiness", timeout=10).json()
-        review_state = httpx.get(
+        readiness_after = http.get(f"{BASE}/api/hil/readiness", timeout=10).json()
+        review_state = http.get(
             f"{BASE}/api/hil/submissions/{submission_id}/review-state",
             headers={"X-SteGVerse-HIL-Review-Token": os.environ["STEGVERSE_HIL_REVIEW_TOKEN"]},
             timeout=10,
@@ -119,7 +131,7 @@ def main() -> None:
         require(review_state.status_code == 200, review_state.text)
         require(review_state.json()["submission"]["submitted_file_sha256"] == response_hash, "restart lost response hash")
 
-        reviewed = httpx.post(
+        reviewed = _post_form(
             f"{BASE}/api/hil/submissions/{submission_id}/review-decisions",
             headers={"X-SteGVerse-HIL-Review-Token": os.environ["STEGVERSE_HIL_REVIEW_TOKEN"]},
             data={"decision": "ACCEPT_PRIVATE", "reviewer": "automated-reviewer", "notes": "bounded proof acceptance"},
@@ -129,7 +141,7 @@ def main() -> None:
         private_receipt = reviewed.json()
 
         response_id = "HIL-RESP-AUTOMATED-0001"
-        published = httpx.post(
+        published = _post_form(
             f"{BASE}/api/hil/submissions/{submission_id}/publication-decisions",
             headers={"X-SteGVerse-HIL-Publication-Token": os.environ["STEGVERSE_HIL_PUBLICATION_TOKEN"]},
             data={
@@ -142,7 +154,7 @@ def main() -> None:
         )
         require(published.status_code == 200, published.text)
         publication = published.json()
-        fetched = httpx.get(f"{BASE}/api/hil/publications/{response_id}", timeout=10)
+        fetched = http.get(f"{BASE}/api/hil/publications/{response_id}", timeout=10)
         require(fetched.status_code == 200, fetched.text)
         require(fetched.json()["publication_record_sha256"] == publication["publication_record_sha256"], "stable lookup mismatch")
     finally:

@@ -11,9 +11,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from llm_adapter.web import FastAPI, File, Form, HTTPException, UploadFile
+from llm_adapter.web import CORSMiddleware
+from llm_adapter.web import JSONResponse
 
 from . import collab_ingress
 
@@ -578,9 +578,8 @@ async def site_hil_submission(
 
 
 def main() -> None:
-    import uvicorn
-
-    uvicorn.run(
+    from llm_adapter.web import server as web_server
+    web_server.run(
         "llm_adapter.service_gateway:app",
         host=os.getenv("HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "8080")),

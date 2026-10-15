@@ -25,7 +25,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter import node_standing, sdk_boundary
 from llm_adapter.combined_gateway import app

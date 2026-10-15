@@ -6,7 +6,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter.deployed_gateway import app
 from llm_adapter import service_gateway_evaluator_intr as mod

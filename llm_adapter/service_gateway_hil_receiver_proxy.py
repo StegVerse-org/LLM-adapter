@@ -6,9 +6,9 @@ from urllib import error as urlerror
 from urllib import request as urlrequest
 from urllib.parse import urlsplit, urlunsplit
 
-from fastapi import Request
-from fastapi.responses import Response
-from starlette.middleware.base import BaseHTTPMiddleware
+from llm_adapter.web import Request
+from llm_adapter.web import Response
+from llm_adapter.web import BaseHTTPMiddleware
 
 from . import gateway_forward_queue
 

@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 import copy
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from llm_adapter.web import FastAPI
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter.resident_rendezvous_api import (
     ResidentRendezvousError,

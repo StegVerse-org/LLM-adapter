@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter.runtime_gateway import app
 from llm_adapter.service_gateway_coinbase_skap import BROWSER_SEALED_FORMAT, digest

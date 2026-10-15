@@ -19,8 +19,8 @@ import re
 from typing import Any, Iterable, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
-from pydantic import BaseModel, Field
+from llm_adapter.web import APIRouter, File, Form, HTTPException, UploadFile
+from llm_adapter.web.model import BaseModel, Field
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 try:

@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from fastapi import HTTPException
+from llm_adapter.web import HTTPException
 
 from llm_adapter import service_gateway_site
 

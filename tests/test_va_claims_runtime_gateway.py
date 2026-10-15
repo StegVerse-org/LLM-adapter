@@ -14,7 +14,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-from fastapi import HTTPException
+from llm_adapter.web import HTTPException
 
 from llm_adapter import va_claims_runtime_core
 from llm_adapter.va_claims_runtime_core import VA_SCOPE_POLICY, readiness_record

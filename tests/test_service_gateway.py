@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter import service_gateway
 from llm_adapter.service_gateway import app

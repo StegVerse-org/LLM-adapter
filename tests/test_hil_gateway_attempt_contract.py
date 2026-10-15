@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fastapi import HTTPException
+from llm_adapter.web import HTTPException
 
 from llm_adapter import service_gateway as gateway
 

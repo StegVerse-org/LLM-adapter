@@ -4,7 +4,7 @@ from typing import Dict, Mapping
 from urllib.parse import parse_qsl
 
 from . import _stdlib_http as _http
-from fastapi import HTTPException, Request, Response
+from llm_adapter.web import HTTPException, Request, Response
 
 from llm_adapter.math_solver_gateway import app
 

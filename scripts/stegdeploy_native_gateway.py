@@ -311,11 +311,11 @@ def serve(host: str, port: int) -> None:
     """Run the startup workers once, then the gateway.
 
     The workers record downstream and drain queued forwards; each always
-    returns, so startup never waits on a receiver. Uvicorn's own access log is
-    off because it records the raw request target; the gateway's query-safe
+    returns, so startup never waits on a receiver. The server keeps no access log;
+    a raw request-target log would expose query secrets, so the gateway's query-safe
     middleware logs instead.
     """
-    import uvicorn
+    from llm_adapter.web import server as web_server
     from llm_adapter import custody_worker, gateway_forward_queue
     hil_root = os.environ.get("STEGVERSE_HIL_DATA_DIR")
     if hil_root:
@@ -324,7 +324,7 @@ def serve(host: str, port: int) -> None:
     gateway_forward_queue.main()
     cert = os.environ.get("STEGDEPLOY_NATIVE_TLS_CERT_FILE")
     key = os.environ.get("STEGDEPLOY_NATIVE_TLS_KEY_FILE")
-    uvicorn.run(
+    web_server.run(
         "llm_adapter.deployed_gateway:app",
         host=host,
         port=port,

@@ -14,7 +14,7 @@ import os
 import unittest
 from unittest import mock
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter import collab_ingress, ecosystem_chat_gateway
 from llm_adapter.ecosystem_chat_gateway import app, limiter

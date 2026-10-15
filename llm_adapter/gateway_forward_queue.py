@@ -32,8 +32,8 @@ from typing import Any, Callable
 from urllib import error as urlerror
 from urllib import request as urlrequest
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
+from llm_adapter.web import APIRouter, HTTPException
+from llm_adapter.web import JSONResponse
 
 OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
 QUEUED_SCHEMA = "stegverse.gateway-forward-queued/v1"

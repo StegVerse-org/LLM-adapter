@@ -11,8 +11,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from llm_adapter.web import FastAPI
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter import external_review_api
 from llm_adapter.external_review_store import ExternalReviewStore

@@ -158,3 +158,18 @@ Canonical ecosystem hygiene goal `HYGIENE-CAUSAL-ROOTS-001` / COSV `101000001000
 ### Repository hygiene first hosted census — 2026-09-21
 
 Reusable hygiene run `35636235950` completed `SUCCESS`: 270 branches inspected, 58 retirement candidates requiring owner clearance, 211 review-required, 1 protected/retained, and zero approved-retirement-ready entries. Evidence artifact `10656017857`, digest `sha256:7e52ff98e69b29b0796a28b332aafb1ed11ed2e8ae152c14f114ed582022dc66`. No ref, PR, or issue mutation occurred; zero refs are routed to `HYGIENE-BRANCH-REF-RETIREMENT` until repository-local owner/evidence approval exists.
+
+## Standard-library web layer (LLMA-368)
+
+Owner directive in the remediation session: reduction and removal of external machine and framework dependencies is required, and adding dependencies is forbidden. #3183 states it as "no new framework dependency".
+
+FastAPI, Starlette, pydantic, uvicorn, httpx and python-multipart are replaced by `llm_adapter/web`, which keeps the same names:
+
+- `app.py`: `FastAPI`, `APIRouter`, `Request`, `Response`/`JSONResponse`/`PlainTextResponse`, `HTTPException`, the `Header`/`Query`/`Cookie`/`Form`/`File` parameters with `UploadFile`, `app.middleware("http")`, `add_middleware`, `include_router`, `mount`, `CORSMiddleware` and `BaseHTTPMiddleware`.
+- `model.py`: `BaseModel`, `Field`, `ConfigDict`, `field_validator`, `model_validator`, `ValidationError`.
+- `testclient.py`: `TestClient`.
+- `server.py`: `run` / `python -m llm_adapter.web.server module:app`. HTTP/1.1, optional TLS, no access log.
+
+Behaviour that clients see is unchanged: routes, status codes, the `{"detail": ...}` body of `HTTPException`, 422 with located validation errors, 404/405, the CORS preflight answers, and redirect-on-slash.
+
+The 70 importing modules and tests switched imports only. `pyproject.toml` extras no longer install a web framework, and `tests/test_service_packaging_credential_free.py` fails if one returns. `pillow`/`pillow-heif` (image decoding) and `jsonschema` (one schema test) are not web frameworks and are not touched here.

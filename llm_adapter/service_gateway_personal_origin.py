@@ -12,8 +12,8 @@ import os
 import re
 from pathlib import Path
 
-from fastapi import Request
-from fastapi.responses import Response
+from llm_adapter.web import Request
+from llm_adapter.web import Response
 
 MANIFEST_NAME = "stegverse-me-origin-manifest.json"
 MANIFEST_SCHEMA = "stegverse.personal-origin.public-bundle/v1"

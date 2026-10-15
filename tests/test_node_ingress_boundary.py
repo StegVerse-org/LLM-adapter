@@ -23,7 +23,7 @@ import threading
 import unittest
 from pathlib import Path
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter import node_ingress_boundary, node_standing
 from llm_adapter.combined_gateway import app

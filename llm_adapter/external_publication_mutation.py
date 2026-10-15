@@ -23,8 +23,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from llm_adapter.web import APIRouter, Header, HTTPException
+from llm_adapter.web.model import BaseModel, ConfigDict, Field, model_validator
 
 from llm_adapter.external_review_store import now_iso
 from llm_adapter.wiki_publication_master_records import (

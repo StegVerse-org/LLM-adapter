@@ -5,7 +5,7 @@ from email.message import Message
 from types import SimpleNamespace
 from unittest import mock
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter import runtime_gateway
 from llm_adapter import service_gateway_external_collab_consent as consent_routes

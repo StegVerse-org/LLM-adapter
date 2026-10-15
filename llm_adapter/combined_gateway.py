@@ -12,9 +12,9 @@ import json
 import os
 from types import SimpleNamespace
 
-from fastapi import HTTPException, Request
-from fastapi.responses import Response
-from fastapi.middleware.cors import CORSMiddleware
+from llm_adapter.web import HTTPException, Request
+from llm_adapter.web import Response
+from llm_adapter.web import CORSMiddleware
 
 from llm_adapter.ecosystem_chat_gateway import app
 from llm_adapter.external_chat_api import router as external_chat_router

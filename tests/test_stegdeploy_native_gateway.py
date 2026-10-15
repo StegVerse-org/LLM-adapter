@@ -153,7 +153,8 @@ class StegdeployNativeGatewayTests(unittest.TestCase):
         source = (Path(__file__).resolve().parents[1] / "scripts/stegdeploy_native_gateway.py").read_text(encoding="utf-8")
         assert '"docker"' not in source
         assert "docker compose" not in source.lower()
-        assert "uvicorn.run(" in source
+        assert "web_server.run(" in source
+        assert "uvicorn" not in source
 
     def test_health_observation_is_single_attempt_and_never_raises(self) -> None:
         calls = []
@@ -187,8 +188,6 @@ class StegdeployNativeGatewayTests(unittest.TestCase):
 
     def test_serve_runs_startup_workers_once_then_gateway_without_raw_access_log(self) -> None:
         tmp_path = self._tmp_path()
-        import sys
-        import types
         from llm_adapter import custody_worker, gateway_forward_queue
 
         order = []
@@ -197,7 +196,8 @@ class StegdeployNativeGatewayTests(unittest.TestCase):
         self._delenv("STEGDEPLOY_NATIVE_TLS_KEY_FILE", raising=False)
         self._setattr(custody_worker, "main", lambda: order.append("custody") or 0)
         self._setattr(gateway_forward_queue, "main", lambda: order.append("forward_queue") or 0)
-        self._setitem(sys.modules, "uvicorn", types.SimpleNamespace(run=lambda app, **kw: order.append((app, kw))))
+        from llm_adapter.web import server as web_server
+        self._setattr(web_server, "run", lambda app, **kw: order.append((app, kw)))
 
         mod.serve("127.0.0.1", 8000)
 

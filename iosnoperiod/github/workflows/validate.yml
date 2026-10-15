@@ -189,7 +189,7 @@ jobs:
           with tempfile.TemporaryDirectory() as root:
               # The ledger a deployed node uses is never the one a CI run appends to.
               os.environ["STEGVERSE_REPO_LEDGER_ROOT"] = root
-              from fastapi.testclient import TestClient
+              from llm_adapter.web.testclient import TestClient
               from llm_adapter.combined_gateway import app
               client = TestClient(app)
               standing = {"mode": "ESTABLISH_GENESIS", "node_ref": "ci-front-half",
@@ -259,7 +259,7 @@ jobs:
           with tempfile.TemporaryDirectory() as root:
               # The ledger a deployed node uses is never the one a CI run appends to.
               os.environ["STEGVERSE_REPO_LEDGER_ROOT"] = root
-              from fastapi.testclient import TestClient
+              from llm_adapter.web.testclient import TestClient
               from llm_adapter.combined_gateway import app
               client = TestClient(app)
 

@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Any, Mapping
 
-from fastapi import APIRouter, HTTPException, Request
+from llm_adapter.web import APIRouter, HTTPException, Request
 
 from llm_adapter.resident_rendezvous_api import rendezvous_enabled, rendezvous_root
 

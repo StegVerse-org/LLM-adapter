@@ -1,0 +1,226 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368-STDLIB-WEB-LAYER",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+    "StegVerse-Labs/.github:data/task-registry-global-invariants.json",
+    "https://github.com/StegVerse-Labs/.github/issues/3183"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Replaces the HTTP framework under unchanged routes and dispositions; no Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368#issuecomment-6168518641",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/404",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/409"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "llm_adapter/_stdlib_http.py",
+      "llm_adapter/query_safe_access_log.py",
+      "scripts/stegdeploy_native_gateway.py",
+      "StegVerse-org/StegVerse-SDK:stegverse/_stdlib_http.py"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open LLM-adapter PR replaces the web framework; importing modules change imports only, so route ownership is unchanged."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "llm_adapter/web/app.py",
+      "llm_adapter/web/server.py",
+      "pyproject.toml"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/hil-triggered-ephemeral-cycle.yml",
+    ".github/workflows/validate.yml",
+    "README.md",
+    "docs/LLM_ADAPTER_MIRROR_HANDOFF.md",
+    "iosnoperiod/github/workflows/validate.yml",
+    "llm_adapter/attachment_intake.py",
+    "llm_adapter/combined_gateway.py",
+    "llm_adapter/deployed_gateway.py",
+    "llm_adapter/ecosystem_chat_gateway.py",
+    "llm_adapter/external_chat_api.py",
+    "llm_adapter/external_publication_mutation.py",
+    "llm_adapter/external_review_api.py",
+    "llm_adapter/gateway_forward_queue.py",
+    "llm_adapter/hil_intake_api.py",
+    "llm_adapter/hil_intake_v1_1_api.py",
+    "llm_adapter/hil_publication_api.py",
+    "llm_adapter/math_solver_gateway.py",
+    "llm_adapter/node_bootstrap.py",
+    "llm_adapter/org_federation_rendezvous_api.py",
+    "llm_adapter/resident_evidence_api.py",
+    "llm_adapter/resident_rendezvous_api.py",
+    "llm_adapter/runtime_gateway.py",
+    "llm_adapter/service_gateway.py",
+    "llm_adapter/service_gateway_composed.py",
+    "llm_adapter/service_gateway_evaluator_intr.py",
+    "llm_adapter/service_gateway_external_collab_consent.py",
+    "llm_adapter/service_gateway_hil_intr.py",
+    "llm_adapter/service_gateway_hil_receiver_proxy.py",
+    "llm_adapter/service_gateway_http01.py",
+    "llm_adapter/service_gateway_kv_onboarding.py",
+    "llm_adapter/service_gateway_personal_origin.py",
+    "llm_adapter/service_gateway_site.py",
+    "llm_adapter/service_gateway_sv002_observation.py",
+    "llm_adapter/usage_session_api.py",
+    "llm_adapter/user_llm_service.py",
+    "llm_adapter/va_claims_runtime_core.py",
+    "llm_adapter/va_claims_runtime_gateway.py",
+    "llm_adapter/web/__init__.py",
+    "llm_adapter/web/app.py",
+    "llm_adapter/web/model.py",
+    "llm_adapter/web/server.py",
+    "llm_adapter/web/testclient.py",
+    "pyproject.toml",
+    "scripts/run_hil_automated_full_cycle.py",
+    "scripts/stegdeploy_native_gateway.py",
+    "scripts/verify_usage_session_api.py",
+    "tests/test_deployed_gateway_coinbase_skap.py",
+    "tests/test_ecosystem_chat_gateway.py",
+    "tests/test_external_publication_mutation.py",
+    "tests/test_external_review_api.py",
+    "tests/test_external_review_publication.py",
+    "tests/test_gateway_forward_queue.py",
+    "tests/test_hil_controlled_cycle.py",
+    "tests/test_hil_gateway_attempt_contract.py",
+    "tests/test_hil_intake_api.py",
+    "tests/test_hil_intake_manifest_conformance.py",
+    "tests/test_hil_provenance_chain.py",
+    "tests/test_hil_publication_api.py",
+    "tests/test_hil_submission_status.py",
+    "tests/test_local_node_vertical_slice.py",
+    "tests/test_math_solver_gateway.py",
+    "tests/test_node_advertisement.py",
+    "tests/test_node_ingress_boundary.py",
+    "tests/test_node_standing.py",
+    "tests/test_resident_rendezvous_api.py",
+    "tests/test_sdk_boundary_crossing_record.py",
+    "tests/test_service_gateway.py",
+    "tests/test_service_gateway_coinbase_skap_api.py",
+    "tests/test_service_gateway_control_plane_source_package.py",
+    "tests/test_service_gateway_evaluator_intr.py",
+    "tests/test_service_gateway_external_collab_consent.py",
+    "tests/test_service_gateway_hil_intr.py",
+    "tests/test_service_gateway_hil_receiver_proxy.py",
+    "tests/test_service_gateway_http01.py",
+    "tests/test_service_gateway_kv_onboarding.py",
+    "tests/test_service_gateway_personal_origin.py",
+    "tests/test_service_gateway_sv002_observation.py",
+    "tests/test_service_packaging_credential_free.py",
+    "tests/test_shared_attachment_math_image.py",
+    "tests/test_stdlib_web.py",
+    "tests/test_stegbrowser_master_records_state_transition_relay.py",
+    "tests/test_stegdeploy_native_gateway.py",
+    "tests/test_usage_session_api.py",
+    "tests/test_user_llm_activation_proof.py",
+    "tests/test_user_llm_deployed_test_mode.py",
+    "tests/test_user_llm_endpoint_readiness.py",
+    "tests/test_va_claims_runtime_gateway.py"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/web/__init__.py",
+      "semantic_responsibility": "Public names of the standard-library web layer.",
+      "closest_existing_implementation": "llm_adapter/_stdlib_http.py (#404) replaced the requests client the same way; nothing in the repository implemented the web layer itself.",
+      "decision": "CREATE_NEW",
+      "justification": "The owner directive removes framework dependencies and forbids adding any; no in-repository web layer existed, so the subset the code uses is implemented once here on the standard library and every surface imports it.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/issues/368#issuecomment-6168518641",
+        "pyproject.toml",
+        "llm_adapter/web/__init__.py"
+      ]
+    },
+    {
+      "path": "llm_adapter/web/app.py",
+      "semantic_responsibility": "ASGI application, routing, request/response types, signature-resolved Header/Query/Cookie/Form/File parameters, CORS and HTTP middleware: the FastAPI/Starlette subset this repository uses.",
+      "closest_existing_implementation": "llm_adapter/_stdlib_http.py (#404) replaced the requests client the same way; nothing in the repository implemented the web layer itself.",
+      "decision": "CREATE_NEW",
+      "justification": "The owner directive removes framework dependencies and forbids adding any; no in-repository web layer existed, so the subset the code uses is implemented once here on the standard library and every surface imports it.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/issues/368#issuecomment-6168518641",
+        "pyproject.toml",
+        "llm_adapter/web/app.py"
+      ]
+    },
+    {
+      "path": "llm_adapter/web/model.py",
+      "semantic_responsibility": "Declarative request models with lax validation: the pydantic v2 subset this repository uses.",
+      "closest_existing_implementation": "llm_adapter/_stdlib_http.py (#404) replaced the requests client the same way; nothing in the repository implemented the web layer itself.",
+      "decision": "CREATE_NEW",
+      "justification": "The owner directive removes framework dependencies and forbids adding any; no in-repository web layer existed, so the subset the code uses is implemented once here on the standard library and every surface imports it.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/issues/368#issuecomment-6168518641",
+        "pyproject.toml",
+        "llm_adapter/web/model.py"
+      ]
+    },
+    {
+      "path": "llm_adapter/web/server.py",
+      "semantic_responsibility": "HTTP/1.1 server with optional TLS and no access log: the uvicorn.run subset the launch surfaces use.",
+      "closest_existing_implementation": "llm_adapter/_stdlib_http.py (#404) replaced the requests client the same way; nothing in the repository implemented the web layer itself.",
+      "decision": "CREATE_NEW",
+      "justification": "The owner directive removes framework dependencies and forbids adding any; no in-repository web layer existed, so the subset the code uses is implemented once here on the standard library and every surface imports it.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/issues/368#issuecomment-6168518641",
+        "pyproject.toml",
+        "llm_adapter/web/server.py"
+      ]
+    },
+    {
+      "path": "llm_adapter/web/testclient.py",
+      "semantic_responsibility": "In-process client for the ASGI app: the fastapi.testclient/httpx subset the tests use.",
+      "closest_existing_implementation": "llm_adapter/_stdlib_http.py (#404) replaced the requests client the same way; nothing in the repository implemented the web layer itself.",
+      "decision": "CREATE_NEW",
+      "justification": "The owner directive removes framework dependencies and forbids adding any; no in-repository web layer existed, so the subset the code uses is implemented once here on the standard library and every surface imports it.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/issues/368#issuecomment-6168518641",
+        "pyproject.toml",
+        "llm_adapter/web/testclient.py"
+      ]
+    },
+    {
+      "path": "tests/test_stdlib_web.py",
+      "semantic_responsibility": "Exercise the web layer: model constraints, parameter resolution, 404/405/422, multipart, mount and redirect, middleware order, CORS, server exceptions, and one real socket round trip.",
+      "closest_existing_implementation": "llm_adapter/_stdlib_http.py (#404) replaced the requests client the same way; nothing in the repository implemented the web layer itself.",
+      "decision": "CREATE_NEW",
+      "justification": "The owner directive removes framework dependencies and forbids adding any; no in-repository web layer existed, so the subset the code uses is implemented once here on the standard library and every surface imports it.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/issues/368#issuecomment-6168518641",
+        "pyproject.toml",
+        "tests/test_stdlib_web.py"
+      ]
+    }
+  ]
+}

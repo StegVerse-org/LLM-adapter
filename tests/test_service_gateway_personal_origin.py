@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from fastapi.testclient import TestClient
+from llm_adapter.web.testclient import TestClient
 
 from llm_adapter.deployed_gateway import app
 from llm_adapter.service_gateway_personal_origin import MANIFEST_NAME, MANIFEST_SCHEMA

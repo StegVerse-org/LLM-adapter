@@ -13,8 +13,8 @@ from urllib import error as urlerror
 from urllib import request as urlrequest
 from urllib.parse import urlsplit
 
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import Response
+from llm_adapter.web import APIRouter, HTTPException, Request
+from llm_adapter.web import Response
 
 from . import gateway_forward_queue
 
