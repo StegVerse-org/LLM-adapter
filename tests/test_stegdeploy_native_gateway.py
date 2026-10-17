@@ -107,7 +107,7 @@ class StegdeployNativeGatewayTests(unittest.TestCase):
         assert receipt["health"]["consequence_observation"] == "NOT_AUTHENTICALLY_OBSERVED"
         assert receipt["health"]["reconciliation_entrypoint"] == mod.RECONCILIATION_ENTRYPOINT
         assert receipt["health"]["gates_transition"] is False
-        assert receipt["runtime"] == "HOST_NATIVE_PYTHON_UVICORN"
+        assert receipt["runtime"] == "HOST_NATIVE_PYTHON_STDLIB"
         assert receipt["same_host_evaluator_loopback"] is True
         assert receipt["docker_required"] is False
         assert receipt["third_party_runtime_required"] is False

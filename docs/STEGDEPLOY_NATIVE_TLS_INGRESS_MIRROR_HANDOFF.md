@@ -135,7 +135,7 @@ The complete source path from resident worker -> Healer -> StegDeploy native TLS
 
 ## Host-native sovereign primary runtime — 2026-08-29
 
-The original native-TLS lane used native Uvicorn TLS *inside* Docker. That remains valid as a compatibility path but is no longer sufficient as the sovereign primary topology for same-host loopback services such as evaluator InTr. (Superseded 2026-10-14: that compatibility path is retired in #409. The receipt label `HOST_NATIVE_PYTHON_UVICORN` below predates #422 and is still emitted, although the server is now the standard library; see the review query on #368.)
+The original native-TLS lane used native Uvicorn TLS *inside* Docker. That remains valid as a compatibility path but is no longer sufficient as the sovereign primary topology for same-host loopback services such as evaluator InTr. (Superseded 2026-10-14: that compatibility path is retired in #409. The receipt label was `HOST_NATIVE_PYTHON_UVICORN` until 2026-10-17; it is now `HOST_NATIVE_PYTHON_STDLIB`, because since #422 the server is the standard library (#368 Q7). No consumer compares the label.)
 
 Issue #224 adds:
 
@@ -148,7 +148,7 @@ This launcher runs the existing `llm_adapter.deployed_gateway:app` directly in t
 The runtime distinction is now:
 
 ```text
-HOST_NATIVE_PYTHON_UVICORN
+HOST_NATIVE_PYTHON_STDLIB
   sovereign primary / same-host loopback composition / docker_required=false
 
 DOCKER_COMPOSE + native Uvicorn TLS
