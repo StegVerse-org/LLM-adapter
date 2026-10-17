@@ -49,7 +49,7 @@ def main() -> int:
     )
     require(
         "scripts/stegdeploy_native_gateway.py",
-        "HOST_NATIVE_PYTHON_UVICORN",
+        "HOST_NATIVE_PYTHON_STDLIB",
         "STEGVERSE_EVALUATOR_INTR_ENABLED",
         "http://127.0.0.1:8765/intr/evaluator",
         "LOCAL_NATIVE_GATEWAY_STARTED",

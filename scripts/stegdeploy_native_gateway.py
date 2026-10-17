@@ -237,7 +237,7 @@ def start(
     receipt = {
         "schema": "stegdeploy.native-sovereign-gateway-receipt/v1",
         "state": "LOCAL_NATIVE_GATEWAY_STARTED",
-        "runtime": "HOST_NATIVE_PYTHON_UVICORN",
+        "runtime": "HOST_NATIVE_PYTHON_STDLIB",
         "process_id": process.pid,
         "host": host,
         "port": port,
