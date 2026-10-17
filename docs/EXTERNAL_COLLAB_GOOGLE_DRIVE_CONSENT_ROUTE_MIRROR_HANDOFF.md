@@ -33,7 +33,7 @@ llm_adapter/runtime_gateway.py
 receipts/work-safety/SDK-GENERIC-MANIFEST-DOWNSTREAM-PROPAGATION-003-external-collab-routes.json
 ```
 
-`runtime_gateway.py` composes the route module before wrapping the complete FastAPI application in the existing `QuerySecretSafeAccessLogMiddleware`. Built-in Uvicorn access logging remains disabled by the existing runtime entrypoint.
+`runtime_gateway.py` composes the route module before wrapping the complete application in the existing `QuerySecretSafeAccessLogMiddleware`. The application is built on the standard-library web layer (`llm_adapter/web`, #422; FastAPI before that). Its server keeps no access log, so the raw request target is never logged.
 
 Implemented rules:
 
@@ -42,7 +42,7 @@ Implemented rules:
 - exact admitted callback query bytes are forwarded in memory without persistence;
 - method/body surface is GET-only;
 - upstream origin is constant `http://127.0.0.1:8786`;
-- `requests.Session.trust_env=false` prevents environment HTTP proxies from redirecting the loopback hop;
+- `trust_env=False` on the standard-library client session (`llm_adapter/_stdlib_http.py`, #404; `requests.Session` before that) prevents environment HTTP proxies from redirecting the loopback hop;
 - redirects are not followed by the Gateway;
 - no browser Authorization/Cookie headers are forwarded;
 - response forwarding is limited to body/status plus `content-type`, `location`, `cache-control`, `pragma`, `expires`, and `retry-after`;

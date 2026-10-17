@@ -118,4 +118,6 @@ Properties:
 - local process/health evidence cannot claim public reachability;
 - Docker Compose remains compatibility/fallback only.
 
+> **Superseded 2026-10-14 (#409, #422):** the Docker/Compose path is retired, so there is no container fallback; the host-native launcher is the only start path. The gateway now runs on the standard-library server in `llm_adapter/web/server.py`; Uvicorn is no longer used.
+
 This change both fixes the evaluator loopback topology and narrows a third-party runtime dependency. It does not claim that a native sovereign host has executed the launcher.

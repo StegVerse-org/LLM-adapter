@@ -62,6 +62,8 @@ README.md already states the sovereign Service Gateway contract as Uvicorn reque
 
 No source, CI, PR, or merge event counts as deployed-ingress evidence.
 
+> **Superseded 2026-10-15 (#409, #422):** `scripts/container-entrypoint.sh` and Uvicorn are gone. The contract still holds: the standard-library server (`llm_adapter/web/server.py`) writes no request-target log, and `QuerySecretSafeAccessLogMiddleware` logs only method, canonical path and status. `tests/test_service_gateway_query_safe_logging.py` asserts it against `deployed_gateway.py` and the native launcher.
+
 ## Authentic deployed observation boundary
 
 The deployed predicate remains fail-closed until authentic observation proves the active sovereign public ingress is actually running the hardened boundary.
