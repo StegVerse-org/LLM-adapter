@@ -34,6 +34,11 @@ No replacement GitHub workflow is authorized. TV/TVC protected credentials must 
 
 ## Sovereign local runtime path
 
+> **Superseded 2026-10-14 (#409):** the Dockerfile → Compose → `scripts/stegdeploy_bootstrap.py` path below is retired; none of those files exists any more. The current path:
+> - `scripts/stegdeploy_native_gateway.py start` closes on spawn, and its health is observed once, never awaited.
+> - In the resident stack, StegVerse-Labs `scripts/activate_resident_stack.py` materializes the control bundle and invokes it.
+> - There is no local image, so the core-node image-digest intake described below has no current input.
+
 ```text
 source tree
 -> Dockerfile
@@ -185,6 +190,8 @@ The existing Healer scheduler target and resident worker can carry the path-only
 This closes the software transport gap. Production still requires a real eligible sovereign node, runtime-materialized TV/TVC TLS files, native runtime execution, and independent public HTTPS/certificate-hostname observation.
 
 ## 2026-08-31 local resident-control bootstrap hook
+
+> **Superseded 2026-10-14 (#409, StegVerse-Labs/.github#3182):** this hook lived in the retired `scripts/stegdeploy_bootstrap.py`. Control-bundle materialization and the resident bootstrap now run from StegVerse-Labs `scripts/activate_resident_stack.py`, which starts the native launcher.
 
 StegDeploy now closes the post-health resident-runtime trigger seam locally.
 

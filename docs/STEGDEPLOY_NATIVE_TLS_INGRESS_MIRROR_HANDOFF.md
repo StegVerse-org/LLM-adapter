@@ -37,6 +37,8 @@ Certificate/private-key bytes must never be committed, written into `.stegdeploy
 
 ## Runtime contract
 
+> **Superseded 2026-10-14 (#409, #422):** the container path below is retired. The current runtime contract is the host-native launcher `scripts/stegdeploy_native_gateway.py`. It serves TLS from TV/TVC-materialized certificate and key files on the standard-library server (`llm_adapter/web/server.py`, TLS 1.2 minimum). This section is kept as the historical record.
+
 Native TLS uses Uvicorn in the existing container.
 
 ```text
@@ -133,7 +135,7 @@ The complete source path from resident worker -> Healer -> StegDeploy native TLS
 
 ## Host-native sovereign primary runtime — 2026-08-29
 
-The original native-TLS lane used native Uvicorn TLS *inside* Docker. That remains valid as a compatibility path but is no longer sufficient as the sovereign primary topology for same-host loopback services such as evaluator InTr.
+The original native-TLS lane used native Uvicorn TLS *inside* Docker. That remains valid as a compatibility path but is no longer sufficient as the sovereign primary topology for same-host loopback services such as evaluator InTr. (Superseded 2026-10-14: that compatibility path is retired in #409. The receipt label `HOST_NATIVE_PYTHON_UVICORN` below predates #422 and is still emitted, although the server is now the standard library; see the review query on #368.)
 
 Issue #224 adds:
 

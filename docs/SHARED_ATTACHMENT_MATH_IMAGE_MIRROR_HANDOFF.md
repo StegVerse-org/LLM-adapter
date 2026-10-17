@@ -53,7 +53,7 @@ POST /api/math-solver/v1/image-review
 
 `/api/stegverse-node` advertises all three routes, making them discoverable rather than requiring client-side hardcoding.
 
-The first attachment profile is `math-image-v1`. Real decoded formats are PNG, JPEG, WebP, and HEIF/HEIC when handled by the installed `pillow-heif` decoder. `Dockerfile.portable-node` installs `.[service]`; this release adds Pillow and pillow-heif to that service dependency set.
+The first attachment profile is `math-image-v1`. Real decoded formats are PNG, JPEG, WebP, and HEIF/HEIC when handled by the installed `pillow-heif` decoder. `Dockerfile.portable-node` installs `.[service]`; this release adds Pillow and pillow-heif to that service dependency set. (Superseded 2026-10-14: the Dockerfiles are retired in #409. The `service` extra now carries only `pillow` and `pillow-heif`, installed directly.)
 
 The service does not trust browser content type. It decodes uploaded bytes, records the detected format, limits upload size to 25 MiB, bounds decoded images to 80,000,000 pixels before full image load, preserves exact bytes, and binds the attachment to SHA-256.
 
