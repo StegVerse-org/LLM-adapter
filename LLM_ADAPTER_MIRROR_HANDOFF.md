@@ -522,3 +522,10 @@ Historical LLM-adapter PR #351 is design evidence only and remains closed/unmerg
 ## 2026-10-04 StegBrowser execution-owner correction
 
 Re-reading current StegVerse-SDK main demonstrated that the installed Ecosystem Chat governed-ask and `stegbrowser` execution path resolves `stegbrowser.llm_browser_execution.execute_manifested_llm_browser_operation` through the StegBrowser owner. It does not traverse `llm_adapter.external_llm_connection`. The earlier capability-selection metadata from PR #361 named external_llm_connection as the execution primitive too strongly. The mapping now names StegBrowser as the execution owner and explicitly records external_llm_connection as a separate provider-neutral text/reasoning primitive not selected by this route. No new bridge, route, broker or authority is introduced merely to make the two implementations look contiguous.
+
+## 2026-10-17 StegVerse governance gate (CI evidence only)
+
+`.github/workflows/stegverse-governance.yml` (added by #420, merged by the owner) calls the SDK's reusable `StegVerse-org/StegVerse-SDK/.github/workflows/governance-gate.yml@main` on every push and pull request.
+- **What it does:** it verifies any portable governance bundles under `.stegverse/governance/`. There are none yet, so the result is PASS / `NO_GOVERNANCE_BUNDLES_FOUND`. It also classifies this repository's JSON Schemas against SDK structural-validator contract 1.6; 17 of 21 are compatible. The classification is informational only.
+- **Its limits:** it is read-only (`contents: read`) and adds no credential or dependency. Its result is CI_VALIDATED evidence. It is not runtime observation and confers no transition, credential or admission authority.
+- **Owner:** `SDK-STRUCTURAL-VALIDATOR-CONSOLIDATION-001` (StegVerse-org/StegVerse-SDK#484). The SDK-side handoff is `StegVerse-org/StegVerse-SDK:docs/SDK_GOVERNANCE_PRODUCT_MIRROR_HANDOFF.md`.
