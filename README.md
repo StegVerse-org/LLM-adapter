@@ -226,6 +226,8 @@ receipt (a `COMPLETED` transition's `final_receipt_id`, or a sovereign parent pr
 flag or reconstruction status. A result that is not verified is `FAIL_CLOSED` (or the retained
 `PENDING` state name) and carries `failure_code`, `failed_predicate`, `required_evidence_or_repair`,
 `retry_entrypoint`, `owning_existing_goal` and `next_attempt`; no verifier reports a bare `BLOCKED`.
+Each verifier observes each endpoint once and never waits on or retries it, because destination liveness is not a transition predicate. An endpoint that does not answer is reported as
+`consequence_observation: NOT_AUTHENTICALLY_OBSERVED` with the verifier itself as the `reconciliation_entrypoint`.
 
 ### Master Records role (LLMA-368)
 
@@ -597,7 +599,7 @@ The same rule covers starting and reconstructing local runtimes. `scripts/stegde
 
 The container runtime path is retired (Dockerfile, Dockerfile.portable-node, Dockerfile.service-gateway, the three Compose files, `scripts/stegdeploy_bootstrap.py` and `scripts/container-entrypoint.sh`). The host-native launcher is the only start path: its `serve` runs the downstream-recording worker and the gateway forward-queue drain once each, then serves `llm_adapter.deployed_gateway:app` on the standard-library server, which keeps no raw access log. StegVerse-Labs `scripts/activate_resident_stack.py` materializes the organization control bundle and invokes it. `scripts/verify_stegdeploy_runtime.py` fails if a retired container path returns.
 
-The web layer is the standard library (`llm_adapter/web`): `app.py` (ASGI app, routing, request/response types, `Header`/`Query`/`Cookie`/`Form`/`File` parameters, CORS and HTTP middleware), `model.py` (request models), `testclient.py` and `server.py` (HTTP/1.1, optional TLS). They replace FastAPI, Starlette, pydantic, uvicorn, httpx and python-multipart under the same names, so routes, status codes, the `{"detail": ...}` error body and 422 validation errors are unchanged. No extra in `pyproject.toml` installs a web framework. Serve any app with `python -m llm_adapter.web.server module:app --host H --port P [--ssl-certfile C --ssl-keyfile K]`.
+The web layer is the standard library (`llm_adapter/web`): `app.py` (ASGI app, routing, request/response types, `Header`/`Query`/`Cookie`/`Form`/`File` parameters, CORS and HTTP middleware), `model.py` (request models), `testclient.py` and `server.py` (HTTP/1.1, optional TLS). They replace FastAPI, Starlette, pydantic, uvicorn, httpx and python-multipart under the same names, so routes, status codes, the `{"detail": ...}` error body and 422 validation errors are unchanged. No extra in `pyproject.toml` installs a web framework. JSON Schema validation in the tests uses `llm_adapter/json_schema.py` (standard library, the validator StegHealth#115 introduced), so `jsonschema` is not installed either. Serve any app with `python -m llm_adapter.web.server module:app --host H --port P [--ssl-certfile C --ssl-keyfile K]`.
 
 
 ## StegBrowser canonical Master Records relay

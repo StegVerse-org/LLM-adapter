@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-import jsonschema
+from llm_adapter import json_schema as jsonschema
 
 from llm_adapter import service_gateway_site
 

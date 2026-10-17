@@ -173,3 +173,6 @@ FastAPI, Starlette, pydantic, uvicorn, httpx and python-multipart are replaced b
 Behaviour that clients see is unchanged: routes, status codes, the `{"detail": ...}` body of `HTTPException`, 422 with located validation errors, 404/405, the CORS preflight answers, and redirect-on-slash.
 
 The 70 importing modules and tests switched imports only. `pyproject.toml` extras no longer install a web framework, and `tests/test_service_packaging_credential_free.py` fails if one returns. `pillow`/`pillow-heif` (image decoding) and `jsonschema` (one schema test) are not web frameworks and are not touched here.
+
+`jsonschema` (the four HIL schema tests) is replaced by `llm_adapter/json_schema.py`, the standard-library draft 2020-12 validator StegVerse-Labs/StegHealth#115 introduced. It refuses any schema keyword it does not implement, so an unsupported constraint cannot pass silently. The test counts are unchanged from main.
+

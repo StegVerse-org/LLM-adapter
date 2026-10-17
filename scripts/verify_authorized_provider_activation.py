@@ -14,7 +14,6 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -69,17 +68,17 @@ def non_allow(blockers: list[str]) -> dict:
     }
 
 
-def wait_for_health() -> dict:
-    last_error = "unobserved"
-    for _ in range(60):
-        try:
-            health = fetch_json(f"{BASE_URL}/health")
-            if health.get("status") == "ok":
-                return health
-        except (OSError, URLError, HTTPError, TimeoutError, RuntimeError, json.JSONDecodeError) as exc:
-            last_error = f"{type(exc).__name__}: {exc}"
-        time.sleep(1)
-    raise RuntimeError(f"authorized provider gateway health not ready: {last_error}")
+def observe_health() -> dict:
+    """Observe the gateway's health once; never wait on it.
+
+    Destination liveness is not a transition predicate. A gateway that does not
+    answer is reported as NOT_AUTHENTICALLY_OBSERVED with RETRY_ENTRYPOINT as the
+    reconciliation entrypoint.
+    """
+    try:
+        return fetch_json(f"{BASE_URL}/health")
+    except (OSError, URLError, HTTPError, TimeoutError, RuntimeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"provider_gateway_health_not_authentically_observed:{type(exc).__name__}") from exc
 
 
 def validate_runtime_result(health: dict, response: dict, identity: dict) -> list[str]:
@@ -158,7 +157,9 @@ def main() -> int:
     }
 
     try:
-        health = wait_for_health()
+        health = observe_health()
+        if health.get("status") != "ok":
+            blockers.append("provider_gateway_health_not_ok")
         evidence["health"] = {
             "status": health.get("status"),
             "service": health.get("service"),
@@ -204,7 +205,13 @@ def main() -> int:
             "final_receipt_id": response.get("final_receipt_id"),
         }
     except Exception as exc:
-        blockers.append(f"runtime_exception:{type(exc).__name__}:{exc}")
+        if str(exc).startswith("provider_gateway_health_not_authentically_observed:"):
+            blockers.append("provider_gateway_health_not_authentically_observed")
+            evidence["health"] = {"consequence_observation": "NOT_AUTHENTICALLY_OBSERVED",
+                                  "reconciliation_entrypoint": RETRY_ENTRYPOINT,
+                                  "gates_transition": False}
+        else:
+            blockers.append(f"runtime_exception:{type(exc).__name__}:{exc}")
 
     payload = {
         "schema": "stegverse.ecosystem_chat.authorized_provider_activation.v1",

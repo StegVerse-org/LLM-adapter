@@ -5,7 +5,7 @@ import json
 import unittest
 from pathlib import Path
 
-from jsonschema import Draft202012Validator
+from llm_adapter.json_schema import Draft202012Validator
 
 
 ROOT = Path(__file__).resolve().parents[1]
