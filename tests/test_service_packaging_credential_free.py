@@ -26,7 +26,7 @@ class ServicePackagingCredentialFreeTests(unittest.TestCase):
         core = data["project"]["dependencies"]
         assert len(core) == 1 and core[0].startswith("stegverse-sdk @ git+https://github.com/StegVerse-org/StegVerse-SDK.git@")
         extras = data["project"]["optional-dependencies"]
-        frameworks = ("fastapi", "starlette", "pydantic", "uvicorn", "httpx", "python-multipart", "requests")
+        frameworks = ("fastapi", "starlette", "pydantic", "uvicorn", "httpx", "python-multipart", "requests", "jsonschema")
         for name, packages in extras.items():
             for package in packages:
                 assert not package.lower().startswith(frameworks), (name, package)

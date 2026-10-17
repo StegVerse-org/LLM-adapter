@@ -29,10 +29,10 @@ dependencies = [
 
 [project.optional-dependencies]
 # FastAPI, Starlette, pydantic, uvicorn, httpx and python-multipart are replaced
-# by the standard-library web layer in llm_adapter/web (LLMA-368).
+# by the standard-library web layer in llm_adapter/web, and jsonschema by
+# llm_adapter/json_schema.py (LLMA-368).
 dev = [
     "pytest>=7.0",
-    "jsonschema>=4.23",
     "pillow>=10.0",
     "pillow-heif>=0.16",
 ]
