@@ -226,6 +226,8 @@ receipt (a `COMPLETED` transition's `final_receipt_id`, or a sovereign parent pr
 flag or reconstruction status. A result that is not verified is `FAIL_CLOSED` (or the retained
 `PENDING` state name) and carries `failure_code`, `failed_predicate`, `required_evidence_or_repair`,
 `retry_entrypoint`, `owning_existing_goal` and `next_attempt`; no verifier reports a bare `BLOCKED`.
+Each verifier observes each endpoint once and never waits on or retries it, because destination liveness is not a transition predicate. An endpoint that does not answer is reported as
+`consequence_observation: NOT_AUTHENTICALLY_OBSERVED` with the verifier itself as the `reconciliation_entrypoint`.
 
 ### Master Records role (LLMA-368)
 

@@ -39,16 +39,19 @@ class LiveActivationAutomationContractTests(unittest.TestCase):
             '"owning_existing_goal"',
             '"authority_granted": False',
             '"repository_mutation_authorized": False',
-            "STEGVERSE_LIVE_ACTIVATION_ATTEMPTS",
-            "STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS",
-            "transport_retry_exhausted",
-            "RETRYABLE_HTTP",
+            "live_endpoint_not_authentically_observed",
+            '"consequence_observation": "NOT_AUTHENTICALLY_OBSERVED"',
+            '"destination_liveness_is_transition_predicate": False',
+            '"external_machine_awaited": False',
             '"verification_policy"',
             "explicit_gateway_base_url_required",
             '"implicit_third_party_gateway": False',
             '"gateway_selection": "EXPLICIT_RUNTIME_INPUT_ONLY"',
         ):
             assert required in source
+        # One observation per request: the verifier never waits on or retries the gateway.
+        for retired in ("time.sleep", "RETRY_DELAY", "RETRYABLE_HTTP", "STEGVERSE_LIVE_ACTIVATION_ATTEMPTS"):
+            assert retired not in source, retired
         assert "STEGVERSE_PROVIDER_TOKEN" not in source
         assert "STEGVERSE_MASTER_RECORDS_TOKEN" not in source
         for retired in ("master_records_submission_enabled", "master_records_usage_submission",

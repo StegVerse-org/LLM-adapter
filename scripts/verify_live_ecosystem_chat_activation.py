@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import json
 import os
-import time
 import uuid
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -24,9 +23,6 @@ from urllib import error, request
 BASE_URL = os.getenv("STEGVERSE_GATEWAY_BASE_URL", "").strip().rstrip("/")
 OUTPUT = Path(os.getenv("STEGVERSE_LIVE_ACTIVATION_OUTPUT", "receipts/ecosystem-chat-live-activation.latest.json"))
 TIMEOUT = float(os.getenv("STEGVERSE_LIVE_ACTIVATION_TIMEOUT_SECONDS", "35"))
-ATTEMPTS = max(1, int(os.getenv("STEGVERSE_LIVE_ACTIVATION_ATTEMPTS", "5")))
-RETRY_DELAY = max(0.0, float(os.getenv("STEGVERSE_LIVE_ACTIVATION_RETRY_DELAY_SECONDS", "8")))
-RETRYABLE_HTTP = {408, 425, 429, 500, 502, 503, 504}
 OWNING_EXISTING_GOAL = "LLMA-DECLARED-PATH-CONFORMANCE-368"
 RETRY_ENTRYPOINT = "STEGVERSE_GATEWAY_BASE_URL=<gateway> python scripts/verify_live_ecosystem_chat_activation.py"
 RETAINED_RESPONSE_HEADERS = {
@@ -65,51 +61,48 @@ def fetch_json(
     payload: dict | None = None,
     headers: dict[str, str] | None = None,
 ) -> tuple[int, dict, int]:
+    """One request, one observation.
+
+    The verifier never waits on the gateway: destination liveness is not a
+    transition predicate. An endpoint that does not answer is reported as
+    NOT_AUTHENTICALLY_OBSERVED with this script as the reconciliation entrypoint.
+    Any HTTP status is an answer and is returned as observed.
+    """
     body = None if payload is None else json.dumps(payload, separators=(",", ":")).encode("utf-8")
-    last_error: Exception | None = None
-    for attempt in range(1, ATTEMPTS + 1):
-        outbound = request.Request(
-            url,
-            data=body,
-            method="GET" if payload is None else "POST",
-            headers={
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "User-Agent": "StegVerse-Ecosystem-Chat-Live-Activation/2.1",
-                **(headers or {}),
-            },
-        )
+    outbound = request.Request(
+        url,
+        data=body,
+        method="GET" if payload is None else "POST",
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "StegVerse-Ecosystem-Chat-Live-Activation/2.2",
+            **(headers or {}),
+        },
+    )
+    try:
+        with request.urlopen(outbound, timeout=TIMEOUT) as response:
+            raw = response.read()
+            status = int(getattr(response, "status", 200))
+            metadata = response_metadata(response)
+        parsed = json.loads(raw.decode("utf-8"))
+        if not isinstance(parsed, dict):
+            raise RuntimeError("live_endpoint_response_not_object")
+        parsed.setdefault("_http_response", metadata)
+        return status, parsed, 1
+    except error.HTTPError as exc:
+        raw = exc.read()
+        metadata = response_metadata(exc)
         try:
-            with request.urlopen(outbound, timeout=TIMEOUT) as response:
-                raw = response.read()
-                status = int(getattr(response, "status", 200))
-                metadata = response_metadata(response)
             parsed = json.loads(raw.decode("utf-8"))
-            if not isinstance(parsed, dict):
-                raise RuntimeError("live_endpoint_response_not_object")
-            parsed.setdefault("_http_response", metadata)
-            return status, parsed, attempt
-        except error.HTTPError as exc:
-            raw = exc.read()
-            status = exc.code
-            metadata = response_metadata(exc)
-            try:
-                parsed = json.loads(raw.decode("utf-8"))
-            except Exception:
-                parsed = {"error": f"http_{status}", "body": raw.decode("utf-8", errors="replace")[:500]}
-            if not isinstance(parsed, dict):
-                parsed = {"error": "live_endpoint_response_not_object"}
-            parsed.setdefault("_http_response", metadata)
-            if status not in RETRYABLE_HTTP or attempt == ATTEMPTS:
-                return status, parsed, attempt
-            last_error = exc
-        except (error.URLError, TimeoutError, OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
-            last_error = exc
-            if attempt == ATTEMPTS:
-                raise RuntimeError(f"transport_retry_exhausted:{type(exc).__name__}") from exc
-        if RETRY_DELAY:
-            time.sleep(RETRY_DELAY)
-    raise RuntimeError(f"transport_retry_exhausted:{type(last_error).__name__ if last_error else 'Unknown'}")
+        except Exception:
+            parsed = {"error": f"http_{exc.code}", "body": raw.decode("utf-8", errors="replace")[:500]}
+        if not isinstance(parsed, dict):
+            parsed = {"error": "live_endpoint_response_not_object"}
+        parsed.setdefault("_http_response", metadata)
+        return exc.code, parsed, 1
+    except (error.URLError, TimeoutError, OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise RuntimeError(f"live_endpoint_not_authentically_observed:{type(exc).__name__}") from exc
 
 
 def non_allow(blockers: list[str]) -> dict:
@@ -136,9 +129,11 @@ def result(state: str, blockers: list[str], evidence: dict) -> dict:
         "gateway_selection": "EXPLICIT_RUNTIME_INPUT_ONLY",
         "implicit_third_party_gateway": False,
         "verification_policy": {
-            "attempts_per_request": ATTEMPTS,
-            "retry_delay_seconds": RETRY_DELAY,
+            "attempts_per_request": 1,
+            "retry_delay_seconds": 0,
             "timeout_seconds": TIMEOUT,
+            "destination_liveness_is_transition_predicate": False,
+            "external_machine_awaited": False,
         },
         "blockers": blockers,
         **non_allow(blockers),
@@ -252,10 +247,15 @@ def main() -> int:
         state = "VERIFIED" if not blockers else "PENDING"
         payload = result(state, sorted(set(blockers)), evidence)
     except Exception as exc:
+        unobserved = str(exc).startswith("live_endpoint_not_authentically_observed:")
         payload = result(
             "PENDING",
-            [f"verifier_exception:{type(exc).__name__}"],
-            {"exception": str(exc)[:500]},
+            ["live_endpoint_not_authentically_observed" if unobserved else f"verifier_exception:{type(exc).__name__}"],
+            {
+                "exception": str(exc)[:500],
+                **({"consequence_observation": "NOT_AUTHENTICALLY_OBSERVED",
+                    "reconciliation_entrypoint": RETRY_ENTRYPOINT} if unobserved else {}),
+            },
         )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)

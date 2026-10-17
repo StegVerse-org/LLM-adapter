@@ -1,0 +1,62 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368-VERIFIERS-OBSERVE-ONCE",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+    "StegVerse-Labs/.github:data/task-registry-global-invariants.json",
+    "StegVerse-Labs/.github:docs/ECOSYSTEM_STATE_TRANSITION_DISPOSITION_INVARIANT.md"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Verifier observation policy only; no Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/400",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/423"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-Labs/StegVerse-Healer",
+      "StegVerse-Labs/StegHealth"
+    ],
+    "evidence_refs": [
+      "scripts/verify_live_ecosystem_chat_activation.py",
+      "scripts/verify_authorized_provider_activation.py",
+      "scripts/stegdeploy_native_gateway.py"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open PR touches these verifiers."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "scripts/verify_live_ecosystem_chat_activation.py",
+      "scripts/verify_authorized_provider_activation.py"
+    ]
+  },
+  "covered_paths": [
+    "README.md",
+    "scripts/verify_live_ecosystem_chat_activation.py",
+    "scripts/verify_authorized_provider_activation.py",
+    "tests/test_live_activation_automation_contract.py"
+  ],
+  "new_files": []
+}
