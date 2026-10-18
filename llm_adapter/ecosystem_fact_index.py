@@ -24,9 +24,12 @@ Supported sources (``repository`` / ``path``):
 Nothing is fetched: no network, no subprocess, and no file reads except in
 ``load_source_manifest``, which reads only the manifest and files the caller
 names. ``build_index`` refuses (fail closed, whole build) any source whose bytes
-do not hash to the declared sha256, any unsupported source and any document
-whose schema is not recognized. ``lookup`` matches identifiers exactly
-(case-sensitive); it never guesses, normalizes or fuzzy-matches. Every answer is
+do not hash to the declared sha256, any unsupported source, any document whose
+schema is not recognized, any document that repeats a key within one JSON
+object (registries must be unambiguous) and any document nested deeper than
+``_MAX_DEPTH`` containers. ``lookup`` matches the query string exactly as given
+(case-sensitive, no whitespace stripping); it never guesses, normalizes or
+fuzzy-matches. Every answer is
 classed ``OBSERVED`` and cites ``repository@revision:path:line`` where ``line``
 is the 1-based line of the supplied bytes on which the matched key appears.
 """
@@ -44,6 +47,7 @@ from typing import Any, Mapping, Sequence
 
 OWNING_GOAL = "SHWP-ECOSYSTEM-CHAT-INFERENCE-001"
 BUILD_ENTRYPOINT = "llm_adapter.ecosystem_fact_index.build_index"
+MANIFEST_ENTRYPOINT = "llm_adapter.ecosystem_fact_index.load_source_manifest"
 LOOKUP_ENTRYPOINT = "llm_adapter.ecosystem_fact_index.lookup"
 SOURCE_MANIFEST_SCHEMA = "stegverse.ecosystem-fact-sources/v1"
 EVIDENCE_CLASS = "OBSERVED"
@@ -64,7 +68,12 @@ _SCHEMA_PREFIX = {
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _WS_RE = re.compile(r"[ \t\n\r]*")
-_MAX_DEPTH = 512
+# Maximum number of nested JSON containers (objects/arrays) in a registry.
+# Each level costs two Python frames in the line-tracking parser
+# (``parse_value`` plus ``parse_object``/``parse_array``), so the bound must sit
+# well below half the interpreter recursion limit. A RecursionError raised
+# anyway is still converted into a refusal by ``build_index``.
+_MAX_DEPTH = 128
 
 
 class EcosystemFactSourceConfigError(ValueError):
@@ -131,6 +140,14 @@ class _ParseError(ValueError):
     pass
 
 
+class _NestingTooDeep(_ParseError):
+    pass
+
+
+class _DuplicateKey(_ParseError):
+    pass
+
+
 def _parse_located_json(text: str) -> Any:
     newlines = [match.start() for match in re.finditer("\n", text)]
     length = len(text)
@@ -142,10 +159,10 @@ def _parse_located_json(text: str) -> Any:
         return _WS_RE.match(text, pos).end()
 
     def parse_value(pos: int, depth: int) -> tuple[Any, int]:
-        if depth > _MAX_DEPTH:
-            raise _ParseError("json_nesting_too_deep")
         pos = skip(pos)
         char = text[pos:pos + 1]
+        if char in ("{", "[") and depth + 1 > _MAX_DEPTH:
+            raise _NestingTooDeep(f"json_nesting_exceeds_{_MAX_DEPTH}_at_line_{line_of(pos)}")
         if char == "{":
             return parse_object(pos + 1, depth + 1)
         if char == "[":
@@ -176,6 +193,8 @@ def _parse_located_json(text: str) -> Any:
             pos = skip(pos)
             if text[pos:pos + 1] != ":":
                 raise _ParseError(f"expected_colon_at_line_{line_of(pos)}")
+            if key in result:
+                raise _DuplicateKey(f"duplicate_object_key_{json.dumps(key)}_at_line_{line_of(key_pos)}")
             value, pos = parse_value(pos + 1, depth)
             result[key] = value
             result.key_lines[key] = line_of(key_pos)
@@ -243,13 +262,14 @@ def _refusal(
     *,
     source: Mapping[str, Any] | None = None,
     detail: str = "",
+    retry_entrypoint: str = BUILD_ENTRYPOINT,
 ) -> dict[str, Any]:
     record: dict[str, Any] = {
         "status": "REFUSED",
         "failure_code": failure_code,
         "failed_predicate": failed_predicate,
         "required_evidence_or_repair": required_evidence_or_repair,
-        "retry_entrypoint": BUILD_ENTRYPOINT,
+        "retry_entrypoint": retry_entrypoint,
         "owning_existing_goal": OWNING_GOAL,
         "next_attempt": next_attempt,
         "authority_effect": "NONE",
@@ -404,6 +424,24 @@ def build_index(sources: Sequence[Mapping[str, Any]]) -> IndexBuildResult:
             return _refused(refused)
         try:
             document = _parse_located_json(bytes(payload).decode("utf-8"))
+        except (_NestingTooDeep, RecursionError) as exc:
+            return _refused(_refusal(
+                "ECOSYSTEM_FACT_SOURCE_NESTING_TOO_DEEP",
+                "REGISTRY_NESTING_WITHIN_BOUND",
+                f"Supply registry JSON nested at most {_MAX_DEPTH} objects/arrays deep.",
+                "Re-supply the registry bytes with bounded nesting, or extend the bound under the owning goal.",
+                source=label,
+                detail=str(exc) if isinstance(exc, _NestingTooDeep) else "json_nesting_exhausted_recursion_limit",
+            ))
+        except _DuplicateKey as exc:
+            return _refused(_refusal(
+                "ECOSYSTEM_FACT_SOURCE_DUPLICATE_KEY",
+                "REGISTRY_OBJECT_KEYS_UNIQUE",
+                "Supply registry JSON in which every object key appears at most once; duplicate keys are ambiguous.",
+                "Remove the duplicate key from the registry revision and retry build_index with its digest.",
+                source=label,
+                detail=str(exc),
+            ))
         except (UnicodeDecodeError, _ParseError) as exc:
             return _refused(_refusal(
                 "ECOSYSTEM_FACT_SOURCE_SCHEMA_UNRECOGNIZED",
@@ -413,7 +451,17 @@ def build_index(sources: Sequence[Mapping[str, Any]]) -> IndexBuildResult:
                 source=label,
                 detail=str(exc),
             ))
-        extracted = _facts_for(kind, document)
+        try:
+            extracted = _facts_for(kind, document)
+        except RecursionError:
+            return _refused(_refusal(
+                "ECOSYSTEM_FACT_SOURCE_NESTING_TOO_DEEP",
+                "REGISTRY_NESTING_WITHIN_BOUND",
+                f"Supply registry JSON nested at most {_MAX_DEPTH} objects/arrays deep.",
+                "Re-supply the registry bytes with bounded nesting, or extend the bound under the owning goal.",
+                source=label,
+                detail="json_nesting_exhausted_recursion_limit",
+            ))
         if extracted is None:
             return _refused(_refusal(
                 "ECOSYSTEM_FACT_SOURCE_SCHEMA_UNRECOGNIZED",
@@ -470,11 +518,16 @@ def _not_found(query: str, index: EcosystemFactIndex) -> dict[str, Any]:
 
 
 def lookup(index: EcosystemFactIndex, query: str, *, kind: str | None = None) -> dict[str, Any]:
-    """Return ANSWER records for an exact identifier, or NOT_FOUND with six fields."""
+    """Return ANSWER records for an exact identifier, or NOT_FOUND with six fields.
+
+    ``query`` is matched byte-for-byte against indexed keys: no case folding and
+    no whitespace stripping, so ``" X"`` does not match ``"X"``. Callers that
+    extract identifiers from free text must pass the bare token.
+    """
 
     if not isinstance(index, EcosystemFactIndex):
         raise TypeError("lookup requires an EcosystemFactIndex from build_index")
-    clean = query.strip() if isinstance(query, str) else ""
+    clean = query if isinstance(query, str) else ""
     matches = [fact for fact in index.facts.get(clean, ()) if kind is None or fact.kind == kind]
     if not clean or not matches:
         return _not_found(clean, index)
@@ -526,7 +579,7 @@ def load_source_manifest(path: Path) -> list[dict[str, Any]]:
     manifest_path = Path(path)
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
         raise EcosystemFactSourceConfigError(f"ecosystem_fact_source_manifest_unavailable:{exc}") from exc
     if not isinstance(manifest, dict) or manifest.get("schema") != SOURCE_MANIFEST_SCHEMA:
         raise EcosystemFactSourceConfigError("ecosystem_fact_source_manifest_schema_unsupported")
@@ -554,6 +607,24 @@ def load_source_manifest(path: Path) -> list[dict[str, Any]]:
     return loaded
 
 
+def source_manifest_refusal(error: EcosystemFactSourceConfigError) -> dict[str, Any]:
+    """Six-field refusal for a configured manifest that ``load_source_manifest`` rejected.
+
+    ``detail`` carries only the stable error code (the text before the first
+    ``:``) so local filesystem paths and OS messages are not echoed.
+    """
+
+    code = str(error).split(":", 1)[0] or "ecosystem_fact_source_manifest_unavailable"
+    return _refusal(
+        "ECOSYSTEM_FACT_SOURCE_MANIFEST_REFUSED",
+        "SOURCE_MANIFEST_LOADABLE",
+        f"Supply a readable {SOURCE_MANIFEST_SCHEMA} manifest whose sources each name a readable local_path.",
+        "Repair the configured manifest and its local files, then retry; the build re-checks every digest.",
+        detail=code,
+        retry_entrypoint=MANIFEST_ENTRYPOINT,
+    )
+
+
 __all__ = [
     "EVIDENCE_CLASS",
     "EcosystemFact",
@@ -565,4 +636,5 @@ __all__ = [
     "build_index",
     "load_source_manifest",
     "lookup",
+    "source_manifest_refusal",
 ]

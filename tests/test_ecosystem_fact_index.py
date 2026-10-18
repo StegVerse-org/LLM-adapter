@@ -13,9 +13,11 @@ from unittest import mock
 import urllib.request
 
 from llm_adapter import ai_entry_backend_service as backend
+from llm_adapter import ecosystem_fact_index as fact_index_module
 from llm_adapter.chat_profiles import SourceCandidate, evaluate_source, load_profile
 from llm_adapter.ecosystem_fact_index import (
     EcosystemFactIndex,
+    EcosystemFactSourceConfigError,
     _parse_located_json,
     _plain,
     build_index,
@@ -67,6 +69,37 @@ def built_index() -> EcosystemFactIndex:
     assert result.status == "ALLOW", result.to_dict()
     assert result.index is not None
     return result.index
+
+
+def nested_organization_tree_source(total_depth: int) -> dict:
+    """Organization-tree source whose deepest container sits at ``total_depth``.
+
+    Root object (1), ``repositories`` array (2) and the entry object (3) are
+    followed by ``total_depth - 3`` nested arrays under ``extra``.
+    """
+
+    inner = total_depth - 3
+    raw = (
+        '{"schema": "sv-llm.organization-tree/v1", "repositories": [{"name": "Deep_Entity", "extra": '
+        + "[" * inner + "]" * inner + "}]}"
+    ).encode("utf-8")
+    return {
+        "repository": "SV-LLM/.github",
+        "path": "data/organization-tree.json",
+        "revision": "deep",
+        "sha256": sha256(raw).hexdigest(),
+        "bytes": raw,
+    }
+
+
+def raw_source(repository: str, path: str, raw: bytes) -> dict:
+    return {
+        "repository": repository,
+        "path": path,
+        "revision": "raw",
+        "sha256": sha256(raw).hexdigest(),
+        "bytes": raw,
+    }
 
 
 def _forbidden(*_args, **_kwargs):
@@ -262,6 +295,88 @@ class EcosystemFactIndexTests(unittest.TestCase):
         self.assertEqual(build_index(loaded).status, "ALLOW")
 
 
+class EcosystemFactIndexHardeningTests(unittest.TestCase):
+    """PR #426 review: nesting bound, duplicate keys and exact (unstripped) lookup."""
+
+    def assert_six_field_refusal(self, refusal: dict, failure_code: str) -> None:
+        self.assertEqual(refusal["status"], "REFUSED")
+        for field in SIX_FIELDS:
+            self.assertTrue(str(refusal[field]).strip(), field)
+        self.assertEqual(refusal["failure_code"], failure_code)
+        self.assertEqual(refusal["owning_existing_goal"], "SHWP-ECOSYSTEM-CHAT-INFERENCE-001")
+        self.assertEqual(refusal["authority_effect"], "NONE")
+
+    def test_nesting_bound_is_below_effective_frame_budget(self):
+        # Each nesting level costs two Python frames (parse_value + parse_object/array).
+        self.assertLessEqual(fact_index_module._MAX_DEPTH, 128)
+        self.assertLess(2 * fact_index_module._MAX_DEPTH + 50, __import__("sys").getrecursionlimit())
+
+    def test_nesting_at_limit_is_indexed(self):
+        result = build_index([nested_organization_tree_source(fact_index_module._MAX_DEPTH)])
+        self.assertEqual(result.status, "ALLOW", result.to_dict())
+        self.assertEqual(lookup(result.index, "Deep_Entity")["status"], "ANSWER")
+
+    def test_nesting_beyond_limit_refuses_without_recursion_error(self):
+        for depth in (fact_index_module._MAX_DEPTH + 1, 129, 600, 5000):
+            with self.subTest(depth=depth):
+                result = build_index([nested_organization_tree_source(depth)])
+                self.assertEqual(result.status, "REFUSED")
+                self.assertIsNone(result.index)
+                refusal = result.to_dict()
+                self.assert_six_field_refusal(refusal, "ECOSYSTEM_FACT_SOURCE_NESTING_TOO_DEEP")
+                self.assertEqual(refusal["failed_predicate"], "REGISTRY_NESTING_WITHIN_BOUND")
+                self.assertEqual(refusal["source"]["path"], "data/organization-tree.json")
+
+    def test_recursion_error_is_refused_even_if_bound_is_not_reached(self):
+        with mock.patch.object(fact_index_module, "_MAX_DEPTH", 10 ** 6):
+            result = build_index([nested_organization_tree_source(5000)])
+        self.assertEqual(result.status, "REFUSED")
+        self.assert_six_field_refusal(result.to_dict(), "ECOSYSTEM_FACT_SOURCE_NESTING_TOO_DEEP")
+
+    def test_duplicate_json_keys_refuse(self):
+        top_level = raw_source(
+            "SV-LLM/.github", "data/organization-tree.json",
+            b'{"schema": "sv-llm.organization-tree/v1",\n "repositories": [],\n'
+            b' "repositories": [{"name": "Shadow_Entity"}]}',
+        )
+        nested = raw_source(
+            "StegVerse-Labs/.github", "data/canonical-task-registry.json",
+            b'{"schema": "stegverse.canonical-task-registry/v1", "tasks": [\n'
+            b'  {"task_id": "TASK-A-001",\n   "task_id": "TASK-B-001"}]}',
+        )
+        invariant = raw_source(
+            "StegVerse-Labs/.github", "data/task-registry-global-invariants.json",
+            b'{"schema": "stegverse.task-registry-global-invariants/v1", "invariants": '
+            b'{"k": 1, "k": 2}}',
+        )
+        for source, line in ((top_level, 3), (nested, 3), (invariant, 1)):
+            with self.subTest(path=source["path"]):
+                result = build_index([source])
+                self.assertEqual(result.status, "REFUSED")
+                self.assertIsNone(result.index)
+                refusal = result.to_dict()
+                self.assert_six_field_refusal(refusal, "ECOSYSTEM_FACT_SOURCE_DUPLICATE_KEY")
+                self.assertEqual(refusal["failed_predicate"], "REGISTRY_OBJECT_KEYS_UNIQUE")
+                self.assertTrue(refusal["detail"].endswith(f"_at_line_{line}"), refusal["detail"])
+
+    def test_lookup_matches_exactly_without_whitespace_normalization(self):
+        index = built_index()
+        self.assertEqual(lookup(index, "QUANTUM-RESILIENCE-001")["status"], "ANSWER")
+        for query in (" QUANTUM-RESILIENCE-001", "QUANTUM-RESILIENCE-001 ", "QUANTUM-RESILIENCE-001\n", "\tEcosystem_Chat"):
+            with self.subTest(query=query):
+                result = lookup(index, query)
+                self.assertEqual(result["status"], "NOT_FOUND")
+                self.assertEqual(result["query"], query)
+        self.assertEqual(lookup(index, None)["status"], "NOT_FOUND")
+
+    def test_deeply_nested_manifest_raises_config_error_not_recursion_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = Path(tmp) / "sources.json"
+            manifest.write_text("[" * 200000 + "]" * 200000, encoding="utf-8")
+            with self.assertRaises(EcosystemFactSourceConfigError):
+                load_source_manifest(manifest)
+
+
 class AIEntryEcosystemFactRouteTests(unittest.TestCase):
     MESSAGES = (
         "",
@@ -323,27 +438,114 @@ class AIEntryEcosystemFactRouteTests(unittest.TestCase):
         self.assertEqual(response.primary_route, "ecosystem_fact_index")
         self.assertIn("SV-LLM/.github@fixture-subset:data/organization-tree.json:22", response.stegverse_response)
 
-    def test_miss_and_refusal_fall_through_to_existing_fallback(self):
+    def assert_surfaced_refusal(self, response, baseline, failure_code: str) -> dict:
+        """Answer text and route come from the existing resolvers; the refusal is visible."""
+
+        configured = response.to_dict()
+        refusal = configured["governance"].pop("ecosystem_fact_index_refusal")
+        self.assertEqual(configured, baseline.to_dict())
+        self.assertEqual(refusal["status"], "REFUSED")
+        for field in SIX_FIELDS:
+            self.assertTrue(str(refusal[field]).strip(), field)
+        self.assertEqual(refusal["failure_code"], failure_code)
+        self.assertEqual(refusal["owning_existing_goal"], "SHWP-ECOSYSTEM-CHAT-INFERENCE-001")
+        self.assertEqual(refusal["authority_effect"], "NONE")
+        self.assertIs(response.governance["authority_issued"], False)
+        self.assertNotEqual(response.primary_route, "ecosystem_fact_index")
+        self.assertNotIn("evidence_class", response.governance)
+        return refusal
+
+    def test_miss_falls_through_to_existing_fallback(self):
+        for message in self.MESSAGES:
+            with self.subTest(message=message):
+                baseline = backend.build_ai_entry_backend_response(message).to_dict()
+                configured = backend.build_ai_entry_backend_response(
+                    message, ecosystem_fact_sources=fixture_sources()
+                ).to_dict()
+                self.assertEqual(configured, baseline)
+                self.assertNotIn("ecosystem_fact_index_refusal", configured["governance"])
+
+    def test_refused_sources_are_surfaced_not_silent(self):
         tampered = fixture_sources()
         tampered[1]["sha256"] = "f" * 64
-        for message in self.MESSAGES:
-            baseline = backend.build_ai_entry_backend_response(message).to_dict()
-            for sources in (fixture_sources(), tampered):
-                with self.subTest(message=message):
-                    configured = backend.build_ai_entry_backend_response(
-                        message, ecosystem_fact_sources=sources
-                    ).to_dict()
-                    self.assertEqual(configured, baseline)
+        wrong_schema = fixture_sources()[:1]
+        payload = (FIXTURES / "reusable-task-registry.json").read_bytes()
+        wrong_schema[0].update(path="data/organization-tree.json", bytes=payload, sha256=sha256(payload).hexdigest())
+        duplicate_key = [raw_source(
+            "SV-LLM/.github", "data/organization-tree.json",
+            b'{"schema": "sv-llm.organization-tree/v1", "schema": "sv-llm.organization-tree/v1", "repositories": []}',
+        )]
+        cases = (
+            (tampered, "ECOSYSTEM_FACT_SOURCE_DIGEST_MISMATCH"),
+            (wrong_schema, "ECOSYSTEM_FACT_SOURCE_SCHEMA_UNRECOGNIZED"),
+            (duplicate_key, "ECOSYSTEM_FACT_SOURCE_DUPLICATE_KEY"),
+            ([], "ECOSYSTEM_FACT_SOURCES_EMPTY"),
+        )
+        messages = self.MESSAGES[1:] + ("Show the registry record for QUANTUM-RESILIENCE-001",)
+        for sources, failure_code in cases:
+            for message in messages:
+                with self.subTest(failure_code=failure_code, message=message):
+                    baseline = backend.build_ai_entry_backend_response(message)
+                    response = backend.build_ai_entry_backend_response(message, ecosystem_fact_sources=sources)
+                    self.assert_surfaced_refusal(response, baseline, failure_code)
         refused = backend.build_ai_entry_backend_response(
             "Show the registry record for QUANTUM-RESILIENCE-001",
             ecosystem_fact_sources=tampered,
         )
-        self.assertNotEqual(refused.primary_route, "ecosystem_fact_index")
         self.assertIn("does not invent an answer", refused.stegverse_response)
         self.assertEqual(
-            refused.to_dict(),
-            backend.build_ai_entry_backend_response("Show the registry record for QUANTUM-RESILIENCE-001").to_dict(),
+            refused.governance["ecosystem_fact_index_refusal"]["failed_predicate"],
+            "REGISTRY_BYTES_MATCH_DECLARED_SHA256",
         )
+
+    def test_deeply_nested_source_does_not_raise_through_backend(self):
+        message = "Registry entry for Deep_Entity"
+        baseline = backend.build_ai_entry_backend_response(message)
+        for depth in (fact_index_module._MAX_DEPTH + 1, 600):
+            with self.subTest(depth=depth):
+                response = backend.build_ai_entry_backend_response(
+                    message, ecosystem_fact_sources=[nested_organization_tree_source(depth)]
+                )
+                self.assert_surfaced_refusal(response, baseline, "ECOSYSTEM_FACT_SOURCE_NESTING_TOO_DEEP")
+
+    def test_bad_environment_manifest_is_surfaced_not_silent(self):
+        message = "Show the registry record for QUANTUM-RESILIENCE-001"
+        baseline = backend.build_ai_entry_backend_response(message)
+        with tempfile.TemporaryDirectory() as tmp:
+            missing = Path(tmp) / "missing.json"
+            wrong_schema = Path(tmp) / "wrong-schema.json"
+            wrong_schema.write_text(json.dumps({"schema": "other/v1", "sources": []}), encoding="utf-8")
+            missing_local = Path(tmp) / "missing-local.json"
+            missing_local.write_text(json.dumps({
+                "schema": "stegverse.ecosystem-fact-sources/v1",
+                "sources": [{"repository": "SV-LLM/.github", "path": "data/organization-tree.json",
+                             "revision": "r", "sha256": "0" * 64, "local_path": "absent.json"}],
+            }), encoding="utf-8")
+            deep = Path(tmp) / "deep.json"
+            deep.write_text("[" * 200000 + "]" * 200000, encoding="utf-8")
+            digest_mismatch = Path(tmp) / "mismatch.json"
+            digest_mismatch.write_text(json.dumps({
+                "schema": "stegverse.ecosystem-fact-sources/v1",
+                "sources": [{"repository": r, "path": p, "revision": REVISION, "sha256": "f" * 64,
+                             "local_path": str(FIXTURES / n)} for r, p, n, _d in PINNED_FIXTURES],
+            }), encoding="utf-8")
+            cases = (
+                (missing, "ECOSYSTEM_FACT_SOURCE_MANIFEST_REFUSED", "ecosystem_fact_source_manifest_unavailable"),
+                (wrong_schema, "ECOSYSTEM_FACT_SOURCE_MANIFEST_REFUSED", "ecosystem_fact_source_manifest_schema_unsupported"),
+                (missing_local, "ECOSYSTEM_FACT_SOURCE_MANIFEST_REFUSED", "ecosystem_fact_source_unreadable"),
+                (deep, "ECOSYSTEM_FACT_SOURCE_MANIFEST_REFUSED", "ecosystem_fact_source_manifest_unavailable"),
+                (digest_mismatch, "ECOSYSTEM_FACT_SOURCE_DIGEST_MISMATCH", None),
+            )
+            for manifest, failure_code, detail in cases:
+                with self.subTest(manifest=manifest.name):
+                    with mock.patch.dict(os.environ, {backend.ECOSYSTEM_FACT_SOURCES_ENV: str(manifest)}):
+                        response = backend.build_ai_entry_backend_response(message)
+                    refusal = self.assert_surfaced_refusal(response, baseline, failure_code)
+                    if detail is not None:
+                        self.assertEqual(refusal["detail"], detail)
+                        self.assertEqual(refusal["retry_entrypoint"], "llm_adapter.ecosystem_fact_index.load_source_manifest")
+                        # Local filesystem paths are not echoed into the response.
+                        self.assertNotIn(tmp, json.dumps(response.to_dict()))
 
     def test_exact_registry_identifier_takes_precedence(self):
         # LLM-adapter#368: an exact identifier with an admitted registry answer goes first.

@@ -8,7 +8,11 @@ an exact registry identifier (task id, organization entity name, invariant key,
 reusable task id) appearing verbatim in the message is answered first with
 OBSERVED, line-cited facts admitted through ``chat_profiles.evaluate_source``;
 a public-knowledge entry that also matches is attached as a related reference.
-Messages without such an identifier keep the existing resolver order.
+Messages without such an identifier keep the existing resolver order. When
+sources are configured but refused (manifest unloadable, digest mismatch,
+unrecognized schema, duplicate keys, excessive nesting), the answer still comes
+from the existing resolvers and the six-field refusal is surfaced as
+``governance.ecosystem_fact_index_refusal``; it is never silently dropped.
 It does not call live providers, issue authority, expose credentials, or persist
 records.
 """
@@ -35,6 +39,7 @@ from llm_adapter.ecosystem_fact_index import (
     build_index,
     load_source_manifest,
     lookup,
+    source_manifest_refusal,
 )
 from llm_adapter.free_tier_limits import ReceiptReplayUsage, evaluate_receipt_replay_limits
 from llm_adapter.free_tier_quota import FreeTierUsage, evaluate_free_tier_quota
@@ -161,16 +166,18 @@ def _public_grounding(message: str) -> tuple[str | None, str]:
 
 def _configured_ecosystem_fact_sources(
     explicit: Sequence[Mapping[str, Any]] | None,
-) -> Sequence[Mapping[str, Any]] | None:
+) -> tuple[Sequence[Mapping[str, Any]] | None, dict[str, Any] | None]:
+    """Return (sources, manifest_refusal); (None, None) means unconfigured."""
+
     if explicit is not None:
-        return explicit
+        return explicit, None
     manifest_path = os.environ.get(ECOSYSTEM_FACT_SOURCES_ENV, "").strip()
     if not manifest_path:
-        return None
+        return None, None
     try:
-        return load_source_manifest(Path(manifest_path))
-    except EcosystemFactSourceConfigError:
-        return None
+        return load_source_manifest(Path(manifest_path)), None
+    except EcosystemFactSourceConfigError as exc:
+        return None, source_manifest_refusal(exc)
 
 
 def _identifier_candidates(message: str) -> list[str]:
@@ -188,11 +195,13 @@ def _ecosystem_fact_grounding(
     message: str,
     sources: Sequence[Mapping[str, Any]] | None,
 ) -> tuple[str | None, str, dict[str, Any] | None]:
-    if not sources:
+    if sources is None:
         return None, "", None
     built = build_index(sources)
     if built.status != "ALLOW" or built.index is None:
-        return None, "", None
+        # Configured but refused: the existing resolvers still answer, and the
+        # six-field refusal is surfaced in governance rather than swallowed.
+        return None, "", {"ecosystem_fact_index_refusal": built.to_dict()}
     answers: list[dict[str, Any]] = []
     for candidate in _identifier_candidates(message):
         result = lookup(built.index, candidate)
@@ -285,8 +294,11 @@ def build_ai_entry_backend_response(
     registry_guidance = ""
     registry_governance: dict[str, Any] | None = None
     if clean:
-        configured = _configured_ecosystem_fact_sources(ecosystem_fact_sources)
-        registry_answer, registry_guidance, registry_governance = _ecosystem_fact_grounding(clean, configured)
+        configured, manifest_refusal = _configured_ecosystem_fact_sources(ecosystem_fact_sources)
+        if manifest_refusal is not None:
+            registry_governance = {"ecosystem_fact_index_refusal": manifest_refusal}
+        else:
+            registry_answer, registry_guidance, registry_governance = _ecosystem_fact_grounding(clean, configured)
     if registry_answer is not None:
         grounded_answer, grounding_guidance = registry_answer, registry_guidance
         route_id = ECOSYSTEM_FACT_ROUTE_ID
