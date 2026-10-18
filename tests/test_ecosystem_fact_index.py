@@ -345,12 +345,60 @@ class AIEntryEcosystemFactRouteTests(unittest.TestCase):
             backend.build_ai_entry_backend_response("Show the registry record for QUANTUM-RESILIENCE-001").to_dict(),
         )
 
-    def test_earlier_resolvers_keep_precedence(self):
-        # Public knowledge is consulted first; the registry index is the third resolver.
-        message = "What is the coordination state of SHWP-ECOSYSTEM-CHAT-INFERENCE-001?"
+    def test_exact_registry_identifier_takes_precedence(self):
+        # LLM-adapter#368: an exact identifier with an admitted registry answer goes first.
+        message = "Show the registry record for QUANTUM-RESILIENCE-001"
+        self.assertIsNone(backend.resolve_public_question(message))
         configured = backend.build_ai_entry_backend_response(message, ecosystem_fact_sources=fixture_sources())
-        self.assertEqual(configured.primary_route, "public_knowledge")
-        self.assertEqual(configured.to_dict(), backend.build_ai_entry_backend_response(message).to_dict())
+        self.assertEqual(configured.primary_route, "ecosystem_fact_index")
+        self.assertNotIn("related_public_knowledge", configured.governance)
+
+    def test_natural_language_without_identifier_keeps_public_knowledge(self):
+        for message in ("What is StegVerse?", "What is ecosystem chat?"):
+            with self.subTest(message=message):
+                configured = backend.build_ai_entry_backend_response(message, ecosystem_fact_sources=fixture_sources())
+                self.assertEqual(configured.primary_route, "public_knowledge")
+                self.assertEqual(configured.to_dict(), backend.build_ai_entry_backend_response(message).to_dict())
+
+    def test_tie_returns_registry_fact_with_related_public_knowledge(self):
+        message = "What is the coordination state of SHWP-ECOSYSTEM-CHAT-INFERENCE-001?"
+        public = backend.resolve_public_question(message)
+        self.assertIsNotNone(public)
+        unconfigured = backend.build_ai_entry_backend_response(message)
+        self.assertEqual(unconfigured.primary_route, "public_knowledge")
+        configured = backend.build_ai_entry_backend_response(message, ecosystem_fact_sources=fixture_sources())
+        self.assertEqual(configured.primary_route, "ecosystem_fact_index")
+        self.assertTrue(configured.stegverse_response.startswith("Observed in the supplied ecosystem registries: "))
+        self.assertIn("SHWP-ECOSYSTEM-CHAT-INFERENCE-001", configured.stegverse_response)
+        self.assertNotIn(public.answer, configured.stegverse_response)
+        self.assertEqual(configured.governance["evidence_class"], "OBSERVED")
+        self.assertEqual(
+            configured.governance["related_public_knowledge"],
+            {"entry_id": public.entry_id, "match": public.match, "source_ids": list(public.source_ids)},
+        )
+        self.assertIs(configured.governance["authority_issued"], False)
+
+    def test_unconfigured_output_is_byte_identical_across_routes(self):
+        messages = self.MESSAGES + (
+            "What is the coordination state of SHWP-ECOSYSTEM-CHAT-INFERENCE-001?",
+            "Show the registry record for QUANTUM-RESILIENCE-001",
+            "Registry entry for StegVerse_AI",
+            "Does StegVerse support iPhone?",
+            "Which providers are available on Android?",
+        )
+        for message in messages:
+            for route in (None, "public_help", "sdk_access_guidance"):
+                with self.subTest(message=message, route=route):
+                    default = backend.build_ai_entry_backend_response(message, declared_route_id=route)
+                    explicit = backend.build_ai_entry_backend_response(
+                        message, declared_route_id=route, ecosystem_fact_sources=None
+                    )
+                    self.assertEqual(
+                        json.dumps(default.to_dict(), sort_keys=True).encode("utf-8"),
+                        json.dumps(explicit.to_dict(), sort_keys=True).encode("utf-8"),
+                    )
+                    self.assertNotIn("related_public_knowledge", default.governance)
+                    self.assertNotEqual(default.primary_route, "ecosystem_fact_index")
 
     def test_plain_lowercase_words_are_not_registry_lookups(self):
         response = backend.build_ai_entry_backend_response(

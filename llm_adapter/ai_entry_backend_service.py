@@ -4,9 +4,11 @@ Provider execution remains owned by the canonical governed provider path. This
 module supplies credential-free bounded fallback responses and grounds known
 public StegVerse/help questions in the committed public-knowledge manifest.
 When caller-configured, digest-pinned ecosystem registry sources are supplied,
-a third resolver answers exact registry identifiers (task ids, organization
-entity names, invariant keys, reusable task ids) with OBSERVED, line-cited facts
-admitted through ``chat_profiles.evaluate_source``.
+an exact registry identifier (task id, organization entity name, invariant key,
+reusable task id) appearing verbatim in the message is answered first with
+OBSERVED, line-cited facts admitted through ``chat_profiles.evaluate_source``;
+a public-knowledge entry that also matches is attached as a related reference.
+Messages without such an identifier keep the existing resolver order.
 It does not call live providers, issue authority, expose credentials, or persist
 records.
 """
@@ -248,6 +250,22 @@ def _ecosystem_fact_grounding(
     return text, guidance, governance_extra
 
 
+def _related_public_knowledge(message: str) -> dict[str, Any] | None:
+    """Reference (not answer) to a public-knowledge entry that also matched an exact registry hit."""
+
+    try:
+        grounded = resolve_public_question(message)
+    except PublicKnowledgeError:
+        return None
+    if grounded is None:
+        return None
+    return {
+        "entry_id": grounded.entry_id,
+        "match": grounded.match,
+        "source_ids": list(grounded.source_ids),
+    }
+
+
 def build_ai_entry_backend_response(
     message: str,
     *,
@@ -259,20 +277,30 @@ def build_ai_entry_backend_response(
     # A governed caller that supplies a manifest-selected route remains bound to
     # that declaration; this module does not substitute a route from message text.
     route_id = str(declared_route_id or "").strip() or classify_route(clean)
-    provider_answer, provider_guidance = _provider_surface_grounding(clean) if clean else (None, "")
-    grounded_answer, grounding_guidance = _public_grounding(clean) if clean and provider_answer is None else (None, "")
-    if provider_answer is not None:
-        grounded_answer, grounding_guidance = provider_answer, provider_guidance
-        route_id = "provider_surface_knowledge"
-    elif grounded_answer is not None:
-        route_id = "public_knowledge"
+    # Precedence (LLM-adapter#368): an admitted exact-identifier registry hit
+    # answers first; otherwise provider_surface, then public_knowledge, then the
+    # bounded fallback. Unconfigured sources or a registry miss leave the
+    # existing resolver order and output unchanged.
+    registry_answer: str | None = None
+    registry_guidance = ""
     registry_governance: dict[str, Any] | None = None
-    if clean and grounded_answer is None:
+    if clean:
         configured = _configured_ecosystem_fact_sources(ecosystem_fact_sources)
         registry_answer, registry_guidance, registry_governance = _ecosystem_fact_grounding(clean, configured)
-        if registry_answer is not None:
-            grounded_answer, grounding_guidance = registry_answer, registry_guidance
-            route_id = ECOSYSTEM_FACT_ROUTE_ID
+    if registry_answer is not None:
+        grounded_answer, grounding_guidance = registry_answer, registry_guidance
+        route_id = ECOSYSTEM_FACT_ROUTE_ID
+        related = _related_public_knowledge(clean)
+        if related is not None:
+            registry_governance = {**(registry_governance or {}), "related_public_knowledge": related}
+    else:
+        provider_answer, provider_guidance = _provider_surface_grounding(clean) if clean else (None, "")
+        grounded_answer, grounding_guidance = _public_grounding(clean) if clean and provider_answer is None else (None, "")
+        if provider_answer is not None:
+            grounded_answer, grounding_guidance = provider_answer, provider_guidance
+            route_id = "provider_surface_knowledge"
+        elif grounded_answer is not None:
+            route_id = "public_knowledge"
     digest = sha256(f"{route_id}\n{clean}".encode("utf-8")).hexdigest()[:16]
     response_id = "welcome" if not clean else f"preview-{route_id}-{digest}"
     provider_boundary = build_disabled_provider_boundary()
