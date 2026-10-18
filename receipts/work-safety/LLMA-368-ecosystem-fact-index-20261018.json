@@ -1,0 +1,151 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368-ECOSYSTEM-FACT-INDEX",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+    "StegVerse-Labs/.github:data/canonical-task-registry.json#SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+    "SV-LLM/.github:SVORG-LLM-ORG-FOUNDATION-001"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Read-only lookup over caller-supplied registry bytes; no Organization append, Master Records transition or registry mutation."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/426"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github",
+      "SV-LLM/.github"
+    ],
+    "evidence_refs": [
+      "llm_adapter/public_knowledge.py",
+      "llm_adapter/provider_surface_knowledge.py",
+      "llm_adapter/chat_profiles.py",
+      "llm_adapter/ai_entry_backend_service.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No other open PR touches ai_entry_backend_service.py, chat_profiles.py or the new fact-index files."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    "README.md",
+    "llm_adapter/ai_entry_backend_service.py",
+    "llm_adapter/chat_profiles.py",
+    "llm_adapter/ecosystem_fact_index.py",
+    "tests/fixtures/ecosystem_fact_index/PROVENANCE.json",
+    "tests/fixtures/ecosystem_fact_index/canonical-task-registry.json",
+    "tests/fixtures/ecosystem_fact_index/organization-tree.json",
+    "tests/fixtures/ecosystem_fact_index/reusable-task-registry.json",
+    "tests/fixtures/ecosystem_fact_index/task-registry-global-invariants.json",
+    "tests/test_ecosystem_fact_index.py"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/ecosystem_fact_index.py",
+      "semantic_responsibility": "Exact-identifier, line-cited OBSERVED fact index over caller-supplied, digest-pinned ecosystem registries (organization tree, canonical/reusable task registries, global invariants); refuses digest mismatch; never fetches.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "llm_adapter/public_knowledge.py (curated answer manifest with trigger scoring, no registry parsing or line citations) and llm_adapter/provider_surface_knowledge.py (KV capability registry, provider surfaces only)",
+      "justification": "No existing module indexes the organization tree or task registries, verifies caller-declared digests, or cites the line in the supplied bytes; extending public_knowledge would mix curated answers with observed registry facts.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "llm_adapter/public_knowledge.py",
+        "llm_adapter/provider_surface_knowledge.py",
+        "llm_adapter/ai_entry_backend_service.py"
+      ]
+    },
+    {
+      "path": "tests/test_ecosystem_fact_index.py",
+      "semantic_responsibility": "Tests the fact index (exact citation lines, NOT_FOUND six fields, digest refusal, no network/subprocess) and its AI Entry third-resolver wiring and evaluate_source classification.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_ai_entry_backend_service.py and tests/test_public_knowledge.py (cover existing resolvers only)",
+      "justification": "New module and route need dedicated fixture-pinned tests.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/test_ai_entry_backend_service.py",
+        "tests/test_public_knowledge.py"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/PROVENANCE.json",
+      "semantic_responsibility": "Records the upstream revision and sha256 of each vendored registry fixture subset.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "none for registry fixtures; tests/fixtures holds no ecosystem registry subsets",
+      "justification": "Fixture provenance must be reviewable next to the fixtures.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/test_ecosystem_fact_index.py"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/organization-tree.json",
+      "semantic_responsibility": "Small verbatim-value subset of SV-LLM/.github:data/organization-tree.json used as a sha256-pinned test fixture.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "none; no vendored copy of this registry exists in the repository",
+      "justification": "Tests must not fetch; a small pinned subset of the real schema is required.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "SV-LLM/.github:data/organization-tree.json",
+        "tests/fixtures/ecosystem_fact_index/PROVENANCE.json"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/canonical-task-registry.json",
+      "semantic_responsibility": "Small verbatim-value subset of StegVerse-Labs/.github:data/canonical-task-registry.json used as a sha256-pinned test fixture.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "none; no vendored copy of this registry exists in the repository",
+      "justification": "Tests must not fetch; a small pinned subset of the real schema is required.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "StegVerse-Labs/.github:data/canonical-task-registry.json",
+        "tests/fixtures/ecosystem_fact_index/PROVENANCE.json"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/reusable-task-registry.json",
+      "semantic_responsibility": "Small verbatim-value subset of StegVerse-Labs/.github:data/reusable-task-registry.json used as a sha256-pinned test fixture.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "none; no vendored copy of this registry exists in the repository",
+      "justification": "Tests must not fetch; a small pinned subset of the real schema is required.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "StegVerse-Labs/.github:data/reusable-task-registry.json",
+        "tests/fixtures/ecosystem_fact_index/PROVENANCE.json"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/task-registry-global-invariants.json",
+      "semantic_responsibility": "Small verbatim-value subset of StegVerse-Labs/.github:data/task-registry-global-invariants.json used as a sha256-pinned test fixture.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "none; no vendored copy of this registry exists in the repository",
+      "justification": "Tests must not fetch; a small pinned subset of the real schema is required.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "StegVerse-Labs/.github:data/task-registry-global-invariants.json",
+        "tests/fixtures/ecosystem_fact_index/PROVENANCE.json"
+      ]
+    }
+  ]
+}

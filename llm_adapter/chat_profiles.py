@@ -49,6 +49,14 @@ ALLOWED_SOURCE_TYPES = {
     "stegverse_internal",
     "user_record",
     "model_memory",
+    "stegverse_registry",
+}
+
+# A digest-pinned StegVerse registry read is an observation of what the
+# registry says at that revision: grounding evidence, never authority.
+OBSERVED_REGISTRY_FACT_LABEL = "observed_registry_fact"
+FACT_LABEL_EVIDENCE_CLASS: Dict[str, str] = {
+    OBSERVED_REGISTRY_FACT_LABEL: "OBSERVED",
 }
 
 
@@ -332,6 +340,19 @@ def evaluate_source(
             allowed_as_authority=True,
             fact_label="va_source_fact",
             reasons=(),
+            normalized_host=host,
+        )
+
+    if candidate.source_type == "stegverse_registry":
+        pinned = len(candidate.content_hash) == 64 and all(
+            char in "0123456789abcdef" for char in candidate.content_hash
+        )
+        return SourceDecision(
+            status="ALLOW_OBSERVED_REGISTRY_FACT" if pinned else "DENY_SOURCE",
+            allowed_for_factual_grounding=pinned,
+            allowed_as_authority=False,
+            fact_label=OBSERVED_REGISTRY_FACT_LABEL if pinned else "",
+            reasons=() if pinned else ("registry_source_digest_missing",),
             normalized_host=host,
         )
 

@@ -1,0 +1,43 @@
+{
+  "schema": "sv-llm.organization-tree/v0.2",
+  "organization": "SV-LLM",
+  "source": "connected GitHub organization enumeration",
+  "repositories": [
+    {
+      "name": ".github",
+      "class": "ORGANIZATION_COORDINATION",
+      "role": "Architecture, topology, authority boundaries, profile, handoffs and shared policy documentation."
+    },
+    {
+      "name": "schemas",
+      "class": "SHARED_CONTRACT",
+      "role": "Provider-neutral machine-readable contracts for work, capabilities, contributions, provenance, epistemic state, Inference Window and governance handoff."
+    },
+    {
+      "name": "sandbox",
+      "class": "COLLABORATION_PLANE",
+      "role": "Provider-neutral bounded multi-entity collaboration and attributable synthesis/handoff."
+    },
+    {
+      "name": "StegVerse_AI",
+      "class": "ECOSYSTEM_ENTITY",
+      "role": "Ecosystem-purpose reconstruction, evidence-versus-receipted-history matching, capability-gap recognition and intelligence orchestration.",
+      "authority_effect": "NONE"
+    },
+    {
+      "name": "Ecosystem_Chat",
+      "class": "ECOSYSTEM_ENTITY",
+      "role": "Governed external-entity to StegVerse ecosystem interaction interface; ecosystem-specialized Sandbox participant and browser-facing path for manifest-bound SDK work proposal and return correlation.",
+      "authority_effect": "NONE",
+      "capability_declaration_ref": {
+        "repository": "Ecosystem_Chat",
+        "path": "contracts/entity-capability.json",
+        "declaration_sha256": "sha256:e89828f1fb48aefb83713d86d18173517fe62ef7533d9c7d7153d649664a6307"
+      }
+    }
+  ],
+  "invariants": [
+    "Provider participation does not confer governance authority.",
+    "Provider-neutral contracts belong in schemas rather than a provider repository."
+  ]
+}

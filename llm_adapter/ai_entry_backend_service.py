@@ -3,6 +3,10 @@
 Provider execution remains owned by the canonical governed provider path. This
 module supplies credential-free bounded fallback responses and grounds known
 public StegVerse/help questions in the committed public-knowledge manifest.
+When caller-configured, digest-pinned ecosystem registry sources are supplied,
+a third resolver answers exact registry identifiers (task ids, organization
+entity names, invariant keys, reusable task ids) with OBSERVED, line-cited facts
+admitted through ``chat_profiles.evaluate_source``.
 It does not call live providers, issue authority, expose credentials, or persist
 records.
 """
@@ -10,9 +14,26 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from hashlib import sha256
-from typing import Any
+import json
+import os
+from pathlib import Path
+import re
+from typing import Any, Mapping, Sequence
 
 from llm_adapter.ai_entry_provider_boundary import build_disabled_provider_boundary
+from llm_adapter.chat_profiles import (
+    FACT_LABEL_EVIDENCE_CLASS,
+    ProfileValidationError,
+    SourceCandidate,
+    evaluate_source,
+    load_profile,
+)
+from llm_adapter.ecosystem_fact_index import (
+    EcosystemFactSourceConfigError,
+    build_index,
+    load_source_manifest,
+    lookup,
+)
 from llm_adapter.free_tier_limits import ReceiptReplayUsage, evaluate_receipt_replay_limits
 from llm_adapter.free_tier_quota import FreeTierUsage, evaluate_free_tier_quota
 from llm_adapter.public_knowledge import PublicKnowledgeError, resolve_public_question
@@ -28,6 +49,11 @@ ROUTE_KEYWORDS = (
     ("documentation_route", ("docs", "documentation", "wiki", "paper", "spec", "runbook", "proof")),
     ("ecosystem_explanation", ("ecosystem", "stegverse", "concept", "component", "role", "status")),
 )
+
+ECOSYSTEM_FACT_SOURCES_ENV = "LLM_ADAPTER_ECOSYSTEM_FACT_SOURCES"
+ECOSYSTEM_FACT_ROUTE_ID = "ecosystem_fact_index"
+ECOSYSTEM_CHAT_PROFILE_PATH = Path(__file__).resolve().parent.parent / "profiles" / "ecosystem-chat-llm.v1.json"
+_IDENTIFIER_TOKEN_RE = re.compile(r"[A-Za-z0-9_.\-]+")
 
 
 @dataclass(frozen=True)
@@ -131,7 +157,103 @@ def _public_grounding(message: str) -> tuple[str | None, str]:
     return grounded.answer, f"Grounded public StegVerse sources: {source_text}. Model memory is not the factual source."
 
 
-def build_ai_entry_backend_response(message: str, *, declared_route_id: str | None = None) -> AIEntryBackendResponse:
+def _configured_ecosystem_fact_sources(
+    explicit: Sequence[Mapping[str, Any]] | None,
+) -> Sequence[Mapping[str, Any]] | None:
+    if explicit is not None:
+        return explicit
+    manifest_path = os.environ.get(ECOSYSTEM_FACT_SOURCES_ENV, "").strip()
+    if not manifest_path:
+        return None
+    try:
+        return load_source_manifest(Path(manifest_path))
+    except EcosystemFactSourceConfigError:
+        return None
+
+
+def _identifier_candidates(message: str) -> list[str]:
+    """Identifier-shaped tokens only; plain lowercase words are never looked up."""
+
+    candidates: list[str] = []
+    for raw in _IDENTIFIER_TOKEN_RE.findall(message):
+        token = raw.rstrip(".-")
+        if token and not (token.isalpha() and token.islower()) and token not in candidates:
+            candidates.append(token)
+    return candidates
+
+
+def _ecosystem_fact_grounding(
+    message: str,
+    sources: Sequence[Mapping[str, Any]] | None,
+) -> tuple[str | None, str, dict[str, Any] | None]:
+    if not sources:
+        return None, "", None
+    built = build_index(sources)
+    if built.status != "ALLOW" or built.index is None:
+        return None, "", None
+    answers: list[dict[str, Any]] = []
+    for candidate in _identifier_candidates(message):
+        result = lookup(built.index, candidate)
+        if result["status"] == "ANSWER":
+            answers.extend(result["answers"])
+    if not answers:
+        return None, "", None
+    try:
+        profile = load_profile(ECOSYSTEM_CHAT_PROFILE_PATH)
+    except (OSError, ValueError, ProfileValidationError):
+        return None, "", None
+    admitted: list[dict[str, Any]] = []
+    decisions: list[dict[str, Any]] = []
+    for answer in answers:
+        source = answer["source"]
+        decision = evaluate_source(
+            profile,
+            SourceCandidate(
+                source_type="stegverse_registry",
+                uri=f"https://github.com/{source['repository']}/blob/{source['revision']}/{source['path']}",
+                admitted=True,
+                authority_class="OBSERVED_REGISTRY",
+                content_hash=source["sha256"],
+            ),
+        )
+        evidence_class = FACT_LABEL_EVIDENCE_CLASS.get(decision.fact_label)
+        if not decision.allowed_for_factual_grounding or evidence_class != "OBSERVED":
+            continue
+        admitted.append(answer)
+        decisions.append({
+            "citation": answer["citation"],
+            "status": decision.status,
+            "fact_label": decision.fact_label,
+            "allowed_as_authority": decision.allowed_as_authority,
+            "evidence_class": evidence_class,
+        })
+    if not admitted:
+        return None, "", None
+    citations = [answer["citation"] for answer in admitted]
+    text = "Observed in the supplied ecosystem registries: " + "; ".join(
+        f"{answer['kind']} {answer['key']} = "
+        f"{json.dumps(answer['value'], sort_keys=True, ensure_ascii=False)} [{answer['citation']}]"
+        for answer in admitted
+    )
+    guidance = (
+        "Grounded ecosystem registry sources (evidence class OBSERVED, admitted by "
+        f"chat_profiles.evaluate_source as {decisions[0]['status']}): {', '.join(citations)}. "
+        "Exact-identifier lookup only; model memory is not the factual source."
+    )
+    governance_extra = {
+        "evidence_class": "OBSERVED",
+        "ecosystem_fact_citations": citations,
+        "source_decisions": decisions,
+    }
+    return text, guidance, governance_extra
+
+
+def build_ai_entry_backend_response(
+    message: str,
+    *,
+    declared_route_id: str | None = None,
+    ecosystem_fact_sources: Sequence[Mapping[str, Any]] | None = None,
+) -> AIEntryBackendResponse:
     clean = message.strip()
     # Message-content classification is descriptive fallback guidance only.
     # A governed caller that supplies a manifest-selected route remains bound to
@@ -144,6 +266,13 @@ def build_ai_entry_backend_response(message: str, *, declared_route_id: str | No
         route_id = "provider_surface_knowledge"
     elif grounded_answer is not None:
         route_id = "public_knowledge"
+    registry_governance: dict[str, Any] | None = None
+    if clean and grounded_answer is None:
+        configured = _configured_ecosystem_fact_sources(ecosystem_fact_sources)
+        registry_answer, registry_guidance, registry_governance = _ecosystem_fact_grounding(clean, configured)
+        if registry_answer is not None:
+            grounded_answer, grounding_guidance = registry_answer, registry_guidance
+            route_id = ECOSYSTEM_FACT_ROUTE_ID
     digest = sha256(f"{route_id}\n{clean}".encode("utf-8")).hexdigest()[:16]
     response_id = "welcome" if not clean else f"preview-{route_id}-{digest}"
     provider_boundary = build_disabled_provider_boundary()
@@ -191,6 +320,7 @@ def build_ai_entry_backend_response(message: str, *, declared_route_id: str | No
             "authority_issued": False,
             "receipt_id": None,
             "reconstruction_available": False,
+            **(registry_governance or {}),
         },
         activation={
             "live_provider_calls_enabled": provider_boundary.live_provider_calls_enabled,

@@ -1,0 +1,27 @@
+{
+  "schema": "stegverse.test-fixture-provenance/v1",
+  "purpose": "Small verbatim-value subsets of real ecosystem registries used to test llm_adapter.ecosystem_fact_index. Records are trimmed (fewer tasks, repositories and invariants; fewer fields per record) and re-serialized with indent=2; field names and values are copied unchanged.",
+  "authority_effect": "NONE",
+  "fixtures": [
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/organization-tree.json",
+      "subset_of": "SV-LLM/.github@398326a27bc5816a5d06bffac8894a19d997ccdf:data/organization-tree.json",
+      "sha256": "73ae5929ba8a55fb45ac17db8f1b04e239f40d54333ac3b19cbcb6828bb6d1e1"
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/canonical-task-registry.json",
+      "subset_of": "StegVerse-Labs/.github@978b8880d238dc3e3a8b690c0675d8bb0e9d6985:data/canonical-task-registry.json",
+      "sha256": "262ce4c39e2e67cc39cbe7409f77f42263eb0e5babf9a521cfd4a224877b1e1f"
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/reusable-task-registry.json",
+      "subset_of": "StegVerse-Labs/.github@978b8880d238dc3e3a8b690c0675d8bb0e9d6985:data/reusable-task-registry.json",
+      "sha256": "c46ccdeed614cc28f6e4057de1390f274e9afadfb5442de81012b583df2a0644"
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/task-registry-global-invariants.json",
+      "subset_of": "StegVerse-Labs/.github@978b8880d238dc3e3a8b690c0675d8bb0e9d6985:data/task-registry-global-invariants.json",
+      "sha256": "48a9ad4fd192ccedba4b783f1b5de088e34f5b89068421741a79bd9c9977b078"
+    }
+  ]
+}

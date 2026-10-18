@@ -756,3 +756,9 @@ sovereign-ledger-verified read-only Registry disclosure. Canonical terminal
 coordination is recorded in StegVerse-org/.github PR #117, COSV `71000000100100`.
 See [the canonical handoff](LLM_ADAPTER_MIRROR_HANDOFF.md). Provider/product
 activation and propagation remain distinct from this source scope.
+
+## AI Entry ecosystem registry facts (LLMA-368, SHWP-ECOSYSTEM-CHAT-INFERENCE-001)
+
+`llm_adapter/ecosystem_fact_index.py` builds an exact-identifier index over registry bytes the caller supplies, each declared with `repository`, `path`, `revision` and `sha256`. It indexes organization entity names from `SV-LLM/.github:data/organization-tree.json`, task ids from `StegVerse-Labs/.github:data/canonical-task-registry.json`, reusable task ids from `data/reusable-task-registry.json` and invariant keys from `data/task-registry-global-invariants.json`. It fetches nothing. Bytes whose sha256 differs from the declared digest refuse the whole build with `ECOSYSTEM_FACT_SOURCE_DIGEST_MISMATCH`. `lookup` returns `OBSERVED` answers cited as `repo@rev:path:line`, or `NOT_FOUND` (`ECOSYSTEM_FACT_NOT_FOUND`) with the six repair fields. It never fuzzy-matches.
+
+The AI Entry backend consults the index only when sources are configured, through the `ecosystem_fact_sources` argument or `LLM_ADAPTER_ECOSYSTEM_FACT_SOURCES` (a local `stegverse.ecosystem-fact-sources/v1` manifest naming local files and their digests). The index runs as a third resolver, after provider-surface and public knowledge. Only identifier-shaped tokens are looked up, so plain lowercase words are skipped. Each hit is admitted through `chat_profiles.evaluate_source` as source type `stegverse_registry`, which returns `ALLOW_OBSERVED_REGISTRY_FACT` / `observed_registry_fact` and never authority. Hits return route `ecosystem_fact_index` with `governance.evidence_class = OBSERVED`. Misses, refusals and unconfigured runs give the same responses as before.
