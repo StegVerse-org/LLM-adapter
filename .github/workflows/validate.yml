@@ -45,22 +45,21 @@ jobs:
           if command -v python3.11 >/dev/null 2>&1; then
             selected="$(command -v python3.11)"
           else
-            selected="$(find "${RUNNER_TOOL_CACHE:-/nonexistent}" -type f -name python 2>/dev/null | grep -E '[/\\]Python[/\\]3\.11([./\\]|$)' | head -n 1 || true)"
+            # The tool cache's bin/python is a symlink, so files and links both count.
+            selected="$(find "${RUNNER_TOOL_CACHE:-/nonexistent}" \( -type f -o -type l \) -name python 2>/dev/null | grep -E '[/\\]Python[/\\]3\.11([./\\]|$)' | head -n 1 || true)"
           fi
           if [ -z "$selected" ]; then
-            bootstrap="$(command -v python3 || command -v python || true)"
-            if [ -z "$bootstrap" ]; then
-              echo "bootstrap_python_not_found"
-              exit 1
-            fi
-            "$bootstrap" -m pip install --user uv
-            uv_bin="$(command -v uv || true)"
-            if [ -z "$uv_bin" ]; then
-              user_base="$($bootstrap -m site --user-base)"
-              uv_bin="$user_base/bin/uv"
-            fi
-            "$uv_bin" python install 3.11
-            selected="$($uv_bin python find 3.11)"
+            # No interpreter is downloaded or installed: the runner image
+            # provides Python 3.11 or the job fails closed (LLMA-368).
+            printf '%s\n' \
+              "state=FAIL_CLOSED" \
+              "failure_code=REQUESTED_PYTHON_NOT_PROVIDED_BY_RUNNER" \
+              "failed_predicate=runner_provides_python_3.11" \
+              "required_evidence_or_repair=select a runner image whose PATH or tool cache provides Python 3.11" \
+              "retry_entrypoint=.github/workflows/validate.yml (workflow_dispatch)" \
+              "owning_existing_goal=LLMA-DECLARED-PATH-CONFORMANCE-368" \
+              "next_attempt=rerun validate on a runner image that provides Python 3.11"
+            exit 1
           fi
           echo "PYTHON_BIN=$selected" >> "$GITHUB_ENV"
           "$selected" --version

@@ -84,21 +84,19 @@ jobs:
           elif command -v py >/dev/null 2>&1; then
             printf '#!/usr/bin/env bash\nexec py -%q "$@"\n' "$PYTHON_VERSION" > "$wrapper"
           else
-            selected="$(find "${RUNNER_TOOL_CACHE:-/nonexistent}" -type f \( -name python -o -name python.exe \) 2>/dev/null | grep -E "[/\\]Python[/\\]${PYTHON_VERSION}([./\\]|$)" | head -n 1 || true)"
+            selected="$(find "${RUNNER_TOOL_CACHE:-/nonexistent}" \( -type f -o -type l \) \( -name python -o -name python.exe \) 2>/dev/null | grep -E "[/\\]Python[/\\]${PYTHON_VERSION}([./\\]|$)" | head -n 1 || true)"
             if [ -z "$selected" ]; then
-              bootstrap="$(command -v python3 || command -v python || true)"
-              if [ -z "$bootstrap" ]; then
-                echo "bootstrap_python_not_found"
-                exit 1
-              fi
-              "$bootstrap" -m pip install --user uv
-              uv_bin="$(command -v uv || true)"
-              if [ -z "$uv_bin" ]; then
-                user_base="$($bootstrap -m site --user-base)"
-                uv_bin="$user_base/bin/uv"
-              fi
-              "$uv_bin" python install "$PYTHON_VERSION"
-              selected="$($uv_bin python find "$PYTHON_VERSION")"
+              # No interpreter is downloaded or installed: the runner image
+              # provides the requested Python or the job fails closed (LLMA-368).
+              printf '%s\n' \
+                "state=FAIL_CLOSED" \
+                "failure_code=REQUESTED_PYTHON_NOT_PROVIDED_BY_RUNNER" \
+                "failed_predicate=runner_provides_python_${PYTHON_VERSION}" \
+                "required_evidence_or_repair=select a runner image whose PATH, py launcher or tool cache provides Python ${PYTHON_VERSION}" \
+                "retry_entrypoint=.github/workflows/capability-runtime.yml (workflow_dispatch)" \
+                "owning_existing_goal=LLMA-DECLARED-PATH-CONFORMANCE-368" \
+                "next_attempt=rerun the matrix entry on a runner image that provides Python ${PYTHON_VERSION}"
+              exit 1
             fi
           fi
           if [ ! -s "$wrapper" ]; then

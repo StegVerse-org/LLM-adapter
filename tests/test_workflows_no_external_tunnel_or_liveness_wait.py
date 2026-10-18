@@ -3,7 +3,8 @@
 Task Registry global invariants: external_machine_awaiting_allowed=false and
 destination_liveness_is_transition_predicate=false. The retired HIL ephemeral
 cycle downloaded an unpinned Cloudflare quick-tunnel binary and polled public
-readiness before accepting work; nothing in CI may reintroduce either.
+readiness before accepting work, and capability-runtime installed uv to download
+a Python interpreter; nothing in CI may reintroduce any of them.
 """
 from __future__ import annotations
 
@@ -16,11 +17,13 @@ FORBIDDEN = (
     re.compile(r"cloudflared", re.IGNORECASE),
     re.compile(r"trycloudflare\.com", re.IGNORECASE),
     re.compile(r"releases/latest/download"),
+    re.compile(r"pip install[^\n]*\buv\b"),
+    re.compile(r"\buv python install\b"),
 )
 
 
 class WorkflowExternalDependencyTests(unittest.TestCase):
-    def test_no_workflow_fetches_a_tunnel_or_an_unpinned_release(self) -> None:
+    def test_no_workflow_fetches_a_tunnel_an_unpinned_release_or_an_interpreter(self) -> None:
         offenders = [
             f"{path.name}: {pattern.pattern}"
             for path in sorted(WORKFLOWS.glob("*.y*ml"))
