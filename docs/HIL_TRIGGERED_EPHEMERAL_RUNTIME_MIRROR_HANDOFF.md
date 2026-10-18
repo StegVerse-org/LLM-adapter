@@ -65,3 +65,15 @@ GitHub Actions may provide ephemeral compute capacity for this controlled cycle,
 A successful workflow startup proves only trigger admission, ephemeral receiver startup, public HTTPS reachability, and exact readiness. Full controlled-cycle completion still requires one actual response packet to reach that live lease. The workflow then performs process restart and persisted-byte/hash verification before teardown.
 
 The workflow does not perform private review, publication, Master Record release, or TVC lifecycle admission. Those remain separate governed transitions after the runtime evidence packet is preserved.
+
+## Tunnel cycle retired — 2026-10-18 (LLMA-368)
+
+The installed bounded cycle above is retired. `.github/workflows/hil-triggered-ephemeral-cycle.yml`, `.github/workflows/hil-ephemeral-controlled-probe.yml`, `control/hil-ephemeral-trigger.json` and `control/hil-ephemeral-probe.json` are removed. That cycle broke the Task Registry global invariants in three ways:
+
+- It downloaded an unpinned third-party binary (`cloudflared`, `releases/latest`) and depended on an external tunnel service. Removing external machine and framework dependencies is required.
+- It polled public readiness (up to 60 attempts) before accepting work, which made destination liveness a transition predicate (`destination_liveness_is_transition_predicate=false`).
+- It held a runner open waiting for one participant submission, which awaited an external machine (`external_machine_awaiting_allowed=false`).
+
+A participant submission is now received the same way as every other HIL submission: on the host-native gateway (`scripts/stegdeploy_native_gateway.py`, started for HIL by `scripts/start-hil-runtime.sh`). It records its receipt in the durable HIL store, and the gateway forward queue drains it. Where no receiver is materialized, the submission waits in the durable queue or is materialized by event (`receiver_unavailable_disposition=DURABLE_QUEUE_OR_EVENT_EPHEMERAL_MATERIALIZATION`). No public reachability is claimed or awaited.
+
+`tests/test_workflows_no_external_tunnel_or_liveness_wait.py` fails if any workflow fetches a tunnel or an unpinned release, or if the retired files return. Historical evidence from the 2026-08 cycles is unchanged, and `data/master-records-role-audit.json` still cites the workflow as a historical row.
