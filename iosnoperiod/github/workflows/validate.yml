@@ -151,6 +151,8 @@ jobs:
         run: "$PYTHON_BIN -m unittest -v tests/test_ai_entry_endpoint.py"
       - name: Test service wrapper
         run: "$PYTHON_BIN -m unittest -v tests/test_ai_entry_service_wrapper.py"
+      - name: Test ecosystem fact index and its shared conformance vector
+        run: "$PYTHON_BIN -m unittest -v tests/test_ecosystem_fact_index.py tests/test_ecosystem_fact_index_conformance.py"
       - name: Test free-tier quota
         run: "$PYTHON_BIN -m unittest -v tests/test_free_tier_quota.py"
       - name: Test free-tier limits
