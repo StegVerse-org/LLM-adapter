@@ -730,7 +730,7 @@ peer execution profiles. The framework helper uses existing run-manifest routing
 adapter discovery preserves its own receiving operation. External instructions
 end at canonical manifest submission and evidence retention. Local handoff is not
 receiver observation; external reciprocal Interlock/InTr remains deferred.
-SDK PR #429 was canonically merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`. This adapter now pins SDK main `3e9e7f31e4cdc65a017d0766b2a7d0ba6b66eca7`, which contains that merge, the standard-library HTTP client that removed `requests` (SDK#520), the organization-role-conformance route (`1062d29`) and the collaborative-ingress routes (`stegverse.route.ecosystem-chat.v1`, `stegverse.route.va-scoped-chat.v1`, `stegverse.route.hil-intake.v1`, #447). See the repository's portability/canonical-standing/machine-contract mirror handoff for retained proof boundaries.
+SDK PR #429 was canonically merged as `ac4fccc1271487c0134ca8f93d17e14ccb395842`. This adapter now pins SDK `080ea4b275c2207268b24314109e8c4f47298405` (SDK#552, a descendant of SDK main that adds `constraints/sdk-install.txt`; every workflow install exports it as `PIP_CONSTRAINT` via `scripts/sdk_install_constraint.py`, #368 M-P8), which contains that merge, the standard-library HTTP client that removed `requests` (SDK#520), the organization-role-conformance route (`1062d29`) and the collaborative-ingress routes (`stegverse.route.ecosystem-chat.v1`, `stegverse.route.va-scoped-chat.v1`, `stegverse.route.hil-intake.v1`, #447). See the repository's portability/canonical-standing/machine-contract mirror handoff for retained proof boundaries.
 
 
 ### Manifest authority boundary (LLMA-368 F14)

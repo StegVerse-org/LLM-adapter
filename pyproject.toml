@@ -24,7 +24,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "stegverse-sdk @ git+https://github.com/StegVerse-org/StegVerse-SDK.git@3e9e7f31e4cdc65a017d0766b2a7d0ba6b66eca7",
+    "stegverse-sdk @ git+https://github.com/StegVerse-org/StegVerse-SDK.git@080ea4b275c2207268b24314109e8c4f47298405",
 ]
 
 [project.optional-dependencies]

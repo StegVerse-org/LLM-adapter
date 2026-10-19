@@ -30,6 +30,6 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - run: python -m unittest tests/test_kv_memory_context_bridge.py
       - run: python -m unittest tests/test_kv_memory_provider_request_materializer.py
