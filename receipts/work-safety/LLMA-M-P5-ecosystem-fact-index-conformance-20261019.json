@@ -1,0 +1,201 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-M-P5-ECOSYSTEM-FACT-INDEX-CONFORMANCE-VECTOR",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+    "StegVerse-Labs/.github:data/canonical-task-registry.json#SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+    "SV-LLM/.github:SVORG-LLM-ORG-FOUNDATION-001",
+    "StegVerse-Labs/.github:RT-ECOSYSTEM-CHAT-LOCAL-ANSWER-001",
+    "https://github.com/StegVerse-Labs/.github/pull/3274"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Test-only conformance fixtures and test for an existing read-only lookup; no Organization append, Master Records transition or registry mutation."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/426",
+      "https://github.com/StegVerse-Labs/.github/pull/3274"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "tests/test_ecosystem_fact_index.py",
+      "tests/fixtures/ecosystem_fact_index/PROVENANCE.json",
+      "llm_adapter/ecosystem_fact_index.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Only new files under tests/fixtures/ecosystem_fact_index/conformance/ and a new test file; no other open PR touches them."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "No runtime behavior changes; the conformance vector is a test fixture documented by its own README in the vector directory.",
+    "evidence_refs": [
+      "tests/fixtures/ecosystem_fact_index/conformance/README.md",
+      "tests/test_ecosystem_fact_index_conformance.py"
+    ]
+  },
+  "covered_paths": [
+    "tests/fixtures/ecosystem_fact_index/conformance/conformance-vector.json",
+    "tests/fixtures/ecosystem_fact_index/conformance/sources/organization-tree.json",
+    "tests/fixtures/ecosystem_fact_index/conformance/sources/canonical-task-registry.json",
+    "tests/fixtures/ecosystem_fact_index/conformance/sources/reusable-task-registry.json",
+    "tests/fixtures/ecosystem_fact_index/conformance/sources/task-registry-global-invariants.json",
+    "tests/fixtures/ecosystem_fact_index/conformance/refusal/digest-mismatch.json",
+    "tests/fixtures/ecosystem_fact_index/conformance/refusal/duplicate-key.json",
+    "tests/fixtures/ecosystem_fact_index/conformance/refusal/nesting-too-deep.json",
+    "tests/fixtures/ecosystem_fact_index/conformance/refusal/unsupported-source.json",
+    "tests/fixtures/ecosystem_fact_index/conformance/refusal/schema-unrecognized.json",
+    "tests/test_ecosystem_fact_index_conformance.py",
+    "tests/fixtures/ecosystem_fact_index/conformance/README.md"
+  ],
+  "new_files": [
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/conformance/conformance-vector.json",
+      "semantic_responsibility": "Pinned shared conformance manifest (stegverse.ecosystem-fact-index-conformance/v1): source and refusal fixtures with sha256, and lookup/build cases with exact expected status, disposition, answers (key, kind, citation) or failure_code/failed_predicate.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_ecosystem_fact_index.py (in-code assertions, not vendorable by another repository)",
+      "justification": "Labs RT-ECOSYSTEM-CHAT-LOCAL-ANSWER-001 must vendor the same expectations by one pinned digest; in-code test assertions cannot be pinned or vendored.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/test_ecosystem_fact_index.py",
+        "llm_adapter/ecosystem_fact_index.py"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/conformance/sources/organization-tree.json",
+      "semantic_responsibility": "Byte-identical vendorable copy of the pinned fixture tests/fixtures/ecosystem_fact_index/organization-tree.json so the conformance directory is self-contained.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/fixtures/ecosystem_fact_index/organization-tree.json (same bytes, same sha256; reused, test asserts equality)",
+      "justification": "Consumers copy one directory; the copy is pinned by the same sha256 and asserted byte-equal to the original.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/fixtures/ecosystem_fact_index/organization-tree.json",
+        "tests/fixtures/ecosystem_fact_index/PROVENANCE.json"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/conformance/sources/canonical-task-registry.json",
+      "semantic_responsibility": "Byte-identical vendorable copy of the pinned fixture tests/fixtures/ecosystem_fact_index/canonical-task-registry.json so the conformance directory is self-contained.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/fixtures/ecosystem_fact_index/canonical-task-registry.json (same bytes, same sha256; reused, test asserts equality)",
+      "justification": "Consumers copy one directory; the copy is pinned by the same sha256 and asserted byte-equal to the original.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/fixtures/ecosystem_fact_index/canonical-task-registry.json",
+        "tests/fixtures/ecosystem_fact_index/PROVENANCE.json"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/conformance/sources/reusable-task-registry.json",
+      "semantic_responsibility": "Byte-identical vendorable copy of the pinned fixture tests/fixtures/ecosystem_fact_index/reusable-task-registry.json so the conformance directory is self-contained.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/fixtures/ecosystem_fact_index/reusable-task-registry.json (same bytes, same sha256; reused, test asserts equality)",
+      "justification": "Consumers copy one directory; the copy is pinned by the same sha256 and asserted byte-equal to the original.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/fixtures/ecosystem_fact_index/reusable-task-registry.json",
+        "tests/fixtures/ecosystem_fact_index/PROVENANCE.json"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/conformance/sources/task-registry-global-invariants.json",
+      "semantic_responsibility": "Byte-identical vendorable copy of the pinned fixture tests/fixtures/ecosystem_fact_index/task-registry-global-invariants.json so the conformance directory is self-contained.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/fixtures/ecosystem_fact_index/task-registry-global-invariants.json (same bytes, same sha256; reused, test asserts equality)",
+      "justification": "Consumers copy one directory; the copy is pinned by the same sha256 and asserted byte-equal to the original.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/fixtures/ecosystem_fact_index/task-registry-global-invariants.json",
+        "tests/fixtures/ecosystem_fact_index/PROVENANCE.json"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/conformance/refusal/digest-mismatch.json",
+      "semantic_responsibility": "Small registry bytes for the digest-mismatch build-refusal conformance case.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_ecosystem_fact_index.py builds equivalent refusal bytes inline, which cannot be vendored",
+      "justification": "Refusal cases must ship their bytes so another implementation can reproduce the same fail-closed result.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/test_ecosystem_fact_index.py",
+        "llm_adapter/ecosystem_fact_index.py"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/conformance/refusal/duplicate-key.json",
+      "semantic_responsibility": "Small registry bytes for the duplicate-key build-refusal conformance case.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_ecosystem_fact_index.py builds equivalent refusal bytes inline, which cannot be vendored",
+      "justification": "Refusal cases must ship their bytes so another implementation can reproduce the same fail-closed result.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/test_ecosystem_fact_index.py",
+        "llm_adapter/ecosystem_fact_index.py"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/conformance/refusal/nesting-too-deep.json",
+      "semantic_responsibility": "Small registry bytes for the nesting-too-deep build-refusal conformance case.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_ecosystem_fact_index.py builds equivalent refusal bytes inline, which cannot be vendored",
+      "justification": "Refusal cases must ship their bytes so another implementation can reproduce the same fail-closed result.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/test_ecosystem_fact_index.py",
+        "llm_adapter/ecosystem_fact_index.py"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/conformance/refusal/unsupported-source.json",
+      "semantic_responsibility": "Small registry bytes for the unsupported-source build-refusal conformance case.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_ecosystem_fact_index.py builds equivalent refusal bytes inline, which cannot be vendored",
+      "justification": "Refusal cases must ship their bytes so another implementation can reproduce the same fail-closed result.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/test_ecosystem_fact_index.py",
+        "llm_adapter/ecosystem_fact_index.py"
+      ]
+    },
+    {
+      "path": "tests/fixtures/ecosystem_fact_index/conformance/refusal/schema-unrecognized.json",
+      "semantic_responsibility": "Small registry bytes for the schema-unrecognized build-refusal conformance case.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_ecosystem_fact_index.py builds equivalent refusal bytes inline, which cannot be vendored",
+      "justification": "Refusal cases must ship their bytes so another implementation can reproduce the same fail-closed result.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/test_ecosystem_fact_index.py",
+        "llm_adapter/ecosystem_fact_index.py"
+      ]
+    },
+    {
+      "path": "tests/test_ecosystem_fact_index_conformance.py",
+      "semantic_responsibility": "Runs every conformance case through build_index/lookup, asserts exact expectations, fixture digests, and the pinned manifest sha256.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_ecosystem_fact_index.py (unit tests; does not read the vector)",
+      "justification": "The vector needs its own runner that consumers can mirror, and it pins the manifest digest.",
+      "canonical_owner": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "evidence_refs": [
+        "tests/test_ecosystem_fact_index.py"
+      ]
+    }
+  ]
+}

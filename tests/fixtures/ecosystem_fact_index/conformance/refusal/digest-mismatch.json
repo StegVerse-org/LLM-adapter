@@ -1,0 +1,9 @@
+{
+  "schema": "sv-llm.organization-tree/v1",
+  "repositories": [
+    {
+      "name": "Mismatch_Entity",
+      "class": "ECOSYSTEM_ENTITY"
+    }
+  ]
+}

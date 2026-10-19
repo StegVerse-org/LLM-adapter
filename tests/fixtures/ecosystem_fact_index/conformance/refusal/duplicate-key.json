@@ -1,0 +1,10 @@
+{
+  "schema": "sv-llm.organization-tree/v1",
+  "repositories": [
+    {
+      "name": "Duplicate_Entity",
+      "name": "Duplicate_Entity_Shadow",
+      "class": "ECOSYSTEM_ENTITY"
+    }
+  ]
+}

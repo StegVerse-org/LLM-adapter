@@ -1,0 +1,26 @@
+{
+  "schema": "stegverse.reusable-task-registry/v1",
+  "generation": 3,
+  "status": "ACTIVE_IDENTITY_CONSTRUCT_SOURCE_DEFINED",
+  "purpose": "Provide durable reusable task identities whose invocation-specific parameters derive exact manifest-bound TT/RTG/GTG constructs and ephemeral runners without creating duplicate permanent implementations or granting execution authority.",
+  "tasks": [
+    {
+      "reusable_task_id": "RT-README-VALIDATION-001",
+      "name": "README Validation",
+      "purpose": "Evaluate every materially changed repository and keep its README accurate for behavior, runtime semantics, interfaces, governance and authority boundaries, evidence semantics, prerequisites, dependencies, failure behavior, and capability meaning.",
+      "trigger": "repository materially changed in current work"
+    },
+    {
+      "reusable_task_id": "RT-MIRROR-HANDOFF-VALIDATION-001",
+      "name": "Mirror Handoff Validation",
+      "purpose": "Resolve and validate applicable *_MIRROR_HANDOFF.md files for repositories touched by current work and update stale task state, next transition, blockers, dependencies, authority boundaries, terminal evidence, and reusable implementation references.",
+      "trigger": "repository or task state materially changed in current work"
+    },
+    {
+      "reusable_task_id": "RT-STEGINDEX-VALIDATION-001",
+      "name": "StegIndex Validation",
+      "purpose": "Verify that capabilities, repositories, releases, runtime states, interfaces, and governed functions materially changed by current work remain accurately represented in StegIndex and related index projections.",
+      "trigger": "indexed capability or indexed source materially changed"
+    }
+  ]
+}
