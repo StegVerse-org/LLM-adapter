@@ -525,7 +525,7 @@ Re-reading current StegVerse-SDK main demonstrated that the installed Ecosystem 
 
 ## 2026-10-17 StegVerse governance gate (CI evidence only)
 
-`.github/workflows/stegverse-governance.yml` (added by #420, merged by the owner) calls the SDK's reusable `StegVerse-org/StegVerse-SDK/.github/workflows/governance-gate.yml@main` on every push and pull request.
+`.github/workflows/stegverse-governance.yml` (added by #420, merged by the owner) calls the SDK's reusable `StegVerse-org/StegVerse-SDK/.github/workflows/governance-gate.yml` on every push and pull request. Since 2026-10-19 (LLMA-368 M-P6) both the workflow reference and its `sdk_ref` input are pinned to SDK commit `1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b` instead of following `@main`.
 - **What it does:** it verifies any portable governance bundles under `.stegverse/governance/`. There are none yet, so the result is PASS / `NO_GOVERNANCE_BUNDLES_FOUND`. It also classifies this repository's JSON Schemas against SDK structural-validator contract 1.6; 17 of 21 are compatible. The classification is informational only.
 - **Its limits:** it is read-only (`contents: read`) and adds no credential or dependency. Its result is CI_VALIDATED evidence. It is not runtime observation and confers no transition, credential or admission authority.
 - **Owner:** `SDK-STRUCTURAL-VALIDATOR-CONSOLIDATION-001` (StegVerse-org/StegVerse-SDK#484). The SDK-side handoff is `StegVerse-org/StegVerse-SDK:docs/SDK_GOVERNANCE_PRODUCT_MIRROR_HANDOFF.md`.
