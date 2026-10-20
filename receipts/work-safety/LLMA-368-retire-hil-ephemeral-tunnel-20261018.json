@@ -1,0 +1,71 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368-RETIRE-HIL-EPHEMERAL-TUNNEL",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/HIL_TRIGGERED_EPHEMERAL_RUNTIME_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+    "StegVerse-Labs/.github:data/task-registry-global-invariants.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Removes a CI transport path; no Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "https://github.com/StegVerse-org/LLM-adapter/issues/185"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "scripts/stegdeploy_native_gateway.py",
+      "scripts/start-hil-runtime.sh",
+      "data/master-records-role-audit.json"
+    ]
+  },
+  "reuse_decision": "REUSE",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No open PR touches the retired workflows or control files."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": false,
+    "no_readme_update_reason": "README does not describe the HIL ephemeral tunnel cycle.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/hil-ephemeral-controlled-probe.yml",
+    ".github/workflows/hil-triggered-ephemeral-cycle.yml",
+    "control/hil-ephemeral-probe.json",
+    "control/hil-ephemeral-trigger.json",
+    "docs/HIL_TRIGGERED_EPHEMERAL_RUNTIME_MIRROR_HANDOFF.md",
+    "tests/test_workflows_no_external_tunnel_or_liveness_wait.py"
+  ],
+  "new_files": [
+    {
+      "path": "tests/test_workflows_no_external_tunnel_or_liveness_wait.py",
+      "semantic_responsibility": "Guard that no workflow fetches a third-party tunnel or unpinned release and that the retired HIL tunnel cycle stays removed.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_live_activation_automation_contract.py (forbids sleeps/retries in verifier scripts, not workflow contents)",
+      "justification": "No existing test inspects workflow files for external tunnel downloads.",
+      "canonical_owner": "LLMA-DECLARED-PATH-CONFORMANCE-368",
+      "evidence_refs": [
+        "tests/test_live_activation_automation_contract.py"
+      ]
+    }
+  ]
+}

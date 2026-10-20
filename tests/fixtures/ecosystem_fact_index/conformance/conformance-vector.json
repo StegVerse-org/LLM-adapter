@@ -1,0 +1,429 @@
+{
+  "schema": "stegverse.ecosystem-fact-index-conformance/v1",
+  "vector_id": "LLMA-ECOSYSTEM-FACT-INDEX-CONFORMANCE-001",
+  "subject": {
+    "repository": "StegVerse-org/LLM-adapter",
+    "module": "llm_adapter/ecosystem_fact_index.py",
+    "build_entrypoint": "llm_adapter.ecosystem_fact_index.build_index",
+    "lookup_entrypoint": "llm_adapter.ecosystem_fact_index.lookup",
+    "owning_existing_goal": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001"
+  },
+  "consumers": [
+    "StegVerse-Labs/.github:RT-ECOSYSTEM-CHAT-LOCAL-ANSWER-001"
+  ],
+  "authority_effect": "NONE",
+  "rules": {
+    "disposition": {
+      "ANSWER": "ALLOW",
+      "NOT_FOUND": "FAIL_CLOSED",
+      "REFUSED": "FAIL_CLOSED"
+    },
+    "fail_closed_required_fields": [
+      "failure_code",
+      "failed_predicate",
+      "required_evidence_or_repair",
+      "retry_entrypoint",
+      "owning_existing_goal",
+      "next_attempt"
+    ],
+    "citation_format": "{repository}@{revision}:{path}:{line}",
+    "line_semantics": "1-based line of the supplied bytes on which the matched key appears",
+    "answer_evidence_class": "OBSERVED",
+    "matching": "exact, case-sensitive, no whitespace stripping, no prefix or fuzzy matching",
+    "expected_answers_semantics": "exact ordered list; each answer compared on key, kind and citation",
+    "fixture_paths_relative_to": "this manifest directory"
+  },
+  "source_fixtures": [
+    {
+      "id": "organization-tree",
+      "repository": "SV-LLM/.github",
+      "path": "data/organization-tree.json",
+      "revision": "fixture-subset",
+      "sha256": "73ae5929ba8a55fb45ac17db8f1b04e239f40d54333ac3b19cbcb6828bb6d1e1",
+      "fixture": "sources/organization-tree.json",
+      "subset_of": "SV-LLM/.github@398326a27bc5816a5d06bffac8894a19d997ccdf:data/organization-tree.json"
+    },
+    {
+      "id": "canonical-task-registry",
+      "repository": "StegVerse-Labs/.github",
+      "path": "data/canonical-task-registry.json",
+      "revision": "fixture-subset",
+      "sha256": "262ce4c39e2e67cc39cbe7409f77f42263eb0e5babf9a521cfd4a224877b1e1f",
+      "fixture": "sources/canonical-task-registry.json",
+      "subset_of": "StegVerse-Labs/.github@978b8880d238dc3e3a8b690c0675d8bb0e9d6985:data/canonical-task-registry.json"
+    },
+    {
+      "id": "reusable-task-registry",
+      "repository": "StegVerse-Labs/.github",
+      "path": "data/reusable-task-registry.json",
+      "revision": "fixture-subset",
+      "sha256": "c46ccdeed614cc28f6e4057de1390f274e9afadfb5442de81012b583df2a0644",
+      "fixture": "sources/reusable-task-registry.json",
+      "subset_of": "StegVerse-Labs/.github@978b8880d238dc3e3a8b690c0675d8bb0e9d6985:data/reusable-task-registry.json"
+    },
+    {
+      "id": "task-registry-global-invariants",
+      "repository": "StegVerse-Labs/.github",
+      "path": "data/task-registry-global-invariants.json",
+      "revision": "fixture-subset",
+      "sha256": "48a9ad4fd192ccedba4b783f1b5de088e34f5b89068421741a79bd9c9977b078",
+      "fixture": "sources/task-registry-global-invariants.json",
+      "subset_of": "StegVerse-Labs/.github@978b8880d238dc3e3a8b690c0675d8bb0e9d6985:data/task-registry-global-invariants.json"
+    }
+  ],
+  "indexes": {
+    "pinned-sources": {
+      "source_fixtures": [
+        "organization-tree",
+        "canonical-task-registry",
+        "reusable-task-registry",
+        "task-registry-global-invariants"
+      ],
+      "expected_build_status": "ALLOW",
+      "expected_fact_count": 20
+    }
+  },
+  "refusal_fixtures": [
+    {
+      "id": "digest-mismatch",
+      "fixture": "refusal/digest-mismatch.json",
+      "sha256": "b2c6cad74c2a6ae70bc5a65b9eb640a7c7e807a9cc47ca9ec5681eccb586b44b"
+    },
+    {
+      "id": "duplicate-key",
+      "fixture": "refusal/duplicate-key.json",
+      "sha256": "8ba4e6ac9fdb4f196664cb19e0f2de153128e563f0ad45d481cd54b66a3223c6"
+    },
+    {
+      "id": "nesting-too-deep",
+      "fixture": "refusal/nesting-too-deep.json",
+      "sha256": "6253d8fda471bc7919d7999c84ef4b390326c163146462d86c0820f33f5e0a13"
+    },
+    {
+      "id": "unsupported-source",
+      "fixture": "refusal/unsupported-source.json",
+      "sha256": "69ab1384f5de65f705a336ead293efa8d05262e4498e935724d0ed6ad9090e67"
+    },
+    {
+      "id": "schema-unrecognized",
+      "fixture": "refusal/schema-unrecognized.json",
+      "sha256": "4d3141ea4e01458f43725d550b2adad871e5aae206adff0f6332b3d1074c90bb"
+    }
+  ],
+  "cases": [
+    {
+      "id": "hit-organization-entity",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "Ecosystem_Chat",
+      "expected_status": "ANSWER",
+      "expected_disposition": "ALLOW",
+      "expected_answers": [
+        {
+          "key": "Ecosystem_Chat",
+          "kind": "organization_entity",
+          "citation": "SV-LLM/.github@fixture-subset:data/organization-tree.json:28"
+        }
+      ]
+    },
+    {
+      "id": "hit-organization-entity-dot-name",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": ".github",
+      "expected_status": "ANSWER",
+      "expected_disposition": "ALLOW",
+      "expected_answers": [
+        {
+          "key": ".github",
+          "kind": "organization_entity",
+          "citation": "SV-LLM/.github@fixture-subset:data/organization-tree.json:7"
+        }
+      ]
+    },
+    {
+      "id": "hit-canonical-task",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+      "expected_status": "ANSWER",
+      "expected_disposition": "ALLOW",
+      "expected_answers": [
+        {
+          "key": "SHWP-ECOSYSTEM-CHAT-INFERENCE-001",
+          "kind": "canonical_task",
+          "citation": "StegVerse-Labs/.github@fixture-subset:data/canonical-task-registry.json:56"
+        }
+      ]
+    },
+    {
+      "id": "hit-reusable-task",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "RT-README-VALIDATION-001",
+      "expected_status": "ANSWER",
+      "expected_disposition": "ALLOW",
+      "expected_answers": [
+        {
+          "key": "RT-README-VALIDATION-001",
+          "kind": "reusable_task",
+          "citation": "StegVerse-Labs/.github@fixture-subset:data/reusable-task-registry.json:8"
+        }
+      ]
+    },
+    {
+      "id": "hit-global-invariant",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "user_verification_authority",
+      "expected_status": "ANSWER",
+      "expected_disposition": "ALLOW",
+      "expected_answers": [
+        {
+          "key": "user_verification_authority",
+          "kind": "global_invariant",
+          "citation": "StegVerse-Labs/.github@fixture-subset:data/task-registry-global-invariants.json:6"
+        }
+      ]
+    },
+    {
+      "id": "hit-with-matching-kind-filter",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "QUANTUM-RESILIENCE-001",
+      "kind": "canonical_task",
+      "expected_status": "ANSWER",
+      "expected_disposition": "ALLOW",
+      "expected_answers": [
+        {
+          "key": "QUANTUM-RESILIENCE-001",
+          "kind": "canonical_task",
+          "citation": "StegVerse-Labs/.github@fixture-subset:data/canonical-task-registry.json:29"
+        }
+      ]
+    },
+    {
+      "id": "miss-kind-filter-mismatch",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "QUANTUM-RESILIENCE-001",
+      "kind": "reusable_task",
+      "expected_status": "NOT_FOUND",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_NOT_FOUND",
+      "expected_failed_predicate": "FACT_PRESENT_IN_SUPPLIED_REGISTRIES",
+      "note": "Key exists only as canonical_task."
+    },
+    {
+      "id": "miss-wrong-case",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "ecosystem_chat",
+      "expected_status": "NOT_FOUND",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_NOT_FOUND",
+      "expected_failed_predicate": "FACT_PRESENT_IN_SUPPLIED_REGISTRIES",
+      "note": "Matching is case-sensitive."
+    },
+    {
+      "id": "miss-wrong-case-task",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "shwp-ecosystem-chat-inference-001",
+      "expected_status": "NOT_FOUND",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_NOT_FOUND",
+      "expected_failed_predicate": "FACT_PRESENT_IN_SUPPLIED_REGISTRIES"
+    },
+    {
+      "id": "miss-prefix",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "QUANTUM-RESILIENCE",
+      "expected_status": "NOT_FOUND",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_NOT_FOUND",
+      "expected_failed_predicate": "FACT_PRESENT_IN_SUPPLIED_REGISTRIES",
+      "note": "No prefix matching."
+    },
+    {
+      "id": "miss-nested-dependency-id",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "DEP-QUANTUM-DEVICE-NODE-CENSUS",
+      "expected_status": "NOT_FOUND",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_NOT_FOUND",
+      "expected_failed_predicate": "FACT_PRESENT_IN_SUPPLIED_REGISTRIES",
+      "note": "Nested task references are not indexed."
+    },
+    {
+      "id": "miss-nested-invariant-array-element",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "STEGOS-CURRENT-DEVICE-NODE",
+      "expected_status": "NOT_FOUND",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_NOT_FOUND",
+      "expected_failed_predicate": "FACT_PRESENT_IN_SUPPLIED_REGISTRIES",
+      "note": "Only top-level invariant keys are indexed."
+    },
+    {
+      "id": "miss-empty",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "",
+      "expected_status": "NOT_FOUND",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_NOT_FOUND",
+      "expected_failed_predicate": "FACT_PRESENT_IN_SUPPLIED_REGISTRIES"
+    },
+    {
+      "id": "miss-leading-space",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": " Ecosystem_Chat",
+      "expected_status": "NOT_FOUND",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_NOT_FOUND",
+      "expected_failed_predicate": "FACT_PRESENT_IN_SUPPLIED_REGISTRIES",
+      "note": "No whitespace stripping."
+    },
+    {
+      "id": "miss-trailing-newline",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "RT-README-VALIDATION-001\n",
+      "expected_status": "NOT_FOUND",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_NOT_FOUND",
+      "expected_failed_predicate": "FACT_PRESENT_IN_SUPPLIED_REGISTRIES"
+    },
+    {
+      "id": "miss-surrounding-tabs",
+      "operation": "lookup",
+      "index": "pinned-sources",
+      "query": "\tuser_verification_authority\t",
+      "expected_status": "NOT_FOUND",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_NOT_FOUND",
+      "expected_failed_predicate": "FACT_PRESENT_IN_SUPPLIED_REGISTRIES"
+    },
+    {
+      "id": "refuse-digest-mismatch",
+      "operation": "build",
+      "sources": [
+        {
+          "repository": "SV-LLM/.github",
+          "path": "data/organization-tree.json",
+          "revision": "conformance",
+          "declared_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "refusal_fixture": "digest-mismatch"
+        }
+      ],
+      "expected_status": "REFUSED",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_SOURCE_DIGEST_MISMATCH",
+      "expected_failed_predicate": "REGISTRY_BYTES_MATCH_DECLARED_SHA256",
+      "note": "Declared digest is sha256 of the empty string, not of the fixture bytes."
+    },
+    {
+      "id": "refuse-duplicate-key",
+      "operation": "build",
+      "sources": [
+        {
+          "repository": "SV-LLM/.github",
+          "path": "data/organization-tree.json",
+          "revision": "conformance",
+          "declared_sha256": "8ba4e6ac9fdb4f196664cb19e0f2de153128e563f0ad45d481cd54b66a3223c6",
+          "refusal_fixture": "duplicate-key"
+        }
+      ],
+      "expected_status": "REFUSED",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_SOURCE_DUPLICATE_KEY",
+      "expected_failed_predicate": "REGISTRY_OBJECT_KEYS_UNIQUE",
+      "note": "Declared digest is correct; the entry repeats \"name\"."
+    },
+    {
+      "id": "refuse-nesting-too-deep",
+      "operation": "build",
+      "sources": [
+        {
+          "repository": "SV-LLM/.github",
+          "path": "data/organization-tree.json",
+          "revision": "conformance",
+          "declared_sha256": "6253d8fda471bc7919d7999c84ef4b390326c163146462d86c0820f33f5e0a13",
+          "refusal_fixture": "nesting-too-deep"
+        }
+      ],
+      "expected_status": "REFUSED",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_SOURCE_NESTING_TOO_DEEP",
+      "expected_failed_predicate": "REGISTRY_NESTING_WITHIN_BOUND",
+      "note": "Declared digest is correct; 129 nested containers exceed the bound of 128."
+    },
+    {
+      "id": "refuse-empty-sources",
+      "operation": "build",
+      "sources": [],
+      "expected_status": "REFUSED",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_SOURCES_EMPTY",
+      "expected_failed_predicate": "AT_LEAST_ONE_SUPPORTED_SOURCE_SUPPLIED"
+    },
+    {
+      "id": "refuse-unsupported-source",
+      "operation": "build",
+      "sources": [
+        {
+          "repository": "StegVerse-org/LLM-adapter",
+          "path": "data/unsupported-registry.json",
+          "revision": "conformance",
+          "declared_sha256": "69ab1384f5de65f705a336ead293efa8d05262e4498e935724d0ed6ad9090e67",
+          "refusal_fixture": "unsupported-source"
+        }
+      ],
+      "expected_status": "REFUSED",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_SOURCE_UNSUPPORTED",
+      "expected_failed_predicate": "SOURCE_IS_SUPPORTED_REGISTRY",
+      "note": "Declared digest is correct; repository/path is not a supported registry."
+    },
+    {
+      "id": "refuse-schema-unrecognized",
+      "operation": "build",
+      "sources": [
+        {
+          "repository": "SV-LLM/.github",
+          "path": "data/organization-tree.json",
+          "revision": "conformance",
+          "declared_sha256": "4d3141ea4e01458f43725d550b2adad871e5aae206adff0f6332b3d1074c90bb",
+          "refusal_fixture": "schema-unrecognized"
+        }
+      ],
+      "expected_status": "REFUSED",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_SOURCE_SCHEMA_UNRECOGNIZED",
+      "expected_failed_predicate": "REGISTRY_SCHEMA_RECOGNIZED",
+      "note": "Declared digest is correct; schema prefix is not sv-llm.organization-tree/."
+    },
+    {
+      "id": "refuse-duplicate-source-declaration",
+      "operation": "build",
+      "sources": [
+        {
+          "source_fixture": "organization-tree"
+        },
+        {
+          "source_fixture": "organization-tree"
+        }
+      ],
+      "expected_status": "REFUSED",
+      "expected_disposition": "FAIL_CLOSED",
+      "expected_failure_code": "ECOSYSTEM_FACT_SOURCE_DUPLICATE",
+      "expected_failed_predicate": "SOURCE_DECLARED_ONCE",
+      "note": "The same pinned registry supplied twice."
+    }
+  ]
+}

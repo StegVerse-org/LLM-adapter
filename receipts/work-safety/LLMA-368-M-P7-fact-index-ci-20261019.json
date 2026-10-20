@@ -1,0 +1,54 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-368-M-P7-FACT-INDEX-CI",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "CI test wiring only; no Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/426",
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      ".github/workflows/validate.yml",
+      "tests/test_ecosystem_fact_index.py",
+      "tests/test_ecosystem_fact_index_conformance.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Only #426 touches these files."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": false,
+    "no_readme_update_reason": "Adds an existing test module to CI; no functional change.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml"
+  ],
+  "new_files": []
+}

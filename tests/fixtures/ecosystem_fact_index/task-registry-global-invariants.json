@@ -1,0 +1,24 @@
+{
+  "schema": "stegverse.task-registry-global-invariants/v1",
+  "invariant_set_id": "TASK-REGISTRY-KV-SKAP-VERIFIER-NODE-INVARIANT-001",
+  "applies_to": "ALL_CANONICAL_TASKS_EXISTING_AND_NEW",
+  "invariants": {
+    "user_verification_authority": "KV/SKAP Vault",
+    "user_verification_authority_exclusive": true,
+    "stegos_device_role": "INTERCHANGEABLE_TRANSPORT_NODE",
+    "device_verification_policy": "NONE_PROHIBITED",
+    "device_verification_process": "NONE_PROHIBITED",
+    "device_attestation_gate": "NONE_PROHIBITED",
+    "physical_device_identity_gate": "NONE_PROHIBITED",
+    "device_user_verifier_authority": "NONE",
+    "runtime_substrate_review_order": [
+      "STEG-BROWSER-RETAINED-RESIDENT-NODE",
+      "STEGOS-CURRENT-DEVICE-NODE",
+      "STEG-BROWSER-EPHEMERAL-LEASE",
+      "SAME-DEVICE-SITE-SAFARI-SERVICE-WORKER",
+      "ADMITTED-EPHEMERAL-STEGOS-NODE",
+      "REMOTE-OR-EXTERNAL-DEVICE-LAST-RESORT"
+    ]
+  },
+  "authority_effect": "NONE_REGISTRY_INVARIANT_ONLY"
+}

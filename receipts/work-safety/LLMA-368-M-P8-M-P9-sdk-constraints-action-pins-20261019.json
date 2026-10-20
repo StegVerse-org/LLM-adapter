@@ -1,0 +1,109 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-368-M-P8-M-P9-SDK-CONSTRAINTS-ACTION-PINS",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "CI install pinning and action pins only; no Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/426",
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "https://github.com/StegVerse-org/StegVerse-SDK/pull/552"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegVerse-SDK",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "pyproject.toml",
+      ".github/workflows/validate.yml",
+      "StegVerse-org/StegVerse-SDK:constraints/sdk-install.txt@080ea4b275c2207268b24314109e8c4f47298405",
+      "StegVerse-Labs/.github:scripts/check_sdk_install_constraints.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Only #426 touches these workflows in this repository."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/capability-runtime.yml",
+    ".github/workflows/check-component-version.yml",
+    ".github/workflows/coinbase-skap-service-gateway.yml",
+    ".github/workflows/distributed-llm-executor-validate.yml",
+    ".github/workflows/distributed-llm-workload-validate.yml",
+    ".github/workflows/hil-site-receipt-compat.yml",
+    ".github/workflows/hil-sovereign-receiver-source.yml",
+    ".github/workflows/internal-governed-reference.yml",
+    ".github/workflows/validate-deepseek-intr.yml",
+    ".github/workflows/validate-external-llm-convergence.yml",
+    ".github/workflows/validate-kimi-intr.yml",
+    ".github/workflows/validate-kv-memory-context-bridge.yml",
+    ".github/workflows/validate-zai-intr.yml",
+    ".github/workflows/validate.yml",
+    "README.md",
+    "iosnoperiod/github/workflows/validate.yml",
+    "pyproject.toml",
+    "scripts/sdk_install_constraint.py",
+    "tests/test_sdk_install_constraints.py",
+    "tests/test_workflow_action_pins.py"
+  ],
+  "new_files": [
+    {
+      "path": "scripts/sdk_install_constraint.py",
+      "semantic_responsibility": "Materialize constraints/sdk-install.txt from the SDK archive of the commit pyproject.toml pins, for PIP_CONSTRAINT.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "StegVerse-Labs/.github:scripts/check_sdk_install_constraints.py (guard only; Labs inlines the fetch per step)",
+      "justification": "LLM-adapter installs the SDK transitively through pip install -e in ten steps; one stdlib helper keyed to the pyproject pin avoids repeating the SHA in every step.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "pyproject.toml"
+      ]
+    },
+    {
+      "path": "tests/test_sdk_install_constraints.py",
+      "semantic_responsibility": "Guard that every workflow install step exports the pinned SDK constraint first.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "StegVerse-Labs/.github:scripts/check_sdk_install_constraints.py",
+      "justification": "Adapted to this repository's transitive install shape; stdlib unittest.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "scripts/sdk_install_constraint.py"
+      ]
+    },
+    {
+      "path": "tests/test_workflow_action_pins.py",
+      "semantic_responsibility": "Guard that every workflow uses: reference is a 40-hex commit.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_workflows_no_external_tunnel_or_liveness_wait.py (different predicate)",
+      "justification": "No existing guard checks action pins.",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        ".github/workflows"
+      ]
+    }
+  ]
+}

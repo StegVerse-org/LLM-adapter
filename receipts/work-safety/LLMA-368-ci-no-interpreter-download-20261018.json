@@ -1,0 +1,58 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368-CI-NO-INTERPRETER-DOWNLOAD",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+    "StegVerse-Labs/.github:data/task-registry-global-invariants.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "CI interpreter resolution only; no Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/426"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      ".github/workflows/validate.yml",
+      ".github/workflows/capability-runtime.yml",
+      "https://github.com/StegVerse-org/LLM-adapter/actions/runs/39127119218"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No open PR touches the Python resolution steps."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": false,
+    "no_readme_update_reason": "README does not describe CI interpreter resolution.",
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/capability-runtime.yml",
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "receipts/work-safety/LLMA-368-ci-no-interpreter-download-20261018.json",
+    "tests/test_workflows_no_external_tunnel_or_liveness_wait.py"
+  ],
+  "new_files": []
+}

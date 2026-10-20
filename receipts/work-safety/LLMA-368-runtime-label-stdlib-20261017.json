@@ -1,0 +1,60 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLMA-DECLARED-PATH-CONFORMANCE-368-RUNTIME-LABEL-STDLIB",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/STEGDEPLOY_NATIVE_TLS_INGRESS_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+    "StegVerse-Labs/.github:data/task-registry-global-invariants.json"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Receipt label rename only; no Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/422"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-Labs/StegVerse-Healer",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "scripts/stegdeploy_native_gateway.py",
+      "scripts/verify_stegdeploy_runtime.py",
+      "StegVerse-Labs/StegVerse-Healer:app/coinbase_stegdeploy_gateway.py",
+      "StegVerse-Labs/.github:scripts/activate_resident_stack.py"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No open PR touches the native gateway receipt; no consumer compares the runtime label."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": false,
+    "evidence_refs": [
+      "README.md"
+    ],
+    "no_readme_update_reason": "README does not mention the runtime receipt label; only the label string changes."
+  },
+  "covered_paths": [
+    "docs/STEGDEPLOY_NATIVE_TLS_INGRESS_MIRROR_HANDOFF.md",
+    "scripts/stegdeploy_native_gateway.py",
+    "scripts/verify_stegdeploy_runtime.py",
+    "tests/test_stegdeploy_native_gateway.py"
+  ],
+  "new_files": []
+}

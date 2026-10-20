@@ -4,4 +4,8 @@ permissions:
   contents: read
 jobs:
   stegverse-governance:
-    uses: StegVerse-org/StegVerse-SDK/.github/workflows/governance-gate.yml@main
+    # Pinned to StegVerse-SDK main as resolved 2026-10-19 (LLMA-368 M-P6); move the
+    # pin forward deliberately, never by following a branch.
+    uses: StegVerse-org/StegVerse-SDK/.github/workflows/governance-gate.yml@1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b
+    with:
+      sdk_ref: 1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b
