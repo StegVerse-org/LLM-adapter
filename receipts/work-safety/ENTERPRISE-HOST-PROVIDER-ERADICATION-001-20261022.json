@@ -1,0 +1,54 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "ENTERPRISE-HOST-PROVIDER-ERADICATION-001",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github#1703",
+    "StegVerse-Labs/StegHealth#88"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Non-authorizing status projection; no sovereign transition."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "StegVerse-Labs/.github#1703",
+      "StegVerse-Labs/StegHealth#88",
+      "StegVerse-org/LLM-adapter#427"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "scripts/write_live_activation_status.py",
+      "scripts/validate_work_mutation_safety.py",
+      "reports/ecosystem-chat-live-activation-status.json"
+    ]
+  },
+  "reuse_decision": "REFACTOR",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Existing owner PR #427; no competing mutation identified in inspected lane."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    "reports/ecosystem-chat-live-activation-status.json"
+  ],
+  "new_files": []
+}
