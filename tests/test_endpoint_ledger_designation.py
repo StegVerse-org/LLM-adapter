@@ -5,8 +5,10 @@ KV independence (StegVerse-org/.github#160 comments 6371986288 and 6372216673; c
 with cvk#263 @706877b6's store keys and chains; the KV receipt-chain reader id is not documented, so a read fails
 closed KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED (KV-SKAP-LEDGER-LOCATION-001); no endpoint is a source of org-ledger
 records (#160 comment 6372871021), and an Org crossing receipt is digest-only; both
-sides record each crossing, with a supplied epoch (#162 comment 6372641743); heads are signed by kv_ledger_head_signer (TVC#542); the newest Org-recorded endpoint_head_sha256 is
-the rollback watermark; an empty ledger is never a genesis; one storage provider now, more refused. Fixtures are
+sides record each crossing, with a supplied epoch (#162 comment 6372641743); heads are signed by kv_ledger_head_signer (TVC#542); the rollback watermark is KV's own recorded
+receipt chain head (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad), required and independent of #235's path_ids;
+the Org-linked head is only the optional digest-only org_crossing_cross_check; keys are closed (CONTRACT_KEY_SCHEMA,
+LC-KV-24); the designation fixtures match cvk @bf684aad's contracts (vendored byte copies); an empty ledger is never a genesis; one storage provider now, more refused. Fixtures are
 this PR's (#431) only; keys are fixture keys only.
 """
 from __future__ import annotations
@@ -26,6 +28,11 @@ from tests import ed25519_test_signer as signer
 
 ROOT = Path(__file__).resolve().parents[1]
 F = ROOT / "tests/fixtures/endpoint-ledger-designation"
+CVK = F / "cvk263-bf684aad"
+#: StegVerse-Labs/continuity-vault-kit#263 @bf684aada366e227714c6f67ac52a7a4ec6933d4 .stegverse/receipt-chains/
+CVK_CONTRACT_SHA256 = {
+    "stegverse-kv-receipts.contract.json": "sha256:610377f21f7ae6e4953fd2324473c00bbe37cc7896f99e35ea572ead035dfaf2",
+    "skap-receipts.contract.json": "sha256:83e30008addc557875f9cadf7f587a852e262d09ac50be9ecc041e9863d0b822"}
 SIX = ("failure_code", "failed_predicate", "required_evidence_or_repair", "retry_entrypoint",
        "owning_existing_goal", "next_attempt")
 
@@ -37,6 +44,11 @@ def load(name):
 def fixture_signers():
     return [{"key_id": "kv-fixture-key", "algorithm": "Ed25519", "public_key_b64": signer.public_key_b64(),
              "custody": "TEST_FIXTURE_ONLY", "signs": "KV_RECORDED_RECEIPT_CHAIN_HEAD"}]
+
+
+def recorded(chain, index=0, **extra):
+    """The KV-recorded rollback watermark input (cvk#263 @bf684aad recorded_head)."""
+    return {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD", "head_receipt_sha256": chain[index]["receipt_sha256"], **extra}
 
 
 def attest(designation, chain, key_id="kv-fixture-key", seed=signer.TEST_SEED):
@@ -86,7 +98,12 @@ class DesignationTests(Base):
             "provider_id": "google-drive", "access_adapter": "provider-or-file-provider", "kv_class": "STEGVERSE_KV",
             "kv_request_id": "SITE-CLOUD-KV-4347408852127319cbda574f02e03edb", "location": "_StegVerse/Receipts"})
         self.assertEqual(load("skap.designation.json")["stores"][0]["location"], "_Vault/SKAP/Receipts")
-        self.assertEqual(self.kv["rollback_watermark_source"]["path_ids"],
+        self.assertEqual(self.kv["rollback_watermark_source"], {
+            "source": "KV_RECORDED_RECEIPT_CHAIN_HEAD", "org_crossing_cross_check": {
+                "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD",
+                "path_ids": ["StegVerse-org->STEGVERSE_KV:_StegVerse/Receipts:intr-destination"],
+                "role": "DIGEST_ONLY_CROSS_CHECK_NEVER_WATERMARK"}})
+        self.assertEqual(eld.crossing_path_ids(self.kv),
                          ["StegVerse-org->STEGVERSE_KV:_StegVerse/Receipts:intr-destination"])
         self.assertEqual(eld.kv_path_id("_Vault/SKAP/Receipts"),
                          "StegVerse-org->STEGVERSE_KV:_Vault/SKAP/Receipts:intr-destination")
@@ -111,7 +128,9 @@ class DesignationTests(Base):
             "unknown store_type": ({**self.kv, "stores": [{**store, "store_type": "S3"}]},
                                    "ENDPOINT_LEDGER_STORE_TYPE_UNDECLARED"),
             "external ledger ref in store": ({**self.kv, "stores": [{**store, "ledger_root": "/drive/x"}]},
-                                             "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
+                                             "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY"),
+            "git ref fields in a KV store": ({**self.kv, "stores": [{**store, "ref": "refs/x"}]},
+                                             "KV_LEDGER_DESIGNATED_ON_GIT_REF"),
             "location traverses": ({**self.kv, "stores": [{**store, "location": "_StegVerse/../x"}]},
                                    "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
             "KV at the SKAP location": ({**self.kv, "stores": [{**store, "location": "_Vault/SKAP/Receipts"}]},
@@ -123,17 +142,34 @@ class DesignationTests(Base):
             "another kv_class": ({**self.kv, "stores": [{**store, "kv_class": "SITE_KV"}]},
                                  "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
             "gateway_node_id key": ({**self.kv, "stores": [{**store, "gateway_node_id": "g"}]},
-                                    "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
-            "withdrawn gateway store": ({**self.kv, "stores": [{"store_type": "GATEWAY_ENCRYPTED_BLOB",
-                                                                "gateway_node_id": "g", "location": "01_KV_Ledger",
-                                                                "provider": "google-drive"}]},
-                                        "ENDPOINT_LEDGER_STORE_TYPE_UNDECLARED"),
+                                    "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY"),
+            "withdrawn gateway store keys": ({**self.kv, "stores": [{"store_type": "GATEWAY_ENCRYPTED_BLOB",
+                                                                     "gateway_node_id": "g", "location": "01_KV_Ledger",
+                                                                     "provider": "google-drive"}]},
+                                             "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY"),
+            "withdrawn gateway store type": ({**self.kv, "stores": [{**store, "store_type": "GATEWAY_ENCRYPTED_BLOB"}]},
+                                             "ENDPOINT_LEDGER_STORE_TYPE_UNDECLARED"),
             "org head signer for KV": ({**self.kv, "head_signer_source": "ORG_LEDGER_HEAD_SIGNER"},
                                        "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
             "KV without watermark": ({**self.kv, "rollback_watermark_source": None},
                                      "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
             "no stores": ({**self.kv, "stores": []}, "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
-            "extra key": ({**self.kv, "ledger_root": "/x"}, "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
+            "extra key": ({**self.kv, "ledger_root": "/x"}, "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY"),
+            "watermark source not KV's": ({**self.kv, "rollback_watermark_source": {"source": "CALLER_SUPPLIED"}},
+                                          "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
+            "cross-check as the watermark role": (
+                {**self.kv, "rollback_watermark_source": {**self.kv["rollback_watermark_source"],
+                                                          "org_crossing_cross_check": {
+                    **self.kv["rollback_watermark_source"]["org_crossing_cross_check"], "role": "WATERMARK"}}},
+                "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
+            "cross-check with no path_ids": (
+                {**self.kv, "rollback_watermark_source": {**self.kv["rollback_watermark_source"],
+                                                          "org_crossing_cross_check": {
+                    **self.kv["rollback_watermark_source"]["org_crossing_cross_check"], "path_ids": []}}},
+                "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
+            "a watermark on the Org's own designation": (
+                {**load("org-git-ref.designation.json"), "rollback_watermark_source": {
+                    "source": "KV_RECORDED_RECEIPT_CHAIN_HEAD"}}, "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
             "EPHEMERAL is not designated here": ({**self.kv, "endpoint_kind": "EPHEMERAL"},
                                                  "ENDPOINT_LEDGER_DESIGNATION_INVALID"),
         }
@@ -194,12 +230,17 @@ class ReaderSeamTests(Base):
                 self.assertIn("TVC#542", failed["owning_existing_goal"])
             with mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
                 with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
-                                         org_chain=self.org_chain) as (chain, failed):
+                                         org_chain=self.org_chain, recorded_head=recorded(self.chain)) as (chain, failed):
                     self.assertIsNone(failed)
                     self.assertEqual(chain, self.chain)
                 with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
-                                         org_chain=None) as (chain, failed):
-                    self.assert_six(failed, "KV_LEDGER_ROLLBACK_WATERMARK_UNREAD")
+                                         org_chain=self.org_chain) as (chain, failed):
+                    self.assert_six(failed, "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING")
+                    self.assertEqual(failed["failure_class"], "A")
+                # the chain holds an endpoint crossing record: with no Org chain it is one-sided
+                with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
+                                         org_chain=None, recorded_head=recorded(self.chain)) as (chain, failed):
+                    self.assert_six(failed, "INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES")
 
 
 class EmptyLedgerTests(Base):
@@ -265,25 +306,84 @@ class SignedHeadTests(Base):
 
 
 class RollbackTests(Base):
-    def test_the_watermark_is_the_newest_org_recorded_head_for_this_endpoint(self):
-        heads = eld.org_recorded_endpoint_heads(self.org_chain, self.kv)
-        self.assertEqual(heads, [self.chain[0]["receipt_sha256"], self.chain[1]["receipt_sha256"]])
-        self.assertEqual(eld.org_recorded_endpoint_heads(self.org_chain, load("skap.designation.json")), [])
+    """cvk#263 @bf684aad: the watermark is KV's own recorded receipt chain head; it is required, never Org-sourced,
+    and does not depend on any Org chain or declared path."""
 
-    def test_a_head_older_than_the_newest_recorded_is_rollback_detected(self):
-        heads = eld.org_recorded_endpoint_heads(self.org_chain, self.kv)
-        self.assertIsNone(eld.rollback_failure(self.chain, heads))
-        self.assert_six(eld.rollback_failure(self.chain[1:], heads), "KV_LEDGER_HEAD_ROLLBACK_DETECTED", "DENY")
-        self.assertIsNone(eld.rollback_failure(self.chain[1:], heads[1:]))   # older watermark: fine
-        self.assertIsNone(eld.rollback_failure(self.chain, []))             # nothing recorded yet
+    def test_the_watermark_is_kvs_own_recorded_head_and_is_required(self):
+        self.assertEqual(eld.WATERMARK_SOURCE, "KV_RECORDED_RECEIPT_CHAIN_HEAD")
+        watermark, failed = eld.kv_watermark(recorded(self.chain))
+        self.assertIsNone(failed)
+        self.assertEqual(watermark, {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD",
+                                     "head_receipt_sha256": self.chain[0]["receipt_sha256"]})
+        xc = self.org_chain[2]["receipt_sha256"]
+        watermark, failed = eld.kv_watermark(recorded(self.chain, org_crossing_cross_check=xc))
+        self.assertEqual(watermark["org_crossing_cross_check"], {
+            "digest": xc, "role": "DIGEST_ONLY_CROSS_CHECK_NEVER_WATERMARK", "authority_effect": "NONE"})
+        for missing in (None, "sha256:" + "a" * 64, {"head_receipt_sha256": self.chain[0]["receipt_sha256"]},
+                        {**recorded(self.chain), "head_receipt_sha256": "abc"},
+                        {**recorded(self.chain), "org_crossing_cross_check": "x"},
+                        {**recorded(self.chain), "extra": 1}, {**recorded(self.chain), "source": "CALLER"}):
+            with self.subTest(missing=missing):
+                got = eld.kv_watermark(missing)[1]
+                self.assert_six(got, "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING")
+                self.assertEqual((got["failed_predicate"], got["failure_class"]), ("ROLLBACK_WATERMARK_SUPPLIED", "A"))
+
+    def test_an_org_sourced_watermark_is_refused_class_a(self):
+        for source in ("ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD", "ORG_RECORDED_HEAD", "StegVerse-org/.github",
+                       "refs/stegverse/organization-ledger", "GIT_REF"):
+            with self.subTest(source=source):
+                got = eld.kv_watermark({**recorded(self.chain), "source": source})[1]
+                self.assert_six(got, "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED")
+                self.assertEqual((got["failed_predicate"], got["failure_class"]),
+                                 ("ROLLBACK_WATERMARK_SOURCED_FROM_KV_OWN_RECEIPT_CHAIN", "A"))
+                for name in ("kv.designation.json", "skap.designation.json"):
+                    d = load(name)
+                    d["rollback_watermark_source"]["source"] = source
+                    self.assert_six(eld.designation_failure(d), "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED")
+
+    def test_the_watermark_does_not_depend_on_235s_path_ids(self):
+        for name in ("kv.designation.json", "skap.designation.json"):
+            d = load(name)
+            d["rollback_watermark_source"] = {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD"}   # no cross-check
+            self.assertIsNone(eld.designation_failure(d))
+            self.assertEqual(eld.crossing_path_ids(d), [])
+        bare = {**self.kv, "rollback_watermark_source": {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD"}}
+        head_only = [r for r in self.chain if r.get("transition_class") not in eld.CROSSING_CLASSES]
+        self.assertEqual(head_only, self.chain[-1:])
+        with mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
+            # no Org chain, no declared path: the KV-recorded watermark alone decides
+            self.assertIsNone(eld.chain_admission_failure(
+                bare, bare["stores"][0], head_only, head_attestation=attest(bare, head_only),
+                signers=fixture_signers(), org_chain=None, recorded_head=recorded(head_only)))
+            self.assert_six(eld.chain_admission_failure(
+                bare, bare["stores"][0], head_only, head_attestation=attest(bare, head_only),
+                signers=fixture_signers(), org_chain=None, recorded_head=None),
+                "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING")
+
+    def test_a_head_older_than_the_kv_recorded_head_is_rollback_detected(self):
+        newest = eld.kv_watermark(recorded(self.chain))[0]
+        self.assertIsNone(eld.rollback_failure(self.chain, newest))
+        got = eld.rollback_failure(self.chain[1:], newest)
+        self.assert_six(got, "KV_LEDGER_HEAD_ROLLBACK_DETECTED", "DENY")
+        self.assertEqual(got["failed_predicate"], "ENDPOINT_HEAD_NOT_OLDER_THAN_THE_NEWEST_KV_RECORDED_HEAD")
+        self.assertIsNone(eld.rollback_failure(self.chain[1:], eld.kv_watermark(recorded(self.chain, 1))[0]))
         older = self.chain[1:]
         with self.lane_d_reader_stub(older), \
                 mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
             with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, older),
-                                     org_chain=self.org_chain) as (chain, failed):
+                                     org_chain=self.org_chain, recorded_head=recorded(self.chain)) as (chain, failed):
                 self.assertIsNone(chain)
                 self.assert_six(failed, "KV_LEDGER_HEAD_ROLLBACK_DETECTED", "DENY")
                 self.assertEqual(failed["recorded_head_sha256"], self.chain[0]["receipt_sha256"])
+        # an Org-recorded head is never the watermark, even with a valid cross-check digest
+        with self.lane_d_reader_stub(self.chain), \
+                mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
+            with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
+                                     org_chain=self.org_chain, recorded_head={
+                                         **recorded(self.chain), "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"}
+                                     ) as (chain, failed):
+                self.assertIsNone(chain)
+                self.assert_six(failed, "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED")
 
 
 class BothSidesRecordTests(Base):
@@ -293,7 +393,7 @@ class BothSidesRecordTests(Base):
     def admit(self, chain, org_chain):
         return eld.chain_admission_failure(self.kv, self.kv["stores"][0], chain,
                                            head_attestation=attest(self.kv, chain), signers=fixture_signers(),
-                                           org_chain=org_chain)
+                                           org_chain=org_chain, recorded_head=recorded(chain))
 
     def test_the_paired_records_are_admitted(self):
         self.assertIsNone(self.admit(self.chain, self.org_chain))
@@ -373,18 +473,115 @@ class BothSidesRecordTests(Base):
 
 
 class OrgMembershipTests(Base):
-    """LC-KV-25 (P1 rev 10): no endpoint is a GitHub Organization member. Lane D's code, predicate and key set
-    (StegVerse-Labs/continuity-vault-kit#263 @543e8c32 runtime/kv_receipt_ledgers.py org_membership_refused)."""
-    CVK_543E8C32_MEMBERSHIP_KEYS = {
-        "org_member", "organization_member", "org_membership", "organization_membership", "membership", "member",
-        "members", "team", "teams", "team_slug", "team_id", "installation", "installation_id", "app_installation",
-        "github_app", "app_id", "app_slug", "collaborator", "collaborators", "org_role", "github_org"}
+    """LC-KV-25 (P1 rev 10): no endpoint is a GitHub Organization member; LC-KV-24: keys are closed. Lane D's codes,
+    predicates and token set (StegVerse-Labs/continuity-vault-kit#263 @bf684aad runtime/kv_receipt_ledgers.py)."""
+    CVK_BF684AAD_MEMBERSHIP_TOKENS = {
+        "org", "orgs", "organization", "organizations", "organisation", "member", "members", "membership",
+        "memberships", "team", "teams", "install", "installation", "installations", "app", "apps", "permission",
+        "permissions", "owner", "owners", "ownership", "collaborator", "collaborators", "role", "roles", "github",
+        "enterprise", "admin", "admins", "seat", "seats", "scope", "scopes"}
+    #: cvk#263 @bf684aad CONTRACT_KEY_SCHEMA as read at that head (a tuple leaf written {"__values__": [...]})
+    CVK_BF684AAD_CONTRACT_KEY_SCHEMA = json.loads(
+        '{"schema": null, "repository": null, "ledger_level": null, "receipt_schema": null, "append_only_receipts": '
+        'null, "required_fields": null, "replay_rule": null, "repository_ledger_location": {"repository": null, "ref": '
+        'null, "namespace": null, "locator_form": null, "new_ledger_root": null, "designation_source": null, '
+        '"initialization": null, "rule": null, "expected_genesis_receipt_sha256": null, "expected_genesis_note": '
+        'null}, "ledger_designation": {"schema": null, "endpoint_id": null, "endpoint_kind": null, "stores": '
+        '[{"store_type": null, "storage_endpoint_schema": null, "provider_id": null, "access_adapter": null, '
+        '"kv_class": null, "kv_request_id": null, "location": null}], "provider_selection": null, "genesis_class": '
+        'null, "expected_genesis_receipt_sha256": null, "head_signer_source": null, "rollback_watermark_source": '
+        '{"source": {"__values__": ["KV_RECORDED_RECEIPT_CHAIN_HEAD"]}, "org_crossing_cross_check": {"source": '
+        '{"__values__": ["ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"]}, "path_ids": null, "role": {"__values__": '
+        '["DIGEST_ONLY_CROSS_CHECK_NEVER_WATERMARK"]}}}}, "designation_notes": {"store_type_note": null, '
+        '"head_signers_path": null, "append_route": null, "path_ids_note": null, "refuses": null, '
+        '"org_crossing_receipts": null, "head_digest_name": null, "genesis_crossing": null, "org_membership": null}, '
+        '"propagation_rule": null, "authority_effect": null}')
+
+    @staticmethod
+    def norm(o):
+        if isinstance(o, tuple):
+            return {"__values__": list(o)}
+        if isinstance(o, list):
+            return [OrgMembershipTests.norm(x) for x in o]
+        if hasattr(o, "items"):
+            return {k: OrgMembershipTests.norm(v) for k, v in o.items()}
+        return o
 
     def test_the_code_predicate_and_keys_are_lane_ds(self):
         self.assertEqual(eld.MEMBERSHIP_CODE, "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
         self.assertEqual(eld.CODES[eld.MEMBERSHIP_CODE][0], "ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER")
-        self.assertEqual(set(eld.MEMBERSHIP_KEYS), self.CVK_543E8C32_MEMBERSHIP_KEYS)
+        self.assertEqual(set(eld.MEMBERSHIP_TOKENS), self.CVK_BF684AAD_MEMBERSHIP_TOKENS)
+        self.assertFalse(hasattr(eld, "MEMBERSHIP_KEYS"))       # cvk @543e8c32's key set, superseded
         self.assertNotEqual(eld.CODES[eld.MEMBERSHIP_CODE][0], eld.CODES["ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE"][0])
+        self.assertEqual(json.dumps(self.norm(eld.CONTRACT_KEY_SCHEMA)),
+                         json.dumps(self.CVK_BF684AAD_CONTRACT_KEY_SCHEMA))
+        self.assertEqual(self.norm(eld.CONTRACT_KEY_SCHEMA["ledger_designation"]["rollback_watermark_source"]),
+                         self.norm(eld.DESIGNATION_KEY_SCHEMA["rollback_watermark_source"]))
+        for code, predicate, cls in (
+                ("KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED", "ROLLBACK_WATERMARK_SOURCED_FROM_KV_OWN_RECEIPT_CHAIN", "A"),
+                ("KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING", "ROLLBACK_WATERMARK_SUPPLIED", "A"),
+                ("KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY", "KV_RECEIPT_CHAIN_DESIGNATION_KEYS_CLOSED", "C"),
+                ("ENDPOINT_ORG_MEMBERSHIP_REFUSED", "ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER", "C")):
+            got = eld.refusal(code, "x")
+            self.assert_six(got, code)
+            self.assertEqual((got["failed_predicate"], got["failure_class"]), (predicate, cls))
+        self.assertNotIn("KV_LEDGER_ROLLBACK_WATERMARK_UNREAD", eld.CODES)
+
+    def test_fixtures_match_cvks_contracts_at_bf684aad(self):
+        for name, sha in CVK_CONTRACT_SHA256.items():
+            raw = (CVK / name).read_bytes()
+            self.assertEqual("sha256:" + hashlib.sha256(raw).hexdigest(), sha)
+            contract = json.loads(raw)
+            self.assertIsNone(eld.contract_key_failure(contract))
+            fixture = load("kv.designation.json" if name.startswith("stegverse-kv") else "skap.designation.json")
+            ld = contract["ledger_designation"]
+            self.assertIsNone(eld.designation_failure(ld))
+            self.assertEqual(ld["expected_genesis_receipt_sha256"], None)
+            # the only difference is this PR's genesis pin for the synthetic test chain (the KV fixture)
+            diff = {k for k in set(ld) | set(fixture) if ld.get(k) != fixture.get(k)}
+            self.assertEqual(diff, {"expected_genesis_receipt_sha256"} if "kv" in name else set(), name)
+        kv = load("kv.designation.json")
+        self.assertEqual(kv["expected_genesis_receipt_sha256"], load("kv-chain.json")["chain"][-1]["receipt_sha256"])
+        # the negative fixtures differ from kv only in their targeted fields
+        for name, targeted in (("kv-two-providers.designation.json", {"stores"}),
+                               ("kv-on-org-git-ref.designation.json", {"stores", "expected_genesis_receipt_sha256"})):
+            neg = load(name)
+            self.assertEqual({k for k in set(kv) | set(neg) if kv.get(k) != neg.get(k)}, targeted, name)
+        self.assertEqual(load("kv-two-providers.designation.json")["stores"][0], kv["stores"][0])
+
+    def test_unknown_keys_are_refused_at_every_level(self):
+        """LC-KV-24: an unknown membership-like key is ENDPOINT_ORG_MEMBERSHIP_REFUSED, any other unknown key
+        KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY, at the top, in a store, in the watermark and in the cross-check."""
+        contract = json.loads((CVK / "stegverse-kv-receipts.contract.json").read_bytes())
+        levels = {
+            "top": lambda d: d,
+            "store": lambda d: d["stores"][0],
+            "watermark": lambda d: d["rollback_watermark_source"],
+            "cross-check": lambda d: d["rollback_watermark_source"]["org_crossing_cross_check"]}
+        for level, at in levels.items():
+            for key, code in (("teamSlug", "ENDPOINT_ORG_MEMBERSHIP_REFUSED"),
+                              ("github_installation_id", "ENDPOINT_ORG_MEMBERSHIP_REFUSED"),
+                              ("ownerScopes", "ENDPOINT_ORG_MEMBERSHIP_REFUSED"),
+                              ("ledger_root", "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY"),
+                              ("note", "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY")):
+                with self.subTest(level=level, key=key):
+                    d = copy.deepcopy(self.kv)
+                    at(d)[key] = "x"
+                    self.assert_six(eld.designation_failure(d), code)
+                    c = copy.deepcopy(contract)
+                    at(c["ledger_designation"])[key] = "x"
+                    self.assert_six(eld.contract_key_failure(c), code)
+        for where in ("repository_ledger_location", "designation_notes", None):
+            c = copy.deepcopy(contract)
+            (c[where] if where else c)["membership_note"] = "x"
+            self.assert_six(eld.contract_key_failure(c), "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
+            c = copy.deepcopy(contract)
+            (c[where] if where else c)["extra_note"] = "x"
+            self.assert_six(eld.contract_key_failure(c), "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY")
+        # a leaf never carries keys
+        c = copy.deepcopy(contract)
+        c["ledger_designation"]["endpoint_id"] = {"x": 1}
+        self.assert_six(eld.contract_key_failure(c), "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY")
 
     def test_a_membership_team_or_app_installation_binding_is_refused_with_six_fields(self):
         for name in ("kv.designation.json", "skap.designation.json"):
@@ -402,7 +599,8 @@ class OrgMembershipTests(Base):
                     self.assert_six(got, "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
                     self.assertEqual(got["failed_predicate"], "ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER")
                     self.assertIn(key, got["required_evidence_or_repair"])
-                    with eld.read_designated(d, source=None, org_chain=self.org_chain) as (chain, failed):
+                    with eld.read_designated(d, source=None, org_chain=self.org_chain,
+                                             recorded_head=recorded(self.chain)) as (chain, failed):
                         self.assertIsNone(chain)
                         self.assertEqual(failed["failure_code"], "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
         node = {**load("org-git-ref.designation.json"), "endpoint_kind": "PERMANENT", "endpoint_id": "node-1",
@@ -423,7 +621,9 @@ class OrgMembershipTests(Base):
         with self.lane_d_reader_stub(self.chain), \
                 mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
             with eld.read_designated(self.kv, source=None, org_chain=self.org_chain,
-                                     head_attestation=attest(self.kv, self.chain)) as (chain, failed):
+                                     head_attestation=attest(self.kv, self.chain),
+                                     recorded_head=recorded(self.chain)) as (chain, failed):
+                self.assertIsNone(failed)
                 text = json.dumps(failed)
         for code in ("ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE", "ENDPOINT_ORG_MEMBERSHIP_REFUSED"):
             self.assertNotIn(code, text)

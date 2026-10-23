@@ -288,9 +288,9 @@
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673",
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372871021"
       ],
-      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad).",
       "path": "llm_adapter/endpoint_ledger_designation.py",
-      "semantic_responsibility": "Per-endpoint ledger designation from the endpoint's own contract (store_type GIT_REF for ORG only; KV_STORAGE_ENDPOINT for KV and SKAP_VAULT with continuity-vault-kit#263 @706877b6's store keys and chains _StegVerse/Receipts and _Vault/SKAP/Receipts; single provider), read-only reader seam (GIT_REF delegates to the unchanged git reader; the KV receipt-chain reader id is not documented, so a read fails closed KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED), and pure checks: empty ledger is not a genesis, sealed and linked receipts, pinned genesis, KV_RECORDED_RECEIPT_CHAIN_HEAD signed by kv_ledger_head_signer, Org-recorded rollback watermark, both sides record each crossing, Org crossing receipts digest-only, and no endpoint is a source of org-ledger records (ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE)."
+      "semantic_responsibility": "Per-endpoint ledger designation from the endpoint's own contract (store_type GIT_REF for ORG only; KV_STORAGE_ENDPOINT for KV and SKAP_VAULT with continuity-vault-kit#263 @706877b6's store keys and chains _StegVerse/Receipts and _Vault/SKAP/Receipts; single provider), read-only reader seam (GIT_REF delegates to the unchanged git reader; the KV receipt-chain reader id is not documented, so a read fails closed KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED), and pure checks: empty ledger is not a genesis, sealed and linked receipts, pinned genesis, KV_RECORDED_RECEIPT_CHAIN_HEAD signed by kv_ledger_head_signer, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad), both sides record each crossing, Org crossing receipts digest-only, and no endpoint is a source of org-ledger records (ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE)."
     },
     {
       "canonical_owner": "StegVerse-Labs/continuity-vault-kit (Lane D)",
@@ -299,7 +299,7 @@
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
       ],
-      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad).",
       "path": ".stegverse/node-ledger/kv-ledger-head-signers.v1.json",
       "semantic_responsibility": "Byte-identical copy (sha256 758d7983) of continuity-vault-kit#263 @706877b6's kv_ledger_head_signer public-key reference file (TVC#542); no signers published yet."
     },
@@ -310,7 +310,7 @@
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
       ],
-      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad).",
       "path": "tests/test_endpoint_ledger_designation.py",
       "semantic_responsibility": "Tests for the designation, reader seam, empty ledger, signed heads and rollback watermark, on this PR's fixtures with fixture keys only."
     },
@@ -321,7 +321,7 @@
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
       ],
-      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad).",
       "path": "tests/fixtures/endpoint-ledger-designation/kv-chain.json",
       "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
     },
@@ -332,7 +332,7 @@
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
       ],
-      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad).",
       "path": "tests/fixtures/endpoint-ledger-designation/kv-on-org-git-ref.designation.json",
       "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
     },
@@ -343,7 +343,7 @@
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
       ],
-      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad).",
       "path": "tests/fixtures/endpoint-ledger-designation/kv-two-providers.designation.json",
       "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
     },
@@ -354,7 +354,7 @@
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
       ],
-      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad).",
       "path": "tests/fixtures/endpoint-ledger-designation/kv.designation.json",
       "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
     },
@@ -365,7 +365,7 @@
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
       ],
-      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad).",
       "path": "tests/fixtures/endpoint-ledger-designation/org-git-ref.designation.json",
       "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
     },
@@ -376,7 +376,7 @@
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
       ],
-      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad).",
       "path": "tests/fixtures/endpoint-ledger-designation/org-linked-receipts.json",
       "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
     },
@@ -387,7 +387,7 @@
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
       ],
-      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad).",
       "path": "tests/fixtures/endpoint-ledger-designation/skap.designation.json",
       "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
     },
@@ -403,6 +403,30 @@
         "https://github.com/StegVerse-org/.github/issues/167#issuecomment-6372442705",
         "https://github.com/StegVerse-Labs/.github/pull/3263"
       ]
+    },
+    {
+      "canonical_owner": "StegVerse-Labs/continuity-vault-kit (Lane D)",
+      "closest_existing_implementation": "StegVerse-Labs/continuity-vault-kit#263 @bf684aada366e227714c6f67ac52a7a4ec6933d4 .stegverse/receipt-chains/stegverse-kv-receipts.contract.json (identical bytes, sha256:610377f21f7ae6e4953fd2324473c00bbe37cc7896f99e35ea572ead035dfaf2)",
+      "decision": "REUSE",
+      "evidence_refs": [
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263",
+        "https://github.com/StegVerse-org/.github/issues/162"
+      ],
+      "justification": "Byte copy of Lane D's contract so the designation fixtures and CONTRACT_KEY_SCHEMA are checked against cvk @bf684aad's shas offline (verifiers stay network-free).",
+      "path": "tests/fixtures/endpoint-ledger-designation/cvk263-bf684aad/stegverse-kv-receipts.contract.json",
+      "semantic_responsibility": "Vendored test fixture (unchanged bytes of Lane D's contract); not ledgered, no authority."
+    },
+    {
+      "canonical_owner": "StegVerse-Labs/continuity-vault-kit (Lane D)",
+      "closest_existing_implementation": "StegVerse-Labs/continuity-vault-kit#263 @bf684aada366e227714c6f67ac52a7a4ec6933d4 .stegverse/receipt-chains/skap-receipts.contract.json (identical bytes, sha256:83e30008addc557875f9cadf7f587a852e262d09ac50be9ecc041e9863d0b822)",
+      "decision": "REUSE",
+      "evidence_refs": [
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263",
+        "https://github.com/StegVerse-org/.github/issues/162"
+      ],
+      "justification": "Byte copy of Lane D's contract so the designation fixtures and CONTRACT_KEY_SCHEMA are checked against cvk @bf684aad's shas offline (verifiers stay network-free).",
+      "path": "tests/fixtures/endpoint-ledger-designation/cvk263-bf684aad/skap-receipts.contract.json",
+      "semantic_responsibility": "Vendored test fixture (unchanged bytes of Lane D's contract); not ledgered, no authority."
     }
   ]
 }

@@ -27,8 +27,21 @@ the endpoint's own contract, never from a caller::
      "stores": [<exactly one store entry>], "provider_selection": "SINGLE_PROVIDER_V1",
      "genesis_class": str, "expected_genesis_receipt_sha256": null | "sha256:<hex>",
      "head_signer_source": "ORG_LEDGER_HEAD_SIGNER" | "KV_LEDGER_HEAD_SIGNER",
-     "rollback_watermark_source": null | {"source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD",
-                                          "path_ids": [str, ...]}}
+     "rollback_watermark_source": null | {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD",
+                                          ["org_crossing_cross_check": {
+                                              "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD",
+                                              "path_ids": [str, ...],
+                                              "role": "DIGEST_ONLY_CROSS_CHECK_NEVER_WATERMARK"}]}}
+
+Keys are closed at every level (continuity-vault-kit#263 @bf684aad runtime/kv_receipt_ledgers.py CONTRACT_KEY_SCHEMA,
+LC-KV-24; mirrored here as CONTRACT_KEY_SCHEMA and, for a bare designation, DESIGNATION_KEY_SCHEMA). An unknown key
+is six-field ENDPOINT_ORG_MEMBERSHIP_REFUSED when it is membership-like (one of its snake/camel tokens is in Lane D's
+MEMBERSHIP_TOKENS), otherwise KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY. The token test only picks the code; it never
+admits a key. ``rollback_watermark_source.source`` is only KV_RECORDED_RECEIPT_CHAIN_HEAD: KV's own recorded receipt
+chain head (KV is independent of the Orgs). An Org-sourced watermark is KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED
+(class A). The Org-linked head and the ``:intr-destination`` path_ids appear only under the optional
+``org_crossing_cross_check``, a digest-only cross-check of the Org's side of a crossing, never the watermark, so the
+watermark does not depend on any declared path (StegVerse-org/.github#235).
 
 store_type (an enum), mapped to the documented endpoint model:
 
@@ -65,11 +78,16 @@ here by the pure ``chain_admission_failure``, for every store type:
 4. KV and SKAP_VAULT: the head is signed by kv_ledger_head_signer (TVC#542), a key published in
    .stegverse/node-ledger/kv-ledger-head-signers.v1.json (none published yet:
    KV_LEDGER_HEAD_SIGNER_NOT_PUBLISHED). GIT_REF heads were authenticated by the git reader;
-5. the rollback watermark: the newest endpoint_head_sha256 the Org recorded on its linked receipts for this
-   endpoint's path_ids must be on the presented chain; an older head is DENY KV_LEDGER_HEAD_ROLLBACK_DETECTED;
-6. both sides recorded each crossing: every Org-side record for this endpoint's path_ids points at an endpoint head
-   that is on the presented chain, every endpoint-side ingress record points at a record on the Org chain, and each
-   such record carries a supplied epoch. A one-sided crossing is FAIL_CLOSED INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES;
+5. KV and SKAP_VAULT: the rollback watermark is required, ``recorded_head = {"source":
+   "KV_RECORDED_RECEIPT_CHAIN_HEAD", "head_receipt_sha256": "sha256:<64 hex>"[, "org_crossing_cross_check":
+   "sha256:<64 hex>"]}``, the newest head KV recorded on its own receipt chain. Absent or malformed:
+   KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING (class A); Org-sourced: KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED
+   (class A); not on the presented chain: DENY KV_LEDGER_HEAD_ROLLBACK_DETECTED. The cross-check digest is echoed
+   with authority NONE and never compared as the watermark;
+6. both sides recorded each crossing: every Org-side record for the designation's cross-check path_ids points at an
+   endpoint head that is on the presented chain, every endpoint-side ingress record points at a record on the Org
+   chain (an endpoint crossing record with no Org chain supplied is one-sided), and each such record carries a
+   supplied epoch. A one-sided crossing is FAIL_CLOSED INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES;
    a crossing record without a supplied epoch is HB_EPOCH_NOT_SUPPLIED / HB_EPOCH_INVALID.
 
 Pure apart from the reader it hands off to. No clock, no network, no randomness, stdlib only. Tests use fixture
@@ -81,6 +99,7 @@ import base64
 import binascii
 import contextlib
 import json
+import re
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Iterator, Mapping
@@ -119,7 +138,7 @@ READER_ID = "UNKNOWN_NOT_AUTHENTICALLY_OBSERVED"
 #: Lane D's reader entrypoints (cvk#263 @706877b6), referenced, never vendored
 READER_ENTRYPOINTS = (
     "runtime.kv_receipt_ledgers.read_receipt_ledger(which, storage_endpoint, readback_root, head_attestation, "
-    "recorded_head)",
+    "recorded_head)",   # cvk#263 @bf684aad, recorded_head = the KV_RECORDED_RECEIPT_CHAIN_HEAD watermark
     "runtime.kv_interlock_endpoint.KVInterlockRuntime.receipt_ledger(...)",
     "runtime.kv_skap_layer2.SkapLayer2Gate.receipt_ledger(...)",
 )
@@ -148,7 +167,19 @@ KV_HEAD_ATTESTATION_SCHEMA = "stegverse.kv-ledger-head-attestation/v1"
 KV_HEAD_ATTESTATION_FIELDS = ("schema", "endpoint_id", "store_location", "genesis_receipt_sha256",
                               "head_receipt_sha256", "signer_role")
 KV_SIGNER_ROLE = "kv_ledger_head_signer"
-WATERMARK_SOURCE = "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"
+#: continuity-vault-kit#263 @bf684aada366e227714c6f67ac52a7a4ec6933d4 runtime/kv_receipt_ledgers.py (Lane D), values
+#: unchanged: the watermark is KV's own recorded receipt chain head; the Org-linked head is only a digest-only
+#: cross-check, never the watermark
+WATERMARK_SOURCE = "KV_RECORDED_RECEIPT_CHAIN_HEAD"
+ORG_CROSS_CHECK_SOURCE = "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"
+CROSS_CHECK_ROLE = "DIGEST_ONLY_CROSS_CHECK_NEVER_WATERMARK"
+ORG_SOURCED_CODE = "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED"
+WATERMARK_MISSING_CODE = "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING"
+UNKNOWN_KEY_CODE = "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY"
+WATERMARK_KEYS = ("source", "org_crossing_cross_check")
+CROSS_CHECK_KEYS = ("source", "path_ids", "role")
+WATERMARK_INPUT_KEYS = ("source", "head_receipt_sha256", "org_crossing_cross_check")
+ORG_MARKERS = ("GIT_REF", "StegVerse-org/.github", "refs/stegverse/organization-ledger", "repository-ledger/")
 ENDPOINT_HEAD_KEY = "endpoint_head_sha256"
 
 ENTRYPOINT = "llm_adapter.endpoint_ledger_designation.read_designated(designation, source=..., ...)"
@@ -167,18 +198,46 @@ ORG_CROSSING_BOUNDARY_KEYS = frozenset({"operation", "path_id", "communication_i
 #: keys that would make an endpoint the originator of an Org-chain record
 ORIGINATOR_KEYS = ("node_id", "node_ref", "originator", "author", "repository", "source_repository")
 #: LC-KV-25 (P1 rev 10, #163 comment 6373389075): no endpoint is a GitHub Organization member. The code and its
-#: predicate are Lane D's (StegVerse-Labs/continuity-vault-kit#263 @543e8c32 runtime/kv_receipt_ledgers.py
+#: predicate are Lane D's (StegVerse-Labs/continuity-vault-kit#263 @bf684aad runtime/kv_receipt_ledgers.py
 #: MEMBERSHIP_CODE / org_membership_refused, predicate ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER; Lane C
-#: TVC#540/#542), and MEMBERSHIP_KEYS is that check's key set, unchanged. The binding is read only from the
-#: designation's own structural keys: no membership data source is consulted. Distinct from
-#: ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE (an endpoint emitting org-ledger records; Coordination's provisional ruling).
+#: TVC#540/#542). LC-KV-24: keys are closed (CONTRACT_KEY_SCHEMA); an unknown key is membership-like when a token
+#: of it is in MEMBERSHIP_TOKENS (Lane D's set, unchanged). Only the designation's own keys are read: no membership
+#: data source is consulted. Distinct from ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE (an endpoint emitting org-ledger
+#: records; Coordination's provisional ruling).
 MEMBERSHIP_CODE = "ENDPOINT_ORG_MEMBERSHIP_REFUSED"
-MEMBERSHIP_KEYS = frozenset({"org_member", "organization_member", "org_membership", "organization_membership",
-                             "membership", "member", "members", "team", "teams", "team_slug", "team_id",
-                             "installation", "installation_id", "app_installation", "github_app", "app_id",
-                             "app_slug", "collaborator", "collaborators", "org_role", "github_org"})
-MEMBERSHIP_GOAL = ("KV-SKAP-VAULT-FUNCTIONAL-001 (Lane D, StegVerse-Labs/continuity-vault-kit#263 @543e8c32 "
+MEMBERSHIP_TOKENS = frozenset({"org", "orgs", "organization", "organizations", "organisation", "member", "members",
+                               "membership", "memberships", "team", "teams", "install", "installation",
+                               "installations", "app", "apps", "permission", "permissions", "owner", "owners",
+                               "ownership", "collaborator", "collaborators", "role", "roles", "github",
+                               "enterprise", "admin", "admins", "seat", "seats", "scope", "scopes"})
+LANE_D_GOAL = ("KV-SKAP-VAULT-FUNCTIONAL-001 (Lane D, StegVerse-Labs/continuity-vault-kit#263 @bf684aad; "
+               "KV-SKAP-LEDGER-LOCATION-001, StegVerse-Labs/.github#3324)")
+MEMBERSHIP_GOAL = ("KV-SKAP-VAULT-FUNCTIONAL-001 (Lane D, StegVerse-Labs/continuity-vault-kit#263 @bf684aad "
                    "ENDPOINT_ORG_MEMBERSHIP_REFUSED; Lane C StegVerse-Labs/TVC#540/#542)")
+#: cvk#263 @bf684aad: LOCATION_SHAPE, DESIGNATION_KEYS, STORE_KEYS and NOTES_KEYS in cvk's order
+LOCATION_SHAPE = ("repository", "ref", "namespace", "locator_form", "new_ledger_root", "designation_source",
+                  "initialization", "rule", "expected_genesis_receipt_sha256", "expected_genesis_note")
+CVK_DESIGNATION_KEYS = ("schema", "endpoint_id", "endpoint_kind", "stores", "provider_selection", "genesis_class",
+                        "expected_genesis_receipt_sha256", "head_signer_source", "rollback_watermark_source")
+CVK_STORE_KEYS = ("store_type", "storage_endpoint_schema", "provider_id", "access_adapter", "kv_class",
+                  "kv_request_id", "location")
+NOTES_KEYS = ("store_type_note", "head_signers_path", "append_route", "path_ids_note", "refuses",
+              "org_crossing_receipts", "head_digest_name", "genesis_crossing", "org_membership")
+#: ``None`` is a leaf; a tuple is a leaf whose value must be one of the tuple's
+WATERMARK_KEY_SCHEMA: Mapping[str, Any] = MappingProxyType({
+    "source": (WATERMARK_SOURCE,),
+    "org_crossing_cross_check": {"source": (ORG_CROSS_CHECK_SOURCE,), "path_ids": None, "role": (CROSS_CHECK_ROLE,)}})
+#: the closed key schema of a KV receipt-chain contract, equal to cvk#263 @bf684aad CONTRACT_KEY_SCHEMA
+CONTRACT_KEY_SCHEMA: Mapping[str, Any] = MappingProxyType({
+    "schema": None, "repository": None, "ledger_level": None, "receipt_schema": None, "append_only_receipts": None,
+    "required_fields": None, "replay_rule": None,
+    "repository_ledger_location": {k: None for k in LOCATION_SHAPE},
+    "ledger_designation": {**{k: None for k in CVK_DESIGNATION_KEYS},
+                           "stores": [{k: None for k in CVK_STORE_KEYS}],
+                           "rollback_watermark_source": dict(WATERMARK_KEY_SCHEMA)},
+    "designation_notes": {k: None for k in NOTES_KEYS},
+    "propagation_rule": None, "authority_effect": None,
+})
 SIGNER_GOAL = "StegVerse-Labs/TVC#542 (kv_ledger_head_signer; ORG-LEDGER-HEAD-SIGNER-001 pattern)"
 ON_CHANGE = "on the admission of a corrected designation in the endpoint's own contract (event-triggered)"
 
@@ -257,15 +316,27 @@ CODES: Mapping[str, tuple[str, str, str, str, str]] = MappingProxyType({
         "a stegverse.kv-ledger-head-attestation/v1 over exactly this endpoint, store location, genesis and head, "
         "Ed25519-signed by a published kv_ledger_head_signer key", SIGNER_GOAL,
         "on the next signed head (event-triggered)", FAIL_CLOSED),
-    "KV_LEDGER_ROLLBACK_WATERMARK_UNREAD": (
-        "ROLLBACK_WATERMARK_READ_FROM_THE_AUTHENTICATED_ORG_LEDGER",
-        "the authenticated org-ledger chain whose linked receipts carry endpoint_head_sha256 for this endpoint's "
-        "path_ids", GOAL, "on the next authenticated org-ledger read-back", FAIL_CLOSED),
+    "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY": (
+        "KV_RECEIPT_CHAIN_DESIGNATION_KEYS_CLOSED",
+        "a designation whose every key is in the closed schema (continuity-vault-kit#263 @bf684aad "
+        "runtime.kv_receipt_ledgers.CONTRACT_KEY_SCHEMA, LC-KV-24; DESIGNATION_KEY_SCHEMA here)", LANE_D_GOAL,
+        "on an admitted change to the endpoint's own contract that removes the key (event-triggered)", FAIL_CLOSED),
+    "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED": (
+        "ROLLBACK_WATERMARK_SOURCED_FROM_KV_OWN_RECEIPT_CHAIN",
+        f"a rollback watermark sourced from KV's own recorded receipt chain head ({WATERMARK_SOURCE}); an Org-linked "
+        f"head ({ORG_CROSS_CHECK_SOURCE}) may appear only as the optional digest-only org_crossing_cross_check "
+        f"({CROSS_CHECK_ROLE}), never as the watermark source", LANE_D_GOAL,
+        "on the corrected designation or call (event-triggered)", FAIL_CLOSED),
+    "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING": (
+        "ROLLBACK_WATERMARK_SUPPLIED",
+        f'recorded_head = {{"source": "{WATERMARK_SOURCE}", "head_receipt_sha256": "sha256:<64 hex>"}}: the newest '
+        'head KV recorded on its own receipt chain (optionally with a digest-only "org_crossing_cross_check" of the '
+        "Org's side of a crossing, never the watermark)", LANE_D_GOAL, "on the corrected call", FAIL_CLOSED),
     "KV_LEDGER_HEAD_ROLLBACK_DETECTED": (
-        "ENDPOINT_HEAD_NOT_OLDER_THAN_THE_NEWEST_ORG_RECORDED_HEAD",
-        "present a ledger whose chain contains the newest endpoint_head_sha256 the Org recorded for this endpoint; "
-        "an older or forked head is refused", GOAL, "on a read-back at or after the recorded head (event-triggered)",
-        DENY),
+        "ENDPOINT_HEAD_NOT_OLDER_THAN_THE_NEWEST_KV_RECORDED_HEAD",
+        f"present a ledger whose chain contains the newest head KV recorded on its own receipt chain "
+        f"({WATERMARK_SOURCE}); an older or forked head is refused", GOAL,
+        "on a read-back at or after the recorded head (event-triggered)", DENY),
     "INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES": (
         "EACH_CROSSING_RECORDED_BY_BOTH_ENDPOINTS",
         "the crossing's egress record on the source side and its ingress record on the destination side, each "
@@ -282,10 +353,15 @@ CODES: Mapping[str, tuple[str, str, str, str, str]] = MappingProxyType({
         "SUPPLIED_HB_EPOCH:<epoch>", CROSSING_GOAL,
         "on a crossing record appended with the supplied epoch (event-triggered)", FAIL_CLOSED),
 })
+#: cvk#263 @bf684aad failure_class for the codes it shares
+FAILURE_CLASS = MappingProxyType({ORG_SOURCED_CODE: "A", WATERMARK_MISSING_CODE: "A", UNKNOWN_KEY_CODE: "C",
+                                  MEMBERSHIP_CODE: "C"})
 
 
 def refusal(code: str, detail: str, **extra: Any) -> dict[str, Any]:
     predicate, repair, goal, next_attempt, disposition = CODES[code]
+    if code in FAILURE_CLASS:
+        extra = {"failure_class": FAILURE_CLASS[code], **extra}
     return {"schema": RESULT_SCHEMA, "disposition": disposition, "failure_code": code,
             "failed_predicate": predicate, "required_evidence_or_repair": f"{repair} ({detail})",
             "retry_entrypoint": ENTRYPOINT, "owning_existing_goal": goal, "next_attempt": next_attempt, **extra,
@@ -297,53 +373,147 @@ def _is_digest(value: Any) -> bool:
         and all(c in "0123456789abcdef" for c in value[7:])
 
 
-def org_membership_binding(designation: Any) -> str | None:
-    """Why an endpoint designation binds the endpoint as an Org member (a MEMBERSHIP_KEYS key at any depth), or None.
+def _membership_like(key: str) -> bool:
+    """cvk#263 @bf684aad _membership_like: a snake/camel token of `key` is in MEMBERSHIP_TOKENS. Pure."""
+    tokens = re.split(r"[^a-z0-9]+", re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", key).lower())
+    return any(t in MEMBERSHIP_TOKENS for t in tokens)
 
-    The ORG designation is the Org's own and is not an endpoint. Structural keys only; nothing else is read. Pure."""
-    if not isinstance(designation, Mapping) or designation.get("endpoint_kind") == ORG:
-        return None
 
-    def walk(node: Any, path: str) -> str | None:
-        items = node.items() if isinstance(node, Mapping) else enumerate(node) if isinstance(node, list) else ()
-        for k, v in items:
-            if isinstance(k, str) and k.lower() in MEMBERSHIP_KEYS:
-                return f"{path}{k} is an org-membership, team or app-installation binding"
-            hit = walk(v, f"{path}{k}.")
+def _store_key_schema(store: Any) -> dict[str, None]:
+    keys = STORE_KEYS[GIT_REF] if isinstance(store, Mapping) and store.get("store_type") == GIT_REF \
+        else CVK_STORE_KEYS
+    return {k: None for k in keys}
+
+
+#: a bare designation's closed key schema: cvk's ledger_designation level (a GIT_REF store, ORG only, has its keys)
+DESIGNATION_KEY_SCHEMA: Mapping[str, Any] = MappingProxyType({
+    **{k: None for k in CVK_DESIGNATION_KEYS}, "stores": [_store_key_schema],
+    "rollback_watermark_source": dict(WATERMARK_KEY_SCHEMA)})
+
+
+def closed_key_failure(node: Any, schema: Any = DESIGNATION_KEY_SCHEMA, path: str = "") -> tuple[str, str] | None:
+    """(code, reason) for the first key outside the closed schema, or None (cvk#263 @bf684aad _closed_schema). A
+    membership-like unknown key is ENDPOINT_ORG_MEMBERSHIP_REFUSED, any other KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY.
+    Leaves must not carry keys. Pure."""
+    if callable(schema):
+        schema = schema(node)
+    if isinstance(node, Mapping):
+        allowed = schema if isinstance(schema, Mapping) else {}
+        for k, v in node.items():
+            if not isinstance(k, str) or k not in allowed:
+                key = str(k)
+                if _membership_like(key):
+                    return MEMBERSHIP_CODE, (f"{path}{key} is not a permitted key and is membership-like (an org, "
+                                             "membership, team, app-installation, permission or owner binding)")
+                return UNKNOWN_KEY_CODE, f"{path}{key} is not a permitted key of the closed designation schema"
+            hit = closed_key_failure(v, allowed[k], f"{path}{k}.")
             if hit:
                 return hit
+    elif isinstance(node, list):
+        item = schema[0] if isinstance(schema, list) and schema else None
+        for i, v in enumerate(node):
+            hit = closed_key_failure(v, item, f"{path}{i}.")
+            if hit:
+                return hit
+    return None
+
+
+def contract_key_failure(contract: Any) -> dict[str, Any] | None:
+    """Six-field refusal for a KV receipt-chain contract with a key outside CONTRACT_KEY_SCHEMA, else None. Pure."""
+    hit = closed_key_failure(contract, CONTRACT_KEY_SCHEMA) if isinstance(contract, Mapping) else None
+    return refusal(*hit) if hit else None
+
+
+def org_membership_binding(designation: Any) -> str | None:
+    """Why an endpoint designation binds the endpoint as an Org member (a membership-like key outside the closed
+    schema, at any depth), or None. The ORG designation is the Org's own and is not an endpoint. Pure."""
+    if not isinstance(designation, Mapping) or designation.get("endpoint_kind") == ORG:
         return None
-    return walk(designation, "")
+    hit = closed_key_failure(designation)
+    return hit[1] if hit and hit[0] == MEMBERSHIP_CODE else None
+
+
+def _org_sourced(value: Any) -> bool:
+    """cvk#263 @bf684aad _org_sourced: a watermark source naming the Org ledger or an Org-side head. Pure."""
+    if not isinstance(value, str):
+        return False
+    tokens = set(re.split(r"[^A-Z0-9]+", value.upper()))
+    return value == ORG_CROSS_CHECK_SOURCE or bool(tokens & {"ORG", "ORGANIZATION"}) \
+        or any(m in value for m in ORG_MARKERS)
+
+
+def crossing_path_ids(designation: Mapping[str, Any]) -> list[str]:
+    """The cross-check path_ids (optional; never the watermark). Pure."""
+    w = designation.get("rollback_watermark_source")
+    xc = w.get("org_crossing_cross_check") if isinstance(w, Mapping) else None
+    ids = xc.get("path_ids") if isinstance(xc, Mapping) else None
+    return list(ids) if isinstance(ids, list) else []
+
+
+def watermark_source_failure(designation: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Six-field refusal unless rollback_watermark_source is {source: KV_RECORDED_RECEIPT_CHAIN_HEAD} with at most
+    the digest-only org_crossing_cross_check (KV, SKAP_VAULT), or null (ORG). Pure."""
+    kind, w = designation.get("endpoint_kind"), designation.get("rollback_watermark_source")
+    if kind not in INDEPENDENT_KINDS:
+        return None if w is None else refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"{kind} carries no "
+                                              f"rollback_watermark_source; got {w!r}")
+    source = w.get("source") if isinstance(w, Mapping) else None
+    if source != WATERMARK_SOURCE and _org_sourced(source):
+        return refusal(ORG_SOURCED_CODE, f"ledger_designation.rollback_watermark_source.source is {source!r}")
+    xc = w.get("org_crossing_cross_check") if isinstance(w, Mapping) else None
+    ids = xc.get("path_ids") if isinstance(xc, Mapping) else None
+    if not isinstance(w, Mapping) or source != WATERMARK_SOURCE \
+            or (xc is not None and (not isinstance(xc, Mapping) or xc.get("source") != ORG_CROSS_CHECK_SOURCE
+                                    or xc.get("role") != CROSS_CHECK_ROLE or not isinstance(ids, list) or not ids
+                                    or not all(isinstance(p, str) and p.endswith(":intr-destination")
+                                               for p in ids))):
+        return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"rollback_watermark_source must be {{source: "
+                       f"{WATERMARK_SOURCE}}} with an optional org_crossing_cross_check {{source: "
+                       f"{ORG_CROSS_CHECK_SOURCE}, path_ids: [..:intr-destination], role: {CROSS_CHECK_ROLE}}} "
+                       f"(required for KV and SKAP_VAULT); got {w!r}"[:400])
+    return None
 
 
 def designation_failure(designation: Any) -> dict[str, Any] | None:
     """Six-field refusal unless `designation` is well formed for its endpoint kind. Pure.
 
-    An Org-membership, team or app-installation binding is refused first (ENDPOINT_ORG_MEMBERSHIP_REFUSED), before
-    the exact-key shape check would call it merely invalid."""
+    Order (cvk#263 @bf684aad designation()): a KV or SKAP_VAULT store on a git ref (KV_LEDGER_DESIGNATED_ON_GIT_REF);
+    then the closed key schema: a membership-like unknown key (ENDPOINT_ORG_MEMBERSHIP_REFUSED), any other unknown
+    key (KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY); then an Org-sourced watermark
+    (KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED); then the exact shape."""
     d = designation
-    member = org_membership_binding(d)
-    if member:
-        return refusal(MEMBERSHIP_CODE, f"{d.get('endpoint_kind')} {d.get('endpoint_id')!r}: {member}")
-    if not isinstance(d, Mapping) or tuple(sorted(d)) != DESIGNATION_KEYS or d.get("schema") != SCHEMA \
-            or not isinstance(d.get("endpoint_id"), str) or not d["endpoint_id"] \
-            or d.get("endpoint_kind") not in STORE_TYPE_OF or not isinstance(d.get("genesis_class"), str) \
-            or not d["genesis_class"] or d.get("provider_selection") not in SELECTION_RULES \
-            or not isinstance(d.get("stores"), list) or not d["stores"] \
-            or not all(isinstance(s, Mapping) for s in d["stores"]):
+    if not isinstance(d, Mapping):
         return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"got {d!r}"[:400])
-    kind = d["endpoint_kind"]
+    kind = d.get("endpoint_kind")
+    stores = d.get("stores") if isinstance(d.get("stores"), list) else []
+    if kind in INDEPENDENT_KINDS:
+        for store in stores:
+            if isinstance(store, Mapping) and (store.get("store_type") == GIT_REF
+                                               or any(k in store for k in ("repository", "ref", "namespace"))):
+                return refusal("KV_LEDGER_DESIGNATED_ON_GIT_REF", f"{kind} {d.get('endpoint_id')} designates "
+                               f"{dict(store)!r}")
+    if kind != ORG:
+        hit = closed_key_failure(d)
+        if hit:
+            return refusal(hit[0], f"{kind} {d.get('endpoint_id')!r}: {hit[1]}")
+        failed = watermark_source_failure(d)
+        if failed and failed["failure_code"] == ORG_SOURCED_CODE:
+            return failed
+    if tuple(sorted(d)) != DESIGNATION_KEYS or d.get("schema") != SCHEMA \
+            or not isinstance(d.get("endpoint_id"), str) or not d["endpoint_id"] \
+            or kind not in STORE_TYPE_OF or not isinstance(d.get("genesis_class"), str) \
+            or not d["genesis_class"] or d.get("provider_selection") not in SELECTION_RULES \
+            or not stores or not all(isinstance(s, Mapping) for s in stores):
+        return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"got {d!r}"[:400])
     if kind != ORG:   # a node (PERMANENT) ledger on the org ledger would make the node an org-ledger source
         if kind not in INDEPENDENT_KINDS:
             return refusal("ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE", f"{kind} {d['endpoint_id']} would be designated on "
-                           f"{[s.get('ref') for s in d['stores']]}; {kind} has no admitted store type off the org "
+                           f"{[s.get('ref') for s in stores]}; {kind} has no admitted store type off the org "
                            "ledger yet")
-    for store in d["stores"]:
+    for store in stores:
         st = store.get("store_type")
         if st not in STORE_TYPES:
             return refusal("ENDPOINT_LEDGER_STORE_TYPE_UNDECLARED", f"store_type {st!r}")
-        if kind in INDEPENDENT_KINDS and st == GIT_REF:
-            return refusal("KV_LEDGER_DESIGNATED_ON_GIT_REF", f"{kind} {d['endpoint_id']} designates {store!r}")
         if st != STORE_TYPE_OF[kind]:
             return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"{kind} uses {STORE_TYPE_OF[kind]}, not {st}")
         if tuple(sorted(store)) != STORE_KEYS[st] or not all(isinstance(store[k], str) and store[k] for k in store):
@@ -360,13 +530,9 @@ def designation_failure(designation: Any) -> dict[str, Any] | None:
     if d["head_signer_source"] != HEAD_SIGNER_OF[kind]:
         return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"{kind} heads are signed by "
                        f"{HEAD_SIGNER_OF[kind]}, not {d['head_signer_source']!r}")
-    w = d["rollback_watermark_source"]
-    if kind in INDEPENDENT_KINDS or w is not None:
-        if not isinstance(w, Mapping) or tuple(sorted(w)) != ("path_ids", "source") or w["source"] != WATERMARK_SOURCE \
-                or not isinstance(w["path_ids"], list) or not w["path_ids"] \
-                or not all(isinstance(p, str) and p for p in w["path_ids"]):
-            return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"rollback_watermark_source must be "
-                           f"{{source: {WATERMARK_SOURCE}, path_ids: [..]}} (required for KV and SKAP_VAULT)")
+    failed = watermark_source_failure(d)
+    if failed:
+        return failed
     g = d["expected_genesis_receipt_sha256"]
     if g is not None and not _is_digest(g):
         return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"expected_genesis_receipt_sha256 {g!r}")
@@ -445,11 +611,28 @@ def kv_head_failure(designation: Mapping[str, Any], store: Mapping[str, Any], ge
 
 # -- the rollback watermark ---------------------------------------------------------------------------------
 
-def org_recorded_endpoint_heads(org_chain: list[Mapping[str, Any]], designation: Mapping[str, Any]) -> list[str]:
-    """endpoint_head_sha256 values the Org recorded on its linked receipts for this endpoint's path_ids, newest
-    first (org-chain order is the only order). Pure."""
-    path_ids = set((designation.get("rollback_watermark_source") or {}).get("path_ids") or ())
-    return [head for _, head in _org_crossings(org_chain, path_ids) if head is not None]
+def kv_watermark(recorded_head: Any) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    """The rollback watermark input (cvk#263 @bf684aad _watermark): {"source": KV_RECORDED_RECEIPT_CHAIN_HEAD,
+    "head_receipt_sha256": sha256[, "org_crossing_cross_check": sha256]}, or (None, six-field refusal). The
+    cross-check digest is echoed with authority NONE and never compared as the watermark. Pure."""
+    if recorded_head is None:
+        return None, refusal(WATERMARK_MISSING_CODE, "no recorded_head supplied")
+    if not isinstance(recorded_head, Mapping):
+        return None, refusal(WATERMARK_MISSING_CODE, f"recorded_head {recorded_head!r} does not declare its source "
+                                                     f"(expected a mapping with source {WATERMARK_SOURCE})")
+    source = recorded_head.get("source")
+    if source != WATERMARK_SOURCE and _org_sourced(source):
+        return None, refusal(ORG_SOURCED_CODE, f"recorded_head.source is {source!r}")
+    xc = recorded_head.get("org_crossing_cross_check")
+    if source != WATERMARK_SOURCE or set(recorded_head) - set(WATERMARK_INPUT_KEYS) \
+            or not _is_digest(recorded_head.get("head_receipt_sha256")) or (xc is not None and not _is_digest(xc)):
+        return None, refusal(WATERMARK_MISSING_CODE, f"recorded_head {dict(recorded_head)!r} is not a "
+                                                     f"{WATERMARK_SOURCE} watermark with head_receipt_sha256 "
+                                                     "sha256:<64 hex>")
+    out = {"source": WATERMARK_SOURCE, "head_receipt_sha256": recorded_head["head_receipt_sha256"]}
+    if xc is not None:
+        out["org_crossing_cross_check"] = {"digest": xc, "role": CROSS_CHECK_ROLE, "authority_effect": "NONE"}
+    return out, None
 
 
 def _boundary_fields(receipt: Any) -> dict[str, Any]:
@@ -500,11 +683,11 @@ def crossing_failure(chain: list[Mapping[str, Any]], org_chain: list[Mapping[str
                      designation: Mapping[str, Any]) -> dict[str, Any] | None:
     """Both sides recorded each crossing of this endpoint's paths, each with a supplied epoch. Pure.
 
-    Org side -> endpoint side: every Org record for the endpoint's path_ids names an endpoint_head_sha256 (a digest
+    Org side -> endpoint side: every Org record for the designation's cross-check path_ids names an endpoint_head_sha256 (a digest
     pointer) that is on the presented chain. Endpoint side -> Org side: every endpoint ingress record names, by
     digest, the Org-side record it ingested (source_repository_receipt_sha256 or organization_receipt_sha256), and
     that record is on the Org chain."""
-    path_ids = set((designation.get("rollback_watermark_source") or {}).get("path_ids") or ())
+    path_ids = set(crossing_path_ids(designation))
     on_chain = {r.get("receipt_sha256") for r in chain}
     org_digests = set()
     for r in org_chain:
@@ -538,16 +721,14 @@ def crossing_failure(chain: list[Mapping[str, Any]], org_chain: list[Mapping[str
     return None
 
 
-def rollback_failure(chain: list[Mapping[str, Any]], recorded_heads: list[str]) -> dict[str, Any] | None:
-    """DENY KV_LEDGER_HEAD_ROLLBACK_DETECTED when the newest Org-recorded head is not on the presented chain (the
-    presented head is older, or a fork). No recorded head yet: no watermark. Pure."""
-    if not recorded_heads:
-        return None
-    newest = recorded_heads[0]
+def rollback_failure(chain: list[Mapping[str, Any]], watermark: Mapping[str, Any]) -> dict[str, Any] | None:
+    """DENY KV_LEDGER_HEAD_ROLLBACK_DETECTED when the newest head KV recorded on its own receipt chain (the
+    kv_watermark) is not on the presented chain (the presented head is older, or a fork). Pure."""
+    newest = watermark["head_receipt_sha256"]
     if newest in {r.get("receipt_sha256") for r in chain}:
         return None
-    return refusal("KV_LEDGER_HEAD_ROLLBACK_DETECTED", f"the Org recorded head {newest}; the presented head is "
-                   f"{chain[0].get('receipt_sha256') if chain else None}", recorded_head_sha256=newest)
+    return refusal("KV_LEDGER_HEAD_ROLLBACK_DETECTED", f"KV recorded {newest} on its own receipt chain; the presented "
+                   f"head is {chain[0].get('receipt_sha256') if chain else None}", recorded_head_sha256=newest)
 
 
 # -- what every reader's output must satisfy ----------------------------------------------------------------
@@ -577,21 +758,34 @@ def chain_failure(designation: Mapping[str, Any], chain: Any) -> dict[str, Any] 
 
 def chain_admission_failure(designation: Mapping[str, Any], store: Mapping[str, Any], chain: Any, *,
                             head_attestation: Any, signers: list[Mapping[str, Any]],
-                            org_chain: list[Mapping[str, Any]] | None) -> dict[str, Any] | None:
-    """The checks every store type's reader output passes before anything reads it. Pure."""
+                            org_chain: list[Mapping[str, Any]] | None,
+                            recorded_head: Any = None) -> dict[str, Any] | None:
+    """The checks every store type's reader output passes before anything reads it. Pure.
+
+    KV and SKAP_VAULT: head signed, then the required KV-recorded watermark (independent of any Org chain or
+    declared path), then both sides of each crossing."""
     failed = chain_failure(designation, chain)
     if failed:
         return failed
-    if designation["endpoint_kind"] in INDEPENDENT_KINDS:
-        failed = kv_head_failure(designation, store, chain[-1]["receipt_sha256"], chain[0]["receipt_sha256"],
-                                 head_attestation, signers)
-        if failed:
-            return failed
-    if designation["rollback_watermark_source"] is not None:
-        if not isinstance(org_chain, list):
-            return refusal("KV_LEDGER_ROLLBACK_WATERMARK_UNREAD", "no authenticated org-ledger chain supplied")
-        return rollback_failure(chain, org_recorded_endpoint_heads(org_chain, designation)) \
-            or crossing_failure(chain, org_chain, designation)
+    if designation["endpoint_kind"] not in INDEPENDENT_KINDS:
+        return None
+    failed = kv_head_failure(designation, store, chain[-1]["receipt_sha256"], chain[0]["receipt_sha256"],
+                             head_attestation, signers)
+    if failed:
+        return failed
+    watermark, failed = kv_watermark(recorded_head)
+    if failed:
+        return failed
+    failed = rollback_failure(chain, watermark)
+    if failed:
+        return failed
+    if isinstance(org_chain, list):
+        return crossing_failure(chain, org_chain, designation)
+    crossing = next((r for r in chain if r.get("transition_class") in CROSSING_CLASSES), None)
+    if crossing is not None:
+        return refusal("INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES", f"the endpoint crossing record "
+                       f"{crossing.get('receipt_sha256')} cannot be matched: no Org chain supplied",
+                       one_sided="ENDPOINT_ONLY")
     return None
 
 
@@ -622,7 +816,8 @@ READERS = MappingProxyType(_READERS)
 
 @contextlib.contextmanager
 def read_designated(designation: Any, *, source: Any, head_attestation: Any = None,
-                    org_chain: list[Mapping[str, Any]] | None = None) -> Iterator[tuple[Any, Any]]:
+                    org_chain: list[Mapping[str, Any]] | None = None,
+                    recorded_head: Any = None) -> Iterator[tuple[Any, Any]]:
     """Yield (chain, None) for an admitted read of the designated ledger, or (None, six-field refusal)."""
     store, failed = select_store(designation)
     if failed:
@@ -650,11 +845,15 @@ def read_designated(designation: Any, *, source: Any, head_attestation: Any = No
             return
         signers = load_head_signers(designation["head_signer_source"])
         failed = chain_admission_failure(designation, store, chain, head_attestation=head_attestation,
-                                         signers=signers, org_chain=org_chain)
+                                         signers=signers, org_chain=org_chain, recorded_head=recorded_head)
         yield (None, failed) if failed else (chain, None)
 
 
-__all__ = ["CODES", "KV_STORAGE_ENDPOINT", "GIT_REF", "MEMBERSHIP_CODE", "MEMBERSHIP_KEYS", "org_membership_binding", "READERS", "SCHEMA", "SINGLE_PROVIDER_V1", "STORE_TYPES",
-           "chain_admission_failure", "chain_failure", "crossing_failure", "designation_failure", "kv_head_attestation_body",
-           "kv_head_attestation_message", "kv_head_failure", "load_head_signers", "org_recorded_endpoint_heads",
-           "read_designated", "refusal", "rollback_failure", "select_store", "store_location"]
+__all__ = ["CODES", "CONTRACT_KEY_SCHEMA", "CROSS_CHECK_ROLE", "DESIGNATION_KEY_SCHEMA", "GIT_REF",
+           "KV_STORAGE_ENDPOINT", "MEMBERSHIP_CODE", "MEMBERSHIP_TOKENS", "ORG_CROSS_CHECK_SOURCE", "ORG_SOURCED_CODE",
+           "READERS", "SCHEMA", "SINGLE_PROVIDER_V1", "STORE_TYPES", "UNKNOWN_KEY_CODE", "WATERMARK_MISSING_CODE",
+           "WATERMARK_SOURCE", "chain_admission_failure", "chain_failure", "closed_key_failure",
+           "contract_key_failure", "crossing_failure", "crossing_path_ids", "designation_failure",
+           "kv_head_attestation_body", "kv_head_attestation_message", "kv_head_failure", "kv_watermark",
+           "load_head_signers", "org_membership_binding", "read_designated", "refusal", "rollback_failure",
+           "select_store", "store_location", "watermark_source_failure"]

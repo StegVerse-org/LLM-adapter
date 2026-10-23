@@ -6,10 +6,14 @@
   "head_signer_source": "KV_LEDGER_HEAD_SIGNER",
   "provider_selection": "SINGLE_PROVIDER_V1",
   "rollback_watermark_source": {
-    "path_ids": [
-      "StegVerse-org->STEGVERSE_KV:_Vault/SKAP/Receipts:intr-destination"
-    ],
-    "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"
+    "org_crossing_cross_check": {
+      "path_ids": [
+        "StegVerse-org->STEGVERSE_KV:_Vault/SKAP/Receipts:intr-destination"
+      ],
+      "role": "DIGEST_ONLY_CROSS_CHECK_NEVER_WATERMARK",
+      "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"
+    },
+    "source": "KV_RECORDED_RECEIPT_CHAIN_HEAD"
   },
   "schema": "stegverse.endpoint-ledger-designation/v1",
   "stores": [
