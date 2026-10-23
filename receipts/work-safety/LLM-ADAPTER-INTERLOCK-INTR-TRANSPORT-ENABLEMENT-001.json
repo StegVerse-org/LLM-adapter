@@ -5,6 +5,8 @@
   "authoring_session": "lane-b-91117956 (Lane B, InTr and Mesh Destinations, StegVerse-org/.github#162)",
   "stacked_on": "https://github.com/StegVerse-org/LLM-adapter/pull/428 (laneb/healthy-node-evaluator @0b37fe3b)",
   "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/TRANSITION_LEDGER_MIRROR_HANDOFF.md",
     "StegVerse-org/.github:data/intr-protocol/v1/protocol.json@907f4305",
     "StegVerse-org/.github:resident-runtime/intr_path_ingress.py@d941d51d"
   ],
@@ -30,7 +32,11 @@
   },
   "semantic_scan": {
     "completed": true,
-    "repositories_searched": ["StegVerse-org/LLM-adapter", "StegVerse-org/.github", "StegVerse-Labs/.github"],
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/.github",
+      "StegVerse-Labs/.github"
+    ],
     "evidence_refs": [
       "llm_adapter/node_ingress_boundary.py",
       "llm_adapter/healthy_node_evaluator.py",
@@ -52,7 +58,11 @@
     "material_function_change": true,
     "readme_path": "README.md",
     "readme_updated_in_change_set": true,
-    "evidence_refs": ["README.md", "llm_adapter/node_ingress_boundary.py", "llm_adapter/intr_transport_carrier.py"]
+    "evidence_refs": [
+      "README.md",
+      "llm_adapter/node_ingress_boundary.py",
+      "llm_adapter/intr_transport_carrier.py"
+    ]
   },
   "covered_paths": [
     ".github/workflows/validate.yml",
@@ -75,7 +85,10 @@
       "decision": "CREATE_NEW",
       "justification": "The ingress boundary needs a carrier check on #428's base, which does not have #432's anchor module. The evidence shapes and payload rule match #432's field for field.",
       "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
-      "evidence_refs": ["StegVerse-org/LLM-adapter#432", "StegVerse-org/.github:data/intr-protocol/v1/protocol.json"]
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#432",
+        "StegVerse-org/.github:data/intr-protocol/v1/protocol.json"
+      ]
     },
     {
       "path": "llm_adapter/org_ledger_location.py",
@@ -84,7 +97,9 @@
       "decision": "REUSE",
       "justification": "The identical copy lets this draft and #432 land in either order without conflict.",
       "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
-      "evidence_refs": ["StegVerse-org/LLM-adapter#432"]
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#432"
+      ]
     },
     {
       "path": "tests/fixtures/node_receipts/contract_with_431_repository_ledger_location.json",
@@ -93,7 +108,10 @@
       "decision": "REUSE",
       "justification": "The production contract has no designation until #431 lands.",
       "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
-      "evidence_refs": ["StegVerse-org/LLM-adapter#431", "StegVerse-org/LLM-adapter#432"]
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#431",
+        "StegVerse-org/LLM-adapter#432"
+      ]
     },
     {
       "path": "tests/test_intr_transport_enablement.py",
@@ -102,7 +120,9 @@
       "decision": "CREATE_NEW",
       "justification": "The gate needs its own CI step with a 0-skipped check.",
       "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
-      "evidence_refs": ["StegVerse-org/LLM-adapter#432"]
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#432"
+      ]
     }
   ]
 }
