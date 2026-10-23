@@ -441,7 +441,10 @@ class InvariantTests(unittest.TestCase):
             "tests/fixtures/node_receipts/org_ledger_test_genesis.json":
                 "a2c01a2ebaa15aae048c42bb6048bdbf402e682a4c69c11def9d20d97539a6a7",
             "tests/fixtures/node_receipts/contract_with_431_location_and_pinned_genesis.json":
-                "a0323936dc13a13561b7538c9ffb3ebaab636726cbfd312afc757588eddd2e12",
+                "ea81ca135bfd3b8e86a69251cf63d6f5aaa86fa46777dcec9370971dd0c5208a",
+            # byte copy of #431's contract.json @27e2b9ab (expected_genesis_receipt_sha256: null, with a note)
+            "tests/fixtures/node_receipts/contract_with_431_repository_ledger_location.json":
+                "d97cd4dc978c7ea02f41137dc85bbf5eb74b2ea6595bc58513be57b4c125e89f",
         }
         for path, digest in shared.items():
             with self.subTest(path):

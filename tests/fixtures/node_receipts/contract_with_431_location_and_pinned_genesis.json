@@ -26,7 +26,7 @@
     "initialization": "Genesis is a REPOSITORY_LEDGER_INITIALIZATION transition whose first receipt has previous_receipt_sha256 null. Publication of the ref is the organization's own append under ORGANIZATION_LEDGER_LOCK. Not performed by this repository.",
     "rule": "The repository chain is kept in its own subtree of the designated organization ledger ref. Repository replay walks repository-ledger/StegVerse-org/LLM-adapter/HEAD.json back through its own receipts and never reads an organization receipt. Existing organization-ledger commits are not rewritten.",
     "expected_genesis_receipt_sha256": "sha256:e7175b7ad2beb11330f4cba79c7e922636b9fef008eca9001e2ffbb059b6f2d1",
-    "expected_genesis_note": "TEST FIXTURE: the org genesis is pinned here so a caller-created store cannot mint its own. #431's contract shape has to add expected_genesis_receipt_sha256 with the registry's org genesis receipt; this value is tests/fixtures/node_receipts/org_ledger_test_genesis.json, not the production genesis."
+    "expected_genesis_note": "TEST FIXTURE: #431's real contract shape (contract_with_431_repository_ledger_location.json, a byte copy of StegVerse-org/LLM-adapter#431's contract.json), with its null expected_genesis_receipt_sha256 replaced by the receipt_sha256 of tests/fixtures/node_receipts/org_ledger_test_genesis.json. This is not the production genesis; production is null until the genesis is observed, and is refused ORG_LEDGER_GENESIS_NOT_PINNED."
   },
   "propagation_rule": "PROPAGATE_ONLY_EVIDENCE_NEEDED_BY_NEXT_HIGHER_LEVEL",
   "authority_effect": "NONE_CONTRACT_ONLY"
