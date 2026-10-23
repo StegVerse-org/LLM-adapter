@@ -269,6 +269,22 @@ class ExpectedGenesisPinTests(unittest.TestCase):
         if pinned is not None:     # a later admitted change sets the precomputed digest
             self.assertRegex(pinned, r"^sha256:[0-9a-f]{64}$")
 
+    def test_null_pin_is_a_six_field_open_item_not_a_fake_pin(self):
+        """LC-KV-19 (StegVerse-Labs/.github#3330 rev 11): while expected_genesis_receipt_sha256 is null the contract
+        carries the six-field blocker and retry entrypoint; nothing is pinned by hand."""
+        location = json.loads((ROOT / ".stegverse/transition-ledger/contract.json").read_text())[
+            "repository_ledger_location"]
+        item = location["expected_genesis_open_item"]
+        for key in P.SIX_FIELDS:
+            self.assertTrue(isinstance(item[key], str) and item[key].strip(), key)
+        self.assertEqual((item["failure_code"], item["failed_predicate"]),
+                         ("ORG_LEDGER_GENESIS_NOT_PINNED", "ORG_LEDGER_GENESIS_PINNED_BY_CONTRACT"))
+        self.assertTrue(item["retry_entrypoint"].startswith(P.PRECOMPUTE_ENTRYPOINT))
+        for needle in ("StegVerse-org/.github#196", "MERGE_APPEND_PATH_NOT_ADMITTED", "never by hand"):
+            self.assertIn(needle, item["required_evidence_or_repair"])
+        if location["expected_genesis_receipt_sha256"] is None:
+            self.assertEqual(item["status"], "DOCUMENTED_OPEN_NO_PIN")
+
     def test_genesis_is_byte_deterministic_and_precomputable_at_a_supplied_epoch(self):
         from datetime import datetime, timezone
         emit = self.emit_module()
@@ -563,11 +579,12 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
     """The GENESIS_PIN trigger arrives over InTr (option (b)) and is received ahead of the pin it delivers.
 
     The genesis and the carrying INTR_MESH_PATH_INGRESS are appended with emit.py into a temporary
-    namespace store; the INTR_MESH_PATH_TRANSFER source half is retained at <namespace>/source-receipts/. Both use
+    namespace store; the Org's own INTR_MESH_PATH_TRANSFER source half (emitter StegVerse-org/.github) is kept at
+    <namespace>/source-receipts/ (ORG-kind, Q-PERMANENT-REPOSITORY-LEDGER) and the ingress is digest-only. Both use
     intr_transport_carrier's own evidence builders (byte copy of #432/#433). Nothing touches the real ledger.
     """
 
-    CARRIER_SHA = "sha256:81ad9d3b42076c991443f3d79ec82c5f306eb8a8aa5f21228fe9faeb8b21aca6"   # = #432/#433
+    CARRIER_SHA = "sha256:9d3e69c838d7e20533f0c5a06401b018948cb12a4201889f6b41d4b497df720f"   # = #432/#433
 
     def setUp(self):
         self.g = GenesisPinTransitionTests()
@@ -729,7 +746,7 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
         self.assertIsNone(R.crossing_pair_failure(self.source, dest))
         other = {**self.source, "evidence": {**self.source["evidence"], "communication_id": "intr-path-v1:other"}}
         self.assertEqual(R.crossing_pair_failure(other, dest)[0], R.CROSSING_CODE)
-        moved = {**dest, "evidence": {**dest["evidence"], "addressed_location": "refs/x:y"}}
+        moved = {**dest, "evidence": {**dest["evidence"], "destination_location": "refs/x:y"}}
         self.assertEqual(R.crossing_pair_failure(self.source, moved)[0], R.CROSSING_CODE)
         # the ingress record carries a pointer (the egress digest), not the egress receipt body
         self.assertEqual(dest["evidence"]["source_repository_receipt_sha256"], self.source["receipt_sha256"])
@@ -877,14 +894,17 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
             source = receipt({"schema": carrier.RECEIPT_SCHEMA, "repository": "StegVerse-org/.github",
                               "transition_class": carrier.SOURCE_CLASS, "previous_receipt_sha256": None,
                               "evidence": ev})
+            seal = source["receipt_sha256"]
             dest = receipt({"schema": carrier.RECEIPT_SCHEMA, "transition_class": carrier.DESTINATION_CLASS,
-                            "evidence": {"schema": carrier.DESTINATION_EVIDENCE_SCHEMA,
-                                         "addressed_location": carrier.ORG_LEDGER_LOCATION,
-                                         "source_repository_receipt_sha256": source["receipt_sha256"],
-                                         "boundary_evidence": {"operation": carrier.DESTINATION_OPERATION}}})
+                            "evidence": {"schema": carrier.DESTINATION_EVIDENCE_SCHEMA, "path_id": "p",
+                                         "communication_id": "c", "destination_location": carrier.ORG_LEDGER_LOCATION,
+                                         "source_repository_receipt_sha256": seal,
+                                         "boundary_evidence": {"operation": carrier.DESTINATION_OPERATION,
+                                                               "path_id": "p", "communication_id": "c",
+                                                               carrier.ENDPOINT_HEAD_KEY: seal}}})
             got = carrier.verify(signal, destination_receipt_sha256=dest["receipt_sha256"],
                                  org_ledger_head_receipt_sha256=dest["receipt_sha256"], org_chain=[dest],
-                                 retained_source=source)
+                                 source_record=source)
             if drop == "communication_id":
                 self.assertIsNotNone(got)          # outside the payload digest; still refused, never raised
             else:

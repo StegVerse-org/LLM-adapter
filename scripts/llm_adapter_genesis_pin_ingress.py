@@ -3,9 +3,11 @@
 
 The genesis pin's trigger reaches LLM-adapter as an InTr ingress signal: the org-side emitter is the existing
 path transfer (StegVerse-org/.github .github/workflows/intr-path-transfer.yml), and the carrying pair is the existing
-INTR_MESH_PATH_TRANSFER source half retained at <namespace>/source-receipts/<hex>.json plus the
+INTR_MESH_PATH_TRANSFER source half kept at <namespace>/source-receipts/<hex>.json plus the Org's digest-only
 INTR_MESH_PATH_INGRESS (ORGANIZATION_INTR_DESTINATION_INGRESS) destination half on the namespace chain, checked by
-llm_adapter.intr_transport_carrier.verify (byte copy of #432/#433's module, unchanged).
+llm_adapter.intr_transport_carrier.verify (byte copy of #432/#433's module). The source half here is the Org's own
+record (emitter StegVerse-org/.github, node_ref = the org), so keeping it on the Org ledger is ORG-kind under
+Q-PERMANENT-REPOSITORY-LEDGER (StegVerse-org/.github#167 comment 6374130335); a node's own source half never is.
 
 No circularity: #433's normal InTr gate (intr_transport_carrier.observe through org_ledger_location.
 designated_org_ledger) accepts a store only at the contract's pinned genesis, so it cannot deliver the pin. This
@@ -100,7 +102,7 @@ def crossing_pair_failure(source: Any, destination: Any) -> tuple[str, str, str]
     sev = source.get("evidence") if isinstance(source.get("evidence"), Mapping) else {}
     dev = destination.get("evidence") if isinstance(destination.get("evidence"), Mapping) else {}
     if dev.get("source_repository_receipt_sha256") != source.get("receipt_sha256") \
-            or sev.get("destination_location") != dev.get("addressed_location") \
+            or sev.get("destination_location") != dev.get("destination_location") \
             or sev.get("communication_id") != dev.get("communication_id"):
         return CROSSING_CODE, CROSSING_PREDICATE, ("the two records do not point at each other (ingress -> egress "
                                                    "digest, egress -> destination location and communication_id)")
@@ -201,7 +203,7 @@ def receive(signal: Any, *, intr_carrier: Any, org_ledger: str | None,
     refused = failure and ("ORG_LEDGER_CHAIN_UNREAD", failure) or carrier.verify(
         signal, destination_receipt_sha256=cited.get("destination_receipt_sha256"),
         org_ledger_head_receipt_sha256=cited.get("org_ledger_head_receipt_sha256"),
-        org_chain=chain, retained_source=retained)
+        org_chain=chain, source_record=retained)
     if refused:
         return _refuse(carrier.FAILURE_CODE, carrier.PREDICATE, f"{refused[0]}: {refused[1]}. {carrier.REPAIR}",
                        carrier_reason=refused[0])

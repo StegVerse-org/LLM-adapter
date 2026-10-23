@@ -83,6 +83,7 @@
     "tests/fixtures/endpoint-ledger-designation/kv-on-org-git-ref.designation.json",
     "tests/fixtures/endpoint-ledger-designation/kv-two-providers.designation.json",
     "tests/fixtures/endpoint-ledger-designation/kv.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/node.designation.json",
     "tests/fixtures/endpoint-ledger-designation/org-git-ref.designation.json",
     "tests/fixtures/endpoint-ledger-designation/org-linked-receipts.json",
     "tests/fixtures/endpoint-ledger-designation/skap.designation.json",
@@ -184,7 +185,7 @@
     },
     {
       "path": "llm_adapter/intr_transport_carrier.py",
-      "semantic_responsibility": "Byte copy (sha256 81ad9d3b) of #432/#433's InTr carrier verifier, so the pre-pin receiver reuses verify unchanged ahead of #433. 5c410dd3 adds a six-field INTR_SOURCE_EVIDENCE_INCOMPLETE refusal in place of a KeyError for a source half missing endpoint_kind or another rebuild field (LC-KV-20), mirrored byte-identically in #432 and #433.",
+      "semantic_responsibility": "Byte copy (sha256 9d3e69c8) of #432/#433's InTr carrier verifier, so the pre-pin receiver reuses verify unchanged ahead of #433. 5c410dd3 adds a six-field INTR_SOURCE_EVIDENCE_INCOMPLETE refusal in place of a KeyError for a source half missing endpoint_kind or another rebuild field (LC-KV-20), mirrored byte-identically in #432 and #433. Carrier v2 (9d3e69c8, Q-PERMANENT-REPOSITORY-LEDGER, #167 comment 6374130335): the Org destination half is digest-only and the source half is read from the sender's own ledger; retain/read_retained are withdrawn.",
       "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 and #433 llm_adapter/intr_transport_carrier.py (identical bytes)",
       "decision": "REUSE",
       "justification": "The receiver precedes GENESIS_PIN and #433 in ADMISSION_ORDER, so it brings the carrier module with it; identical bytes merge cleanly with #432/#433.",
@@ -359,6 +360,18 @@
       "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, KV-recorded rollback watermark (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad).",
       "path": "tests/fixtures/endpoint-ledger-designation/kv.designation.json",
       "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
+    },
+    {
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "closest_existing_implementation": "tests/fixtures/endpoint-ledger-designation/kv.designation.json",
+      "decision": "REUSE",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/167#issuecomment-6374130335",
+        "https://github.com/StegVerse-org/.github/issues/167#issuecomment-6373412055"
+      ],
+      "justification": "LC-KV-25 / Q-PERMANENT-REPOSITORY-LEDGER (StegVerse-Labs/.github#3330 rev 11; #167 comment 6374130335): the node ledger is designated on its own storage endpoint the same way as STEGVERSE_KV, minimal shape mirroring cvk's descriptor, no provider details invented.",
+      "path": "tests/fixtures/endpoint-ledger-designation/node.designation.json",
+      "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py: the minimal PERMANENT (node) designation on the node's own NODE_STORAGE_ENDPOINT; not ledgered."
     },
     {
       "canonical_owner": "StegVerse-org/LLM-adapter",

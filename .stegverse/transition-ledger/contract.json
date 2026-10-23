@@ -35,6 +35,16 @@
       "digest": "sha256: + hex sha256 of json.dumps(body, sort_keys=True, separators=(',', ':'), ensure_ascii=False) encoded UTF-8",
       "supplied_epoch_rule": "supplied_epoch_failure (byte copy, SUPPLIED_EPOCH_FAILURE_SHA256 7f36f0e697cadc91acd27af121eee3fc460b887ec67cfa258727bfccec0ca5f8): absent HB_EPOCH_NOT_SUPPLIED; not ASCII [0-9]+, below 32 or derived_from_clock not exactly false HB_EPOCH_INVALID",
       "clock_read": false
+    },
+    "expected_genesis_open_item": {
+      "item": "LC-KV-19 (StegVerse-Labs/.github#3330 rev 11)",
+      "status": "DOCUMENTED_OPEN_NO_PIN",
+      "failure_code": "ORG_LEDGER_GENESIS_NOT_PINNED",
+      "failed_predicate": "ORG_LEDGER_GENESIS_PINNED_BY_CONTRACT",
+      "required_evidence_or_repair": "The digest is deterministic (expected_genesis_computation: the emit.py receipt body at a supplied epoch, canonical JSON, sha256), but four of its inputs are not yet fixed by anyone entitled to fix them: the supplied hb epoch, predecessor_state_sha256, successor_state_sha256 and evidence of the REPOSITORY_LEDGER_INITIALIZATION append for repository-ledger/StegVerse-org/LLM-adapter. They are fixed by the organization's admitted append route for refs/stegverse/organization-ledger, which is not admitted (MERGE_APPEND_PATH_NOT_ADMITTED; no org-ledger head attester published). Separately, the org kernel's hb_reference keeps a clock fallback until StegVerse-org/.github#196 lands (draft, open, head fd683c63, stacked on #188, which merged 2026-10-20), so an org-emitted genesis can still carry derived_from_clock true and is refused HB_EPOCH_INVALID, not pinned. Repair: once the append route supplies those inputs, run the precompute entrypoint and set this field to its output through the REPOSITORY_LEDGER_GENESIS_PIN transition, never by hand; after the append the read-back must equal it (EXPECTED_GENESIS_PIN_CONFLICT otherwise).",
+      "retry_entrypoint": "scripts/llm_adapter_repository_ledger_genesis_pin.py precompute --hb-epoch <supplied epoch> --predecessor-state-sha256 <sha256> --successor-state-sha256 <sha256> --evidence-json <json>, then scripts/llm_adapter_genesis_pin_ingress.py (REPOSITORY_LEDGER_GENESIS_PIN receiver) on the receipted genesis read-back",
+      "owning_existing_goal": "StegVerse-org/LLM-adapter#431 (organization-ledger onboarding; REPOSITORY_LEDGER_GENESIS_PIN), StegVerse-org/.github#162; clock-fallback dependency StegVerse-org/.github#196 (InTr consumers lane)",
+      "next_attempt": "on the admission of the org-ledger append route that supplies the genesis inputs, with StegVerse-org/.github#196 landed (event-triggered)"
     }
   },
   "propagation_rule": "PROPAGATE_ONLY_EVIDENCE_NEEDED_BY_NEXT_HIGHER_LEVEL",
