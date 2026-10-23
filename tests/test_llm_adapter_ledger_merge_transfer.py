@@ -561,6 +561,66 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
         self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=bare,
                                   contract_bytes=json.dumps(conflicting).encode()), "PRE_PIN_INGRESS_CLOSED")
 
+    ORG_FIXTURE = ROOT / "tests/fixtures/org-intr-path-transfer/typed-genesis-observed.json"
+    ORG_FIXTURE_SHA = "05babd7b5c38fba61050220c41b987043f1fd2c9e7c5ded072a6f9625dc13890"   # = .github's copy
+
+    def org_emitted(self, *, name="emitted", source_edit=None):
+        """A ledger copy built from the org writer's typed output (StegVerse-org/.github INTR-PATH-TRANSFER-TYPED-BODY-001).
+
+        The genesis and the retained INTR_MESH_PATH_TRANSFER source receipt are the fixture's bytes, unchanged; the
+        INTR_MESH_PATH_INGRESS is carrier.destination_evidence over that source. SYNTHETIC: nothing is ledgered."""
+        fixture = json.loads(self.ORG_FIXTURE.read_text())
+        genesis, source = fixture["genesis_receipt"], fixture["source_receipt"]
+        if source_edit:
+            source = source_edit(json.loads(json.dumps(source)))
+        work = self.g.tmp / (name + "-work")
+        store = work / NS
+        (store / "receipts").mkdir(parents=True)
+        (store / "source-receipts").mkdir()
+        (store / "receipts" / (genesis["receipt_sha256"][7:] + ".json")).write_text(json.dumps(genesis))
+        (store / "source-receipts" / (source["receipt_sha256"][7:] + ".json")).write_text(json.dumps(source))
+        dest = receipt({"schema": carrier.RECEIPT_SCHEMA, "repository": "StegVerse-org/LLM-adapter",
+                        "transition_class": carrier.DESTINATION_CLASS,
+                        "transition_id": "INTR_MESH_PATH_INGRESS:" + source["evidence"]["communication_id"],
+                        "previous_receipt_sha256": genesis["receipt_sha256"],
+                        "evidence": carrier.destination_evidence(source),
+                        "synthetic": "FIXTURE_NOT_LEDGERED_NOT_AUTHENTIC"})
+        (store / "receipts" / (dest["receipt_sha256"][7:] + ".json")).write_text(json.dumps(dest))
+        (store / "HEAD.json").write_text(json.dumps({"receipt_sha256": dest["receipt_sha256"]}))
+        git(work, "init", "-q")
+        git(work, "add", ".")
+        git(work, "commit", "-q", "-m", "ledger")
+        bare = self.g.tmp / (name + ".git")
+        git(self.g.tmp, "clone", "-q", "--bare", str(work), str(bare))
+        git(self.g.tmp, "--git-dir", str(bare), "update-ref", M.LEDGER_REF, "HEAD")
+        cite = {"destination_receipt_sha256": dest["receipt_sha256"],
+                "org_ledger_head_receipt_sha256": dest["receipt_sha256"]}
+        return str(bare), fixture, cite
+
+    def test_the_org_emitters_typed_output_is_accepted_by_the_receiver(self):
+        raw = self.ORG_FIXTURE.read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), self.ORG_FIXTURE_SHA)   # byte-identical copy
+        bare, fixture, cite = self.org_emitted()
+        signal = fixture["source_receipt"]["evidence"]["message"]["body"]
+        self.assertEqual(signal, fixture["declaration_row"]["typed_body"])
+        self.assertEqual(signal, R.genesis_signal(fixture["genesis_receipt"]["receipt_sha256"], self.contract))
+        self.assertEqual(fixture["source_receipt"]["evidence"]["endpoint_kind"], "ORG")
+        d = R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before)
+        self.assertEqual(d["disposition"], R.ACCEPTED, d)
+        self.assertEqual(d["carried_by"]["source_receipt_sha256"], fixture["source_receipt"]["receipt_sha256"])
+        self.assertEqual(d["genesis_pin_plan"]["genesis_receipt_sha256"], fixture["genesis_receipt"]["receipt_sha256"])
+        # the same emitted pair is refused once the pin is set, and a tampered emitted body is refused by the carrier
+        pinned = P.apply_write(d["genesis_pin_plan"], self.before)
+        self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=pinned),
+                        "PRE_PIN_INGRESS_CLOSED")
+
+        def tamper(source):
+            source["evidence"]["message"]["body"]["node_ref"] = "n-1"
+            return source
+        bare2, _, cite2 = self.org_emitted(name="tampered", source_edit=tamper)
+        self.assert_six(R.receive(signal, intr_carrier=cite2, org_ledger=bare2, contract_bytes=self.before),
+                        carrier.FAILURE_CODE)
+
     def test_receiver_reuses_the_carrier_unchanged_and_is_wired_declaratively(self):
         got = "sha256:" + hashlib.sha256((ROOT / "llm_adapter/intr_transport_carrier.py").read_bytes()).hexdigest()
         self.assertEqual(got, self.CARRIER_SHA)        # byte copy of #432/#433's module

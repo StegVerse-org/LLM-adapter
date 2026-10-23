@@ -1,175 +1,187 @@
 {
- "schema": "stegverse.work-mutation-safety/v1",
- "task_id": "LLM-ADAPTER-ORGANIZATION-LEDGER-ONBOARDING (observed-merges gap, StegVerse-org/.github#160 class B)",
- "authority_effect": "NONE_PREFLIGHT_ONLY",
- "authoring_session": "lane-b-91117956 (Lane B, InTr and Mesh Destinations, StegVerse-org/.github#162)",
- "canonical_handoff_refs": [
-  "StegVerse-org/LLM-adapter:docs/TRANSITION_LEDGER_MIRROR_HANDOFF.md"
- ],
- "task_registry_refs": [
-  "StegVerse-org/.github#160 (class B: observed-merges gap)",
-  "StegVerse-org/.github#162",
-  "StegVerse-org/StegVerse-SDK#558 (same pattern for the SDK)"
- ],
- "master_records_review": {
-  "applicable": false,
-  "reason": "Plan only. No ledger ref is created, nothing is appended, and no organization propagation or custody transition is performed or claimed."
- },
- "cross_task_coordination": {
-  "checked": true,
-  "refs": [
-   "https://github.com/StegVerse-org/StegVerse-SDK/pull/558",
-   "https://github.com/StegVerse-org/.github/issues/160",
-   "https://github.com/StegVerse-org/.github/issues/162",
-   "https://github.com/StegVerse-org/LLM-adapter/pull/430"
-  ]
- },
- "semantic_scan": {
-  "completed": true,
-  "repositories_searched": [
-   "StegVerse-org/LLM-adapter",
-   "StegVerse-org/.github",
-   "StegVerse-org/StegVerse-SDK"
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLM-ADAPTER-ORGANIZATION-LEDGER-ONBOARDING (observed-merges gap, StegVerse-org/.github#160 class B)",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "authoring_session": "lane-b-91117956 (Lane B, InTr and Mesh Destinations, StegVerse-org/.github#162)",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/TRANSITION_LEDGER_MIRROR_HANDOFF.md"
   ],
-  "evidence_refs": [
-   "StegVerse-org/.github@907f4305:.github/workflows/organization-ledger-merge-transfer.yml",
-   "StegVerse-org/.github@907f4305:resident-runtime/merge_transfer.py",
-   "StegVerse-org/StegVerse-SDK#558 scripts/sdk_ledger_merge_transfer.py",
-   ".stegverse/transition-ledger/contract.json"
-  ]
- },
- "reuse_decision": "EXTEND",
- "existing_equivalent_found": false,
- "active_owner_collision": {
-  "checked": true,
-  "collision_found": false,
-  "reason": "LLM-adapter has no merge-transfer workflow and no repository-ledger namespace on the org ledger ref (read back at tip 21648778). The org writer is pinned, not replaced."
- },
- "readme_impact": {
-  "material_function_change": true,
-  "readme_path": "README.md",
-  "readme_updated_in_change_set": true,
-  "evidence_refs": [
-   "README.md",
-   "scripts/llm_adapter_ledger_merge_transfer.py",
-   "scripts/llm_adapter_repository_ledger_genesis_pin.py",
-   "scripts/llm_adapter_genesis_pin_ingress.py"
-  ]
- },
- "covered_paths": [
-  ".github/workflows/llm-adapter-organization-ledger-merge-transfer.yml",
-  ".github/workflows/llm-adapter-ledger-merge-transfer-validation.yml",
-  ".stegverse/transition-ledger/contract.json",
-  ".stegverse/transition-ledger/merge-transfer-writer-pin.v1.json",
-  "scripts/llm_adapter_ledger_merge_transfer.py",
-  "tests/test_llm_adapter_ledger_merge_transfer.py",
-  "README.md",
-  ".stegverse/transition-ledger/genesis-pin-transition.v1.json",
-  "scripts/llm_adapter_repository_ledger_genesis_pin.py",
-  "scripts/llm_adapter_genesis_pin_ingress.py",
-  "llm_adapter/intr_transport_carrier.py"
- ],
- "new_files": [
-  {
-   "path": "scripts/llm_adapter_ledger_merge_transfer.py",
-   "semantic_responsibility": "Plan-only main-merge transfer evidence for this repository against the pinned org writer. Always six-field FAIL_CLOSED until genesis and an admitted append route exist.",
-   "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 scripts/sdk_ledger_merge_transfer.py (adapted for this repository)",
-   "decision": "CREATE_NEW",
-   "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
-   "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
-   "evidence_refs": [
-    "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
-   ]
+  "task_registry_refs": [
+    "StegVerse-org/.github#160 (class B: observed-merges gap)",
+    "StegVerse-org/.github#162",
+    "StegVerse-org/StegVerse-SDK#558 (same pattern for the SDK)"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Plan only. No ledger ref is created, nothing is appended, and no organization propagation or custody transition is performed or claimed."
   },
-  {
-   "path": ".stegverse/transition-ledger/merge-transfer-writer-pin.v1.json",
-   "semantic_responsibility": "sha256 pin of the StegVerse-org/.github writer closure at 907f4305 and of the four verbatim-copied blocks.",
-   "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 pin (same files, re-hashed)",
-   "decision": "CREATE_NEW",
-   "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
-   "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
-   "evidence_refs": [
-    "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
-   ]
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/StegVerse-SDK/pull/558",
+      "https://github.com/StegVerse-org/.github/issues/160",
+      "https://github.com/StegVerse-org/.github/issues/162",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/430"
+    ]
   },
-  {
-   "path": ".github/workflows/llm-adapter-organization-ledger-merge-transfer.yml",
-   "semantic_responsibility": "Push-to-main plan workflow: contents: read, no secrets, no dispatch, no push.",
-   "closest_existing_implementation": "StegVerse-org/.github organization-ledger-merge-transfer.yml",
-   "decision": "CREATE_NEW",
-   "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
-   "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
-   "evidence_refs": [
-    "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
-   ]
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/.github",
+      "StegVerse-org/StegVerse-SDK"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/.github@907f4305:.github/workflows/organization-ledger-merge-transfer.yml",
+      "StegVerse-org/.github@907f4305:resident-runtime/merge_transfer.py",
+      "StegVerse-org/StegVerse-SDK#558 scripts/sdk_ledger_merge_transfer.py",
+      ".stegverse/transition-ledger/contract.json"
+    ]
   },
-  {
-   "path": ".github/workflows/llm-adapter-ledger-merge-transfer-validation.yml",
-   "semantic_responsibility": "Pull-request validation of the onboarding tests, with 0 skipped required.",
-   "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 validation workflow",
-   "decision": "CREATE_NEW",
-   "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
-   "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
-   "evidence_refs": [
-    "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
-   ]
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "LLM-adapter has no merge-transfer workflow and no repository-ledger namespace on the org ledger ref (read back at tip 21648778). The org writer is pinned, not replaced."
   },
-  {
-   "path": "tests/test_llm_adapter_ledger_merge_transfer.py",
-   "semantic_responsibility": "13 deterministic tests on temporary repositories and ledgers.",
-   "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 tests",
-   "decision": "CREATE_NEW",
-   "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
-   "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
-   "evidence_refs": [
-    "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
-   ]
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "scripts/llm_adapter_ledger_merge_transfer.py",
+      "scripts/llm_adapter_repository_ledger_genesis_pin.py",
+      "scripts/llm_adapter_genesis_pin_ingress.py"
+    ]
   },
-  {
-   "path": "scripts/llm_adapter_repository_ledger_genesis_pin.py",
-   "semantic_responsibility": "REPOSITORY_LEDGER_GENESIS_PIN planner/verifier: reads back the receipted REPOSITORY_LEDGER_INITIALIZATION genesis from a read-only org ledger copy and plans the exact contract.json pin write plus a consumes receipt; idempotent; six-field FAIL_CLOSED otherwise. Writes and appends nothing.",
-   "closest_existing_implementation": "scripts/llm_adapter_ledger_merge_transfer.py (read_org_ledger chain walk, sealed, canon/sha, SIX_FIELDS), reused by import",
-   "decision": "EXTEND",
-   "justification": "Coordination ruling: the genesis pin is a manifest state transition triggered by the receipted genesis record, admitted under the governed-element rule as clearly related to #431; it cannot be a hand step and emit.py is not changed.",
-   "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, #431)",
-   "evidence_refs": [
+  "covered_paths": [
+    ".github/workflows/llm-adapter-organization-ledger-merge-transfer.yml",
+    ".github/workflows/llm-adapter-ledger-merge-transfer-validation.yml",
+    ".stegverse/transition-ledger/contract.json",
+    ".stegverse/transition-ledger/merge-transfer-writer-pin.v1.json",
     "scripts/llm_adapter_ledger_merge_transfer.py",
-    ".stegverse/transition-ledger/emit.py"
-   ]
-  },
-  {
-   "path": ".stegverse/transition-ledger/genesis-pin-transition.v1.json",
-   "semantic_responsibility": "Declaration of REPOSITORY_LEDGER_GENESIS_PIN: trigger record, entrypoint, write target, consumes receipt and refusals; no cron, polling, dispatch or person.",
-   "closest_existing_implementation": ".stegverse/transition-ledger/merge-transfer-writer-pin.v1.json (same directory, declarative JSON)",
-   "decision": "CREATE_NEW",
-   "justification": "No existing workflow in this repository is triggered by an org-ledger record, so the trigger binding is declared and the entrypoint documented.",
-   "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, #431)",
-   "evidence_refs": [
-    "StegVerse-org/.github@907f4305:.github/workflows/intr-path-ingress.yml"
-   ]
-  },
-  {
-   "path": "scripts/llm_adapter_genesis_pin_ingress.py",
-   "semantic_responsibility": "Pre-pin InTr ingress receiver for the REPOSITORY_LEDGER_GENESIS_PIN trigger: while expected_genesis_receipt_sha256 is null it accepts only REPOSITORY_LEDGER_GENESIS_OBSERVED carried by a verified InTr pair, authenticated by the planner's chain-to-sealed-genesis check (never the pin); refuses every other signal with six fields; closed once the pin is set.",
-   "closest_existing_implementation": "llm_adapter/intr_transport_carrier.py verify (reused unchanged) and llm_adapter/node_ingress_boundary.py admit (#433, unchanged; its read is pin-gated, so it cannot deliver the pin)",
-   "decision": "EXTEND",
-   "justification": "Coordination ruling option (b): the GENESIS_PIN trigger arrives as an InTr ingress signal; the ingress path must not depend on the pin it delivers.",
-   "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, #431; StegVerse-org/.github#162)",
-   "evidence_refs": [
+    "tests/test_llm_adapter_ledger_merge_transfer.py",
+    "README.md",
+    ".stegverse/transition-ledger/genesis-pin-transition.v1.json",
+    "scripts/llm_adapter_repository_ledger_genesis_pin.py",
+    "scripts/llm_adapter_genesis_pin_ingress.py",
     "llm_adapter/intr_transport_carrier.py",
-    "scripts/llm_adapter_repository_ledger_genesis_pin.py"
-   ]
-  },
-  {
-   "path": "llm_adapter/intr_transport_carrier.py",
-   "semantic_responsibility": "Byte copy (sha256 9f460c07) of #432/#433's InTr carrier verifier, so the pre-pin receiver reuses verify unchanged ahead of #433.",
-   "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 and #433 llm_adapter/intr_transport_carrier.py (identical bytes)",
-   "decision": "REUSE",
-   "justification": "The receiver precedes GENESIS_PIN and #433 in ADMISSION_ORDER, so it brings the carrier module with it; identical bytes merge cleanly with #432/#433.",
-   "canonical_owner": "StegVerse-org/LLM-adapter (Lane B)",
-   "evidence_refs": [
-    "https://github.com/StegVerse-org/LLM-adapter/pull/433"
-   ]
-  }
- ]
+    "tests/fixtures/org-intr-path-transfer/typed-genesis-observed.json"
+  ],
+  "new_files": [
+    {
+      "path": "scripts/llm_adapter_ledger_merge_transfer.py",
+      "semantic_responsibility": "Plan-only main-merge transfer evidence for this repository against the pinned org writer. Always six-field FAIL_CLOSED until genesis and an admitted append route exist.",
+      "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 scripts/sdk_ledger_merge_transfer.py (adapted for this repository)",
+      "decision": "CREATE_NEW",
+      "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
+      ]
+    },
+    {
+      "path": ".stegverse/transition-ledger/merge-transfer-writer-pin.v1.json",
+      "semantic_responsibility": "sha256 pin of the StegVerse-org/.github writer closure at 907f4305 and of the four verbatim-copied blocks.",
+      "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 pin (same files, re-hashed)",
+      "decision": "CREATE_NEW",
+      "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
+      ]
+    },
+    {
+      "path": ".github/workflows/llm-adapter-organization-ledger-merge-transfer.yml",
+      "semantic_responsibility": "Push-to-main plan workflow: contents: read, no secrets, no dispatch, no push.",
+      "closest_existing_implementation": "StegVerse-org/.github organization-ledger-merge-transfer.yml",
+      "decision": "CREATE_NEW",
+      "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
+      ]
+    },
+    {
+      "path": ".github/workflows/llm-adapter-ledger-merge-transfer-validation.yml",
+      "semantic_responsibility": "Pull-request validation of the onboarding tests, with 0 skipped required.",
+      "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 validation workflow",
+      "decision": "CREATE_NEW",
+      "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
+      ]
+    },
+    {
+      "path": "tests/test_llm_adapter_ledger_merge_transfer.py",
+      "semantic_responsibility": "13 deterministic tests on temporary repositories and ledgers.",
+      "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 tests",
+      "decision": "CREATE_NEW",
+      "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
+      ]
+    },
+    {
+      "path": "scripts/llm_adapter_repository_ledger_genesis_pin.py",
+      "semantic_responsibility": "REPOSITORY_LEDGER_GENESIS_PIN planner/verifier: reads back the receipted REPOSITORY_LEDGER_INITIALIZATION genesis from a read-only org ledger copy and plans the exact contract.json pin write plus a consumes receipt; idempotent; six-field FAIL_CLOSED otherwise. Writes and appends nothing.",
+      "closest_existing_implementation": "scripts/llm_adapter_ledger_merge_transfer.py (read_org_ledger chain walk, sealed, canon/sha, SIX_FIELDS), reused by import",
+      "decision": "EXTEND",
+      "justification": "Coordination ruling: the genesis pin is a manifest state transition triggered by the receipted genesis record, admitted under the governed-element rule as clearly related to #431; it cannot be a hand step and emit.py is not changed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, #431)",
+      "evidence_refs": [
+        "scripts/llm_adapter_ledger_merge_transfer.py",
+        ".stegverse/transition-ledger/emit.py"
+      ]
+    },
+    {
+      "path": ".stegverse/transition-ledger/genesis-pin-transition.v1.json",
+      "semantic_responsibility": "Declaration of REPOSITORY_LEDGER_GENESIS_PIN: trigger record, entrypoint, write target, consumes receipt and refusals; no cron, polling, dispatch or person.",
+      "closest_existing_implementation": ".stegverse/transition-ledger/merge-transfer-writer-pin.v1.json (same directory, declarative JSON)",
+      "decision": "CREATE_NEW",
+      "justification": "No existing workflow in this repository is triggered by an org-ledger record, so the trigger binding is declared and the entrypoint documented.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, #431)",
+      "evidence_refs": [
+        "StegVerse-org/.github@907f4305:.github/workflows/intr-path-ingress.yml"
+      ]
+    },
+    {
+      "path": "scripts/llm_adapter_genesis_pin_ingress.py",
+      "semantic_responsibility": "Pre-pin InTr ingress receiver for the REPOSITORY_LEDGER_GENESIS_PIN trigger: while expected_genesis_receipt_sha256 is null it accepts only REPOSITORY_LEDGER_GENESIS_OBSERVED carried by a verified InTr pair, authenticated by the planner's chain-to-sealed-genesis check (never the pin); refuses every other signal with six fields; closed once the pin is set.",
+      "closest_existing_implementation": "llm_adapter/intr_transport_carrier.py verify (reused unchanged) and llm_adapter/node_ingress_boundary.py admit (#433, unchanged; its read is pin-gated, so it cannot deliver the pin)",
+      "decision": "EXTEND",
+      "justification": "Coordination ruling option (b): the GENESIS_PIN trigger arrives as an InTr ingress signal; the ingress path must not depend on the pin it delivers.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, #431; StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "llm_adapter/intr_transport_carrier.py",
+        "scripts/llm_adapter_repository_ledger_genesis_pin.py"
+      ]
+    },
+    {
+      "path": "llm_adapter/intr_transport_carrier.py",
+      "semantic_responsibility": "Byte copy (sha256 9f460c07) of #432/#433's InTr carrier verifier, so the pre-pin receiver reuses verify unchanged ahead of #433.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 and #433 llm_adapter/intr_transport_carrier.py (identical bytes)",
+      "decision": "REUSE",
+      "justification": "The receiver precedes GENESIS_PIN and #433 in ADMISSION_ORDER, so it brings the carrier module with it; identical bytes merge cleanly with #432/#433.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/pull/433"
+      ]
+    },
+    {
+      "path": "tests/fixtures/org-intr-path-transfer/typed-genesis-observed.json",
+      "semantic_responsibility": "Byte-identical copy (sha256 05babd7b) of StegVerse-org/.github tests/fixtures/intr-path-transfer/typed-genesis-observed.json: the org path-transfer writer's typed REPOSITORY_LEDGER_GENESIS_OBSERVED output (INTR-PATH-TRANSFER-TYPED-BODY-001). SYNTHETIC, NOT LEDGERED, NOT AUTHENTIC.",
+      "closest_existing_implementation": "StegVerse-org/.github laneb/intr-path-transfer-typed-body tests/fixtures/intr-path-transfer/typed-genesis-observed.json (identical bytes)",
+      "decision": "REUSE",
+      "justification": "Cross-repo fixture test: the org emitter's output is accepted by this repository's pre-pin receiver logic, unchanged.",
+      "canonical_owner": "StegVerse-org/.github (Lane B, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-org/.github resident-runtime/intr_path_transfer.py"
+      ]
+    }
+  ]
 }
