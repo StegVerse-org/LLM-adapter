@@ -188,6 +188,15 @@ jobs:
         run: "$PYTHON_BIN -m unittest -v tests/test_node_standing.py"
       - name: Test the ingress boundary records establishing a healthy node
         run: "$PYTHON_BIN -m unittest -v tests/test_node_ingress_boundary.py"
+      - name: Test healthy means evaluated from receipted reports (LC-KV-13, LC-KV-14; 0 skipped required)
+        run: |
+          "$PYTHON_BIN" - <<'PY'
+          import sys, unittest
+          suite = unittest.defaultTestLoader.loadTestsFromName("tests.test_healthy_node_evaluator")
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          print(f"ran={result.testsRun} failures={len(result.failures)} errors={len(result.errors)} skipped={len(result.skipped)}")
+          sys.exit(0 if result.wasSuccessful() and not result.skipped and result.testsRun > 0 else 1)
+          PY
       - name: Test every SDK boundary crossing is recorded
         run: "$PYTHON_BIN -m unittest -v tests/test_sdk_boundary_crossing_record.py"
       - name: Every front-half transition, admitted or refused, is on one chain in order
@@ -208,6 +217,10 @@ jobs:
               # successful one, so the refused arrivals are on the chain too: a
               # registration that established no node, and a crossing that
               # declared no standing.
+              # Healthy means evaluated: the node's current HEALTHY report is
+              # receipted on this (temporary) chain before it registers.
+              from tests.healthy_node_reports import report
+              report("ci-front-half")
               client.post("/api/node-standing", json={**standing, "node_ref": ""})
               issued = client.post("/api/node-standing", json=standing).json()["manifest_fields"]
               client.post("/api/sdk/contract", json={})
@@ -238,6 +251,12 @@ jobs:
                   chain.append(receipts[cursor])
                   cursor = receipts[cursor]["previous_receipt_sha256"]
               chain.reverse()
+              # The first receipt is the test fixture's receipted HEALTHY report the
+              # registration is evaluated against; the front half follows it.
+              fixture = chain.pop(0)
+              assert fixture["transition_class"] == "NODE_HEALTH_REPORTED", fixture["transition_class"]
+              assert fixture["evidence"]["status"] == "HEALTHY"
+              assert fixture["evidence"]["authority_effect"] == "NONE_TEST_FIXTURE"
               assert [r["transition_class"] for r in chain] == [
                   "NODE_INGRESS_REFUSED", "NODE_INGRESS_ADMITTED",
                   "SDK_CROSSING_REFUSED_FOR_WANT_OF_STANDING", "SDK_CONTRACT_DISCOVERED",
