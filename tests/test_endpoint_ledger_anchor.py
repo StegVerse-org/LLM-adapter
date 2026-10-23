@@ -6,8 +6,18 @@ ledger is published to refs/stegverse/organization-ledger of a scratch git objec
 store, the location #431's contract designates (LC-KV-16).
 
 E0 harness, in scope only: the contract carries #431's repository_ledger_location
-(fixture copy at b7a5c08b), and the NODE_LEDGER_OPENED signer list holds a TEST-ONLY
-public key (tests/ed25519_test_signer.py seed). Production has neither yet.
+(fixture copy at b7a5c08b) plus the pinned org genesis #431's shape has to add
+(contract_with_431_location_and_pinned_genesis.json), and the NODE_LEDGER_OPENED
+signer list holds a TEST-ONLY public key (tests/ed25519_test_signer.py seed).
+Production has none of these yet.
+
+LC-KV-16 rev 5: the org-ledger head attester is NOT patched in setUp. Each test_
+method runs inside tests/org_ledger_harness.append_route() (a TEST-ONLY stand-in for
+the admitted append route, @with_append_route); anything that drives setUp() and the
+helpers directly gets production: FAIL_CLOSED MERGE_APPEND_PATH_NOT_ADMITTED.
+
+Run: python -m pip install -e '.[dev]' (pyproject pins stegverse-sdk, which
+node_standing imports), then python -m unittest tests.test_endpoint_ledger_anchor.
 """
 from __future__ import annotations
 
@@ -33,6 +43,8 @@ from llm_adapter import node_ingress_boundary as boundary
 from llm_adapter import node_ledger_dissolution as dissolution
 from llm_adapter import org_ledger_location as location
 from tests import ed25519_test_signer as signer
+from tests import org_ledger_harness as harness
+from llm_adapter import intr_transport_carrier as carrier
 from tests.test_node_receipt_producers import BROKER, NODE, OBSERVATION, PROFILE, attestation_for, claim_for
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,7 +57,8 @@ EVENT = {"event": "NODE_DISSOLUTION", "node_id": NODE}
 FIXTURES = ROOT / "tests/fixtures/node_receipts"
 # Emitted by StegOS's own generation-time code (generate_node_ledger_opened_with_stegos.py).
 STEGOS_OPENED = json.loads((FIXTURES / "stegos_node_ledger_opened.json").read_text())
-CONTRACT_431 = FIXTURES / "contract_with_431_repository_ledger_location.json"
+CONTRACT_431 = FIXTURES / "contract_with_431_repository_ledger_location.json"     # #431's copy: no genesis pin
+CONTRACT_PINNED = harness.CONTRACT_PINNED
 # TEST-ONLY NODE_LEDGER_OPENED signer (a public seed; TV/TVC custody holds real keys).
 ISSUER_SEED = hashlib.sha256(b"endpoint-ledger-anchor tests: NODE_LEDGER_OPENED signer public seed").digest()
 ISSUER_REF = {"key_id": "test-node-ledger-opened-signer", "algorithm": "Ed25519", "custody": "TV/TVC",
@@ -90,14 +103,11 @@ class _Ledgers(unittest.TestCase):
         self.tree = base / "org-ledger"                 # the ref's tree; self.org is its #431 namespace
         self.git = base / "org-object-store.git"
         subprocess.run(["git", "init", "-q", "--bare", str(self.git)], check=True, env=GIT_ENV)
-        for patcher in (mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431),
+        for patcher in (mock.patch.object(location, "CONTRACT_PATH", CONTRACT_PINNED),
                         mock.patch.object(anchor, "load_opened_signers", return_value=[dict(ISSUER_REF)])):
             patcher.start()
             self.addCleanup(patcher.stop)
-        anchor.append_receipt(self.org, anchor.GENESIS_CLASS, "REPOSITORY_LEDGER_INITIALIZATION:test-fixture",
-                              anchor.sha({"repository": anchor.REPOSITORY, "ledger": None}),
-                              {"schema": "stegverse.repository-ledger-initialization/v1", "repository": anchor.REPOSITORY,
-                               "authority_effect": "NONE_TEST_FIXTURE"}, 32)
+        harness.write_genesis(self.org)      # the genesis the contract fixture pins
         previous = os.environ.get("STEGVERSE_REPO_LEDGER_ROOT")
 
         def restore():
@@ -136,8 +146,31 @@ class _Ledgers(unittest.TestCase):
             kw["identity_proof"] = self.prove(endpoint, head)
         if publish:
             self.publish()
+        if "org_ledger_head_attestation" not in kw:
+            kw["org_ledger_head_attestation"] = self.attest(git_dir)
         return anchor.evaluate_anchored(endpoint=endpoint, org_ledger_git_dir=git_dir or self.git,
                                         org_ledger_head_receipt_sha256=head, **kw)
+
+    def attest(self, git_dir=None):
+        """Inside append_route(), the route attests the store it published (self.git) and nothing else."""
+        if git_dir not in (None, self.git) or not location.load_head_signers():
+            return None
+        try:
+            return harness.attest(self.git)
+        except subprocess.CalledProcessError:
+            return None
+
+    def carry(self, signal, communication_id="node-ingress-1"):
+        """The InTr path pair that carried `signal` to the boundary: source retained, destination on the org ledger."""
+        scratch = Path(self._t.name) / "intr-source-ledger"
+        prev = json.loads((scratch / "HEAD.json").read_text())["receipt_sha256"] if (scratch / "HEAD.json").exists() \
+            else anchor.sha(None)
+        source = anchor.append_receipt(scratch, carrier.SOURCE_CLASS, f"{carrier.SOURCE_CLASS}:{communication_id}",
+                                       prev, carrier.source_evidence(signal, communication_id), 40)
+        anchor.retain(self.org, source)
+        return anchor.append_receipt(self.org, carrier.DESTINATION_CLASS,
+                                     f"{carrier.DESTINATION_CLASS}:{communication_id}", self.head(),
+                                     carrier.destination_evidence(source), 40)
 
     def prove(self, endpoint=None, head=None, seed=signer.TEST_SEED, **override):
         """The node's identity proof: its key's signature over the current chain-bound challenge.
@@ -180,6 +213,8 @@ class _Ledgers(unittest.TestCase):
         self.assertEqual(report["report_status"], "HEALTHY", report)
         signal = {"mode": "ESTABLISH_GENESIS", "node_ref": NODE, "predecessor": None, "node_class": "LLM_ADAPTER"}
         states = {boundary.INTERLOCK_INTR: "INSTALLED"} if installed else {}
+        if installed and transport == boundary.INTERLOCK_INTR:
+            self.carried = self.carry(signal)     # the pair that carried it, on the org ledger after the anchor
         with mock.patch.dict(boundary.TRANSPORTS, states):
             admitted = boundary.admit(signal, transport=transport,
                                       health_report_receipt_sha256=report["health_report_receipt_sha256"])
@@ -196,6 +231,7 @@ class _Ledgers(unittest.TestCase):
             self.assertTrue(isinstance(out[key], str) and out[key].strip(), key)
 
 
+@harness.with_append_route
 class AnchoredEndToEndTests(_Ledgers):
     def test_ephemeral_node_anchored_by_stegos_node_ledger_opened_reaches_layer1_allow(self):
         pair = self.open_and_anchor()
@@ -225,7 +261,8 @@ class AnchoredEndToEndTests(_Ledgers):
         self.assertEqual(classes, ["REPOSITORY_LEDGER_INITIALIZATION", "INTR_MESH_PATH_TRANSFER",
                                    "AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE", "NODE_IDENTITY_BINDING",
                                    "NODE_HEALTH_CHECK_OBSERVED", "NODE_HEALTH_REPORTED", "NODE_INGRESS_ADMITTED"])
-        ingress = hne.read_chain(self.org)[0][0]
+        ingress = next(r for r in hne.read_chain(self.org)[0]
+                       if r["receipt_sha256"] == pair["destination_receipt_sha256"])
         self.assertEqual((ingress["transition_class"], ingress["evidence"]["boundary_evidence"]["operation"]),
                          ("INTR_MESH_PATH_INGRESS", "ORGANIZATION_INTR_DESTINATION_INGRESS"))
         self.assertEqual(ingress["evidence"]["message"]["body"]["node_ledger_opened"], STEGOS_OPENED)
@@ -253,7 +290,9 @@ class AnchoredEndToEndTests(_Ledgers):
         layer1 = self.evaluate({"endpoint_kind": "GATEWAY"})
         self.assertEqual(layer1["disposition"], "ALLOW", layer1)
         self.assertEqual(layer1["anchor"]["location"], f"node-ledger/StegVerse-org/{NODE}")
-        self.assertFalse((self.org / "source-receipts").exists())
+        # no anchor pair: the only retained source half is the InTr carrier of the node's ingress signal
+        retained = [json.loads(f.read_text()) for f in (self.org / "source-receipts").glob("*.json")]
+        self.assertEqual([r["evidence"]["endpoint_kind"] for r in retained], [carrier.ENDPOINT_KIND])
         # the root is derived, never caller-supplied
         self.assert_refused(self.evaluate({"endpoint_kind": "GATEWAY", "ledger_root": str(self.root)}),
                             "ENDPOINT_INVALID")
@@ -265,6 +304,7 @@ class AnchoredEndToEndTests(_Ledgers):
         self.assert_refused(self.evaluate(), "UNANCHORED")
 
 
+@harness.with_append_route
 class AnchorRefusalTests(_Ledgers):
     def test_unanchored_scratch_ledger(self):
         self.chain_to_admission()      # a scratch ledger with no genesis at all
@@ -367,6 +407,7 @@ class AnchorRefusalTests(_Ledgers):
         self.assertEqual(anchor.plan_open(NODE, "PERMANENT", KEY, "StegApp")["reason"], "ENDPOINT_INVALID")
 
 
+@harness.with_append_route
 class IdentityAndTransportTests(_Ledgers):
     """LC-KV-15 inside the wrapper: identity only from a node_identity_key proof, transport only from receipts."""
 
@@ -409,13 +450,89 @@ class IdentityAndTransportTests(_Ledgers):
 
     def test_transport_unobserved_without_an_installed_intr_ingress(self):
         self.open_and_anchor()
-        self.assert_transport_refused(self.evaluate(transport_state="INSTALLED"))     # no ingress record at all
         refused = self.chain_to_admission(installed=False)   # main: INTERLOCK_INTR is NOT_YET_ENABLED
         self.assertEqual(refused["disposition"], "FAIL_CLOSED")
-        self.assert_transport_refused(self.evaluate())
+        # refused at ingress: the most specific predicate is admission, not transport (precedence, below)
+        self.assert_refused(self.evaluate(transport_state="INSTALLED"), "NODE_NOT_ADMITTED", hne.FAILURE_CODE)
         self.assertEqual(boundary.TRANSPORTS[boundary.INTERLOCK_INTR], "NOT_YET_ENABLED")
 
 
+@harness.with_append_route
+class FailurePrecedenceTests(_Ledgers):
+    """Steering 5:31 PM: report the most specific failed predicate, deterministically; nothing new ALLOWs."""
+
+    def assert_stage(self, out, reason, failure_code, stage):
+        self.assert_refused(out, reason, failure_code)
+        self.assertEqual(out["failed_stage"], stage)
+        self.assertEqual(out["failure_precedence"], anchor.FAILURE_PRECEDENCE)
+
+    def test_the_order_is_fixed_and_documented(self):
+        self.assertEqual(anchor.FAILURE_PRECEDENCE, ("ORG_LEDGER_LOCATION_AND_STORE", "PINNED_CODE_AND_ANCHOR",
+                                                     "IDENTITY", "HEALTH_AND_ADMISSION", "TRANSPORT_RECORD",
+                                                     "TRANSPORT_INTR_CARRIER"))
+        self.assertIn("Failure precedence", anchor.evaluate_anchored.__doc__)
+        readme = (ROOT / "README.md").read_text()
+        self.assertIn("failure precedence", readme.lower())
+        self.assertIn("HEALTH_REPORT_MISSING", readme)
+
+    def test_no_health_report_is_health_report_missing_not_transport(self):
+        self.open_and_anchor()          # anchored, proven identity, no NODE_HEALTH_REPORTED, no ingress
+        for asserted in (None, "INSTALLED"):
+            out = self.evaluate(transport_state=asserted)
+            self.assert_stage(out, "HEALTH_REPORT_MISSING", hne.FAILURE_CODE, "HEALTH_AND_ADMISSION")
+            self.assertIsNone(out["observed_transport"])
+
+    def test_refused_at_ingress_is_node_not_admitted_not_transport(self):
+        self.open_and_anchor()
+        self.assertEqual(self.chain_to_admission(installed=False)["disposition"], "FAIL_CLOSED")
+        out = self.evaluate(transport_state="INSTALLED")
+        self.assert_stage(out, "NODE_NOT_ADMITTED", hne.FAILURE_CODE, "HEALTH_AND_ADMISSION")
+        self.assertEqual(out["observed_transport"]["transition_class"], boundary.REFUSED_CLASS)
+
+    def test_transport_is_reported_only_when_health_and_admission_pass(self):
+        self.open_and_anchor()
+        self.chain_to_admission(transport=boundary.HTTP)      # healthy and admitted, but over HTTP
+        self.assertEqual(hne.evaluate(NODE, ledger_root=self.root, require_admission=True)["disposition"], "ALLOW")
+        self.assert_stage(self.evaluate(transport_state="INSTALLED"), "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED",
+                          "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED", "TRANSPORT_RECORD")
+
+    def test_carrier_stage_is_last_and_fails_closed(self):
+        self.open_and_anchor()
+        with mock.patch.object(self, "carry", lambda *a, **k: None):     # admitted over InTr, no carrier pair
+            self.chain_to_admission()
+        out = self.evaluate()
+        self.assert_stage(out, "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED", "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED",
+                          "TRANSPORT_INTR_CARRIER")
+        self.assertEqual(out["intr_carrier_refusal"], "INTR_CARRIER_NOT_ON_AUTHENTICATED_ORG_LEDGER")
+
+    def test_repository_is_passed_through_to_the_evaluator_and_ingress_read(self):
+        self.open_and_anchor()
+        self.chain_to_admission()
+        calls = []
+        real = hne.evaluate
+
+        def spy(*args, **kwargs):
+            calls.append(kwargs)
+            return real(*args, **kwargs)
+        with mock.patch.object(anchor.hne, "evaluate", spy):
+            self.assertEqual(self.evaluate()["disposition"], "ALLOW")
+            self.assert_refused(self.evaluate(repository="StegVerse-org/Elsewhere"), "RECEIPT_REPOSITORY_MISMATCH",
+                                hne.FAILURE_CODE)
+        self.assertEqual([c["repository"] for c in calls], [hne.REPOSITORY, "StegVerse-org/Elsewhere"])
+
+    def test_not_designated_six_fields_name_431(self):
+        with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431.parent / "no-such-contract.json"):
+            out = self.evaluate()
+        self.assert_refused(out, "ORG_LEDGER_LOCATION_NOT_DESIGNATED")
+        for key in ("required_evidence_or_repair", "retry_entrypoint", "owning_existing_goal", "next_attempt"):
+            self.assertIn("StegVerse-org/LLM-adapter#431", out[key], key)
+        with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431):     # #431's shape, no genesis pin yet
+            pinless = self.evaluate()
+        self.assert_refused(pinless, "ORG_LEDGER_GENESIS_NOT_PINNED")
+        self.assertIn("StegVerse-org/LLM-adapter#431", pinless["next_attempt"])
+
+
+@harness.with_append_route
 class SelfMintAndAssertionTests(_Ledgers):
     """LC-KV-16 (StegVerse-Labs/.github#3330 @c8b8d156): the three holes in evaluate_anchored, closed."""
 
@@ -538,8 +655,11 @@ class SelfMintAndAssertionTests(_Ledgers):
             return real(*args, **kwargs)
         with mock.patch.object(anchor.hne, "evaluate", spy):
             self.assertEqual(self.evaluate()["disposition"], "ALLOW")
-        self.assertEqual(len(calls), 1)
-        self.assertEqual((calls[0]["transport_state"], calls[0]["require_admission"]), ("INSTALLED", True))
+            self.assertEqual(self.evaluate(transport_state="NOT_YET_ENABLED")["disposition"], "ALLOW")  # decides nothing
+        # one evaluator run per call; the transport stage is passed explicitly, and its ALLOW is returned only after
+        # the transport record and the InTr carrier verify (FailurePrecedenceTests)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual({(c["transport_state"], c["require_admission"]) for c in calls}, {("INSTALLED", True)})
         tree = ast.parse((ROOT / "llm_adapter/endpoint_ledger_anchor.py").read_text())
         wrapper = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "evaluate_anchored")
         evaluator_calls = [c for c in ast.walk(wrapper) if isinstance(c, ast.Call)
@@ -550,6 +670,176 @@ class SelfMintAndAssertionTests(_Ledgers):
         self.assertNotIn("INSTALLED", [d.value for d in defaults])
 
 
+class CallerStoreAndIngressTests(_Ledgers):
+    """LC-KV-16 rev 5 (StegVerse-Labs/.github#3330 @8abd5741): the three rows that ALLOWed on #432 @1cbad77e.
+
+    Each row runs twice: under production (no head attester published: the append route is not admitted) and
+    inside the TEST-ONLY append_route() harness, where it must still refuse, for its own reason.
+    """
+
+    def assert_transport_refused(self, out):
+        self.assert_refused(out, "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED", "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED")
+
+    def caller_appended_ingress(self, base_receipt=None):
+        """The caller appends its own NODE_INGRESS_ADMITTED claiming installed InTr to its own node ledger."""
+        chain = hne.read_chain(self.root)[0]
+        ev = {"schema": "stegverse.node-ingress-record/v1", "node_endpoint": {"node_id": NODE}, "evaluated_node_id": NODE,
+              "healthy_node_established": True, "transport": boundary.INTERLOCK_INTR, "transport_state": "INSTALLED",
+              "signal_sha256": anchor.sha({"mode": "ESTABLISH_GENESIS", "node_ref": NODE, "predecessor": None,
+                                           "node_class": "LLM_ADAPTER"})}
+        report = next((r for r in chain if r["transition_class"] == "NODE_HEALTH_REPORTED"), None)
+        if report:
+            ev["health_report_receipt_sha256"] = report["receipt_sha256"]
+        anchor._emitter().append("NODE_INGRESS_ADMITTED:caller-appended", boundary.ADMITTED_CLASS,
+                                 (base_receipt or chain[0])["receipt_sha256"], hne.sha(ev), ev, "NONE", hb_epoch=10**12)
+
+    def caller_store(self, name, *, own_genesis=False, with_anchor_of=None):
+        """A git object store the caller created and filled, at the designated ref and namespace."""
+        base = Path(self._t.name) / name
+        org = base / "tree" / "repository-ledger/StegVerse-org/LLM-adapter"
+        if own_genesis:
+            anchor.append_receipt(org, anchor.GENESIS_CLASS, "REPOSITORY_LEDGER_INITIALIZATION:caller",
+                                  anchor.sha({"repository": anchor.REPOSITORY, "ledger": "caller"}),
+                                  {"schema": "stegverse.repository-ledger-initialization/v1",
+                                   "repository": anchor.REPOSITORY, "authority_effect": "NONE_TEST_FIXTURE"}, 32)
+        else:
+            shutil.copytree(self.org, org)     # starts from the real chain, then adds what it likes
+        if with_anchor_of is not None:
+            anchor.anchor(with_anchor_of, org, NODE)
+        store = base / "store.git"
+        subprocess.run(["git", "init", "-q", "--bare", str(store)], check=True, env=GIT_ENV)
+        self.publish(tree=base / "tree", git_dir=store)
+        return store, json.loads((org / "HEAD.json").read_text())["receipt_sha256"]
+
+    def evaluate_on(self, store, head, root, attestation):
+        return anchor.evaluate_anchored(endpoint=self.endpoint("PERMANENT", root), org_ledger_git_dir=store,
+                                        org_ledger_head_receipt_sha256=head, org_ledger_head_attestation=attestation,
+                                        identity_proof=self.prove(self.endpoint("PERMANENT", root), head))
+
+    def permanent_node(self, name):
+        self.use(Path(self._t.name) / name)
+        out = anchor.open_ledger(self.root, NODE, "PERMANENT", KEY, None)
+        self.assertEqual(out["disposition"], "ALLOW", out)
+        return self.root
+
+    def test_a_permanent_root_on_a_caller_created_store_is_refused(self):
+        """Row (a), PERMANENT_ROOT_ON_CALLER_CREATED_ORG_OBJECT_STORE."""
+        root = self.permanent_node("perm-node")
+        own_seed = hashlib.sha256(b"endpoint-ledger-anchor tests: a caller's own head attester").digest()
+        # production: no attester is published, so no store is ever accepted
+        store, head = self.caller_store("copy", with_anchor_of=root)
+        self.chain_to_admission()
+        out = self.evaluate_on(store, head, root, None)
+        self.assert_refused(out, "MERGE_APPEND_PATH_NOT_ADMITTED")
+        self.assertEqual(out["failed_predicate"], "ORG_LEDGER_HEAD_AUTHENTICATED_BY_APPEND_ROUTE")
+        self.assertEqual(self.evaluate_on(store, head, root, harness.attest(store, seed=own_seed,
+                                                                            key_id="callers-own"))["reason"],
+                         "MERGE_APPEND_PATH_NOT_ADMITTED")
+        with harness.append_route():
+            # a store that minted its own genesis is not the org ledger, whatever it holds
+            minted, minted_head = self.caller_store("minted", own_genesis=True)
+            self.assert_refused(self.evaluate_on(minted, minted_head, root, harness.attest(minted)),
+                                "ORG_LEDGER_GENESIS_MISMATCH")
+            # the real genesis copied, plus the caller's own anchor pair: its head is not one the route attested
+            self.assert_refused(self.evaluate_on(store, head, root, None), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+            self.assert_refused(self.evaluate_on(store, head, root, harness.attest(store, seed=own_seed,
+                                                                                    key_id="callers-own")),
+                                "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+            self.assert_refused(self.evaluate_on(store, head, root, harness.attest(
+                store, seed=own_seed, key_id=harness.ROUTE_REF["key_id"])), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+            self.publish()
+            route = harness.attest(self.git)          # the route's attestation of the real store, replayed
+            self.assert_refused(self.evaluate_on(store, head, root, route), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+            # an attestation of a head and tree the store does not hold
+            self.assert_refused(self.evaluate_on(store, head, root, {**harness.attest(store), "namespace_tree_oid":
+                                                                     route["namespace_tree_oid"]}),
+                                "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+        # #431's contract copy carries no genesis pin: refused before the store is read
+        with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431), harness.append_route():
+            self.assert_refused(self.evaluate_on(store, head, root, harness.attest(store)),
+                                "ORG_LEDGER_GENESIS_NOT_PINNED")
+
+    def test_a_stale_head_attestation_is_refused(self):
+        with harness.append_route():
+            self.open_and_anchor()
+            self.chain_to_admission()
+            self.publish()
+            stale = harness.attest(self.git)
+            self.assertEqual(self.evaluate(org_ledger_head_attestation=stale)["disposition"], "ALLOW")
+            self.carry({"mode": "ESTABLISH_GENESIS", "node_ref": "SV-NODE-another", "predecessor": None,
+                        "node_class": "LLM_ADAPTER"}, "another-node-1")
+            self.assert_refused(self.evaluate(org_ledger_head_attestation=stale), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+            self.assertEqual(self.evaluate()["disposition"], "ALLOW")
+
+    def test_b_a_caller_appended_ingress_record_claiming_installed_intr_is_refused(self):
+        """Row (b), CALLER_APPENDED_INGRESS_RECORD_CLAIMING_INSTALLED_INTR: the anchor passes, transport refuses."""
+        self.open_and_anchor()
+        self.chain_to_admission(transport=boundary.HTTP)
+        self.caller_appended_ingress()
+        self.assert_refused(self.evaluate(), "MERGE_APPEND_PATH_NOT_ADMITTED")     # production
+        with harness.append_route():
+            out = self.evaluate()
+            self.assert_transport_refused(out)
+            self.assertEqual(out["anchor"]["disposition"], "ALLOW")
+            self.assertEqual(out["intr_carrier_refusal"], "INTR_CARRIER_NOT_ON_AUTHENTICATED_ORG_LEDGER")
+            self.assertEqual((out["observed_transport"]["transport"], out["observed_transport"]["transport_state"]),
+                             ("INTERLOCK_INTR", "INSTALLED"))     # what the node's own record says; it decides nothing
+            # a carrier for another node's signal on the authenticated chain does not carry this node
+            self.carry({"mode": "ESTABLISH_GENESIS", "node_ref": "SV-NODE-another", "predecessor": None,
+                        "node_class": "LLM_ADAPTER"}, "another-node-1")
+            self.assertEqual(self.evaluate()["intr_carrier_refusal"], "INTR_CARRIER_NOT_ON_AUTHENTICATED_ORG_LEDGER")
+
+    def test_c_caller_store_and_caller_appended_ingress_without_the_transport_patch_is_refused(self):
+        """Row (c), PERMANENT_CALLER_STORE_AND_CALLER_APPENDED_INGRESS_NO_TRANSPORT_PATCH."""
+        root = self.permanent_node("perm-node-2")
+        anchor.anchor(root, self.org, NODE)
+        refused = self.chain_to_admission(installed=False)
+        self.assertEqual(refused["disposition"], "FAIL_CLOSED")
+        self.caller_appended_ingress()
+        self.assert_refused(self.evaluate(self.endpoint("PERMANENT", root)), "MERGE_APPEND_PATH_NOT_ADMITTED")
+        store, head = self.caller_store("caller-everything")
+        with harness.append_route():
+            self.assert_refused(self.evaluate_on(store, head, root, None), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+            # even on the route-attested store, the caller's own record is not an InTr crossing
+            out = self.evaluate(self.endpoint("PERMANENT", root))
+            self.assert_transport_refused(out)
+            self.assertEqual(out["anchor"]["disposition"], "ALLOW")
+            self.assertEqual(out["intr_carrier_refusal"], "INTR_CARRIER_NOT_ON_AUTHENTICATED_ORG_LEDGER")
+
+    def test_transport_only_row_passes_the_anchor_then_fails_on_transport(self):
+        with harness.append_route():
+            self.open_and_anchor()
+            self.chain_to_admission(transport=boundary.HTTP)
+            out = self.evaluate(transport_state="INSTALLED")
+            self.assert_transport_refused(out)
+            self.assertEqual(out["anchor"]["disposition"], "ALLOW")
+            self.assertEqual(out["anchor"]["org_ledger_location"], location.ORG_LEDGER_LOCATION)
+            self.assertEqual(out["observed_transport"]["transport"], "HTTP")
+
+    def test_a_carrier_older_than_the_anchor_does_not_count(self):
+        with harness.append_route():
+            signal = {"mode": "ESTABLISH_GENESIS", "node_ref": NODE, "predecessor": None, "node_class": "LLM_ADAPTER"}
+            self.carry(signal, "before-the-anchor")
+            self.open_and_anchor()
+            self.chain_to_admission(transport=boundary.HTTP)
+            self.caller_appended_ingress()
+            self.assertEqual(self.evaluate()["intr_carrier_refusal"], "INTR_CARRIER_NOT_ON_AUTHENTICATED_ORG_LEDGER")
+
+    def test_production_refuses_every_positive_control(self):
+        """Nothing ALLOWs until the append route is admitted: the E0 positive controls, without the harness."""
+        self.assertEqual(location.load_head_signers(), [])
+        published = json.loads(location.HEAD_SIGNERS_PATH.read_text())
+        self.assertEqual((published["signers"], published["state"].split(":")[0]), ([], "NONE_PUBLISHED"))
+        self.open_and_anchor()
+        self.chain_to_admission()
+        out = self.evaluate()
+        self.assert_refused(out, "MERGE_APPEND_PATH_NOT_ADMITTED")
+        self.assertIs(out["healthy_node_established"], False)
+        with harness.append_route():
+            self.assertEqual(self.evaluate()["disposition"], "ALLOW")
+
+
+@harness.with_append_route
 class IssuedAnchorTests(_Ledgers):
     """The stegverse.node-ledger-opened/v1 anchor KV consumes (continuity-vault-kit#258) and its schemas."""
 
@@ -566,7 +856,8 @@ class IssuedAnchorTests(_Ledgers):
         self.assertEqual(issued["issuer_receipt_ref"], pair["destination_receipt_sha256"])
         self.publish()
         verify = lambda a, git_dir=self.git: anchor.verify_node_ledger_opened_anchor(   # noqa: E731
-            a, ledger_root=self.node, org_ledger_git_dir=git_dir, org_ledger_head_receipt_sha256=self.head())
+            a, ledger_root=self.node, org_ledger_git_dir=git_dir, org_ledger_head_receipt_sha256=self.head(),
+            org_ledger_head_attestation=self.attest(git_dir))
         self.assertEqual(verify(issued)["disposition"], "ALLOW")
 
         def resealed(**change):
@@ -609,6 +900,7 @@ class IssuedAnchorTests(_Ledgers):
         self.assertEqual(kinds["properties"]["schema"]["const"], anchor.ENDPOINT_KIND_SCHEMA)
 
 
+@harness.with_append_route
 class DissolutionTests(_Ledgers):
     def dissolve(self, endpoint=None, head=None):
         return dissolution.dissolve(NODE, endpoint=endpoint or self.endpoint(), org_ledger_root=self.org,
@@ -698,10 +990,14 @@ class DeterminismTests(unittest.TestCase):
                     self.assertNotIn(n.split(".")[0], banned, n)
         runs = [c for c in ast.walk(tree) if isinstance(c, ast.Call) and isinstance(c.func, ast.Attribute)
                 and isinstance(c.func.value, ast.Name) and c.func.value.id == "subprocess"]
-        self.assertEqual([c.func.attr for c in runs], ["run"])
+        # three local git reads, all through the one argv prefix: rev-parse the ref's commit, rev-parse the
+        # namespace tree (what the head attestation names), archive that commit
+        self.assertEqual([c.func.attr for c in runs], ["run", "run", "run"])
         source = (ROOT / "llm_adapter/org_ledger_location.py").read_text()
         self.assertIn('"protocol.allow=never"', source)
         self.assertIn('"archive"', source)
+        self.assertEqual(source.count('"rev-parse", "--verify", "--quiet"'), 2)
+        self.assertEqual(source.count("git + ["), 3)
 
     def test_evaluator_is_untouched(self):
         digest = hashlib.sha256((ROOT / "llm_adapter/healthy_node_evaluator.py").read_bytes()).hexdigest()

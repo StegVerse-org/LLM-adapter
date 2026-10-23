@@ -828,6 +828,31 @@ hold keys; the tests use fixture keys only). None is published yet, so every pro
 `NODE_LEDGER_OPENED_SIGNER_NOT_PUBLISHED`. `node_id` is not a caller argument: it is derived from the verified
 identity proof, and an optional `claimed_node_id` decides nothing and must match. Transport has no default.
 
+**The store is not trusted either (LC-KV-16 rev 5, StegVerse-Labs/.github#3330 @8abd5741).** A caller-named object
+store decides nothing by holding the designated ref. `org_ledger_location` accepts it only when (1) the namespace's
+`REPOSITORY_LEDGER_INITIALIZATION` genesis equals `expected_genesis_receipt_sha256`, a field this adds to the contract's
+`repository_ledger_location` shape (#431 has to carry it; absent is `ORG_LEDGER_GENESIS_NOT_PINNED`, different is
+`ORG_LEDGER_GENESIS_MISMATCH`), and (2) its head receipt and namespace tree oid carry a
+`stegverse.org-ledger-head-attestation/v1` by a key published in `.stegverse/node-ledger/org-ledger-head-signers.v1.json`
+for the admitted org-ledger append route (`ORG_LEDGER_HEAD_NOT_AUTHENTICATED` otherwise). That route is not admitted and
+no attester is published, so every production read is six-field `FAIL_CLOSED` `MERGE_APPEND_PATH_NOT_ADMITTED` and
+nothing on this path ALLOWs, the E0 positive controls included. Transport is then decided on that authenticated chain:
+the node's own `NODE_INGRESS_ADMITTED` record counts only when its `signal_sha256` is the body of an InTr path pair on
+the org chain, newer than the anchor, verified by `llm_adapter.intr_transport_carrier.verify` (byte-identical with
+StegVerse-org/LLM-adapter#433); a record the node appended itself is `INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED`. The
+tests stand the append route in with a TEST-ONLY attester (`tests/org_ledger_harness.py`, public seed) per test method;
+`setUp` stays production. Run them with the pinned SDK installed: `python -m pip install -e '.[dev]'` (pyproject pins
+`stegverse-sdk`, which `node_standing` imports), then `python -m unittest tests.test_endpoint_ledger_anchor`.
+
+**Failure precedence.** `evaluate_anchored` reports the first failing stage of `FAILURE_PRECEDENCE`, in this fixed
+order: the org-ledger location and store (designation, pinned genesis, authenticated head;
+`ORG_LEDGER_LOCATION_NOT_DESIGNATED` names #431 in its six fields until #431 lands), the pinned code and the anchor
+(`EPHEMERAL_NODE_LEDGER_NOT_ANCHORED`), the identity proof, health and admission (`HEALTH_REPORT_MISSING` when there
+is no `NODE_HEALTH_REPORTED`, `NODE_NOT_ADMITTED` when the node was refused at ingress, from the unchanged evaluator),
+then transport: the ingress record, then its InTr carrier, as `INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED` only when
+health and admission pass. Every stage is `FAIL_CLOSED` with the six fields; none of them ALLOWs on its own, and
+`repository` is passed through to the evaluator and the ingress read-back.
+
 **Identity and transport (LC-KV-15 inside the wrapper).** Identity is never taken from an asserted field. The caller
 passes a `stegverse.node-identity-proof/v1`: an Ed25519 signature by the anchored `node_identity_key` over the
 deterministic `stegverse.node-identity-challenge/v1` (node, kind, genesis, current chain head, anchor receipt, pinned
