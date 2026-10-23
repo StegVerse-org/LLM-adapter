@@ -96,8 +96,33 @@ def source_evidence(signal: Mapping[str, Any], communication_id: str) -> dict[st
             "boundary_evidence": {"operation": SOURCE_CLASS, "path_id": pid, "communication_id": communication_id}}
 
 
+def destination_evidence_failure(source: Any) -> tuple[str, str] | None:
+    """(reason, detail) when `source` lacks a field the destination half is rebuilt from, else None. Pure."""
+    ev = source.get("evidence") if isinstance(source, Mapping) else None
+    if not isinstance(ev, Mapping):
+        return "INTR_SOURCE_EVIDENCE_INCOMPLETE", "the source half is not a receipt with an evidence object"
+    missing = [k for k in SOURCE_REBUILD_KEYS if k not in ev] + \
+        [k for k in ("repository", "receipt_sha256") if not isinstance(source.get(k), str)]
+    if missing:
+        return "INTR_SOURCE_EVIDENCE_INCOMPLETE", (f"{source.get('receipt_sha256')!r} lacks {', '.join(missing)}, so "
+                                                   "the destination half cannot be rebuilt from it")
+    return None
+
+
+def refusal(reason: str, detail: str) -> dict[str, Any]:
+    """The six-field FAIL_CLOSED for `reason` under FAILURE_CODE (an existing code; nothing new is minted)."""
+    return {"disposition": "FAIL_CLOSED", "reason": reason, "detail": detail, "failure_code": FAILURE_CODE,
+            "failed_predicate": PREDICATE, "required_evidence_or_repair": f"{REPAIR} ({reason}: {detail})",
+            "retry_entrypoint": RETRY_ENTRYPOINT, "owning_existing_goal": OWNING_GOAL, "next_attempt": NEXT_ATTEMPT,
+            "authority_effect": "NONE"}
+
+
 def destination_evidence(source: Mapping[str, Any]) -> dict[str, Any]:
-    """The destination half's evidence for a sealed source receipt (#432's destination_evidence shape)."""
+    """The destination half's evidence for a sealed source receipt, or a six-field FAIL_CLOSED (never a KeyError)
+    when the source half lacks a field it is rebuilt from (LC-KV-20)."""
+    failed = destination_evidence_failure(source)
+    if failed:
+        return refusal(*failed)
     ev = source["evidence"]
     core = {"schema": DESTINATION_EVIDENCE_SCHEMA, "repository": REPOSITORY, "path_id": ev["path_id"],
             "source_repository": source["repository"], "source_repository_receipt_sha256": source["receipt_sha256"],
@@ -149,11 +174,9 @@ def verify(signal: Any, *, destination_receipt_sha256: Any, org_ledger_head_rece
         return "INTR_SOURCE_NOT_A_TRANSFER", f"{source_sha} is not an {SOURCE_EVIDENCE_SCHEMA} to {ORG_LEDGER_LOCATION}"
     # A source half missing a field the destination half is rebuilt from fails closed here (six fields at the
     # caller), never with a KeyError out of destination_evidence (LC-KV-20).
-    missing = [k for k in SOURCE_REBUILD_KEYS if k not in sev] + \
-        [k for k in ("repository",) if not isinstance(retained_source.get(k), str)]
-    if missing:
-        return "INTR_SOURCE_EVIDENCE_INCOMPLETE", (f"{source_sha} lacks {', '.join(missing)}, so the destination half "
-                                                   "cannot be rebuilt from it")
+    incomplete = destination_evidence_failure(retained_source)
+    if incomplete:
+        return incomplete
     message = sev.get("message") if isinstance(sev.get("message"), Mapping) else {}
     if message.get("message_class") != MESSAGE_CLASS or sev.get("message_sha256") != sha(dict(message)):
         return "INTR_MESSAGE_UNSEALED", "message is not a sealed " + MESSAGE_CLASS
@@ -215,4 +238,4 @@ def observe(signal: Any, intr_carrier: Any, org_ledger_git_dir: Any) -> tuple[di
 
 
 __all__ = ["DESTINATION_CLASS", "FAILURE_CODE", "ORG_LEDGER_LOCATION", "PREDICATE", "SOURCE_CLASS",
-           "destination_evidence", "observe", "payload_ok", "path_id", "source_evidence", "verify"]
+           "destination_evidence", "destination_evidence_failure", "observe", "refusal", "payload_ok", "path_id", "source_evidence", "verify"]

@@ -422,7 +422,7 @@ class HttpIsUnchangedTests(_OrgLedger):
 
 class InvariantTests(unittest.TestCase):
     def test_a_source_half_missing_endpoint_kind_fails_closed_not_keyerror(self):
-        """LC-KV-20 (carrier 5c410dd3): an incomplete retained source half is refused, never a KeyError."""
+        """LC-KV-20 (carrier 81ad9d3b): an incomplete retained source half is refused, never a KeyError."""
         def receipt(body):
             return {**body, "receipt_sha256": carrier.sha(body)}
         sig = signal()
@@ -446,6 +446,26 @@ class InvariantTests(unittest.TestCase):
             if drop != "communication_id":
                 self.assertEqual(got[0], "INTR_SOURCE_EVIDENCE_INCOMPLETE", (drop, got))
 
+    def test_destination_evidence_refuses_with_six_fields_never_keyerror(self):
+        """Carrier 81ad9d3b: destination_evidence() on an incomplete source half returns the six-field FAIL_CLOSED."""
+        six = ("failure_code", "failed_predicate", "required_evidence_or_repair", "retry_entrypoint",
+               "owning_existing_goal", "next_attempt")
+        ev = carrier.source_evidence(signal(), "intr-node-1")
+        cases = [None, {}, {"evidence": "x"}, {"evidence": ev}, {"evidence": ev, "repository": "StegVerse-org/.github"}]
+        for drop in carrier.SOURCE_REBUILD_KEYS:
+            cases.append({"evidence": {k: v for k, v in ev.items() if k != drop},
+                          "repository": "StegVerse-org/.github", "receipt_sha256": "0" * 64})
+        for source in cases:
+            with self.subTest(source=str(source)[:60]):
+                got = carrier.destination_evidence(source)
+                self.assertEqual(got["disposition"], "FAIL_CLOSED")
+                self.assertEqual(got["reason"], "INTR_SOURCE_EVIDENCE_INCOMPLETE")
+                self.assertEqual(got["failure_code"], carrier.FAILURE_CODE)
+                for field in six:
+                    self.assertTrue(isinstance(got[field], str) and got[field], field)
+        whole = {"evidence": ev, "repository": "StegVerse-org/.github", "receipt_sha256": "0" * 64}
+        self.assertNotIn("failure_code", carrier.destination_evidence(whole))
+
     def test_transport_table(self):
         self.assertEqual(boundary.TRANSPORTS, {"HTTP": "INSTALLED", "INTERLOCK_INTR": "INSTALLED"})
 
@@ -458,7 +478,7 @@ class InvariantTests(unittest.TestCase):
         shared = {
             "llm_adapter/org_ledger_location.py": "b51e6a8bd39ba6fd83044222a3858a2cb0c437020e3e9abbe97c4494d41f2681",
             "llm_adapter/ed25519_verify.py": "ab05e39a3e40b99f02ff199b178554e0ba435c3ff387dca3f896619770770232",
-            "llm_adapter/intr_transport_carrier.py": "5c410dd3fddad854f41234a112574bb361ebd2c74362765292fc8480a689efa7",
+            "llm_adapter/intr_transport_carrier.py": "81ad9d3b42076c991443f3d79ec82c5f306eb8a8aa5f21228fe9faeb8b21aca6",
             "tests/org_ledger_harness.py": "3bbf7f7da563afd9e7a1da1ee8cdbb04219a655a3dcaff3d3a6b2190ce6db945",
             "tests/ed25519_test_signer.py": "3173bfcfca33129cd31942783b9e3e4c9380022f308f2fc31ccdda3dc2f6fe52",
             ".stegverse/node-ledger/org-ledger-head-signers.v1.json":
