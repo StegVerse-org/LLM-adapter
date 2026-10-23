@@ -1,0 +1,123 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLM-ADAPTER-ORGANIZATION-LEDGER-ONBOARDING (observed-merges gap, StegVerse-org/.github#160 class B)",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "authoring_session": "lane-b-91117956 (Lane B, InTr and Mesh Destinations, StegVerse-org/.github#162)",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/TRANSITION_LEDGER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github#160 (class B: observed-merges gap)",
+    "StegVerse-org/.github#162",
+    "StegVerse-org/StegVerse-SDK#558 (same pattern for the SDK)"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Plan only. No ledger ref is created, nothing is appended, and no organization propagation or custody transition is performed or claimed."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/StegVerse-SDK/pull/558",
+      "https://github.com/StegVerse-org/.github/issues/160",
+      "https://github.com/StegVerse-org/.github/issues/162",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/430"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/.github",
+      "StegVerse-org/StegVerse-SDK"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/.github@907f4305:.github/workflows/organization-ledger-merge-transfer.yml",
+      "StegVerse-org/.github@907f4305:resident-runtime/merge_transfer.py",
+      "StegVerse-org/StegVerse-SDK#558 scripts/sdk_ledger_merge_transfer.py",
+      ".stegverse/transition-ledger/contract.json"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "LLM-adapter has no merge-transfer workflow and no repository-ledger namespace on the org ledger ref (read back at tip 21648778). The org writer is pinned, not replaced."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "scripts/llm_adapter_ledger_merge_transfer.py"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/llm-adapter-organization-ledger-merge-transfer.yml",
+    ".github/workflows/llm-adapter-ledger-merge-transfer-validation.yml",
+    ".stegverse/transition-ledger/contract.json",
+    ".stegverse/transition-ledger/merge-transfer-writer-pin.v1.json",
+    "scripts/llm_adapter_ledger_merge_transfer.py",
+    "tests/test_llm_adapter_ledger_merge_transfer.py",
+    "README.md"
+  ],
+  "new_files": [
+    {
+      "path": "scripts/llm_adapter_ledger_merge_transfer.py",
+      "semantic_responsibility": "Plan-only main-merge transfer evidence for this repository against the pinned org writer. Always six-field FAIL_CLOSED until genesis and an admitted append route exist.",
+      "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 scripts/sdk_ledger_merge_transfer.py (adapted for this repository)",
+      "decision": "CREATE_NEW",
+      "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
+      ]
+    },
+    {
+      "path": ".stegverse/transition-ledger/merge-transfer-writer-pin.v1.json",
+      "semantic_responsibility": "sha256 pin of the StegVerse-org/.github writer closure at 907f4305 and of the four verbatim-copied blocks.",
+      "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 pin (same files, re-hashed)",
+      "decision": "CREATE_NEW",
+      "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
+      ]
+    },
+    {
+      "path": ".github/workflows/llm-adapter-organization-ledger-merge-transfer.yml",
+      "semantic_responsibility": "Push-to-main plan workflow: contents: read, no secrets, no dispatch, no push.",
+      "closest_existing_implementation": "StegVerse-org/.github organization-ledger-merge-transfer.yml",
+      "decision": "CREATE_NEW",
+      "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
+      ]
+    },
+    {
+      "path": ".github/workflows/llm-adapter-ledger-merge-transfer-validation.yml",
+      "semantic_responsibility": "Pull-request validation of the onboarding tests, with 0 skipped required.",
+      "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 validation workflow",
+      "decision": "CREATE_NEW",
+      "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
+      ]
+    },
+    {
+      "path": "tests/test_llm_adapter_ledger_merge_transfer.py",
+      "semantic_responsibility": "13 deterministic tests on temporary repositories and ledgers.",
+      "closest_existing_implementation": "StegVerse-org/StegVerse-SDK#558 tests",
+      "decision": "CREATE_NEW",
+      "justification": "LLM-adapter merges to main produce no landing receipts (the observed-merges gap). The org writer binds repository() to its own checkout, so a per-repository plan is needed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
+      ]
+    }
+  ]
+}

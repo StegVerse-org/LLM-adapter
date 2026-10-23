@@ -24,6 +24,11 @@ POST /api/sdk/manifest/submit     governed_manifest_ingress.process_manifest
 
 Manifest validity is the SDK's to decide; the adapter delegates to `stegverse.manifest_contract.validate_ingress_manifest` and carries the SDK's refusal unchanged. Processing is selected by the manifest's declared `processing.capability` and `processing.route_id`, never by source or provider identity. No external machine, receiver or observer is awaited on this path. Every non-`ALLOW` disposition carries `failure_code`, `failed_predicate`, `required_evidence_or_repair`, `retry_entrypoint`, `owning_existing_goal` and `next_attempt`. The organization ledger records the transition receipt; Master Records receives only released organization batches downstream and is not a predicate of any transition here.
 
+**Organization-ledger onboarding (G-8 draft, plan only).** This repository's chain is designated as the subtree `repository-ledger/StegVerse-org/LLM-adapter` of StegVerse-org/.github `refs/stegverse/organization-ledger` (`.stegverse/transition-ledger/contract.json`, `new_ledger_root: false`). There is no LLM-adapter ledger ref.
+- On each push to main, `.github/workflows/llm-adapter-organization-ledger-merge-transfer.yml` runs `scripts/llm_adapter_ledger_merge_transfer.py plan` with `contents: read`, no secrets and no dispatch.
+- The plan verifies the org writer pinned in `.stegverse/transition-ledger/merge-transfer-writer-pin.v1.json`, reads the public ledger ref anonymously, and builds each merge's evidence.
+- It ends six-field FAIL_CLOSED until the namespace genesis and an admitted append route are observed. It never writes a ledger.
+
 ### Generic SDK manifest InTr ingress
 
 Issue #354 removes the governance-specific callable as the LLM Adapter's processing selector. Actionable external manifests now require a recognized Node endpoint plus manifest-declared `processing.capability` and `processing.route_id`; the adapter frames that unchanged declaration as non-authorizing Interlock/InTr transfer to the distributed SDK manifest endpoint. Source/provider identity is provenance only and cannot select processing. Missing Node recognition or processing declaration fails closed before endpoint invocation. This is source/CI conformance only; it does not claim authentic runtime transport, SDK execution or an organization ledger transition.
