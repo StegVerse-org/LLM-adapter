@@ -1,0 +1,140 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "KV-SKAP-VAULT-FUNCTIONAL-001/LC-KV-13-anchored-endpoint-ledger+NODE-LEDGER-DISSOLUTION-DISBURSEMENT-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "authoring_session": "lane-b-91117956 (Lane B, InTr and Mesh Destinations, StegVerse-org/.github#162)",
+  "stacked_on": "main, carrying https://github.com/StegVerse-org/LLM-adapter/pull/430 (laneb/node-receipt-producers @3c106de4, itself on #429 and #428) by merge commit",
+  "admission_order": "ADMISSION_ORDER: node-ledger dissolution (this PR), then temp binding (this PR, admitted together with dissolution), then StegVerse-Labs/StegOS#426, then LLM-adapter#430, then #429, then #428",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/TRANSITION_LEDGER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github#3324 (KV-SKAP-VAULT-FUNCTIONAL-001)",
+    "StegVerse-Labs/.github#3330@578583be (LC-KV-13, LC-KV-15)",
+    "StegVerse-org/.github#162 (NODE-LEDGER-DISSOLUTION-DISBURSEMENT-001, goal STEGVERSE-CANONICAL-WORK-COORDINATION-001, class B, Lane B)"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "All appends run on temporary directories, the org-ledger fixture included. The org-ledger append route (MERGE_APPEND_PATH_NOT_ADMITTED) and genesis (REPOSITORY_LEDGER_GENESIS_UNOBSERVED, #431) are not claimed. No organization propagation, custody transition or Master Records closure is performed."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/428",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/429",
+      "https://github.com/StegVerse-org/.github/issues/162",
+      "https://github.com/StegVerse-org/.github/issues/160",
+      "https://github.com/StegVerse-Labs/StegOS (laneb/node-identity-key-reference: node_identity_key REQUIRED for KV standing)",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/430",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+      "https://github.com/StegVerse-Labs/StegOS/pull/426"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/.github",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/.github@907f4305:data/intr-protocol/v1/protocol.json (mesh_path_transfer)",
+      "StegVerse-org/.github@d941d51d:resident-runtime/intr_path_ingress.py",
+      "StegVerse-org/.github@907f4305:resident-runtime/merge_transfer_gitstore.py",
+      "StegVerse-org/LLM-adapter#431 (REPOSITORY_LEDGER_INITIALIZATION)"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No module binds a layer-1 ledger root to the org ledger or disburses a node ledger. The healthy-node evaluator (Lane D vendors it byte-identical) is wrapped, not modified. The InTr path classes are reused by shape, with the upstream file shas recorded."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "README.md",
+    ".stegverse/node-ledger/pinned-code-digests.v1.json",
+    "llm_adapter/endpoint_ledger_anchor.py",
+    "llm_adapter/node_ledger_dissolution.py",
+    "tests/test_endpoint_ledger_anchor.py",
+    "receipts/work-safety/LC-KV-13-anchored-endpoint-ledger.json"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/endpoint_ledger_anchor.py",
+      "semantic_responsibility": "Binds a layer-1 ledger root to the Org Ledger: an own-ledger endpoint by an InTr path receipt pair over its genesis, a gateway node as an org-carried location. Counts only pinned-producer receipts, then calls the unchanged evaluate().",
+      "closest_existing_implementation": "StegVerse-org/.github resident-runtime/intr_path_ingress.py (destination half shape and payload rule, mirrored without importing)",
+      "decision": "CREATE_NEW",
+      "justification": "LC-KV-15: layer 1 takes a caller-given root. Nothing binds a root to the org ledger. Importing the org module cross-repo would add a dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "StegVerse-Labs/.github#3330:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-15.json"
+      ]
+    },
+    {
+      "path": "llm_adapter/node_ledger_dissolution.py",
+      "semantic_responsibility": "On NODE_DISSOLUTION, disburses the full temp chain to the org ledger as an InTr path transfer, reads the destination back, then appends NODE_LEDGER_DISSOLVED. A gateway location is closed in place.",
+      "closest_existing_implementation": "INTR_MESH_PATH_TRANSFER / ORGANIZATION_INTR_DESTINATION_INGRESS (reused for the transfer). No existing class closes a ledger location.",
+      "decision": "CREATE_NEW",
+      "justification": "Rigel: temporary node ledgers must be disbursed back to an Org Ledger at dissolution. No disbursement or closure exists.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "StegVerse-Labs/.github#3330:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-15.json"
+      ]
+    },
+    {
+      "path": ".stegverse/node-ledger/pinned-code-digests.v1.json",
+      "semantic_responsibility": "The evaluator and producer file digests whose receipts count (evaluator from #428, producers from #430 @3c106de4).",
+      "closest_existing_implementation": "None",
+      "decision": "CREATE_NEW",
+      "justification": "Health receipts count only from pinned producers.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "StegVerse-Labs/.github#3330:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-15.json"
+      ]
+    },
+    {
+      "path": "tests/test_endpoint_ledger_anchor.py",
+      "semantic_responsibility": "End to end to layer-1 ALLOW for anchored own-ledger and gateway nodes, every refusal, dissolution read-back, and determinism bans, on temporary ledgers only.",
+      "closest_existing_implementation": "tests/test_node_receipt_producers.py (fixtures and helpers reused)",
+      "decision": "CREATE_NEW",
+      "justification": "New modules need their own tests.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "StegVerse-Labs/.github#3330:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-15.json"
+      ]
+    },
+    {
+      "path": "receipts/work-safety/LC-KV-13-anchored-endpoint-ledger.json",
+      "semantic_responsibility": "This work-safety manifest.",
+      "closest_existing_implementation": "receipts/work-safety/LC-KV-13-node-receipt-producers.json",
+      "decision": "CREATE_NEW",
+      "justification": "Required for each change set.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "StegVerse-Labs/.github#3330:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-15.json"
+      ]
+    }
+  ]
+}

@@ -773,3 +773,28 @@ activation and propagation remain distinct from this source scope.
 `llm_adapter/ecosystem_fact_index.py` builds an exact-identifier index over registry bytes the caller supplies, each declared with `repository`, `path`, `revision` and `sha256`. It indexes organization entity names from `SV-LLM/.github:data/organization-tree.json`, task ids from `StegVerse-Labs/.github:data/canonical-task-registry.json`, reusable task ids from `data/reusable-task-registry.json` and invariant keys from `data/task-registry-global-invariants.json`. It fetches nothing. Bytes whose sha256 differs from the declared digest refuse the whole build with `ECOSYSTEM_FACT_SOURCE_DIGEST_MISMATCH`. `lookup` returns `OBSERVED` answers cited as `repo@rev:path:line`, or `NOT_FOUND` (`ECOSYSTEM_FACT_NOT_FOUND`) with the six repair fields. It never fuzzy-matches.
 
 The AI Entry backend consults the index only when sources are configured, through the `ecosystem_fact_sources` argument or `LLM_ADAPTER_ECOSYSTEM_FACT_SOURCES` (a local `stegverse.ecosystem-fact-sources/v1` manifest naming local files and their digests). An exact registry identifier that appears verbatim in the message and yields an admitted answer takes precedence over provider-surface and public knowledge (LLM-adapter#368). If a public-knowledge entry also matches, the registry fact is still the answer and the entry is attached as `governance.related_public_knowledge` (`entry_id`, `match`, `source_ids`). Messages without such an identifier keep the existing order: provider-surface, then public knowledge, then the bounded fallback. Only identifier-shaped tokens are looked up, so plain lowercase words are skipped. Each hit is admitted through `chat_profiles.evaluate_source` as source type `stegverse_registry`, which returns `ALLOW_OBSERVED_REGISTRY_FACT` / `observed_registry_fact` and never authority. Hits return route `ecosystem_fact_index` with `governance.evidence_class = OBSERVED`. Misses and unconfigured runs give the same responses as before. When sources are configured but refused (unloadable manifest, digest mismatch, unrecognized schema, duplicate JSON keys, nesting deeper than 128 containers), the answer and route still come from the existing resolvers and the six-field refusal is surfaced as `governance.ecosystem_fact_index_refusal`; it is never dropped silently. `lookup` matches the query exactly as given, without case folding or whitespace stripping.
+
+## Anchored endpoint ledgers and node-ledger dissolution (LC-KV-13, NODE-LEDGER-DISSOLUTION-DISBURSEMENT-001)
+
+Layer 1 decides health only on a ledger root that is anchored to the Org Ledger. A caller-given
+scratch root is not enough (this closes the LC-KV-15 bypass). `llm_adapter.endpoint_ledger_anchor.evaluate_anchored`
+wraps the unchanged `healthy_node_evaluator.evaluate` (sha256 `fdaa2005…1f58`).
+
+- Every endpoint has an `endpoint_kind`: `org`, `kv`, `skap_vault`, `permanent_node` or `gateway_node`.
+- Own-ledger endpoints (KV, SKAP Vault, permanent nodes, and temporary nodes with
+  `ledger_lifetime: BOUNDED_UNTIL_DISSOLUTION`) open with a `REPOSITORY_LEDGER_INITIALIZATION` genesis that
+  binds `node_id`, `node_identity_key` and the pinned code digests. They are anchored by the existing InTr path pair:
+  `INTR_MESH_PATH_TRANSFER` on the endpoint ledger and `INTR_MESH_PATH_INGRESS` /
+  `ORGANIZATION_INTR_DESTINATION_INGRESS` on the org ledger, with the source half retained under
+  `source-receipts/<hex>.json`.
+- Gateway nodes have no external ledger. Their chain is the org-carried location
+  `node-ledger/StegVerse-org/<node_id>`, its root is derived from the org root, and no external chain is imported.
+- The caller must pin the org-ledger head, and it must equal `HEAD.json`. Only receipts of the pinned producers
+  (`.stegverse/node-ledger/pinned-code-digests.v1.json`) count, and a health report must re-derive from its cited
+  receipts. Anything else is six-field `FAIL_CLOSED` `TEMP_NODE_LEDGER_NOT_ANCHORED`.
+- On a `NODE_DISSOLUTION` event, `llm_adapter.node_ledger_dissolution.dissolve` disburses the full temporary chain to
+  the org ledger as an InTr path transfer and reads the destination back. Only then does it append the one new class,
+  `NODE_LEDGER_DISSOLVED`, after which the root is inadmissible. Until the read-back succeeds the result is
+  `FAIL_CLOSED` `NODE_LEDGER_DISBURSEMENT_NOT_READ_BACK`. A gateway location is closed in place.
+- E0 and event-triggered only. There are no clock or network reads in either core, and it runs only on
+  temporary ledgers until the org-ledger append route is admitted.
