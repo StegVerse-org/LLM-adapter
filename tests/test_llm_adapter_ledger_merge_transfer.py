@@ -16,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import llm_adapter_ledger_merge_transfer as M  # noqa: E402
 import llm_adapter_repository_ledger_genesis_pin as P  # noqa: E402
+import llm_adapter_genesis_pin_ingress as R  # noqa: E402
+from llm_adapter import intr_transport_carrier as carrier  # noqa: E402
 
 SIX = M.SIX_FIELDS
 NS = "repository-ledger/StegVerse-org/LLM-adapter"
@@ -420,6 +422,7 @@ class GenesisPinTransitionTests(unittest.TestCase):
         self.assertEqual(decl["transition_class"], P.TRANSITION_CLASS)
         self.assertEqual(decl["entrypoint"], P.ENTRYPOINT)
         self.assertEqual(decl["trigger"]["record_transition_class"], P.GENESIS_CLASS)
+        self.assertEqual(decl["trigger"]["accepted_while_pin_is_null"], ["REPOSITORY_LEDGER_GENESIS_OBSERVED"])
         for k in ("cron", "polling", "waits_on_a_person", "dispatch"):
             self.assertIs(decl["trigger"][k], False, k)
         tree = ast.parse((ROOT / "scripts/llm_adapter_repository_ledger_genesis_pin.py").read_text())
@@ -431,6 +434,156 @@ class GenesisPinTransitionTests(unittest.TestCase):
                 names.add((n.module or "").split(".")[0])
         self.assertFalse(names & {"socket", "urllib", "http", "requests", "time", "datetime", "random", "secrets",
                                   "subprocess"})
+
+
+class GenesisPinPrePinIngressTests(unittest.TestCase):
+    """The GENESIS_PIN trigger arrives over InTr (option (b)) and is received ahead of the pin it delivers.
+
+    The genesis and the carrying INTR_MESH_PATH_INGRESS are appended with the unchanged emit.py into a temporary
+    namespace store; the INTR_MESH_PATH_TRANSFER source half is retained at <namespace>/source-receipts/. Both use
+    intr_transport_carrier's own evidence builders (byte copy of #432/#433). Nothing touches the real ledger.
+    """
+
+    CARRIER_SHA = "sha256:9f460c078f5aba3a25edfecaf7e240334d943c3bf0b0cecc5972fc59e47501bf"
+
+    def setUp(self):
+        self.g = GenesisPinTransitionTests()
+        self.g.setUp()
+        self.before = self.g.before
+        self.contract = json.loads(self.before)
+
+    def tearDown(self):
+        self.g.tearDown()
+
+    def carried(self, signal_for=None, *, name="org", tamper=False, carry_other=None):
+        """A ledger copy: genesis, then the InTr destination half carrying the genesis-observed signal."""
+        tmp = self.g.tmp
+        work = tmp / (name + "-work")
+        work.mkdir()
+        store = work / NS
+        genesis = self.g.append(store, "REPOSITORY_LEDGER_INITIALIZATION:StegVerse-org/LLM-adapter",
+                                "REPOSITORY_LEDGER_INITIALIZATION", "sha256:" + "0" * 64, "sha256:" + "1" * 64,
+                                evidence={"namespace": NS}, hb_epoch=446655631)
+        signal = carry_other if carry_other is not None else R.genesis_signal(
+            signal_for or genesis["receipt_sha256"], self.contract)
+        cid = "intr-path-v1:StegVerse-org/.github->StegVerse-org:genesis-pin"
+        source = receipt({"schema": carrier.RECEIPT_SCHEMA, "repository": "StegVerse-org/.github",
+                          "transition_class": carrier.SOURCE_CLASS, "previous_receipt_sha256": None,
+                          "evidence": carrier.source_evidence(signal, cid)})
+        (store / "source-receipts").mkdir(parents=True)
+        (store / "source-receipts" / (source["receipt_sha256"][7:] + ".json")).write_text(json.dumps(source))
+        dest = self.g.append(store, "INTR_MESH_PATH_INGRESS:" + cid, carrier.DESTINATION_CLASS,
+                             "sha256:" + "1" * 64, "sha256:" + "2" * 64,
+                             evidence=carrier.destination_evidence(source), hb_epoch=446655632)
+        if tamper:
+            path = store / "receipts" / (genesis["receipt_sha256"][7:] + ".json")
+            forged = json.loads(path.read_text())
+            forged["evidence"] = {"namespace": NS, "forged": True}
+            path.write_text(json.dumps(forged))
+        git(work, "init", "-q")
+        git(work, "add", ".")
+        git(work, "commit", "-q", "-m", "ledger")
+        bare = tmp / (name + ".git")
+        git(tmp, "clone", "-q", "--bare", str(work), str(bare))
+        git(tmp, "--git-dir", str(bare), "update-ref", M.LEDGER_REF, "HEAD")
+        cite = {"destination_receipt_sha256": dest["receipt_sha256"], "org_ledger_head_receipt_sha256": dest["receipt_sha256"]}
+        return str(bare), genesis, signal, cite
+
+    def assert_six(self, d, code):
+        self.assertEqual(d["disposition"], "FAIL_CLOSED", d)
+        self.assertEqual(d["failure_code"], code)
+        for f in SIX:
+            self.assertIsInstance(d[f], str)
+            self.assertTrue(d[f], f)
+        self.assertIsNone(d["genesis_pin_plan"])
+        for word in ("grant", "approved", "authorized", "merge-ready"):
+            self.assertNotIn(word, json.dumps(d).lower())
+
+    def test_pre_pin_genesis_signal_is_accepted_and_planned(self):
+        bare, genesis, signal, cite = self.carried()
+        d = R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before)
+        self.assertEqual(d["disposition"], R.ACCEPTED, d)
+        plan = d["genesis_pin_plan"]
+        self.assertEqual(plan["disposition"], "ALLOW")
+        self.assertEqual(plan["genesis_receipt_sha256"], genesis["receipt_sha256"])
+        self.assertEqual(plan["contract_write"]["value"], genesis["receipt_sha256"])
+        ev = plan["consumes_receipt"]["emit_append"]["evidence"]
+        self.assertEqual(ev["consumes_receipt_sha256"], genesis["receipt_sha256"])
+        self.assertEqual([c["receipt_sha256"] for c in ev["consumes"]],
+                         [genesis["receipt_sha256"], cite["destination_receipt_sha256"]])
+        self.assertEqual(ev["carried_by"]["destination_receipt_sha256"], cite["destination_receipt_sha256"])
+        # the planned pin, applied, is the exact write the planner alone gives for this genesis
+        self.assertEqual(P.apply_write(plan, self.before).decode(), plan["contract_write"]["after_text"])
+
+    def test_pre_pin_any_other_signal_class_is_refused(self):
+        bare, genesis, signal, cite = self.carried()
+        others = [{**signal, "signal_class": "NODE_INGRESS_SIGNAL"}, {**signal, "extra": 1},
+                  {k: v for k, v in signal.items() if k != "node_ref"}, {"node_ref": "n-1", "kind": "NODE_INGRESS"},
+                  "not an object", {**signal, "transition_class": "SOMETHING_ELSE"}]
+        for other in others:
+            d = R.receive(other, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before)
+            self.assert_six(d, "PRE_PIN_SIGNAL_CLASS_NOT_ACCEPTED")
+        # a node signal genuinely carried over InTr is still refused while the pin is null
+        node = {"node_ref": "n-1", "signal_class": "NODE_INGRESS_SIGNAL"}
+        bare2, _, _, cite2 = self.carried(name="node", carry_other=node)
+        self.assert_six(R.receive(node, intr_carrier=cite2, org_ledger=bare2, contract_bytes=self.before),
+                        "PRE_PIN_SIGNAL_CLASS_NOT_ACCEPTED")
+
+    def test_forged_or_off_chain_genesis_is_refused(self):
+        bare, _, signal, cite = self.carried(name="forged", tamper=True)
+        self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before),
+                        "REPOSITORY_LEDGER_GENESIS_NOT_ON_CHAIN")
+        off = "sha256:" + "a" * 64          # the carried record names a genesis that is not the chain's root
+        bare, _, signal, cite = self.carried(off, name="offchain")
+        self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before),
+                        "REPOSITORY_LEDGER_GENESIS_NOT_ON_CHAIN")
+        # a real genesis delivered without its InTr pair, or with a pair for another body, is refused by the carrier
+        bare, genesis, signal, cite = self.carried(name="nocarrier")
+        for bad in ({}, {**cite, "destination_receipt_sha256": "sha256:" + "b" * 64},
+                    {**cite, "org_ledger_head_receipt_sha256": genesis["receipt_sha256"]}):
+            self.assert_six(R.receive(signal, intr_carrier=bad, org_ledger=bare, contract_bytes=self.before),
+                            carrier.FAILURE_CODE)
+        self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=None, contract_bytes=self.before),
+                        "ORGANIZATION_LEDGER_COPY_UNAVAILABLE")
+
+    def test_once_pinned_the_exception_closes_and_normal_gates_apply(self):
+        bare, genesis, signal, cite = self.carried()
+        accepted = R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before)
+        pinned = P.apply_write(accepted["genesis_pin_plan"], self.before)
+        node = {"node_ref": "n-1", "signal_class": "NODE_INGRESS_SIGNAL"}
+        for s in (signal, node):
+            d = R.receive(s, intr_carrier=cite, org_ledger=bare, contract_bytes=pinned)
+            self.assert_six(d, "PRE_PIN_INGRESS_CLOSED")
+            self.assertEqual(d["retry_entrypoint"], carrier.RETRY_ENTRYPOINT)     # the normal #433 InTr gate
+            self.assertEqual(d["next_attempt"], carrier.NEXT_ATTEMPT)
+        conflicting = json.loads(self.before)
+        conflicting["repository_ledger_location"]["expected_genesis_receipt_sha256"] = "sha256:" + "e" * 64
+        self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=bare,
+                                  contract_bytes=json.dumps(conflicting).encode()), "PRE_PIN_INGRESS_CLOSED")
+
+    def test_receiver_reuses_the_carrier_unchanged_and_is_wired_declaratively(self):
+        got = "sha256:" + hashlib.sha256((ROOT / "llm_adapter/intr_transport_carrier.py").read_bytes()).hexdigest()
+        self.assertEqual(got, self.CARRIER_SHA)        # byte copy of #432/#433's module
+        source = (ROOT / "scripts/llm_adapter_genesis_pin_ingress.py").read_text()
+        self.assertNotIn("designated_org_ledger(", source.replace('"', ""))  # never the pin-gated read
+        self.assertNotIn("observe(", source)
+        tree = ast.parse(source)
+        names = set()
+        for n in ast.walk(tree):
+            if isinstance(n, ast.Import):
+                names |= {a.name.split(".")[0] for a in n.names}
+            elif isinstance(n, ast.ImportFrom):
+                names.add((n.module or "").split(".")[0])
+        self.assertFalse(names & {"socket", "urllib", "http", "requests", "time", "datetime", "random", "secrets",
+                                  "subprocess"})
+        decl = json.loads((ROOT / ".stegverse/transition-ledger/genesis-pin-transition.v1.json").read_text())
+        trig = decl["trigger"]
+        self.assertEqual(trig["kind"], "INTR_INGRESS_SIGNAL")
+        self.assertEqual(trig["signal_class"], R.SIGNAL_CLASS)
+        self.assertEqual(trig["receiver"]["entrypoint"], R.ENTRYPOINT)
+        self.assertEqual(trig["carrier_classes"], [carrier.SOURCE_CLASS, carrier.DESTINATION_CLASS])
+        self.assertIn("intr-path-transfer.yml", trig["org_side_emitter"])
+        self.assertIs(trig["new_organization_workflow"], False)
 
 
 if __name__ == "__main__":

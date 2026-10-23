@@ -66,38 +66,47 @@ def _refuse(code: str, predicate: str, repair: str, **extra: Any) -> dict[str, A
 
 def read_genesis(git_dir: str | None, namespace: str) -> tuple[dict[str, Any] | None, dict[str, Any], str | None]:
     """(root receipt, observation, failure detail) for the namespace chain on the ledger copy. Read-only."""
+    chain, obs, failure = read_chain(git_dir, namespace)
+    return (chain[-1] if chain and not failure else None), obs, failure
+
+
+def ledger_file(git_dir: str, tip: str, path: str) -> Any:
+    """One JSON file at `tip` of the ledger copy, or None. Read-only."""
+    raw = M._git(git_dir, "show", f"{tip}:{path}")
+    try:
+        return json.loads(raw) if raw is not None else None
+    except ValueError:
+        return None
+
+
+def read_chain(git_dir: str | None, namespace: str) -> tuple[list[dict[str, Any]], dict[str, Any], str | None]:
+    """(sealed chain newest first, observation, failure detail) from <namespace>/HEAD.json to its root. Read-only."""
     obs: dict[str, Any] = {"tip": None, "namespace": namespace, "namespace_head": None, "chain_length": 0}
+    chain: list[dict[str, Any]] = []
     if not git_dir:
-        return None, obs, "no copy"
+        return chain, obs, "no copy"
     tip = M._git(git_dir, "rev-parse", "--verify", M.LEDGER_REF + "^{commit}")
     if tip is None:
-        return None, obs, "no copy"
+        return chain, obs, "no copy"
     obs["tip"] = tip.decode().strip()
-
-    def get(path: str) -> Any:
-        raw = M._git(git_dir, "show", f"{obs['tip']}:{path}")
-        try:
-            return json.loads(raw) if raw is not None else None
-        except ValueError:
-            return None
-
-    head = get(namespace + "/HEAD.json")
+    head = ledger_file(git_dir, obs["tip"], namespace + "/HEAD.json")
     if not isinstance(head, Mapping) or not isinstance(head.get("receipt_sha256"), str):
-        return None, obs, "absent"
+        return chain, obs, "absent"
     obs["namespace_head"] = head["receipt_sha256"]
-    cursor, seen, root = head["receipt_sha256"], set(), None
+    cursor, seen = head["receipt_sha256"], set()
     while isinstance(cursor, str):
         if cursor in seen:
-            return None, obs, f"chain cycles at {cursor}"
+            return chain, obs, f"chain cycles at {cursor}"
         seen.add(cursor)
-        r = get(f"{namespace}/receipts/{cursor.split(':')[-1]}.json")
+        r = ledger_file(git_dir, obs["tip"], f"{namespace}/receipts/{cursor.split(':')[-1]}.json")
         if not M.sealed(r) or r.get("receipt_sha256") != cursor:
-            return None, obs, f"receipt {cursor} is absent or does not hash to its receipt_sha256"
+            return chain, obs, f"receipt {cursor} is absent or does not hash to its receipt_sha256"
         obs["chain_length"] += 1
-        root, cursor = r, r.get("previous_receipt_sha256")
-    if cursor is not None or root is None:
-        return None, obs, "the chain does not end at previous_receipt_sha256 null"
-    return root, obs, None
+        chain.append(r)
+        cursor = r.get("previous_receipt_sha256")
+    if cursor is not None or not chain:
+        return chain, obs, "the chain does not end at previous_receipt_sha256 null"
+    return chain, obs, None
 
 
 def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
