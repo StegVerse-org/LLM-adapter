@@ -10,14 +10,21 @@ ledger ref. It:
   2. requires the root to be this repository's REPOSITORY_LEDGER_INITIALIZATION genesis
      (stegverse.repo-transition-receipt/v1, previous_receipt_sha256 null), and, when the triggering record
      names a genesis receipt, requires that receipt to be the root;
-  3. returns the exact contract.json write (bytes, before and after sha256) setting the field to the genesis
+  3. authenticates that read-back (LC-KV-19): the genesis, the namespace head and the namespace tree oid at the
+     published ref must carry a stegverse.org-ledger-head-attestation/v1 signed by a key published in
+     .stegverse/node-ledger/org-ledger-head-signers.v1.json (ORG-LEDGER-HEAD-SIGNER-001, TV/TVC custody; checked by
+     llm_adapter.org_ledger_location, a byte copy of #432's module). A caller-built ledger copy that carries its own
+     genesis (and its own InTr pair) is therefore never accepted. No attester is published yet, so every plan is
+     six-field FAIL_CLOSED MERGE_APPEND_PATH_NOT_ADMITTED until the append route is admitted;
+  4. returns the exact contract.json write (bytes, before and after sha256) setting the field to the genesis
      receipt_sha256, plus the consumes receipt: the emit.append arguments of a REPOSITORY_LEDGER_GENESIS_PIN
      repository receipt whose evidence consumes the genesis receipt by its sha256.
 
 It is idempotent: a contract already pinned to the observed genesis plans no write and no receipt, and a contract
 pinned to a different value is refused. Every refusal is FAIL_CLOSED with the six fields. Nothing is written,
 appended or dispatched here: emit.py is unchanged and appends the consumes receipt only when the admitted transition
-runs. There is no clock, network, credential or new dependency: stdlib plus local `git`, through the #431 reader.
+runs. There is no clock, network, credential or new dependency: stdlib plus local `git`, through the #431 reader; the
+signature check is the stdlib Ed25519 verifier (llm_adapter.ed25519_verify, byte copy) and holds no key.
 """
 from __future__ import annotations
 
@@ -30,6 +37,8 @@ from typing import Any, Mapping
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import llm_adapter_ledger_merge_transfer as M  # noqa: E402  (#431's reader: sha, sealed, _git, read_org_ledger)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from llm_adapter import org_ledger_location as org_location  # noqa: E402  (byte copy of #432's; LC-KV-19)
 
 ROOT = M.ROOT
 CONTRACT_PATH = M.CONTRACT_PATH
@@ -45,7 +54,17 @@ ALLOW, FAIL_CLOSED = M.ALLOW, M.FAIL_CLOSED
 SIX_FIELDS = M.SIX_FIELDS
 GOAL = "StegVerse-org/LLM-adapter#431 (organization-ledger onboarding; governed element), StegVerse-org/.github#162"
 ENTRYPOINT = ("scripts/llm_adapter_repository_ledger_genesis_pin.py plan --org-ledger <read-only copy of "
-              "refs/stegverse/organization-ledger> --genesis-receipt <sha256 named by the receipted genesis record>")
+              "refs/stegverse/organization-ledger> --genesis-receipt <sha256 named by the receipted genesis record> "
+              "--head-attestation <stegverse.org-ledger-head-attestation/v1 json>")
+HEAD_PREDICATE = "ORG_LEDGER_HEAD_AUTHENTICATED_BY_APPEND_ROUTE"
+HEAD_REPAIR = ("the genesis may be authenticated only from the published refs/stegverse/organization-ledger read-back "
+               "plus an org-ledger head attestation: a stegverse.org-ledger-head-attestation/v1 over {org_ledger_location, "
+               "genesis_receipt_sha256, head_receipt_sha256, namespace_tree_oid, appended_through} signed by a key "
+               "published in .stegverse/node-ledger/org-ledger-head-signers.v1.json (ORG-LEDGER-HEAD-SIGNER-001; TV/TVC "
+               "custody, StegVerse-org/TVC#542; publication only by an admitted change carrying TV/TVC's publication "
+               "receipt). A caller-built ledger copy with its own genesis is never accepted")
+HEAD_NEXT = ("event-triggered: when ORG-LEDGER-HEAD-SIGNER-001 is published by its admitted change and the append "
+             "route attests the head that holds the receipted genesis; no clock, no polling, no person")
 NEXT = ("event-triggered: re-run when the receipted REPOSITORY_LEDGER_INITIALIZATION genesis record is on the org "
         "ledger at the contract's location; no clock, no polling, no person")
 PINNED_NOTE = ("Pinned by REPOSITORY_LEDGER_GENESIS_PIN from the receipted REPOSITORY_LEDGER_INITIALIZATION genesis "
@@ -109,8 +128,14 @@ def read_chain(git_dir: str | None, namespace: str) -> tuple[list[dict[str, Any]
     return chain, obs, None
 
 
+def namespace_tree_oid(git_dir: str, tip: str, namespace: str) -> str:
+    """The namespace's tree oid at `tip` of the ledger copy ('' when absent). Read-only, local objects only."""
+    raw = M._git(git_dir, "rev-parse", "--verify", "--quiet", f"{tip}:{namespace}")
+    return raw.decode().strip() if raw else ""
+
+
 def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
-         contract_bytes: bytes | None = None) -> dict[str, Any]:
+         contract_bytes: bytes | None = None, org_ledger_head_attestation: Any = None) -> dict[str, Any]:
     """The exact contract write and consumes receipt for REPOSITORY_LEDGER_GENESIS_PIN, or six-field FAIL_CLOSED."""
     before = contract_bytes if contract_bytes is not None else CONTRACT_PATH.read_bytes()
     contract = json.loads(before)
@@ -140,6 +165,19 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
         return _refuse("REPOSITORY_LEDGER_GENESIS_NOT_ON_CHAIN", "REPOSITORY_LEDGER_GENESIS_ON_SEALED_CHAIN",
                        f"the triggering record names {genesis_receipt_sha256!r}, but the chain from "
                        f"{loc['namespace']}/HEAD.json is rooted at {digest}", **common)
+    # LC-KV-19: the read-back decides nothing by itself. Its genesis, head and namespace tree must be attested by
+    # a published org-ledger head signer, or a caller-built copy could carry its own genesis and InTr pair.
+    if f"{loc['ref']}:{loc['namespace']}" != org_location.ORG_LEDGER_LOCATION:
+        return _refuse("ORG_LEDGER_LOCATION_NOT_DESIGNATED", "ORG_LEDGER_LOCATION_IS_THE_DESIGNATED_LOCATION",
+                       f"{CONTRACT_REL} repository_ledger_location must designate {org_location.ORG_LEDGER_LOCATION}",
+                       **common)
+    tree_oid = namespace_tree_oid(org_ledger, obs["tip"], loc["namespace"])
+    unauthenticated = org_location.head_attestation_failure(org_ledger_head_attestation, digest, obs["namespace_head"],
+                                                        tree_oid)
+    if unauthenticated:
+        return _refuse(unauthenticated[0], HEAD_PREDICATE,
+                       f"{unauthenticated[1]}. {HEAD_REPAIR}", **common, observed_genesis_receipt_sha256=digest,
+                       namespace_tree_oid=tree_oid, next_attempt=HEAD_NEXT)
     current = loc.get(FIELD)
     if current is not None and current != digest:
         return _refuse("EXPECTED_GENESIS_PIN_CONFLICT", "EXPECTED_GENESIS_PIN_UNSET_OR_EQUAL",
@@ -148,6 +186,7 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
                        **common, observed_genesis_receipt_sha256=digest)
     result = {"schema": RESULT_SCHEMA, "transition_class": TRANSITION_CLASS, "disposition": ALLOW, **common,
               "genesis_receipt_sha256": digest, "already_pinned": current == digest,
+              "org_ledger_head_authenticated": True, "namespace_tree_oid": tree_oid,
               "contract_write": None, "consumes_receipt": None,
               "ledger_written": False, "contract_written": False, "authority_effect": "NONE_PLAN_ONLY"}
     if current == digest:
@@ -173,6 +212,8 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
                                        "ledger_location": location}],
                          "organization_ledger_tip": obs["tip"],
                          "namespace_head_receipt_sha256": obs["namespace_head"],
+                         "namespace_tree_oid": tree_oid,
+                         "org_ledger_head_attestation_key_id": org_ledger_head_attestation.get("key_id"),
                          "contract_path": CONTRACT_REL, "json_pointer": FIELD_POINTER, "value": digest},
             "authority_effect": "NONE",
             # the genesis's own supplied epoch orders the pin after it; None means emit.py would sample a clock,
@@ -198,9 +239,12 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("plan")
     p.add_argument("--org-ledger", help="local bare copy holding " + M.LEDGER_REF)
     p.add_argument("--genesis-receipt", help="the genesis receipt_sha256 named by the triggering record")
+    p.add_argument("--head-attestation", help="stegverse.org-ledger-head-attestation/v1 json file")
     p.add_argument("--out")
     a = ap.parse_args(argv)
-    result = plan(org_ledger=a.org_ledger, genesis_receipt_sha256=a.genesis_receipt)
+    attestation = json.loads(Path(a.head_attestation).read_text()) if a.head_attestation else None
+    result = plan(org_ledger=a.org_ledger, genesis_receipt_sha256=a.genesis_receipt,
+                  org_ledger_head_attestation=attestation)
     text = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if a.out:
         Path(a.out).write_text(text)

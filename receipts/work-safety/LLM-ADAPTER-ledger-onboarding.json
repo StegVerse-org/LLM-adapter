@@ -68,7 +68,12 @@
     "scripts/llm_adapter_repository_ledger_genesis_pin.py",
     "scripts/llm_adapter_genesis_pin_ingress.py",
     "llm_adapter/intr_transport_carrier.py",
-    "tests/fixtures/org-intr-path-transfer/typed-genesis-observed.json"
+    "tests/fixtures/org-intr-path-transfer/typed-genesis-observed.json",
+    "llm_adapter/org_ledger_location.py",
+    "llm_adapter/ed25519_verify.py",
+    "llm_adapter/healthy_node_evaluator.py",
+    ".stegverse/node-ledger/org-ledger-head-signers.v1.json",
+    "tests/ed25519_test_signer.py"
   ],
   "new_files": [
     {
@@ -181,6 +186,61 @@
       "canonical_owner": "StegVerse-org/.github (Lane B, StegVerse-org/.github#162)",
       "evidence_refs": [
         "StegVerse-org/.github resident-runtime/intr_path_transfer.py"
+      ]
+    },
+    {
+      "path": "llm_adapter/org_ledger_location.py",
+      "semantic_responsibility": "Byte copy (sha256 b51e6a8b) of #432's org-ledger read-back and head-attestation check; #431 uses head_attestation_failure only (network-free, no key).",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 llm_adapter/org_ledger_location.py (identical bytes)",
+      "decision": "REUSE",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B; #432/#428 byte-identical)",
+      "justification": "LC-KV-19 (class A, Lane B): the pre-pin receiver and the genesis-pin planner authenticate the genesis only from the published refs/stegverse/organization-ledger read-back plus the ORG-LEDGER-HEAD-SIGNER-001 head attestation, reusing #432's org_ledger_location byte-identically; identical bytes merge cleanly with #432/#433.",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/pull/432"
+      ]
+    },
+    {
+      "path": "llm_adapter/ed25519_verify.py",
+      "semantic_responsibility": "Byte copy (sha256 ab05e39a) of #432's stdlib Ed25519 verifier (verify only, no signing).",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 llm_adapter/ed25519_verify.py (identical bytes)",
+      "decision": "REUSE",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B; #432/#428 byte-identical)",
+      "justification": "LC-KV-19 (class A, Lane B): the pre-pin receiver and the genesis-pin planner authenticate the genesis only from the published refs/stegverse/organization-ledger read-back plus the ORG-LEDGER-HEAD-SIGNER-001 head attestation, reusing #432's org_ledger_location byte-identically; identical bytes merge cleanly with #432/#433.",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/pull/432"
+      ]
+    },
+    {
+      "path": "llm_adapter/healthy_node_evaluator.py",
+      "semantic_responsibility": "Byte copy (sha256 fdaa2005) of #428's evaluator, imported by org_ledger_location (canon, REPOSITORY).",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#428/#432 llm_adapter/healthy_node_evaluator.py (identical bytes)",
+      "decision": "REUSE",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B; #432/#428 byte-identical)",
+      "justification": "LC-KV-19 (class A, Lane B): the pre-pin receiver and the genesis-pin planner authenticate the genesis only from the published refs/stegverse/organization-ledger read-back plus the ORG-LEDGER-HEAD-SIGNER-001 head attestation, reusing #432's org_ledger_location byte-identically; identical bytes merge cleanly with #432/#433.",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/pull/432"
+      ]
+    },
+    {
+      "path": ".stegverse/node-ledger/org-ledger-head-signers.v1.json",
+      "semantic_responsibility": "Byte copy of #432's published head-signer references: empty (NONE_PUBLISHED), so production refuses MERGE_APPEND_PATH_NOT_ADMITTED.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 .stegverse/node-ledger/org-ledger-head-signers.v1.json (identical bytes)",
+      "decision": "REUSE",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B; #432/#428 byte-identical)",
+      "justification": "LC-KV-19 (class A, Lane B): the pre-pin receiver and the genesis-pin planner authenticate the genesis only from the published refs/stegverse/organization-ledger read-back plus the ORG-LEDGER-HEAD-SIGNER-001 head attestation, reusing #432's org_ledger_location byte-identically; identical bytes merge cleanly with #432/#433.",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/pull/432"
+      ]
+    },
+    {
+      "path": "tests/ed25519_test_signer.py",
+      "semantic_responsibility": "TEST-ONLY Ed25519 signer, byte copy of #432's (public fixture seed; no key material).",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 tests/ed25519_test_signer.py (identical bytes)",
+      "decision": "REUSE",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B; #432/#428 byte-identical)",
+      "justification": "LC-KV-19 (class A, Lane B): the pre-pin receiver and the genesis-pin planner authenticate the genesis only from the published refs/stegverse/organization-ledger read-back plus the ORG-LEDGER-HEAD-SIGNER-001 head attestation, reusing #432's org_ledger_location byte-identically; identical bytes merge cleanly with #432/#433.",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/LLM-adapter/pull/432"
       ]
     }
   ]

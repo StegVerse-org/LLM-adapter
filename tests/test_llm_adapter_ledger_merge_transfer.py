@@ -18,6 +18,9 @@ import llm_adapter_ledger_merge_transfer as M  # noqa: E402
 import llm_adapter_repository_ledger_genesis_pin as P  # noqa: E402
 import llm_adapter_genesis_pin_ingress as R  # noqa: E402
 from llm_adapter import intr_transport_carrier as carrier  # noqa: E402
+from llm_adapter import org_ledger_location as location  # noqa: E402  (byte copy of #432's; LC-KV-19)
+sys.path.insert(0, str(ROOT))
+from tests import ed25519_test_signer as signer  # noqa: E402  (TEST-ONLY, byte copy of #432's)
 
 SIX = M.SIX_FIELDS
 NS = "repository-ledger/StegVerse-org/LLM-adapter"
@@ -271,6 +274,35 @@ class ExpectedGenesisPinTests(unittest.TestCase):
         self.assertTrue(derived["derived_from_clock"])
 
 
+#: TEST-ONLY append-route attester (a public seed, not a secret; TV/TVC custody holds real keys and bots never do).
+ROUTE_SEED = hashlib.sha256(b"org-ledger harness: TEST-ONLY append-route attester public seed").digest()
+ROUTE_REF = {"key_id": "test-org-ledger-append-route", "algorithm": "Ed25519", "custody": "TV/TVC",
+             "signs": "ORG_LEDGER_HEAD", "public_key_b64": __import__("base64").b64encode(
+                 signer.public_key(ROUTE_SEED)).decode()}
+
+
+def attest(bare, seed=ROUTE_SEED, key_id=ROUTE_REF["key_id"], **override):
+    """The append route's head attestation over what a ledger copy holds at the designated ref (TEST-ONLY)."""
+    chain, obs, failure = P.read_chain(bare, NS)
+    assert not failure, failure
+    body = {**location.head_attestation_body(chain[-1]["receipt_sha256"], obs["namespace_head"],
+                                             P.namespace_tree_oid(bare, obs["tip"], NS)), **override}
+    return {**body, "key_id": key_id, "signature_b64": signer.sign_b64(location.head_attestation_message(body), seed)}
+
+
+def with_append_route(cls):
+    """Run each test_ method with the TEST-ONLY attester published, as an admitted append route would."""
+    from unittest import mock
+    for name in [n for n in vars(cls) if n.startswith("test_")]:
+        def run(self, _method=getattr(cls, name)):
+            with mock.patch.object(location, "load_head_signers", return_value=[dict(ROUTE_REF)]):
+                return _method(self)
+        run.__name__ = name
+        setattr(cls, name, run)
+    return cls
+
+
+@with_append_route
 class GenesisPinTransitionTests(unittest.TestCase):
     """REPOSITORY_LEDGER_GENESIS_PIN: the pin is a manifest state transition triggered by the receipted genesis.
 
@@ -343,8 +375,10 @@ class GenesisPinTransitionTests(unittest.TestCase):
 
     def test_valid_genesis_gives_the_exact_contract_write_and_consumes_receipt(self):
         bare, (g, later) = self.org_ledger(extra=1)
-        d = P.plan(org_ledger=bare, genesis_receipt_sha256=g["receipt_sha256"], contract_bytes=self.before)
+        d = P.plan(org_ledger=bare, genesis_receipt_sha256=g["receipt_sha256"], contract_bytes=self.before,
+                   org_ledger_head_attestation=attest(bare))
         self.assertEqual(d["disposition"], M.ALLOW, d)
+        self.assertTrue(d["org_ledger_head_authenticated"])
         self.assertEqual(d["genesis_receipt_sha256"], g["receipt_sha256"])
         self.assertEqual(d["observation"]["namespace_head"], later["receipt_sha256"])
         self.assertEqual(d["observation"]["chain_length"], 2)
@@ -382,10 +416,12 @@ class GenesisPinTransitionTests(unittest.TestCase):
 
     def test_idempotent_re_run(self):
         bare, (g,) = self.org_ledger()
-        first = P.plan(org_ledger=bare, contract_bytes=self.before)
-        self.assertEqual(first, P.plan(org_ledger=bare, contract_bytes=self.before))
+        att = attest(bare)
+        first = P.plan(org_ledger=bare, contract_bytes=self.before, org_ledger_head_attestation=att)
+        self.assertEqual(first, P.plan(org_ledger=bare, contract_bytes=self.before, org_ledger_head_attestation=att))
         pinned = P.apply_write(first, self.before)
-        again = P.plan(org_ledger=bare, genesis_receipt_sha256=g["receipt_sha256"], contract_bytes=pinned)
+        again = P.plan(org_ledger=bare, genesis_receipt_sha256=g["receipt_sha256"], contract_bytes=pinned,
+                       org_ledger_head_attestation=att)
         self.assertEqual(again["disposition"], M.ALLOW)
         self.assertTrue(again["already_pinned"])
         self.assertIsNone(again["contract_write"])
@@ -398,7 +434,8 @@ class GenesisPinTransitionTests(unittest.TestCase):
         bare, (g,) = self.org_ledger()
         other = json.loads(self.before)
         other["repository_ledger_location"]["expected_genesis_receipt_sha256"] = "sha256:" + "e" * 64
-        d = P.plan(org_ledger=bare, contract_bytes=(json.dumps(other, indent=2) + "\n").encode())
+        d = P.plan(org_ledger=bare, contract_bytes=(json.dumps(other, indent=2) + "\n").encode(),
+                   org_ledger_head_attestation=attest(bare))
         self.assert_refused(d, "EXPECTED_GENESIS_PIN_CONFLICT")
         self.assertEqual(d["observed_genesis_receipt_sha256"], g["receipt_sha256"])
 
@@ -415,7 +452,7 @@ class GenesisPinTransitionTests(unittest.TestCase):
     def test_planner_writes_nothing_and_declares_its_trigger(self):
         bare, _ = self.org_ledger()
         tip = git(self.tmp, "--git-dir", bare, "rev-parse", M.LEDGER_REF)
-        P.plan(org_ledger=bare)
+        P.plan(org_ledger=bare, org_ledger_head_attestation=attest(bare))
         self.assertEqual(self.CONTRACT.read_bytes(), self.before)
         self.assertEqual(git(self.tmp, "--git-dir", bare, "rev-parse", M.LEDGER_REF), tip)
         decl = json.loads((ROOT / ".stegverse/transition-ledger/genesis-pin-transition.v1.json").read_text())
@@ -436,6 +473,7 @@ class GenesisPinTransitionTests(unittest.TestCase):
                                   "subprocess"})
 
 
+@with_append_route
 class GenesisPinPrePinIngressTests(unittest.TestCase):
     """The GENESIS_PIN trigger arrives over InTr (option (b)) and is received ahead of the pin it delivers.
 
@@ -486,7 +524,8 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
         bare = tmp / (name + ".git")
         git(tmp, "clone", "-q", "--bare", str(work), str(bare))
         git(tmp, "--git-dir", str(bare), "update-ref", M.LEDGER_REF, "HEAD")
-        cite = {"destination_receipt_sha256": dest["receipt_sha256"], "org_ledger_head_receipt_sha256": dest["receipt_sha256"]}
+        cite = {"destination_receipt_sha256": dest["receipt_sha256"], "org_ledger_head_receipt_sha256": dest["receipt_sha256"],
+                "org_ledger_head_attestation": attest(str(bare)) if not tamper else None}
         return str(bare), genesis, signal, cite
 
     def assert_six(self, d, code):
@@ -539,7 +578,8 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
                         "REPOSITORY_LEDGER_GENESIS_NOT_ON_CHAIN")
         # a real genesis delivered without its InTr pair, or with a pair for another body, is refused by the carrier
         bare, genesis, signal, cite = self.carried(name="nocarrier")
-        for bad in ({}, {**cite, "destination_receipt_sha256": "sha256:" + "b" * 64},
+        for bad in ({"org_ledger_head_attestation": cite["org_ledger_head_attestation"]},
+                    {**cite, "destination_receipt_sha256": "sha256:" + "b" * 64},
                     {**cite, "org_ledger_head_receipt_sha256": genesis["receipt_sha256"]}):
             self.assert_six(R.receive(signal, intr_carrier=bad, org_ledger=bare, contract_bytes=self.before),
                             carrier.FAILURE_CODE)
@@ -594,7 +634,7 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
         git(self.g.tmp, "clone", "-q", "--bare", str(work), str(bare))
         git(self.g.tmp, "--git-dir", str(bare), "update-ref", M.LEDGER_REF, "HEAD")
         cite = {"destination_receipt_sha256": dest["receipt_sha256"],
-                "org_ledger_head_receipt_sha256": dest["receipt_sha256"]}
+                "org_ledger_head_receipt_sha256": dest["receipt_sha256"], "org_ledger_head_attestation": attest(str(bare))}
         return str(bare), fixture, cite
 
     def test_the_org_emitters_typed_output_is_accepted_by_the_receiver(self):
@@ -644,6 +684,83 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
         self.assertEqual(trig["carrier_classes"], [carrier.SOURCE_CLASS, carrier.DESTINATION_CLASS])
         self.assertIn("intr-path-transfer.yml", trig["org_side_emitter"])
         self.assertIs(trig["new_organization_workflow"], False)
+
+
+
+class CallerWrittenLedgerCopyTests(unittest.TestCase):
+    """LC-KV-19, P1 probe row CALLER_WRITTEN_GENESIS_AND_CARRIER_ON_A_CALLER_LEDGER_COPY (negative).
+
+    A caller builds its own copy of refs/stegverse/organization-ledger holding its own REPOSITORY_LEDGER_INITIALIZATION
+    genesis and its own INTR_MESH_PATH_TRANSFER / INTR_MESH_PATH_INGRESS pair carrying a well-formed genesis-observed
+    signal. Before LC-KV-19 the planner and the pre-pin receiver accepted it. The genesis may now be authenticated only
+    from the published ref read-back plus the head-signer attestation (ORG-LEDGER-HEAD-SIGNER-001); both are required.
+    """
+
+    PROBE_ROW = "CALLER_WRITTEN_GENESIS_AND_CARRIER_ON_A_CALLER_LEDGER_COPY"
+
+    def setUp(self):
+        self.i = GenesisPinPrePinIngressTests()
+        self.i.setUp()
+        self.addCleanup(self.i.tearDown)
+        self.bare, self.genesis, self.signal, self.cite = self.i.carried(name="caller-copy")
+
+    def receive(self, cite):
+        return R.receive(self.signal, intr_carrier=cite, org_ledger=self.bare, contract_bytes=self.i.before)
+
+    def test_production_refuses_the_caller_copy_merge_append_path_not_admitted(self):
+        # production publishes no head signer: an attestation of any kind decides nothing
+        self.assertEqual(location.load_head_signers(), [])
+        for cite in (self.cite, {**self.cite, "org_ledger_head_attestation": None},
+                     {**self.cite, "org_ledger_head_attestation": attest(self.bare, seed=b"c" * 32, key_id="caller")}):
+            d = self.receive(cite)
+            self.i.assert_six(d, "MERGE_APPEND_PATH_NOT_ADMITTED")
+            self.assertEqual(d["failed_predicate"], P.HEAD_PREDICATE)
+            self.assertIn("ORG-LEDGER-HEAD-SIGNER-001", d["required_evidence_or_repair"])
+            self.assertEqual(d["next_attempt"], P.HEAD_NEXT)
+        p = P.plan(org_ledger=self.bare, genesis_receipt_sha256=self.genesis["receipt_sha256"],
+                   contract_bytes=self.i.before, org_ledger_head_attestation=self.cite["org_ledger_head_attestation"])
+        self.assertEqual((p["disposition"], p["failure_code"]), ("FAIL_CLOSED", "MERGE_APPEND_PATH_NOT_ADMITTED"))
+        self.assertIsNone(p["contract_write"])
+        self.assertIsNone(p["consumes_receipt"])
+
+    def test_with_a_published_signer_only_its_attestation_of_this_copy_counts(self):
+        from unittest import mock
+        with mock.patch.object(location, "load_head_signers", return_value=[dict(ROUTE_REF)]):
+            caller_key = attest(self.bare, seed=b"c" * 32)                        # signed by an unpublished key
+            caller_id = attest(self.bare, seed=b"c" * 32, key_id="caller-key")
+            other_tree = attest(self.bare, namespace_tree_oid="0" * 40)           # a genuine signer, another tree
+            other_genesis = attest(self.bare, genesis_receipt_sha256="sha256:" + "a" * 64)
+            for att in (None, {}, caller_key, caller_id, other_tree, other_genesis):
+                d = self.receive({**self.cite, "org_ledger_head_attestation": att})
+                self.i.assert_six(d, "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+                self.assertEqual(d["failed_predicate"], P.HEAD_PREDICATE)
+            # a genuine attestation of another ledger copy does not carry over to the caller's copy
+            bare2, _, _, cite2 = self.i.carried(name="published")
+            d = self.receive({**self.cite, "org_ledger_head_attestation": cite2["org_ledger_head_attestation"]})
+            self.i.assert_six(d, "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+            # the positive control: the same copy with the published signer's attestation of exactly it
+            self.assertEqual(self.receive(self.cite)["disposition"], R.ACCEPTED)
+
+    def test_the_head_check_is_network_free_and_reuses_432s_module_byte_identically(self):
+        pins = {"llm_adapter/org_ledger_location.py": "b51e6a8bd39ba6fd83044222a3858a2cb0c437020e3e9abbe97c4494d41f2681",
+                "llm_adapter/ed25519_verify.py": "ab05e39a3e40b99f02ff199b178554e0ba435c3ff387dca3f896619770770232",
+                "llm_adapter/healthy_node_evaluator.py":
+                    "fdaa20053c527927067d16b011889ca84089b9750e95e291021310c669451f58",
+                "tests/ed25519_test_signer.py": "3173bfcfca33129cd31942783b9e3e4c9380022f308f2fc31ccdda3dc2f6fe52"}
+        for rel, want in pins.items():
+            self.assertEqual(hashlib.sha256((ROOT / rel).read_bytes()).hexdigest(), want, rel)
+        signers = json.loads((ROOT / ".stegverse/node-ledger/org-ledger-head-signers.v1.json").read_text())
+        self.assertEqual(signers["signers"], [])
+        for rel in ("llm_adapter/org_ledger_location.py", "llm_adapter/ed25519_verify.py",
+                    "scripts/llm_adapter_repository_ledger_genesis_pin.py", "scripts/llm_adapter_genesis_pin_ingress.py"):
+            names = set()
+            for n in ast.walk(ast.parse((ROOT / rel).read_text())):
+                if isinstance(n, ast.Import):
+                    names |= {a.name.split(".")[0] for a in n.names}
+                elif isinstance(n, ast.ImportFrom):
+                    names.add((n.module or "").split(".")[0])
+            self.assertFalse(names & {"socket", "urllib", "http", "requests", "time", "datetime", "random", "secrets"},
+                             rel)
 
 
 if __name__ == "__main__":

@@ -12,7 +12,9 @@ designated_org_ledger) accepts a store only at the contract's pinned genesis, so
 receiver never reads the pin to authenticate anything. While repository_ledger_location.expected_genesis_receipt_sha256
 is null it accepts exactly one signal class, REPOSITORY_LEDGER_GENESIS_OBSERVED (the receipted genesis-observed
 record), and relies on the genesis-pin planner's own chain-to-sealed-genesis verification over the read-only ledger
-copy. Every other signal class is refused with six fields. Once the pin is set this exception is closed: every
+copy, which also requires the published head signer's attestation over that genesis, head and namespace tree
+(LC-KV-19; org_ledger_location byte copy of #432's), so a caller-built copy with its own genesis and InTr pair is
+refused. Every other signal class is refused with six fields. Once the pin is set this exception is closed: every
 signal, including a repeated trigger, is refused here and goes to the normal gates.
 
 Pure apart from reading the local ledger copy through the planner (local `git`; no clock, network, credential or
@@ -42,7 +44,7 @@ ACCEPTED, FAIL_CLOSED = "ACCEPTED_FOR_GENESIS_PIN", "FAIL_CLOSED"
 OWNING_GOAL = ("StegVerse-org/.github#162 (Lane B; GENESIS_PIN trigger over InTr, option (b)); "
                "StegVerse-org/LLM-adapter#431")
 ENTRYPOINT = ("scripts/llm_adapter_genesis_pin_ingress.py receive --signal <genesis-observed signal json> "
-              "--carrier <{destination_receipt_sha256, org_ledger_head_receipt_sha256} json> "
+              "--carrier <{destination_receipt_sha256, org_ledger_head_receipt_sha256, org_ledger_head_attestation} json> "
               "--org-ledger <read-only copy of refs/stegverse/organization-ledger>")
 NEXT = ("event-triggered: on the InTr pair the existing org path transfer (intr-path-transfer.yml) appends for the "
         "receipted genesis-observed record; no clock, no polling, no person")
@@ -86,13 +88,16 @@ def receive(signal: Any, *, intr_carrier: Any, org_ledger: str | None,
                        next_attempt="after REPOSITORY_LEDGER_GENESIS_PIN is admitted, through the normal gates "
                                     "(#433); event-triggered, never on a timer")
     # The planner's own chain-to-sealed-genesis verification, never the pin.
+    # LC-KV-19: the read-back must carry a published head signer's attestation (cited with the carrier).
+    cited = intr_carrier if isinstance(intr_carrier, Mapping) else {}
     planned = P.plan(org_ledger=org_ledger, genesis_receipt_sha256=signal["genesis_receipt_sha256"],
-                     contract_bytes=before)
+                     contract_bytes=before, org_ledger_head_attestation=cited.get("org_ledger_head_attestation"))
     if planned["disposition"] != P.ALLOW:
         return _refuse(planned["failure_code"], planned["failed_predicate"], planned["required_evidence_or_repair"],
-                       observation=planned.get("observation"))
+                       observation=planned.get("observation"),
+                       **({"next_attempt": planned["next_attempt"]} if planned["failed_predicate"] == P.HEAD_PREDICATE
+                          else {}))
     chain, _, failure = P.read_chain(org_ledger, loc["namespace"])
-    cited = intr_carrier if isinstance(intr_carrier, Mapping) else {}
     destination = next((r for r in chain if r.get("receipt_sha256") == cited.get("destination_receipt_sha256")), {})
     dev = destination.get("evidence") if isinstance(destination.get("evidence"), Mapping) else {}
     source_sha = dev.get("source_repository_receipt_sha256")
@@ -110,6 +115,7 @@ def receive(signal: Any, *, intr_carrier: Any, org_ledger: str | None,
     carried_by = {"destination_receipt_sha256": cited["destination_receipt_sha256"],
                   "source_receipt_sha256": source_sha,
                   "org_ledger_head_receipt_sha256": cited["org_ledger_head_receipt_sha256"],
+                  "org_ledger_head_authenticated": True,
                   "carrier_classes": [carrier.SOURCE_CLASS, carrier.DESTINATION_CLASS]}
     if planned["consumes_receipt"] is not None:
         evidence = planned["consumes_receipt"]["emit_append"]["evidence"]

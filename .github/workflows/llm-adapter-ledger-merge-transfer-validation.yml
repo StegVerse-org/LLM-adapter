@@ -12,6 +12,11 @@ on:
       - "scripts/llm_adapter_repository_ledger_genesis_pin.py"
       - "scripts/llm_adapter_genesis_pin_ingress.py"
       - "llm_adapter/intr_transport_carrier.py"
+      - "llm_adapter/org_ledger_location.py"
+      - "llm_adapter/ed25519_verify.py"
+      - "llm_adapter/healthy_node_evaluator.py"
+      - ".stegverse/node-ledger/org-ledger-head-signers.v1.json"
+      - "tests/ed25519_test_signer.py"
       - "tests/test_llm_adapter_ledger_merge_transfer.py"
       - "tests/fixtures/org-intr-path-transfer/**"
       - ".github/workflows/llm-adapter-organization-ledger-merge-transfer.yml"
@@ -34,7 +39,7 @@ jobs:
           GH_TOKEN: ""
         run: |
           set -euo pipefail
-          python3 -m py_compile scripts/llm_adapter_ledger_merge_transfer.py scripts/llm_adapter_repository_ledger_genesis_pin.py scripts/llm_adapter_genesis_pin_ingress.py llm_adapter/intr_transport_carrier.py tests/test_llm_adapter_ledger_merge_transfer.py
+          python3 -m py_compile scripts/llm_adapter_ledger_merge_transfer.py scripts/llm_adapter_repository_ledger_genesis_pin.py scripts/llm_adapter_genesis_pin_ingress.py llm_adapter/intr_transport_carrier.py llm_adapter/org_ledger_location.py llm_adapter/ed25519_verify.py tests/ed25519_test_signer.py tests/test_llm_adapter_ledger_merge_transfer.py
           python3 - <<'PY'
           import sys, unittest
           suite = unittest.defaultTestLoader.loadTestsFromName("tests.test_llm_adapter_ledger_merge_transfer")
