@@ -210,28 +210,48 @@
       "semantic_responsibility": "LC-KV-16: the one I/O boundary of evaluate_anchored. Reads the org ledger only at the contract's repository_ledger_location (#431: repository, ref refs/stegverse/organization-ledger, namespace) by a local git archive (protocol.allow=never, minimal env, timeout) into a temporary directory, with a safe regular-files-only unpack, and requires the REPOSITORY_LEDGER_INITIALIZATION genesis.",
       "closest_existing_implementation": "StegVerse-org/.github resident-runtime/merge_transfer_gitstore.py (git-ref ledger store; not imported)",
       "decision": "CREATE_NEW",
-      "justification": "LC-KV-16 forbids a caller-chosen org-ledger path; the pure cores ban subprocess, so the git read is isolated in its own module."
+      "justification": "LC-KV-16 forbids a caller-chosen org-ledger path; the pure cores ban subprocess, so the git read is isolated in its own module.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-Labs/.github#3330@c8b8d156:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-16.json",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431"
+      ]
     },
     {
       "path": ".stegverse/node-ledger/node-ledger-opened-signers.v1.json",
       "semantic_responsibility": "Published public-key references (TV/TVC custody) whose Ed25519 signature over StegOS's NODE_LEDGER_OPENED record is accepted. Empty: NONE_PUBLISHED.",
       "closest_existing_implementation": ".stegverse/node-ledger/pinned-code-digests.v1.json (pinned reference file)",
       "decision": "CREATE_NEW",
-      "justification": "LC-KV-16: the anchor must be signed and verified against a published public-key reference; bots never hold keys."
+      "justification": "LC-KV-16: the anchor must be signed and verified against a published public-key reference; bots never hold keys.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-Labs/.github#3330@c8b8d156:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-16.json",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431"
+      ]
     },
     {
       "path": "schemas/node-ledger-opened-signed.v1.json",
       "semantic_responsibility": "Schema of the signed NODE_LEDGER_OPENED envelope (stegverse.node-ledger-opened-signed/v1).",
       "closest_existing_implementation": "schemas/node-ledger-opened-generation.v1.json",
       "decision": "CREATE_NEW",
-      "justification": "Publishes the LC-KV-16 anchor body shape; a test pins it to the code."
+      "justification": "Publishes the LC-KV-16 anchor body shape; a test pins it to the code.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-Labs/.github#3330@c8b8d156:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-16.json",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431"
+      ]
     },
     {
       "path": "tests/fixtures/node_receipts/contract_with_431_repository_ledger_location.json",
       "semantic_responsibility": "Test-only byte copy of #431 @b7a5c08b's contract.json, which adds repository_ledger_location.",
       "closest_existing_implementation": ".stegverse/transition-ledger/contract.json",
       "decision": "CREATE_NEW",
-      "justification": "Exercises the designated-location path before #431 is admitted; production (main's contract) refuses NOT_DESIGNATED."
+      "justification": "Exercises the designated-location path before #431 is admitted; production (main's contract) refuses NOT_DESIGNATED.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-Labs/.github#3330@c8b8d156:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-16.json",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431"
+      ]
     }
   ]
 }
