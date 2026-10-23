@@ -29,7 +29,13 @@
   },
   "semantic_scan": {
     "completed": true,
-    "repositories_searched": ["all 16 StegVerse organizations (code search)", "StegVerse-Labs/StegOS", "StegVerse-Labs/StegHealth", "StegVerse-Labs/.github"],
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "all 16 StegVerse organizations (code search)",
+      "StegVerse-Labs/StegOS",
+      "StegVerse-Labs/StegHealth",
+      "StegVerse-Labs/.github"
+    ],
     "evidence_refs": [
       "StegVerse-Labs/StegOS@e63f7e89:stegos/universal_intr_public_profile.py",
       "StegVerse-Labs/StegOS@e63f7e89:stegos/node_event_execution_broker.py",
@@ -48,7 +54,10 @@
     "material_function_change": true,
     "readme_path": "README.md",
     "readme_updated_in_change_set": true,
-    "evidence_refs": ["README.md", "docs/HEALTHY_NODE_EVALUATOR_INTERFACE.md"]
+    "evidence_refs": [
+      "README.md",
+      "docs/HEALTHY_NODE_EVALUATOR_INTERFACE.md"
+    ]
   },
   "covered_paths": [
     ".github/workflows/validate.yml",
@@ -75,7 +84,11 @@
       "closest_existing_implementation": "StegOS observe_reciprocal_node_existence (writes no ledger receipt)",
       "decision": "CREATE_NEW",
       "justification": "The inventory found EXISTS_NOT_RECEIPTED: the observer exists, but no read-back did.",
-      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)"
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
     },
     {
       "path": "llm_adapter/node_identity_binding_producer.py",
@@ -83,7 +96,11 @@
       "closest_existing_implementation": "StegVerse-Labs/.github legacy stegbrowser-node-interlock-runtime-binding/v1 (StegBrowser-only, no cryptographic binding, no receipt)",
       "decision": "CREATE_NEW",
       "justification": "The inventory found MISSING.",
-      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)"
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
     },
     {
       "path": "llm_adapter/node_health_check_projection.py",
@@ -91,29 +108,59 @@
       "closest_existing_implementation": "StegHealth sovereign_runtime_observation (no node_id, no status, no receipt)",
       "decision": "CREATE_NEW",
       "justification": "The inventory found MISSING. This projection closes the schema delta without changing StegHealth.",
-      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)"
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
     },
     {
       "path": "llm_adapter/ed25519_verify.py",
       "semantic_responsibility": "Standard-library Ed25519 verification only (RFC 8032), with no signing and no dependency.",
       "closest_existing_implementation": "None in this repository. cryptography is not a dependency.",
       "decision": "CREATE_NEW",
-      "justification": "Binding verification is needed without adding a dependency."
+      "justification": "Binding verification is needed without adding a dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
     },
     {
       "path": "llm_adapter/node_receipt_common.py",
       "semantic_responsibility": "Shared six-field results, chain read-back, chain-derived epoch, and the single append path for the three producers.",
-      "decision": "CREATE_NEW"
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "llm_adapter/node_health_report_producer.py (same six-field and emit pattern, inline)",
+      "justification": "The three new producers share it, so the pattern is not copied three times.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
     },
     {
       "path": "tests/test_node_receipt_producers.py",
       "semantic_responsibility": "Unit tests for pieces 1-3, plus the end-to-end chain on temporary ledgers: StegOS observation, readback, binding, health check, the #429 producer, admit, and layer-1 ALLOW.",
-      "decision": "CREATE_NEW"
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_node_health_report_producer.py covers the #429 producer only",
+      "justification": "New producers need their own tests and an end-to-end path that starts from a StegOS observation.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
     },
     {
       "path": "tests/ed25519_test_signer.py",
       "semantic_responsibility": "TEST-ONLY signer using a public fixture seed, so the tests can make signatures. It is not a credential.",
-      "decision": "CREATE_NEW"
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "None. No signer exists in this repository, and production code must not have one.",
+      "justification": "The tests need signatures. The signer is kept out of production code.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
     }
   ]
 }
