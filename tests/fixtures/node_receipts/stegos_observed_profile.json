@@ -1,0 +1,30 @@
+{
+  "always_on_application_receiver_required": false,
+  "authority_effect": "NONE_DISCOVERY_EVIDENCE_ONLY",
+  "credential_authority": "TV/TVC",
+  "event_triggered": true,
+  "execution_authority": "NONE",
+  "g18_required": false,
+  "github_token_runtime_authority": "NONE",
+  "materialization_path": "/intr/materialization",
+  "node_identity_key": {
+    "algorithm": "Ed25519",
+    "custody": "TV/TVC",
+    "key_id": "test-fixture-key-1",
+    "node_id": "SV-NODE-0123456789abcdef01234567",
+    "public_key_b64": "MBAoeOsm2OYMOkmAXjHspaB9b60rD2BFcEEuZ5yhLdk=",
+    "test_fixture_only": true
+  },
+  "profile_path": "/intr/profile",
+  "profiles": [
+    "NodeExchange:Existence"
+  ],
+  "protocol": "InTr",
+  "schema": "stegverse.universal-intr-profiled-ingress/v1",
+  "second_user_device_required": false,
+  "state": "ACTIVE_SOVEREIGN_INTR_INGRESS",
+  "supported_origins": [
+    "STEGOS_NODE_OUTBOX"
+  ],
+  "tls_enabled": true
+}

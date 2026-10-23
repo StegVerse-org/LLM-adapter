@@ -96,3 +96,19 @@ The evidence fields are:
 - `authority_effect` NONE.
 
 **Result.** `disposition` is ALLOW, with `outcome` EMITTED or NOOP_ALREADY_CURRENT, `report_status` and `health_report_receipt_sha256`. Otherwise it is FAIL_CLOSED with the six fields: `failure_code` NODE_HEALTH_REPORT_NOT_PRODUCED, a `failed_predicate` naming the missing receipted input, and a `reason`. Nothing is appended on FAIL_CLOSED.
+
+## The three input producers (class B pieces 1-3)
+
+Every producer has the same shape: `plan(...)` is the deterministic, read-only core, with no clock, network or randomness, and `produce(...)` plans and then appends through `emit.py`. Each is triggered by an event, never by a timer. Every refusal is FAIL_CLOSED with the six fields and appends nothing. `hb_reference.epoch` is the HEAD receipt's epoch, or the declared anchor epoch on an empty ledger, so `derived_from_clock` is false.
+
+| producer | trigger / inputs | appends | `failure_code` |
+|---|---|---|---|
+| `node_existence_readback.produce(broker_receipt, *, ledger_root)` | a StegOS `stegos.node-event-execution-broker.receipt/v3` from capability `observe-reciprocal-node-existence` | `AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE`, evidence `stegverse.node-existence-readback/v1` {node_id = broker `node_ref`, disposition ALLOW, source_broker_receipt, observation} | `NODE_EXISTENCE_NOT_READ_BACK` |
+| `node_identity_binding_producer.produce(existence_receipt_sha256, identity_claim, profile, *, ledger_root)` | the node's newest existence ALLOW on the chain, a signed `stegverse.node-identity-claim/v1`, and the observed profile (its StegOS sha256 must equal the receipted `profile_sha256`) | `NODE_IDENTITY_BINDING`, evidence `stegverse.node-identity-binding/v1` {node_id, disposition ALLOW, existence_receipt_sha256, key_ref, public_key_b64, identity_claim_sha256} | `NODE_IDENTITY_NOT_BOUND` |
+| `node_health_check_projection.produce(binding_receipt_sha256, observation, attestation, *, ledger_root)` | the node's newest binding ALLOW, a StegHealth `stegverse.steghealth.sovereign-runtime-observation/v1`, and a `stegverse.node-health-attestation/v1` signed by the bound key | `NODE_HEALTH_CHECK_OBSERVED`, evidence `stegverse.node-health-check/v1` {node_id, status HEALTHY or UNHEALTHY, failing_predicates, source, binding_receipt_sha256} | `NODE_HEALTH_CHECK_NOT_OBSERVED` |
+
+**Key reference.** The profile's `node_identity_key` holds {algorithm `Ed25519`, key_id, node_id, public_key_b64, custody `TV/TVC`}. The claim's `key_ref` is {algorithm, key_id, public_key_sha256}.
+
+**Signatures.** The signed bytes are `<schema>\n` followed by the canonical JSON of the object without `signature_b64`. `llm_adapter.ed25519_verify` verifies only; it has no signing function, and any input field named like private key material is refused.
+
+**Requirement on real inputs.** The node's public InTr profile must publish `node_identity_key`. StegOS's profile validator allows the field but doesn't require it.

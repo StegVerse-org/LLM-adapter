@@ -28,6 +28,13 @@ Manifest validity is the SDK's to decide; the adapter delegates to `stegverse.ma
 
 **Producing health reports.** `llm_adapter.node_health_report_producer` is the only producer of `NODE_HEALTH_REPORTED` receipts, and it fires only on an event: a registration that `admit` refused at CURRENT_NODE_HEALTH, a `NODE_IDENTITY_BINDING` receipt, or a `NODE_HEALTH_CHECK_OBSERVED` receipt. It never runs on a timer. It emits a report only when the node's `AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE`, `NODE_IDENTITY_BINDING` and newest health-check receipts are read back, hash-valid, on this chain. The report is HEALTHY only when that check says exactly HEALTHY. Any input that isn't receipted returns a six-field FAIL_CLOSED, and nothing is emitted.
 
+**The three input producers.** Each fires on an event and is six-field FAIL_CLOSED on anything unreceipted or unverifiable. None of them reads a clock or the network in its deterministic `plan()` core.
+- `llm_adapter.node_existence_readback` reads a StegOS `observe-reciprocal-node-existence` broker receipt back into an `AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE` receipt. `node_id` is the broker receipt's `node_ref`.
+- `llm_adapter.node_identity_binding_producer` writes `NODE_IDENTITY_BINDING`. It checks the node's Ed25519 signature against the key reference published in the reciprocally observed profile (verification only, in `llm_adapter.ed25519_verify`). It never holds or mints a credential.
+- `llm_adapter.node_health_check_projection` turns a StegHealth `sovereign-runtime-observation/v1`, attested by the bound node key, into `stegverse.node-health-check/v1` `NODE_HEALTH_CHECK_OBSERVED`.
+
+Until this repository's ledger location (`repository-ledger/StegVerse-org/LLM-adapter` on the org ledger ref) is onboarded, these producers run on temporary ledgers in tests only.
+
 ### Generic SDK manifest InTr ingress
 
 Issue #354 removes the governance-specific callable as the LLM Adapter's processing selector. Actionable external manifests now require a recognized Node endpoint plus manifest-declared `processing.capability` and `processing.route_id`; the adapter frames that unchanged declaration as non-authorizing Interlock/InTr transfer to the distributed SDK manifest endpoint. Source/provider identity is provenance only and cannot select processing. Missing Node recognition or processing declaration fails closed before endpoint invocation. This is source/CI conformance only; it does not claim authentic runtime transport, SDK execution or an organization ledger transition.
