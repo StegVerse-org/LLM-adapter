@@ -421,6 +421,31 @@ class HttpIsUnchangedTests(_OrgLedger):
 
 
 class InvariantTests(unittest.TestCase):
+    def test_a_source_half_missing_endpoint_kind_fails_closed_not_keyerror(self):
+        """LC-KV-20 (carrier 5c410dd3): an incomplete retained source half is refused, never a KeyError."""
+        def receipt(body):
+            return {**body, "receipt_sha256": carrier.sha(body)}
+        sig = signal()
+        for drop in carrier.SOURCE_REBUILD_KEYS:
+            ev = carrier.source_evidence(sig, "intr-node-1")
+            ev.pop(drop)
+            core = {k: v for k, v in ev.items()
+                    if k not in ("payload_sha256", "disposition", "communication_id", "boundary_evidence")}
+            ev["payload_sha256"] = carrier.sha(core)
+            source = receipt({"schema": carrier.RECEIPT_SCHEMA, "repository": "StegVerse-org/.github",
+                              "transition_class": carrier.SOURCE_CLASS, "previous_receipt_sha256": None, "evidence": ev})
+            dest = receipt({"schema": carrier.RECEIPT_SCHEMA, "transition_class": carrier.DESTINATION_CLASS,
+                            "evidence": {"schema": carrier.DESTINATION_EVIDENCE_SCHEMA,
+                                         "addressed_location": carrier.ORG_LEDGER_LOCATION,
+                                         "source_repository_receipt_sha256": source["receipt_sha256"],
+                                         "boundary_evidence": {"operation": carrier.DESTINATION_OPERATION}}})
+            got = carrier.verify(sig, destination_receipt_sha256=dest["receipt_sha256"],
+                                 org_ledger_head_receipt_sha256=dest["receipt_sha256"], org_chain=[dest],
+                                 retained_source=source)
+            self.assertIsNotNone(got, drop)
+            if drop != "communication_id":
+                self.assertEqual(got[0], "INTR_SOURCE_EVIDENCE_INCOMPLETE", (drop, got))
+
     def test_transport_table(self):
         self.assertEqual(boundary.TRANSPORTS, {"HTTP": "INSTALLED", "INTERLOCK_INTR": "INSTALLED"})
 
@@ -433,7 +458,7 @@ class InvariantTests(unittest.TestCase):
         shared = {
             "llm_adapter/org_ledger_location.py": "b51e6a8bd39ba6fd83044222a3858a2cb0c437020e3e9abbe97c4494d41f2681",
             "llm_adapter/ed25519_verify.py": "ab05e39a3e40b99f02ff199b178554e0ba435c3ff387dca3f896619770770232",
-            "llm_adapter/intr_transport_carrier.py": "9f460c078f5aba3a25edfecaf7e240334d943c3bf0b0cecc5972fc59e47501bf",
+            "llm_adapter/intr_transport_carrier.py": "5c410dd3fddad854f41234a112574bb361ebd2c74362765292fc8480a689efa7",
             "tests/org_ledger_harness.py": "3bbf7f7da563afd9e7a1da1ee8cdbb04219a655a3dcaff3d3a6b2190ce6db945",
             "tests/ed25519_test_signer.py": "3173bfcfca33129cd31942783b9e3e4c9380022f308f2fc31ccdda3dc2f6fe52",
             ".stegverse/node-ledger/org-ledger-head-signers.v1.json":

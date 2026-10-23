@@ -51,6 +51,9 @@ SOURCE_INCLUSION = "READ_BACK_FROM_THE_ENDPOINT_LEDGER_AND_RETAINED"
 #: #432's dissolution class (endpoint_ledger_anchor.DISSOLVED_CLASS), reused by value.
 DISSOLVED_CLASS = "NODE_LEDGER_DISSOLVED"
 
+#: Source-evidence fields destination_evidence rebuilds the destination half from; one missing is refused, not raised.
+SOURCE_REBUILD_KEYS = ("path_id", "message", "message_sha256", "endpoint_kind", "communication_id")
+
 #: The six-field code and predicate for a transport that was named but not observed.
 FAILURE_CODE = "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED"
 PREDICATE = "INSTALLED_INTR_TRANSPORT_OBSERVED_ON_RECEIPTS"
@@ -144,6 +147,13 @@ def verify(signal: Any, *, destination_receipt_sha256: Any, org_ledger_head_rece
             or sev.get("destination_organization") != ORGANIZATION
             or (sev.get("boundary_evidence") or {}).get("operation") != SOURCE_CLASS):
         return "INTR_SOURCE_NOT_A_TRANSFER", f"{source_sha} is not an {SOURCE_EVIDENCE_SCHEMA} to {ORG_LEDGER_LOCATION}"
+    # A source half missing a field the destination half is rebuilt from fails closed here (six fields at the
+    # caller), never with a KeyError out of destination_evidence (LC-KV-20).
+    missing = [k for k in SOURCE_REBUILD_KEYS if k not in sev] + \
+        [k for k in ("repository",) if not isinstance(retained_source.get(k), str)]
+    if missing:
+        return "INTR_SOURCE_EVIDENCE_INCOMPLETE", (f"{source_sha} lacks {', '.join(missing)}, so the destination half "
+                                                   "cannot be rebuilt from it")
     message = sev.get("message") if isinstance(sev.get("message"), Mapping) else {}
     if message.get("message_class") != MESSAGE_CLASS or sev.get("message_sha256") != sha(dict(message)):
         return "INTR_MESSAGE_UNSEALED", "message is not a sealed " + MESSAGE_CLASS
