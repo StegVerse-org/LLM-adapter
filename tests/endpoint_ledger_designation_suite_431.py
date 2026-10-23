@@ -90,7 +90,7 @@ class DesignationTests(Base):
         self.assertIsNone(eld.designation_failure(load("skap.designation.json")))
         self.assertIsNone(eld.designation_failure(load("org-git-ref.designation.json")))
         self.assertEqual(self.kv["stores"][0]["store_type"], eld.KV_STORAGE_ENDPOINT)
-        self.assertEqual(eld.STORE_TYPES, ("GIT_REF", "KV_STORAGE_ENDPOINT"))
+        self.assertEqual(eld.STORE_TYPES, ("GIT_REF", "KV_STORAGE_ENDPOINT", "NODE_STORAGE_ENDPOINT"))
         self.assertEqual(eld.store_location(self.kv["stores"][0]), "storage-endpoint:google-drive/_StegVerse/Receipts")
         # Lane D's store (cvk#263 @706877b6 kv_receipt_ledgers.STORE_KEYS); nothing claims encryption or a gateway
         self.assertEqual(self.kv["stores"][0], {
@@ -247,7 +247,9 @@ class EmptyLedgerTests(Base):
     def test_an_empty_or_missing_ledger_is_never_a_genesis_for_every_store_type(self):
         designations = {eld.KV_STORAGE_ENDPOINT: self.kv,
                         eld.GIT_REF: {**load("org-git-ref.designation.json"),
-                                      "expected_genesis_receipt_sha256": self.chain[-1]["receipt_sha256"]}}
+                                      "expected_genesis_receipt_sha256": self.chain[-1]["receipt_sha256"]},
+                        eld.NODE_STORAGE_ENDPOINT: {**load("node.designation.json"),
+                                                    "expected_genesis_receipt_sha256": self.chain[-1]["receipt_sha256"]}}
         self.assertEqual(set(designations), set(eld.STORE_TYPES))
         for st, d in designations.items():
             for empty in ([], None, {}):
@@ -428,9 +430,24 @@ class BothSidesRecordTests(Base):
         self.assertIsNone(eld.crossing_failure(self.chain, self.org_chain, self.kv))
 
     def test_a_node_ledger_is_never_designated_on_the_org_ledger(self):
+        """LC-KV-25 (Coordination, #167 comment 6373412055 items 3 and 4): a PERMANENT ledger on an org GIT_REF is
+        DENY ENDPOINT_ORG_MEMBERSHIP_REFUSED, failure_class A, never FAIL_CLOSED ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE."""
         node = {**load("org-git-ref.designation.json"), "endpoint_kind": "PERMANENT", "endpoint_id": "node-1"}
-        self.assert_six(eld.designation_failure(node), "ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE")
+        got = eld.designation_failure(node)
+        self.assert_six(got, "ENDPOINT_ORG_MEMBERSHIP_REFUSED", "DENY")
+        self.assertEqual((got["failed_predicate"], got["failure_class"], got["membership_basis"]),
+                         ("ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER", "A", "LOCATION_ORG_GIT_REF"))
+        self.assertIn("NODE_STORAGE_ENDPOINT", got["required_evidence_or_repair"])
+        self.assertIn("6373412055", got["required_evidence_or_repair"])
+        self.assertNotIn("ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE", json.dumps(got))
+        # any git-ref key on a PERMANENT store is the same location-based membership
+        for store in ({**load("node.designation.json")["stores"][0], "ref": "refs/stegverse/organization-ledger"},
+                      {**load("org-git-ref.designation.json")["stores"][0], "store_type": "NODE_STORAGE_ENDPOINT"}):
+            with self.subTest(store=store):
+                self.assert_six(eld.designation_failure({**load("node.designation.json"), "stores": [store]}),
+                                "ENDPOINT_ORG_MEMBERSHIP_REFUSED", "DENY")
         self.assertIsNone(eld.designation_failure(load("org-git-ref.designation.json")))
+        self.assertIsNone(eld.designation_failure(load("node.designation.json")))
 
     def test_an_org_side_record_without_the_endpoint_record_is_refused(self):
         stray = self.reseal(self.org_chain[2], evidence={
@@ -605,7 +622,10 @@ class OrgMembershipTests(Base):
                         self.assertEqual(failed["failure_code"], "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
         node = {**load("org-git-ref.designation.json"), "endpoint_kind": "PERMANENT", "endpoint_id": "node-1",
                 "team": "x"}
-        self.assert_six(eld.designation_failure(node), "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
+        # a node ledger on an org ref is a location-based membership first: DENY, class A (LC-KV-25)
+        self.assert_six(eld.designation_failure(node), "ENDPOINT_ORG_MEMBERSHIP_REFUSED", "DENY")
+        self.assert_six(eld.designation_failure({**load("node.designation.json"), "team": "x"}),
+                        "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
         # the Org's own designation is not an endpoint; the unbound fixtures pass
         for name in ("kv.designation.json", "skap.designation.json", "org-git-ref.designation.json"):
             self.assertIsNone(eld.org_membership_binding(load(name)))
@@ -627,6 +647,102 @@ class OrgMembershipTests(Base):
                 text = json.dumps(failed)
         for code in ("ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE", "ENDPOINT_ORG_MEMBERSHIP_REFUSED"):
             self.assertNotIn(code, text)
+
+
+class NodeStorageEndpointTests(Base):
+    """Q-PERMANENT-REPOSITORY-LEDGER (#167 comment 6374130335) and LC-KV-25: a PERMANENT (node) ledger is the node's
+    own recorded receipt chain on the node's own storage endpoint, the same way as STEGVERSE_KV: the minimal shape
+    mirroring cvk's v2 descriptor (no node descriptor is documented), its own recorded head as the watermark, the
+    Org-side digest-only cross-check of its own path, and no reader yet (six-field FAIL_CLOSED, class B)."""
+
+    def setUp(self):
+        super().setUp()
+        self.node = {**load("node.designation.json"), "expected_genesis_receipt_sha256": self.chain[-1]["receipt_sha256"]}
+
+    def node_head(self, chain, index=0, **extra):
+        return {"source": "NODE_RECORDED_RECEIPT_CHAIN_HEAD", "head_receipt_sha256": chain[index]["receipt_sha256"],
+                **extra}
+
+    def test_the_two_predicates_stay_distinct(self):
+        self.assertNotEqual(eld.CODES[eld.MEMBERSHIP_CODE][0], eld.CODES["ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE"][0])
+        self.assertEqual(eld.STORE_TYPE_OF["PERMANENT"], eld.NODE_STORAGE_ENDPOINT)
+        self.assertEqual(eld.HEAD_SIGNER_OF["PERMANENT"], eld.NODE_IDENTITY_KEY)
+        self.assertEqual(eld.load_head_signers(eld.NODE_IDENTITY_KEY), [])
+        # key-based membership stays Lane D's FAIL_CLOSED class C
+        got = eld.designation_failure({**self.node, "team": "x"})
+        self.assert_six(got, "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
+        self.assertEqual(got["failure_class"], "C")
+        # the originator predicate still guards Org records naming an endpoint as originator
+        rec = self.org_chain[2]
+        self.assertEqual(eld.org_crossing_receipt_failure(
+            {**rec, "evidence": {**rec["evidence"], "node_id": self.node["endpoint_id"]}}, self.node)["failure_code"],
+            "ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE")
+
+    def test_the_minimal_node_store_shape(self):
+        self.assertIsNone(eld.designation_failure(self.node))
+        self.assertEqual(eld.store_location(self.node["stores"][0]), "storage-endpoint:device-local/Receipts")
+        store = self.node["stores"][0]
+        bad = {"kv": {**store, "kv_class": "STEGVERSE_KV"}, "schema": {**store, "storage_endpoint_schema": "x/v1"},
+               "adapter": {**store, "access_adapter": "provider-or-file-provider"},
+               "kv-location": {**store, "location": "_StegVerse/Receipts"},
+               "org-namespace": {**store, "location": "repository-ledger/StegVerse-org/LLM-adapter"},
+               "absolute": {**store, "location": "/var/node"}, "parent": {**store, "location": "a/../b"},
+               "ref": {**store, "location": "refs/heads/main"}}
+        for name, s in bad.items():
+            with self.subTest(name=name):
+                code = "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY" if name == "kv" else "ENDPOINT_LEDGER_DESIGNATION_INVALID"
+                self.assert_six(eld.designation_failure({**self.node, "stores": [s]}), code)
+        for field, value in (("head_signer_source", "ORG_LEDGER_HEAD_SIGNER"), ("rollback_watermark_source", None),
+                             ("rollback_watermark_source", {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD"}),
+                             ("rollback_watermark_source", {"source": "NODE_RECORDED_RECEIPT_CHAIN_HEAD",
+                                                            "org_crossing_cross_check": {
+                                                                **self.node["rollback_watermark_source"][
+                                                                    "org_crossing_cross_check"],
+                                                                "path_ids": ["other->StegVerse-org:intr-destination"]}})):
+            with self.subTest(field=field, value=value):
+                self.assert_six(eld.designation_failure({**self.node, field: value}),
+                                "ENDPOINT_LEDGER_DESIGNATION_INVALID")
+        self.assert_six(eld.designation_failure({**self.node, "rollback_watermark_source": {
+            "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"}}), "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED")
+        self.assertIsNone(eld.designation_failure({**self.node, "rollback_watermark_source": {
+            "source": "NODE_RECORDED_RECEIPT_CHAIN_HEAD"}}))
+
+    def test_production_has_no_node_reader(self):
+        self.assertNotIn(eld.NODE_STORAGE_ENDPOINT, eld.READERS)
+        with eld.read_designated(self.node, source=None, org_chain=[],
+                                 recorded_head=self.node_head(self.chain)) as (chain, failed):
+            self.assertIsNone(chain)
+            self.assert_six(failed, "NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED")
+            self.assertEqual((failed["failure_class"], failed["reader_id"], failed["failed_predicate"]),
+                             ("B", "UNKNOWN_NOT_AUTHENTICALLY_OBSERVED",
+                              "NODE_STORAGE_ENDPOINT_DESCRIPTOR_AND_READER_DOCUMENTED"))
+            self.assertIn("NODE-STORAGE-ENDPOINT-DESCRIPTOR", failed["owning_existing_goal"])
+            self.assertFalse(failed["ledger_written"])
+
+    def test_the_watermark_is_the_nodes_own_recorded_head(self):
+        """With a TEST-ONLY reader stub: the node's own head is the watermark; an older chain is DENY rollback."""
+        @contextlib.contextmanager
+        def reader(designation, store, source, head_attestation):
+            yield copy.deepcopy(self.chain), None
+        node = {**self.node, "rollback_watermark_source": {"source": "NODE_RECORDED_RECEIPT_CHAIN_HEAD"}}
+        with mock.patch.dict(eld._READERS, {eld.NODE_STORAGE_ENDPOINT: reader}):
+            with eld.read_designated(node, source=None, org_chain=self.org_chain,
+                                     recorded_head=self.node_head(self.chain)) as (chain, failed):
+                self.assertIsNone(failed)
+                self.assertEqual(chain, self.chain)
+            for head, code in ((None, "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING"),
+                               (recorded(self.chain), "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING"),
+                               ({"source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD",
+                                 "head_receipt_sha256": self.chain[0]["receipt_sha256"]},
+                                "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED")):
+                with self.subTest(head=head):
+                    with eld.read_designated(node, source=None, org_chain=self.org_chain,
+                                             recorded_head=head) as (chain, failed):
+                        self.assert_six(failed, code)
+            newer = {"source": "NODE_RECORDED_RECEIPT_CHAIN_HEAD", "head_receipt_sha256": "sha256:" + "e" * 64}
+            with eld.read_designated(node, source=None, org_chain=self.org_chain,
+                                     recorded_head=newer) as (chain, failed):
+                self.assert_six(failed, "KV_LEDGER_HEAD_ROLLBACK_DETECTED", "DENY")
 
 
 class DeterminismTests(unittest.TestCase):

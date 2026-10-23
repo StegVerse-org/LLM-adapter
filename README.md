@@ -807,11 +807,28 @@ only its own side of the crossing, as a digest-only crossing receipt (`endpoint_
     `endpoint_ledger_anchor.dissolution_on` inside `verify_anchor`, so `evaluate_anchored` already refuses a dissolved
     EPHEMERAL root with `EPHEMERAL_NODE_LEDGER_DISSOLVED`; `DissolutionTests` drives `dissolve()` and then that refusal.
 - **PERMANENT.** Its own ledger, with no dissolution, anchored the same way with a `stegverse.endpoint-ledger-anchor/v1`
-  body.
+  body. It is designated on the node's own storage endpoint, the same way as STEGVERSE_KV (Q-PERMANENT-REPOSITORY-LEDGER,
+  StegVerse-org/.github#167 comment 6374130335; LC-KV-25): `endpoint.designation` is an
+  `endpoint_ledger_designation` designation with `store_type` `NODE_STORAGE_ENDPOINT` (`storage_endpoint_schema`,
+  `provider_id`, `access_adapter`, `location`: the minimal shape mirroring cvk's
+  `stegverse.kv.storage-endpoint-descriptor/v2`, because no node storage-endpoint descriptor is documented),
+  `head_signer_source` `NODE_IDENTITY_KEY` (the identity proof below), `rollback_watermark_source`
+  `NODE_RECORDED_RECEIPT_CHAIN_HEAD` (the node's own recorded head, `endpoint.recorded_head`) with at most the
+  digest-only Org cross-check of the node's own `<node_id>->StegVerse-org:intr-destination` path. A PERMANENT ledger on
+  an org `GIT_REF` is `DENY` `ENDPOINT_ORG_MEMBERSHIP_REFUSED`, `failure_class` A (#167 comment 6373412055 items 3
+  and 4), never `ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE`; that code stays the originator check on Org records. The chain is
+  read only through `endpoint_ledger_designation.read_designated`, which has no `NODE_STORAGE_ENDPOINT` reader:
+  production is six-field `FAIL_CLOSED` `NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED` (class B; open item
+  NODE-STORAGE-ENDPOINT-DESCRIPTOR on StegVerse-org/.github#162). The tests inject a TEST-ONLY reader stub to drive the
+  remaining checks.
+- **The InTr carrier is split the same way (Q-PERMANENT-REPOSITORY-LEDGER: mixed, so split).** The node's own
+  `INTR_MESH_PATH_TRANSFER` source half is on the node's own ledger; the Org's `INTR_MESH_PATH_INGRESS` is digest-only
+  (`ORG_CROSSING_EVIDENCE_KEYS`). `retain` / `read_retained` and the org-ledger `source-receipts/` copy are withdrawn;
+  `intr_carrier_on_org_chain` reads the source half from the anchored node ledger.
 - **KV, SKAP_VAULT.** `STEGVERSE_KV:_StegVerse/Receipts` and `STEGVERSE_KV:_Vault/SKAP/Receipts`, designated with the
   cvk storage-endpoint keys (`store_type`, `storage_endpoint_schema`, `provider_id`, `access_adapter`, `kv_class`,
   `kv_request_id`, `location`) and path ids ending `:intr-destination`. They are read only through
-  `llm_adapter/endpoint_ledger_designation.py` (a byte copy of #431 @2494d75a); heads are signed against
+  `llm_adapter/endpoint_ledger_designation.py` (a byte copy of #431 @f29e4fbf); heads are signed against
   `.stegverse/node-ledger/kv-ledger-head-signers.v1.json` (byte copy, sha256 758d7983) under the
   `KV_RECORDED_RECEIPT_CHAIN_HEAD` digest. They are never opened on a ledger root (`ENDPOINT_INVALID`); a
   `ledger_root` is `KV_LEDGER_DESIGNATED_ON_GIT_REF`; an Org-membership binding is `ENDPOINT_ORG_MEMBERSHIP_REFUSED`;
@@ -819,6 +836,26 @@ only its own side of the crossing, as a digest-only crossing receipt (`endpoint_
   designation suite runs here against these anchors (`test_431_designation_suite_passes_against_432_anchors`).
 - **GATEWAY.** No carrier ledger is designated, so a gateway chain is refused everywhere with six fields
   `GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED`; nothing is opened inside the org ledger.
+
+**Refused and documented-open: the KV receipt-chain reader (LC-KV-21).** Every KV and SKAP_VAULT read goes through
+`endpoint_ledger_designation.read_designated` and is refused with six fields:
+
+| field | value |
+| --- | --- |
+| failure_code | `KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED` (`FAIL_CLOSED`) |
+| failed_predicate | `SUCCESSOR_READER_ID_DEFINED_BY_THE_KV_STORAGE_ENDPOINT_V2_MODEL` |
+| required_evidence_or_repair | an admitted reader id for the access-adapter read of `_StegVerse/Receipts` or `_Vault/SKAP/Receipts`; the reader is cvk's `runtime.kv_receipt_ledgers.read_receipt_ledger` (continuity-vault-kit#263), referenced not vendored |
+| retry_entrypoint | `llm_adapter.endpoint_ledger_designation.read_designated(designation, source=..., ...)` |
+| owning_existing_goal | KV-SKAP-LEDGER-LOCATION-001 under KV-SKAP-VAULT-FUNCTIONAL-001 (StegVerse-Labs/.github#3324; reader StegVerse-Labs/continuity-vault-kit#263) |
+| next_attempt | on continuity-vault-kit#263's admission or a #167 ruling that names the id (event-triggered) |
+
+Why: the KV Storage Endpoint v2 model documents no reader id (StegVerse-org/.github#167 comment 6372772397), so the
+result carries `reader_id` `UNKNOWN_NOT_AUTHENTICALLY_OBSERVED` and the referenced `reader_entrypoints`. Reading KV's
+chain through an id nobody has documented would make a guessed reader the authority for KV's head. The refusal also
+holds after a well-formed designation, a published `kv_ledger_head_signer` and a valid `KV_RECORDED_RECEIPT_CHAIN_HEAD`
+watermark, because none of those name the reader. The PERMANENT counterpart, `NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED`
+(reader_id `UNKNOWN_NOT_AUTHENTICALLY_OBSERVED`, owner StegVerse-org/.github#162), is documented-open for the same
+reason. Status: documented-open. Nothing here closes either item; the owning goals do.
 
 **Common to every kind.** Each own ledger opens with a `REPOSITORY_LEDGER_INITIALIZATION` genesis binding the node,
 the kind, the key and the pinned code digests. The caller must pin the org-ledger head, and the pin must equal

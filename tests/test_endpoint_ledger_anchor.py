@@ -23,6 +23,7 @@ node_standing imports), then python -m unittest tests.test_endpoint_ledger_ancho
 from __future__ import annotations
 
 import ast
+import contextlib
 import copy
 import hashlib
 import json
@@ -101,6 +102,34 @@ def opened_for(genesis, **overrides):
     return {**record, "receipt_sha256": anchor.opened_record_sha256(record)}
 
 
+NODE_DESIGNATION = json.loads((ROOT / "tests/fixtures/endpoint-ledger-designation/node.designation.json").read_text())
+
+
+@contextlib.contextmanager
+def node_reader_stub(designation, store, source, head_attestation):
+    """TEST-ONLY stand-in for a NODE_STORAGE_ENDPOINT access adapter (none is documented or admitted): it reads the
+    read-back root it is handed. Production has no reader (NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED)."""
+    chain, failure, detail = hne.read_chain(Path(source)) if source else (None, "NO_SOURCE", "")
+    yield (None, ("ENDPOINT_LEDGER_UNREADABLE", f"{failure}: {detail}")) if failure else (chain, None)
+
+
+def node_designated(root, node_id=None):
+    """The node's own designation (node.designation.json, #431's fixture) for the ledger at `root`, and its own
+    recorded head (the watermark)."""
+    node_id = node_id or NODE
+    chain = hne.read_chain(Path(root))[0] if (Path(root) / "HEAD.json").exists() else []
+    designation = {**NODE_DESIGNATION, "endpoint_id": node_id,
+                   "expected_genesis_receipt_sha256": chain[-1]["receipt_sha256"] if chain else None,
+                   "rollback_watermark_source": {**NODE_DESIGNATION["rollback_watermark_source"],
+                                                 "org_crossing_cross_check": {
+                                                     **NODE_DESIGNATION["rollback_watermark_source"][
+                                                         "org_crossing_cross_check"],
+                                                     "path_ids": [anchor.path_id(node_id)]}}}
+    recorded_head = {"source": eld.NODE_WATERMARK_SOURCE,
+                     "head_receipt_sha256": chain[0]["receipt_sha256"] if chain else None}
+    return {"designation": designation, "recorded_head": recorded_head}
+
+
 class _Ledgers(unittest.TestCase):
     def setUp(self):
         self._t = tempfile.TemporaryDirectory()
@@ -111,7 +140,8 @@ class _Ledgers(unittest.TestCase):
         self.git = base / "org-object-store.git"
         subprocess.run(["git", "init", "-q", "--bare", str(self.git)], check=True, env=GIT_ENV)
         for patcher in (mock.patch.object(location, "CONTRACT_PATH", CONTRACT_PINNED),
-                        mock.patch.object(anchor, "load_opened_signers", return_value=[dict(ISSUER_REF)])):
+                        mock.patch.object(anchor, "load_opened_signers", return_value=[dict(ISSUER_REF)]),
+                        mock.patch.dict(eld._READERS, {eld.NODE_STORAGE_ENDPOINT: node_reader_stub})):
             patcher.start()
             self.addCleanup(patcher.stop)
         harness.write_genesis(self.org)      # the genesis the contract fixture pins
@@ -134,7 +164,10 @@ class _Ledgers(unittest.TestCase):
         return json.loads(((root or self.org) / "HEAD.json").read_text())["receipt_sha256"]
 
     def endpoint(self, kind="EPHEMERAL", root=None):
-        return {"endpoint_kind": kind, "ledger_root": str(root or self.node)}
+        root = root or self.node
+        if kind != "PERMANENT":
+            return {"endpoint_kind": kind, "ledger_root": str(root)}
+        return {"endpoint_kind": kind, "ledger_root": str(root), **node_designated(root)}
 
     def publish(self, tree=None, git_dir=None):
         """Publish the org-ledger tree to refs/stegverse/organization-ledger (a scratch object store)."""
@@ -168,13 +201,16 @@ class _Ledgers(unittest.TestCase):
             return None
 
     def carry(self, signal, communication_id="node-ingress-1"):
-        """The InTr path pair that carried `signal` to the boundary: source retained, destination on the org ledger."""
-        scratch = Path(self._t.name) / "intr-source-ledger"
-        prev = json.loads((scratch / "HEAD.json").read_text())["receipt_sha256"] if (scratch / "HEAD.json").exists() \
-            else anchor.sha(None)
-        source = anchor.append_receipt(scratch, carrier.SOURCE_CLASS, f"{carrier.SOURCE_CLASS}:{communication_id}",
-                                       prev, carrier.source_evidence(signal, communication_id), 40)
-        anchor.retain(self.org, source)
+        """The InTr path pair that carried `signal` to the boundary: the sender's own INTR_MESH_PATH_TRANSFER on the
+        sender's own ledger (this node's ledger once it is open; another sender's ledger otherwise), and the Org's
+        digest-only destination half on the org ledger. Nothing is retained on the org ledger."""
+        own = signal.get("node_ref") == NODE and (self.root / "HEAD.json").exists()
+        sender = self.root if own else Path(self._t.name) / f"intr-source-ledger-{signal.get('node_ref')}"
+        chain = hne.read_chain(sender)[0] if (sender / "HEAD.json").exists() else []
+        prev = chain[0]["receipt_sha256"] if chain else anchor.sha(None)
+        source = anchor.append_receipt(sender, carrier.SOURCE_CLASS, f"{carrier.SOURCE_CLASS}:{communication_id}",
+                                       prev, carrier.source_evidence(signal, communication_id),
+                                       anchor.epoch_of(chain) if chain else 40)
         return anchor.append_receipt(self.org, carrier.DESTINATION_CLASS,
                                      f"{carrier.DESTINATION_CLASS}:{communication_id}", self.head(),
                                      carrier.destination_evidence(source), 40)
@@ -267,7 +303,9 @@ class AnchoredEndToEndTests(_Ledgers):
         classes = [r["transition_class"] for r in reversed(hne.read_chain(self.root)[0])]
         self.assertEqual(classes, ["REPOSITORY_LEDGER_INITIALIZATION", "INTR_MESH_PATH_TRANSFER",
                                    "AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE", "NODE_IDENTITY_BINDING",
-                                   "NODE_HEALTH_CHECK_OBSERVED", "NODE_HEALTH_REPORTED", "NODE_INGRESS_ADMITTED"])
+                                   "NODE_HEALTH_CHECK_OBSERVED", "NODE_HEALTH_REPORTED",
+                                   # the node's own egress record of the ingress signal (the carrier's source half)
+                                   "INTR_MESH_PATH_TRANSFER", "NODE_INGRESS_ADMITTED"])
         ingress = next(r for r in hne.read_chain(self.org)[0]
                        if r["receipt_sha256"] == pair["destination_receipt_sha256"])
         self.assertEqual((ingress["transition_class"], ingress["evidence"]["boundary_evidence"]["operation"]),
@@ -276,6 +314,14 @@ class AnchoredEndToEndTests(_Ledgers):
         self.assertEqual(set(ingress["evidence"]), eld.ORG_CROSSING_EVIDENCE_KEYS)
         self.assertIsNone(eld.org_crossing_receipt_failure(ingress, {"endpoint_id": NODE}))
         self.assertIsNone(supplied_epoch.record_epoch_failure(ingress))
+        # Q-PERMANENT-REPOSITORY-LEDGER: the carrier's Org record is digest-only too, its source half is on the
+        # node's own ledger, and nothing is retained on the org ledger
+        carried = next(r for r in hne.read_chain(self.org)[0] if r["receipt_sha256"] == self.carried["receipt_sha256"])
+        self.assertEqual(set(carried["evidence"]), eld.ORG_CROSSING_EVIDENCE_KEYS)
+        self.assertIsNone(anchor.crossing_record_failure(carried, NODE))
+        self.assertIn(carried["evidence"]["source_repository_receipt_sha256"],
+                      {r["receipt_sha256"] for r in hne.read_chain(self.node)[0]})
+        self.assertFalse((self.org / "source-receipts").exists())
         own = next(r for r in hne.read_chain(self.node)[0]
                    if r["receipt_sha256"] == ingress["evidence"]["source_repository_receipt_sha256"])
         self.assertEqual(own["evidence"]["message"]["body"]["node_ledger_opened"], STEGOS_OPENED)
@@ -296,6 +342,57 @@ class AnchoredEndToEndTests(_Ledgers):
         self.assertEqual((layer1["anchor"]["anchor"], layer1["anchor"]["ledger_lifetime"]),
                          ("INTR_PATH_RECEIPT_PAIR", "UNBOUNDED"))
         self.assertEqual(layer1["anchor"]["org_side"], "DIGEST_ONLY_CROSSING_RECEIPT")
+
+    def test_permanent_is_designated_on_the_nodes_own_storage_endpoint(self):
+        """Q-PERMANENT-REPOSITORY-LEDGER (#167 comment 6374130335) and LC-KV-25 (#167 comment 6373412055 items 3, 4):
+        the node's own chain is designated on its own storage endpoint and read only through
+        endpoint_ledger_designation; on an org GIT_REF it is DENY ENDPOINT_ORG_MEMBERSHIP_REFUSED, class A."""
+        self._t2 = tempfile.TemporaryDirectory()
+        self.addCleanup(self._t2.cleanup)
+        self.use(Path(self._t2.name))
+        self.open_and_anchor("PERMANENT", root=self.root)
+        good = self.endpoint("PERMANENT", self.root)
+        self.assertEqual(self.anchored(good)["disposition"], "ALLOW")
+        org_ref = {**good, "designation": {**good["designation"],
+                                           "stores": [{"store_type": "GIT_REF", "provider": "git",
+                                                       "repository": "StegVerse-org/.github",
+                                                       "ref": "refs/stegverse/organization-ledger",
+                                                       "namespace": "repository-ledger/StegVerse-org/LLM-adapter"}]}}
+        out = self.anchored(org_ref)
+        self.assertEqual((out["disposition"], out["failure_code"], out["failure_class"], out["failed_predicate"]),
+                         ("DENY", "ENDPOINT_ORG_MEMBERSHIP_REFUSED", "A", "ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER"))
+        self.assertNotIn("ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE", json.dumps(out))
+        for key in SIX:
+            self.assertTrue(isinstance(out[key], str) and out[key].strip(), key)
+        # no designation, another node's designation, or another node's path: six fields, nothing read
+        for bad in ({k: v for k, v in good.items() if k != "designation"},
+                    {**good, **node_designated(self.root, "SV-NODE-another")}):
+            with self.subTest(bad=sorted(bad)):
+                self.assert_refused(self.anchored(bad), "ENDPOINT_LEDGER_DESIGNATION_INVALID",
+                                    "ENDPOINT_LEDGER_DESIGNATION_INVALID")
+        # the node's own recorded head is the watermark: absent is class A, a newer recorded head is DENY rollback
+        self.assert_refused(self.anchored({**good, "recorded_head": None}), "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING",
+                            "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING")
+        newer = self.anchored({**good, "recorded_head": {"source": eld.NODE_WATERMARK_SOURCE,
+                                                         "head_receipt_sha256": "sha256:" + "e" * 64}})
+        self.assertEqual((newer["disposition"], newer["failure_code"]), ("DENY", "KV_LEDGER_HEAD_ROLLBACK_DETECTED"))
+        # production: no NODE_STORAGE_ENDPOINT reader is documented or admitted
+        with mock.patch.dict(eld._READERS, {eld.GIT_REF: eld._git_ref_reader}, clear=True):
+            out = self.anchored(good)
+            self.assert_refused(out, "NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED",
+                                "NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED")
+            self.assertEqual((out["failure_class"], out["reader_id"]), ("B", "UNKNOWN_NOT_AUTHENTICALLY_OBSERVED"))
+
+    def test_the_kv_reader_refusal_is_documented_open(self):
+        """LC-KV-21: the README states what is refused and why, with the module's own six fields."""
+        readme = (ROOT / "README.md").read_text()
+        section = readme.split("**Refused and documented-open: the KV receipt-chain reader (LC-KV-21).**")[1]
+        section = section.split("**Common to every kind.**")[0]
+        out = eld.refusal("KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED", "documented-open")
+        for key in ("failure_code", "failed_predicate", "owning_existing_goal", "next_attempt"):
+            self.assertIn(out[key], section, key)
+        for text in ("UNKNOWN_NOT_AUTHENTICALLY_OBSERVED", eld.ENTRYPOINT, eld.NODE_READER_CODE, "documented-open"):
+            self.assertIn(text, section)
 
     def test_gateway_chain_is_never_anchored_on_the_org_ledger(self):
         """Rule (1): no gateway location is opened inside the org ledger; six fields, nothing written."""
@@ -401,10 +498,12 @@ class AnchoredEndToEndTests(_Ledgers):
 
     def test_431_designation_suite_passes_against_432_anchors(self):
         """Rerun #431's designation tests here (byte-identical module), with #431's contract designation."""
-        # byte copy of #431 @2494d75a tests/test_endpoint_ledger_designation.py, not collected on its own (#432's
+        # byte copy of #431 @f29e4fbf tests/test_endpoint_ledger_designation.py, not collected on its own (#432's
         # contract.json does not designate)
         from tests import endpoint_ledger_designation_suite_431 as suite_module
-        with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431):
+        # production's reader seam (no NODE_STORAGE_ENDPOINT reader), not this class's TEST-ONLY node reader stub
+        with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431), \
+                mock.patch.dict(eld._READERS, {eld.GIT_REF: eld._git_ref_reader}, clear=True):
             suite = unittest.defaultTestLoader.loadTestsFromModule(suite_module)
             result = unittest.TestResult()
             suite.run(result)
@@ -1102,7 +1201,7 @@ class DissolutionTests(_Ledgers):
                      and r["evidence"]["communication_id"].startswith("node-ledger-disbursement:")}
         for r in node_chain:   # every receipt crossed digest-only: the Org holds its digest, never a copy
             self.assertIn(r["receipt_sha256"], crossings)
-            self.assertIsNone(anchor.read_retained(self.org, r["receipt_sha256"]))
+            self.assertFalse((self.org / "source-receipts" / (r["receipt_sha256"][7:] + ".json")).exists())
             self.assertIsNone(anchor.crossing_record_failure(crossings[r["receipt_sha256"]], NODE))
         self.assertEqual([r["transition_class"] for r in org_chain][:2], ["NODE_LEDGER_DISSOLVED", "INTR_MESH_PATH_INGRESS"])
         self.assertEqual(org_chain[0]["evidence"]["node_kind"], "StegNode")
