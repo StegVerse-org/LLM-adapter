@@ -15,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import llm_adapter_ledger_merge_transfer as M  # noqa: E402
+import llm_adapter_repository_ledger_genesis_pin as P  # noqa: E402
 
 SIX = M.SIX_FIELDS
 NS = "repository-ledger/StegVerse-org/LLM-adapter"
@@ -266,6 +267,170 @@ class ExpectedGenesisPinTests(unittest.TestCase):
         self.assertEqual(a["receipt_sha256"], emit.sha({k: v for k, v in a.items() if k != "receipt_sha256"}))
         derived = emit.hb_reference()          # with no supplied epoch the reference itself is a clock sample
         self.assertTrue(derived["derived_from_clock"])
+
+
+class GenesisPinTransitionTests(unittest.TestCase):
+    """REPOSITORY_LEDGER_GENESIS_PIN: the pin is a manifest state transition triggered by the receipted genesis.
+
+    The genesis is appended with this repository's own emit.py into a temporary namespace store, committed into a
+    temporary bare copy of the org ledger ref, and read back by the planner. Nothing touches the real ledger.
+    """
+
+    CONTRACT = ROOT / ".stegverse/transition-ledger/contract.json"
+
+    def setUp(self):
+        self._t = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._t.name)
+        self.emit = ExpectedGenesisPinTests.emit_module(self)
+        self.before = self.CONTRACT.read_bytes()
+
+    def tearDown(self):
+        self._t.cleanup()
+
+    def append(self, root, *args, **kw):
+        from unittest import mock
+        with mock.patch.dict(os.environ, {"STEGVERSE_REPO_LEDGER_ROOT": str(root)}):
+            return self.emit.append(*args, **kw)
+
+    def org_ledger(self, *, genesis=True, extra=0, tamper=False, transition_class="REPOSITORY_LEDGER_INITIALIZATION",
+                   name="org"):
+        work = self.tmp / (name + "-work")
+        work.mkdir()
+        (work / "README").write_text("org ledger copy\n")
+        receipts = []
+        if genesis:
+            store = work / NS
+            receipts.append(self.append(store, transition_class + ":StegVerse-org/LLM-adapter", transition_class,
+                                        "sha256:" + "0" * 64, "sha256:" + "1" * 64, evidence={"namespace": NS},
+                                        hb_epoch=446655631))
+            for i in range(extra):
+                receipts.append(self.append(store, f"LATER:{i}", "LATER", "sha256:" + "1" * 64,
+                                            "sha256:" + "2" * 64, hb_epoch=446655632 + i))
+            if tamper:
+                path = store / "receipts" / (receipts[0]["receipt_sha256"].split(":")[1] + ".json")
+                forged = json.loads(path.read_text())
+                forged["evidence"] = {"namespace": NS, "forged": True}
+                path.write_text(json.dumps(forged))
+        git(work, "init", "-q")
+        git(work, "add", ".")
+        git(work, "commit", "-q", "-m", "ledger")
+        bare = self.tmp / (name + ".git")
+        git(self.tmp, "clone", "-q", "--bare", str(work), str(bare))
+        git(self.tmp, "--git-dir", str(bare), "update-ref", M.LEDGER_REF, "HEAD")
+        return str(bare), receipts
+
+    def assert_refused(self, d, code):
+        self.assertEqual(d["disposition"], M.FAIL_CLOSED, d)
+        self.assertEqual(d["failure_code"], code)
+        for f in SIX:
+            self.assertIsInstance(d[f], str)
+            self.assertTrue(d[f], f)
+        self.assertEqual(d["retry_entrypoint"], P.ENTRYPOINT)
+        self.assertIn("StegVerse-org/LLM-adapter#431", d["owning_existing_goal"])
+        self.assertIsNone(d["contract_write"])
+        self.assertIsNone(d["consumes_receipt"])
+        for word in ("grant", "granted", "authorized", "approved", "merge-ready"):
+            self.assertNotIn(word, json.dumps(d).lower())
+
+    def test_no_genesis_refuses_with_six_fields(self):
+        self.assert_refused(P.plan(org_ledger=None, contract_bytes=self.before), "ORGANIZATION_LEDGER_COPY_UNAVAILABLE")
+        bare, _ = self.org_ledger(genesis=False)
+        d = P.plan(org_ledger=bare, contract_bytes=self.before)
+        self.assert_refused(d, "REPOSITORY_LEDGER_GENESIS_UNOBSERVED")
+        self.assertEqual(d["failed_predicate"], "REPOSITORY_LEDGER_GENESIS_RECEIPTED_ON_ORG_LEDGER")
+
+    def test_valid_genesis_gives_the_exact_contract_write_and_consumes_receipt(self):
+        bare, (g, later) = self.org_ledger(extra=1)
+        d = P.plan(org_ledger=bare, genesis_receipt_sha256=g["receipt_sha256"], contract_bytes=self.before)
+        self.assertEqual(d["disposition"], M.ALLOW, d)
+        self.assertEqual(d["genesis_receipt_sha256"], g["receipt_sha256"])
+        self.assertEqual(d["observation"]["namespace_head"], later["receipt_sha256"])
+        self.assertEqual(d["observation"]["chain_length"], 2)
+        self.assertFalse(d["already_pinned"])
+        expected = json.loads(self.before)
+        expected["repository_ledger_location"]["expected_genesis_receipt_sha256"] = g["receipt_sha256"]
+        expected["repository_ledger_location"]["expected_genesis_note"] = P.PINNED_NOTE.format(
+            location="StegVerse-org/.github#refs/stegverse/organization-ledger:" + NS, tip=d["observation"]["tip"])
+        after = (json.dumps(expected, indent=2, ensure_ascii=False) + "\n").encode()
+        w = d["contract_write"]
+        self.assertEqual(w["after_text"].encode(), after)
+        self.assertEqual(w["json_pointer"], "/repository_ledger_location/expected_genesis_receipt_sha256")
+        self.assertEqual(w["before_sha256"], "sha256:" + hashlib.sha256(self.before).hexdigest())
+        self.assertEqual(w["after_sha256"], "sha256:" + hashlib.sha256(after).hexdigest())
+        self.assertEqual(P.apply_write(d, self.before), after)
+        # only the pin and its note change
+        old, new = json.loads(self.before), json.loads(after)
+        for k in ("expected_genesis_receipt_sha256", "expected_genesis_note"):
+            old["repository_ledger_location"].pop(k)
+            new["repository_ledger_location"].pop(k)
+        self.assertEqual(old, new)
+        self.assertRegex(json.loads(after)["repository_ledger_location"]["expected_genesis_receipt_sha256"],
+                         r"^sha256:[0-9a-f]{64}$")
+        # the consumes receipt, appended with the unchanged emit.py into a scratch store, cites the genesis
+        req = d["consumes_receipt"]["emit_append"]
+        self.assertEqual(req["transition_class"], "REPOSITORY_LEDGER_GENESIS_PIN")
+        self.assertEqual(req["hb_epoch"], 446655631)
+        r = self.append(self.tmp / "pin-store", **req)
+        self.assertEqual(r["evidence"]["consumes_receipt_sha256"], g["receipt_sha256"])
+        self.assertEqual(r["evidence"]["consumes"][0]["receipt_sha256"], g["receipt_sha256"])
+        self.assertEqual((r["predecessor_state_sha256"], r["successor_state_sha256"]),
+                         (w["before_sha256"], w["after_sha256"]))
+        self.assertFalse(r["hb_reference"]["derived_from_clock"])
+        self.assertEqual(r["receipt_sha256"], self.emit.sha({k: v for k, v in r.items() if k != "receipt_sha256"}))
+
+    def test_idempotent_re_run(self):
+        bare, (g,) = self.org_ledger()
+        first = P.plan(org_ledger=bare, contract_bytes=self.before)
+        self.assertEqual(first, P.plan(org_ledger=bare, contract_bytes=self.before))
+        pinned = P.apply_write(first, self.before)
+        again = P.plan(org_ledger=bare, genesis_receipt_sha256=g["receipt_sha256"], contract_bytes=pinned)
+        self.assertEqual(again["disposition"], M.ALLOW)
+        self.assertTrue(again["already_pinned"])
+        self.assertIsNone(again["contract_write"])
+        self.assertIsNone(again["consumes_receipt"])
+        self.assertEqual(P.apply_write(again, pinned), pinned)
+        with self.assertRaises(ValueError):
+            P.apply_write(first, pinned)       # a stale plan is never applied over a changed contract
+
+    def test_conflicting_pin_is_refused(self):
+        bare, (g,) = self.org_ledger()
+        other = json.loads(self.before)
+        other["repository_ledger_location"]["expected_genesis_receipt_sha256"] = "sha256:" + "e" * 64
+        d = P.plan(org_ledger=bare, contract_bytes=(json.dumps(other, indent=2) + "\n").encode())
+        self.assert_refused(d, "EXPECTED_GENESIS_PIN_CONFLICT")
+        self.assertEqual(d["observed_genesis_receipt_sha256"], g["receipt_sha256"])
+
+    def test_forged_or_non_chain_genesis_is_refused(self):
+        bare, _ = self.org_ledger(tamper=True, name="forged")
+        self.assert_refused(P.plan(org_ledger=bare, contract_bytes=self.before), "REPOSITORY_LEDGER_GENESIS_NOT_ON_CHAIN")
+        bare, (g,) = self.org_ledger(name="real")
+        named_elsewhere = receipt({**{k: v for k, v in g.items() if k != "receipt_sha256"}, "evidence": {"x": 1}})
+        d = P.plan(org_ledger=bare, genesis_receipt_sha256=named_elsewhere["receipt_sha256"], contract_bytes=self.before)
+        self.assert_refused(d, "REPOSITORY_LEDGER_GENESIS_NOT_ON_CHAIN")
+        bare, _ = self.org_ledger(transition_class="SOMETHING_ELSE", name="wrongclass")
+        self.assert_refused(P.plan(org_ledger=bare, contract_bytes=self.before), "REPOSITORY_LEDGER_GENESIS_MISMATCH")
+
+    def test_planner_writes_nothing_and_declares_its_trigger(self):
+        bare, _ = self.org_ledger()
+        tip = git(self.tmp, "--git-dir", bare, "rev-parse", M.LEDGER_REF)
+        P.plan(org_ledger=bare)
+        self.assertEqual(self.CONTRACT.read_bytes(), self.before)
+        self.assertEqual(git(self.tmp, "--git-dir", bare, "rev-parse", M.LEDGER_REF), tip)
+        decl = json.loads((ROOT / ".stegverse/transition-ledger/genesis-pin-transition.v1.json").read_text())
+        self.assertEqual(decl["transition_class"], P.TRANSITION_CLASS)
+        self.assertEqual(decl["entrypoint"], P.ENTRYPOINT)
+        self.assertEqual(decl["trigger"]["record_transition_class"], P.GENESIS_CLASS)
+        for k in ("cron", "polling", "waits_on_a_person", "dispatch"):
+            self.assertIs(decl["trigger"][k], False, k)
+        tree = ast.parse((ROOT / "scripts/llm_adapter_repository_ledger_genesis_pin.py").read_text())
+        names = set()
+        for n in ast.walk(tree):
+            if isinstance(n, ast.Import):
+                names |= {a.name.split(".")[0] for a in n.names}
+            elif isinstance(n, ast.ImportFrom):
+                names.add((n.module or "").split(".")[0])
+        self.assertFalse(names & {"socket", "urllib", "http", "requests", "time", "datetime", "random", "secrets",
+                                  "subprocess"})
 
 
 if __name__ == "__main__":

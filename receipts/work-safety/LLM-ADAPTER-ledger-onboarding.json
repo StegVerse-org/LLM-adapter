@@ -51,7 +51,8 @@
     "readme_updated_in_change_set": true,
     "evidence_refs": [
       "README.md",
-      "scripts/llm_adapter_ledger_merge_transfer.py"
+      "scripts/llm_adapter_ledger_merge_transfer.py",
+      "scripts/llm_adapter_repository_ledger_genesis_pin.py"
     ]
   },
   "covered_paths": [
@@ -61,7 +62,9 @@
     ".stegverse/transition-ledger/merge-transfer-writer-pin.v1.json",
     "scripts/llm_adapter_ledger_merge_transfer.py",
     "tests/test_llm_adapter_ledger_merge_transfer.py",
-    "README.md"
+    "README.md",
+    ".stegverse/transition-ledger/genesis-pin-transition.v1.json",
+    "scripts/llm_adapter_repository_ledger_genesis_pin.py"
   ],
   "new_files": [
     {
@@ -117,6 +120,29 @@
       "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, class B item on StegVerse-org/.github#160)",
       "evidence_refs": [
         "https://github.com/StegVerse-org/StegVerse-SDK/pull/558"
+      ]
+    },
+    {
+      "path": "scripts/llm_adapter_repository_ledger_genesis_pin.py",
+      "semantic_responsibility": "REPOSITORY_LEDGER_GENESIS_PIN planner/verifier: reads back the receipted REPOSITORY_LEDGER_INITIALIZATION genesis from a read-only org ledger copy and plans the exact contract.json pin write plus a consumes receipt; idempotent; six-field FAIL_CLOSED otherwise. Writes and appends nothing.",
+      "closest_existing_implementation": "scripts/llm_adapter_ledger_merge_transfer.py (read_org_ledger chain walk, sealed, canon/sha, SIX_FIELDS), reused by import",
+      "decision": "EXTEND",
+      "justification": "Coordination ruling: the genesis pin is a manifest state transition triggered by the receipted genesis record, admitted under the governed-element rule as clearly related to #431; it cannot be a hand step and emit.py is not changed.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, #431)",
+      "evidence_refs": [
+        "scripts/llm_adapter_ledger_merge_transfer.py",
+        ".stegverse/transition-ledger/emit.py"
+      ]
+    },
+    {
+      "path": ".stegverse/transition-ledger/genesis-pin-transition.v1.json",
+      "semantic_responsibility": "Declaration of REPOSITORY_LEDGER_GENESIS_PIN: trigger record, entrypoint, write target, consumes receipt and refusals; no cron, polling, dispatch or person.",
+      "closest_existing_implementation": ".stegverse/transition-ledger/merge-transfer-writer-pin.v1.json (same directory, declarative JSON)",
+      "decision": "CREATE_NEW",
+      "justification": "No existing workflow in this repository is triggered by an org-ledger record, so the trigger binding is declared and the entrypoint documented.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (Lane B, #431)",
+      "evidence_refs": [
+        "StegVerse-org/.github@907f4305:.github/workflows/intr-path-ingress.yml"
       ]
     }
   ]

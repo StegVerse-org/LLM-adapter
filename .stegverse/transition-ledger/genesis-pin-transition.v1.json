@@ -1,0 +1,29 @@
+{
+  "schema": "stegverse.manifest-state-transition/v1",
+  "transition_class": "REPOSITORY_LEDGER_GENESIS_PIN",
+  "repository": "StegVerse-org/LLM-adapter",
+  "admission": "governed-element rule: clearly related to StegVerse-org/LLM-adapter#431 (organization-ledger onboarding), which designates the location this transition pins",
+  "trigger": {
+    "kind": "RECEIPTED_ORG_LEDGER_RECORD",
+    "record_transition_class": "REPOSITORY_LEDGER_INITIALIZATION",
+    "record_location": "StegVerse-org/.github#refs/stegverse/organization-ledger:repository-ledger/StegVerse-org/LLM-adapter",
+    "record_is_the_organizations_own_append": true,
+    "cron": false,
+    "polling": false,
+    "waits_on_a_person": false,
+    "dispatch": false,
+    "wiring": "DOCUMENTED_ENTRYPOINT",
+    "wiring_reason": "No existing event-triggered workflow fires in this repository on an org-ledger record. The org's own record-triggered pattern (StegVerse-org/.github intr-path-ingress.yml and intr-path-transfer.yml, workflow_run on 'Organization Ledger Main Merge Transfer') fires only inside StegVerse-org/.github, because workflow_run selects workflows of the same repository; refs/stegverse/organization-ledger is neither a branch nor a tag, so a push filter cannot select it; and repository_dispatch, workflow_dispatch and schedules are excluded. The entrypoint is therefore documented, and the transition is bound to the record by its input, not by a clock."
+  },
+  "entrypoint": "scripts/llm_adapter_repository_ledger_genesis_pin.py plan --org-ledger <read-only copy of refs/stegverse/organization-ledger> --genesis-receipt <sha256 named by the receipted genesis record>",
+  "reads": "the namespace chain from repository-ledger/StegVerse-org/LLM-adapter/HEAD.json back to its sealed REPOSITORY_LEDGER_INITIALIZATION root",
+  "writes": {
+    "path": ".stegverse/transition-ledger/contract.json",
+    "json_pointer": "/repository_ledger_location/expected_genesis_receipt_sha256",
+    "value": "the observed genesis receipt_sha256, read back; never computed in advance"
+  },
+  "consumes_receipt": "a REPOSITORY_LEDGER_GENESIS_PIN repository receipt appended by .stegverse/transition-ledger/emit.py (unchanged) whose evidence.consumes_receipt_sha256 is the genesis receipt_sha256 and whose predecessor and successor state digests are the contract bytes before and after",
+  "idempotent": "a contract already pinned to the observed genesis plans no write and no receipt",
+  "refusals": ["ORGANIZATION_LEDGER_COPY_UNAVAILABLE", "REPOSITORY_LEDGER_GENESIS_UNOBSERVED", "REPOSITORY_LEDGER_GENESIS_NOT_ON_CHAIN", "REPOSITORY_LEDGER_GENESIS_MISMATCH", "EXPECTED_GENESIS_PIN_CONFLICT"],
+  "authority_effect": "NONE"
+}

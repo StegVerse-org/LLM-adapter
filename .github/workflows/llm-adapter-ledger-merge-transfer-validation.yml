@@ -1,12 +1,14 @@
 name: LLM-adapter Ledger Merge Transfer Onboarding - Validation Only / No Ledger Write
 
-# Deterministic tests for scripts/llm_adapter_ledger_merge_transfer.py against temporary local
+# Deterministic tests for scripts/llm_adapter_ledger_merge_transfer.py and the
+# REPOSITORY_LEDGER_GENESIS_PIN planner (scripts/llm_adapter_repository_ledger_genesis_pin.py) against temporary local
 # repositories and ledgers. Never fetches, appends to or pushes any ledger ref.
 on:
   pull_request:
     paths:
       - ".stegverse/transition-ledger/**"
       - "scripts/llm_adapter_ledger_merge_transfer.py"
+      - "scripts/llm_adapter_repository_ledger_genesis_pin.py"
       - "tests/test_llm_adapter_ledger_merge_transfer.py"
       - ".github/workflows/llm-adapter-organization-ledger-merge-transfer.yml"
       - ".github/workflows/llm-adapter-ledger-merge-transfer-validation.yml"
@@ -28,7 +30,7 @@ jobs:
           GH_TOKEN: ""
         run: |
           set -euo pipefail
-          python3 -m py_compile scripts/llm_adapter_ledger_merge_transfer.py tests/test_llm_adapter_ledger_merge_transfer.py
+          python3 -m py_compile scripts/llm_adapter_ledger_merge_transfer.py scripts/llm_adapter_repository_ledger_genesis_pin.py tests/test_llm_adapter_ledger_merge_transfer.py
           python3 - <<'PY'
           import sys, unittest
           suite = unittest.defaultTestLoader.loadTestsFromName("tests.test_llm_adapter_ledger_merge_transfer")
