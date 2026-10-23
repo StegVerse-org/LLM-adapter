@@ -5,3 +5,11 @@
 - `steghealth_runtime_observation.json` is the output of StegHealth @8508a43c `steghealth.sovereign_runtime_observation.project_runtime_observation`, run on a synthetic passing `sovereign-runtime-activation-proof/v4` with `observed_at` fixed.
 
 None of these files is a real node, a real key or a ledger receipt.
+
+## `stegos_node_ledger_opened.json`
+
+This is the `NODE_LEDGER_OPENED` record that StegOS's own generation-time code (`stegos.ephemeral_node_ledger_open`, StegOS branch `laneb/ephemeral-node-ledger-opened`) emits for the EPHEMERAL StegNode ledger genesis of `stegos_observed_profile.json`'s node.
+
+To regenerate it, run `STEGOS_ROOT=... python3 tests/fixtures/node_receipts/generate_node_ledger_opened_with_stegos.py`. The genesis is deterministic, and `tests/test_endpoint_ledger_anchor.py` re-opens it and checks that the record names its hash.
+
+If the pinned code digests change, the genesis changes too, and this fixture has to be regenerated.

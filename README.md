@@ -776,25 +776,35 @@ The AI Entry backend consults the index only when sources are configured, throug
 
 ## Anchored endpoint ledgers and node-ledger dissolution (LC-KV-13, NODE-LEDGER-DISSOLUTION-DISBURSEMENT-001)
 
-Layer 1 decides health only on a ledger root that is anchored to the Org Ledger. A caller-given
-scratch root is not enough (this closes the LC-KV-15 bypass). `llm_adapter.endpoint_ledger_anchor.evaluate_anchored`
-wraps the unchanged `healthy_node_evaluator.evaluate` (sha256 `fdaa2005…1f58`).
+Layer 1 decides health only on a ledger root that is anchored to the Org Ledger. A caller-given scratch root is not
+enough, which closes the LC-KV-15 bypass. `llm_adapter.endpoint_ledger_anchor.evaluate_anchored` wraps the unchanged
+`healthy_node_evaluator.evaluate` (sha256 `fdaa2005…1f58`).
 
-- Every endpoint has an `endpoint_kind`: `org`, `kv`, `skap_vault`, `permanent_node` or `gateway_node`.
-- Own-ledger endpoints (KV, SKAP Vault, permanent nodes, and temporary nodes with
-  `ledger_lifetime: BOUNDED_UNTIL_DISSOLUTION`) open with a `REPOSITORY_LEDGER_INITIALIZATION` genesis that
-  binds `node_id`, `node_identity_key` and the pinned code digests. They are anchored by the existing InTr path pair:
-  `INTR_MESH_PATH_TRANSFER` on the endpoint ledger and `INTR_MESH_PATH_INGRESS` /
-  `ORGANIZATION_INTR_DESTINATION_INGRESS` on the org ledger, with the source half retained under
-  `source-receipts/<hex>.json`.
-- Gateway nodes have no external ledger. Their chain is the org-carried location
-  `node-ledger/StegVerse-org/<node_id>`, its root is derived from the org root, and no external chain is imported.
-- The caller must pin the org-ledger head, and it must equal `HEAD.json`. Only receipts of the pinned producers
-  (`.stegverse/node-ledger/pinned-code-digests.v1.json`) count, and a health report must re-derive from its cited
-  receipts. Anything else is six-field `FAIL_CLOSED` `TEMP_NODE_LEDGER_NOT_ANCHORED`.
-- On a `NODE_DISSOLUTION` event, `llm_adapter.node_ledger_dissolution.dissolve` disburses the full temporary chain to
-  the org ledger as an InTr path transfer and reads the destination back. Only then does it append the one new class,
-  `NODE_LEDGER_DISSOLVED`, after which the root is inadmissible. Until the read-back succeeds the result is
-  `FAIL_CLOSED` `NODE_LEDGER_DISBURSEMENT_NOT_READ_BACK`. A gateway location is closed in place.
-- E0 and event-triggered only. There are no clock or network reads in either core, and it runs only on
-  temporary ledgers until the org-ledger append route is admitted.
+Every endpoint has an `endpoint_kind`, which is one of `EPHEMERAL`, `PERMANENT`, `GATEWAY`, `KV`, `SKAP_VAULT` or `ORG`. `ORG` is an organization's `.github` and is never a node health root.
+
+- **EPHEMERAL.** A temporary StegApp, StegBrowser or StegNode generated through StegOS. It has its own ledger with
+  `ledger_lifetime: BOUNDED_UNTIL_DISSOLUTION`.
+  - **Anchor.** The anchor is the `NODE_LEDGER_OPENED` record that StegOS emits at generation time
+    (StegVerse-Labs/StegOS `stegos/ephemeral_node_ledger_open.py`, on the #426 profile path). The record binds
+    `node_id`, `node_identity_key` and the ledger's genesis hash.
+  - **Carried by the existing InTr path pair.** `INTR_MESH_PATH_TRANSFER` on the ephemeral ledger, then
+    `INTR_MESH_PATH_INGRESS` / `ORGANIZATION_INTR_DESTINATION_INGRESS` on the org ledger. The source half is retained
+    under `source-receipts/<hex>.json`.
+  - **Dissolution applies to EPHEMERAL nodes only.** On a `NODE_DISSOLUTION` event,
+    `llm_adapter.node_ledger_dissolution.dissolve` disburses the full chain to the org ledger by the same InTr pair and
+    reads the destination back. Only then does it append the one new class, `NODE_LEDGER_DISSOLVED`, after which the
+    root is inadmissible. Until the read-back succeeds the result is `FAIL_CLOSED`
+    `NODE_LEDGER_DISBURSEMENT_NOT_READ_BACK`.
+- **PERMANENT, KV, SKAP_VAULT.** Each has its own ledger, which corresponds to the org ledger with no dissolution. It is
+  anchored by the same InTr pair carrying a `stegverse.endpoint-ledger-anchor/v1` body.
+- **GATEWAY.** There is no external ledger. The node's chain is the org-carried location
+  `node-ledger/StegVerse-org/<node_id>`, and its root is derived from the org root. No external chain is imported.
+
+**Common to every kind.** Each own ledger opens with a `REPOSITORY_LEDGER_INITIALIZATION` genesis binding the node,
+the kind, the key and the pinned code digests. The caller must pin the org-ledger head, and the pin must equal
+`HEAD.json`. Only receipts from the pinned producers (`.stegverse/node-ledger/pinned-code-digests.v1.json`) count, and
+a health report must re-derive from the receipts it cites. Anything else is a six-field `FAIL_CLOSED`
+`TEMP_NODE_LEDGER_NOT_ANCHORED`.
+
+**E0.** Everything is event-triggered only. There are no clock or network reads in either core, and it runs only on
+temporary ledgers until the org-ledger append route is admitted.

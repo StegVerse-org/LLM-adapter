@@ -4,28 +4,26 @@ Rigel's rule: temporary node ledgers are viable as long as each is disbursed
 back to an Org Ledger at node dissolution. Dissolution is an event (the node's
 NODE_DISSOLUTION), never a timer.
 
-* Own-ledger endpoint with ledger_lifetime BOUNDED_UNTIL_DISSOLUTION (a
-  temporary node; same pattern as KV, SKAP Vault and permanent nodes, with a
-  lifetime bound). Disbursement is an InTr path transfer, the same pair as the
-  anchor:
-    1. source half on the endpoint ledger: INTR_MESH_PATH_TRANSFER whose
-       message body is stegverse.node-ledger-disbursement/v1 naming the full
-       chain (every address oldest first, the head, the genesis, the anchor);
-    2. every receipt of the endpoint chain, the source half included, retained
-       verbatim under source-receipts/<hex>.json at the org-ledger location
-       repository-ledger/StegVerse-org/LLM-adapter (#431);
-    3. destination half on the org ledger: INTR_MESH_PATH_INGRESS, operation
-       ORGANIZATION_INTR_DESTINATION_INGRESS, linking the source half by seal.
-  ``read_back`` then reads the destination back: the ingress receipt on the
-  org chain, the retained source half, and a walk from it to genesis through
-  retained copies only, equal to the planned addresses. Only after that read
-  back does ``finalize`` append NODE_LEDGER_DISSOLVED on the org ledger. Until
-  then it is six-field FAIL_CLOSED NODE_LEDGER_DISBURSEMENT_NOT_READ_BACK and
-  nothing is closed.
-* Gateway node: its chain is already the org-carried location
-  node-ledger/StegVerse-org/<node_id>, so nothing is imported or copied.
-  Dissolution appends NODE_LEDGER_DISSOLVED on that location, closing it, and
-  is read back at the location head.
+Dissolution applies to EPHEMERAL nodes only: a temporary StegApp, StegBrowser
+or StegNode generated through StegOS, whose ledger was anchored by StegOS's
+NODE_LEDGER_OPENED record. PERMANENT, KV and SKAP_VAULT ledgers keep
+corresponding to the org ledger and never dissolve here, and a GATEWAY node's
+chain already lives inside the org ledger. Disbursement is an InTr path
+transfer, the same pair as the anchor:
+  1. source half on the ephemeral ledger: INTR_MESH_PATH_TRANSFER whose
+     message body is stegverse.node-ledger-disbursement/v1 naming the full
+     chain (every address oldest first, the head, the genesis, the anchor);
+  2. every receipt of the ephemeral chain, the source half included, retained
+     verbatim under source-receipts/<hex>.json at the org-ledger location
+     repository-ledger/StegVerse-org/LLM-adapter (#431);
+  3. destination half on the org ledger: INTR_MESH_PATH_INGRESS, operation
+     ORGANIZATION_INTR_DESTINATION_INGRESS, linking the source half by seal.
+``read_back`` then reads the destination back: the ingress receipt on the org
+chain, the retained source half, and a walk from it to genesis through
+retained copies only, equal to the planned addresses. Only after that read
+back does ``finalize`` append NODE_LEDGER_DISSOLVED on the org ledger. Until
+then the result is six-field FAIL_CLOSED NODE_LEDGER_DISBURSEMENT_NOT_READ_BACK
+and nothing is closed.
 
 After NODE_LEDGER_DISSOLVED, llm_adapter.endpoint_ledger_anchor.verify_anchor
 refuses the root (TEMP_NODE_LEDGER_DISSOLVED), so it is no longer admissible.
@@ -64,15 +62,13 @@ REASONS: dict[str, tuple[str, str]] = {
     "DISSOLUTION_EVENT_INVALID": ("DISSOLUTION_IS_A_NODE_EVENT", "an event {event: NODE_DISSOLUTION, node_id} for this node"),
     "ENDPOINT_NOT_ANCHORED": ("ENDPOINT_LEDGER_ANCHORED_ON_ORG_LEDGER", "an anchored, undissolved endpoint ledger "
                               "(endpoint_ledger_anchor.verify_anchor ALLOW)"),
-    "LIFETIME_NOT_BOUNDED": ("LEDGER_LIFETIME_BOUNDED_UNTIL_DISSOLUTION", "only a BOUNDED_UNTIL_DISSOLUTION ledger "
-                             "dissolves here; KV, SKAP Vault and permanent nodes stay anchored"),
+    "NOT_EPHEMERAL": ("ENDPOINT_KIND_EPHEMERAL", "only an EPHEMERAL ledger dissolves; PERMANENT, KV and SKAP_VAULT "
+                      "ledgers stay anchored, and a GATEWAY chain is already inside the org ledger"),
     "DISBURSEMENT_RECEIPT_NOT_READ_BACK": ("DISBURSEMENT_DESTINATION_RECEIPT_READ_BACK", "the org ledger's "
                                            "INTR_MESH_PATH_INGRESS receipt for this disbursement, linking the source "
                                            "half by seal"),
     "DISBURSED_CHAIN_INCOMPLETE": ("FULL_CHAIN_RETAINED_AT_DESTINATION", "every planned endpoint receipt retained "
                                    "verbatim under source-receipts/<hex>.json, walking to genesis"),
-    "CLOSURE_NOT_READ_BACK": ("DISSOLUTION_RECEIPT_READ_BACK", "the NODE_LEDGER_DISSOLVED receipt at the head it "
-                              "closes"),
 }
 
 
@@ -90,6 +86,8 @@ def plan(node_id: Any, *, endpoint: Any, org_ledger_root: Any, org_ledger_head_r
     if not isinstance(dissolution_event, Mapping) or dissolution_event.get("event") != EVENT \
             or dissolution_event.get("node_id") != node_id:
         return _fail("DISSOLUTION_EVENT_INVALID", f"event {dissolution_event!r}", node_id)
+    if not isinstance(endpoint, Mapping) or endpoint.get("endpoint_kind") != anchor.EPHEMERAL:
+        return _fail("NOT_EPHEMERAL", f"endpoint {endpoint!r}", node_id)
     # Provenance is not a precondition: even a ledger holding a foreign receipt is disbursed whole, never stranded.
     anchored = anchor.verify_anchor(node_id, endpoint=endpoint, org_ledger_root=org_ledger_root,
                                     org_ledger_head_receipt_sha256=org_ledger_head_receipt_sha256,
@@ -97,16 +95,17 @@ def plan(node_id: Any, *, endpoint: Any, org_ledger_root: Any, org_ledger_head_r
     if anchored["disposition"] != ALLOW:
         return _fail("ENDPOINT_NOT_ANCHORED", f"{anchored['reason']}: {anchored['detail']}", node_id,
                      anchor_result=anchored)
-    if anchored["ledger_lifetime"] != anchor.BOUNDED:
-        return _fail("LIFETIME_NOT_BOUNDED", f"ledger_lifetime {anchored['ledger_lifetime']!r}", node_id)
+    if anchored["endpoint_kind"] != anchor.EPHEMERAL or anchored["ledger_lifetime"] != anchor.BOUNDED:
+        return _fail("NOT_EPHEMERAL", f"endpoint_kind {anchored['endpoint_kind']!r}", node_id)
     chain, _, _ = hne.read_chain(anchored["ledger_root"])
     addresses = [r["receipt_sha256"] for r in reversed(chain)]
     body = {"schema": anchor.DISBURSEMENT_BODY_SCHEMA, "node_id": node_id, "endpoint_kind": anchored["endpoint_kind"],
             "ledger_genesis_sha256": anchored["ledger_genesis_sha256"], "disbursed_head_sha256": addresses[-1],
             "chain_length": len(addresses), "receipt_sha256s": addresses, "chain_sha256": anchor.sha(addresses),
             "anchor_destination_receipt_sha256": anchored.get("anchor_destination_receipt_sha256"),
-            "destination_location": anchor.ORG_LEDGER_LOCATION if anchored["endpoint_kind"] != anchor.GATEWAY
-            else anchor.ORG_LEDGER_LOCATION.split(":")[0] + ":" + anchor.gateway_location(node_id),
+            "node_kind": anchored.get("node_kind"),
+            "node_ledger_opened_record_sha256": anchored.get("node_ledger_opened_record_sha256"),
+            "destination_location": anchor.ORG_LEDGER_LOCATION,
             "provenance_at_dissolution": (anchor.provenance_failure(chain, node_id, anchored["endpoint_kind"])
                                           or ("PINNED_SHAPE_ONLY", ""))[0]}
     return {"schema": RESULT_SCHEMA, "disposition": ALLOW, "node_id": node_id, "task": TASK,
@@ -116,8 +115,8 @@ def plan(node_id: Any, *, endpoint: Any, org_ledger_root: Any, org_ledger_head_r
 
 
 def disburse(planned: Mapping[str, Any], *, org_ledger_root: Any) -> dict[str, Any]:
-    """Own-ledger: the source half, every receipt retained, then the destination half. Temporary directories only."""
-    if planned["disposition"] != ALLOW or planned["endpoint_kind"] == anchor.GATEWAY:
+    """The source half, every receipt retained, then the destination half. Temporary directories only."""
+    if planned["disposition"] != ALLOW:
         return dict(planned)
     root = planned["ledger_root"]
     source = anchor.append_source(root, planned["node_id"], planned["communication_id"], planned["disbursement_body"])
@@ -143,16 +142,6 @@ def read_back(planned: Mapping[str, Any], *, org_ledger_root: Any) -> dict[str, 
     if planned.get("disposition") != ALLOW:
         return _fail("ENDPOINT_NOT_ANCHORED", "nothing was planned", node_id)
     body = planned["disbursement_body"]
-    if planned["endpoint_kind"] == anchor.GATEWAY:
-        chain, failure, detail = hne.read_chain(anchor.gateway_root(org_ledger_root, node_id))
-        head = chain[0] if not failure and chain else {}
-        ev = anchor._ev(head)
-        if (failure or head.get("transition_class") != anchor.DISSOLVED_CLASS
-                or head.get("previous_receipt_sha256") != body["disbursed_head_sha256"]
-                or ev.get("ledger_genesis_sha256") != body["ledger_genesis_sha256"]):
-            return _fail("CLOSURE_NOT_READ_BACK", failure or "the location head is not this closure", node_id)
-        return {"schema": RESULT_SCHEMA, "disposition": ALLOW, "node_id": node_id, "read_back": "LOCATION_CLOSED",
-                "closure_receipt_sha256": head["receipt_sha256"]}
     org_chain, failure, detail = hne.read_chain(org_ledger_root)
     if failure:
         return _fail("DISBURSEMENT_RECEIPT_NOT_READ_BACK", f"{failure}: {detail}", node_id)
@@ -181,17 +170,15 @@ def read_back(planned: Mapping[str, Any], *, org_ledger_root: Any) -> dict[str, 
 
 
 def finalize(planned: Mapping[str, Any], *, org_ledger_root: Any) -> dict[str, Any]:
-    """Own-ledger: NODE_LEDGER_DISSOLVED on the org ledger, only after the disbursement is read back."""
+    """NODE_LEDGER_DISSOLVED on the org ledger, only after the disbursement is read back."""
     node_id = planned.get("node_id")
-    if planned.get("endpoint_kind") == anchor.GATEWAY:
-        return _fail("CLOSURE_NOT_READ_BACK", "use dissolve() for a gateway location", node_id)
     readback = read_back(planned, org_ledger_root=org_ledger_root)
     if readback["disposition"] != ALLOW:
         return readback
     chain, _, _ = hne.read_chain(org_ledger_root)
     body = planned["disbursement_body"]
     evidence = {"schema": DISSOLUTION_SCHEMA, "task": TASK, "node_id": node_id, "endpoint_kind": planned["endpoint_kind"],
-                "ledger_genesis_sha256": body["ledger_genesis_sha256"],
+                "node_kind": body.get("node_kind"), "ledger_genesis_sha256": body["ledger_genesis_sha256"],
                 "disbursement_destination_receipt_sha256": readback["disbursement_destination_receipt_sha256"],
                 "endpoint_final_head_sha256": readback["disbursement_source_receipt_sha256"],
                 "retained_receipts": readback["retained_receipts"], "root_admissible_after": False,
@@ -208,18 +195,6 @@ def dissolve(node_id: Any, *, endpoint: Any, org_ledger_root: Any, org_ledger_he
                    org_ledger_head_receipt_sha256=org_ledger_head_receipt_sha256, dissolution_event=dissolution_event)
     if planned["disposition"] != ALLOW:
         return planned
-    if planned["endpoint_kind"] == anchor.GATEWAY:
-        root = planned["ledger_root"]
-        chain, _, _ = hne.read_chain(root)
-        evidence = {"schema": DISSOLUTION_SCHEMA, "task": TASK, "node_id": node_id, "endpoint_kind": anchor.GATEWAY,
-                    "ledger_genesis_sha256": planned["disbursement_body"]["ledger_genesis_sha256"],
-                    "location": anchor.gateway_location(node_id), "closed_head_sha256": chain[0]["receipt_sha256"],
-                    "chain_length": len(chain), "external_chain_imported": False, "root_admissible_after": False,
-                    "trigger": {"event": EVENT, "node_id": node_id}, "authority_effect": "NONE"}
-        anchor.append_receipt(root, anchor.DISSOLVED_CLASS, f"{anchor.DISSOLVED_CLASS}:{node_id}:{evidence['ledger_genesis_sha256']}",
-                              chain[0]["receipt_sha256"], evidence, anchor.epoch_of(chain))
-        out = read_back(planned, org_ledger_root=org_ledger_root)
-        return {**out, "outcome": "DISSOLVED", "dissolved": True} if out["disposition"] == ALLOW else out
     disbursed = disburse(planned, org_ledger_root=org_ledger_root)
     if disbursed["disposition"] != ALLOW:
         return disbursed

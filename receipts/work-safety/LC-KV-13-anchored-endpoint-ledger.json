@@ -4,7 +4,7 @@
   "authority_effect": "NONE_PREFLIGHT_ONLY",
   "authoring_session": "lane-b-91117956 (Lane B, InTr and Mesh Destinations, StegVerse-org/.github#162)",
   "stacked_on": "main, carrying https://github.com/StegVerse-org/LLM-adapter/pull/430 (laneb/node-receipt-producers @3c106de4, itself on #429 and #428) by merge commit",
-  "admission_order": "ADMISSION_ORDER: node-ledger dissolution (this PR), then temp binding (this PR, admitted together with dissolution), then StegVerse-Labs/StegOS#426, then LLM-adapter#430, then #429, then #428",
+  "admission_order": "ADMISSION_ORDER: node-ledger dissolution (this PR), then the temp (EPHEMERAL) binding (this PR, admitted together with dissolution, and together with or after StegVerse-Labs/StegOS laneb/ephemeral-node-ledger-opened, the StegOS NODE_LEDGER_OPENED emit: StegOS changes go with or before the binding), then StegVerse-Labs/StegOS#426, then LLM-adapter#430, then #429, then #428",
   "canonical_handoff_refs": [
     "StegVerse-org/LLM-adapter:docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md",
     "StegVerse-org/LLM-adapter:docs/TRANSITION_LEDGER_MIRROR_HANDOFF.md"
@@ -28,7 +28,8 @@
       "https://github.com/StegVerse-Labs/StegOS (laneb/node-identity-key-reference: node_identity_key REQUIRED for KV standing)",
       "https://github.com/StegVerse-org/LLM-adapter/pull/430",
       "https://github.com/StegVerse-org/LLM-adapter/pull/431",
-      "https://github.com/StegVerse-Labs/StegOS/pull/426"
+      "https://github.com/StegVerse-Labs/StegOS/pull/426",
+      "https://github.com/StegVerse-Labs/StegOS (laneb/ephemeral-node-ledger-opened: NODE_LEDGER_OPENED emit at EPHEMERAL node generation)"
     ]
   },
   "semantic_scan": {
@@ -68,12 +69,15 @@
     "llm_adapter/endpoint_ledger_anchor.py",
     "llm_adapter/node_ledger_dissolution.py",
     "tests/test_endpoint_ledger_anchor.py",
-    "receipts/work-safety/LC-KV-13-anchored-endpoint-ledger.json"
+    "receipts/work-safety/LC-KV-13-anchored-endpoint-ledger.json",
+    "tests/fixtures/node_receipts/README.md",
+    "tests/fixtures/node_receipts/stegos_node_ledger_opened.json",
+    "tests/fixtures/node_receipts/generate_node_ledger_opened_with_stegos.py"
   ],
   "new_files": [
     {
       "path": "llm_adapter/endpoint_ledger_anchor.py",
-      "semantic_responsibility": "Binds a layer-1 ledger root to the Org Ledger: an own-ledger endpoint by an InTr path receipt pair over its genesis, a gateway node as an org-carried location. Counts only pinned-producer receipts, then calls the unchanged evaluate().",
+      "semantic_responsibility": "Binds a layer-1 ledger root to the Org Ledger by endpoint_kind (EPHEMERAL, PERMANENT, GATEWAY, KV, SKAP_VAULT; ORG refused). EPHEMERAL is anchored by StegOS's generation-time NODE_LEDGER_OPENED record carried by the InTr path pair; PERMANENT/KV/SKAP_VAULT by the InTr pair; GATEWAY as an org-carried location. Counts only pinned-producer receipts, then calls the unchanged evaluate().",
       "closest_existing_implementation": "StegVerse-org/.github resident-runtime/intr_path_ingress.py (destination half shape and payload rule, mirrored without importing)",
       "decision": "CREATE_NEW",
       "justification": "LC-KV-15: layer 1 takes a caller-given root. Nothing binds a root to the org ledger. Importing the org module cross-repo would add a dependency.",
@@ -86,7 +90,7 @@
     },
     {
       "path": "llm_adapter/node_ledger_dissolution.py",
-      "semantic_responsibility": "On NODE_DISSOLUTION, disburses the full temp chain to the org ledger as an InTr path transfer, reads the destination back, then appends NODE_LEDGER_DISSOLVED. A gateway location is closed in place.",
+      "semantic_responsibility": "EPHEMERAL only: on NODE_DISSOLUTION, disburses the full chain to the org ledger as an InTr path transfer, reads the destination back, then appends NODE_LEDGER_DISSOLVED.",
       "closest_existing_implementation": "INTR_MESH_PATH_TRANSFER / ORGANIZATION_INTR_DESTINATION_INGRESS (reused for the transfer). No existing class closes a ledger location.",
       "decision": "CREATE_NEW",
       "justification": "Rigel: temporary node ledgers must be disbursed back to an Org Ledger at dissolution. No disbursement or closure exists.",
@@ -134,6 +138,28 @@
         "https://github.com/StegVerse-org/.github/issues/162",
         "https://github.com/StegVerse-org/LLM-adapter/pull/431",
         "StegVerse-Labs/.github#3330:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-15.json"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/stegos_node_ledger_opened.json",
+      "semantic_responsibility": "The NODE_LEDGER_OPENED record emitted by StegOS's own generation-time code for the test StegNode's EPHEMERAL genesis. Test fixture.",
+      "closest_existing_implementation": "tests/fixtures/node_receipts/stegos_existence_broker_receipt.json (same StegOS-generated fixture pattern)",
+      "decision": "CREATE_NEW",
+      "justification": "The end-to-end test must start from genuine StegOS output.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "tests/fixtures/node_receipts/README.md"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/generate_node_ledger_opened_with_stegos.py",
+      "semantic_responsibility": "Regenerates stegos_node_ledger_opened.json by running real StegOS code (STEGOS_ROOT). Test-only, not run in CI.",
+      "closest_existing_implementation": "tests/fixtures/node_receipts/generate_with_stegos.py",
+      "decision": "CREATE_NEW",
+      "justification": "The end-to-end test must start from genuine StegOS output.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "tests/fixtures/node_receipts/README.md"
       ]
     }
   ]
