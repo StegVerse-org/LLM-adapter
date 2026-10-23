@@ -206,5 +206,67 @@ class LlmAdapterLedgerMergeTransferTests(unittest.TestCase):
         self.assertFalse(names & {"socket", "urllib", "http", "requests", "time", "datetime", "random", "secrets"})
 
 
+class ExpectedGenesisPinTests(unittest.TestCase):
+    """repository_ledger_location.expected_genesis_receipt_sha256 is the source of #432's genesis pin.
+
+    It is null with a note, never an invented digest, because the genesis receipt_sha256 cannot be computed before
+    the genesis is observed. This test recomputes a REPOSITORY_LEDGER_INITIALIZATION genesis with the repository's own
+    emit.py and shows that the digest moves with the clock-stamped observed_at, even with a supplied epoch, fixed
+    inputs and an empty ledger. Only an observed, read-back genesis can be pinned.
+    """
+
+    def emit_module(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("repo_transition_emit_pin_test",
+                                                      ROOT / ".stegverse/transition-ledger/emit.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def genesis_at(self, emit, instant):
+        from datetime import datetime as real_datetime
+        from unittest import mock
+
+        class FixedClock(real_datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return instant
+
+        with tempfile.TemporaryDirectory() as root, mock.patch.dict(os.environ, {"STEGVERSE_REPO_LEDGER_ROOT": root}), \
+                mock.patch.object(emit, "datetime", FixedClock):
+            anchor = int(emit.heartbeat_parameters()["anchor_epoch"])
+            receipt = emit.append("REPOSITORY_LEDGER_INITIALIZATION:StegVerse-org/LLM-adapter",
+                                  "REPOSITORY_LEDGER_INITIALIZATION", "sha256:" + "0" * 64, "sha256:" + "1" * 64,
+                                  evidence={"namespace": NS}, hb_epoch=anchor)
+        self.assertIsNone(receipt["previous_receipt_sha256"])
+        return receipt
+
+    def test_contract_pin_is_null_with_a_note_not_an_invented_digest(self):
+        location = json.loads((ROOT / ".stegverse/transition-ledger/contract.json").read_text())[
+            "repository_ledger_location"]
+        self.assertIn("expected_genesis_receipt_sha256", location)
+        pinned = location["expected_genesis_receipt_sha256"]
+        if pinned is None:
+            note = location["expected_genesis_note"]
+            for needle in ("cannot be known before it is observed", "observed_at", "ORG_LEDGER_GENESIS_NOT_PINNED"):
+                self.assertIn(needle, note)
+        else:     # a later admitted change may set the observed genesis; it must then be a real digest form
+            self.assertRegex(pinned, r"^sha256:[0-9a-f]{64}$")
+
+    def test_genesis_digest_is_not_computable_before_observation(self):
+        from datetime import datetime, timezone
+        emit = self.emit_module()
+        t1 = datetime(2026, 10, 23, 17, 0, 0, tzinfo=timezone.utc)
+        t2 = datetime(2026, 10, 23, 17, 0, 0, 1, tzinfo=timezone.utc)
+        a, a_again, b = self.genesis_at(emit, t1), self.genesis_at(emit, t1), self.genesis_at(emit, t2)
+        self.assertEqual(a["receipt_sha256"], a_again["receipt_sha256"])    # recomputed: same inputs, same instant
+        self.assertNotEqual(a["receipt_sha256"], b["receipt_sha256"])       # one microsecond moves the digest
+        self.assertFalse(a["hb_reference"]["derived_from_clock"])
+        self.assertTrue(a["observed_at_is_descriptive_not_ordering"])
+        self.assertEqual(a["receipt_sha256"], emit.sha({k: v for k, v in a.items() if k != "receipt_sha256"}))
+        derived = emit.hb_reference()          # with no supplied epoch the reference itself is a clock sample
+        self.assertTrue(derived["derived_from_clock"])
+
+
 if __name__ == "__main__":
     unittest.main()

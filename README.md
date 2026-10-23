@@ -28,6 +28,7 @@ Manifest validity is the SDK's to decide; the adapter delegates to `stegverse.ma
 - On each push to main, `.github/workflows/llm-adapter-organization-ledger-merge-transfer.yml` runs `scripts/llm_adapter_ledger_merge_transfer.py plan` with `contents: read`, no secrets and no dispatch.
 - The plan verifies the org writer pinned in `.stegverse/transition-ledger/merge-transfer-writer-pin.v1.json`, reads the public ledger ref anonymously, and builds each merge's evidence.
 - It ends six-field FAIL_CLOSED until the namespace genesis and an admitted append route are observed. It never writes a ledger.
+- `repository_ledger_location.expected_genesis_receipt_sha256` is the genesis pin that consumers (#432's `org_ledger_location`) check. It is `null` with an `expected_genesis_note`, because the genesis receipt's digest covers the clock-stamped `observed_at`, so it cannot be known before the genesis is observed. Consumers fail closed `ORG_LEDGER_GENESIS_NOT_PINNED` until an admitted change sets it to the observed, read-back genesis digest. `ExpectedGenesisPinTests` recomputes a genesis with `emit.py` to show this.
 
 ### Generic SDK manifest InTr ingress
 
