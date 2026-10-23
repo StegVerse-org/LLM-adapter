@@ -25,8 +25,9 @@ from pathlib import Path
 
 from llm_adapter.web.testclient import TestClient
 
-from llm_adapter import node_ingress_boundary, node_standing
+from llm_adapter import healthy_node_evaluator, node_ingress_boundary, node_standing
 from llm_adapter.combined_gateway import app
+from tests.healthy_node_reports import report
 
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = "StegVerse-org/LLM-adapter"
@@ -64,7 +65,12 @@ class IngressBoundaryTests(unittest.TestCase):
         return found
 
     def register(self, **overrides):
+        # Healthy means evaluated: the node's current HEALTHY report is receipted first.
+        report(genesis(**overrides)["node_ref"])
         return self.client.post("/api/node-standing", json=genesis(**overrides))
+
+    def ingress(self):
+        return [r for r in self.receipts() if r["transition_class"] != healthy_node_evaluator.HEALTH_REPORT_CLASS]
 
     def test_registration_records_the_ingress_and_hands_back_its_reference(self):
         """The first receipt of an incoming state transition now exists."""
@@ -73,14 +79,14 @@ class IngressBoundaryTests(unittest.TestCase):
         self.assertEqual(body["ingress_transition_id"],
                          "NODE_INGRESS_ADMITTED:ingress-test-node")
         self.assertTrue(body["ingress_receipt_sha256"].startswith("sha256:"))
-        receipt, = self.receipts()
+        receipt, = self.ingress()
         self.assertEqual(receipt["receipt_sha256"], body["ingress_receipt_sha256"])
         self.assertEqual(receipt["repository"], REPOSITORY)
         self.assertEqual(receipt["transition_class"], "NODE_INGRESS_ADMITTED")
 
     def test_the_record_carries_what_makes_this_node_a_node(self):
         body = self.register().json()
-        record = self.receipts()[0]["evidence"]
+        record = self.ingress()[0]["evidence"]
         self.assertEqual(record["node_endpoint"], {"node_id": "ingress-test-node",
                                                    "recognized": True})
         self.assertIs(record["manifest_fields_are_boundary_issued_not_caller_asserted"], True)
@@ -91,11 +97,14 @@ class IngressBoundaryTests(unittest.TestCase):
         # What it was told to do next, so the chain shows the instruction given.
         self.assertEqual(record["continuation_profile"], body["continuation_profile"])
         self.assertIs(record["healthy_node_established"], True)
-        self.assertEqual(record["node_health_status"], "ok")
+        self.assertEqual(record["node_health_status"], "HEALTHY")
+        self.assertEqual(record["health_report_receipt_sha256"],
+                         body["health_evaluation"]["health_report_receipt_sha256"])
+        self.assertEqual(record["observed_health_unreceipted_status"], "ok")
 
     def test_the_record_grants_nothing_and_proves_no_identity(self):
         self.register()
-        record = self.receipts()[0]["evidence"]
+        record = self.ingress()[0]["evidence"]
         self.assertEqual(record["authority_effect"], "NONE_INGRESS_RECORD_ONLY")
         self.assertIs(record["structural_standing_is_authenticated_standing"], False)
         self.assertEqual(record["attestation_owner_state"], "NOT_PROVEN")
@@ -163,12 +172,15 @@ class IngressBoundaryTests(unittest.TestCase):
             cursor = by[cursor]["previous_receipt_sha256"]
         order.reverse()
         self.assertEqual(order, [node_ingress_boundary.REFUSED_CLASS,
+                                 healthy_node_evaluator.HEALTH_REPORT_CLASS,
                                  node_ingress_boundary.ADMITTED_CLASS])
 
     def test_an_arrival_over_an_unsupported_transport_is_recorded(self):
         """The signal still arrived, so the refusal is still its transition."""
-        with self.assertRaises(node_standing.StandingRefused):
-            node_ingress_boundary.admit(genesis(), transport="SMOKE_SIGNAL")
+        out = node_ingress_boundary.admit(genesis(), transport="SMOKE_SIGNAL")
+        self.assertEqual(out["disposition"], node_standing.FAIL_CLOSED)
+        self.assertEqual(out["failed_stage"], node_ingress_boundary.STAGE_TRANSPORT)
+        self.assertEqual(out["failure_code"], "NODE_NOT_CURRENTLY_ADMITTED_HEALTHY")
         record = self.receipts(node_ingress_boundary.REFUSED_CLASS)[0]["evidence"]
         self.assertEqual(record["transport"], "SMOKE_SIGNAL")
         self.assertIsNone(record["transport_state"])
@@ -179,14 +191,23 @@ class IngressBoundaryTests(unittest.TestCase):
         second = self.register(node_ref="second-node").json()
         self.assertNotEqual(first["ingress_receipt_sha256"], second["ingress_receipt_sha256"])
         by = {receipt["receipt_sha256"]: receipt for receipt in self.receipts()}
-        self.assertEqual(len(by), 2)
-        self.assertIsNone(by[first["ingress_receipt_sha256"]]["previous_receipt_sha256"])
+        self.assertEqual(len(by), 4)
+        # Each admission follows its node's health report, and the chain does not fork.
+        first_report = by[first["health_evaluation"]["health_report_receipt_sha256"]]
+        second_report = by[second["health_evaluation"]["health_report_receipt_sha256"]]
+        self.assertIsNone(first_report["previous_receipt_sha256"])
+        self.assertEqual(by[first["ingress_receipt_sha256"]]["previous_receipt_sha256"],
+                         first_report["receipt_sha256"])
+        self.assertEqual(second_report["previous_receipt_sha256"], first["ingress_receipt_sha256"])
         self.assertEqual(by[second["ingress_receipt_sha256"]]["previous_receipt_sha256"],
-                         first["ingress_receipt_sha256"])
+                         second_report["receipt_sha256"])
 
     def test_concurrent_arrivals_do_not_orphan_receipts(self):
         """The defect this ledger had: eight concurrent appends, one reachable."""
         results, errors = [], []
+
+        for index in range(8):
+            report(f"concurrent-{index}")
 
         def register(index):
             try:
@@ -203,7 +224,8 @@ class IngressBoundaryTests(unittest.TestCase):
             thread.join()
         self.assertEqual(errors, [])
         receipts = self.receipts()
-        self.assertEqual(len(receipts), 8)
+        self.assertEqual(len(self.receipts(node_ingress_boundary.ADMITTED_CLASS)), 8)
+        self.assertEqual(len(receipts), 16)
         # Exactly one genesis, and every receipt reachable from the head.
         genesis_count = sum(1 for r in receipts if r["previous_receipt_sha256"] is None)
         self.assertEqual(genesis_count, 1)
@@ -213,11 +235,11 @@ class IngressBoundaryTests(unittest.TestCase):
         while cursor in by:
             reachable += 1
             cursor = by[cursor]["previous_receipt_sha256"]
-        self.assertEqual(reachable, 8)
+        self.assertEqual(reachable, 16)
 
     def test_the_chain_is_ordered_by_the_oscillator_not_a_clock(self):
         self.register()
-        receipt = self.receipts()[0]
+        receipt = self.receipts(node_ingress_boundary.ADMITTED_CLASS)[0]
         self.assertEqual(receipt["ordering"], "OSCILLATOR_HEARTBEAT_EPOCH_ONLY")
         self.assertIs(receipt["observed_at_is_descriptive_not_ordering"], True)
         reference = receipt["hb_reference"]
@@ -270,7 +292,9 @@ class TransportIsNotTheBoundaryTests(unittest.TestCase):
         for transport in ("HTTP", "INTERLOCK_INTR"):
             record = node_ingress_boundary.ingress_record(
                 signal, disposition, "LLM_MACHINE_CONTINUATION", "LLM_ADAPTER",
-                transport, {"status": "ok"})
+                transport, {"disposition": "ALLOW", "healthy_node_established": True,
+                            "predicate": node_ingress_boundary.PREDICATE,
+                            "health_status": "HEALTHY", "health_report_receipt_sha256": "sha256:" + "0" * 64})
             shapes[transport] = {k: v for k, v in record.items()
                                  if k not in ("transport", "transport_state")}
         self.assertEqual(shapes["HTTP"], shapes["INTERLOCK_INTR"])
