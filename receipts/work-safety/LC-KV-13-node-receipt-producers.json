@@ -1,0 +1,211 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "KV-SKAP-VAULT-FUNCTIONAL-001/LC-KV-13-input-producers",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "authoring_session": "lane-b-91117956 (Lane B, InTr and Mesh Destinations, StegVerse-org/.github#162)",
+  "stacked_on": "https://github.com/StegVerse-org/LLM-adapter/pull/429 (laneb/node-health-report-producer), itself on #428",
+  "admission_order": "ADMISSION_ORDER: this PR is admitted together with or before #429, and #429 together with or before #428",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/TRANSITION_LEDGER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github#3324 (KV-SKAP-VAULT-FUNCTIONAL-001)",
+    "StegVerse-Labs/.github#3330@c47a1cbb (LC-KV-13)",
+    "StegVerse-org/.github#162 (inventory comment 6368729262: the three missing class B pieces)"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "These append only to this repository's own transition ledger through its existing emitter, and only on temporary ledgers until the ledger location is onboarded. No organization propagation, custody transition or Master Records closure is performed or claimed."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/428",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/429",
+      "https://github.com/StegVerse-org/.github/issues/162",
+      "https://github.com/StegVerse-org/.github/issues/160",
+      "https://github.com/StegVerse-Labs/StegOS (laneb/node-identity-key-reference: node_identity_key REQUIRED for KV standing)"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "all 16 StegVerse organizations (code search)",
+      "StegVerse-Labs/StegOS",
+      "StegVerse-Labs/StegHealth",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "StegVerse-Labs/StegOS@e63f7e89:stegos/universal_intr_public_profile.py",
+      "StegVerse-Labs/StegOS@e63f7e89:stegos/node_event_execution_broker.py",
+      "StegVerse-Labs/StegHealth@8508a43c:src/steghealth/sovereign_runtime_observation.py",
+      "StegVerse-Labs/.github:data/node-exchange/first-executable-conformance-v0.1.json"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "The inventory (StegVerse-org/.github#162 comment 6368729262) found no receipted writer for any of the three classes. The StegOS observer and the StegHealth projection are consumed as-is and not modified."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "docs/HEALTHY_NODE_EVALUATOR_INTERFACE.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "README.md",
+    "docs/HEALTHY_NODE_EVALUATOR_INTERFACE.md",
+    "llm_adapter/ed25519_verify.py",
+    "llm_adapter/node_receipt_common.py",
+    "llm_adapter/node_existence_readback.py",
+    "llm_adapter/node_identity_binding_producer.py",
+    "llm_adapter/node_health_check_projection.py",
+    "tests/ed25519_test_signer.py",
+    "tests/test_node_receipt_producers.py",
+    "tests/fixtures/node_receipts/README.md",
+    "tests/fixtures/node_receipts/generate_with_stegos.py",
+    "tests/fixtures/node_receipts/stegos_existence_broker_receipt.json",
+    "tests/fixtures/node_receipts/stegos_observed_profile.json",
+    "tests/fixtures/node_receipts/steghealth_runtime_observation.json"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/node_existence_readback.py",
+      "semantic_responsibility": "Reads a StegOS observe-reciprocal-node-existence broker receipt back into an AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE receipt on this chain.",
+      "closest_existing_implementation": "StegOS observe_reciprocal_node_existence (writes no ledger receipt)",
+      "decision": "CREATE_NEW",
+      "justification": "The inventory found EXISTS_NOT_RECEIPTED: the observer exists, but no read-back did.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
+    },
+    {
+      "path": "llm_adapter/node_identity_binding_producer.py",
+      "semantic_responsibility": "Writes NODE_IDENTITY_BINDING after verifying an Ed25519 identity claim against the key reference in the reciprocally observed profile. It never holds or mints a credential.",
+      "closest_existing_implementation": "StegVerse-Labs/.github legacy stegbrowser-node-interlock-runtime-binding/v1 (StegBrowser-only, no cryptographic binding, no receipt)",
+      "decision": "CREATE_NEW",
+      "justification": "The inventory found MISSING.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
+    },
+    {
+      "path": "llm_adapter/node_health_check_projection.py",
+      "semantic_responsibility": "Projects a StegHealth sovereign-runtime-observation/v1, attested by the bound node key, into stegverse.node-health-check/v1 NODE_HEALTH_CHECK_OBSERVED.",
+      "closest_existing_implementation": "StegHealth sovereign_runtime_observation (no node_id, no status, no receipt)",
+      "decision": "CREATE_NEW",
+      "justification": "The inventory found MISSING. This projection closes the schema delta without changing StegHealth.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
+    },
+    {
+      "path": "llm_adapter/ed25519_verify.py",
+      "semantic_responsibility": "Standard-library Ed25519 verification only (RFC 8032), with no signing and no dependency.",
+      "closest_existing_implementation": "None in this repository. cryptography is not a dependency.",
+      "decision": "CREATE_NEW",
+      "justification": "Binding verification is needed without adding a dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
+    },
+    {
+      "path": "llm_adapter/node_receipt_common.py",
+      "semantic_responsibility": "Shared six-field results, chain read-back, chain-derived epoch, and the single append path for the three producers.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "llm_adapter/node_health_report_producer.py (same six-field and emit pattern, inline)",
+      "justification": "The three new producers share it, so the pattern is not copied three times.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
+    },
+    {
+      "path": "tests/test_node_receipt_producers.py",
+      "semantic_responsibility": "Unit tests for pieces 1-3, plus the end-to-end chain on temporary ledgers: StegOS observation, readback, binding, health check, the #429 producer, admit, and layer-1 ALLOW.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "tests/test_node_health_report_producer.py covers the #429 producer only",
+      "justification": "New producers need their own tests and an end-to-end path that starts from a StegOS observation.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
+    },
+    {
+      "path": "tests/ed25519_test_signer.py",
+      "semantic_responsibility": "TEST-ONLY signer using a public fixture seed, so the tests can make signatures. It is not a credential.",
+      "decision": "CREATE_NEW",
+      "closest_existing_implementation": "None. No signer exists in this repository, and production code must not have one.",
+      "justification": "The tests need signatures. The signer is kept out of production code.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/429"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/generate_with_stegos.py",
+      "semantic_responsibility": "Regenerates the StegOS fixtures by running real StegOS code (STEGOS_ROOT) with the network reader stubbed. Test-only.",
+      "closest_existing_implementation": "tests/fixtures (no StegOS/StegHealth-produced node fixtures exist)",
+      "decision": "CREATE_NEW",
+      "justification": "The end-to-end test must start from genuine upstream code output.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "tests/fixtures/node_receipts/README.md"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/stegos_existence_broker_receipt.json",
+      "semantic_responsibility": "Broker receipt produced by StegOS@e63f7e89 observe-reciprocal-node-existence. Test fixture.",
+      "closest_existing_implementation": "tests/fixtures (no StegOS/StegHealth-produced node fixtures exist)",
+      "decision": "CREATE_NEW",
+      "justification": "The end-to-end test must start from genuine upstream code output.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "tests/fixtures/node_receipts/README.md"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/stegos_observed_profile.json",
+      "semantic_responsibility": "Observed InTr profile carrying a test-only node_identity_key. Test fixture.",
+      "closest_existing_implementation": "tests/fixtures (no StegOS/StegHealth-produced node fixtures exist)",
+      "decision": "CREATE_NEW",
+      "justification": "The end-to-end test must start from genuine upstream code output.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "tests/fixtures/node_receipts/README.md"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/steghealth_runtime_observation.json",
+      "semantic_responsibility": "Output of StegHealth@8508a43c sovereign_runtime_observation projection on a synthetic proof. Test fixture.",
+      "closest_existing_implementation": "tests/fixtures (no StegOS/StegHealth-produced node fixtures exist)",
+      "decision": "CREATE_NEW",
+      "justification": "The end-to-end test must start from genuine upstream code output.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "tests/fixtures/node_receipts/README.md"
+      ]
+    }
+  ]
+}

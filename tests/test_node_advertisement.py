@@ -135,6 +135,9 @@ class NodeAdvertisementTests(unittest.TestCase):
 
         # Each class receives its own profile, so the two are asserted on the two
         # registrations that earn them rather than on one response carrying both.
+        # Healthy means evaluated, so the node's HEALTHY report is receipted first.
+        from tests.healthy_node_reports import report
+        report("external-reviewer-node")
         adapter = client.post("/api/node-standing", json=_genesis("LLM_ADAPTER"))
         assert adapter.status_code == 200
         body = adapter.json()
