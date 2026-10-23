@@ -57,7 +57,7 @@ EVENT = {"event": "NODE_DISSOLUTION", "node_id": NODE}
 FIXTURES = ROOT / "tests/fixtures/node_receipts"
 # Emitted by StegOS's own generation-time code (generate_node_ledger_opened_with_stegos.py).
 STEGOS_OPENED = json.loads((FIXTURES / "stegos_node_ledger_opened.json").read_text())
-CONTRACT_431 = FIXTURES / "contract_with_431_repository_ledger_location.json"     # #431's copy: no genesis pin
+CONTRACT_431 = FIXTURES / "contract_with_431_repository_ledger_location.json"     # #431's contract.json, genesis pin null
 CONTRACT_PINNED = harness.CONTRACT_PINNED
 # TEST-ONLY NODE_LEDGER_OPENED signer (a public seed; TV/TVC custody holds real keys).
 ISSUER_SEED = hashlib.sha256(b"endpoint-ledger-anchor tests: NODE_LEDGER_OPENED signer public seed").digest()
@@ -530,6 +530,31 @@ class FailurePrecedenceTests(_Ledgers):
             pinless = self.evaluate()
         self.assert_refused(pinless, "ORG_LEDGER_GENESIS_NOT_PINNED")
         self.assertIn("StegVerse-org/LLM-adapter#431", pinless["next_attempt"])
+
+    def test_431s_null_genesis_pin_is_six_field_not_pinned(self):
+        """#431 sets expected_genesis_receipt_sha256 to null (it cannot be known before observation)."""
+        real = json.loads(CONTRACT_431.read_text())
+        self.assertIn("expected_genesis_receipt_sha256", real["repository_ledger_location"])
+        self.assertIsNone(real["repository_ledger_location"]["expected_genesis_receipt_sha256"])
+        with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431):
+            designated = location.org_ledger_location()
+        self.assertEqual(designated["namespace"], "repository-ledger/StegVerse-org/LLM-adapter")
+        self.assertIsNone(designated["expected_genesis_receipt_sha256"])
+        pinned = json.loads(CONTRACT_PINNED.read_text())
+        self.assertEqual(set(pinned["repository_ledger_location"]), set(real["repository_ledger_location"]))
+        self.assertEqual({k: v for k, v in pinned.items() if k != "repository_ledger_location"},
+                         {k: v for k, v in real.items() if k != "repository_ledger_location"})
+        for missing in ("null", "absent"):
+            contract = json.loads(CONTRACT_431.read_text())
+            if missing == "absent":
+                del contract["repository_ledger_location"]["expected_genesis_receipt_sha256"]
+            path = Path(self._t.name) / f"contract-{missing}.json"
+            path.write_text(json.dumps(contract))
+            with mock.patch.object(location, "CONTRACT_PATH", path):
+                out = self.evaluate()
+            self.assert_refused(out, "ORG_LEDGER_GENESIS_NOT_PINNED")
+            self.assertEqual(out["failed_predicate"], "ORG_LEDGER_GENESIS_PINNED_BY_CONTRACT")
+            self.assertIn("StegVerse-org/LLM-adapter#431", out["next_attempt"])
 
 
 @harness.with_append_route
