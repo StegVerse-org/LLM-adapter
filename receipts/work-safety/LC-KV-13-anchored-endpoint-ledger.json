@@ -102,7 +102,7 @@
     },
     {
       "path": "llm_adapter/node_ledger_dissolution.py",
-      "semantic_responsibility": "EPHEMERAL only: on NODE_DISSOLUTION, disburses the full chain to the org ledger as an InTr path transfer, reads the destination back, then appends NODE_LEDGER_DISSOLVED.",
+      "semantic_responsibility": "EPHEMERAL only: on NODE_DISSOLUTION, disburses the full chain to the org ledger as an InTr path transfer, reads the destination back, then appends NODE_LEDGER_DISSOLVED. Event-driven write-side entrypoint (dissolve), not imported by endpoint_ledger_anchor (it imports the anchor); the read side is endpoint_ledger_anchor.dissolution_on in verify_anchor, which refuses a dissolved EPHEMERAL root (EPHEMERAL_NODE_LEDGER_DISSOLVED). Exercised end to end by DissolutionTests.",
       "closest_existing_implementation": "INTR_MESH_PATH_TRANSFER / ORGANIZATION_INTR_DESTINATION_INGRESS (reused for the transfer). No existing class closes a ledger location.",
       "decision": "CREATE_NEW",
       "justification": "Rigel: temporary node ledgers must be disbursed back to an Org Ledger at dissolution. No disbursement or closure exists.",

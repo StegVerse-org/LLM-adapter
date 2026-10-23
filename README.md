@@ -794,7 +794,10 @@ Every endpoint has an `endpoint_kind`, which is one of `EPHEMERAL`, `PERMANENT`,
     `llm_adapter.node_ledger_dissolution.dissolve` disburses the full chain to the org ledger by the same InTr pair and
     reads the destination back. Only then does it append the one new class, `NODE_LEDGER_DISSOLVED`, after which the
     root is inadmissible. Until the read-back succeeds the result is `FAIL_CLOSED`
-    `NODE_LEDGER_DISBURSEMENT_NOT_READ_BACK`.
+    `NODE_LEDGER_DISBURSEMENT_NOT_READ_BACK`. The module is the event-driven write side and is not imported by
+    `endpoint_ledger_anchor` (it imports the anchor, so the reverse would be circular). The read side is
+    `endpoint_ledger_anchor.dissolution_on` inside `verify_anchor`, so `evaluate_anchored` already refuses a dissolved
+    EPHEMERAL root with `EPHEMERAL_NODE_LEDGER_DISSOLVED`; `DissolutionTests` drives `dissolve()` and then that refusal.
 - **PERMANENT, KV, SKAP_VAULT.** Each has its own ledger, which corresponds to the org ledger with no dissolution. It is
   anchored by the same InTr pair carrying a `stegverse.endpoint-ledger-anchor/v1` body.
 - **GATEWAY.** There is no external ledger. The node's chain is the org-carried location
@@ -803,8 +806,11 @@ Every endpoint has an `endpoint_kind`, which is one of `EPHEMERAL`, `PERMANENT`,
 **Common to every kind.** Each own ledger opens with a `REPOSITORY_LEDGER_INITIALIZATION` genesis binding the node,
 the kind, the key and the pinned code digests. The caller must pin the org-ledger head, and the pin must equal
 `HEAD.json`. Only receipts from the pinned producers (`.stegverse/node-ledger/pinned-code-digests.v1.json`) count, and
-a health report must re-derive from the receipts it cites. Anything else is a six-field `FAIL_CLOSED`
-`EPHEMERAL_NODE_LEDGER_NOT_ANCHORED`.
+a health report must re-derive from the receipts it cites. Anything else is a six-field `FAIL_CLOSED`. Its
+`failure_code` is `EPHEMERAL_NODE_LEDGER_NOT_ANCHORED` for an EPHEMERAL endpoint only. For PERMANENT, KV, SKAP_VAULT
+and GATEWAY it is the specific org-ledger code (`ORG_LEDGER_LOCATION_*`, `ORG_LEDGER_GENESIS_NOT_PINNED`,
+`ORG_LEDGER_GENESIS_MISMATCH`, `ORG_LEDGER_HEAD_*`, `MERGE_APPEND_PATH_NOT_ADMITTED`, `ORG_LEDGER_UNREADABLE`), and
+otherwise `ENDPOINT_LEDGER_NOT_ANCHORED` (`endpoint_ledger_anchor.anchor_failure_code`; `FailureCodePerKindTests`).
 
 **The issued anchor.** StegOS's emission (`stegverse.node-ledger-opened-generation/v1`) has no issuer. When the org
 ledger's ingress admits it, `issued_anchor` derives the `stegverse.node-ledger-opened/v1` anchor that
@@ -841,13 +847,15 @@ the node's own `NODE_INGRESS_ADMITTED` record counts only when its `signal_sha25
 the org chain, newer than the anchor, verified by `llm_adapter.intr_transport_carrier.verify` (byte-identical with
 StegVerse-org/LLM-adapter#433); a record the node appended itself is `INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED`. The
 tests stand the append route in with a TEST-ONLY attester (`tests/org_ledger_harness.py`, public seed) per test method;
-`setUp` stays production. Run them with the pinned SDK installed: `python -m pip install -e '.[dev]'` (pyproject pins
+`setUp` stays production. The harness is test-only: no production module imports a test module (a test checks this),
+and `tests/org_ledger_harness.py` must not be vendored as production code. Run them with the pinned SDK installed: `python -m pip install -e '.[dev]'` (pyproject pins
 `stegverse-sdk`, which `node_standing` imports), then `python -m unittest tests.test_endpoint_ledger_anchor`.
 
 **Failure precedence.** `evaluate_anchored` reports the first failing stage of `FAILURE_PRECEDENCE`, in this fixed
 order: the org-ledger location and store (designation, pinned genesis, authenticated head;
 `ORG_LEDGER_LOCATION_NOT_DESIGNATED` names #431 in its six fields until #431 lands), the pinned code and the anchor
-(`EPHEMERAL_NODE_LEDGER_NOT_ANCHORED`), the identity proof, health and admission (`HEALTH_REPORT_MISSING` when there
+(`EPHEMERAL_NODE_LEDGER_NOT_ANCHORED` for EPHEMERAL; for the other kinds the org-ledger reason itself, else
+`ENDPOINT_LEDGER_NOT_ANCHORED`), the identity proof, health and admission (`HEALTH_REPORT_MISSING` when there
 is no `NODE_HEALTH_REPORTED`, `NODE_NOT_ADMITTED` when the node was refused at ingress, from the unchanged evaluator),
 then transport: the ingress record, then its InTr carrier, as `INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED` only when
 health and admission pass. Every stage is `FAIL_CLOSED` with the six fields; none of them ALLOWs on its own, and

@@ -58,7 +58,10 @@ those bytes ran: the anchor binds the pin set and this module checks shape,
 seal and re-derivation (``producer_provenance`` NOT_PROVEN_BEYOND_PINNED_SHAPE).
 
 Anything unanchored, mismatched, foreign or dissolved is a six-field
-FAIL_CLOSED, failure_code EPHEMERAL_NODE_LEDGER_NOT_ANCHORED.
+FAIL_CLOSED. Its failure_code is EPHEMERAL_NODE_LEDGER_NOT_ANCHORED for an EPHEMERAL
+endpoint only; for PERMANENT, KV, SKAP_VAULT and GATEWAY it is the specific org-ledger
+code (ORG_LEDGER_LOCATION_*, ORG_LEDGER_GENESIS_NOT_PINNED, MERGE_APPEND_PATH_NOT_ADMITTED,
+...), else ENDPOINT_LEDGER_NOT_ANCHORED (Lane D finding 3).
 
 The issued anchor (stegverse.node-ledger-opened/v1, schemas/node-ledger-opened.v1.json)
 ---------------------------------------------------------------------------------------
@@ -208,7 +211,9 @@ DISBURSEMENT_BODY_SCHEMA = "stegverse.node-ledger-disbursement/v1"
 RESULT_SCHEMA = "stegverse.endpoint-ledger-anchor-result/v1"
 RECEIPT_SCHEMA = "stegverse.repo-transition-receipt/v1"
 
-FAILURE_CODE = "EPHEMERAL_NODE_LEDGER_NOT_ANCHORED"
+FAILURE_CODE = "EPHEMERAL_NODE_LEDGER_NOT_ANCHORED"     # EPHEMERAL only (Lane D finding 3)
+#: the failure_code of a non-EPHEMERAL anchor refusal that is not an org-ledger reason
+ENDPOINT_FAILURE_CODE = "ENDPOINT_LEDGER_NOT_ANCHORED"
 TRANSPORT_FAILURE_CODE = "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED"   # Lane D's code (cvk#258)
 IDENTITY_FAILURE_CODE = "NODE_IDENTITY_NOT_PROVEN"
 IDENTITY_CHALLENGE_SCHEMA = "stegverse.node-identity-challenge/v1"
@@ -289,6 +294,11 @@ REASONS: dict[str, tuple[str, str]] = {
                                              "INTR_MESH_PATH_INGRESS that carried StegOS's generation record, re-derived "
                                              "at the pinned org-ledger head"),
 }
+#: org-ledger reasons: for PERMANENT, KV, SKAP_VAULT and GATEWAY the failure_code is the reason itself (Lane D finding 3)
+ORG_LEDGER_REASONS = ("ORG_LEDGER_HEAD_NOT_PINNED", "ORG_LEDGER_LOCATION_NOT_DESIGNATED", "ORG_LEDGER_LOCATION_UNREADABLE",
+                      "ORG_LEDGER_GENESIS_NOT_PINNED", "ORG_LEDGER_GENESIS_MISMATCH", "MERGE_APPEND_PATH_NOT_ADMITTED",
+                      "ORG_LEDGER_HEAD_NOT_AUTHENTICATED", "ORG_LEDGER_UNREADABLE")
+_KIND_UNSET = object()
 #: evaluate_anchored reports the first failing stage, in this fixed order; every stage fails closed, none ALLOWs alone
 FAILURE_PRECEDENCE = ("ORG_LEDGER_LOCATION_AND_STORE", "PINNED_CODE_AND_ANCHOR", "IDENTITY",
                       "HEALTH_AND_ADMISSION", "TRANSPORT_RECORD", "TRANSPORT_INTR_CARRIER")
@@ -356,11 +366,21 @@ def _ev(receipt: Mapping[str, Any]) -> Mapping[str, Any]:
     return common.evidence(receipt)
 
 
+def anchor_failure_code(kind: Any, reason: str) -> str:
+    """EPHEMERAL_NODE_LEDGER_NOT_ANCHORED for EPHEMERAL only; otherwise the org-ledger reason, else
+    ENDPOINT_LEDGER_NOT_ANCHORED. Pure."""
+    if kind == EPHEMERAL:
+        return FAILURE_CODE
+    return reason if reason in ORG_LEDGER_REASONS else ENDPOINT_FAILURE_CODE
+
+
 def non_allow(reason: str, detail: str, *, node_id: Any = None, schema: str = RESULT_SCHEMA,
               failure_code: str = FAILURE_CODE, reasons: Mapping[str, tuple[str, str]] = REASONS,
               retry_entrypoint: str = RETRY_ENTRYPOINT, owning_existing_goal: str = OWNING_GOAL,
-              next_attempt: str = NEXT_ATTEMPT, **extra: Any) -> dict[str, Any]:
+              next_attempt: str = NEXT_ATTEMPT, kind_for_code: Any = _KIND_UNSET, **extra: Any) -> dict[str, Any]:
     predicate, repair = reasons[reason]
+    if kind_for_code is not _KIND_UNSET and reasons is REASONS and failure_code == FAILURE_CODE:
+        failure_code = anchor_failure_code(kind_for_code, reason)
     if reason in AWAITS_431 and reasons is REASONS:
         retry_entrypoint, owning_existing_goal, next_attempt = RETRY_431, OWNING_431, NEXT_431
         if reason == "ORG_LEDGER_GENESIS_NOT_PINNED":
@@ -777,32 +797,34 @@ def provenance_failure(chain: list[dict[str, Any]], node_id: str, kind: str) -> 
 
 def verify_anchor(node_id: Any, *, endpoint: Any, org_ledger_root: Any,
                   org_ledger_head_receipt_sha256: Any, check_provenance: bool = True) -> dict[str, Any]:
-    """ALLOW with the anchored `ledger_root`, or six-field FAIL_CLOSED EPHEMERAL_NODE_LEDGER_NOT_ANCHORED. Pure.
+    """ALLOW with the anchored `ledger_root`, or six-field FAIL_CLOSED (failure_code per kind, below). Pure.
 
     Checks, in order: endpoint kind, the pinned code digests, the org chain at the pinned head (``org_ledger_root``
     is already read back; evaluate_anchored gets it from org_ledger_location, which pins the genesis and
     authenticates the head), the endpoint genesis, the anchor pair on the org chain (EPHEMERAL: StegOS's signed
     NODE_LEDGER_OPENED; PERMANENT, KV, SKAP_VAULT: the genesis body; GATEWAY: the org-carried location), the
     node_identity_key on every receipt, then producer provenance. A dissolved EPHEMERAL ledger is
-    EPHEMERAL_NODE_LEDGER_DISSOLVED. The failure_code of every refusal is EPHEMERAL_NODE_LEDGER_NOT_ANCHORED.
+    EPHEMERAL_NODE_LEDGER_DISSOLVED. failure_code (Lane D finding 3): EPHEMERAL_NODE_LEDGER_NOT_ANCHORED for an EPHEMERAL
+    endpoint only; for any other kind the org-ledger reason itself (ORG_LEDGER_LOCATION_*, ORG_LEDGER_GENESIS_*,
+    ORG_LEDGER_HEAD_*, MERGE_APPEND_PATH_NOT_ADMITTED, ORG_LEDGER_UNREADABLE), else ENDPOINT_LEDGER_NOT_ANCHORED.
     """
     kind = endpoint.get("endpoint_kind") if isinstance(endpoint, Mapping) else None
     if kind == ORG:
-        return non_allow("ENDPOINT_KIND_NOT_A_NODE_ROOT", "endpoint_kind ORG", node_id=node_id)
+        return non_allow("ENDPOINT_KIND_NOT_A_NODE_ROOT", "endpoint_kind ORG", node_id=node_id, kind_for_code=kind)
     if not isinstance(node_id, str) or not node_id or kind not in ENDPOINT_KINDS \
             or (kind == GATEWAY and endpoint.get("ledger_root") is not None) \
             or (kind != GATEWAY and endpoint.get("ledger_root") is None):
-        return non_allow("ENDPOINT_INVALID", f"endpoint {endpoint!r}", node_id=node_id)
+        return non_allow("ENDPOINT_INVALID", f"endpoint {endpoint!r}", node_id=node_id, kind_for_code=kind)
     code = pinned_code_failure()
     if code:
-        return non_allow("PINNED_CODE_DIGEST_MISMATCH", code, node_id=node_id)
+        return non_allow("PINNED_CODE_DIGEST_MISMATCH", code, node_id=node_id, kind_for_code=kind)
     org_chain, failed = _org_chain(org_ledger_root, org_ledger_head_receipt_sha256)
     if failed:
-        return non_allow(*failed, node_id=node_id)
+        return non_allow(*failed, node_id=node_id, kind_for_code=kind)
     root = gateway_root(org_ledger_root, node_id) if kind == GATEWAY else Path(endpoint["ledger_root"])
     chain, failure, detail = hne.read_chain(root)
     if failure:
-        return non_allow("ENDPOINT_LEDGER_UNREADABLE", f"{failure}: {detail}", node_id=node_id)
+        return non_allow("ENDPOINT_LEDGER_UNREADABLE", f"{failure}: {detail}", node_id=node_id, kind_for_code=kind)
     genesis = chain[-1]
     g = _ev(genesis)
     if (genesis.get("transition_class") != GENESIS_CLASS or genesis.get("previous_receipt_sha256") is not None
@@ -812,7 +834,7 @@ def verify_anchor(node_id: Any, *, endpoint: Any, org_ledger_root: Any,
             or g.get("ledger_lifetime") != LIFETIME_OF[kind]
             or (kind == EPHEMERAL) != (g.get("node_kind") in EPHEMERAL_NODE_KINDS)):
         return non_allow("ENDPOINT_GENESIS_INVALID", f"genesis {genesis.get('receipt_sha256')} does not declare "
-                         f"{node_id} as {kind} with the pinned digests", node_id=node_id)
+                         f"{node_id} as {kind} with the pinned digests", node_id=node_id, kind_for_code=kind)
     key, genesis_sha = g["node_identity_key"], genesis["receipt_sha256"]
     anchor_info: dict[str, Any] = {"endpoint_kind": kind, "ledger_lifetime": g.get("ledger_lifetime"),
                                    "genesis_receipt_sha256": genesis_sha, "ledger_root": str(root)}
@@ -823,19 +845,19 @@ def verify_anchor(node_id: Any, *, endpoint: Any, org_ledger_root: Any,
     else:
         if dissolution_on(org_chain, genesis_sha) is not None:
             return non_allow("EPHEMERAL_NODE_LEDGER_DISSOLVED", f"genesis {genesis_sha} was dissolved on the org ledger",
-                             node_id=node_id, **anchor_info)
+                             node_id=node_id, **anchor_info, kind_for_code=kind)
         want_body = (SIGNED_OPENED_SCHEMA, GENERATION_SCHEMA) if kind == EPHEMERAL else (ANCHOR_BODY_SCHEMA,)
         ingresses = [r for r in org_chain if r.get("transition_class") == DESTINATION_CLASS
                      and _ev(r).get("path_id") == path_id(node_id)
                      and ((_ev(r).get("message") or {}).get("body") or {}).get("schema") in want_body]
         if not ingresses:
             return non_allow("UNANCHORED", f"no anchor ingress for {path_id(node_id)} on the org ledger",
-                             node_id=node_id, **anchor_info)
+                             node_id=node_id, **anchor_info, kind_for_code=kind)
         bodies = [((_ev(r).get("message") or {}).get("body") or {}) for r in ingresses]
         match = [(r, b) for r, b in zip(ingresses, bodies) if b.get("genesis_receipt_sha256") == genesis_sha]
         if not match:
             return non_allow("GENESIS_MISMATCH", f"anchors name {[b.get('genesis_receipt_sha256') for b in bodies]}, "
-                             f"the ledger's genesis is {genesis_sha}", node_id=node_id, **anchor_info)
+                             f"the ledger's genesis is {genesis_sha}", node_id=node_id, **anchor_info, kind_for_code=kind)
         ingress, body = match[0]
         ev = _ev(ingress)
         source_sha = ev.get("source_repository_receipt_sha256")
@@ -845,25 +867,25 @@ def verify_anchor(node_id: Any, *, endpoint: Any, org_ledger_root: Any,
                 or (ev.get("boundary_evidence") or {}).get("operation") != DESTINATION_OPERATION
                 or ev != destination_evidence(source) or not payload_ok(_ev(source))):
             return non_allow("ANCHOR_LINK_UNVERIFIED", f"ingress {ingress['receipt_sha256']} does not link a source half "
-                             "on this endpoint ledger by seal", node_id=node_id, **anchor_info)
+                             "on this endpoint ledger by seal", node_id=node_id, **anchor_info, kind_for_code=kind)
         if kind == EPHEMERAL:
             unsigned = opened_signature_failure(body)
             if unsigned:
-                return non_allow(*unsigned, node_id=node_id, **anchor_info)
+                return non_allow(*unsigned, node_id=node_id, **anchor_info, kind_for_code=kind)
             record = body["node_ledger_opened"]
             opened = opened_record_failure(record, genesis)
             if opened:
-                return non_allow(*opened, node_id=node_id, **anchor_info)
+                return non_allow(*opened, node_id=node_id, **anchor_info, kind_for_code=kind)
             anchor_info.update(node_ledger_opened_signer_key_id=body["signature"]["key_id"],
                                node_ledger_opened_generation_receipt_sha256=record["receipt_sha256"],
                                node_ledger_opened=issued_anchor(node_id, key, genesis_sha, ingress["receipt_sha256"]))
         else:
             if body.get("node_identity_key") != key:
                 return non_allow("KEY_MISMATCH", "the anchor binds another node_identity_key than the genesis",
-                                 node_id=node_id, **anchor_info)
+                                 node_id=node_id, **anchor_info, kind_for_code=kind)
             if body != anchor_body(genesis):
                 return non_allow("ENDPOINT_GENESIS_INVALID", "the anchor body differs from the genesis it names",
-                                 node_id=node_id, **anchor_info)
+                                 node_id=node_id, **anchor_info, kind_for_code=kind)
         anchor_info.update(anchor=("NODE_LEDGER_OPENED_VIA_INTR_PATH_RECEIPT_PAIR" if kind == EPHEMERAL
                                    else "INTR_PATH_RECEIPT_PAIR"), anchor_source_receipt_sha256=source_sha,
                            anchor_destination_receipt_sha256=ingress["receipt_sha256"])
@@ -871,11 +893,11 @@ def verify_anchor(node_id: Any, *, endpoint: Any, org_ledger_root: Any,
         seen = _key_of_receipt(r)
         if seen is not None and not _key_matches(key, seen):
             return non_allow("KEY_MISMATCH", f"{r['receipt_sha256']} carries another node_identity_key",
-                             node_id=node_id, **anchor_info)
+                             node_id=node_id, **anchor_info, kind_for_code=kind)
     if check_provenance:
         foreign = provenance_failure(chain, node_id, kind)
         if foreign:
-            return non_allow(*foreign, node_id=node_id, **anchor_info)
+            return non_allow(*foreign, node_id=node_id, **anchor_info, kind_for_code=kind)
     return {"schema": RESULT_SCHEMA, "disposition": ALLOW, "node_id": node_id, **anchor_info,
             "chain_head_receipt_sha256": chain[0]["receipt_sha256"],
             "org_ledger_head_receipt_sha256": org_ledger_head_receipt_sha256,
@@ -1055,7 +1077,8 @@ def evaluate_anchored(claimed_node_id: Any = None, *, endpoint: Any, org_ledger_
     node_id = identity_proof["node_id"]      # a candidate until the signature below verifies
     with designated_org_ledger(org_ledger_git_dir, org_ledger_head_attestation) as (org_root, failed):
         if failed:
-            return {**non_allow(*failed, node_id=node_id, **asserted), **gate}
+            kind = endpoint.get("endpoint_kind") if isinstance(endpoint, Mapping) else None
+            return {**non_allow(*failed, node_id=node_id, kind_for_code=kind, **asserted), **gate}
         anchored = verify_anchor(node_id, endpoint=endpoint, org_ledger_root=org_root,
                                  org_ledger_head_receipt_sha256=org_ledger_head_receipt_sha256)
         if anchored["disposition"] != ALLOW:
@@ -1102,7 +1125,8 @@ def evaluate_anchored(claimed_node_id: Any = None, *, endpoint: Any, org_ledger_
                          "challenge_sha256": sha(identity_challenge(anchored))}}
 
 
-__all__ = ["ENDPOINT_KINDS", "EPHEMERAL", "FAILURE_CODE", "GATEWAY", "IDENTITY_FAILURE_CODE", "OWN_LEDGER_KINDS",
+__all__ = ["ENDPOINT_FAILURE_CODE", "ENDPOINT_KINDS", "EPHEMERAL", "FAILURE_CODE", "ORG_LEDGER_REASONS",
+           "anchor_failure_code", "GATEWAY", "IDENTITY_FAILURE_CODE", "OWN_LEDGER_KINDS",
            "FAILURE_PRECEDENCE", "REASONS", "TRANSPORT_FAILURE_CODE", "anchor", "append_destination", "append_receipt", "append_source",
            "designated_org_ledger", "evaluate_anchored", "identity_challenge", "intr_carrier_on_org_chain", "identity_challenge_message", "issued_anchor",
            "load_opened_signers", "open_gateway_location", "opened_signature_failure", "opened_signing_message",

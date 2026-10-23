@@ -296,7 +296,7 @@ class AnchoredEndToEndTests(_Ledgers):
         self.assertEqual([r["evidence"]["endpoint_kind"] for r in retained], [carrier.ENDPOINT_KIND])
         # the root is derived, never caller-supplied
         self.assert_refused(self.evaluate({"endpoint_kind": "GATEWAY", "ledger_root": str(self.root)}),
-                            "ENDPOINT_INVALID")
+                            "ENDPOINT_INVALID", anchor.ENDPOINT_FAILURE_CODE)
 
     def test_the_lc_kv_15_hole_is_closed(self):
         anchor.open_ledger(self.node, NODE, "EPHEMERAL", KEY, "StegNode")   # opened, never anchored
@@ -310,7 +310,8 @@ class AnchorRefusalTests(_Ledgers):
     def test_unanchored_scratch_ledger(self):
         self.chain_to_admission()      # a scratch ledger with no genesis at all
         self.assert_refused(self.evaluate(), "ENDPOINT_GENESIS_INVALID")
-        self.assert_refused(self.evaluate(self.endpoint("KV", self.org / "nowhere")), "ENDPOINT_LEDGER_UNREADABLE")
+        self.assert_refused(self.evaluate(self.endpoint("KV", self.org / "nowhere")), "ENDPOINT_LEDGER_UNREADABLE",
+                            anchor.ENDPOINT_FAILURE_CODE)
 
     def test_ephemeral_needs_the_stegos_record(self):
         genesis = anchor.open_ledger(self.node, NODE, "EPHEMERAL", KEY, "StegNode")["genesis"]
@@ -340,7 +341,7 @@ class AnchorRefusalTests(_Ledgers):
         body = {**anchor.anchor_body(genesis), "node_identity_key": OTHER_KEY}
         source = anchor.append_source(self.node, NODE, anchor.anchor_communication_id(NODE, genesis["receipt_sha256"]), body)
         anchor.append_destination(self.org, source)
-        self.assert_refused(self.evaluate(self.endpoint("PERMANENT")), "KEY_MISMATCH")
+        self.assert_refused(self.evaluate(self.endpoint("PERMANENT")), "KEY_MISMATCH", anchor.ENDPOINT_FAILURE_CODE)
 
     def test_mismatched_key_on_the_chain(self):
         self.open_and_anchor(key=OTHER_KEY)   # anchored consistently, but the node's receipts carry another key
@@ -401,9 +402,11 @@ class AnchorRefusalTests(_Ledgers):
 
     def test_kind_names(self):
         self.assertEqual(anchor.ENDPOINT_KINDS, ("EPHEMERAL", "PERMANENT", "GATEWAY", "KV", "SKAP_VAULT", "ORG"))
-        self.assert_refused(self.evaluate({"endpoint_kind": "ORG"}), "ENDPOINT_KIND_NOT_A_NODE_ROOT")
+        self.assert_refused(self.evaluate({"endpoint_kind": "ORG"}), "ENDPOINT_KIND_NOT_A_NODE_ROOT",
+                            anchor.ENDPOINT_FAILURE_CODE)
         for bad in ("permanent_node", "gateway_node", "kv", "temporary"):
-            self.assert_refused(self.evaluate({"endpoint_kind": bad, "ledger_root": str(self.node)}), "ENDPOINT_INVALID")
+            self.assert_refused(self.evaluate({"endpoint_kind": bad, "ledger_root": str(self.node)}), "ENDPOINT_INVALID",
+                                anchor.ENDPOINT_FAILURE_CODE)
         self.assertEqual(anchor.plan_open(NODE, "EPHEMERAL", KEY)["reason"], "ENDPOINT_INVALID")      # node_kind required
         self.assertEqual(anchor.plan_open(NODE, "PERMANENT", KEY, "StegApp")["reason"], "ENDPOINT_INVALID")
 
@@ -772,7 +775,7 @@ class CallerStoreAndIngressTests(_Ledgers):
         store, head = self.caller_store("copy", with_anchor_of=root)
         self.chain_to_admission()
         out = self.evaluate_on(store, head, root, None)
-        self.assert_refused(out, "MERGE_APPEND_PATH_NOT_ADMITTED")
+        self.assert_refused(out, "MERGE_APPEND_PATH_NOT_ADMITTED", "MERGE_APPEND_PATH_NOT_ADMITTED")
         self.assertEqual(out["failed_predicate"], "ORG_LEDGER_HEAD_AUTHENTICATED_BY_APPEND_ROUTE")
         self.assertEqual(self.evaluate_on(store, head, root, harness.attest(store, seed=own_seed,
                                                                             key_id="callers-own"))["reason"],
@@ -781,25 +784,25 @@ class CallerStoreAndIngressTests(_Ledgers):
             # a store that minted its own genesis is not the org ledger, whatever it holds
             minted, minted_head = self.caller_store("minted", own_genesis=True)
             self.assert_refused(self.evaluate_on(minted, minted_head, root, harness.attest(minted)),
-                                "ORG_LEDGER_GENESIS_MISMATCH")
+                                "ORG_LEDGER_GENESIS_MISMATCH", "ORG_LEDGER_GENESIS_MISMATCH")
             # the real genesis copied, plus the caller's own anchor pair: its head is not one the route attested
-            self.assert_refused(self.evaluate_on(store, head, root, None), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+            self.assert_refused(self.evaluate_on(store, head, root, None), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED", "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
             self.assert_refused(self.evaluate_on(store, head, root, harness.attest(store, seed=own_seed,
                                                                                     key_id="callers-own")),
-                                "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+                                "ORG_LEDGER_HEAD_NOT_AUTHENTICATED", "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
             self.assert_refused(self.evaluate_on(store, head, root, harness.attest(
-                store, seed=own_seed, key_id=harness.ROUTE_REF["key_id"])), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+                store, seed=own_seed, key_id=harness.ROUTE_REF["key_id"])), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED", "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
             self.publish()
             route = harness.attest(self.git)          # the route's attestation of the real store, replayed
-            self.assert_refused(self.evaluate_on(store, head, root, route), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+            self.assert_refused(self.evaluate_on(store, head, root, route), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED", "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
             # an attestation of a head and tree the store does not hold
             self.assert_refused(self.evaluate_on(store, head, root, {**harness.attest(store), "namespace_tree_oid":
                                                                      route["namespace_tree_oid"]}),
-                                "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+                                "ORG_LEDGER_HEAD_NOT_AUTHENTICATED", "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
         # #431's contract copy carries no genesis pin: refused before the store is read
         with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431), harness.append_route():
             self.assert_refused(self.evaluate_on(store, head, root, harness.attest(store)),
-                                "ORG_LEDGER_GENESIS_NOT_PINNED")
+                                "ORG_LEDGER_GENESIS_NOT_PINNED", "ORG_LEDGER_GENESIS_NOT_PINNED")
 
     def test_a_stale_head_attestation_is_refused(self):
         with harness.append_route():
@@ -838,10 +841,11 @@ class CallerStoreAndIngressTests(_Ledgers):
         refused = self.chain_to_admission(installed=False)
         self.assertEqual(refused["disposition"], "FAIL_CLOSED")
         self.caller_appended_ingress()
-        self.assert_refused(self.evaluate(self.endpoint("PERMANENT", root)), "MERGE_APPEND_PATH_NOT_ADMITTED")
+        self.assert_refused(self.evaluate(self.endpoint("PERMANENT", root)), "MERGE_APPEND_PATH_NOT_ADMITTED",
+                            "MERGE_APPEND_PATH_NOT_ADMITTED")
         store, head = self.caller_store("caller-everything")
         with harness.append_route():
-            self.assert_refused(self.evaluate_on(store, head, root, None), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+            self.assert_refused(self.evaluate_on(store, head, root, None), "ORG_LEDGER_HEAD_NOT_AUTHENTICATED", "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
             # even on the route-attested store, the caller's own record is not an InTr crossing
             out = self.evaluate(self.endpoint("PERMANENT", root))
             self.assert_transport_refused(out)
@@ -1010,7 +1014,79 @@ class DissolutionTests(_Ledgers):
                             "DISSOLUTION_EVENT_INVALID", dissolution.FAILURE_CODE)
 
 
+class FailureCodePerKindTests(_Ledgers):
+    """Lane D finding 3: EPHEMERAL_NODE_LEDGER_NOT_ANCHORED for EPHEMERAL only; every other kind surfaces the
+    specific org-ledger code, else ENDPOINT_LEDGER_NOT_ANCHORED."""
+    NON_EPHEMERAL = ("PERMANENT", "KV", "SKAP_VAULT", "GATEWAY")
+
+    def kind_endpoint(self, kind):
+        return {"endpoint_kind": "GATEWAY"} if kind == "GATEWAY" else self.endpoint(kind)
+
+    def test_the_rule(self):
+        for reason in anchor.ORG_LEDGER_REASONS:
+            self.assertIn(reason, anchor.REASONS)
+            self.assertEqual(anchor.anchor_failure_code("EPHEMERAL", reason), anchor.FAILURE_CODE)
+            for kind in self.NON_EPHEMERAL:
+                self.assertEqual(anchor.anchor_failure_code(kind, reason), reason)
+        for kind in self.NON_EPHEMERAL + ("ORG", None):
+            self.assertEqual(anchor.anchor_failure_code(kind, "UNANCHORED"), anchor.ENDPOINT_FAILURE_CODE)
+
+    def test_production_store_without_an_append_route_per_kind(self):
+        """No head signer published: MERGE_APPEND_PATH_NOT_ADMITTED is the code for every kind but EPHEMERAL."""
+        self.chain_to_admission()
+        for kind in ("EPHEMERAL",) + self.NON_EPHEMERAL:
+            with self.subTest(kind=kind):
+                out = self.evaluate(self.kind_endpoint(kind), org_ledger_head_attestation=None)
+                self.assert_refused(out, "MERGE_APPEND_PATH_NOT_ADMITTED",
+                                    anchor.FAILURE_CODE if kind == "EPHEMERAL" else "MERGE_APPEND_PATH_NOT_ADMITTED")
+
+    @harness.with_append_route
+    def test_org_ledger_head_not_pinned_per_kind(self):
+        self.chain_to_admission()
+        stale = "sha256:" + "1" * 64
+        for kind in ("EPHEMERAL",) + self.NON_EPHEMERAL:
+            with self.subTest(kind=kind):
+                out = anchor.verify_anchor(NODE, endpoint=self.kind_endpoint(kind), org_ledger_root=self.org,
+                                           org_ledger_head_receipt_sha256=stale)
+                self.assert_refused(out, "ORG_LEDGER_HEAD_NOT_PINNED",
+                                    anchor.FAILURE_CODE if kind == "EPHEMERAL" else "ORG_LEDGER_HEAD_NOT_PINNED")
+
+    @harness.with_append_route
+    def test_an_unanchored_ledger_per_kind(self):
+        for kind in ("EPHEMERAL", "PERMANENT", "KV", "SKAP_VAULT"):
+            with self.subTest(kind=kind):
+                self._t2 = tempfile.TemporaryDirectory()
+                self.addCleanup(self._t2.cleanup)
+                self.use(Path(self._t2.name))
+                out = anchor.open_ledger(self.root, NODE, kind, KEY, "StegNode" if kind == "EPHEMERAL" else None)
+                self.assertEqual(out["disposition"], "ALLOW", out)
+                self.assert_refused(self.anchored(self.endpoint(kind, self.root)), "UNANCHORED",
+                                    anchor.FAILURE_CODE if kind == "EPHEMERAL" else anchor.ENDPOINT_FAILURE_CODE)
+
+
 class DeterminismTests(unittest.TestCase):
+    def test_no_production_module_imports_a_test_module(self):
+        """Lane D finding 1: tests/org_ledger_harness.py and the other test helpers are test-only."""
+        for path in sorted((ROOT / "llm_adapter").glob("*.py")):
+            tree = ast.parse(path.read_text())
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.Import, ast.ImportFrom)):
+                    names = [a.name for a in node.names] if isinstance(node, ast.Import) else [node.module or ""]
+                    for n in names:
+                        self.assertNotEqual(n.split(".")[0], "tests", f"{path.name} imports {n}")
+
+    def test_the_dissolution_writer_is_what_the_anchor_reads(self):
+        """Lane D finding 2: node_ledger_dissolution is the event-driven write side (it imports the anchor, so
+        the anchor cannot import it); verify_anchor's dissolution_on is its read side, keyed on the same class."""
+        self.assertEqual(dissolution.anchor, anchor)
+        src = (ROOT / "llm_adapter/node_ledger_dissolution.py").read_text()
+        self.assertIn("anchor.DISSOLVED_CLASS", src)
+        tree = ast.parse((ROOT / "llm_adapter/endpoint_ledger_anchor.py").read_text())
+        imported = [a.name for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) for a in n.names]
+        self.assertNotIn("node_ledger_dissolution", imported)
+        # live, not dead-listed: DissolutionTests drives dissolve() and evaluate_anchored then refuses the root
+        self.assertTrue(hasattr(DissolutionTests, "test_disburse_read_back_then_root_inadmissible"))
+
     def test_no_clock_network_or_randomness(self):
         banned = {"datetime", "time", "random", "secrets", "socket", "urllib", "http", "requests", "httpx", "uuid",
                   "subprocess"}
