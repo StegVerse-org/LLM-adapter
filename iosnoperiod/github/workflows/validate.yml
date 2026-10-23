@@ -201,8 +201,8 @@ jobs:
         run: "$PYTHON_BIN -m unittest -v tests/test_sdk_boundary_crossing_record.py"
       - name: Test anchored endpoint ledgers and node-ledger dissolution (LC-KV-13, LC-KV-16 rev 5, NODE-LEDGER-DISSOLUTION-DISBURSEMENT-001; 0 skipped required)
         run: |
-          # Needs the pinned stegverse-sdk that "Install validation dependencies" installs (pip install -e '.[dev]';
-          # node_standing imports it). Local equivalent: python -m unittest tests.test_endpoint_ledger_anchor
+          # Needs the pinned stegverse-sdk from the "Install validation dependencies" step (the editable '.[dev]'
+          # install the README names; node_standing imports it). Local: python -m unittest tests.test_endpoint_ledger_anchor
           "$PYTHON_BIN" - <<'PY'
           import sys, unittest
           suite = unittest.defaultTestLoader.loadTestsFromNames(["tests.test_endpoint_ledger_anchor"])
