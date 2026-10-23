@@ -1,0 +1,35 @@
+{
+  "chain": [
+    {
+      "ciphertext_sha256": "sha256:324a463f75cbcb9aac120c5b7ab74149290cc2677713d559d7bf05337345766a",
+      "endpoint_id": "StegVerse-Labs/continuity-vault-kit:01_KV_Ledger",
+      "previous_receipt_sha256": "sha256:636a63caa2d85f0eb5d009dba0e02f83cfece724fa9060021ed8259f3f042f55",
+      "receipt_sha256": "sha256:d80bc02651eae097d4012d278c281ace021df73d86bed741df82e11016428e91",
+      "schema": "stegverse.kv-ledger-receipt-view/v1",
+      "sequence": 2,
+      "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
+      "transition_class": "KV_LEDGER_APPEND"
+    },
+    {
+      "ciphertext_sha256": "sha256:231c842995cd344663475e068deab418530d1579ee6f9acfd5d6d04ff388e8f4",
+      "endpoint_id": "StegVerse-Labs/continuity-vault-kit:01_KV_Ledger",
+      "previous_receipt_sha256": "sha256:644ed4340bb99be5048bee742f34502bf854f5f0623cfeaf66588df52fdb67da",
+      "receipt_sha256": "sha256:636a63caa2d85f0eb5d009dba0e02f83cfece724fa9060021ed8259f3f042f55",
+      "schema": "stegverse.kv-ledger-receipt-view/v1",
+      "sequence": 1,
+      "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
+      "transition_class": "KV_LEDGER_APPEND"
+    },
+    {
+      "ciphertext_sha256": "sha256:0800f8ccb04b98ceafae4764fcc03dc1a1b57decae9283e0863ae3724e99d662",
+      "endpoint_id": "StegVerse-Labs/continuity-vault-kit:01_KV_Ledger",
+      "previous_receipt_sha256": null,
+      "receipt_sha256": "sha256:644ed4340bb99be5048bee742f34502bf854f5f0623cfeaf66588df52fdb67da",
+      "schema": "stegverse.kv-ledger-receipt-view/v1",
+      "sequence": 0,
+      "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
+      "transition_class": "KV_LEDGER_INITIALIZATION"
+    }
+  ],
+  "note": "SYNTHETIC: the decrypted-on-KV-side view a GATEWAY_ENCRYPTED_BLOB reader yields, newest first"
+}

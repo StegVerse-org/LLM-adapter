@@ -16,6 +16,10 @@ on:
       - "llm_adapter/ed25519_verify.py"
       - "llm_adapter/healthy_node_evaluator.py"
       - ".stegverse/node-ledger/org-ledger-head-signers.v1.json"
+      - ".stegverse/node-ledger/kv-ledger-head-signers.v1.json"
+      - "llm_adapter/endpoint_ledger_designation.py"
+      - "tests/test_endpoint_ledger_designation.py"
+      - "tests/fixtures/endpoint-ledger-designation/**"
       - "tests/ed25519_test_signer.py"
       - "tests/test_llm_adapter_ledger_merge_transfer.py"
       - "tests/fixtures/org-intr-path-transfer/**"
@@ -40,10 +44,10 @@ jobs:
           GH_TOKEN: ""
         run: |
           set -euo pipefail
-          python3 -m py_compile scripts/llm_adapter_ledger_merge_transfer.py scripts/llm_adapter_repository_ledger_genesis_pin.py scripts/llm_adapter_genesis_pin_ingress.py llm_adapter/intr_transport_carrier.py llm_adapter/org_ledger_location.py llm_adapter/ed25519_verify.py tests/ed25519_test_signer.py tests/test_llm_adapter_ledger_merge_transfer.py
+          python3 -m py_compile scripts/llm_adapter_ledger_merge_transfer.py scripts/llm_adapter_repository_ledger_genesis_pin.py scripts/llm_adapter_genesis_pin_ingress.py llm_adapter/intr_transport_carrier.py llm_adapter/org_ledger_location.py llm_adapter/ed25519_verify.py tests/ed25519_test_signer.py tests/test_llm_adapter_ledger_merge_transfer.py llm_adapter/endpoint_ledger_designation.py tests/test_endpoint_ledger_designation.py
           python3 - <<'PY'
           import sys, unittest
-          suite = unittest.defaultTestLoader.loadTestsFromName("tests.test_llm_adapter_ledger_merge_transfer")
+          suite = unittest.defaultTestLoader.loadTestsFromNames(["tests.test_llm_adapter_ledger_merge_transfer", "tests.test_endpoint_ledger_designation"])
           result = unittest.TextTestRunner(verbosity=2).run(suite)
           print(f"ran={result.testsRun} failures={len(result.failures)} errors={len(result.errors)} skipped={len(result.skipped)}")
           sys.exit(0 if result.wasSuccessful() and not result.skipped and result.testsRun > 0 else 1)

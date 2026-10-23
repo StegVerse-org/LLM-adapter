@@ -1,0 +1,29 @@
+{
+  "endpoint_id": "StegVerse-Labs/continuity-vault-kit:01_KV_Ledger",
+  "endpoint_kind": "KV",
+  "expected_genesis_receipt_sha256": "sha256:644ed4340bb99be5048bee742f34502bf854f5f0623cfeaf66588df52fdb67da",
+  "genesis_class": "KV_LEDGER_INITIALIZATION",
+  "head_signer_source": "KV_LEDGER_HEAD_SIGNER",
+  "provider_selection": "SINGLE_PROVIDER_V1",
+  "rollback_watermark_source": {
+    "path_ids": [
+      "StegVerse-Labs/continuity-vault-kit:01_KV_Ledger->StegVerse-org:intr-destination"
+    ],
+    "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"
+  },
+  "schema": "stegverse.endpoint-ledger-designation/v1",
+  "stores": [
+    {
+      "gateway_node_id": "gw-kv-fixture-1",
+      "location": "01_KV_Ledger",
+      "provider": "google-drive",
+      "store_type": "GATEWAY_ENCRYPTED_BLOB"
+    },
+    {
+      "gateway_node_id": "gw-kv-fixture-2",
+      "location": "01_KV_Ledger",
+      "provider": "onedrive",
+      "store_type": "GATEWAY_ENCRYPTED_BLOB"
+    }
+  ]
+}

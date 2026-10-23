@@ -75,7 +75,17 @@
     ".stegverse/node-ledger/org-ledger-head-signers.v1.json",
     "tests/ed25519_test_signer.py",
     "tests/fixtures/cvk-receipt-ledger-contracts/01_KV_Ledger.contract.json",
-    "tests/fixtures/cvk-receipt-ledger-contracts/02_SKAP_Vault_Ledger.contract.json"
+    "tests/fixtures/cvk-receipt-ledger-contracts/02_SKAP_Vault_Ledger.contract.json",
+    "llm_adapter/endpoint_ledger_designation.py",
+    ".stegverse/node-ledger/kv-ledger-head-signers.v1.json",
+    "tests/test_endpoint_ledger_designation.py",
+    "tests/fixtures/endpoint-ledger-designation/kv-chain.json",
+    "tests/fixtures/endpoint-ledger-designation/kv-on-org-git-ref.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/kv-two-providers.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/kv.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/org-git-ref.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/org-linked-receipts.json",
+    "tests/fixtures/endpoint-ledger-designation/skap.designation.json"
   ],
   "new_files": [
     {
@@ -266,6 +276,116 @@
       "evidence_refs": [
         "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263"
       ]
+    },
+    {
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "closest_existing_implementation": "llm_adapter/org_ledger_location.py (the git reader, reused unchanged)",
+      "decision": "EXTEND",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
+      ],
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "path": "llm_adapter/endpoint_ledger_designation.py",
+      "semantic_responsibility": "Per-endpoint ledger designation (store_type GIT_REF | GATEWAY_ENCRYPTED_BLOB, single provider), read-only store-reader seam (GIT_REF delegates to the unchanged git reader; no blob reader installed), and pure checks: empty ledger never a genesis, sealed chain, genesis pin, kv_ledger_head_signer head attestation, KV_LEDGER_HEAD_ROLLBACK_DETECTED."
+    },
+    {
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "closest_existing_implementation": ".stegverse/node-ledger/org-ledger-head-signers.v1.json (same shape)",
+      "decision": "REUSE",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
+      ],
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "path": ".stegverse/node-ledger/kv-ledger-head-signers.v1.json",
+      "semantic_responsibility": "kv_ledger_head_signer public-key references (TVC#542), NONE_PUBLISHED."
+    },
+    {
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "closest_existing_implementation": "tests/test_llm_adapter_ledger_merge_transfer.py",
+      "decision": "EXTEND",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
+      ],
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "path": "tests/test_endpoint_ledger_designation.py",
+      "semantic_responsibility": "Tests for the designation, reader seam, empty ledger, signed heads and rollback watermark, on this PR's fixtures with fixture keys only."
+    },
+    {
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "closest_existing_implementation": "tests/fixtures/cvk-receipt-ledger-contracts/",
+      "decision": "REUSE",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
+      ],
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "path": "tests/fixtures/endpoint-ledger-designation/kv-chain.json",
+      "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
+    },
+    {
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "closest_existing_implementation": "tests/fixtures/cvk-receipt-ledger-contracts/",
+      "decision": "REUSE",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
+      ],
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "path": "tests/fixtures/endpoint-ledger-designation/kv-on-org-git-ref.designation.json",
+      "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
+    },
+    {
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "closest_existing_implementation": "tests/fixtures/cvk-receipt-ledger-contracts/",
+      "decision": "REUSE",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
+      ],
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "path": "tests/fixtures/endpoint-ledger-designation/kv-two-providers.designation.json",
+      "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
+    },
+    {
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "closest_existing_implementation": "tests/fixtures/cvk-receipt-ledger-contracts/",
+      "decision": "REUSE",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
+      ],
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "path": "tests/fixtures/endpoint-ledger-designation/kv.designation.json",
+      "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
+    },
+    {
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "closest_existing_implementation": "tests/fixtures/cvk-receipt-ledger-contracts/",
+      "decision": "REUSE",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
+      ],
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "path": "tests/fixtures/endpoint-ledger-designation/org-git-ref.designation.json",
+      "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
+    },
+    {
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "closest_existing_implementation": "tests/fixtures/cvk-receipt-ledger-contracts/",
+      "decision": "REUSE",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
+      ],
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "path": "tests/fixtures/endpoint-ledger-designation/org-linked-receipts.json",
+      "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
+    },
+    {
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "closest_existing_implementation": "tests/fixtures/cvk-receipt-ledger-contracts/",
+      "decision": "REUSE",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
+      ],
+      "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
+      "path": "tests/fixtures/endpoint-ledger-designation/skap.designation.json",
+      "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
     }
   ]
 }

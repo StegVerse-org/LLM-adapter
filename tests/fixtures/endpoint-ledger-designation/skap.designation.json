@@ -1,0 +1,23 @@
+{
+  "endpoint_id": "StegVerse-Labs/continuity-vault-kit:02_SKAP_Vault_Ledger",
+  "endpoint_kind": "SKAP_VAULT",
+  "expected_genesis_receipt_sha256": null,
+  "genesis_class": "KV_LEDGER_INITIALIZATION",
+  "head_signer_source": "KV_LEDGER_HEAD_SIGNER",
+  "provider_selection": "SINGLE_PROVIDER_V1",
+  "rollback_watermark_source": {
+    "path_ids": [
+      "StegVerse-Labs/continuity-vault-kit:02_SKAP_Vault_Ledger->StegVerse-org:intr-destination"
+    ],
+    "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"
+  },
+  "schema": "stegverse.endpoint-ledger-designation/v1",
+  "stores": [
+    {
+      "gateway_node_id": "gw-kv-fixture-1",
+      "location": "02_SKAP_Vault_Ledger",
+      "provider": "google-drive",
+      "store_type": "GATEWAY_ENCRYPTED_BLOB"
+    }
+  ]
+}

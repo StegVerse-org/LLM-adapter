@@ -1,0 +1,35 @@
+{
+  "chain": [
+    {
+      "evidence": {
+        "endpoint_head_sha256": "sha256:d80bc02651eae097d4012d278c281ace021df73d86bed741df82e11016428e91",
+        "path_id": "StegVerse-Labs/continuity-vault-kit:01_KV_Ledger->StegVerse-org:intr-destination",
+        "schema": "stegverse.intr-path-ingress-evidence/v1"
+      },
+      "receipt_sha256": "sha256:6d6a3082ffd9077695adb6aba1b369325c2ea99b228bfe4bb91b6e8659c5b8c6",
+      "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
+      "transition_class": "INTR_MESH_PATH_INGRESS"
+    },
+    {
+      "evidence": {
+        "endpoint_head_sha256": "sha256:8b0bb7512fb6d1595c87b3604b48935021ab88233ea853246f5c244600a40929",
+        "path_id": "other->StegVerse-org:intr-destination",
+        "schema": "stegverse.intr-path-ingress-evidence/v1"
+      },
+      "receipt_sha256": "sha256:5337f2cbff8ba8151f83e91c251be7fb730052cf2c8466a79e299a5b3ca5aed4",
+      "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
+      "transition_class": "INTR_MESH_PATH_INGRESS"
+    },
+    {
+      "evidence": {
+        "endpoint_head_sha256": "sha256:636a63caa2d85f0eb5d009dba0e02f83cfece724fa9060021ed8259f3f042f55",
+        "path_id": "StegVerse-Labs/continuity-vault-kit:01_KV_Ledger->StegVerse-org:intr-destination",
+        "schema": "stegverse.intr-path-ingress-evidence/v1"
+      },
+      "receipt_sha256": "sha256:6ba452bc262e9d4257b938b9509158b3103982bd44b60cd380757502e55f47e9",
+      "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
+      "transition_class": "INTR_MESH_PATH_INGRESS"
+    }
+  ],
+  "note": "SYNTHETIC: org-chain excerpt, newest first; linked receipts carry endpoint_head_sha256 (.github#235)"
+}
