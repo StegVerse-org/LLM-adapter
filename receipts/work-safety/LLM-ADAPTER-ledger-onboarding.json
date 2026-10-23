@@ -87,7 +87,9 @@
     "tests/fixtures/endpoint-ledger-designation/org-linked-receipts.json",
     "tests/fixtures/endpoint-ledger-designation/skap.designation.json",
     "llm_adapter/supplied_epoch.py",
-    ".stegverse/transition-ledger/emit.py"
+    ".stegverse/transition-ledger/emit.py",
+    "tests/fixtures/endpoint-ledger-designation/cvk263-bf684aad/skap-receipts.contract.json",
+    "tests/fixtures/endpoint-ledger-designation/cvk263-bf684aad/stegverse-kv-receipts.contract.json"
   ],
   "new_files": [
     {
