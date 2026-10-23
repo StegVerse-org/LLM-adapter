@@ -197,6 +197,15 @@ jobs:
           print(f"ran={result.testsRun} failures={len(result.failures)} errors={len(result.errors)} skipped={len(result.skipped)}")
           sys.exit(0 if result.wasSuccessful() and not result.skipped and result.testsRun > 0 else 1)
           PY
+      - name: Test INTERLOCK_INTR is installed only for a verified InTr path pair on an authenticated, genesis-pinned org ledger (LLM-ADAPTER-INTERLOCK-INTR-TRANSPORT-ENABLEMENT-001, LC-KV-16 rev 5; 0 skipped required)
+        run: |
+          "$PYTHON_BIN" - <<'PY'
+          import sys, unittest
+          suite = unittest.defaultTestLoader.loadTestsFromName("tests.test_intr_transport_enablement")
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          print(f"ran={result.testsRun} failures={len(result.failures)} errors={len(result.errors)} skipped={len(result.skipped)}")
+          sys.exit(0 if result.wasSuccessful() and not result.skipped and result.testsRun > 0 else 1)
+          PY
       - name: Test every SDK boundary crossing is recorded
         run: "$PYTHON_BIN -m unittest -v tests/test_sdk_boundary_crossing_record.py"
       - name: Every front-half transition, admitted or refused, is on one chain in order

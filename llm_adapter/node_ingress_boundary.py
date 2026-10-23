@@ -57,6 +57,18 @@ with failure_code NODE_NOT_CURRENTLY_ADMITTED_HEALTHY and failed_predicate
 REQUESTER_IS_CURRENTLY_ADMITTED_HEALTHY_NODE. Lane D's layer 1 treats anything
 but ALLOW as its own KV_ACCESS_LAYER1_REFUSED. The return interface is
 documented on `admit`.
+
+Interlock/InTr is INSTALLED, gated on an observed carrier
+(LLM-ADAPTER-INTERLOCK-INTR-TRANSPORT-ENABLEMENT-001, StegVerse-org/.github#162).
+A caller naming INTERLOCK_INTR has not arrived over it. `admit` treats the
+transport as INSTALLED only when `intr_transport_carrier.observe` reads the
+carrying InTr path pair back from #431's organization-ledger location and
+`intr_transport_carrier.verify` accepts it. That pair is INTR_MESH_PATH_TRANSFER
+then INTR_MESH_PATH_INGRESS / ORGANIZATION_INTR_DESTINATION_INGRESS, with the
+body digest equal to the signal digest. Otherwise the crossing is recorded under
+NODE_INGRESS_REFUSED with transport_state NOT_AUTHENTICALLY_OBSERVED and
+returned as the six-field INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED. HTTP is
+unchanged.
 """
 from __future__ import annotations
 
@@ -66,7 +78,7 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
-from . import healthy_node_evaluator, node_standing
+from . import healthy_node_evaluator, intr_transport_carrier, node_standing
 
 ROOT = Path(__file__).resolve().parents[1]
 BOUNDARY = "LLM_ADAPTER_INGRESS_BOUNDARY"
@@ -92,12 +104,18 @@ STAGE_TRANSPORT = "TRANSPORT"
 STAGE_STANDING = "NODE_STANDING"
 STAGE_HEALTH = healthy_node_evaluator.GATE
 
-#: The transports this boundary can be reached over. HTTP is installed;
-#: Interlock/InTr is the next stage and is named so a reader can see that the
-#: boundary is the constant and the transport is not.
+#: The transports this boundary can be reached over. Both are installed. An
+#: INTERLOCK_INTR crossing is INSTALLED only when its carrying InTr path pair
+#: verifies (intr_transport_carrier); a crossing that merely names it is
+#: recorded as NOT_AUTHENTICALLY_OBSERVED and refused. The boundary is the
+#: constant and the transport is not.
 HTTP = "HTTP"
 INTERLOCK_INTR = "INTERLOCK_INTR"
-TRANSPORTS = {HTTP: "INSTALLED", INTERLOCK_INTR: "NOT_YET_ENABLED"}
+TRANSPORTS = {HTTP: "INSTALLED", INTERLOCK_INTR: "INSTALLED"}
+#: Recorded for an INTERLOCK_INTR crossing whose carrier did not verify.
+NOT_AUTHENTICALLY_OBSERVED = "NOT_AUTHENTICALLY_OBSERVED"
+TRANSPORT_FAILURE_CODE = intr_transport_carrier.FAILURE_CODE
+TRANSPORT_PREDICATE = intr_transport_carrier.PREDICATE
 
 
 def _ledger():
@@ -123,13 +141,21 @@ def transport_state(transport: str) -> str:
     return state
 
 
-def _arrival(signal: Mapping[str, Any], transport: str) -> dict[str, Any]:
-    """What both dispositions record about the arrival itself."""
+def _arrival(signal: Mapping[str, Any], transport: str,
+             intr_carrier: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    """What both dispositions record about the arrival itself.
+
+    An INTERLOCK_INTR crossing records INSTALLED only with its verified carrier.
+    """
+    state = TRANSPORTS.get(transport)
+    if transport == INTERLOCK_INTR and intr_carrier is None:
+        state = NOT_AUTHENTICALLY_OBSERVED
     return {
         "schema": RECORD_SCHEMA,
         "boundary": BOUNDARY,
         "transport": transport,
-        "transport_state": TRANSPORTS.get(transport),
+        "transport_state": state,
+        "intr_carrier": dict(intr_carrier) if intr_carrier is not None else None,
         "intended_action": INTENDED_ACTION,
         "transition_is_the_disposition_of_the_intended_action": True,
         # What arrived, by digest, without copying a caller's payload into the chain.
@@ -142,7 +168,8 @@ def _arrival(signal: Mapping[str, Any], transport: str) -> dict[str, Any]:
 def ingress_record(signal: Mapping[str, Any], disposition: Mapping[str, Any],
                    profile: str, node_class: str, transport: str,
                    evaluation: Mapping[str, Any] | None,
-                   observed_health: Mapping[str, Any] | None = None) -> dict[str, Any]:
+                   observed_health: Mapping[str, Any] | None = None,
+                   intr_carrier: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """What an admitted crossing recorded about the node that arrived.
 
     Boundary-issued fields are kept apart from caller-declared ones, because a
@@ -159,7 +186,7 @@ def ingress_record(signal: Mapping[str, Any], disposition: Mapping[str, Any],
                and evaluation.get("healthy_node_established") is True
                and evaluation.get("predicate") == PREDICATE)
     return {
-        **_arrival(signal, transport),
+        **_arrival(signal, transport, intr_carrier),
         "disposition": ALLOW,
         "transition_class": ADMITTED_CLASS,
         # Who arrived, as the boundary recognized them.
@@ -188,7 +215,9 @@ def ingress_record(signal: Mapping[str, Any], disposition: Mapping[str, Any],
 
 def refusal_record(signal: Mapping[str, Any], error: node_standing.StandingRefused,
                    transport: str, *, stage: str = STAGE_STANDING,
-                   evaluation: Mapping[str, Any] | None = None) -> dict[str, Any]:
+                   evaluation: Mapping[str, Any] | None = None,
+                   failure_code: str = FAILURE_CODE,
+                   intr_carrier: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """What a refused crossing recorded about the signal that arrived.
 
     No node endpoint, class or continuation appears: the boundary issued none,
@@ -198,14 +227,14 @@ def refusal_record(signal: Mapping[str, Any], error: node_standing.StandingRefus
     the authority on that shape.
     """
     return {
-        **_arrival(signal, transport),
+        **_arrival(signal, transport, intr_carrier),
         "disposition": DENY,
         "transition_class": REFUSED_CLASS,
         "standing_disposition": error.disposition,
         "refusal_reason": error.reason,
         "refusal_is_verbatim": True,
         "refusal_stage": stage,
-        "failure_code": FAILURE_CODE,
+        "failure_code": failure_code,
         "health_evaluation_reason": (evaluation or {}).get("reason"),
         "healthy_node_established": False,
         "node_endpoint_issued": False,
@@ -226,20 +255,30 @@ def _record(reference: str, transition_class: str, record: Mapping[str, Any],
 def _non_allow(signal: Mapping[str, Any], transport: str, stage: str, disposition: str,
                reason: str, repair: str, hb_epoch: int | None,
                evaluation: Mapping[str, Any] | None = None,
-               standing_refusal: Mapping[str, Any] | None = None) -> dict[str, Any]:
-    """Record the refusal under NODE_INGRESS_REFUSED, then return it with the six fields."""
+               standing_refusal: Mapping[str, Any] | None = None,
+               six: Mapping[str, str] | None = None,
+               intr_carrier: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    """Record the refusal under NODE_INGRESS_REFUSED, then return it with the six fields.
+
+    `six` replaces the health six (an unobserved InTr carrier has its own).
+    """
+    fields = {"failure_code": FAILURE_CODE, "failed_predicate": PREDICATE,
+              "retry_entrypoint": healthy_node_evaluator.RETRY_ENTRYPOINT,
+              "owning_existing_goal": healthy_node_evaluator.OWNING_GOAL,
+              "next_attempt": healthy_node_evaluator.NEXT_ATTEMPT, **(six or {})}
     error = node_standing.StandingRefused(disposition, reason)
-    record = refusal_record(signal, error, transport, stage=stage, evaluation=evaluation)
+    record = refusal_record(signal, error, transport, stage=stage, evaluation=evaluation,
+                            failure_code=fields["failure_code"], intr_carrier=intr_carrier)
     receipt = _record(REFUSED_CLASS + ":" + record["signal_sha256"], REFUSED_CLASS, record, hb_epoch)
     return {
         "schema": ADMISSION_SCHEMA,
         "disposition": disposition,
-        "failure_code": FAILURE_CODE,
-        "failed_predicate": PREDICATE,
+        "failure_code": fields["failure_code"],
+        "failed_predicate": fields["failed_predicate"],
         "required_evidence_or_repair": repair,
-        "retry_entrypoint": healthy_node_evaluator.RETRY_ENTRYPOINT,
-        "owning_existing_goal": healthy_node_evaluator.OWNING_GOAL,
-        "next_attempt": healthy_node_evaluator.NEXT_ATTEMPT,
+        "retry_entrypoint": fields["retry_entrypoint"],
+        "owning_existing_goal": fields["owning_existing_goal"],
+        "next_attempt": fields["next_attempt"],
         "failed_stage": stage,
         "reason": reason,
         "health_evaluation": dict(evaluation) if evaluation is not None else None,
@@ -258,7 +297,9 @@ def _non_allow(signal: Mapping[str, Any], transport: str, stage: str, dispositio
 def admit(signal: Mapping[str, Any], *, transport: str = HTTP,
           health: Callable[[], Mapping[str, Any]] | None = None,
           health_report_receipt_sha256: str | None = None,
-          hb_epoch: int | None = None) -> dict[str, Any]:
+          hb_epoch: int | None = None,
+          intr_carrier: Mapping[str, Any] | None = None,
+          org_ledger_git_dir: Any = None) -> dict[str, Any]:
     """Admit a signal at this boundary, record the crossing, and return its disposition.
 
     Never raises for a refusal. The returned mapping always has
@@ -284,6 +325,17 @@ def admit(signal: Mapping[str, Any], *, transport: str = HTTP,
     `health_report_receipt_sha256` is the report the requester cites. Without
     it, the node's current report on the chain is used. `health` is recorded as
     an unreceipted observation and decides nothing.
+
+    INTERLOCK_INTR is INSTALLED only for a verified carrier. `intr_carrier`
+    cites `destination_receipt_sha256` (the INTR_MESH_PATH_INGRESS on the org
+    ledger) and `org_ledger_head_receipt_sha256` (the head pinned for the
+    read-back); `org_ledger_git_dir` is a local StegVerse-org/.github object
+    store. The pair is read back from #431's designated location, never a
+    caller-chosen path. Unverified, the crossing is recorded and refused
+    FAIL_CLOSED at stage TRANSPORT with the six fields: failure_code
+    INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED, failed_predicate
+    INSTALLED_INTR_TRANSPORT_OBSERVED_ON_RECEIPTS, owning_existing_goal
+    StegVerse-org/.github#162. An admitted InTr record carries `intr_carrier`.
     """
     state = TRANSPORTS.get(transport)
     if state is None:
@@ -291,6 +343,16 @@ def admit(signal: Mapping[str, Any], *, transport: str = HTTP,
                           "unsupported ingress transport: " + str(transport),
                           "arrive over a transport this boundary names: " + ", ".join(sorted(TRANSPORTS)),
                           hb_epoch)
+    carrier = None
+    if transport == INTERLOCK_INTR:
+        carrier, unobserved = intr_transport_carrier.observe(signal, intr_carrier, org_ledger_git_dir)
+        if unobserved:
+            return _non_allow(signal, transport, STAGE_TRANSPORT, node_standing.FAIL_CLOSED,
+                              unobserved[0] + ": " + unobserved[1], intr_transport_carrier.REPAIR, hb_epoch,
+                              six={"failure_code": TRANSPORT_FAILURE_CODE, "failed_predicate": TRANSPORT_PREDICATE,
+                                   "retry_entrypoint": intr_transport_carrier.RETRY_ENTRYPOINT,
+                                   "owning_existing_goal": intr_transport_carrier.OWNING_GOAL,
+                                   "next_attempt": intr_transport_carrier.NEXT_ATTEMPT})
     try:
         disposition = node_standing.resolve(signal)
         node_class = node_standing.node_class(signal)
@@ -299,7 +361,8 @@ def admit(signal: Mapping[str, Any], *, transport: str = HTTP,
         mode = signal.get("mode") if isinstance(signal, Mapping) else None
         standing = node_standing.refusal(error, mode=mode)
         return _non_allow(signal, transport, STAGE_STANDING, error.disposition, error.reason,
-                          standing["required_evidence_or_repair"], hb_epoch, standing_refusal=standing)
+                          standing["required_evidence_or_repair"], hb_epoch, standing_refusal=standing,
+                          intr_carrier=carrier)
 
     node_id = disposition["manifest_fields"]["node_endpoint"]["node_id"]
     evaluation = healthy_node_evaluator.evaluate(
@@ -308,10 +371,11 @@ def admit(signal: Mapping[str, Any], *, transport: str = HTTP,
     if evaluation["disposition"] != ALLOW:
         return _non_allow(signal, transport, STAGE_HEALTH, evaluation["disposition"],
                           evaluation["reason"] + ": " + evaluation["detail"],
-                          evaluation["required_evidence_or_repair"], hb_epoch, evaluation=evaluation)
+                          evaluation["required_evidence_or_repair"], hb_epoch, evaluation=evaluation,
+                          intr_carrier=carrier)
 
     observed = health() if health is not None else None
-    record = ingress_record(signal, disposition, profile, node_class, transport, evaluation, observed)
+    record = ingress_record(signal, disposition, profile, node_class, transport, evaluation, observed, carrier)
     receipt = _record(
         # The node's own reference names the transition, so the chain is
         # searchable by the node that arrived.
@@ -336,5 +400,5 @@ def admit(signal: Mapping[str, Any], *, transport: str = HTTP,
 
 __all__ = ["ADMISSION_SCHEMA", "ADMITTED_CLASS", "ALLOW", "BOUNDARY", "DENY", "FAILURE_CODE", "HTTP",
            "INTENDED_ACTION", "PREDICATE", "STAGE_HEALTH", "STAGE_STANDING", "STAGE_TRANSPORT",
-           "INTERLOCK_INTR", "RECORD_SCHEMA", "REFUSED_CLASS", "TRANSITION_CLASS",
-           "TRANSPORTS", "admit", "ingress_record", "refusal_record", "transport_state"]
+           "INTERLOCK_INTR", "NOT_AUTHENTICALLY_OBSERVED", "RECORD_SCHEMA", "REFUSED_CLASS", "TRANSITION_CLASS",
+           "TRANSPORTS", "TRANSPORT_FAILURE_CODE", "TRANSPORT_PREDICATE", "admit", "ingress_record", "refusal_record", "transport_state"]

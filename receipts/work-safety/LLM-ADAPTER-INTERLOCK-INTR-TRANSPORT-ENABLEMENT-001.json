@@ -1,0 +1,212 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "LLM-ADAPTER-INTERLOCK-INTR-TRANSPORT-ENABLEMENT-001",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "authoring_session": "lane-b-91117956 (Lane B, InTr and Mesh Destinations, StegVerse-org/.github#162)",
+  "stacked_on": "https://github.com/StegVerse-org/LLM-adapter/pull/428 (laneb/healthy-node-evaluator @0b37fe3b)",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/TRANSITION_LEDGER_MIRROR_HANDOFF.md",
+    "StegVerse-org/.github:data/intr-protocol/v1/protocol.json@907f4305",
+    "StegVerse-org/.github:resident-runtime/intr_path_ingress.py@d941d51d"
+  ],
+  "task_registry_refs": [
+    "StegVerse-org/.github#162 (owning goal)",
+    "StegVerse-org/LLM-adapter#432 ADMISSION_ORDER step 8 (LLM-ADAPTER-INTERLOCK-INTR-TRANSPORT-ENABLEMENT-001)",
+    "StegVerse-Labs/.github#3330 (LC-KV-13)"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Reads the organization ledger back at #431's designated location and records only on this repository's own transition ledger. No organization append, custody transition or Master Records closure is performed or claimed."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/.github/issues/162",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/428",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/432",
+      "https://github.com/StegVerse-org/.github/pull/210",
+      "https://github.com/StegVerse-Labs/StegOS/pull/427"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/.github",
+      "StegVerse-Labs/.github"
+    ],
+    "evidence_refs": [
+      "llm_adapter/node_ingress_boundary.py",
+      "llm_adapter/healthy_node_evaluator.py",
+      "StegVerse-org/LLM-adapter#432:llm_adapter/endpoint_ledger_anchor.py",
+      "StegVerse-org/LLM-adapter#432:llm_adapter/org_ledger_location.py",
+      "StegVerse-org/.github:data/intr-protocol/v1/protocol.json",
+      "StegVerse-org/.github:resident-runtime/intr_path_ingress.py",
+      ".stegverse/transition-ledger/emit.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "No open draft enables INTERLOCK_INTR. StegVerse-org/.github#210 covers org-level ingress only, and the InTr contract has no per-repository enablement. The existing InTr classes and the emit.py receipt shape are reused; org_ledger_location.py is #432's file byte-identical (sha256 2ffaa91a...), so the two drafts merge without conflict."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md",
+      "llm_adapter/node_ingress_boundary.py",
+      "llm_adapter/intr_transport_carrier.py"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "README.md",
+    "llm_adapter/intr_transport_carrier.py",
+    "llm_adapter/node_ingress_boundary.py",
+    "llm_adapter/org_ledger_location.py",
+    "receipts/work-safety/LLM-ADAPTER-INTERLOCK-INTR-TRANSPORT-ENABLEMENT-001.json",
+    "tests/fixtures/node_receipts/contract_with_431_repository_ledger_location.json",
+    "tests/test_healthy_node_evaluator.py",
+    "tests/test_intr_transport_enablement.py",
+    "tests/test_node_ingress_boundary.py",
+    "llm_adapter/ed25519_verify.py",
+    "tests/ed25519_test_signer.py",
+    ".stegverse/node-ledger/org-ledger-head-signers.v1.json",
+    "tests/org_ledger_harness.py",
+    "tests/fixtures/node_receipts/org_ledger_test_genesis.json",
+    "tests/fixtures/node_receipts/contract_with_431_location_and_pinned_genesis.json"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/intr_transport_carrier.py",
+      "semantic_responsibility": "Pure verifier of the InTr path pair that carried a signal (INTR_MESH_PATH_TRANSFER, then INTR_MESH_PATH_INGRESS / ORGANIZATION_INTR_DESTINATION_INGRESS at #431's location, with the body digest equal to the signal digest), plus the read-back step through org_ledger_location. It mints no class. v2 (sha256 9d3e69c8, byte-identical in #431/#432): the Org destination half is digest-only (INTR_DESTINATION_NOT_DIGEST_ONLY otherwise) and the source half is read from the sender's own ledger (INTR_SOURCE_NOT_ON_SENDER_LEDGER otherwise), per Q-PERMANENT-REPOSITORY-LEDGER (StegVerse-org/.github#167 comment 6374130335); no copy is retained on the org ledger.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 endpoint_ledger_anchor verifies anchor pairs for endpoint ledgers, and resident-runtime/intr_path_ingress.py verifies org-level ingress. Neither gates a transport at the ingress boundary.",
+      "decision": "CREATE_NEW",
+      "justification": "The ingress boundary needs a carrier check on #428's base, which does not have #432's anchor module. The evidence shapes and payload rule match #432's field for field.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#432",
+        "StegVerse-org/.github:data/intr-protocol/v1/protocol.json"
+      ]
+    },
+    {
+      "path": "llm_adapter/org_ledger_location.py",
+      "semantic_responsibility": "Read-back of the organization ledger from the contract-designated location (#431). It is #432's file byte-identical.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432:llm_adapter/org_ledger_location.py (identical).",
+      "decision": "REUSE",
+      "justification": "The identical copy lets this draft and #432 land in either order without conflict.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#432"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/contract_with_431_repository_ledger_location.json",
+      "semantic_responsibility": "Test fixture: the repository contract with #431's repository_ledger_location designation. It is #432's fixture byte-identical.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 fixture of the same path.",
+      "decision": "REUSE",
+      "justification": "The production contract has no designation until #431 lands.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#431",
+        "StegVerse-org/LLM-adapter#432"
+      ]
+    },
+    {
+      "path": "tests/test_intr_transport_enablement.py",
+      "semantic_responsibility": "Tests that a named-only or unverified InTr transport is refused with six-field INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED, that a verified pair is admitted, that HTTP is unchanged, and that the evaluator pin and the no-clock/network core hold.",
+      "closest_existing_implementation": "tests/test_node_ingress_boundary.py asserted INTERLOCK_INTR NOT_YET_ENABLED only.",
+      "decision": "CREATE_NEW",
+      "justification": "The gate needs its own CI step with a 0-skipped check.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-org/LLM-adapter#432"
+      ]
+    },
+    {
+      "path": "llm_adapter/ed25519_verify.py",
+      "semantic_responsibility": "Byte-identical copy of #432's pure Ed25519 verifier, used to check the org-ledger head attestation.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 llm_adapter/ed25519_verify.py",
+      "decision": "REUSE",
+      "justification": "Shared byte-identically with #432 so the two drafts cannot diverge; no cross-PR import, no new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/432",
+        "StegVerse-Labs/.github#3330@8abd5741 (P1 rev 5, LC-KV-16 reopen)"
+      ]
+    },
+    {
+      "path": "tests/ed25519_test_signer.py",
+      "semantic_responsibility": "Byte-identical copy of #432's fixture-key test signer.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 tests/ed25519_test_signer.py",
+      "decision": "REUSE",
+      "justification": "Shared byte-identically with #432 so the two drafts cannot diverge; no cross-PR import, no new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/432",
+        "StegVerse-Labs/.github#3330@8abd5741 (P1 rev 5, LC-KV-16 reopen)"
+      ]
+    },
+    {
+      "path": ".stegverse/node-ledger/org-ledger-head-signers.v1.json",
+      "semantic_responsibility": "Published head-attester keys for the org ledger's admitted append route; empty (NONE_PUBLISHED), so production fails closed MERGE_APPEND_PATH_NOT_ADMITTED.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 .stegverse/node-ledger/org-ledger-head-signers.v1.json (byte-identical)",
+      "decision": "REUSE",
+      "justification": "Shared byte-identically with #432 (LC-KV-16 rev 5); LC-KV-16 rev 5: the head must be authenticated by the append route, not by the caller naming a store.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/432",
+        "StegVerse-Labs/.github#3330@8abd5741 (P1 rev 5, LC-KV-16 reopen)"
+      ]
+    },
+    {
+      "path": "tests/org_ledger_harness.py",
+      "semantic_responsibility": "TEST-ONLY append-route stand-in (fixture seed) and pinned-genesis helpers, shared byte-identically with #433.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 tests/org_ledger_harness.py (byte-identical)",
+      "decision": "REUSE",
+      "justification": "Shared byte-identically with #432 (LC-KV-16 rev 5); Fixture keys only; opt-in per test so production behaviour stays the default.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/432",
+        "StegVerse-Labs/.github#3330@8abd5741 (P1 rev 5, LC-KV-16 reopen)"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/org_ledger_test_genesis.json",
+      "semantic_responsibility": "Fixture org-ledger genesis receipt whose sha256 the pinned test contract names.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 tests/fixtures/node_receipts/org_ledger_test_genesis.json (byte-identical)",
+      "decision": "REUSE",
+      "justification": "Shared byte-identically with #432 (LC-KV-16 rev 5); Rev 5 pins the org genesis; tests need a fixed one.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/432",
+        "StegVerse-Labs/.github#3330@8abd5741 (P1 rev 5, LC-KV-16 reopen)"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/contract_with_431_location_and_pinned_genesis.json",
+      "semantic_responsibility": "#431's repository_ledger_location shape plus expected_genesis_receipt_sha256 (the contract field #431 should add).",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 tests/fixtures/node_receipts/contract_with_431_location_and_pinned_genesis.json (byte-identical)",
+      "decision": "REUSE",
+      "justification": "Shared byte-identically with #432 (LC-KV-16 rev 5); Shows the one field #431's contract needs for the genesis pin.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/432",
+        "StegVerse-Labs/.github#3330@8abd5741 (P1 rev 5, LC-KV-16 reopen)"
+      ]
+    }
+  ]
+}
