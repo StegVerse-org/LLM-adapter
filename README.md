@@ -804,7 +804,26 @@ Every endpoint has an `endpoint_kind`, which is one of `EPHEMERAL`, `PERMANENT`,
 the kind, the key and the pinned code digests. The caller must pin the org-ledger head, and the pin must equal
 `HEAD.json`. Only receipts from the pinned producers (`.stegverse/node-ledger/pinned-code-digests.v1.json`) count, and
 a health report must re-derive from the receipts it cites. Anything else is a six-field `FAIL_CLOSED`
-`TEMP_NODE_LEDGER_NOT_ANCHORED`.
+`EPHEMERAL_NODE_LEDGER_NOT_ANCHORED`.
+
+**The issued anchor.** StegOS's emission (`stegverse.node-ledger-opened-generation/v1`) has no issuer. When the org
+ledger's ingress admits it, `issued_anchor` derives the `stegverse.node-ledger-opened/v1` anchor that
+continuity-vault-kit#258 consumes: `schema`, `transition_class`, `node_id`, `node_identity_key`,
+`genesis_receipt_sha256`, `issuer` (`ORGANIZATION_LEDGER`), `issuer_receipt_ref` (the org `INTR_MESH_PATH_INGRESS`
+receipt) and `receipt_sha256`. `verify_node_ledger_opened_anchor` is the `ORGANIZATION_LEDGER` issuer verifier; it
+re-derives the anchor from both ledgers and refuses anything else with `NODE_LEDGER_OPENED_ANCHOR_NOT_ISSUED`. No
+`TV/TVC` verifier exists, so a `TV/TVC` anchor is refused. Schemas: `schemas/node-ledger-opened.v1.json`,
+`schemas/node-ledger-opened-generation.v1.json`, `schemas/endpoint-kind.v1.json`.
+
+**Identity and transport (LC-KV-15 inside the wrapper).** Identity is never taken from an asserted field. The caller
+passes a `stegverse.node-identity-proof/v1`: an Ed25519 signature by the anchored `node_identity_key` over the
+deterministic `stegverse.node-identity-challenge/v1` (node, kind, genesis, current chain head, anchor receipt, pinned
+org head), verified with `llm_adapter.ed25519_verify`. A missing, stale or wrong proof is six-field `FAIL_CLOSED`
+`NODE_IDENTITY_NOT_PROVEN`. Transport is read from the node's newest ingress receipt and must be `INTERLOCK_INTR` /
+`INSTALLED` and `ADMITTED`. A caller's `transport_state` is recorded as `asserted_transport_state` and decides nothing.
+Otherwise the result is six-field `FAIL_CLOSED` `INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED`. On main
+`node_ingress_boundary.TRANSPORTS` has `INTERLOCK_INTR: NOT_YET_ENABLED`, so every production call refuses here
+today; the tests install it only inside the test.
 
 **E0.** Everything is event-triggered only. There are no clock or network reads in either core, and it runs only on
 temporary ledgers until the org-ledger append route is admitted.

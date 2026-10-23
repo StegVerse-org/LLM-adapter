@@ -9,8 +9,7 @@
   "emitted_at": "STEGOS_NODE_GENERATION",
   "emitted_by": "stegos.ephemeral_node_ledger_open",
   "endpoint_kind": "EPHEMERAL",
-  "event": "NODE_LEDGER_OPENED",
-  "ledger_genesis_sha256": "sha256:1fcf3b0ee434022783f77beca14926a7b51f9f55353f87e990af34faa05af4ea",
+  "genesis_receipt_sha256": "sha256:1fcf3b0ee434022783f77beca14926a7b51f9f55353f87e990af34faa05af4ea",
   "ledger_lifetime": "BOUNDED_UNTIL_DISSOLUTION",
   "ledger_opened": true,
   "node_id": "SV-NODE-0123456789abcdef01234567",
@@ -23,6 +22,7 @@
   },
   "node_kind": "StegNode",
   "profile_sha256": "sha256:56866f4aeeb3bb748304a477d6ac5371e2fcbbfb5bd48f5f7731b32d87231f2f",
-  "record_sha256": "sha256:7df8b6afa2fa8f5babbf81e899fbd213264eef5c1db0c460570ff81e68f92d3f",
-  "schema": "stegverse.node-ledger-opened/v1"
+  "receipt_sha256": "sha256:668e9b724546c605645f3ec2147e9d95eb6d9510e3a055771b5094aef0ab7485",
+  "schema": "stegverse.node-ledger-opened-generation/v1",
+  "transition_class": "NODE_LEDGER_OPENED"
 }

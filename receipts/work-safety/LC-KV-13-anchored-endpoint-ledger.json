@@ -72,7 +72,10 @@
     "receipts/work-safety/LC-KV-13-anchored-endpoint-ledger.json",
     "tests/fixtures/node_receipts/README.md",
     "tests/fixtures/node_receipts/stegos_node_ledger_opened.json",
-    "tests/fixtures/node_receipts/generate_node_ledger_opened_with_stegos.py"
+    "tests/fixtures/node_receipts/generate_node_ledger_opened_with_stegos.py",
+    "schemas/node-ledger-opened.v1.json",
+    "schemas/node-ledger-opened-generation.v1.json",
+    "schemas/endpoint-kind.v1.json"
   ],
   "new_files": [
     {
@@ -160,6 +163,42 @@
       "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
       "evidence_refs": [
         "tests/fixtures/node_receipts/README.md"
+      ]
+    },
+    {
+      "path": "schemas/node-ledger-opened.v1.json",
+      "semantic_responsibility": "The issued NODE_LEDGER_OPENED anchor (eight fields, issuer ORGANIZATION_LEDGER, issuer_receipt_ref = the org ledger's INTR_MESH_PATH_INGRESS), the shape continuity-vault-kit#258 consumes.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter schemas/*.schema.json (JSON Schema 2020-12 convention); continuity-vault-kit#258 NODE_LEDGER_OPENED_FIELDS and ENDPOINT_KINDS",
+      "decision": "CREATE_NEW",
+      "justification": "Lane D (continuity-vault-kit#258 @037f505e) consumes the node-ledger-opened anchor and endpoint_kind with PENDING_LANE_B schema placeholders; no schema for either exists in the org (searched StegVerse-org/LLM-adapter, StegVerse-org/.github, StegVerse-Labs/.github, StegVerse-Labs/StegOS).",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-Labs/continuity-vault-kit@037f505e:runtime/kv_interlock_endpoint.py (NODE_LEDGER_OPENED_FIELDS, ENDPOINT_KINDS, PENDING_LANE_B_SCHEMA)",
+        "llm_adapter/endpoint_ledger_anchor.py"
+      ]
+    },
+    {
+      "path": "schemas/node-ledger-opened-generation.v1.json",
+      "semantic_responsibility": "StegOS's generation-time NODE_LEDGER_OPENED record (no issuer; carried as the InTr path pair body).",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter schemas/*.schema.json (JSON Schema 2020-12 convention); continuity-vault-kit#258 NODE_LEDGER_OPENED_FIELDS and ENDPOINT_KINDS",
+      "decision": "CREATE_NEW",
+      "justification": "Lane D (continuity-vault-kit#258 @037f505e) consumes the node-ledger-opened anchor and endpoint_kind with PENDING_LANE_B schema placeholders; no schema for either exists in the org (searched StegVerse-org/LLM-adapter, StegVerse-org/.github, StegVerse-Labs/.github, StegVerse-Labs/StegOS).",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-Labs/continuity-vault-kit@037f505e:runtime/kv_interlock_endpoint.py (NODE_LEDGER_OPENED_FIELDS, ENDPOINT_KINDS, PENDING_LANE_B_SCHEMA)",
+        "llm_adapter/endpoint_ledger_anchor.py"
+      ]
+    },
+    {
+      "path": "schemas/endpoint-kind.v1.json",
+      "semantic_responsibility": "endpoint_kind EPHEMERAL/PERMANENT/GATEWAY/KV/SKAP_VAULT/ORG with each kind's ledger model, lifetime, dissolution and anchor; clears Lane D's ENDPOINT_KIND_SCHEMA_PENDING.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter schemas/*.schema.json (JSON Schema 2020-12 convention); continuity-vault-kit#258 NODE_LEDGER_OPENED_FIELDS and ENDPOINT_KINDS",
+      "decision": "CREATE_NEW",
+      "justification": "Lane D (continuity-vault-kit#258 @037f505e) consumes the node-ledger-opened anchor and endpoint_kind with PENDING_LANE_B schema placeholders; no schema for either exists in the org (searched StegVerse-org/LLM-adapter, StegVerse-org/.github, StegVerse-Labs/.github, StegVerse-Labs/StegOS).",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "StegVerse-Labs/continuity-vault-kit@037f505e:runtime/kv_interlock_endpoint.py (NODE_LEDGER_OPENED_FIELDS, ENDPOINT_KINDS, PENDING_LANE_B_SCHEMA)",
+        "llm_adapter/endpoint_ledger_anchor.py"
       ]
     }
   ]

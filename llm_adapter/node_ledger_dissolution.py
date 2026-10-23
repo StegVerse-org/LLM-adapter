@@ -26,7 +26,7 @@ then the result is six-field FAIL_CLOSED NODE_LEDGER_DISBURSEMENT_NOT_READ_BACK
 and nothing is closed.
 
 After NODE_LEDGER_DISSOLVED, llm_adapter.endpoint_ledger_anchor.verify_anchor
-refuses the root (TEMP_NODE_LEDGER_DISSOLVED), so it is no longer admissible.
+refuses the root (EPHEMERAL_NODE_LEDGER_DISSOLVED), so it is no longer admissible.
 
 NODE_LEDGER_DISSOLVED is the one new transition class: REPOSITORY_LEDGER_INITIALIZATION
 opens a ledger location and the InTr path classes move receipts, but no
@@ -100,11 +100,11 @@ def plan(node_id: Any, *, endpoint: Any, org_ledger_root: Any, org_ledger_head_r
     chain, _, _ = hne.read_chain(anchored["ledger_root"])
     addresses = [r["receipt_sha256"] for r in reversed(chain)]
     body = {"schema": anchor.DISBURSEMENT_BODY_SCHEMA, "node_id": node_id, "endpoint_kind": anchored["endpoint_kind"],
-            "ledger_genesis_sha256": anchored["ledger_genesis_sha256"], "disbursed_head_sha256": addresses[-1],
+            "genesis_receipt_sha256": anchored["genesis_receipt_sha256"], "disbursed_head_sha256": addresses[-1],
             "chain_length": len(addresses), "receipt_sha256s": addresses, "chain_sha256": anchor.sha(addresses),
             "anchor_destination_receipt_sha256": anchored.get("anchor_destination_receipt_sha256"),
             "node_kind": anchored.get("node_kind"),
-            "node_ledger_opened_record_sha256": anchored.get("node_ledger_opened_record_sha256"),
+            "node_ledger_opened_generation_receipt_sha256": anchored.get("node_ledger_opened_generation_receipt_sha256"),
             "destination_location": anchor.ORG_LEDGER_LOCATION,
             "provenance_at_dissolution": (anchor.provenance_failure(chain, node_id, anchored["endpoint_kind"])
                                           or ("PINNED_SHAPE_ONLY", ""))[0]}
@@ -178,13 +178,13 @@ def finalize(planned: Mapping[str, Any], *, org_ledger_root: Any) -> dict[str, A
     chain, _, _ = hne.read_chain(org_ledger_root)
     body = planned["disbursement_body"]
     evidence = {"schema": DISSOLUTION_SCHEMA, "task": TASK, "node_id": node_id, "endpoint_kind": planned["endpoint_kind"],
-                "node_kind": body.get("node_kind"), "ledger_genesis_sha256": body["ledger_genesis_sha256"],
+                "node_kind": body.get("node_kind"), "genesis_receipt_sha256": body["genesis_receipt_sha256"],
                 "disbursement_destination_receipt_sha256": readback["disbursement_destination_receipt_sha256"],
                 "endpoint_final_head_sha256": readback["disbursement_source_receipt_sha256"],
                 "retained_receipts": readback["retained_receipts"], "root_admissible_after": False,
                 "trigger": {"event": EVENT, "node_id": node_id}, "authority_effect": "NONE"}
     receipt = anchor.append_receipt(org_ledger_root, anchor.DISSOLVED_CLASS,
-                                    f"{anchor.DISSOLVED_CLASS}:{node_id}:{body['ledger_genesis_sha256']}",
+                                    f"{anchor.DISSOLVED_CLASS}:{node_id}:{body['genesis_receipt_sha256']}",
                                     chain[0]["receipt_sha256"], evidence, anchor.epoch_of(chain))
     return {**readback, "outcome": "DISSOLVED", "dissolved": True, "dissolution_receipt_sha256": receipt["receipt_sha256"]}
 

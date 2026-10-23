@@ -29,4 +29,4 @@ with tempfile.TemporaryDirectory() as root:
 record = open_ephemeral_node_ledger(profile, node_kind="StegNode", ledger_genesis=genesis)
 assert record["disposition"] == "ALLOW", record
 (HERE / "stegos_node_ledger_opened.json").write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
-print(record["record_sha256"], record["ledger_genesis_sha256"])
+print(record["receipt_sha256"], record["genesis_receipt_sha256"])

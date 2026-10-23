@@ -8,8 +8,8 @@ None of these files is a real node, a real key or a ledger receipt.
 
 ## `stegos_node_ledger_opened.json`
 
-This is the `NODE_LEDGER_OPENED` record that StegOS's own generation-time code (`stegos.ephemeral_node_ledger_open`, StegOS branch `laneb/ephemeral-node-ledger-opened`) emits for the EPHEMERAL StegNode ledger genesis of `stegos_observed_profile.json`'s node.
+This is the `NODE_LEDGER_OPENED` generation record (`stegverse.node-ledger-opened-generation/v1`, `schemas/node-ledger-opened-generation.v1.json`; `receipt_sha256` `sha256:668e9b72…7485`) that StegOS's own generation-time code (`stegos.ephemeral_node_ledger_open`, StegOS branch `laneb/ephemeral-node-ledger-opened`) emits for the EPHEMERAL StegNode ledger genesis of `stegos_observed_profile.json`'s node.
 
-To regenerate it, run `STEGOS_ROOT=... python3 tests/fixtures/node_receipts/generate_node_ledger_opened_with_stegos.py`. The genesis is deterministic, and `tests/test_endpoint_ledger_anchor.py` re-opens it and checks that the record names its hash.
+To regenerate it, run `STEGOS_ROOT=... python3 tests/fixtures/node_receipts/generate_node_ledger_opened_with_stegos.py`. The genesis is deterministic, and `tests/test_endpoint_ledger_anchor.py` re-opens it and checks that the record's `genesis_receipt_sha256` names its hash. The org ledger issues the `stegverse.node-ledger-opened/v1` anchor from this record when its ingress admits it; the anchor is not a fixture.
 
 If the pinned code digests change, the genesis changes too, and this fixture has to be regenerated.
