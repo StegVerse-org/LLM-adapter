@@ -811,7 +811,7 @@ only its own side of the crossing, as a digest-only crossing receipt (`endpoint_
 - **KV, SKAP_VAULT.** `STEGVERSE_KV:_StegVerse/Receipts` and `STEGVERSE_KV:_Vault/SKAP/Receipts`, designated with the
   cvk storage-endpoint keys (`store_type`, `storage_endpoint_schema`, `provider_id`, `access_adapter`, `kv_class`,
   `kv_request_id`, `location`) and path ids ending `:intr-destination`. They are read only through
-  `llm_adapter/endpoint_ledger_designation.py` (a byte copy of #431 @e9d45e6c); heads are signed against
+  `llm_adapter/endpoint_ledger_designation.py` (a byte copy of #431 @2494d75a); heads are signed against
   `.stegverse/node-ledger/kv-ledger-head-signers.v1.json` (byte copy, sha256 758d7983) under the
   `KV_RECORDED_RECEIPT_CHAIN_HEAD` digest. They are never opened on a ledger root (`ENDPOINT_INVALID`); a
   `ledger_root` is `KV_LEDGER_DESIGNATED_ON_GIT_REF`; an Org-membership binding is `ENDPOINT_ORG_MEMBERSHIP_REFUSED`;

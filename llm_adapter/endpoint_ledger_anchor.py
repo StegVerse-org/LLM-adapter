@@ -54,7 +54,7 @@ Endpoint kinds (`endpoint_kind`) and how each is anchored
   KV_RECORDED_RECEIPT_CHAIN_HEAD, signed by a kv_ledger_head_signer published in
   .stegverse/node-ledger/kv-ledger-head-signers.v1.json (byte copy of #431's,
   sha256 758d7983...). Reading the chain goes through
-  llm_adapter.endpoint_ledger_designation (byte copy of #431 @e9d45e6c), whose
+  llm_adapter.endpoint_ledger_designation (byte copy of #431 @2494d75a), whose
   reader id is not documented: FAIL_CLOSED
   KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED, six fields.
 * ``GATEWAY``: no gateway chain is carried on the org ledger. A gateway's
@@ -1000,7 +1000,7 @@ def verify_anchor(node_id: Any, *, endpoint: Any, org_ledger_root: Any,
 def verify_independent(node_id: Any, endpoint: Mapping[str, Any], org_ledger_root: Any,
                        org_ledger_head_receipt_sha256: Any) -> dict[str, Any]:
     """KV and SKAP_VAULT: STEGVERSE_KV:<location> with the cvk storage-endpoint keys, read only through
-    endpoint_ledger_designation (byte copy of #431 @e9d45e6c). Six fields from that module on any refusal."""
+    endpoint_ledger_designation (byte copy of #431 @2494d75a). Six fields from that module on any refusal."""
     kind = endpoint["endpoint_kind"]
     designation = endpoint.get("designation")
     base = {"schema": RESULT_SCHEMA, "node_id": node_id if isinstance(node_id, str) else None,
@@ -1019,13 +1019,15 @@ def verify_independent(node_id: Any, endpoint: Mapping[str, Any], org_ledger_roo
         return refused(failed)
     if designation["endpoint_kind"] != kind or designation["endpoint_id"] != kv_endpoint_id(kind) \
             or node_id != kv_endpoint_id(kind) \
-            or (designation.get("rollback_watermark_source") or {}).get("path_ids") != [base["path_id"]]:
+            or eld.crossing_path_ids(designation) not in ([], [base["path_id"]]):
+        # cvk#263 @bf684aad: the watermark is KV's own recorded head; path_ids are only the optional cross-check
         return refused(eld.refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"{kind} is {kv_endpoint_id(kind)} on "
                                    f"path {base['path_id']}; got {designation.get('endpoint_id')!r} for {node_id!r}"))
     org_chain, failure = _org_chain(org_ledger_root, org_ledger_head_receipt_sha256)
     if failure:
         return non_allow(*failure, node_id=node_id, kind_for_code=kind)
-    with eld.read_designated(designation, source=None, org_chain=org_chain) as (chain, failed):
+    with eld.read_designated(designation, source=None, org_chain=org_chain,
+                             recorded_head=endpoint.get("recorded_head")) as (chain, failed):
         if failed:
             return refused(failed)
     return refused(eld.refusal("KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED", "no admitted reader"))   # unreachable

@@ -318,7 +318,10 @@ class AnchoredEndToEndTests(_Ledgers):
         self.open_and_anchor()
         node_chain, org_chain = hne.read_chain(self.node)[0], hne.read_chain(self.org)[0]
         self.assertIsNone(eld.crossing_failure(node_chain, org_chain, {
-            "endpoint_id": NODE, "rollback_watermark_source": {"path_ids": [anchor.path_id(NODE)]}}))
+            "endpoint_id": NODE, "rollback_watermark_source": {
+                "source": "KV_RECORDED_RECEIPT_CHAIN_HEAD", "org_crossing_cross_check": {
+                    "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD", "path_ids": [anchor.path_id(NODE)],
+                    "role": "DIGEST_ONLY_CROSS_CHECK_NEVER_WATERMARK"}}}))
         crossing = next(r for r in org_chain if r["transition_class"] == anchor.DESTINATION_CLASS)
         own = [r for r in node_chain if r["transition_class"] == anchor.SOURCE_CLASS]
         self.assertEqual([r["receipt_sha256"] for r in own],
@@ -341,7 +344,10 @@ class AnchoredEndToEndTests(_Ledgers):
                 endpoint_id = f"STEGVERSE_KV:{location_}"
                 self.assertEqual(anchor.kv_endpoint_id(kind), endpoint_id)
                 self.assertTrue(anchor.path_id(NODE).endswith(":intr-destination"))
-                self.assertEqual(designation["rollback_watermark_source"]["path_ids"],
+                # cvk#263 @bf684aad: KV's own recorded head is the watermark; the :intr-destination path is only the
+                # optional digest-only Org crossing cross-check
+                self.assertEqual(designation["rollback_watermark_source"]["source"], "KV_RECORDED_RECEIPT_CHAIN_HEAD")
+                self.assertEqual(eld.crossing_path_ids(designation),
                                  [f"StegVerse-org->{endpoint_id}:intr-destination"])
                 self.assertEqual(set(designation["stores"][0]), {
                     "store_type", "storage_endpoint_schema", "provider_id", "access_adapter", "kv_class",
@@ -374,10 +380,28 @@ class AnchoredEndToEndTests(_Ledgers):
                 wrong = anchor.verify_anchor(NODE, endpoint={"endpoint_kind": kind, "designation": designation},
                                              org_ledger_root=self.org, org_ledger_head_receipt_sha256=self.head())
                 self.assert_refused(wrong, "ENDPOINT_LEDGER_DESIGNATION_INVALID", "ENDPOINT_LEDGER_DESIGNATION_INVALID")
+                # cvk#263 @bf684aad: no declared path is needed for the watermark; an Org-sourced one is refused
+                bare = {**designation, "rollback_watermark_source": {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD"}}
+                out = anchor.verify_anchor(endpoint_id, endpoint={"endpoint_kind": kind, "designation": bare},
+                                           org_ledger_root=self.org, org_ledger_head_receipt_sha256=self.head())
+                self.assert_refused(out, "KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED",
+                                    "KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED")
+                org_sourced = {**designation, "rollback_watermark_source": {
+                    **designation["rollback_watermark_source"], "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"}}
+                out = anchor.verify_anchor(endpoint_id, endpoint={"endpoint_kind": kind, "designation": org_sourced},
+                                           org_ledger_root=self.org, org_ledger_head_receipt_sha256=self.head())
+                self.assert_refused(out, "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED",
+                                    "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED")
+                self.assertEqual(out["failure_class"], "A")
+                unknown = anchor.verify_anchor(endpoint_id, endpoint={"endpoint_kind": kind, "designation": {
+                    **designation, "ledger_note": "x"}}, org_ledger_root=self.org,
+                    org_ledger_head_receipt_sha256=self.head())     # LC-KV-24: keys are closed
+                self.assert_refused(unknown, "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY",
+                                    "KV_RECEIPT_CHAIN_DESIGNATION_UNKNOWN_KEY")
 
     def test_431_designation_suite_passes_against_432_anchors(self):
         """Rerun #431's designation tests here (byte-identical module), with #431's contract designation."""
-        # byte copy of #431 @e9d45e6c tests/test_endpoint_ledger_designation.py, not collected on its own (#432's
+        # byte copy of #431 @2494d75a tests/test_endpoint_ledger_designation.py, not collected on its own (#432's
         # contract.json does not designate)
         from tests import endpoint_ledger_designation_suite_431 as suite_module
         with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431):
