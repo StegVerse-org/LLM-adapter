@@ -215,11 +215,14 @@ class LlmAdapterLedgerMergeTransferTests(unittest.TestCase):
 class ExpectedGenesisPinTests(unittest.TestCase):
     """repository_ledger_location.expected_genesis_receipt_sha256 is the source of #432's genesis pin.
 
-    It is null with a note, never an invented digest, because the genesis receipt_sha256 cannot be computed before
-    the genesis is observed. This test recomputes a REPOSITORY_LEDGER_INITIALIZATION genesis with the repository's own
-    emit.py and shows that the digest moves with the clock-stamped observed_at, even with a supplied epoch, fixed
-    inputs and an empty ledger. Only an observed, read-back genesis can be pinned.
+    Byte-deterministic genesis (StegVerse-org/.github#167 comment 6372442705 item 6, aligned with
+    StegVerse-Labs/.github#3263/#3290): observed_at comes from the receipt's own hb_reference
+    (SUPPLIED_HB_EPOCH:<epoch>), so the digest is precomputable from the supplied inputs, and an absent epoch is
+    refused HB_EPOCH_NOT_SUPPLIED. Pin-after-observe is only the read-back check.
     """
+
+    INPUTS = dict(predecessor_state_sha256="sha256:" + "0" * 64, successor_state_sha256="sha256:" + "1" * 64,
+                  evidence={"namespace": NS})
 
     def emit_module(self):
         import importlib.util
@@ -229,7 +232,8 @@ class ExpectedGenesisPinTests(unittest.TestCase):
         spec.loader.exec_module(module)
         return module
 
-    def genesis_at(self, emit, instant):
+    def genesis_at(self, emit, instant, epoch):
+        """emit.append the genesis with the host clock pinned to `instant` (it must not matter)."""
         from datetime import datetime as real_datetime
         from unittest import mock
 
@@ -240,38 +244,78 @@ class ExpectedGenesisPinTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as root, mock.patch.dict(os.environ, {"STEGVERSE_REPO_LEDGER_ROOT": root}), \
                 mock.patch.object(emit, "datetime", FixedClock):
-            anchor = int(emit.heartbeat_parameters()["anchor_epoch"])
             receipt = emit.append("REPOSITORY_LEDGER_INITIALIZATION:StegVerse-org/LLM-adapter",
-                                  "REPOSITORY_LEDGER_INITIALIZATION", "sha256:" + "0" * 64, "sha256:" + "1" * 64,
-                                  evidence={"namespace": NS}, hb_epoch=anchor)
+                                  "REPOSITORY_LEDGER_INITIALIZATION", self.INPUTS["predecessor_state_sha256"],
+                                  self.INPUTS["successor_state_sha256"], evidence=dict(self.INPUTS["evidence"]),
+                                  hb_epoch=epoch)
         self.assertIsNone(receipt["previous_receipt_sha256"])
         return receipt
 
-    def test_contract_pin_is_null_with_a_note_not_an_invented_digest(self):
+    def test_contract_pin_is_null_until_inputs_are_supplied_and_says_how_it_is_computed(self):
         location = json.loads((ROOT / ".stegverse/transition-ledger/contract.json").read_text())[
             "repository_ledger_location"]
         self.assertIn("expected_genesis_receipt_sha256", location)
         pinned = location["expected_genesis_receipt_sha256"]
-        if pinned is None:
-            note = location["expected_genesis_note"]
-            for needle in ("cannot be known before it is observed", "observed_at", "ORG_LEDGER_GENESIS_NOT_PINNED"):
-                self.assertIn(needle, note)
-        else:     # a later admitted change may set the observed genesis; it must then be a real digest form
+        computation = location["expected_genesis_computation"]
+        self.assertEqual(computation["observed_at"], "SUPPLIED_HB_EPOCH:<epoch>")
+        self.assertIs(computation["clock_read"], False)
+        self.assertIn(P.SUPPLIED_EPOCH_FAILURE_SHA256, computation["supplied_epoch_rule"])
+        self.assertTrue(computation["entrypoint"].startswith(P.PRECOMPUTE_ENTRYPOINT.split(" --hb-epoch")[0]))
+        note = location["expected_genesis_note"]
+        for needle in ("byte-deterministic", "SUPPLIED_HB_EPOCH", "HB_EPOCH_NOT_SUPPLIED", "read-back",
+                       "ORG_LEDGER_GENESIS_NOT_PINNED", "StegVerse-org/.github#196"):
+            self.assertIn(needle, note)
+        self.assertNotIn("cannot be known before it is observed", note)
+        if pinned is not None:     # a later admitted change sets the precomputed digest
             self.assertRegex(pinned, r"^sha256:[0-9a-f]{64}$")
 
-    def test_genesis_digest_is_not_computable_before_observation(self):
+    def test_genesis_is_byte_deterministic_and_precomputable_at_a_supplied_epoch(self):
         from datetime import datetime, timezone
         emit = self.emit_module()
         t1 = datetime(2026, 10, 23, 17, 0, 0, tzinfo=timezone.utc)
-        t2 = datetime(2026, 10, 23, 17, 0, 0, 1, tzinfo=timezone.utc)
-        a, a_again, b = self.genesis_at(emit, t1), self.genesis_at(emit, t1), self.genesis_at(emit, t2)
-        self.assertEqual(a["receipt_sha256"], a_again["receipt_sha256"])    # recomputed: same inputs, same instant
-        self.assertNotEqual(a["receipt_sha256"], b["receipt_sha256"])       # one microsecond moves the digest
+        t2 = datetime(2031, 1, 2, 3, 4, 5, 6, tzinfo=timezone.utc)
+        a, b = self.genesis_at(emit, t1, 446655631), self.genesis_at(emit, t2, 446655631)
+        self.assertEqual(json.dumps(a, sort_keys=True), json.dumps(b, sort_keys=True))   # the instant does not matter
+        self.assertEqual(a["observed_at"], "SUPPLIED_HB_EPOCH:446655631")
         self.assertFalse(a["hb_reference"]["derived_from_clock"])
         self.assertTrue(a["observed_at_is_descriptive_not_ordering"])
-        self.assertEqual(a["receipt_sha256"], emit.sha({k: v for k, v in a.items() if k != "receipt_sha256"}))
-        derived = emit.hb_reference()          # with no supplied epoch the reference itself is a clock sample
+        self.assertNotEqual(a["receipt_sha256"], self.genesis_at(emit, t1, 446655632)["receipt_sha256"])  # the epoch does
+        pre = P.expected_genesis(hb_epoch=446655631, **self.INPUTS)
+        self.assertEqual(pre["disposition"], M.ALLOW, pre)
+        self.assertEqual(pre["expected_genesis_receipt_sha256"], a["receipt_sha256"])
+        self.assertEqual(pre["genesis_receipt"], a)                   # precompute equals emit.append, byte for byte
+        self.assertEqual(P.expected_genesis(hb_epoch="446655631", **self.INPUTS), pre)
+        # the documented formula, by hand
+        body = {k: v for k, v in a.items() if k != "receipt_sha256"}
+        canon = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        self.assertEqual(a["receipt_sha256"], "sha256:" + hashlib.sha256(canon).hexdigest())
+        # emit.py and Labs#3263 share the observed_at rule; a clock-derived reference says so
+        derived = emit.hb_reference()
         self.assertTrue(derived["derived_from_clock"])
+        self.assertTrue(emit.observed_at_from_hb_reference(derived).startswith("HB_EPOCH_DERIVED_FROM_CLOCK:"))
+        self.assertEqual(P.observed_at_from_hb_reference(derived), emit.observed_at_from_hb_reference(derived))
+
+    def test_precompute_refuses_an_absent_or_invalid_epoch_with_six_fields(self):
+        cases = [(None, "HB_EPOCH_NOT_SUPPLIED")] + [(v, "HB_EPOCH_INVALID") for v in
+                                                     (31, "+33", " 33", "3_3", "33.0", True, 33.0, "", "-33")]
+        for value, code in cases:
+            d = P.expected_genesis(hb_epoch=value, **self.INPUTS)
+            self.assertEqual((d["disposition"], d["failure_code"]), (M.FAIL_CLOSED, code), value)
+            self.assertEqual(d["failed_predicate"], "SUBMISSION_CARRIES_THE_SUPPLIED_HB_EPOCH")
+            for f in SIX:
+                self.assertTrue(isinstance(d[f], str) and d[f], (value, f))
+            self.assertIsNone(d["expected_genesis_receipt_sha256"])
+        bad = P.expected_genesis(hb_epoch=446655631, **{**self.INPUTS, "predecessor_state_sha256": "0"})
+        self.assertEqual(bad["failure_code"], "REPOSITORY_LEDGER_GENESIS_MISMATCH")
+        self.assertEqual(P.main(["precompute", "--predecessor-state-sha256", "sha256:" + "0" * 64,
+                                 "--successor-state-sha256", "sha256:" + "1" * 64]), 3)
+
+    def test_supplied_epoch_rule_is_the_shared_byte_copy(self):
+        source = (ROOT / "llm_adapter/supplied_epoch.py").read_text()
+        node = next(n for n in ast.parse(source).body
+                    if isinstance(n, ast.FunctionDef) and n.name == "supplied_epoch_failure")
+        segment = ast.get_source_segment(source, node) + "\n"
+        self.assertEqual(hashlib.sha256(segment.encode("utf-8")).hexdigest(), P.SUPPLIED_EPOCH_FAILURE_SHA256)
 
 
 #: TEST-ONLY append-route attester (a public seed, not a secret; TV/TVC custody holds real keys and bots never do).
@@ -402,7 +446,7 @@ class GenesisPinTransitionTests(unittest.TestCase):
         self.assertEqual(old, new)
         self.assertRegex(json.loads(after)["repository_ledger_location"]["expected_genesis_receipt_sha256"],
                          r"^sha256:[0-9a-f]{64}$")
-        # the consumes receipt, appended with the unchanged emit.py into a scratch store, cites the genesis
+        # the consumes receipt, appended with emit.py into a scratch store, cites the genesis
         req = d["consumes_receipt"]["emit_append"]
         self.assertEqual(req["transition_class"], "REPOSITORY_LEDGER_GENESIS_PIN")
         self.assertEqual(req["hb_epoch"], 446655631)
@@ -429,6 +473,47 @@ class GenesisPinTransitionTests(unittest.TestCase):
         self.assertEqual(P.apply_write(again, pinned), pinned)
         with self.assertRaises(ValueError):
             P.apply_write(first, pinned)       # a stale plan is never applied over a changed contract
+
+    def test_a_clock_stamped_or_unsupplied_genesis_is_refused_not_pinned(self):
+        bare, (g,) = self.org_ledger()
+        for name, edit, code in (
+                ("clock", {"hb_reference": {**g["hb_reference"], "derived_from_clock": True}}, "HB_EPOCH_INVALID"),
+                ("noepoch", {"hb_reference": None}, "HB_EPOCH_NOT_SUPPLIED"),
+                ("stamp", {"observed_at": "2026-10-23T17:00:00+00:00"}, "HB_EPOCH_INVALID")):
+            forged = {**{k: v for k, v in g.items() if k != "receipt_sha256"}, **edit}
+            work = self.tmp / (name + "-work")
+            store = work / NS / "receipts"
+            store.mkdir(parents=True)
+            r = receipt(forged)
+            (store / (r["receipt_sha256"][7:] + ".json")).write_text(json.dumps(r))
+            (work / NS / "HEAD.json").write_text(json.dumps({"receipt_sha256": r["receipt_sha256"]}))
+            git(work, "init", "-q")
+            git(work, "add", ".")
+            git(work, "commit", "-q", "-m", "ledger")
+            b = self.tmp / (name + ".git")
+            git(self.tmp, "clone", "-q", "--bare", str(work), str(b))
+            git(self.tmp, "--git-dir", str(b), "update-ref", M.LEDGER_REF, "HEAD")
+            d = P.plan(org_ledger=str(b), contract_bytes=self.before, org_ledger_head_attestation=attest(str(b)))
+            self.assert_refused(d, code)
+            self.assertEqual(d["failed_predicate"], "SUBMISSION_CARRIES_THE_SUPPLIED_HB_EPOCH")
+
+    def test_a_precomputed_pin_is_only_read_back(self):
+        bare, (g,) = self.org_ledger()
+        pre = P.expected_genesis(hb_epoch=446655631, **ExpectedGenesisPinTests.INPUTS)
+        self.assertEqual(pre["expected_genesis_receipt_sha256"], g["receipt_sha256"])
+        pinned = json.loads(self.before)
+        pinned["repository_ledger_location"]["expected_genesis_receipt_sha256"] = pre["expected_genesis_receipt_sha256"]
+        pinned = (json.dumps(pinned, indent=2, ensure_ascii=False) + "\n").encode()
+        d = P.plan(org_ledger=bare, contract_bytes=pinned, org_ledger_head_attestation=attest(bare))
+        self.assertEqual((d["disposition"], d["read_back_check"]), (M.ALLOW, "MATCHES_PIN"), d)
+        self.assertTrue(d["already_pinned"])
+        self.assertIsNone(d["contract_write"])
+        self.assertIsNone(d["consumes_receipt"])
+        other = P.expected_genesis(hb_epoch=446655632, **ExpectedGenesisPinTests.INPUTS)["expected_genesis_receipt_sha256"]
+        wrong = json.loads(pinned)
+        wrong["repository_ledger_location"]["expected_genesis_receipt_sha256"] = other
+        d = P.plan(org_ledger=bare, contract_bytes=json.dumps(wrong).encode(), org_ledger_head_attestation=attest(bare))
+        self.assert_refused(d, "EXPECTED_GENESIS_PIN_CONFLICT")
 
     def test_conflicting_pin_is_refused(self):
         bare, (g,) = self.org_ledger()
@@ -477,7 +562,7 @@ class GenesisPinTransitionTests(unittest.TestCase):
 class GenesisPinPrePinIngressTests(unittest.TestCase):
     """The GENESIS_PIN trigger arrives over InTr (option (b)) and is received ahead of the pin it delivers.
 
-    The genesis and the carrying INTR_MESH_PATH_INGRESS are appended with the unchanged emit.py into a temporary
+    The genesis and the carrying INTR_MESH_PATH_INGRESS are appended with emit.py into a temporary
     namespace store; the INTR_MESH_PATH_TRANSFER source half is retained at <namespace>/source-receipts/. Both use
     intr_transport_carrier's own evidence builders (byte copy of #432/#433). Nothing touches the real ledger.
     """
@@ -493,7 +578,8 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
     def tearDown(self):
         self.g.tearDown()
 
-    def carried(self, signal_for=None, *, name="org", tamper=False, carry_other=None):
+    def carried(self, signal_for=None, *, name="org", tamper=False, carry_other=None, retain=True,
+                source_hb="supplied"):
         """A ledger copy: genesis, then the InTr destination half carrying the genesis-observed signal."""
         tmp = self.g.tmp
         work = tmp / (name + "-work")
@@ -507,9 +593,16 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
         cid = "intr-path-v1:StegVerse-org/.github->StegVerse-org:genesis-pin"
         source = receipt({"schema": carrier.RECEIPT_SCHEMA, "repository": "StegVerse-org/.github",
                           "transition_class": carrier.SOURCE_CLASS, "previous_receipt_sha256": None,
+                          **({"hb_reference": P.supplied_hb_reference(446655630)} if source_hb == "supplied" else
+                             {"hb_reference": {**P.supplied_hb_reference(446655630), "derived_from_clock": True}}
+                             if source_hb == "clock" else {}),
                           "evidence": carrier.source_evidence(signal, cid)})
+        self.source = source
         (store / "source-receipts").mkdir(parents=True)
-        (store / "source-receipts" / (source["receipt_sha256"][7:] + ".json")).write_text(json.dumps(source))
+        if retain:
+            (store / "source-receipts" / (source["receipt_sha256"][7:] + ".json")).write_text(json.dumps(source))
+        else:
+            (store / "source-receipts" / ".keep").write_text("")
         dest = self.g.append(store, "INTR_MESH_PATH_INGRESS:" + cid, carrier.DESTINATION_CLASS,
                              "sha256:" + "1" * 64, "sha256:" + "2" * 64,
                              evidence=carrier.destination_evidence(source), hb_epoch=446655632)
@@ -556,9 +649,10 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
 
     def test_pre_pin_any_other_signal_class_is_refused(self):
         bare, genesis, signal, cite = self.carried()
-        others = [{**signal, "signal_class": "NODE_INGRESS_SIGNAL"}, {**signal, "extra": 1},
-                  {k: v for k, v in signal.items() if k != "node_ref"}, {"node_ref": "n-1", "kind": "NODE_INGRESS"},
-                  "not an object", {**signal, "transition_class": "SOMETHING_ELSE"}]
+        others = [{**signal, "schema": "stegverse.repository-ledger-genesis-observed/v1"}, {**signal, "extra": 1},
+                  {k: v for k, v in signal.items() if k != "ledger_location"}, {"node_ref": "n-1", "kind": "NODE_INGRESS"},
+                  "not an object", {**signal, "ledger_location": "StegVerse-org/.github#refs/x:y"},
+                  {**signal, "signal_class": "REPOSITORY_LEDGER_GENESIS_OBSERVED"}]
         for other in others:
             d = R.receive(other, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before)
             self.assert_six(d, "PRE_PIN_SIGNAL_CLASS_NOT_ACCEPTED")
@@ -568,6 +662,20 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
         self.assert_six(R.receive(node, intr_carrier=cite2, org_ledger=bare2, contract_bytes=self.before),
                         "PRE_PIN_SIGNAL_CLASS_NOT_ACCEPTED")
 
+    def test_a_genesis_pointer_originated_by_an_endpoint_is_refused(self):
+        """No endpoint is an Organization member or a source of org-ledger records (#160 comment 6372871021)."""
+        bare, genesis, signal, cite = self.carried()
+        self.assertEqual(signal["node_ref"], R.EMITTER_REF)
+        for endpoint in ("STEGVERSE_KV:_StegVerse/Receipts", "STEGVERSE_KV:_Vault/SKAP/Receipts", "node-1",
+                         "gateway-1"):
+            with self.subTest(endpoint=endpoint):
+                d = R.receive({**signal, "node_ref": endpoint}, intr_carrier=cite, org_ledger=bare,
+                              contract_bytes=self.before)
+                self.assert_six(d, R.ENDPOINT_NOT_ORG_SOURCE)
+                self.assertEqual(d["failed_predicate"],
+                                 "NO_ENDPOINT_IS_AN_ORG_MEMBER_OR_A_SOURCE_OF_ORG_LEDGER_RECORDS")
+                self.assertFalse(d["ledger_written"])
+
     def test_forged_or_off_chain_genesis_is_refused(self):
         bare, _, signal, cite = self.carried(name="forged", tamper=True)
         self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before),
@@ -576,33 +684,126 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
         bare, _, signal, cite = self.carried(off, name="offchain")
         self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before),
                         "REPOSITORY_LEDGER_GENESIS_NOT_ON_CHAIN")
-        # a real genesis delivered without its InTr pair, or with a pair for another body, is refused by the carrier
+        # a real genesis delivered without its InTr pair is a crossing neither side shows: refused, six fields
         bare, genesis, signal, cite = self.carried(name="nocarrier")
         for bad in ({"org_ledger_head_attestation": cite["org_ledger_head_attestation"]},
-                    {**cite, "destination_receipt_sha256": "sha256:" + "b" * 64},
-                    {**cite, "org_ledger_head_receipt_sha256": genesis["receipt_sha256"]}):
-            self.assert_six(R.receive(signal, intr_carrier=bad, org_ledger=bare, contract_bytes=self.before),
-                            carrier.FAILURE_CODE)
+                    {**cite, "destination_receipt_sha256": "sha256:" + "b" * 64}):
+            d = R.receive(signal, intr_carrier=bad, org_ledger=bare, contract_bytes=self.before)
+            self.assert_six(d, R.CROSSING_CODE)
+            self.assertEqual(d["one_sided"], "NEITHER")
+        # a pair the carrier cannot authenticate (head not the carrying ingress) is refused by the carrier
+        self.assert_six(R.receive(signal, intr_carrier={**cite, "org_ledger_head_receipt_sha256": genesis["receipt_sha256"]},
+                                  org_ledger=bare, contract_bytes=self.before), carrier.FAILURE_CODE)
         self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=None, contract_bytes=self.before),
                         "ORGANIZATION_LEDGER_COPY_UNAVAILABLE")
+
+    def test_a_one_sided_crossing_is_refused_with_six_fields(self):
+        """Both sides record the crossing (#162 comment 6372641743): the egress record (source) and the ingress
+        record (destination), each pointing at the other, each with a supplied epoch."""
+        bare, genesis, signal, cite = self.carried(name="both")
+        self.assertEqual(R.receive(signal, intr_carrier=cite, org_ledger=bare,
+                                   contract_bytes=self.before)["disposition"], R.ACCEPTED)
+        # source only: the egress record is retained and cited, the destination never recorded its ingress
+        src_only = {"source_receipt_sha256": self.source["receipt_sha256"],
+                    "org_ledger_head_receipt_sha256": cite["org_ledger_head_receipt_sha256"],
+                    "org_ledger_head_attestation": cite["org_ledger_head_attestation"]}
+        d = R.receive(signal, intr_carrier=src_only, org_ledger=bare, contract_bytes=self.before)
+        self.assert_six(d, R.CROSSING_CODE)
+        self.assertEqual((d["one_sided"], d["failed_predicate"]), ("SOURCE_ONLY", R.CROSSING_PREDICATE))
+        # destination only: the ingress record is on the chain, the source's egress record is not retained
+        bare, genesis, signal, cite = self.carried(name="destonly", retain=False)
+        d = R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before)
+        self.assert_six(d, R.CROSSING_CODE)
+        self.assertEqual(d["one_sided"], "DESTINATION_ONLY")
+        # an egress record without a supplied epoch is refused under the shared rule
+        for hb, code in (("clock", "HB_EPOCH_INVALID"), ("none", "HB_EPOCH_NOT_SUPPLIED")):
+            bare, genesis, signal, cite = self.carried(name="hb-" + hb, source_hb=hb)
+            d = R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before)
+            self.assert_six(d, code)
+            self.assertEqual(d["failed_predicate"], "SUBMISSION_CARRIES_THE_SUPPLIED_HB_EPOCH")
+
+    def test_records_that_do_not_point_at_each_other_are_refused(self):
+        bare, genesis, signal, cite = self.carried(name="pointers")
+        chain, _, _ = P.read_chain(bare, NS)
+        dest = next(r for r in chain if r["receipt_sha256"] == cite["destination_receipt_sha256"])
+        self.assertIsNone(R.crossing_pair_failure(self.source, dest))
+        other = {**self.source, "evidence": {**self.source["evidence"], "communication_id": "intr-path-v1:other"}}
+        self.assertEqual(R.crossing_pair_failure(other, dest)[0], R.CROSSING_CODE)
+        moved = {**dest, "evidence": {**dest["evidence"], "addressed_location": "refs/x:y"}}
+        self.assertEqual(R.crossing_pair_failure(self.source, moved)[0], R.CROSSING_CODE)
+        # the ingress record carries a pointer (the egress digest), not the egress receipt body
+        self.assertEqual(dest["evidence"]["source_repository_receipt_sha256"], self.source["receipt_sha256"])
+        self.assertNotIn("evidence", dest["evidence"])
+
+    def test_the_destination_half_is_planned_from_the_egress_record_but_not_wired(self):
+        """LC-KV-20 defect 4: the destination's own ingress record is now planned (the exact emit.py append), with
+        a supplied epoch; no transition runs it and nothing is written here, so defect 4 stays partial."""
+        self.carried(name="plan")
+        head = "sha256:" + "1" * 64
+        plan = R.plan_destination_half(self.source, hb_epoch="446655632", namespace_head_receipt_sha256=head)
+        self.assertEqual(plan["disposition"], "ALLOW", plan)
+        req = plan["emit_append"]
+        self.assertEqual(req["evidence"], carrier.destination_evidence(self.source))
+        self.assertEqual((req["transition_class"], req["hb_epoch"], req["successor_state_sha256"]),
+                         (carrier.DESTINATION_CLASS, 446655632, self.source["receipt_sha256"]))
+        self.assertEqual((plan["wired_to_transition"], plan["ledger_written"]), (False, False))
+        # emit.py, given this request at this epoch, writes the record the receiver then pairs with the egress
+        emit = ExpectedGenesisPinTests.emit_module(self)
+        body = emit.receipt_body(req["transition_id"], req["transition_class"], req["predecessor_state_sha256"],
+                                 req["successor_state_sha256"], req["evidence"], req["authority_effect"],
+                                 emit.hb_reference(req["hb_epoch"]), None)
+        self.assertEqual(body["observed_at"], "SUPPLIED_HB_EPOCH:446655632")
+        self.assertIsNone(R.crossing_pair_failure(self.source, {**body, "receipt_sha256": carrier.sha(body)}))
+        cases = {
+            "no epoch": (dict(source=self.source, hb_epoch=None), "HB_EPOCH_NOT_SUPPLIED"),
+            "low epoch": (dict(source=self.source, hb_epoch="31"), "HB_EPOCH_INVALID"),
+            "clock egress": (dict(source={**self.source, "hb_reference": {**self.source["hb_reference"],
+                                                                           "derived_from_clock": True}},
+                                  hb_epoch="446655632"), R.CROSSING_CODE),   # reseal fails first
+            "not sealed": (dict(source={**self.source, "receipt_sha256": "sha256:" + "0" * 64},
+                                hb_epoch="446655632"), R.CROSSING_CODE),
+            # carrier.destination_evidence would raise KeyError here; the plan refuses first (register item (a))
+            "no evidence": (dict(source=receipt({k: v for k, v in self.source.items()
+                                                 if k not in ("evidence", "receipt_sha256")}),
+                                 hb_epoch="446655632"), R.CROSSING_CODE),
+            "not an object": (dict(source=None, hb_epoch="446655632"), R.CROSSING_CODE),
+        }
+        for name, (kw, code) in cases.items():
+            with self.subTest(name=name):
+                got = R.plan_destination_half(namespace_head_receipt_sha256=head, **kw)
+                self.assertEqual((got["disposition"], got["failure_code"]), ("FAIL_CLOSED", code), got)
+                for f in SIX:
+                    self.assertTrue(got[f], f)
+                self.assertIsNone(got["emit_append"])
+        clocked = receipt({**{k: v for k, v in self.source.items() if k != "receipt_sha256"},
+                           "hb_reference": {**self.source["hb_reference"], "derived_from_clock": True}})
+        self.assertEqual(R.plan_destination_half(clocked, hb_epoch="446655632",
+                                                 namespace_head_receipt_sha256=head)["failure_code"], "HB_EPOCH_INVALID")
 
     def test_once_pinned_the_exception_closes_and_normal_gates_apply(self):
         bare, genesis, signal, cite = self.carried()
         accepted = R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before)
         pinned = P.apply_write(accepted["genesis_pin_plan"], self.before)
         node = {"node_ref": "n-1", "signal_class": "NODE_INGRESS_SIGNAL"}
-        for s in (signal, node):
-            d = R.receive(s, intr_carrier=cite, org_ledger=bare, contract_bytes=pinned)
-            self.assert_six(d, "PRE_PIN_INGRESS_CLOSED")
-            self.assertEqual(d["retry_entrypoint"], carrier.RETRY_ENTRYPOINT)     # the normal #433 InTr gate
-            self.assertEqual(d["next_attempt"], carrier.NEXT_ATTEMPT)
+        d = R.receive(node, intr_carrier=cite, org_ledger=bare, contract_bytes=pinned)
+        self.assert_six(d, "PRE_PIN_INGRESS_CLOSED")
+        self.assertEqual(d["retry_entrypoint"], carrier.RETRY_ENTRYPOINT)     # the normal #433 InTr gate
+        self.assertEqual(d["next_attempt"], carrier.NEXT_ATTEMPT)
+        # the genesis pointer, once pinned (here: precomputed), is only the read-back check: no write is planned
+        pre = P.expected_genesis(hb_epoch=446655631, **ExpectedGenesisPinTests.INPUTS)["expected_genesis_receipt_sha256"]
+        self.assertEqual(pre, genesis["receipt_sha256"])
+        back = R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=pinned)
+        self.assertEqual((back["disposition"], back["read_back_check"]), (R.READ_BACK, "MATCHES_PIN"), back)
+        self.assertFalse(back["pre_pin_exception"])
+        self.assertIsNone(back["genesis_pin_plan"]["contract_write"])
+        self.assertIsNone(back["genesis_pin_plan"]["consumes_receipt"])
         conflicting = json.loads(self.before)
         conflicting["repository_ledger_location"]["expected_genesis_receipt_sha256"] = "sha256:" + "e" * 64
         self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=bare,
-                                  contract_bytes=json.dumps(conflicting).encode()), "PRE_PIN_INGRESS_CLOSED")
+                                  contract_bytes=json.dumps(conflicting).encode()), "EXPECTED_GENESIS_PIN_CONFLICT")
 
     ORG_FIXTURE = ROOT / "tests/fixtures/org-intr-path-transfer/typed-genesis-observed.json"
-    ORG_FIXTURE_SHA = "05babd7b5c38fba61050220c41b987043f1fd2c9e7c5ded072a6f9625dc13890"   # = .github's copy
+    ORG_FIXTURE_SHA = "a4f3f951e874f9b0ad37a7cf88234d9f067c68b43455da07e975ccf1749e2022"   # = .github's copy
 
     def org_emitted(self, *, name="emitted", source_edit=None):
         """A ledger copy built from the org writer's typed output (StegVerse-org/.github INTR-PATH-TRANSFER-TYPED-BODY-001).
@@ -624,6 +825,8 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
                         "transition_id": "INTR_MESH_PATH_INGRESS:" + source["evidence"]["communication_id"],
                         "previous_receipt_sha256": genesis["receipt_sha256"],
                         "evidence": carrier.destination_evidence(source),
+                        "hb_reference": P.supplied_hb_reference(446655632),
+                        "observed_at": "SUPPLIED_HB_EPOCH:446655632",
                         "synthetic": "FIXTURE_NOT_LEDGERED_NOT_AUTHENTIC"})
         (store / "receipts" / (dest["receipt_sha256"][7:] + ".json")).write_text(json.dumps(dest))
         (store / "HEAD.json").write_text(json.dumps({"receipt_sha256": dest["receipt_sha256"]}))
@@ -649,13 +852,13 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
         self.assertEqual(d["disposition"], R.ACCEPTED, d)
         self.assertEqual(d["carried_by"]["source_receipt_sha256"], fixture["source_receipt"]["receipt_sha256"])
         self.assertEqual(d["genesis_pin_plan"]["genesis_receipt_sha256"], fixture["genesis_receipt"]["receipt_sha256"])
-        # the same emitted pair is refused once the pin is set, and a tampered emitted body is refused by the carrier
+        # once the pin is set the same emitted pair is only the read-back check; a tampered body is refused
         pinned = P.apply_write(d["genesis_pin_plan"], self.before)
-        self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=pinned),
-                        "PRE_PIN_INGRESS_CLOSED")
+        back = R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=pinned)
+        self.assertEqual(back["disposition"], R.READ_BACK, back)
 
         def tamper(source):
-            source["evidence"]["message"]["body"]["node_ref"] = "n-1"
+            source["evidence"]["message"]["body"]["genesis_receipt_sha256"] = "sha256:" + "a" * 64
             return source
         bare2, _, cite2 = self.org_emitted(name="tampered", source_edit=tamper)
         self.assert_six(R.receive(signal, intr_carrier=cite2, org_ledger=bare2, contract_bytes=self.before),
@@ -715,9 +918,9 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
 
 @with_append_route
 class GenesisPinContractPathTests(unittest.TestCase):
-    """Lane D finding 5: REPOSITORY_LEDGER_GENESIS_PIN can target StegVerse-Labs/continuity-vault-kit's KV and SKAP
-    Vault ledger contracts (designated in cvk#263 @20451a0c, #431 shape, genesis null) through an allowlisted,
-    repo-relative contract path. The fixtures are byte copies of cvk#263's two contracts."""
+    """Lane D finding 5: REPOSITORY_LEDGER_GENESIS_PIN targets only an allowlisted, repo-relative contract path. The
+    fixtures are byte copies of cvk#263 @20451a0c's two contracts, kept as the negative case: an endpoint ledger on
+    the org ledger is refused (#160 comment 6372871021; superseded in cvk#263 @706877b6)."""
 
     CVK = ROOT / "tests/fixtures/cvk-receipt-ledger-contracts"
     CVK_SHA = {"01_KV_Ledger": "81dbc78b0cb21c8ce06faadbca0b9b0521636800ca99a886c24742a2aa35af57",
@@ -746,7 +949,8 @@ class GenesisPinContractPathTests(unittest.TestCase):
                      "transition_id": "REPOSITORY_LEDGER_INITIALIZATION:" + repository,
                      "transition_class": "REPOSITORY_LEDGER_INITIALIZATION", "previous_receipt_sha256": None,
                      "evidence": {"namespace": namespace}, "hb_reference": {"epoch": 446655631,
-                                                                            "derived_from_clock": False}})
+                                                                            "derived_from_clock": False},
+                     "observed_at": "SUPPLIED_HB_EPOCH:446655631"})
         (store / "receipts" / (g["receipt_sha256"][7:] + ".json")).write_text(json.dumps(g))
         (store / "HEAD.json").write_text(json.dumps({"receipt_sha256": g["receipt_sha256"]}))
         git(work, "init", "-q")
@@ -763,38 +967,36 @@ class GenesisPinContractPathTests(unittest.TestCase):
                "signature_b64": signer.sign_b64(location.head_attestation_message(body), ROUTE_SEED)}
         return str(bare), g, att
 
-    def test_both_cvk_contracts_are_planned_through_the_allowlisted_path(self):
+    def test_the_withdrawn_cvk_endpoint_contracts_are_refused_with_six_fields(self):
+        """No endpoint is an Organization member or a source of org-ledger records (#160 comment 6372871021):
+        cvk#263 @20451a0c's KV and SKAP Vault contracts put those ledgers on the org ledger, so naming either (by
+        path, or as contract bytes) is refused and nothing is read or planned. cvk#263 @706877b6 moved both to
+        STEGVERSE_KV's own recorded receipt chains."""
         checkout = self.cvk_checkout()
         for name in self.CVK_SHA:
             rel = f".stegverse/receipt-ledgers/{name}.contract.json"
-            self.assertIn(rel, P.CONTRACT_PATHS)
+            self.assertNotIn(rel, P.CONTRACT_PATHS)
+            self.assertIn(rel, P.ENDPOINT_CONTRACT_PATHS)
             before = (checkout / rel).read_bytes()
             repository = json.loads(before)["repository"]
             bare, g, att = self.ledger_for(repository, name)
-            d = P.plan(org_ledger=bare, genesis_receipt_sha256=g["receipt_sha256"], org_ledger_head_attestation=att,
-                       contract_path=rel, checkout=checkout)
-            self.assertEqual(d["disposition"], M.ALLOW, d)
-            self.assertEqual(d["contract_write"]["path"], rel)
-            self.assertEqual(d["consumes_receipt"]["emit_append"]["evidence"]["contract_path"], rel)
-            after = json.loads(P.apply_write(d, before))
-            self.assertEqual(after["repository_ledger_location"]["expected_genesis_receipt_sha256"], g["receipt_sha256"])
-            self.assertEqual(json.loads(before)["repository_ledger_location"]["expected_genesis_receipt_sha256"], None)
-            # the attestation binds the location: LLM-adapter's location, or the other cvk ledger's, does not verify
-            for other in (location.ORG_LEDGER_LOCATION, "refs/stegverse/organization-ledger:repository-ledger/x"):
-                forged = {**att, "org_ledger_location": other}
-                r = P.plan(org_ledger=bare, org_ledger_head_attestation=forged, contract_path=rel, checkout=checkout)
-                self.assertEqual(r["failure_code"], "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
-            # production (no published head signer) refuses MERGE_APPEND_PATH_NOT_ADMITTED for cvk too
-            from unittest import mock
-            with mock.patch.object(location, "load_head_signers", return_value=[]):
-                r = P.plan(org_ledger=bare, org_ledger_head_attestation=att, contract_path=rel, checkout=checkout)
-            self.assertEqual(r["failure_code"], "MERGE_APPEND_PATH_NOT_ADMITTED")
-            # the pre-pin receiver carries the same parameter
-            signal = R.genesis_signal(g["receipt_sha256"], json.loads(before))
-            r = R.receive(signal, intr_carrier={"org_ledger_head_attestation": att}, org_ledger=bare,
-                          contract_path=rel, checkout=checkout)
-            self.assertEqual(r["failure_code"], carrier.FAILURE_CODE)   # planned, then the LLM-adapter-bound carrier
-            self.assertNotEqual(r["failure_code"], "CONTRACT_PATH_NOT_ALLOWLISTED")
+            for d in (P.plan(org_ledger=bare, genesis_receipt_sha256=g["receipt_sha256"],
+                             org_ledger_head_attestation=att, contract_path=rel, checkout=checkout),
+                      P.plan(org_ledger=bare, genesis_receipt_sha256=g["receipt_sha256"],
+                             org_ledger_head_attestation=att, contract_bytes=before),
+                      R.receive(R.genesis_signal(g["receipt_sha256"], json.loads(before)),
+                                intr_carrier={"org_ledger_head_attestation": att}, org_ledger=bare,
+                                contract_path=rel, checkout=checkout),
+                      R.receive(R.genesis_signal(g["receipt_sha256"], json.loads(before)),
+                                intr_carrier={"org_ledger_head_attestation": att}, org_ledger=bare,
+                                contract_bytes=before)):
+                self.assertEqual((d["disposition"], d["failure_code"]),
+                                 (M.FAIL_CLOSED, "ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE"), d)
+                self.assertEqual(d["failed_predicate"], "NO_ENDPOINT_IS_AN_ORG_MEMBER_OR_A_SOURCE_OF_ORG_LEDGER_RECORDS")
+                for f in SIX:
+                    self.assertTrue(isinstance(d[f], str) and d[f], f)
+                self.assertIsNone(d.get("contract_write"))
+                self.assertFalse(d["contract_written"])
 
     def test_traversal_and_unlisted_contract_paths_are_refused_with_six_fields(self):
         checkout = self.cvk_checkout()
@@ -810,9 +1012,9 @@ class GenesisPinContractPathTests(unittest.TestCase):
             r = R.receive({}, intr_carrier={}, org_ledger=None, contract_path=bad, checkout=checkout)
             self.assertEqual(r["failure_code"], "CONTRACT_PATH_NOT_ALLOWLISTED", bad)
         # an allowlisted path whose bytes lack the #431 shape is refused too
-        shaped = json.loads((checkout / P.CONTRACT_PATHS[1]).read_text())
-        shaped["repository_ledger_location"]["namespace"] = "repository-ledger/StegVerse-org/LLM-adapter"
-        d = P.plan(org_ledger=None, contract_path=P.CONTRACT_PATHS[1], contract_bytes=json.dumps(shaped).encode())
+        shaped = json.loads((ROOT / P.CONTRACT_REL).read_text())
+        shaped["repository_ledger_location"]["namespace"] = "repository-ledger/StegVerse-org/Other"
+        d = P.plan(org_ledger=None, contract_path=P.CONTRACT_REL, contract_bytes=json.dumps(shaped).encode())
         self.assertEqual(d["failure_code"], "CONTRACT_NOT_431_SHAPE")
         self.assertEqual(P.contract_path_failure(P.CONTRACT_REL), None)    # the default is unchanged
 

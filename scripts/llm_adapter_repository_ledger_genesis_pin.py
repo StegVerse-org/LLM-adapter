@@ -1,5 +1,21 @@
 #!/usr/bin/env python3
-"""REPOSITORY_LEDGER_GENESIS_PIN: pin repository_ledger_location.expected_genesis_receipt_sha256 after genesis.
+"""REPOSITORY_LEDGER_GENESIS_PIN: precompute repository_ledger_location.expected_genesis_receipt_sha256, read it back.
+
+Byte-deterministic genesis (Coordination, StegVerse-org/.github#167 comment 6372442705 item 6). The genesis receipt
+takes ``observed_at`` from its own ``hb_reference`` (``SUPPLIED_HB_EPOCH:<epoch>``, the StegVerse-Labs/.github#3263
+rule, now in this repository's emit.py), so the same inputs at the same supplied epoch give the same bytes. An
+absent epoch is refused before anything is computed (``HB_EPOCH_NOT_SUPPLIED``; a clock-derived or malformed one is
+``HB_EPOCH_INVALID``; predicate ``SUBMISSION_CARRIES_THE_SUPPLIED_HB_EPOCH``; StegVerse-Labs/.github#3290 and the
+shared supplied-epoch rule below). ``precompute`` therefore gives ``expected_genesis_receipt_sha256`` in advance:
+
+    sha256(canon(receipt_body(transition_id, REPOSITORY_LEDGER_INITIALIZATION, predecessor_state_sha256,
+                              successor_state_sha256, evidence, authority_effect, hb_reference(epoch), None)))
+
+with ``canon`` = json.dumps(sort_keys, separators (",", ":"), ensure_ascii False) and ``hb_reference(epoch)`` the
+supplied-epoch reference built from .stegverse/heartbeat-awareness.json, exactly as emit.py builds them (a test
+proves the bytes equal emit.append's). ``plan`` below is then only the read-back check: it requires the observed
+genesis to be supplied-epoch and byte-deterministic, and to equal a precomputed pin (else
+EXPECTED_GENESIS_PIN_CONFLICT); while no pin is set it still plans the write from the read-back.
 
 A manifest state transition, not a hand step. Its trigger is the receipted
 REPOSITORY_LEDGER_INITIALIZATION genesis on the org ledger at the contract's location (the organization's own
@@ -22,8 +38,7 @@ ledger ref. It:
 
 It is idempotent: a contract already pinned to the observed genesis plans no write and no receipt, and a contract
 pinned to a different value is refused. Every refusal is FAIL_CLOSED with the six fields. Nothing is written,
-appended or dispatched here: emit.py is unchanged and appends the consumes receipt only when the admitted transition
-runs. There is no clock, network, credential or new dependency: stdlib plus local `git`, through the #431 reader; the
+appended or dispatched here: emit.py appends the consumes receipt only when the admitted transition runs. There is no clock, network, credential or new dependency: stdlib plus local `git`, through the #431 reader; the
 signature check is the stdlib Ed25519 verifier (llm_adapter.ed25519_verify, byte copy) and holds no key.
 """
 from __future__ import annotations
@@ -39,16 +54,25 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import llm_adapter_ledger_merge_transfer as M  # noqa: E402  (#431's reader: sha, sealed, _git, read_org_ledger)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from llm_adapter import org_ledger_location as org_location  # noqa: E402  (byte copy of #432's; LC-KV-19)
+from llm_adapter import supplied_epoch  # noqa: E402  (the shared supplied-epoch rule, byte copy)
 
 ROOT = M.ROOT
 CONTRACT_PATH = M.CONTRACT_PATH
 CONTRACT_REL = ".stegverse/transition-ledger/contract.json"
-#: The repo-relative contracts this transition may target (Lane D finding 5). The default is this repository's; the
-#: other two are StegVerse-Labs/continuity-vault-kit's KV and SKAP Vault ledger contracts (designated in cvk#263 with
-#: the #431 repository_ledger_location shape, genesis null). Nothing outside this list is ever read or planned.
-CONTRACT_PATHS = (CONTRACT_REL,
-                  ".stegverse/receipt-ledgers/01_KV_Ledger.contract.json",
-                  ".stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json")
+#: The repo-relative contracts this transition may target (Lane D finding 5): this repository's only. Nothing outside
+#: this list is ever read or planned.
+CONTRACT_PATHS = (CONTRACT_REL,)
+#: Withdrawn targets: continuity-vault-kit#263 @20451a0c's KV and SKAP Vault ledger contracts put those endpoints'
+#: ledgers on refs/stegverse/organization-ledger. No endpoint (KV, SKAP Vault, node or gateway, externally or
+#: ecosystem maintained) is a GitHub Organization member or a source of org-ledger records (Rigel, relayed on
+#: StegVerse-org/.github#160 comment 6372871021), and cvk#263 @706877b6 moved both to STEGVERSE_KV's own recorded
+#: receipt chains (_StegVerse/Receipts, _Vault/SKAP/Receipts; KV_RECEIPT_CHAIN_DESIGNATED_ON_ORG_LEDGER there).
+#: Naming one here is six-field FAIL_CLOSED ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE; nothing is read or planned.
+ENDPOINT_CONTRACT_PATHS = (".stegverse/receipt-ledgers/01_KV_Ledger.contract.json",
+                           ".stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json")
+ENDPOINT_REPOSITORY_PREFIXES = ("_StegVerse-org/", "STEGVERSE_KV", "_StegVerse/", "_Vault/")
+ENDPOINT_NOT_ORG_SOURCE = "ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE"
+ENDPOINT_NOT_ORG_SOURCE_PREDICATE = "NO_ENDPOINT_IS_AN_ORG_MEMBER_OR_A_SOURCE_OF_ORG_LEDGER_RECORDS"
 CONTRACT_SCHEMA = "stegverse.repo-transition-ledger-contract/v1"
 ORG_LEDGER_REPOSITORY, ORG_LEDGER_REF = "StegVerse-org/.github", "refs/stegverse/organization-ledger"
 TRANSITION_CLASS = "REPOSITORY_LEDGER_GENESIS_PIN"
@@ -59,6 +83,21 @@ EVIDENCE_SCHEMA = "stegverse.repository-ledger-genesis-pin-evidence/v1"
 FIELD = "expected_genesis_receipt_sha256"
 FIELD_POINTER = "/repository_ledger_location/" + FIELD
 ALLOW, FAIL_CLOSED = M.ALLOW, M.FAIL_CLOSED
+PRECOMPUTE_SCHEMA = "stegverse.repository-ledger-expected-genesis/v1"
+AWARENESS_PATH = ROOT / ".stegverse/heartbeat-awareness.json"
+EPOCH_PREDICATE = supplied_epoch.EPOCH_PREDICATE
+SUPPLIED_EPOCH_FAILURE_SHA256 = supplied_epoch.SUPPLIED_EPOCH_FAILURE_SHA256
+supplied_epoch_failure = supplied_epoch.supplied_epoch_failure
+observed_at_from_hb_reference = supplied_epoch.observed_at_from_hb_reference
+ORDERING = "OSCILLATOR_HEARTBEAT_EPOCH_ONLY"
+PRECOMPUTE_ENTRYPOINT = ("scripts/llm_adapter_repository_ledger_genesis_pin.py precompute --hb-epoch <supplied epoch> "
+                         "--predecessor-state-sha256 <sha256> --successor-state-sha256 <sha256> "
+                         "--evidence-json <json>")
+EPOCH_NEXT = ("supply the epoch the genesis append carries (ASCII digits, >= 32, derived_from_clock false) and run "
+              "again; nothing was computed or written")
+#: the external dependency this alignment records rather than guesses (StegVerse-org/.github#196, InTr consumers
+#: lane, session 03dd): the org kernel's hb_reference keeps a clock fallback until #196 lands.
+HB_REFERENCE_DEPENDENCY = "StegVerse-org/.github#196 (kernel hb_reference has no clock fallback; draft, not landed)"
 SIX_FIELDS = M.SIX_FIELDS
 GOAL = "StegVerse-org/LLM-adapter#431 (organization-ledger onboarding; governed element), StegVerse-org/.github#162"
 ENTRYPOINT = ("scripts/llm_adapter_repository_ledger_genesis_pin.py plan --org-ledger <read-only copy of "
@@ -77,6 +116,85 @@ NEXT = ("event-triggered: re-run when the receipted REPOSITORY_LEDGER_INITIALIZA
         "ledger at the contract's location; no clock, no polling, no person")
 PINNED_NOTE = ("Pinned by REPOSITORY_LEDGER_GENESIS_PIN from the receipted REPOSITORY_LEDGER_INITIALIZATION genesis "
                "read back from {location} at organization-ledger tip {tip}; the transition's consumes receipt cites it.")
+
+
+def supplied_hb_reference(epoch: int) -> dict[str, Any]:
+    """emit.py's hb_reference(epoch) for a supplied epoch, from the declared heartbeat. Reads a file, never a clock."""
+    p = json.loads(AWARENESS_PATH.read_text(encoding="utf-8"))["heartbeat"]
+    if p.get("progression_dependency") != "OSCILLATOR_ONLY":
+        raise ValueError("heartbeat progression must be OSCILLATOR_ONLY")
+    if epoch < int(p["anchor_epoch"]):
+        raise ValueError(f"epoch must be an integer of at least the anchor {p['anchor_epoch']}")
+    return {"epoch": epoch, "heartbeat_id": f"HB:{epoch}", "frequency_hz": p["rate_hz"],
+            "period_ms": int(p["period_ms"]), "progression_dependency": "OSCILLATOR_ONLY",
+            "derived_from_clock": False, "authority_effect": "NONE"}
+
+
+def genesis_receipt_body(repository: str, *, transition_id: str, predecessor_state_sha256: str,
+                         successor_state_sha256: str, evidence: Mapping[str, Any], authority_effect: str,
+                         hb: Mapping[str, Any]) -> dict[str, Any]:
+    """emit.py receipt_body for the genesis (previous_receipt_sha256 null). Pure."""
+    return {"schema": RECEIPT_SCHEMA, "repository": repository, "transition_id": transition_id,
+            "transition_class": GENESIS_CLASS, "predecessor_state_sha256": predecessor_state_sha256,
+            "successor_state_sha256": successor_state_sha256, "evidence": dict(evidence),
+            "authority_effect": authority_effect, "hb_reference": dict(hb), "ordering": ORDERING,
+            "observed_at": observed_at_from_hb_reference(hb), "observed_at_is_descriptive_not_ordering": True,
+            "previous_receipt_sha256": None}
+
+
+def _precompute_refuse(code: str, predicate: str, repair: str, **extra: Any) -> dict[str, Any]:
+    return {"schema": PRECOMPUTE_SCHEMA, "disposition": FAIL_CLOSED, "failure_code": code,
+            "failed_predicate": predicate, "required_evidence_or_repair": repair,
+            "retry_entrypoint": PRECOMPUTE_ENTRYPOINT, "owning_existing_goal": GOAL, "next_attempt": EPOCH_NEXT,
+            "expected_genesis_receipt_sha256": None, **extra, "ledger_written": False, "contract_written": False,
+            "authority_effect": "NONE_PLAN_ONLY"}
+
+
+def expected_genesis(*, hb_epoch: Any, predecessor_state_sha256: Any, successor_state_sha256: Any,
+                     evidence: Any, transition_id: str | None = None, authority_effect: str = "NONE",
+                     repository: str | None = None) -> dict[str, Any]:
+    """The genesis receipt and its receipt_sha256, computed before it is appended, or six-field FAIL_CLOSED. Pure
+    apart from reading the declared heartbeat parameters. Nothing is written."""
+    failure = supplied_epoch_failure(hb_epoch)
+    if failure:
+        return _precompute_refuse(failure[0], EPOCH_PREDICATE, f"{failure[1]}: the genesis is byte-deterministic "
+                                  "only at a supplied epoch, so none is precomputed without one")
+    repo = repository or json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))["repository"]
+    problems = [name for name, v in (("predecessor_state_sha256", predecessor_state_sha256),
+                                     ("successor_state_sha256", successor_state_sha256))
+                if not (isinstance(v, str) and v.startswith("sha256:") and len(v) == 71)]
+    if not isinstance(evidence, Mapping):
+        problems.append("evidence")
+    if problems:
+        return _precompute_refuse("REPOSITORY_LEDGER_GENESIS_MISMATCH",
+                                  "REPOSITORY_LEDGER_GENESIS_IS_THIS_REPOSITORYS_INITIALIZATION",
+                                  f"supply {', '.join(problems)} as the genesis append carries them "
+                                  "(sha256:<64 hex> digests and an evidence object)")
+    hb = supplied_hb_reference(int(str(hb_epoch)))
+    body = genesis_receipt_body(repo, transition_id=transition_id or f"{GENESIS_CLASS}:{repo}",
+                                predecessor_state_sha256=predecessor_state_sha256,
+                                successor_state_sha256=successor_state_sha256, evidence=evidence,
+                                authority_effect=authority_effect, hb=hb)
+    digest = M.sha(body)
+    return {"schema": PRECOMPUTE_SCHEMA, "disposition": ALLOW, "repository": repo,
+            "expected_genesis_receipt_sha256": digest, "genesis_receipt": {**body, "receipt_sha256": digest},
+            "computation": "sha256(canon(receipt_body(..., hb_reference(supplied epoch), previous null))); "
+                           "observed_at = SUPPLIED_HB_EPOCH:<epoch> (StegVerse-Labs/.github#3263)",
+            "read_back_check": ENTRYPOINT, "ledger_written": False, "contract_written": False,
+            "authority_effect": "NONE_PLAN_ONLY"}
+
+
+def genesis_determinism_failure(genesis: Mapping[str, Any]) -> tuple[str, str] | None:
+    """Why an observed genesis is not a supplied-epoch, byte-deterministic receipt, or None. Pure."""
+    hb = genesis.get("hb_reference")
+    failure = supplied_epoch_failure(hb.get("epoch") if isinstance(hb, dict) else None, hb)
+    if failure:
+        return failure
+    if genesis.get("observed_at") != observed_at_from_hb_reference(hb):
+        return "HB_EPOCH_INVALID", (f"observed_at {genesis.get('observed_at')!r} is not "
+                                    f"{observed_at_from_hb_reference(hb)!r}; a clock-stamped genesis is not "
+                                    "byte-deterministic")
+    return None
 
 
 def _sha_bytes(data: bytes) -> str:
@@ -155,6 +273,26 @@ def contract_path_failure(contract_path: Any) -> str | None:
     return None
 
 
+def endpoint_contract_failure(contract_path: Any, contract: Any = None) -> str | None:
+    """Why the target is an endpoint's ledger on the org ledger (never planned), or None. Pure."""
+    if contract_path in ENDPOINT_CONTRACT_PATHS:
+        return (f"{contract_path} designates an endpoint's ledger on {ORG_LEDGER_REF} (continuity-vault-kit#263 "
+                "@20451a0c, superseded at @706877b6 by STEGVERSE_KV's own recorded receipt chains)")
+    repository = contract.get("repository") if isinstance(contract, Mapping) else None
+    if isinstance(repository, str) and repository.startswith(ENDPOINT_REPOSITORY_PREFIXES):
+        return f"the contract names endpoint {repository!r}, whose ledger is never on {ORG_LEDGER_REF}"
+    return None
+
+
+def endpoint_contract_refusal(why: str, refuse: Any) -> dict[str, Any]:
+    return refuse(ENDPOINT_NOT_ORG_SOURCE, ENDPOINT_NOT_ORG_SOURCE_PREDICATE,
+                  f"{why}. No endpoint (KV, SKAP Vault, node or gateway, externally or ecosystem maintained) is a "
+                  "GitHub Organization member or a source of org-ledger records (StegVerse-org/.github#160 comment "
+                  "6372871021): its genesis is pinned on its own recorded receipt chain, and its data crosses only "
+                  "through InTr, recorded at both ends (the Org side a digest-only crossing receipt). Name "
+                  f"{CONTRACT_REL}")
+
+
 def contract_shape_failure(contract: Any) -> str | None:
     """Why `contract` does not have the #431 repository_ledger_location shape, or None. Pure."""
     if not isinstance(contract, Mapping) or contract.get("schema") != CONTRACT_SCHEMA \
@@ -207,6 +345,9 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
          contract_bytes: bytes | None = None, org_ledger_head_attestation: Any = None,
          contract_path: str = CONTRACT_REL, checkout: Any = None) -> dict[str, Any]:
     """The exact contract write and consumes receipt for REPOSITORY_LEDGER_GENESIS_PIN, or six-field FAIL_CLOSED."""
+    endpoint = endpoint_contract_failure(contract_path)
+    if endpoint:
+        return {**endpoint_contract_refusal(endpoint, _refuse), "contract_path": repr(contract_path)}
     bad_path = contract_path_failure(contract_path)
     if bad_path:
         return _refuse("CONTRACT_PATH_NOT_ALLOWLISTED", "CONTRACT_PATH_IS_AN_ALLOWLISTED_REPO_RELATIVE_431_CONTRACT",
@@ -217,6 +358,9 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
     except (OSError, ValueError) as exc:
         contract, before = None, b""
         unreadable = type(exc).__name__
+    endpoint = endpoint_contract_failure(contract_path, contract)
+    if endpoint:
+        return endpoint_contract_refusal(endpoint, _refuse)
     bad_shape = contract_shape_failure(contract) if contract is not None else f"unreadable ({unreadable})"
     if bad_shape:
         return _refuse("CONTRACT_NOT_431_SHAPE", "CONTRACT_HAS_THE_431_REPOSITORY_LEDGER_LOCATION_SHAPE",
@@ -243,6 +387,12 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
                        f"the chain root {genesis['receipt_sha256']} must be a {RECEIPT_SCHEMA} {GENESIS_CLASS} receipt "
                        f"for {repo}; it differs in {', '.join(wrong)}", **common)
     digest = genesis["receipt_sha256"]
+    undetermined = genesis_determinism_failure(genesis)
+    if undetermined:
+        return _refuse(undetermined[0], EPOCH_PREDICATE, f"the chain root {digest}: {undetermined[1]}. The genesis "
+                       "must carry a supplied hb_epoch (derived_from_clock false) and observed_at "
+                       "SUPPLIED_HB_EPOCH:<epoch>, so its digest is the precomputed one", **common,
+                       observed_genesis_receipt_sha256=digest)
     if genesis_receipt_sha256 is not None and genesis_receipt_sha256 != digest:
         return _refuse("REPOSITORY_LEDGER_GENESIS_NOT_ON_CHAIN", "REPOSITORY_LEDGER_GENESIS_ON_SEALED_CHAIN",
                        f"the triggering record names {genesis_receipt_sha256!r}, but the chain from "
@@ -259,16 +409,18 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
     current = loc.get(FIELD)
     if current is not None and current != digest:
         return _refuse("EXPECTED_GENESIS_PIN_CONFLICT", "EXPECTED_GENESIS_PIN_UNSET_OR_EQUAL",
-                       f"{contract_path} {FIELD_POINTER} is {current!r}, not the observed genesis {digest}; a pin is "
-                       "never overwritten by this transition, so the conflict needs its own admitted change",
+                       f"{contract_path} {FIELD_POINTER} is {current!r}, not the observed genesis {digest}; the "
+                       "read-back does not match the pin (precomputed or earlier), and a pin is never overwritten by "
+                       "this transition, so the conflict needs its own admitted change",
                        **common, observed_genesis_receipt_sha256=digest)
     result = {"schema": RESULT_SCHEMA, "transition_class": TRANSITION_CLASS, "disposition": ALLOW, **common,
               "genesis_receipt_sha256": digest, "already_pinned": current == digest,
+              "read_back_check": "MATCHES_PIN" if current == digest else "PIN_UNSET_PLANNED_FROM_READ_BACK",
               "org_ledger_head_authenticated": True, "namespace_tree_oid": tree_oid,
               "contract_write": None, "consumes_receipt": None,
               "ledger_written": False, "contract_written": False, "authority_effect": "NONE_PLAN_ONLY"}
     if current == digest:
-        return result      # idempotent: the pin and its consumes receipt already exist
+        return result      # read-back check only: the pin (precomputed or earlier) equals the observed genesis
     after_contract = json.loads(before)
     after_contract["repository_ledger_location"][FIELD] = digest
     after_contract["repository_ledger_location"]["expected_genesis_note"] = PINNED_NOTE.format(
@@ -277,8 +429,7 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
     result["contract_write"] = {"path": contract_path, "json_pointer": FIELD_POINTER, "value": digest,
                                 "before_sha256": _sha_bytes(before), "after_sha256": _sha_bytes(after),
                                 "after_text": after.decode("utf-8")}
-    epoch = (genesis.get("hb_reference") or {}).get("epoch")
-    supplied = (genesis.get("hb_reference") or {}).get("derived_from_clock") is False and type(epoch) is int
+    epoch = int(str(genesis["hb_reference"]["epoch"]))      # supplied: checked by genesis_determinism_failure above
     result["consumes_receipt"] = {
         "emit_append": {
             "transition_id": f"{TRANSITION_CLASS}:{repo}:{digest.split(':')[1]}",
@@ -294,10 +445,9 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
                          "org_ledger_head_attestation_key_id": org_ledger_head_attestation.get("key_id"),
                          "contract_path": contract_path, "json_pointer": FIELD_POINTER, "value": digest},
             "authority_effect": "NONE",
-            # the genesis's own supplied epoch orders the pin after it; None means emit.py would sample a clock,
-            # so the admitted run must then supply the epoch of the triggering record
-            "hb_epoch": epoch if supplied else None},
-        "appended_by": ".stegverse/transition-ledger/emit.py append (unchanged), when the admitted transition runs"}
+            # the genesis's own supplied epoch orders the pin after it
+            "hb_epoch": epoch},
+        "appended_by": ".stegverse/transition-ledger/emit.py append, when the admitted transition runs"}
     return result
 
 
@@ -322,7 +472,25 @@ def main(argv: list[str] | None = None) -> int:
                    help="allowlisted repo-relative contract (default: this repository's)")
     p.add_argument("--checkout", help="checkout holding --contract-path (default: this repository)")
     p.add_argument("--out")
+    c = sub.add_parser("precompute", help="expected_genesis_receipt_sha256 from the supplied genesis inputs")
+    c.add_argument("--hb-epoch", type=str, default=None)
+    c.add_argument("--predecessor-state-sha256", required=True)
+    c.add_argument("--successor-state-sha256", required=True)
+    c.add_argument("--evidence-json", default="{}")
+    c.add_argument("--transition-id")
+    c.add_argument("--authority-effect", default="NONE")
+    c.add_argument("--out")
     a = ap.parse_args(argv)
+    if a.cmd == "precompute":
+        result = expected_genesis(hb_epoch=a.hb_epoch, predecessor_state_sha256=a.predecessor_state_sha256,
+                                  successor_state_sha256=a.successor_state_sha256,
+                                  evidence=json.loads(a.evidence_json), transition_id=a.transition_id,
+                                  authority_effect=a.authority_effect)
+        text = json.dumps(result, indent=2, sort_keys=True) + "\n"
+        if a.out:
+            Path(a.out).write_text(text)
+        sys.stdout.write(text)
+        return 0 if result["disposition"] == ALLOW else 3
     attestation = json.loads(Path(a.head_attestation).read_text()) if a.head_attestation else None
     result = plan(org_ledger=a.org_ledger, genesis_receipt_sha256=a.genesis_receipt,
                   org_ledger_head_attestation=attestation, contract_path=a.contract_path, checkout=a.checkout)

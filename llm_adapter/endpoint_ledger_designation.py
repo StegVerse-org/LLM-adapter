@@ -1,14 +1,26 @@
-"""Per-endpoint ledger designation and the store-reader seam (ENDPOINT-LEDGER-DESIGNATION-001).
+"""Per-endpoint recorded receipt chain designation and the access-adapter seam (ENDPOINT-LEDGER-DESIGNATION-001).
 
-Ruling (Rigel, StegVerse-org/.github#160 comments 6371986288 and 6372216673): KV is independent of the Orgs. It
-runs its own ledger behind its own InTr ingress/egress endpoint and that ledger is never stored on an org's
-refs/stegverse/organization-ledger. KV's ledger is a set of encrypted, content-addressed objects in user-owned
-storage (for example Google Drive) behind a GATEWAY node: each receipt is an opaque encrypted blob keyed by sha256,
-with an append-only head pointer under a ``##_<name>`` location (01_KV_Ledger, 02_SKAP_Vault_Ledger). KV verifies
-and decrypts on its own side; the storage's own records never cross.
+KV is independent of the Orgs (Rigel, StegVerse-org/.github#160 comments 6371986288 and 6372216673): it keeps its
+own recorded receipt chain behind its own InTr ingress/egress endpoint, and that chain is never stored on an org's
+refs/stegverse/organization-ledger. Corrected by Coordination (#167 comment 6372442705; SVKV, ECOSYSTEM-OWN-KV-001
+and KV-LEDGER-STORE-READER-001 withdrawn): the ecosystem KV is STEGVERSE_KV (``_StegVerse/``, cvk
+KV_AI_PERSISTENCE_LAYOUTS.md), and KV storage follows the KV Storage Endpoint v2 model (cvk
+KV_STORAGE_ENDPOINT_V2_MIRROR_HANDOFF.md, goal KV-CONNECTION-REVALIDATION-WORKER-001)::
 
-A designation names, per endpoint, where its ledger is and what authenticates it. It is read from the endpoint's
-own contract, never from a caller::
+    KV instance -> storage endpoint -> access adapter -> location
+
+KnowledgeVault's file structure is not itself encryption; ciphertext belongs only behind the SKAP Vault boundary
+(``_Vault/SKAP``; cvk README). So the recorded receipt chain is read through the endpoint's access adapter as
+receipts, not decrypted here, and nothing here claims encryption.
+
+Both sides record every crossing (Rigel, #162 comment 6372641743; CAPTURE lines 72-76; NODE_INGRESS line 176): the
+egress record on the source side and the ingress record on the destination side, each pointing at the other's
+record by digest (never a copied body) and each carrying a supplied heartbeat epoch (SUPPLIED_HB_EPOCH). Those paired
+records carry continuity between Orgs, and ENVELOPE v2 line 55 (the Org's own append and read-back of the genesis
+crossing) stands as the Org's record of the crossing (#167 comment 6372591635).
+
+A designation names, per endpoint, where its recorded receipt chain is and what authenticates it. It is read from
+the endpoint's own contract, never from a caller::
 
     {"schema": "stegverse.endpoint-ledger-designation/v1", "endpoint_id": str,
      "endpoint_kind": "ORG" | "PERMANENT" | "KV" | "SKAP_VAULT",
@@ -18,36 +30,47 @@ own contract, never from a caller::
      "rollback_watermark_source": null | {"source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD",
                                           "path_ids": [str, ...]}}
 
-store_type (an enum):
+store_type (an enum), mapped to the documented endpoint model:
 
 * ``GIT_REF``: {store_type, provider "git", repository, ref, namespace}. Read by the existing git reader,
   llm_adapter.org_ledger_location.designated_org_ledger, unchanged (it pins the genesis and authenticates the head
-  with the org-ledger head signers). Used for ORG and PERMANENT.
-* ``GATEWAY_ENCRYPTED_BLOB`` (reserved): {store_type, provider, gateway_node_id, location "##_<name>"}. Required
-  for KV and SKAP_VAULT; GIT_REF is refused for them. No reader is installed: the reader is Lane D's
-  (KV-LEDGER-STORE-READER-001 under ECOSYSTEM-OWN-KV-001), consuming their gateway storage adapter contract
-  (put/get/list of opaque blobs by location, stdlib only). Until it is admitted every such read is six-field
-  FAIL_CLOSED ENDPOINT_LEDGER_STORE_READER_NOT_INSTALLED.
+  with the org-ledger head signers). Used for ORG only: PERMANENT (a node) is refused with six fields
+  ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE, since no endpoint is an org-ledger source (#160 comment 6372871021).
+* ``KV_STORAGE_ENDPOINT``: {store_type, storage_endpoint_schema, provider_id, access_adapter, kv_class,
+  kv_request_id, location}, exactly Lane D's store (StegVerse-Labs/continuity-vault-kit#263 @706877b6
+  runtime/kv_receipt_ledgers.py STORE_KEYS; the storage endpoint is reused unchanged from cvk
+  runtime/kv_storage_provider_adapter.py): storage_endpoint_schema stegverse.kv.storage-endpoint-descriptor/v2,
+  provider_id and access_adapter a documented registry pair (google-drive / provider-or-file-provider, KV #2
+  SITE-CLOUD-KV-4347408852127319cbda574f02e03edb; E0 only device-local / resident-device-local), kv_class
+  STEGVERSE_KV, and location KV's own chain: ``_StegVerse/Receipts`` (KV) or ``_Vault/SKAP/Receipts``
+  (SKAP_VAULT), laid out as HEAD.json + receipts/<hex>.json, on no org ref. Required for KV and SKAP_VAULT; GIT_REF
+  is refused for them. The reader is cvk's, referenced not vendored: runtime.kv_receipt_ledgers.read_receipt_ledger
+  (which, storage_endpoint, readback_root, head_attestation, recorded_head), KVInterlockRuntime.receipt_ledger and
+  SkapLayer2Gate.receipt_ledger. Its reader id is not documented (UNKNOWN_NOT_AUTHENTICALLY_OBSERVED), so every
+  such read here is six-field FAIL_CLOSED KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED (#167 comment 6372772397).
 
-Several storage providers per endpoint (designed for, not supported): ``stores`` is an ordered list. The selection
-rule is deterministic: list order is the only selector, never health, latency, a clock or the caller.
+Several storage endpoints per KV instance (designed for, not supported): ``stores`` is an ordered list. The
+selection rule is deterministic: list order is the only selector, never health, latency, a clock or the caller.
 SINGLE_PROVIDER_V1 (the only rule now) selects ``stores[0]`` and requires exactly one entry; more than one is
-six-field ENDPOINT_LEDGER_MULTI_PROVIDER_NOT_SUPPORTED. A multi-provider rule is its own admitted change.
+six-field ENDPOINT_LEDGER_MULTI_PROVIDER_NOT_SUPPORTED. A multi-endpoint rule is its own admitted change.
 
-The reader seam: ``READERS`` maps store_type to a reader. A reader is a context manager factory
-``reader(designation, store, source, head_attestation)`` that yields ``(chain, None)`` (receipts newest first,
-as the endpoint sees them after its own decryption) or ``(None, (reason, detail))``. Whatever a reader yields is
-checked again here by the pure ``chain_admission_failure``, for every store type:
+The access-adapter seam: ``READERS`` maps store_type to a reader. A reader is a context manager factory
+``reader(designation, store, source, head_attestation)`` that yields ``(chain, None)`` (receipts newest first, as
+the endpoint's access adapter reads them) or ``(None, (reason, detail))``. Whatever a reader yields is checked again
+here by the pure ``chain_admission_failure``, for every store type:
 
-1. an empty or missing ledger is never taken as a genesis (ENDPOINT_LEDGER_EMPTY_NOT_A_GENESIS);
+1. an empty or missing chain is never taken as a genesis (ENDPOINT_LEDGER_EMPTY_NOT_A_GENESIS);
 2. every receipt is sealed and linked, and the chain ends at the designated genesis class;
-3. the genesis equals the designation's pin (null: ENDPOINT_LEDGER_GENESIS_NOT_PINNED; the pre-pin receiver
-   pattern of #431 sets it);
+3. the genesis equals the designation's pin (null: ENDPOINT_LEDGER_GENESIS_NOT_PINNED);
 4. KV and SKAP_VAULT: the head is signed by kv_ledger_head_signer (TVC#542), a key published in
    .stegverse/node-ledger/kv-ledger-head-signers.v1.json (none published yet:
    KV_LEDGER_HEAD_SIGNER_NOT_PUBLISHED). GIT_REF heads were authenticated by the git reader;
 5. the rollback watermark: the newest endpoint_head_sha256 the Org recorded on its linked receipts for this
-   endpoint's path_ids must be on the presented chain; an older head is DENY KV_LEDGER_HEAD_ROLLBACK_DETECTED.
+   endpoint's path_ids must be on the presented chain; an older head is DENY KV_LEDGER_HEAD_ROLLBACK_DETECTED;
+6. both sides recorded each crossing: every Org-side record for this endpoint's path_ids points at an endpoint head
+   that is on the presented chain, every endpoint-side ingress record points at a record on the Org chain, and each
+   such record carries a supplied epoch. A one-sided crossing is FAIL_CLOSED INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES;
+   a crossing record without a supplied epoch is HB_EPOCH_NOT_SUPPLIED / HB_EPOCH_INVALID.
 
 Pure apart from the reader it hands off to. No clock, no network, no randomness, stdlib only. Tests use fixture
 keys only; bots never hold keys.
@@ -58,7 +81,6 @@ import base64
 import binascii
 import contextlib
 import json
-import re
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Iterator, Mapping
@@ -66,20 +88,48 @@ from typing import Any, Iterator, Mapping
 from llm_adapter import ed25519_verify
 from llm_adapter import healthy_node_evaluator as hne
 from llm_adapter import org_ledger_location
+from llm_adapter import supplied_epoch
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = "stegverse.endpoint-ledger-designation/v1"
 RESULT_SCHEMA = "stegverse.endpoint-ledger-read/v1"
 ALLOW, FAIL_CLOSED, DENY = "ALLOW", "FAIL_CLOSED", "DENY"
 
-GIT_REF, GATEWAY_ENCRYPTED_BLOB = "GIT_REF", "GATEWAY_ENCRYPTED_BLOB"
-STORE_TYPES = (GIT_REF, GATEWAY_ENCRYPTED_BLOB)
+GIT_REF, KV_STORAGE_ENDPOINT = "GIT_REF", "KV_STORAGE_ENDPOINT"
+STORE_TYPES = (GIT_REF, KV_STORAGE_ENDPOINT)
 ORG, PERMANENT, KV, SKAP_VAULT = "ORG", "PERMANENT", "KV", "SKAP_VAULT"
-STORE_TYPE_OF = {ORG: GIT_REF, PERMANENT: GIT_REF, KV: GATEWAY_ENCRYPTED_BLOB, SKAP_VAULT: GATEWAY_ENCRYPTED_BLOB}
+STORE_TYPE_OF = {ORG: GIT_REF, PERMANENT: GIT_REF, KV: KV_STORAGE_ENDPOINT, SKAP_VAULT: KV_STORAGE_ENDPOINT}
 INDEPENDENT_KINDS = (KV, SKAP_VAULT)
+#: cvk#263 @706877b6 runtime/kv_receipt_ledgers.py STORE_KEYS (in that order there; sorted here)
 STORE_KEYS = {GIT_REF: ("namespace", "provider", "ref", "repository", "store_type"),
-              GATEWAY_ENCRYPTED_BLOB: ("gateway_node_id", "location", "provider", "store_type")}
-BLOB_LOCATION = re.compile(r"^[0-9]{2}_[A-Za-z0-9][A-Za-z0-9_]*$")
+              KV_STORAGE_ENDPOINT: ("access_adapter", "kv_class", "kv_request_id", "location", "provider_id",
+                                    "storage_endpoint_schema", "store_type")}
+#: cvk runtime/kv_storage_provider_adapter.py STORAGE_ENDPOINT_SCHEMA (line 25)
+STORAGE_ENDPOINT_SCHEMA = "stegverse.kv.storage-endpoint-descriptor/v2"
+#: documented (provider_id, access_adapter) pairs the reader consumes (cvk default_registry lines 150 and 152)
+ACCESS_ADAPTERS = {"google-drive": "provider-or-file-provider", "device-local": "resident-device-local"}
+KV_CLASS = "STEGVERSE_KV"
+KV2_REQUEST_ID = "SITE-CLOUD-KV-4347408852127319cbda574f02e03edb"
+#: KV's own recorded receipt chains (cvk specs/kv-ai-persistence-layouts.v1.json; kv_receipt_ledgers RECEIPT_LEDGERS)
+KV_CHAIN_LOCATIONS = {"KV": "_StegVerse/Receipts", "SKAP_VAULT": "_Vault/SKAP/Receipts"}
+#: the head digest the InTr crossing receipt carries to the Org ledger (StegVerse-Labs/TVC#542 @4c2504da)
+HEAD_DIGEST_NAME = "KV_RECORDED_RECEIPT_CHAIN_HEAD"
+#: the reader id; the KV Storage Endpoint v2 docs define none (#167 comment 6372772397)
+READER_ID = "UNKNOWN_NOT_AUTHENTICALLY_OBSERVED"
+#: Lane D's reader entrypoints (cvk#263 @706877b6), referenced, never vendored
+READER_ENTRYPOINTS = (
+    "runtime.kv_receipt_ledgers.read_receipt_ledger(which, storage_endpoint, readback_root, head_attestation, "
+    "recorded_head)",
+    "runtime.kv_interlock_endpoint.KVInterlockRuntime.receipt_ledger(...)",
+    "runtime.kv_skap_layer2.SkapLayer2Gate.receipt_ledger(...)",
+)
+
+
+def kv_path_id(location: str) -> str:
+    """The Org-side path_id for a crossing with KV's chain at ``location`` (cvk#263 contracts)."""
+    return f"StegVerse-org->{KV_CLASS}:{location}:intr-destination"
+CROSSING_CLASSES = ("INTR_MESH_PATH_TRANSFER", "INTR_MESH_PATH_INGRESS")
+INGRESS_CLASS = "INTR_MESH_PATH_INGRESS"
 SINGLE_PROVIDER_V1 = "SINGLE_PROVIDER_V1"
 SELECTION_RULES = (SINGLE_PROVIDER_V1,)
 DESIGNATION_KEYS = ("endpoint_id", "endpoint_kind", "expected_genesis_receipt_sha256", "genesis_class",
@@ -91,7 +141,7 @@ HEAD_SIGNER_OF = {ORG: ORG_LEDGER_HEAD_SIGNER, PERMANENT: ORG_LEDGER_HEAD_SIGNER
 #: head-signer set sources: public-key reference files, TV/TVC custody, empty until published
 HEAD_SIGNER_FILES = MappingProxyType({
     ORG_LEDGER_HEAD_SIGNER: (ROOT / ".stegverse/node-ledger/org-ledger-head-signers.v1.json", "ORG_LEDGER_HEAD"),
-    KV_LEDGER_HEAD_SIGNER: (ROOT / ".stegverse/node-ledger/kv-ledger-head-signers.v1.json", "KV_LEDGER_HEAD"),
+    KV_LEDGER_HEAD_SIGNER: (ROOT / ".stegverse/node-ledger/kv-ledger-head-signers.v1.json", HEAD_DIGEST_NAME),
 })
 SIGNERS_SCHEMA = "stegverse.published-public-key-references/v1"
 KV_HEAD_ATTESTATION_SCHEMA = "stegverse.kv-ledger-head-attestation/v1"
@@ -103,7 +153,19 @@ ENDPOINT_HEAD_KEY = "endpoint_head_sha256"
 
 ENTRYPOINT = "llm_adapter.endpoint_ledger_designation.read_designated(designation, source=..., ...)"
 GOAL = "StegVerse-org/.github#162 (ENDPOINT-LEDGER-DESIGNATION-001; KV independence, .github#160 comment 6372216673)"
-READER_GOAL = "KV-LEDGER-STORE-READER-001 under ECOSYSTEM-OWN-KV-001 (Lane D)"
+READER_GOAL = ("KV-SKAP-LEDGER-LOCATION-001 under KV-SKAP-VAULT-FUNCTIONAL-001 (StegVerse-Labs/.github#3324; reader "
+               "StegVerse-Labs/continuity-vault-kit#263)")
+CROSSING_GOAL = "StegVerse-org/.github#162 (both sides record each InTr crossing; #162 comment 6372641743; Lane B)"
+#: Rigel, relayed on StegVerse-org/.github#160 comment 6372871021: no endpoint (KV, SKAP Vault, node or gateway,
+#: externally or ecosystem maintained) is a GitHub Organization member or a source of org-ledger records.
+ORG_SOURCE_GOAL = ("StegVerse-org/.github#162 (no endpoint is an Organization member or a source of org-ledger "
+                   "records; #160 comment 6372871021; Lane B)")
+#: the only keys an Org-chain crossing receipt for an endpoint path may carry: pointers and digests, never a body
+ORG_CROSSING_EVIDENCE_KEYS = frozenset({"schema", "path_id", "communication_id", "source_repository_receipt_sha256",
+                                        "destination_location", "boundary_evidence"})
+ORG_CROSSING_BOUNDARY_KEYS = frozenset({"operation", "path_id", "communication_id", ENDPOINT_HEAD_KEY})
+#: keys that would make an endpoint the originator of an Org-chain record
+ORIGINATOR_KEYS = ("node_id", "node_ref", "originator", "author", "repository", "source_repository")
 SIGNER_GOAL = "StegVerse-Labs/TVC#542 (kv_ledger_head_signer; ORG-LEDGER-HEAD-SIGNER-001 pattern)"
 ON_CHANGE = "on the admission of a corrected designation in the endpoint's own contract (event-triggered)"
 
@@ -115,23 +177,39 @@ CODES: Mapping[str, tuple[str, str, str, str, str]] = MappingProxyType({
         "(ORG, PERMANENT, KV, SKAP_VAULT), its store_type, head_signer_source and genesis_class", GOAL, ON_CHANGE,
         FAIL_CLOSED),
     "ENDPOINT_LEDGER_STORE_TYPE_UNDECLARED": (
-        "STORE_TYPE_IS_A_DECLARED_STORE_TYPE", "store_type GIT_REF or GATEWAY_ENCRYPTED_BLOB", GOAL, ON_CHANGE,
+        "STORE_TYPE_IS_A_DECLARED_STORE_TYPE", "store_type GIT_REF or KV_STORAGE_ENDPOINT", GOAL, ON_CHANGE,
         FAIL_CLOSED),
     "KV_LEDGER_DESIGNATED_ON_GIT_REF": (
         "INDEPENDENT_ENDPOINT_LEDGER_NOT_ORG_HOSTED",
-        "KV and SKAP_VAULT designate store_type GATEWAY_ENCRYPTED_BLOB (their own encrypted ledger behind their "
-        "gateway node); their ledger is never a git ref and never on refs/stegverse/organization-ledger", GOAL,
+        "KV and SKAP_VAULT designate store_type KV_STORAGE_ENDPOINT (their own recorded receipt chain at a location "
+        "on their KV storage endpoint, KV Storage Endpoint v2); it is never a git ref and never on "
+        "refs/stegverse/organization-ledger", GOAL,
         ON_CHANGE, FAIL_CLOSED),
+    "ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE": (
+        "NO_ENDPOINT_IS_AN_ORG_MEMBER_OR_A_SOURCE_OF_ORG_LEDGER_RECORDS",
+        "no endpoint (KV, SKAP Vault, node or gateway, externally or ecosystem maintained) designates, writes or "
+        "originates a record on refs/stegverse/organization-ledger: only endpoint_kind ORG is designated there; an "
+        "endpoint keeps its own recorded receipt chain and its data crosses only through InTr, recorded at both ends, "
+        "the Org side as the org's own digest-only crossing receipt", ORG_SOURCE_GOAL,
+        "on an admitted endpoint store type off the org ledger for that kind (event-triggered)", FAIL_CLOSED),
+    "ORG_CROSSING_RECEIPT_NOT_DIGEST_ONLY": (
+        "ORG_CHAIN_CROSSING_RECEIPT_IS_DIGEST_ONLY_ON_THE_ORGS_OWN_PATH",
+        "an Org-chain crossing receipt for an endpoint path carries only pointers and digests (schema, path_id, "
+        "communication_id, source_repository_receipt_sha256, destination_location, boundary_evidence {operation, "
+        "path_id, communication_id, endpoint_head_sha256}) and a supplied hb epoch, is recorded by the org's own "
+        "path, and names no endpoint as its originator", ORG_SOURCE_GOAL,
+        "on the next org-ledger read-back with a corrected crossing receipt (event-triggered)", FAIL_CLOSED),
     "ENDPOINT_LEDGER_MULTI_PROVIDER_NOT_SUPPORTED": (
         "ONE_STORE_PROVIDER_UNDER_SINGLE_PROVIDER_V1",
         "designate exactly one store; more than one provider needs its own admitted selection rule (list order "
         "only), which is not built", GOAL, "on the admission of a multi-provider selection rule", FAIL_CLOSED),
-    "ENDPOINT_LEDGER_STORE_READER_NOT_INSTALLED": (
-        "ENDPOINT_LEDGER_STORE_HAS_AN_INSTALLED_READER",
-        "an admitted GATEWAY_ENCRYPTED_BLOB reader registered in READERS, consuming Lane D's gateway storage "
-        "adapter contract (put/get/list of opaque blobs by location), yielding the chain as KV decrypts it; no "
-        "storage-side record is admitted", READER_GOAL, "on the admission of Lane D's reader (event-triggered)",
-        FAIL_CLOSED),
+    "KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED": (
+        "SUCCESSOR_READER_ID_DEFINED_BY_THE_KV_STORAGE_ENDPOINT_V2_MODEL",
+        "an admitted reader id for the access-adapter read of the recorded receipt chain at the designated location "
+        "(_StegVerse/Receipts or _Vault/SKAP/Receipts); the reader is cvk's runtime.kv_receipt_ledgers."
+        "read_receipt_ledger (continuity-vault-kit#263), referenced not vendored; reader id is "
+        "UNKNOWN_NOT_AUTHENTICALLY_OBSERVED", READER_GOAL,
+        "on continuity-vault-kit#263's admission or a #167 ruling that names the id (event-triggered)", FAIL_CLOSED),
     "ENDPOINT_LEDGER_EMPTY_NOT_A_GENESIS": (
         "ENDPOINT_LEDGER_HAS_A_SEALED_GENESIS",
         "an endpoint ledger whose head walks back to a sealed genesis of the designated genesis_class; an empty or "
@@ -168,6 +246,21 @@ CODES: Mapping[str, tuple[str, str, str, str, str]] = MappingProxyType({
         "present a ledger whose chain contains the newest endpoint_head_sha256 the Org recorded for this endpoint; "
         "an older or forked head is refused", GOAL, "on a read-back at or after the recorded head (event-triggered)",
         DENY),
+    "INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES": (
+        "EACH_CROSSING_RECORDED_BY_BOTH_ENDPOINTS",
+        "the crossing's egress record on the source side and its ingress record on the destination side, each "
+        "pointing at the other's record by digest (never a copied body); a one-sided crossing is not continuity",
+        CROSSING_GOAL, "on the read-back of the missing side's record (event-triggered)", FAIL_CLOSED),
+    "HB_EPOCH_NOT_SUPPLIED": (
+        supplied_epoch.EPOCH_PREDICATE,
+        "the crossing record's hb_reference with a supplied epoch (derived_from_clock false) and observed_at "
+        "SUPPLIED_HB_EPOCH:<epoch> (StegVerse-Labs/.github#3263/#3290)", CROSSING_GOAL,
+        "on a crossing record appended with the supplied epoch (event-triggered)", FAIL_CLOSED),
+    "HB_EPOCH_INVALID": (
+        supplied_epoch.EPOCH_PREDICATE,
+        "a supplied epoch: ASCII [0-9]+, at least 32, derived_from_clock exactly false, observed_at "
+        "SUPPLIED_HB_EPOCH:<epoch>", CROSSING_GOAL,
+        "on a crossing record appended with the supplied epoch (event-triggered)", FAIL_CLOSED),
 })
 
 
@@ -195,6 +288,11 @@ def designation_failure(designation: Any) -> dict[str, Any] | None:
             or not all(isinstance(s, Mapping) for s in d["stores"]):
         return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"got {d!r}"[:400])
     kind = d["endpoint_kind"]
+    if kind != ORG:   # a node (PERMANENT) ledger on the org ledger would make the node an org-ledger source
+        if kind not in INDEPENDENT_KINDS:
+            return refusal("ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE", f"{kind} {d['endpoint_id']} would be designated on "
+                           f"{[s.get('ref') for s in d['stores']]}; {kind} has no admitted store type off the org "
+                           "ledger yet")
     for store in d["stores"]:
         st = store.get("store_type")
         if st not in STORE_TYPES:
@@ -206,8 +304,14 @@ def designation_failure(designation: Any) -> dict[str, Any] | None:
         if tuple(sorted(store)) != STORE_KEYS[st] or not all(isinstance(store[k], str) and store[k] for k in store):
             return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"a {st} store has exactly {list(STORE_KEYS[st])}"
                            " as non-empty strings (no storage-side record or external ledger ref)")
-        if st == GATEWAY_ENCRYPTED_BLOB and not BLOB_LOCATION.match(store["location"]):
-            return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"location {store['location']!r} is not ##_<name>")
+        if st == KV_STORAGE_ENDPOINT and (store["storage_endpoint_schema"] != STORAGE_ENDPOINT_SCHEMA
+                                          or ACCESS_ADAPTERS.get(store["provider_id"]) != store["access_adapter"]
+                                          or store["kv_class"] != KV_CLASS
+                                          or store["location"] != KV_CHAIN_LOCATIONS[kind]):
+            return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"a {KV_STORAGE_ENDPOINT} store names "
+                           f"storage_endpoint_schema {STORAGE_ENDPOINT_SCHEMA}, a documented provider_id/access_adapter "
+                           f"pair {ACCESS_ADAPTERS}, kv_class {KV_CLASS} and location {KV_CHAIN_LOCATIONS[kind]} for "
+                           f"{kind}; got {dict(store)!r}")
     if d["head_signer_source"] != HEAD_SIGNER_OF[kind]:
         return refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"{kind} heads are signed by "
                        f"{HEAD_SIGNER_OF[kind]}, not {d['head_signer_source']!r}")
@@ -232,14 +336,15 @@ def select_store(designation: Mapping[str, Any]) -> tuple[dict[str, Any] | None,
     stores = designation["stores"]
     if len(stores) != 1:
         return None, refusal("ENDPOINT_LEDGER_MULTI_PROVIDER_NOT_SUPPORTED", f"{len(stores)} stores designated "
-                             f"({[s.get('provider') for s in stores]}); {SINGLE_PROVIDER_V1} accepts one")
+                             f"({[s.get('provider_id', s.get('provider')) for s in stores]}); {SINGLE_PROVIDER_V1} "
+                             "accepts one")
     return dict(stores[0]), None
 
 
 def store_location(store: Mapping[str, Any]) -> str:
     if store["store_type"] == GIT_REF:
         return f"{store['ref']}:{store['namespace']}"
-    return f"gateway:{store['gateway_node_id']}/{store['location']}"
+    return f"storage-endpoint:{store['provider_id']}/{store['location']}"   # cvk#263 designation()["store_location"]
 
 
 # -- head signers and the KV head attestation ---------------------------------------------------------------
@@ -299,12 +404,93 @@ def org_recorded_endpoint_heads(org_chain: list[Mapping[str, Any]], designation:
     """endpoint_head_sha256 values the Org recorded on its linked receipts for this endpoint's path_ids, newest
     first (org-chain order is the only order). Pure."""
     path_ids = set((designation.get("rollback_watermark_source") or {}).get("path_ids") or ())
-    heads = []
+    return [head for _, head in _org_crossings(org_chain, path_ids) if head is not None]
+
+
+def _boundary_fields(receipt: Any) -> dict[str, Any]:
+    """path_id and endpoint_head_sha256 as an Org record carries them: in boundary_evidence (the receipt's, or its
+    evidence's), or, for records written before the typed body moved them there, in evidence. Pure."""
+    if not isinstance(receipt, Mapping):
+        return {}
+    ev = receipt.get("evidence") if isinstance(receipt.get("evidence"), Mapping) else {}
+    out: dict[str, Any] = {}
+    for holder in (ev, ev.get("boundary_evidence"), receipt.get("boundary_evidence")):
+        if isinstance(holder, Mapping):
+            out.update({k: holder[k] for k in ("path_id", ENDPOINT_HEAD_KEY) if k in holder})
+    return out
+
+
+def _org_crossings(org_chain: list[Mapping[str, Any]], path_ids: set[str]) -> list[tuple[Mapping[str, Any], Any]]:
+    """(Org record, endpoint head digest or None) for this endpoint's path_ids, org-chain order. Pure."""
+    out = []
     for receipt in org_chain:
-        ev = receipt.get("evidence") if isinstance(receipt, Mapping) else None
-        if isinstance(ev, Mapping) and ev.get("path_id") in path_ids and _is_digest(ev.get(ENDPOINT_HEAD_KEY)):
-            heads.append(ev[ENDPOINT_HEAD_KEY])
-    return heads
+        fields = _boundary_fields(receipt)
+        if fields.get("path_id") in path_ids:
+            head = fields.get(ENDPOINT_HEAD_KEY)
+            out.append((receipt, head if _is_digest(head) else None))
+    return out
+
+
+def org_crossing_receipt_failure(record: Mapping[str, Any], designation: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Six-field refusal unless an Org-chain crossing receipt for an endpoint path is digest-only and the org's own
+    (no endpoint originates it; #160 comment 6372871021). Pure."""
+    ev = record.get("evidence") if isinstance(record.get("evidence"), Mapping) else {}
+    be = ev.get("boundary_evidence") if isinstance(ev.get("boundary_evidence"), Mapping) else {}
+    endpoint = designation.get("endpoint_id")
+    named = [k for k in ORIGINATOR_KEYS for where in (record, ev, be) if where.get(k) not in (None, "")
+             and (where.get(k) == endpoint or str(where.get(k)).startswith(KV_CLASS))]
+    if named:
+        return refusal("ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE", f"Org record {record.get('receipt_sha256')} names "
+                       f"{endpoint} as its originator ({sorted(set(named))})")
+    extra = sorted(set(ev) - ORG_CROSSING_EVIDENCE_KEYS) + sorted(f"boundary_evidence.{k}"
+                                                                 for k in set(be) - ORG_CROSSING_BOUNDARY_KEYS)
+    digests = [k for k in ("source_repository_receipt_sha256",) if k in ev and not _is_digest(ev[k])]
+    if extra or digests:
+        return refusal("ORG_CROSSING_RECEIPT_NOT_DIGEST_ONLY", f"Org record {record.get('receipt_sha256')} carries "
+                       f"{extra + digests} (a copied body or a non-digest), not only pointers and digests")
+    return None
+
+
+def crossing_failure(chain: list[Mapping[str, Any]], org_chain: list[Mapping[str, Any]],
+                     designation: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Both sides recorded each crossing of this endpoint's paths, each with a supplied epoch. Pure.
+
+    Org side -> endpoint side: every Org record for the endpoint's path_ids names an endpoint_head_sha256 (a digest
+    pointer) that is on the presented chain. Endpoint side -> Org side: every endpoint ingress record names, by
+    digest, the Org-side record it ingested (source_repository_receipt_sha256 or organization_receipt_sha256), and
+    that record is on the Org chain."""
+    path_ids = set((designation.get("rollback_watermark_source") or {}).get("path_ids") or ())
+    on_chain = {r.get("receipt_sha256") for r in chain}
+    org_digests = set()
+    for r in org_chain:
+        if isinstance(r, Mapping):
+            org_digests |= {r.get("receipt_sha256"), r.get("repo_receipt_sha256")}
+    org_digests.discard(None)
+    for record, head in _org_crossings(org_chain, path_ids):
+        failed = org_crossing_receipt_failure(record, designation)
+        if failed:
+            return failed
+        if head is None or head not in on_chain:
+            return refusal("INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES", f"the Org record "
+                           f"{record.get('receipt_sha256')} names endpoint head {head}, which the presented chain does "
+                           "not hold", one_sided="ORG_ONLY")
+        failed = supplied_epoch.record_epoch_failure(record)
+        if failed:
+            return refusal(failed[0], f"Org record {record.get('receipt_sha256')}: {failed[1]}")
+    for record in chain:
+        if record.get("transition_class") not in CROSSING_CLASSES:
+            continue
+        ev = record.get("evidence") if isinstance(record.get("evidence"), Mapping) else {}
+        if record.get("transition_class") == INGRESS_CLASS:
+            peer = ev.get("source_repository_receipt_sha256") or ev.get("organization_receipt_sha256")
+            if not _is_digest(peer) or peer not in org_digests:
+                return refusal("INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES", f"the endpoint ingress record "
+                               f"{record.get('receipt_sha256')} points at {peer!r}, which the Org chain does not hold",
+                               one_sided="ENDPOINT_ONLY")
+        failed = supplied_epoch.record_epoch_failure(record)
+        if failed:
+            return refusal(failed[0], f"endpoint record {record.get('receipt_sha256')}: {failed[1]}")
+    return None
 
 
 def rollback_failure(chain: list[Mapping[str, Any]], recorded_heads: list[str]) -> dict[str, Any] | None:
@@ -359,7 +545,8 @@ def chain_admission_failure(designation: Mapping[str, Any], store: Mapping[str, 
     if designation["rollback_watermark_source"] is not None:
         if not isinstance(org_chain, list):
             return refusal("KV_LEDGER_ROLLBACK_WATERMARK_UNREAD", "no authenticated org-ledger chain supplied")
-        return rollback_failure(chain, org_recorded_endpoint_heads(org_chain, designation))
+        return rollback_failure(chain, org_recorded_endpoint_heads(org_chain, designation)) \
+            or crossing_failure(chain, org_chain, designation)
     return None
 
 
@@ -383,7 +570,7 @@ def _git_ref_reader(designation: Mapping[str, Any], store: Mapping[str, Any], so
         yield (None, ("ENDPOINT_LEDGER_UNREADABLE", f"{failure}: {detail}")) if failure else (chain, None)
 
 
-#: store_type -> reader. GATEWAY_ENCRYPTED_BLOB has none until Lane D's reader is admitted by its own change.
+#: store_type -> reader. KV_STORAGE_ENDPOINT has none until an access adapter is admitted by its own change.
 _READERS: dict[str, Any] = {GIT_REF: _git_ref_reader}
 READERS = MappingProxyType(_READERS)
 
@@ -398,8 +585,11 @@ def read_designated(designation: Any, *, source: Any, head_attestation: Any = No
         return
     reader = READERS.get(store["store_type"])
     if reader is None:
-        yield None, refusal("ENDPOINT_LEDGER_STORE_READER_NOT_INSTALLED", f"no {store['store_type']} reader for "
-                            f"{store_location(store)} ({store['provider']})", store_type=store["store_type"])
+        yield None, refusal("KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED", f"no admitted {store['store_type']} reader "
+                            f"for {store_location(store)} ({store.get('provider_id')}); cvk's "
+                            f"{READER_ENTRYPOINTS[0]} is referenced, not vendored",
+                            store_type=store["store_type"], reader_id=READER_ID,
+                            reader_entrypoints=list(READER_ENTRYPOINTS))
         return
     with reader(designation, store, source, head_attestation) as (chain, reason):
         if reason:
@@ -419,7 +609,7 @@ def read_designated(designation: Any, *, source: Any, head_attestation: Any = No
         yield (None, failed) if failed else (chain, None)
 
 
-__all__ = ["CODES", "GATEWAY_ENCRYPTED_BLOB", "GIT_REF", "READERS", "SCHEMA", "SINGLE_PROVIDER_V1", "STORE_TYPES",
-           "chain_admission_failure", "chain_failure", "designation_failure", "kv_head_attestation_body",
+__all__ = ["CODES", "KV_STORAGE_ENDPOINT", "GIT_REF", "READERS", "SCHEMA", "SINGLE_PROVIDER_V1", "STORE_TYPES",
+           "chain_admission_failure", "chain_failure", "crossing_failure", "designation_failure", "kv_head_attestation_body",
            "kv_head_attestation_message", "kv_head_failure", "load_head_signers", "org_recorded_endpoint_heads",
            "read_designated", "refusal", "rollback_failure", "select_store", "store_location"]

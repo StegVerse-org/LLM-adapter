@@ -1,35 +1,82 @@
 {
   "chain": [
     {
-      "ciphertext_sha256": "sha256:324a463f75cbcb9aac120c5b7ab74149290cc2677713d559d7bf05337345766a",
-      "endpoint_id": "StegVerse-Labs/continuity-vault-kit:01_KV_Ledger",
-      "previous_receipt_sha256": "sha256:636a63caa2d85f0eb5d009dba0e02f83cfece724fa9060021ed8259f3f042f55",
-      "receipt_sha256": "sha256:d80bc02651eae097d4012d278c281ace021df73d86bed741df82e11016428e91",
-      "schema": "stegverse.kv-ledger-receipt-view/v1",
+      "endpoint_id": "STEGVERSE_KV:_StegVerse/Receipts",
+      "evidence": {
+        "boundary_evidence": {
+          "communication_id": "intr-path-v1:STEGVERSE_KV:_StegVerse/Receipts->StegVerse-org:crossing-2",
+          "operation": "INTR_MESH_PATH_TRANSFER",
+          "path_id": "StegVerse-org->STEGVERSE_KV:_StegVerse/Receipts:intr-destination"
+        },
+        "communication_id": "intr-path-v1:STEGVERSE_KV:_StegVerse/Receipts->StegVerse-org:crossing-2",
+        "destination_location": "StegVerse-org/.github#refs/stegverse/organization-ledger",
+        "path_id": "StegVerse-org->STEGVERSE_KV:_StegVerse/Receipts:intr-destination"
+      },
+      "hb_reference": {
+        "authority_effect": "NONE",
+        "derived_from_clock": false,
+        "epoch": 446655633,
+        "frequency_hz": 100,
+        "heartbeat_id": "HB:446655633",
+        "period_ms": 10,
+        "progression_dependency": "OSCILLATOR_ONLY"
+      },
+      "observed_at": "SUPPLIED_HB_EPOCH:446655633",
+      "previous_receipt_sha256": "sha256:23fac5e23384aa5bfd8f0892ca68b838ec3fd614abeb962f666ecb63e4bfc212",
+      "receipt_sha256": "sha256:5d4c499ad7d4085251d2fb3369c51930b8a20a744218e22d0392931184631e3d",
+      "schema": "stegverse.kv-recorded-receipt/v1",
       "sequence": 2,
       "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
-      "transition_class": "KV_LEDGER_APPEND"
+      "transition_class": "INTR_MESH_PATH_TRANSFER"
     },
     {
-      "ciphertext_sha256": "sha256:231c842995cd344663475e068deab418530d1579ee6f9acfd5d6d04ff388e8f4",
-      "endpoint_id": "StegVerse-Labs/continuity-vault-kit:01_KV_Ledger",
-      "previous_receipt_sha256": "sha256:644ed4340bb99be5048bee742f34502bf854f5f0623cfeaf66588df52fdb67da",
-      "receipt_sha256": "sha256:636a63caa2d85f0eb5d009dba0e02f83cfece724fa9060021ed8259f3f042f55",
-      "schema": "stegverse.kv-ledger-receipt-view/v1",
+      "endpoint_id": "STEGVERSE_KV:_StegVerse/Receipts",
+      "evidence": {
+        "boundary_evidence": {
+          "communication_id": "intr-path-v1:STEGVERSE_KV:_StegVerse/Receipts->StegVerse-org:crossing-1",
+          "operation": "INTR_MESH_PATH_TRANSFER",
+          "path_id": "StegVerse-org->STEGVERSE_KV:_StegVerse/Receipts:intr-destination"
+        },
+        "communication_id": "intr-path-v1:STEGVERSE_KV:_StegVerse/Receipts->StegVerse-org:crossing-1",
+        "destination_location": "StegVerse-org/.github#refs/stegverse/organization-ledger",
+        "path_id": "StegVerse-org->STEGVERSE_KV:_StegVerse/Receipts:intr-destination"
+      },
+      "hb_reference": {
+        "authority_effect": "NONE",
+        "derived_from_clock": false,
+        "epoch": 446655632,
+        "frequency_hz": 100,
+        "heartbeat_id": "HB:446655632",
+        "period_ms": 10,
+        "progression_dependency": "OSCILLATOR_ONLY"
+      },
+      "observed_at": "SUPPLIED_HB_EPOCH:446655632",
+      "previous_receipt_sha256": "sha256:b2d439d04add0f1074b13d2ff6ef2ce2a73bc5ae8df2a580e29c35c1a5fbd36f",
+      "receipt_sha256": "sha256:23fac5e23384aa5bfd8f0892ca68b838ec3fd614abeb962f666ecb63e4bfc212",
+      "schema": "stegverse.kv-recorded-receipt/v1",
       "sequence": 1,
       "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
-      "transition_class": "KV_LEDGER_APPEND"
+      "transition_class": "INTR_MESH_PATH_TRANSFER"
     },
     {
-      "ciphertext_sha256": "sha256:0800f8ccb04b98ceafae4764fcc03dc1a1b57decae9283e0863ae3724e99d662",
-      "endpoint_id": "StegVerse-Labs/continuity-vault-kit:01_KV_Ledger",
+      "endpoint_id": "STEGVERSE_KV:_StegVerse/Receipts",
+      "hb_reference": {
+        "authority_effect": "NONE",
+        "derived_from_clock": false,
+        "epoch": 446655631,
+        "frequency_hz": 100,
+        "heartbeat_id": "HB:446655631",
+        "period_ms": 10,
+        "progression_dependency": "OSCILLATOR_ONLY"
+      },
+      "observed_at": "SUPPLIED_HB_EPOCH:446655631",
       "previous_receipt_sha256": null,
-      "receipt_sha256": "sha256:644ed4340bb99be5048bee742f34502bf854f5f0623cfeaf66588df52fdb67da",
-      "schema": "stegverse.kv-ledger-receipt-view/v1",
+      "receipt_sha256": "sha256:b2d439d04add0f1074b13d2ff6ef2ce2a73bc5ae8df2a580e29c35c1a5fbd36f",
+      "schema": "stegverse.kv-recorded-receipt/v1",
       "sequence": 0,
       "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
-      "transition_class": "KV_LEDGER_INITIALIZATION"
+      "transition_class": "REPOSITORY_LEDGER_INITIALIZATION"
     }
   ],
-  "note": "SYNTHETIC: the decrypted-on-KV-side view a GATEWAY_ENCRYPTED_BLOB reader yields, newest first"
+  "note": "SYNTHETIC: a KV recorded receipt chain as its access adapter reads it, newest first; genesis then two egress (INTR_MESH_PATH_TRANSFER) records, each with a supplied epoch"
 }

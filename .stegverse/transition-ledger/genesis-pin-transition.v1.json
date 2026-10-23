@@ -54,13 +54,15 @@
   "authority_effect": "NONE",
   "contract_paths": {
     "allowlist": [
-      ".stegverse/transition-ledger/contract.json",
-      ".stegverse/receipt-ledgers/01_KV_Ledger.contract.json",
-      ".stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json"
+      ".stegverse/transition-ledger/contract.json"
     ],
     "default": ".stegverse/transition-ledger/contract.json",
     "rule": "repo-relative, on the allowlist, no traversal, and the contract must have the #431 repository_ledger_location shape; else six-field FAIL_CLOSED CONTRACT_PATH_NOT_ALLOWLISTED / CONTRACT_NOT_431_SHAPE",
-    "cvk_designation": "StegVerse-Labs/continuity-vault-kit#263 @20451a0c (01_KV_Ledger, 02_SKAP_Vault_Ledger; genesis null)",
-    "receiver_note": "the pre-pin receiver takes the same parameter; its carrier step (intr_transport_carrier, byte-identical across #431/#432/#433) is bound to this repository's location, so a cvk contract's InTr carrier is refused until a location-parameterized carrier is a registered item"
+    "withdrawn_endpoint_contract_paths": [
+      ".stegverse/receipt-ledgers/01_KV_Ledger.contract.json",
+      ".stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json"
+    ],
+    "endpoint_rule": "No endpoint (KV, SKAP Vault, node or gateway, externally or ecosystem maintained) is a GitHub Organization member or a source of org-ledger records (Rigel, relayed on StegVerse-org/.github#160 comment 6372871021). StegVerse-Labs/continuity-vault-kit#263 @20451a0c put the KV and SKAP Vault ledgers on refs/stegverse/organization-ledger; @706877b6 moved them to STEGVERSE_KV's own recorded receipt chains (_StegVerse/Receipts, _Vault/SKAP/Receipts). Naming either withdrawn path, or contract bytes naming an endpoint repository, is six-field FAIL_CLOSED ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE; nothing is read or planned. An endpoint's genesis is pinned on its own chain by its own reader (cvk runtime.kv_receipt_ledgers.read_receipt_ledger).",
+    "receiver_note": "the pre-pin receiver takes the same parameter and the same endpoint rule; its genesis pointer carries node_ref, and a pointer naming any node_ref but StegVerse-org/.github (the org's own path) is six-field FAIL_CLOSED ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE"
   }
 }

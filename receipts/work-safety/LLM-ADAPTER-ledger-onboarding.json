@@ -85,7 +85,9 @@
     "tests/fixtures/endpoint-ledger-designation/kv.designation.json",
     "tests/fixtures/endpoint-ledger-designation/org-git-ref.designation.json",
     "tests/fixtures/endpoint-ledger-designation/org-linked-receipts.json",
-    "tests/fixtures/endpoint-ledger-designation/skap.designation.json"
+    "tests/fixtures/endpoint-ledger-designation/skap.designation.json",
+    "llm_adapter/supplied_epoch.py",
+    ".stegverse/transition-ledger/emit.py"
   ],
   "new_files": [
     {
@@ -191,7 +193,7 @@
     },
     {
       "path": "tests/fixtures/org-intr-path-transfer/typed-genesis-observed.json",
-      "semantic_responsibility": "Byte-identical copy (sha256 05babd7b) of StegVerse-org/.github tests/fixtures/intr-path-transfer/typed-genesis-observed.json: the org path-transfer writer's typed REPOSITORY_LEDGER_GENESIS_OBSERVED output (INTR-PATH-TRANSFER-TYPED-BODY-001). SYNTHETIC, NOT LEDGERED, NOT AUTHENTIC.",
+      "semantic_responsibility": "Byte-identical copy (sha256 a4f3f951) of StegVerse-org/.github tests/fixtures/intr-path-transfer/typed-genesis-observed.json: the org path-transfer writer's typed REPOSITORY_LEDGER_GENESIS_OBSERVED output (INTR-PATH-TRANSFER-TYPED-BODY-001). SYNTHETIC, NOT LEDGERED, NOT AUTHENTIC.",
       "closest_existing_implementation": "StegVerse-org/.github laneb/intr-path-transfer-typed-body tests/fixtures/intr-path-transfer/typed-genesis-observed.json (identical bytes)",
       "decision": "REUSE",
       "justification": "Cross-repo fixture test: the org emitter's output is accepted by this repository's pre-pin receiver logic, unchanged.",
@@ -257,10 +259,10 @@
     },
     {
       "path": "tests/fixtures/cvk-receipt-ledger-contracts/01_KV_Ledger.contract.json",
-      "semantic_responsibility": "Byte copy (sha256 81dbc78b) of StegVerse-Labs/continuity-vault-kit#263 @20451a0c .stegverse/receipt-ledgers/01_KV_Ledger.contract.json, the target of the genesis-pin contract-path parameter test.",
-      "closest_existing_implementation": "StegVerse-Labs/continuity-vault-kit#263 .stegverse/receipt-ledgers/01_KV_Ledger.contract.json (identical bytes)",
+      "semantic_responsibility": "Byte copy (sha256 81dbc78b) of StegVerse-Labs/continuity-vault-kit#263 @20451a0c .stegverse/receipt-ledgers/01_KV_Ledger.contract.json, kept as the negative fixture: it places an endpoint ledger on refs/stegverse/organization-ledger, which the genesis-pin planner and receiver refuse with ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE.",
+      "closest_existing_implementation": "StegVerse-Labs/continuity-vault-kit#263 @20451a0c .stegverse/receipt-ledgers/01_KV_Ledger.contract.json (identical bytes; withdrawn at @706877b6)",
       "decision": "REUSE",
-      "justification": "Lane D finding 5: REPOSITORY_LEDGER_GENESIS_PIN targets cvk's KV and SKAP Vault contracts through an allowlisted repo-relative path.",
+      "justification": "Lane D finding 5, superseded: cvk#263 @706877b6 moved the KV and SKAP Vault ledgers to STEGVERSE_KV's own recorded receipt chains, and no endpoint is a source of org-ledger records (StegVerse-org/.github#160 comment 6372871021). The contract-path allowlist is the default contract only.",
       "canonical_owner": "StegVerse-Labs/continuity-vault-kit",
       "evidence_refs": [
         "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263"
@@ -268,10 +270,10 @@
     },
     {
       "path": "tests/fixtures/cvk-receipt-ledger-contracts/02_SKAP_Vault_Ledger.contract.json",
-      "semantic_responsibility": "Byte copy (sha256 153c32e6) of StegVerse-Labs/continuity-vault-kit#263 @20451a0c .stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json, the target of the genesis-pin contract-path parameter test.",
-      "closest_existing_implementation": "StegVerse-Labs/continuity-vault-kit#263 .stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json (identical bytes)",
+      "semantic_responsibility": "Byte copy (sha256 153c32e6) of StegVerse-Labs/continuity-vault-kit#263 @20451a0c .stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json, kept as the negative fixture: it places an endpoint ledger on refs/stegverse/organization-ledger, which the genesis-pin planner and receiver refuse with ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE.",
+      "closest_existing_implementation": "StegVerse-Labs/continuity-vault-kit#263 @20451a0c .stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json (identical bytes; withdrawn at @706877b6)",
       "decision": "REUSE",
-      "justification": "Lane D finding 5: REPOSITORY_LEDGER_GENESIS_PIN targets cvk's KV and SKAP Vault contracts through an allowlisted repo-relative path.",
+      "justification": "Lane D finding 5, superseded: cvk#263 @706877b6 moved the KV and SKAP Vault ledgers to STEGVERSE_KV's own recorded receipt chains, and no endpoint is a source of org-ledger records (StegVerse-org/.github#160 comment 6372871021). The contract-path allowlist is the default contract only.",
       "canonical_owner": "StegVerse-Labs/continuity-vault-kit",
       "evidence_refs": [
         "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263"
@@ -282,22 +284,24 @@
       "closest_existing_implementation": "llm_adapter/org_ledger_location.py (the git reader, reused unchanged)",
       "decision": "EXTEND",
       "evidence_refs": [
-        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263",
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673",
+        "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372871021"
       ],
       "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
       "path": "llm_adapter/endpoint_ledger_designation.py",
-      "semantic_responsibility": "Per-endpoint ledger designation (store_type GIT_REF | GATEWAY_ENCRYPTED_BLOB, single provider), read-only store-reader seam (GIT_REF delegates to the unchanged git reader; no blob reader installed), and pure checks: empty ledger never a genesis, sealed chain, genesis pin, kv_ledger_head_signer head attestation, KV_LEDGER_HEAD_ROLLBACK_DETECTED."
+      "semantic_responsibility": "Per-endpoint ledger designation from the endpoint's own contract (store_type GIT_REF for ORG only; KV_STORAGE_ENDPOINT for KV and SKAP_VAULT with continuity-vault-kit#263 @706877b6's store keys and chains _StegVerse/Receipts and _Vault/SKAP/Receipts; single provider), read-only reader seam (GIT_REF delegates to the unchanged git reader; the KV receipt-chain reader id is not documented, so a read fails closed KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED), and pure checks: empty ledger is not a genesis, sealed and linked receipts, pinned genesis, KV_RECORDED_RECEIPT_CHAIN_HEAD signed by kv_ledger_head_signer, Org-recorded rollback watermark, both sides record each crossing, Org crossing receipts digest-only, and no endpoint is a source of org-ledger records (ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE)."
     },
     {
-      "canonical_owner": "StegVerse-org/LLM-adapter",
-      "closest_existing_implementation": ".stegverse/node-ledger/org-ledger-head-signers.v1.json (same shape)",
+      "canonical_owner": "StegVerse-Labs/continuity-vault-kit (Lane D)",
+      "closest_existing_implementation": "StegVerse-Labs/continuity-vault-kit#263 @706877b6 .stegverse/node-ledger/kv-ledger-head-signers.v1.json (identical bytes)",
       "decision": "REUSE",
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/160#issuecomment-6372216673"
       ],
       "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
       "path": ".stegverse/node-ledger/kv-ledger-head-signers.v1.json",
-      "semantic_responsibility": "kv_ledger_head_signer public-key references (TVC#542), NONE_PUBLISHED."
+      "semantic_responsibility": "Byte-identical copy (sha256 758d7983) of continuity-vault-kit#263 @706877b6's kv_ledger_head_signer public-key reference file (TVC#542); no signers published yet."
     },
     {
       "canonical_owner": "StegVerse-org/LLM-adapter",
@@ -386,6 +390,19 @@
       "justification": "ENDPOINT-LEDGER-DESIGNATION-001: KV independence ruling (StegVerse-org/.github#160 comment 6372216673): per-endpoint ledger designation, store_type seam, signed KV heads, Org-recorded rollback watermark.",
       "path": "tests/fixtures/endpoint-ledger-designation/skap.designation.json",
       "semantic_responsibility": "SYNTHETIC test fixture for tests/test_endpoint_ledger_designation.py; not ledgered."
+    },
+    {
+      "path": "llm_adapter/supplied_epoch.py",
+      "semantic_responsibility": "supplied_epoch_failure: the genesis refuses an absent hb epoch (HB_EPOCH_NOT_SUPPLIED) and a clock-derived or malformed one (HB_EPOCH_INVALID), predicate SUBMISSION_CARRIES_THE_SUPPLIED_HB_EPOCH.",
+      "closest_existing_implementation": "StegVerse-org/.github resident-runtime/organization_egress_boundary.py supplied_epoch_failure (byte copy, pinned by intr_hop.py SUPPLIED_EPOCH_FAILURE_SHA256) and StegVerse-Labs/.github#3263 observed_at_from_hb_reference",
+      "decision": "REUSE",
+      "justification": "Coordination ruling 1 (StegVerse-org/.github#167 comment 6372442705): the genesis is byte-deterministic at a supplied epoch per StegVerse-Labs/.github#3263/#3290.",
+      "canonical_owner": "StegVerse-org/.github (rule) / StegVerse-Labs/.github#3263, #3290",
+      "evidence_refs": [
+        "https://github.com/StegVerse-Labs/.github/pull/3290",
+        "https://github.com/StegVerse-org/.github/issues/167#issuecomment-6372442705",
+        "https://github.com/StegVerse-Labs/.github/pull/3263"
+      ]
     }
   ]
 }
