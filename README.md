@@ -813,8 +813,12 @@ only its own side of the crossing, as a digest-only crossing receipt (`endpoint_
   `provider_id`, `access_adapter`, `location`: the minimal shape mirroring cvk's
   `stegverse.kv.storage-endpoint-descriptor/v2`, because no node storage-endpoint descriptor is documented),
   `head_signer_source` `NODE_IDENTITY_KEY` (the identity proof below), `rollback_watermark_source`
-  `NODE_RECORDED_RECEIPT_CHAIN_HEAD` (the node's own recorded head, `endpoint.recorded_head`) with at most the
-  digest-only Org cross-check of the node's own `<node_id>->StegVerse-org:intr-destination` path. A PERMANENT ledger on
+  `NODE_RECORDED_RECEIPT_CHAIN_HEAD` (the node's own recorded head, read back from its own head record
+  `head-record.v1.jsonl`; `endpoint.recorded_head` is only a claim) with the required digest-only Org cross-check of
+  the node's own `<node_id>->StegVerse-org:intr-destination` path, read by `endpoint_ledger_designation` itself
+  (`ORG_CROSSING_READER`; LC-KV-23, aligned with continuity-vault-kit#263 @9bc54d05): not observable on a crossed
+  chain is `KV_CROSSING_RECORD_NOT_OBSERVED` (class B), an Org record naming a newer or non-ancestor head is `DENY`
+  `KV_LEDGER_HEAD_ROLLBACK_DETECTED`. A PERMANENT ledger on
   an org `GIT_REF` is `DENY` `ENDPOINT_ORG_MEMBERSHIP_REFUSED`, `failure_class` A (#167 comment 6373412055 items 3
   and 4), never `ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE`; that code stays the originator check on Org records. The chain is
   read only through `endpoint_ledger_designation.read_designated`, which has no `NODE_STORAGE_ENDPOINT` reader:
@@ -828,7 +832,7 @@ only its own side of the crossing, as a digest-only crossing receipt (`endpoint_
 - **KV, SKAP_VAULT.** `STEGVERSE_KV:_StegVerse/Receipts` and `STEGVERSE_KV:_Vault/SKAP/Receipts`, designated with the
   cvk storage-endpoint keys (`store_type`, `storage_endpoint_schema`, `provider_id`, `access_adapter`, `kv_class`,
   `kv_request_id`, `location`) and path ids ending `:intr-destination`. They are read only through
-  `llm_adapter/endpoint_ledger_designation.py` (a byte copy of #431 @f29e4fbf); heads are signed against
+  `llm_adapter/endpoint_ledger_designation.py` (a byte copy of #431 @64121f4d); heads are signed against
   `.stegverse/node-ledger/kv-ledger-head-signers.v1.json` (byte copy, sha256 758d7983) under the
   `KV_RECORDED_RECEIPT_CHAIN_HEAD` digest. They are never opened on a ledger root (`ENDPOINT_INVALID`); a
   `ledger_root` is `KV_LEDGER_DESIGNATED_ON_GIT_REF`; an Org-membership binding is `ENDPOINT_ORG_MEMBERSHIP_REFUSED`;

@@ -60,7 +60,7 @@ Endpoint kinds (`endpoint_kind`) and how each is anchored
   KV_RECORDED_RECEIPT_CHAIN_HEAD, signed by a kv_ledger_head_signer published in
   .stegverse/node-ledger/kv-ledger-head-signers.v1.json (byte copy of #431's,
   sha256 758d7983...). Reading the chain goes through
-  llm_adapter.endpoint_ledger_designation (byte copy of #431 @f29e4fbf), whose
+  llm_adapter.endpoint_ledger_designation (byte copy of #431 @64121f4d), whose
   reader id is not documented: FAIL_CLOSED
   KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED, six fields.
 * ``GATEWAY``: no gateway chain is carried on the org ledger. A gateway's
@@ -894,7 +894,7 @@ def verify_anchor(node_id: Any, *, endpoint: Any, org_ledger_root: Any,
     if failed:
         return non_allow(*failed, node_id=node_id, kind_for_code=kind)
     if kind == PERMANENT:
-        refused = permanent_read_failure(node_id, endpoint, org_chain)
+        refused = permanent_read_failure(node_id, endpoint)
         if refused:
             return refused
     root = Path(endpoint["ledger_root"])
@@ -1012,20 +1012,20 @@ def permanent_designation_failure(node_id: Any, endpoint: Mapping[str, Any]) -> 
     designation = endpoint.get("designation")
     failed = eld.designation_failure(designation)
     if failed is None and (designation["endpoint_kind"] != PERMANENT or designation["endpoint_id"] != node_id
-                           or eld.crossing_path_ids(designation) not in ([], [path_id(node_id)])):
+                           or eld.crossing_path_ids(designation) != [path_id(node_id)]):
         failed = eld.refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"PERMANENT {node_id!r} designates its own "
                              f"ledger as endpoint_id {node_id!r} on path {path_id(node_id)!r} only; got "
                              f"{designation.get('endpoint_kind')!r} {designation.get('endpoint_id')!r}")
     return {**failed, **_permanent_base(node_id), "reason": failed["failure_code"]} if failed else None
 
 
-def permanent_read_failure(node_id: str, endpoint: Mapping[str, Any],
-                           org_chain: list[Mapping[str, Any]]) -> dict[str, Any] | None:
+def permanent_read_failure(node_id: str, endpoint: Mapping[str, Any]) -> dict[str, Any] | None:
     """Read the node's own chain only through endpoint_ledger_designation.read_designated (its reader for
     NODE_STORAGE_ENDPOINT, of which none is admitted: six-field FAIL_CLOSED NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED,
-    open item NODE-STORAGE-ENDPOINT-DESCRIPTOR), with the node's own recorded head as the watermark and the Org
-    chain for the digest-only both-sides check. ``ledger_root`` is the read-back root handed to that reader."""
-    with eld.read_designated(endpoint["designation"], source=endpoint.get("ledger_root"), org_chain=org_chain,
+    open item NODE-STORAGE-ENDPOINT-DESCRIPTOR). The watermark is the node's own read-back head record and the Org
+    side of each crossing is read by that module itself (LC-KV-23, cvk#263 @9bc54d05); ``recorded_head`` is only
+    the caller's claim. ``ledger_root`` is the read-back root handed to that reader."""
+    with eld.read_designated(endpoint["designation"], source=endpoint.get("ledger_root"),
                              recorded_head=endpoint.get("recorded_head")) as (chain, failed):
         if failed:
             return {**failed, **_permanent_base(node_id), "reason": failed["failure_code"]}
@@ -1035,7 +1035,7 @@ def permanent_read_failure(node_id: str, endpoint: Mapping[str, Any],
 def verify_independent(node_id: Any, endpoint: Mapping[str, Any], org_ledger_root: Any,
                        org_ledger_head_receipt_sha256: Any) -> dict[str, Any]:
     """KV and SKAP_VAULT: STEGVERSE_KV:<location> with the cvk storage-endpoint keys, read only through
-    endpoint_ledger_designation (byte copy of #431 @f29e4fbf). Six fields from that module on any refusal."""
+    endpoint_ledger_designation (byte copy of #431 @64121f4d). Six fields from that module on any refusal."""
     kind = endpoint["endpoint_kind"]
     designation = endpoint.get("designation")
     base = {"schema": RESULT_SCHEMA, "node_id": node_id if isinstance(node_id, str) else None,
@@ -1054,14 +1054,15 @@ def verify_independent(node_id: Any, endpoint: Mapping[str, Any], org_ledger_roo
         return refused(failed)
     if designation["endpoint_kind"] != kind or designation["endpoint_id"] != kv_endpoint_id(kind) \
             or node_id != kv_endpoint_id(kind) \
-            or eld.crossing_path_ids(designation) not in ([], [base["path_id"]]):
-        # cvk#263 @bf684aad: the watermark is KV's own recorded head; path_ids are only the optional cross-check
+            or eld.crossing_path_ids(designation) != [base["path_id"]]:
+        # cvk#263 @9bc54d05: the watermark is KV's own head record; the required cross-check names KV's own path
         return refused(eld.refusal("ENDPOINT_LEDGER_DESIGNATION_INVALID", f"{kind} is {kv_endpoint_id(kind)} on "
                                    f"path {base['path_id']}; got {designation.get('endpoint_id')!r} for {node_id!r}"))
     org_chain, failure = _org_chain(org_ledger_root, org_ledger_head_receipt_sha256)
     if failure:
         return non_allow(*failure, node_id=node_id, kind_for_code=kind)
-    with eld.read_designated(designation, source=None, org_chain=org_chain,
+    del org_chain   # the Org side is read by endpoint_ledger_designation itself (LC-KV-23 (b)), never passed in
+    with eld.read_designated(designation, source=None,
                              recorded_head=endpoint.get("recorded_head")) as (chain, failed):
         if failed:
             return refused(failed)

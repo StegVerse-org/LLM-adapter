@@ -105,12 +105,21 @@ def opened_for(genesis, **overrides):
 NODE_DESIGNATION = json.loads((ROOT / "tests/fixtures/endpoint-ledger-designation/node.designation.json").read_text())
 
 
+#: TEST-ONLY: a read-back root's own head record, when a test sets one; otherwise the stub records the read-back head
+HEAD_RECORDS: dict = {}
+
+
 @contextlib.contextmanager
 def node_reader_stub(designation, store, source, head_attestation):
     """TEST-ONLY stand-in for a NODE_STORAGE_ENDPOINT access adapter (none is documented or admitted): it reads the
-    read-back root it is handed. Production has no reader (NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED)."""
+    read-back root it is handed, and the node's own head record (cvk#263 @9bc54d05 HEAD_RECORD shape). Production
+    has no reader (NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED)."""
     chain, failure, detail = hne.read_chain(Path(source)) if source else (None, "NO_SOURCE", "")
-    yield (None, ("ENDPOINT_LEDGER_UNREADABLE", f"{failure}: {detail}")) if failure else (chain, None)
+    if failure:
+        yield None, None, ("ENDPOINT_LEDGER_UNREADABLE", f"{failure}: {detail}")
+        return
+    record = HEAD_RECORDS.get(str(source), eld.head_record_entries([chain[0]["receipt_sha256"]] if chain else []))
+    yield chain, copy.deepcopy(record), None
 
 
 def node_designated(root, node_id=None):
@@ -141,7 +150,10 @@ class _Ledgers(unittest.TestCase):
         subprocess.run(["git", "init", "-q", "--bare", str(self.git)], check=True, env=GIT_ENV)
         for patcher in (mock.patch.object(location, "CONTRACT_PATH", CONTRACT_PINNED),
                         mock.patch.object(anchor, "load_opened_signers", return_value=[dict(ISSUER_REF)]),
-                        mock.patch.dict(eld._READERS, {eld.NODE_STORAGE_ENDPOINT: node_reader_stub})):
+                        mock.patch.dict(eld._READERS, {eld.NODE_STORAGE_ENDPOINT: node_reader_stub}),
+                        # TEST-ONLY Org-side readback (LC-KV-23 (b)): the module reads the Org's crossing records
+                        mock.patch.object(eld, "ORG_CROSSING_READER", lambda d: hne.read_chain(self.org)[0]),
+                        mock.patch.dict(HEAD_RECORDS, clear=True)):
             patcher.start()
             self.addCleanup(patcher.stop)
         harness.write_genesis(self.org)      # the genesis the contract fixture pins
@@ -370,12 +382,23 @@ class AnchoredEndToEndTests(_Ledgers):
             with self.subTest(bad=sorted(bad)):
                 self.assert_refused(self.anchored(bad), "ENDPOINT_LEDGER_DESIGNATION_INVALID",
                                     "ENDPOINT_LEDGER_DESIGNATION_INVALID")
-        # the node's own recorded head is the watermark: absent is class A, a newer recorded head is DENY rollback
-        self.assert_refused(self.anchored({**good, "recorded_head": None}), "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING",
-                            "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING")
+        # LC-KV-23 (a): the watermark is the node's own read-back head record; the caller's recorded_head is only
+        # a claim (absent is fine; a newer claim is DENY rollback); no head record read back is class A
+        self.assertEqual(self.anchored({**good, "recorded_head": None})["disposition"], "ALLOW")
         newer = self.anchored({**good, "recorded_head": {"source": eld.NODE_WATERMARK_SOURCE,
                                                          "head_receipt_sha256": "sha256:" + "e" * 64}})
         self.assertEqual((newer["disposition"], newer["failure_code"]), ("DENY", "KV_LEDGER_HEAD_ROLLBACK_DETECTED"))
+        chain = hne.read_chain(self.root)[0]
+        for record, code in (([], "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING"),
+                             (eld.head_record_entries([r["receipt_sha256"] for r in reversed(chain)]
+                                                      + ["sha256:" + "e" * 64]), "KV_LEDGER_HEAD_ROLLBACK_DETECTED")):
+            with self.subTest(code=code), mock.patch.dict(HEAD_RECORDS, {str(self.root): record}):
+                self.assertEqual(self.anchored(good)["failure_code"], code)
+        # LC-KV-23 (b): the Org side is read by the module; not observable on a crossed chain is class B
+        with mock.patch.object(eld, "ORG_CROSSING_READER", None):
+            out = self.anchored(good)
+            self.assert_refused(out, "KV_CROSSING_RECORD_NOT_OBSERVED", "KV_CROSSING_RECORD_NOT_OBSERVED")
+            self.assertEqual(out["failure_class"], "B")
         # production: no NODE_STORAGE_ENDPOINT reader is documented or admitted
         with mock.patch.dict(eld._READERS, {eld.GIT_REF: eld._git_ref_reader}, clear=True):
             out = self.anchored(good)
@@ -441,8 +464,8 @@ class AnchoredEndToEndTests(_Ledgers):
                 endpoint_id = f"STEGVERSE_KV:{location_}"
                 self.assertEqual(anchor.kv_endpoint_id(kind), endpoint_id)
                 self.assertTrue(anchor.path_id(NODE).endswith(":intr-destination"))
-                # cvk#263 @bf684aad: KV's own recorded head is the watermark; the :intr-destination path is only the
-                # optional digest-only Org crossing cross-check
+                # cvk#263 @9bc54d05: KV's own head record is the watermark; the :intr-destination path is the
+                # required digest-only Org crossing cross-check
                 self.assertEqual(designation["rollback_watermark_source"]["source"], "KV_RECORDED_RECEIPT_CHAIN_HEAD")
                 self.assertEqual(eld.crossing_path_ids(designation),
                                  [f"StegVerse-org->{endpoint_id}:intr-destination"])
@@ -477,12 +500,12 @@ class AnchoredEndToEndTests(_Ledgers):
                 wrong = anchor.verify_anchor(NODE, endpoint={"endpoint_kind": kind, "designation": designation},
                                              org_ledger_root=self.org, org_ledger_head_receipt_sha256=self.head())
                 self.assert_refused(wrong, "ENDPOINT_LEDGER_DESIGNATION_INVALID", "ENDPOINT_LEDGER_DESIGNATION_INVALID")
-                # cvk#263 @bf684aad: no declared path is needed for the watermark; an Org-sourced one is refused
+                # cvk#263 @9bc54d05: the cross-check is required; an Org-sourced watermark is refused
                 bare = {**designation, "rollback_watermark_source": {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD"}}
                 out = anchor.verify_anchor(endpoint_id, endpoint={"endpoint_kind": kind, "designation": bare},
                                            org_ledger_root=self.org, org_ledger_head_receipt_sha256=self.head())
-                self.assert_refused(out, "KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED",
-                                    "KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED")
+                self.assert_refused(out, "ENDPOINT_LEDGER_DESIGNATION_INVALID",
+                                    "ENDPOINT_LEDGER_DESIGNATION_INVALID")
                 org_sourced = {**designation, "rollback_watermark_source": {
                     **designation["rollback_watermark_source"], "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"}}
                 out = anchor.verify_anchor(endpoint_id, endpoint={"endpoint_kind": kind, "designation": org_sourced},
@@ -498,12 +521,13 @@ class AnchoredEndToEndTests(_Ledgers):
 
     def test_431_designation_suite_passes_against_432_anchors(self):
         """Rerun #431's designation tests here (byte-identical module), with #431's contract designation."""
-        # byte copy of #431 @f29e4fbf tests/test_endpoint_ledger_designation.py, not collected on its own (#432's
+        # byte copy of #431 @64121f4d tests/test_endpoint_ledger_designation.py, not collected on its own (#432's
         # contract.json does not designate)
         from tests import endpoint_ledger_designation_suite_431 as suite_module
         # production's reader seam (no NODE_STORAGE_ENDPOINT reader), not this class's TEST-ONLY node reader stub
         with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431), \
-                mock.patch.dict(eld._READERS, {eld.GIT_REF: eld._git_ref_reader}, clear=True):
+                mock.patch.dict(eld._READERS, {eld.GIT_REF: eld._git_ref_reader}, clear=True), \
+                mock.patch.object(eld, "ORG_CROSSING_READER", None):
             suite = unittest.defaultTestLoader.loadTestsFromModule(suite_module)
             result = unittest.TestResult()
             suite.run(result)

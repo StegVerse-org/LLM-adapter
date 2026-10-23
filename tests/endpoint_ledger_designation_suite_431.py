@@ -6,9 +6,10 @@ with cvk#263 @706877b6's store keys and chains; the KV receipt-chain reader id i
 closed KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED (KV-SKAP-LEDGER-LOCATION-001); no endpoint is a source of org-ledger
 records (#160 comment 6372871021), and an Org crossing receipt is digest-only; both
 sides record each crossing, with a supplied epoch (#162 comment 6372641743); heads are signed by kv_ledger_head_signer (TVC#542); the rollback watermark is KV's own recorded
-receipt chain head (KV_RECORDED_RECEIPT_CHAIN_HEAD, cvk#263 @bf684aad), required and independent of #235's path_ids;
-the Org-linked head is only the optional digest-only org_crossing_cross_check; keys are closed (CONTRACT_KEY_SCHEMA,
-LC-KV-24); the designation fixtures match cvk @bf684aad's contracts (vendored byte copies); an empty ledger is never a genesis; one storage provider now, more refused. Fixtures are
+receipt chain head (KV_RECORDED_RECEIPT_CHAIN_HEAD), read from KV's own head record, never the caller (LC-KV-23 (a),
+cvk#263 @9bc54d05); the Org side is the required digest-only org_crossing_cross_check, read by the module itself
+through ORG_CROSSING_READER and compared only to refuse (LC-KV-23 (b)); keys are closed (CONTRACT_KEY_SCHEMA,
+LC-KV-24); the designation fixtures match cvk @9bc54d05's contracts (vendored byte copies); an empty ledger is never a genesis; one storage provider now, more refused. Fixtures are
 this PR's (#431) only; keys are fixture keys only.
 """
 from __future__ import annotations
@@ -28,11 +29,11 @@ from tests import ed25519_test_signer as signer
 
 ROOT = Path(__file__).resolve().parents[1]
 F = ROOT / "tests/fixtures/endpoint-ledger-designation"
-CVK = F / "cvk263-bf684aad"
-#: StegVerse-Labs/continuity-vault-kit#263 @bf684aada366e227714c6f67ac52a7a4ec6933d4 .stegverse/receipt-chains/
+CVK = F / "cvk263-9bc54d05"
+#: StegVerse-Labs/continuity-vault-kit#263 @9bc54d05253b6377d26dd6dd3dac966dc75cdf98 .stegverse/receipt-chains/
 CVK_CONTRACT_SHA256 = {
-    "stegverse-kv-receipts.contract.json": "sha256:610377f21f7ae6e4953fd2324473c00bbe37cc7896f99e35ea572ead035dfaf2",
-    "skap-receipts.contract.json": "sha256:83e30008addc557875f9cadf7f587a852e262d09ac50be9ecc041e9863d0b822"}
+    "stegverse-kv-receipts.contract.json": "sha256:c9cc8913de21183fb23774cd155fee84fd6d275c003e71b2712ad44d30d89ce1",
+    "skap-receipts.contract.json": "sha256:7f0a0536214213b6dfc74074fec9c2375d130d875fc7fcc6c7796a77b901a86f"}
 SIX = ("failure_code", "failed_predicate", "required_evidence_or_repair", "retry_entrypoint",
        "owning_existing_goal", "next_attempt")
 
@@ -47,7 +48,7 @@ def fixture_signers():
 
 
 def recorded(chain, index=0, **extra):
-    """The KV-recorded rollback watermark input (cvk#263 @bf684aad recorded_head)."""
+    """The KV-recorded rollback watermark input (cvk#263 @9bc54d05 recorded_head)."""
     return {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD", "head_receipt_sha256": chain[index]["receipt_sha256"], **extra}
 
 
@@ -72,13 +73,25 @@ class Base(unittest.TestCase):
         for word in ("grant", "approved", "authorized", "merge-ready"):
             self.assertNotIn(word, json.dumps(result).lower())
 
+    def reseal(self, receipt, **edit):
+        body = {k: v for k, v in receipt.items() if k != "receipt_sha256"}
+        body.update(edit)
+        return {**body, "receipt_sha256": hne.sha(body)}
+
     @contextlib.contextmanager
-    def lane_d_reader_stub(self, chain):
-        """TEST-ONLY stand-in for a KV_STORAGE_ENDPOINT access adapter, to exercise the seam; not an adapter."""
+    def lane_d_reader_stub(self, chain, head_record="CURRENT", org="FIXTURE"):
+        """TEST-ONLY stand-ins for a KV_STORAGE_ENDPOINT access adapter (the chain and KV's own head record) and for
+        the Org-side crossing readback (ORG_CROSSING_READER), to exercise the seams; not adapters."""
+        if head_record == "CURRENT":
+            head_record = eld.head_record_entries([chain[0]["receipt_sha256"]]) if chain else []
+        observed = self.org_chain if org == "FIXTURE" else org
+
         @contextlib.contextmanager
         def reader(designation, store, source, head_attestation):
-            yield copy.deepcopy(chain), None
-        with mock.patch.dict(eld._READERS, {eld.KV_STORAGE_ENDPOINT: reader}):
+            yield copy.deepcopy(chain), copy.deepcopy(head_record), None
+        with mock.patch.dict(eld._READERS, {eld.KV_STORAGE_ENDPOINT: reader}), \
+                mock.patch.object(eld, "ORG_CROSSING_READER",
+                                  None if observed is None else (lambda d: copy.deepcopy(observed))):
             yield
 
 
@@ -195,7 +208,7 @@ class ReaderSeamTests(Base):
         with self.assertRaises(TypeError):
             eld.READERS[eld.KV_STORAGE_ENDPOINT] = object()     # the seam is read-only at runtime
         for d in (self.kv, load("skap.designation.json")):
-            with eld.read_designated(d, source="/any/caller/path", org_chain=self.org_chain) as (chain, failed):
+            with eld.read_designated(d, source="/any/caller/path") as (chain, failed):
                 self.assertIsNone(chain)
                 self.assert_six(failed, "KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED")
                 self.assertEqual(failed["failed_predicate"],
@@ -224,23 +237,30 @@ class ReaderSeamTests(Base):
     def test_a_plugged_in_reader_still_passes_every_check(self):
         with self.lane_d_reader_stub(self.chain):
             # no kv_ledger_head_signer is published in production
-            with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
-                                     org_chain=self.org_chain) as (chain, failed):
+            with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain)) as (chain, failed):
                 self.assert_six(failed, "KV_LEDGER_HEAD_SIGNER_NOT_PUBLISHED")
                 self.assertIn("TVC#542", failed["owning_existing_goal"])
             with mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
-                with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
-                                         org_chain=self.org_chain, recorded_head=recorded(self.chain)) as (chain, failed):
+                with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain), recorded_head=recorded(self.chain)) as (chain, failed):
                     self.assertIsNone(failed)
                     self.assertEqual(chain, self.chain)
-                with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
-                                         org_chain=self.org_chain) as (chain, failed):
-                    self.assert_six(failed, "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING")
-                    self.assertEqual(failed["failure_class"], "A")
-                # the chain holds an endpoint crossing record: with no Org chain it is one-sided
-                with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
-                                         org_chain=None, recorded_head=recorded(self.chain)) as (chain, failed):
-                    self.assert_six(failed, "INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES")
+                # the caller's recorded_head is only a claim: absent, the head record alone decides
+                with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain)) as (chain, failed):
+                    self.assertIsNone(failed)
+            with mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
+                for absent in (None, []):
+                    with self.subTest(head_record=absent), self.lane_d_reader_stub(self.chain, head_record=absent):
+                        with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
+                                                 recorded_head=recorded(self.chain)) as (chain, failed):
+                            self.assert_six(failed, "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING")
+                            self.assertEqual(failed["failure_class"], "A")
+                # the chain holds an endpoint crossing record and no Org side is observable: not observed, class B
+                with self.lane_d_reader_stub(self.chain, org=None):
+                    with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
+                                             recorded_head=recorded(self.chain)) as (chain, failed):
+                        self.assert_six(failed, "KV_CROSSING_RECORD_NOT_OBSERVED")
+                        self.assertEqual((failed["failure_class"], failed["failed_predicate"]),
+                                         ("B", "ORG_SIDE_OF_EACH_CROSSING_OBSERVED_BY_THE_READER"))
 
 
 class EmptyLedgerTests(Base):
@@ -256,10 +276,11 @@ class EmptyLedgerTests(Base):
                 with self.subTest(store_type=st, empty=empty):
                     self.assert_six(eld.chain_failure(d, empty), "ENDPOINT_LEDGER_EMPTY_NOT_A_GENESIS")
                     self.assert_six(eld.chain_admission_failure(d, d["stores"][0], empty, head_attestation=None,
-                                                                signers=fixture_signers(), org_chain=[]),
+                                                                signers=fixture_signers(), head_record=[],
+                                                                org_chain=[]),
                                     "ENDPOINT_LEDGER_EMPTY_NOT_A_GENESIS")
         with self.lane_d_reader_stub([]):
-            with eld.read_designated(self.kv, source=None, org_chain=self.org_chain) as (chain, failed):
+            with eld.read_designated(self.kv, source=None) as (chain, failed):
                 self.assert_six(failed, "ENDPOINT_LEDGER_EMPTY_NOT_A_GENESIS")
         # a chain that does not end at a genesis of the designated class is not taken as one
         headless = self.chain[:-1]
@@ -308,20 +329,41 @@ class SignedHeadTests(Base):
 
 
 class RollbackTests(Base):
-    """cvk#263 @bf684aad: the watermark is KV's own recorded receipt chain head; it is required, never Org-sourced,
+    """cvk#263 @9bc54d05: the watermark is KV's own recorded receipt chain head; it is required, never Org-sourced,
     and does not depend on any Org chain or declared path."""
 
     def test_the_watermark_is_kvs_own_recorded_head_and_is_required(self):
+        """LC-KV-23 (a): the watermark is read from KV's own head record; the caller's recorded_head is a claim."""
         self.assertEqual(eld.WATERMARK_SOURCE, "KV_RECORDED_RECEIPT_CHAIN_HEAD")
-        watermark, failed = eld.kv_watermark(recorded(self.chain))
+        self.assertEqual((eld.HEAD_RECORD, eld.HEAD_RECORD_SCHEMA, eld.HEAD_RECORD_KEYS),
+                         ("head-record.v1.jsonl", "stegverse.kv-recorded-head/v1",
+                          ("schema", "head_receipt_sha256", "previous_record_sha256", "record_sha256")))
+        heads = [r["receipt_sha256"] for r in reversed(self.chain)]
+        record = eld.head_record_entries(heads)
+        self.assertEqual(eld.recorded_head_failure(self.chain, record), (self.chain[0]["receipt_sha256"], None))
+        self.assertIsNone(record[0]["previous_record_sha256"])
+        self.assertEqual(record[1]["previous_record_sha256"], record[0]["record_sha256"])
+        for name, bad in {"absent": None, "empty": [], "not a list": {"x": 1},
+                          "relinked": [record[0], {**record[1], "previous_record_sha256": None}],
+                          "resealed": [{**record[0], "record_sha256": "sha256:" + "0" * 64}],
+                          "extra key": [{**record[0], "extra": 1}],
+                          "another schema": [{**record[0], "schema": "x"}],
+                          "backwards": eld.head_record_entries(list(reversed(heads)))}.items():
+            with self.subTest(name=name):
+                got = eld.recorded_head_failure(self.chain, bad)[1]
+                self.assert_six(got, "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING")
+                self.assertEqual((got["failed_predicate"], got["failure_class"]), ("ROLLBACK_WATERMARK_SUPPLIED", "A"))
+        off = eld.head_record_entries(heads + ["sha256:" + "e" * 64])
+        got = eld.recorded_head_failure(self.chain, off)[1]
+        self.assert_six(got, "KV_LEDGER_HEAD_ROLLBACK_DETECTED", "DENY")
+        self.assertEqual(got["failure_class"], "C")
+        # the claim
+        self.assertEqual(eld.kv_watermark(None), (None, None))
+        claim, failed = eld.kv_watermark(recorded(self.chain, org_crossing_cross_check=self.org_chain[2]["receipt_sha256"]))
         self.assertIsNone(failed)
-        self.assertEqual(watermark, {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD",
-                                     "head_receipt_sha256": self.chain[0]["receipt_sha256"]})
-        xc = self.org_chain[2]["receipt_sha256"]
-        watermark, failed = eld.kv_watermark(recorded(self.chain, org_crossing_cross_check=xc))
-        self.assertEqual(watermark["org_crossing_cross_check"], {
-            "digest": xc, "role": "DIGEST_ONLY_CROSS_CHECK_NEVER_WATERMARK", "authority_effect": "NONE"})
-        for missing in (None, "sha256:" + "a" * 64, {"head_receipt_sha256": self.chain[0]["receipt_sha256"]},
+        self.assertEqual(claim, {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD",
+                                 "head_receipt_sha256": self.chain[0]["receipt_sha256"]})
+        for missing in ("sha256:" + "a" * 64, {"head_receipt_sha256": self.chain[0]["receipt_sha256"]},
                         {**recorded(self.chain), "head_receipt_sha256": "abc"},
                         {**recorded(self.chain), "org_crossing_cross_check": "x"},
                         {**recorded(self.chain), "extra": 1}, {**recorded(self.chain), "source": "CALLER"}):
@@ -343,24 +385,48 @@ class RollbackTests(Base):
                     d["rollback_watermark_source"]["source"] = source
                     self.assert_six(eld.designation_failure(d), "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED")
 
-    def test_the_watermark_does_not_depend_on_235s_path_ids(self):
-        for name in ("kv.designation.json", "skap.designation.json"):
+    def test_the_org_cross_check_is_required_on_intr_destination_path_ids(self):
+        """LC-KV-23 (b) (cvk#263 @9bc54d05): the cross-check is required; every path_id ends :intr-destination."""
+        self.assertEqual(eld.PATH_ID_SUFFIX, ":intr-destination")
+        xc = self.kv["rollback_watermark_source"]["org_crossing_cross_check"]
+        for name in ("kv.designation.json", "skap.designation.json", "node.designation.json"):
             d = load(name)
-            d["rollback_watermark_source"] = {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD"}   # no cross-check
             self.assertIsNone(eld.designation_failure(d))
-            self.assertEqual(eld.crossing_path_ids(d), [])
-        bare = {**self.kv, "rollback_watermark_source": {"source": "KV_RECORDED_RECEIPT_CHAIN_HEAD"}}
+            source = d["rollback_watermark_source"]["source"]
+            for bad in ({"source": source}, {"source": source, "org_crossing_cross_check": None},
+                        {"source": source, "org_crossing_cross_check": {**xc, "path_ids": ["a->b:intr-source"]}},
+                        {"source": source, "org_crossing_cross_check": {**xc, "path_ids": ["x", 1]}}):
+                with self.subTest(name=name, bad=bad):
+                    self.assert_six(eld.designation_failure({**d, "rollback_watermark_source": bad}),
+                                    "ENDPOINT_LEDGER_DESIGNATION_INVALID")
         head_only = [r for r in self.chain if r.get("transition_class") not in eld.CROSSING_CLASSES]
         self.assertEqual(head_only, self.chain[-1:])
         with mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
-            # no Org chain, no declared path: the KV-recorded watermark alone decides
+            # a never-crossed chain with nothing observable skips the comparison; the head record alone decides
             self.assertIsNone(eld.chain_admission_failure(
-                bare, bare["stores"][0], head_only, head_attestation=attest(bare, head_only),
-                signers=fixture_signers(), org_chain=None, recorded_head=recorded(head_only)))
+                self.kv, self.kv["stores"][0], head_only, head_attestation=attest(self.kv, head_only),
+                signers=fixture_signers(), head_record=eld.head_record_entries([head_only[0]["receipt_sha256"]]),
+                org_chain=None))
             self.assert_six(eld.chain_admission_failure(
-                bare, bare["stores"][0], head_only, head_attestation=attest(bare, head_only),
-                signers=fixture_signers(), org_chain=None, recorded_head=None),
+                self.kv, self.kv["stores"][0], head_only, head_attestation=attest(self.kv, head_only),
+                signers=fixture_signers(), head_record=None, org_chain=None, recorded_head=recorded(head_only)),
                 "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING")
+
+    def test_the_org_side_is_read_by_the_module_never_the_caller(self):
+        """LC-KV-23 (b): no org_chain argument; production ORG_CROSSING_READER is None (not observable)."""
+        self.assertIsNone(eld.ORG_CROSSING_READER)
+        self.assertNotIn("org_chain", eld.read_designated.__wrapped__.__code__.co_varnames[:5])
+        with self.assertRaises(TypeError):
+            with eld.read_designated(self.kv, source=None, org_chain=self.org_chain):
+                pass
+        self.assertIsNone(eld.observe_org_crossings(self.kv))
+        for broken in (lambda d: "not a list", lambda d: 1 / 0):
+            with mock.patch.object(eld, "ORG_CROSSING_READER", broken):
+                self.assertIsNone(eld.observe_org_crossings(self.kv))
+        seen = []
+        with mock.patch.object(eld, "ORG_CROSSING_READER", lambda d: seen.append(d) or list(self.org_chain)):
+            self.assertEqual(eld.observe_org_crossings(self.kv), self.org_chain)
+        self.assertEqual(seen, [self.kv])
 
     def test_a_head_older_than_the_kv_recorded_head_is_rollback_detected(self):
         newest = eld.kv_watermark(recorded(self.chain))[0]
@@ -370,18 +436,33 @@ class RollbackTests(Base):
         self.assertEqual(got["failed_predicate"], "ENDPOINT_HEAD_NOT_OLDER_THAN_THE_NEWEST_KV_RECORDED_HEAD")
         self.assertIsNone(eld.rollback_failure(self.chain[1:], eld.kv_watermark(recorded(self.chain, 1))[0]))
         older = self.chain[1:]
-        with self.lane_d_reader_stub(older), \
+        # KV's own head record names the newest head; the read-back chain is older
+        with self.lane_d_reader_stub(older, head_record=eld.head_record_entries(
+                [self.chain[1]["receipt_sha256"], self.chain[0]["receipt_sha256"]])), \
                 mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
-            with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, older),
-                                     org_chain=self.org_chain, recorded_head=recorded(self.chain)) as (chain, failed):
+            with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, older)) as (chain, failed):
                 self.assertIsNone(chain)
                 self.assert_six(failed, "KV_LEDGER_HEAD_ROLLBACK_DETECTED", "DENY")
                 self.assertEqual(failed["recorded_head_sha256"], self.chain[0]["receipt_sha256"])
+        # the read-back is behind its own last recorded head (the record names a head the chain holds, not its head)
+        with self.lane_d_reader_stub(self.chain, head_record=eld.head_record_entries(
+                [self.chain[1]["receipt_sha256"]])), \
+                mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
+            with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain)) as (_, failed):
+                self.assert_six(failed, "KV_LEDGER_HEAD_ROLLBACK_DETECTED", "DENY")
+        # a caller's claim that differs from the recorded head is DENY, never relied on
+        with self.lane_d_reader_stub(self.chain), \
+                mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
+            for claim in (recorded(self.chain, 1), {**recorded(self.chain), "head_receipt_sha256": "sha256:" + "e" * 64}):
+                with self.subTest(claim=claim):
+                    with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
+                                             recorded_head=claim) as (chain, failed):
+                        self.assertIsNone(chain)
+                        self.assert_six(failed, "KV_LEDGER_HEAD_ROLLBACK_DETECTED", "DENY")
         # an Org-recorded head is never the watermark, even with a valid cross-check digest
         with self.lane_d_reader_stub(self.chain), \
                 mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
-            with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain),
-                                     org_chain=self.org_chain, recorded_head={
+            with eld.read_designated(self.kv, source=None, head_attestation=attest(self.kv, self.chain), recorded_head={
                                          **recorded(self.chain), "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"}
                                      ) as (chain, failed):
                 self.assertIsNone(chain)
@@ -395,6 +476,7 @@ class BothSidesRecordTests(Base):
     def admit(self, chain, org_chain):
         return eld.chain_admission_failure(self.kv, self.kv["stores"][0], chain,
                                            head_attestation=attest(self.kv, chain), signers=fixture_signers(),
+                                           head_record=eld.head_record_entries([chain[0]["receipt_sha256"]]),
                                            org_chain=org_chain, recorded_head=recorded(chain))
 
     def test_the_paired_records_are_admitted(self):
@@ -404,11 +486,6 @@ class BothSidesRecordTests(Base):
             self.assertNotIn("message", org["evidence"])
             self.assertEqual(org["evidence"]["source_repository_receipt_sha256"],
                              org["evidence"]["boundary_evidence"]["endpoint_head_sha256"])
-
-    def reseal(self, receipt, **edit):
-        body = {k: v for k, v in receipt.items() if k != "receipt_sha256"}
-        body.update(edit)
-        return {**body, "receipt_sha256": hne.sha(body)}
 
     def test_an_org_crossing_receipt_is_digest_only_and_never_endpoint_originated(self):
         """No endpoint is an Organization member or a source of org-ledger records (#160 comment 6372871021)."""
@@ -454,14 +531,37 @@ class BothSidesRecordTests(Base):
             **self.org_chain[2]["evidence"], "source_repository_receipt_sha256": "sha256:" + "a" * 64,
             "boundary_evidence": {**self.org_chain[2]["evidence"]["boundary_evidence"],
                                   "endpoint_head_sha256": "sha256:" + "a" * 64}})
+        # LC-KV-23 (cvk#263 @9bc54d05): an Org record naming a newer or non-ancestor head is DENY rollback
         got = eld.crossing_failure(self.chain, [self.org_chain[0], self.org_chain[1], stray], self.kv)
-        self.assert_six(got, "INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES")
-        self.assertEqual(got["one_sided"], "ORG_ONLY")
+        self.assert_six(got, "KV_LEDGER_HEAD_ROLLBACK_DETECTED", "DENY")
+        self.assertEqual((got["failure_class"], got["org_named_head_sha256"]), ("C", "sha256:" + "a" * 64))
+        self.assertIsNone(self.admit(self.chain, self.org_chain))
+        self.assert_six(self.admit(self.chain[1:], self.org_chain), "KV_LEDGER_HEAD_ROLLBACK_DETECTED", "DENY")
+        self.assertNotIn("KV_ROLLBACK_CROSSING_RECORD_AHEAD_OF_KV_HEAD",
+                         (ROOT / "llm_adapter/endpoint_ledger_designation.py").read_text())
         no_head = self.reseal(self.org_chain[2], evidence={
             **self.org_chain[2]["evidence"], "boundary_evidence": {"operation": "ORGANIZATION_INTR_DESTINATION_INGRESS",
                                                                    "path_id": self.org_chain[2]["evidence"]["path_id"]}})
         self.assert_six(eld.crossing_failure(self.chain, [self.org_chain[0], no_head], self.kv),
-                        "INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES")
+                        "KV_CROSSING_RECORD_NOT_OBSERVED")
+
+    def test_a_crossed_chain_with_no_org_record_observed_is_not_observed(self):
+        """LC-KV-23 (b): KV crossed, no Org record observable -> FAIL_CLOSED KV_CROSSING_RECORD_NOT_OBSERVED (B);
+        INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES is kept for an observed Org side missing the ingress peer."""
+        other, ev = "other->StegVerse-org:intr-destination", self.org_chain[2]["evidence"]
+        elsewhere = self.reseal(self.org_chain[2], evidence={**ev, "path_id": other, "boundary_evidence": {
+            **ev["boundary_evidence"], "path_id": other}})
+        for observed in (None, [], [elsewhere]):
+            with self.subTest(observed=observed):
+                got = eld.crossing_failure(self.chain, observed, self.kv)
+                self.assert_six(got, "KV_CROSSING_RECORD_NOT_OBSERVED")
+                self.assertEqual((got["failure_class"], got["owning_existing_goal"]),
+                                 ("B", eld.CODES["INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES"][2]))
+                self.assertIn("read by the reader itself", got["required_evidence_or_repair"])
+                self.assertEqual(got["next_attempt"], "on the read-back of the Org side of the crossing (event-triggered)")
+        self.assertEqual(eld.FAILURE_CLASS["INTR_CROSSING_NOT_RECORDED_BY_BOTH_SIDES"], "B")
+        never = self.chain[-1:]
+        self.assertIsNone(eld.crossing_failure(never, None, self.kv))
 
     def test_an_endpoint_ingress_record_without_the_org_record_is_refused(self):
         org_egress = self.org_chain[1]
@@ -491,13 +591,13 @@ class BothSidesRecordTests(Base):
 
 class OrgMembershipTests(Base):
     """LC-KV-25 (P1 rev 10): no endpoint is a GitHub Organization member; LC-KV-24: keys are closed. Lane D's codes,
-    predicates and token set (StegVerse-Labs/continuity-vault-kit#263 @bf684aad runtime/kv_receipt_ledgers.py)."""
+    predicates and token set (StegVerse-Labs/continuity-vault-kit#263 @9bc54d05 runtime/kv_receipt_ledgers.py)."""
     CVK_BF684AAD_MEMBERSHIP_TOKENS = {
         "org", "orgs", "organization", "organizations", "organisation", "member", "members", "membership",
         "memberships", "team", "teams", "install", "installation", "installations", "app", "apps", "permission",
         "permissions", "owner", "owners", "ownership", "collaborator", "collaborators", "role", "roles", "github",
         "enterprise", "admin", "admins", "seat", "seats", "scope", "scopes"}
-    #: cvk#263 @bf684aad CONTRACT_KEY_SCHEMA as read at that head (a tuple leaf written {"__values__": [...]})
+    #: cvk#263 @9bc54d05 CONTRACT_KEY_SCHEMA as read at that head (a tuple leaf written {"__values__": [...]})
     CVK_BF684AAD_CONTRACT_KEY_SCHEMA = json.loads(
         '{"schema": null, "repository": null, "ledger_level": null, "receipt_schema": null, "append_only_receipts": '
         'null, "required_fields": null, "replay_rule": null, "repository_ledger_location": {"repository": null, "ref": '
@@ -544,7 +644,7 @@ class OrgMembershipTests(Base):
             self.assertEqual((got["failed_predicate"], got["failure_class"]), (predicate, cls))
         self.assertNotIn("KV_LEDGER_ROLLBACK_WATERMARK_UNREAD", eld.CODES)
 
-    def test_fixtures_match_cvks_contracts_at_bf684aad(self):
+    def test_fixtures_match_cvks_contracts_at_9bc54d05(self):
         for name, sha in CVK_CONTRACT_SHA256.items():
             raw = (CVK / name).read_bytes()
             self.assertEqual("sha256:" + hashlib.sha256(raw).hexdigest(), sha)
@@ -616,7 +716,7 @@ class OrgMembershipTests(Base):
                     self.assert_six(got, "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
                     self.assertEqual(got["failed_predicate"], "ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER")
                     self.assertIn(key, got["required_evidence_or_repair"])
-                    with eld.read_designated(d, source=None, org_chain=self.org_chain,
+                    with eld.read_designated(d, source=None,
                                              recorded_head=recorded(self.chain)) as (chain, failed):
                         self.assertIsNone(chain)
                         self.assertEqual(failed["failure_code"], "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
@@ -640,7 +740,7 @@ class OrgMembershipTests(Base):
             self.assertIsNone(eld.org_crossing_receipt_failure(org, self.kv))
         with self.lane_d_reader_stub(self.chain), \
                 mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
-            with eld.read_designated(self.kv, source=None, org_chain=self.org_chain,
+            with eld.read_designated(self.kv, source=None,
                                      head_attestation=attest(self.kv, self.chain),
                                      recorded_head=recorded(self.chain)) as (chain, failed):
                 self.assertIsNone(failed)
@@ -704,12 +804,12 @@ class NodeStorageEndpointTests(Base):
                                 "ENDPOINT_LEDGER_DESIGNATION_INVALID")
         self.assert_six(eld.designation_failure({**self.node, "rollback_watermark_source": {
             "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"}}), "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED")
-        self.assertIsNone(eld.designation_failure({**self.node, "rollback_watermark_source": {
-            "source": "NODE_RECORDED_RECEIPT_CHAIN_HEAD"}}))
+        self.assert_six(eld.designation_failure({**self.node, "rollback_watermark_source": {
+            "source": "NODE_RECORDED_RECEIPT_CHAIN_HEAD"}}), "ENDPOINT_LEDGER_DESIGNATION_INVALID")
 
     def test_production_has_no_node_reader(self):
         self.assertNotIn(eld.NODE_STORAGE_ENDPOINT, eld.READERS)
-        with eld.read_designated(self.node, source=None, org_chain=[],
+        with eld.read_designated(self.node, source=None,
                                  recorded_head=self.node_head(self.chain)) as (chain, failed):
             self.assertIsNone(chain)
             self.assert_six(failed, "NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED")
@@ -721,28 +821,41 @@ class NodeStorageEndpointTests(Base):
 
     def test_the_watermark_is_the_nodes_own_recorded_head(self):
         """With a TEST-ONLY reader stub: the node's own head is the watermark; an older chain is DENY rollback."""
+        head_record = [eld.head_record_entries([self.chain[0]["receipt_sha256"]])]
+
         @contextlib.contextmanager
         def reader(designation, store, source, head_attestation):
-            yield copy.deepcopy(self.chain), None
-        node = {**self.node, "rollback_watermark_source": {"source": "NODE_RECORDED_RECEIPT_CHAIN_HEAD"}}
-        with mock.patch.dict(eld._READERS, {eld.NODE_STORAGE_ENDPOINT: reader}):
-            with eld.read_designated(node, source=None, org_chain=self.org_chain,
+            yield copy.deepcopy(self.chain), copy.deepcopy(head_record[0]), None
+        node = self.node
+        path = node["rollback_watermark_source"]["org_crossing_cross_check"]["path_ids"][0]
+        kv_path = eld.crossing_path_ids(self.kv)[0]
+        org = [self.reseal(r, evidence={**r["evidence"], "path_id": path, "boundary_evidence": {
+            **r["evidence"]["boundary_evidence"], "path_id": path}})
+            if r["evidence"].get("path_id") == kv_path else r for r in self.org_chain]
+        with mock.patch.dict(eld._READERS, {eld.NODE_STORAGE_ENDPOINT: reader}), \
+                mock.patch.object(eld, "ORG_CROSSING_READER", lambda d: copy.deepcopy(org)):
+            with eld.read_designated(node, source=None,
                                      recorded_head=self.node_head(self.chain)) as (chain, failed):
                 self.assertIsNone(failed)
                 self.assertEqual(chain, self.chain)
-            for head, code in ((None, "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING"),
-                               (recorded(self.chain), "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING"),
+            with eld.read_designated(node, source=None) as (chain, failed):
+                self.assertIsNone(failed)
+            for head, code in ((recorded(self.chain), "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING"),
                                ({"source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD",
                                  "head_receipt_sha256": self.chain[0]["receipt_sha256"]},
                                 "KV_ROLLBACK_WATERMARK_ORG_LEDGER_SOURCED")):
                 with self.subTest(head=head):
-                    with eld.read_designated(node, source=None, org_chain=self.org_chain,
+                    with eld.read_designated(node, source=None,
                                              recorded_head=head) as (chain, failed):
                         self.assert_six(failed, code)
             newer = {"source": "NODE_RECORDED_RECEIPT_CHAIN_HEAD", "head_receipt_sha256": "sha256:" + "e" * 64}
-            with eld.read_designated(node, source=None, org_chain=self.org_chain,
+            with eld.read_designated(node, source=None,
                                      recorded_head=newer) as (chain, failed):
                 self.assert_six(failed, "KV_LEDGER_HEAD_ROLLBACK_DETECTED", "DENY")
+            head_record[0] = None      # the node's own head record not read back
+            with eld.read_designated(node, source=None,
+                                     recorded_head=self.node_head(self.chain)) as (chain, failed):
+                self.assert_six(failed, "KV_LEDGER_HEAD_ROLLBACK_WATERMARK_MISSING")
 
 
 class DeterminismTests(unittest.TestCase):
