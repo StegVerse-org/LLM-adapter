@@ -1,0 +1,28 @@
+{
+  "authority_effect": "NONE_RECORD_ONLY",
+  "credential_authority_effect": "NONE",
+  "disbursement": {
+    "destination": "refs/stegverse/organization-ledger:repository-ledger/StegVerse-org/LLM-adapter",
+    "on_event": "NODE_DISSOLUTION"
+  },
+  "disposition": "ALLOW",
+  "emitted_at": "STEGOS_NODE_GENERATION",
+  "emitted_by": "stegos.ephemeral_node_ledger_open",
+  "endpoint_kind": "EPHEMERAL",
+  "genesis_receipt_sha256": "sha256:1fcf3b0ee434022783f77beca14926a7b51f9f55353f87e990af34faa05af4ea",
+  "ledger_lifetime": "BOUNDED_UNTIL_DISSOLUTION",
+  "ledger_opened": true,
+  "node_id": "SV-NODE-0123456789abcdef01234567",
+  "node_identity_key": {
+    "algorithm": "Ed25519",
+    "custody": "TV/TVC",
+    "key_id": "test-fixture-key-1",
+    "node_id": "SV-NODE-0123456789abcdef01234567",
+    "public_key_b64": "MBAoeOsm2OYMOkmAXjHspaB9b60rD2BFcEEuZ5yhLdk="
+  },
+  "node_kind": "StegNode",
+  "profile_sha256": "sha256:56866f4aeeb3bb748304a477d6ac5371e2fcbbfb5bd48f5f7731b32d87231f2f",
+  "receipt_sha256": "sha256:668e9b724546c605645f3ec2147e9d95eb6d9510e3a055771b5094aef0ab7485",
+  "schema": "stegverse.node-ledger-opened-generation/v1",
+  "transition_class": "NODE_LEDGER_OPENED"
+}

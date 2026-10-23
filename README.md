@@ -24,6 +24,17 @@ POST /api/sdk/manifest/submit     governed_manifest_ingress.process_manifest
 
 Manifest validity is the SDK's to decide; the adapter delegates to `stegverse.manifest_contract.validate_ingress_manifest` and carries the SDK's refusal unchanged. Processing is selected by the manifest's declared `processing.capability` and `processing.route_id`, never by source or provider identity. No external machine, receiver or observer is awaited on this path. Every non-`ALLOW` disposition carries `failure_code`, `failed_predicate`, `required_evidence_or_repair`, `retry_entrypoint`, `owning_existing_goal` and `next_attempt`. The organization ledger records the transition receipt; Master Records receives only released organization batches downstream and is not a predicate of any transition here.
 
+**Healthy means evaluated (LC-KV-13, LC-KV-14).** `POST /api/node-standing` admits a node, with `healthy_node_established: true`, only when `llm_adapter.healthy_node_evaluator.evaluate` returns `ALLOW`. That requires the node's current `NODE_HEALTH_REPORTED` receipt to be read back on this repository's chain from `HEAD.json`, with every body hash matching its address, a status of exactly `HEALTHY`, and an `INSTALLED` transport. A live health callback is recorded as an unreceipted observation and decides nothing. Every other case is recorded as `NODE_INGRESS_REFUSED` and returned as the six-field `NODE_NOT_CURRENTLY_ADMITTED_HEALTHY` (`failed_predicate` `REQUESTER_IS_CURRENTLY_ADMITTED_HEALTHY_NODE`). Until an authenticated producer of health reports exists, registration fails closed. The consumer interface is in `docs/HEALTHY_NODE_EVALUATOR_INTERFACE.md`.
+
+**Producing health reports.** `llm_adapter.node_health_report_producer` is the only producer of `NODE_HEALTH_REPORTED` receipts, and it fires only on an event: a registration that `admit` refused at CURRENT_NODE_HEALTH, a `NODE_IDENTITY_BINDING` receipt, or a `NODE_HEALTH_CHECK_OBSERVED` receipt. It never runs on a timer. It emits a report only when the node's `AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE`, `NODE_IDENTITY_BINDING` and newest health-check receipts are read back, hash-valid, on this chain. The report is HEALTHY only when that check says exactly HEALTHY. Any input that isn't receipted returns a six-field FAIL_CLOSED, and nothing is emitted.
+
+**The three input producers.** Each fires on an event and is six-field FAIL_CLOSED on anything unreceipted or unverifiable. None of them reads a clock or the network in its deterministic `plan()` core.
+- `llm_adapter.node_existence_readback` reads a StegOS `observe-reciprocal-node-existence` broker receipt back into an `AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE` receipt. `node_id` is the broker receipt's `node_ref`.
+- `llm_adapter.node_identity_binding_producer` writes `NODE_IDENTITY_BINDING`. It checks the node's Ed25519 signature against the key reference published in the reciprocally observed profile (verification only, in `llm_adapter.ed25519_verify`). It never holds or mints a credential. The existence read-back requires the observation to carry a well-formed `node_identity_key` naming the node, because every node admitted here seeks KV standing (the same rule as StegOS).
+- `llm_adapter.node_health_check_projection` turns a StegHealth `sovereign-runtime-observation/v1`, attested by the bound node key, into `stegverse.node-health-check/v1` `NODE_HEALTH_CHECK_OBSERVED`.
+
+Until this repository's ledger location (`repository-ledger/StegVerse-org/LLM-adapter` on the org ledger ref) is onboarded, these producers run on temporary ledgers in tests only.
+
 ### Generic SDK manifest InTr ingress
 
 Issue #354 removes the governance-specific callable as the LLM Adapter's processing selector. Actionable external manifests now require a recognized Node endpoint plus manifest-declared `processing.capability` and `processing.route_id`; the adapter frames that unchanged declaration as non-authorizing Interlock/InTr transfer to the distributed SDK manifest endpoint. Source/provider identity is provenance only and cannot select processing. Missing Node recognition or processing declaration fails closed before endpoint invocation. This is source/CI conformance only; it does not claim authentic runtime transport, SDK execution or an organization ledger transition.
@@ -762,3 +773,162 @@ activation and propagation remain distinct from this source scope.
 `llm_adapter/ecosystem_fact_index.py` builds an exact-identifier index over registry bytes the caller supplies, each declared with `repository`, `path`, `revision` and `sha256`. It indexes organization entity names from `SV-LLM/.github:data/organization-tree.json`, task ids from `StegVerse-Labs/.github:data/canonical-task-registry.json`, reusable task ids from `data/reusable-task-registry.json` and invariant keys from `data/task-registry-global-invariants.json`. It fetches nothing. Bytes whose sha256 differs from the declared digest refuse the whole build with `ECOSYSTEM_FACT_SOURCE_DIGEST_MISMATCH`. `lookup` returns `OBSERVED` answers cited as `repo@rev:path:line`, or `NOT_FOUND` (`ECOSYSTEM_FACT_NOT_FOUND`) with the six repair fields. It never fuzzy-matches.
 
 The AI Entry backend consults the index only when sources are configured, through the `ecosystem_fact_sources` argument or `LLM_ADAPTER_ECOSYSTEM_FACT_SOURCES` (a local `stegverse.ecosystem-fact-sources/v1` manifest naming local files and their digests). An exact registry identifier that appears verbatim in the message and yields an admitted answer takes precedence over provider-surface and public knowledge (LLM-adapter#368). If a public-knowledge entry also matches, the registry fact is still the answer and the entry is attached as `governance.related_public_knowledge` (`entry_id`, `match`, `source_ids`). Messages without such an identifier keep the existing order: provider-surface, then public knowledge, then the bounded fallback. Only identifier-shaped tokens are looked up, so plain lowercase words are skipped. Each hit is admitted through `chat_profiles.evaluate_source` as source type `stegverse_registry`, which returns `ALLOW_OBSERVED_REGISTRY_FACT` / `observed_registry_fact` and never authority. Hits return route `ecosystem_fact_index` with `governance.evidence_class = OBSERVED`. Misses and unconfigured runs give the same responses as before. When sources are configured but refused (unloadable manifest, digest mismatch, unrecognized schema, duplicate JSON keys, nesting deeper than 128 containers), the answer and route still come from the existing resolvers and the six-field refusal is surfaced as `governance.ecosystem_fact_index_refusal`; it is never dropped silently. `lookup` matches the query exactly as given, without case folding or whitespace stripping.
+
+## Anchored endpoint ledgers and node-ledger dissolution (LC-KV-13, NODE-LEDGER-DISSOLUTION-DISBURSEMENT-001)
+
+Layer 1 decides health only on a ledger root that is anchored to the Org Ledger. A caller-given scratch root is not
+enough, which closes the LC-KV-15 bypass. `llm_adapter.endpoint_ledger_anchor.evaluate_anchored` wraps the unchanged
+`healthy_node_evaluator.evaluate` (sha256 `fdaa2005…1f58`).
+
+Every endpoint has an `endpoint_kind`, which is one of `EPHEMERAL`, `PERMANENT`, `GATEWAY`, `KV`, `SKAP_VAULT` or `ORG`. `ORG` is an organization's `.github` and is never a node health root.
+
+**Rule (1)** (Lane D, #432 re-pin against continuity-vault-kit#263 @543e8c32): gateway chains and EPHEMERAL / PERMANENT
+node ledgers are never anchored on the org ledger. The anchor record lives on the endpoint's own chain; the Org records
+only its own side of the crossing, as a digest-only crossing receipt (`endpoint_ledger_designation`
+`ORG_CROSSING_EVIDENCE_KEYS`; a copied body is `ORG_CROSSING_RECEIPT_NOT_DIGEST_ONLY`). Both sides carry
+`observed_at` `SUPPLIED_HB_EPOCH:<epoch>`. That is not a ledger source, so neither `ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE` nor
+`ENDPOINT_ORG_MEMBERSHIP_REFUSED` fires on a valid both-sides crossing.
+
+- **EPHEMERAL.** A temporary StegApp, StegBrowser or StegNode generated through StegOS. It has its own ledger with
+  `ledger_lifetime: BOUNDED_UNTIL_DISSOLUTION`.
+  - **Anchor.** The anchor is the `NODE_LEDGER_OPENED` record that StegOS emits at generation time
+    (StegVerse-Labs/StegOS `stegos/ephemeral_node_ledger_open.py`, on the #426 profile path). The record binds
+    `node_id`, `node_identity_key` and the ledger's genesis hash.
+  - **Carried by the existing InTr path.** `INTR_MESH_PATH_TRANSFER` on the ephemeral ledger (the record and its body),
+    then the Org's own `INTR_MESH_PATH_INGRESS` / `ORGANIZATION_INTR_DESTINATION_INGRESS`, naming that record and the
+    endpoint head by digest only. Nothing is retained or copied onto the org ledger.
+  - **Dissolution applies to EPHEMERAL nodes only.** On a `NODE_DISSOLUTION` event,
+    `llm_adapter.node_ledger_dissolution.dissolve` appends the disbursement record on the ephemeral ledger, then one
+    digest-only Org crossing receipt per receipt of the chain, and reads them back (`FULL_CHAIN_RECORDED_DIGEST_ONLY`).
+    Only then does it append the one new class, `NODE_LEDGER_DISSOLVED`, after which the root is inadmissible. Until
+    the read-back succeeds the result is `FAIL_CLOSED` (`DISBURSEMENT_RECEIPT_NOT_READ_BACK` /
+    `DISBURSED_CHAIN_INCOMPLETE`). The module is the event-driven write side and is not imported by
+    `endpoint_ledger_anchor` (it imports the anchor, so the reverse would be circular). The read side is
+    `endpoint_ledger_anchor.dissolution_on` inside `verify_anchor`, so `evaluate_anchored` already refuses a dissolved
+    EPHEMERAL root with `EPHEMERAL_NODE_LEDGER_DISSOLVED`; `DissolutionTests` drives `dissolve()` and then that refusal.
+- **PERMANENT.** Its own ledger, with no dissolution, anchored the same way with a `stegverse.endpoint-ledger-anchor/v1`
+  body. It is designated on the node's own storage endpoint, the same way as STEGVERSE_KV (Q-PERMANENT-REPOSITORY-LEDGER,
+  StegVerse-org/.github#167 comment 6374130335; LC-KV-25): `endpoint.designation` is an
+  `endpoint_ledger_designation` designation with `store_type` `NODE_STORAGE_ENDPOINT` (`storage_endpoint_schema`,
+  `provider_id`, `access_adapter`, `location`: the minimal shape mirroring cvk's
+  `stegverse.kv.storage-endpoint-descriptor/v2`, because no node storage-endpoint descriptor is documented),
+  `head_signer_source` `NODE_IDENTITY_KEY` (the identity proof below), `rollback_watermark_source`
+  `NODE_RECORDED_RECEIPT_CHAIN_HEAD` (the node's own recorded head, read back from its own head record
+  `head-record.v1.jsonl`; `endpoint.recorded_head` is only a claim) with the required digest-only Org cross-check of
+  the node's own `<node_id>->StegVerse-org:intr-destination` path, read by `endpoint_ledger_designation` itself
+  (`ORG_CROSSING_READER`; LC-KV-23, aligned with continuity-vault-kit#263 @9bc54d05): not observable on a crossed
+  chain is `KV_CROSSING_RECORD_NOT_OBSERVED` (class B), an Org record naming a newer or non-ancestor head is `DENY`
+  `KV_LEDGER_HEAD_ROLLBACK_DETECTED`. A PERMANENT ledger on
+  an org `GIT_REF` is `DENY` `ENDPOINT_ORG_MEMBERSHIP_REFUSED`, `failure_class` A (#167 comment 6373412055 items 3
+  and 4), never `ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE`; that code stays the originator check on Org records. The chain is
+  read only through `endpoint_ledger_designation.read_designated`, which has no `NODE_STORAGE_ENDPOINT` reader:
+  production is six-field `FAIL_CLOSED` `NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED` (class B; open item
+  NODE-STORAGE-ENDPOINT-DESCRIPTOR on StegVerse-org/.github#162). The tests inject a TEST-ONLY reader stub to drive the
+  remaining checks.
+- **The InTr carrier is split the same way (Q-PERMANENT-REPOSITORY-LEDGER: mixed, so split).** The node's own
+  `INTR_MESH_PATH_TRANSFER` source half is on the node's own ledger; the Org's `INTR_MESH_PATH_INGRESS` is digest-only
+  (`ORG_CROSSING_EVIDENCE_KEYS`). `retain` / `read_retained` and the org-ledger `source-receipts/` copy are withdrawn;
+  `intr_carrier_on_org_chain` reads the source half from the anchored node ledger.
+- **KV, SKAP_VAULT.** `STEGVERSE_KV:_StegVerse/Receipts` and `STEGVERSE_KV:_Vault/SKAP/Receipts`, designated with the
+  cvk storage-endpoint keys (`store_type`, `storage_endpoint_schema`, `provider_id`, `access_adapter`, `kv_class`,
+  `kv_request_id`, `location`) and path ids ending `:intr-destination`. They are read only through
+  `llm_adapter/endpoint_ledger_designation.py` (a byte copy of #431 @64121f4d); heads are signed against
+  `.stegverse/node-ledger/kv-ledger-head-signers.v1.json` (byte copy, sha256 758d7983) under the
+  `KV_RECORDED_RECEIPT_CHAIN_HEAD` digest. They are never opened on a ledger root (`ENDPOINT_INVALID`); a
+  `ledger_root` is `KV_LEDGER_DESIGNATED_ON_GIT_REF`; an Org-membership binding is `ENDPOINT_ORG_MEMBERSHIP_REFUSED`;
+  a valid designation fails closed `KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED` (no reader id is documented). #431's
+  designation suite runs here against these anchors (`test_431_designation_suite_passes_against_432_anchors`).
+- **GATEWAY.** No carrier ledger is designated, so a gateway chain is refused everywhere with six fields
+  `GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED`; nothing is opened inside the org ledger.
+
+**Refused and documented-open: the KV receipt-chain reader (LC-KV-21).** Every KV and SKAP_VAULT read goes through
+`endpoint_ledger_designation.read_designated` and is refused with six fields:
+
+| field | value |
+| --- | --- |
+| failure_code | `KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED` (`FAIL_CLOSED`) |
+| failed_predicate | `SUCCESSOR_READER_ID_DEFINED_BY_THE_KV_STORAGE_ENDPOINT_V2_MODEL` |
+| required_evidence_or_repair | an admitted reader id for the access-adapter read of `_StegVerse/Receipts` or `_Vault/SKAP/Receipts`; the reader is cvk's `runtime.kv_receipt_ledgers.read_receipt_ledger` (continuity-vault-kit#263), referenced not vendored |
+| retry_entrypoint | `llm_adapter.endpoint_ledger_designation.read_designated(designation, source=..., ...)` |
+| owning_existing_goal | KV-SKAP-LEDGER-LOCATION-001 under KV-SKAP-VAULT-FUNCTIONAL-001 (StegVerse-Labs/.github#3324; reader StegVerse-Labs/continuity-vault-kit#263) |
+| next_attempt | on continuity-vault-kit#263's admission or a #167 ruling that names the id (event-triggered) |
+
+Why: the KV Storage Endpoint v2 model documents no reader id (StegVerse-org/.github#167 comment 6372772397), so the
+result carries `reader_id` `UNKNOWN_NOT_AUTHENTICALLY_OBSERVED` and the referenced `reader_entrypoints`. Reading KV's
+chain through an id nobody has documented would make a guessed reader the authority for KV's head. The refusal also
+holds after a well-formed designation, a published `kv_ledger_head_signer` and a valid `KV_RECORDED_RECEIPT_CHAIN_HEAD`
+watermark, because none of those name the reader. The PERMANENT counterpart, `NODE_STORAGE_ENDPOINT_READER_NOT_DOCUMENTED`
+(reader_id `UNKNOWN_NOT_AUTHENTICALLY_OBSERVED`, owner StegVerse-org/.github#162), is documented-open for the same
+reason. Status: documented-open. Nothing here closes either item; the owning goals do.
+
+**Common to every kind.** Each own ledger opens with a `REPOSITORY_LEDGER_INITIALIZATION` genesis binding the node,
+the kind, the key and the pinned code digests. The caller must pin the org-ledger head, and the pin must equal
+`HEAD.json`. Only receipts from the pinned producers (`.stegverse/node-ledger/pinned-code-digests.v1.json`) count, and
+a health report must re-derive from the receipts it cites. Anything else is a six-field `FAIL_CLOSED`. Its
+`failure_code` is `EPHEMERAL_NODE_LEDGER_NOT_ANCHORED` for an EPHEMERAL endpoint only (a rule (1) code is its own
+failure_code for every kind). For PERMANENT, KV and SKAP_VAULT it is the specific org-ledger code (`ORG_LEDGER_LOCATION_*`, `ORG_LEDGER_GENESIS_NOT_PINNED`,
+`ORG_LEDGER_GENESIS_MISMATCH`, `ORG_LEDGER_HEAD_*`, `MERGE_APPEND_PATH_NOT_ADMITTED`, `ORG_LEDGER_UNREADABLE`), and
+otherwise `ENDPOINT_LEDGER_NOT_ANCHORED` (`endpoint_ledger_anchor.anchor_failure_code`; `FailureCodePerKindTests`).
+
+**The issued anchor.** StegOS's emission (`stegverse.node-ledger-opened-generation/v1`) has no issuer. When the org
+ledger's ingress admits it, `issued_anchor` derives the `stegverse.node-ledger-opened/v1` anchor that
+continuity-vault-kit#258 consumes: `schema`, `transition_class`, `node_id`, `node_identity_key`,
+`genesis_receipt_sha256`, `issuer` (`ORGANIZATION_LEDGER`), `issuer_receipt_ref` (the org `INTR_MESH_PATH_INGRESS`
+receipt) and `receipt_sha256`. `verify_node_ledger_opened_anchor` is the `ORGANIZATION_LEDGER` issuer verifier; it
+re-derives the anchor from both ledgers and refuses anything else with `NODE_LEDGER_OPENED_ANCHOR_NOT_ISSUED`. No
+`TV/TVC` verifier exists, so a `TV/TVC` anchor is refused. Schemas: `schemas/node-ledger-opened.v1.json`,
+`schemas/node-ledger-opened-generation.v1.json`, `schemas/node-ledger-opened-signed.v1.json`,
+`schemas/endpoint-kind.v1.json`.
+
+**The anchor cannot be self-minted (LC-KV-16, StegVerse-Labs/.github#3330 @c8b8d156).** The org ledger is never a
+caller-chosen path: `llm_adapter.org_ledger_location` reads the contract's `repository_ledger_location` (#431:
+`StegVerse-org/.github`, `refs/stegverse/organization-ledger`, `repository-ledger/StegVerse-org/LLM-adapter`) and takes
+only that ref and namespace, by a local `git archive` (`protocol.allow=never`, minimal env, no network) from the object
+store the caller names. No designation is `ORG_LEDGER_LOCATION_NOT_DESIGNATED`; a missing ref, namespace or genesis is
+`ORG_LEDGER_LOCATION_UNREADABLE`. An EPHEMERAL anchor body must be a `stegverse.node-ledger-opened-signed/v1` envelope
+(`schemas/node-ledger-opened-signed.v1.json`): StegOS's record plus an Ed25519 signature, verified with the stdlib
+verifier, by a key published in `.stegverse/node-ledger/node-ledger-opened-signers.v1.json` (TV/TVC custody; bots never
+hold keys; the tests use fixture keys only). None is published yet, so every production EPHEMERAL anchor is
+`NODE_LEDGER_OPENED_SIGNER_NOT_PUBLISHED`. `node_id` is not a caller argument: it is derived from the verified
+identity proof, and an optional `claimed_node_id` decides nothing and must match. Transport has no default.
+
+**The store is not trusted either (LC-KV-16 rev 5, StegVerse-Labs/.github#3330 @8abd5741).** A caller-named object
+store decides nothing by holding the designated ref. `org_ledger_location` accepts it only when (1) the namespace's
+`REPOSITORY_LEDGER_INITIALIZATION` genesis equals `expected_genesis_receipt_sha256`, a field this adds to the contract's
+`repository_ledger_location` shape (#431 has to carry it; absent is `ORG_LEDGER_GENESIS_NOT_PINNED`, different is
+`ORG_LEDGER_GENESIS_MISMATCH`), and (2) its head receipt and namespace tree oid carry a
+`stegverse.org-ledger-head-attestation/v1` by a key published in `.stegverse/node-ledger/org-ledger-head-signers.v1.json`
+for the admitted org-ledger append route (`ORG_LEDGER_HEAD_NOT_AUTHENTICATED` otherwise). That route is not admitted and
+no attester is published, so every production read is six-field `FAIL_CLOSED` `MERGE_APPEND_PATH_NOT_ADMITTED` and
+nothing on this path ALLOWs, the E0 positive controls included. Transport is then decided on that authenticated chain:
+the node's own `NODE_INGRESS_ADMITTED` record counts only when its `signal_sha256` is the body of an InTr path pair on
+the org chain, newer than the anchor, verified by `llm_adapter.intr_transport_carrier.verify` (byte-identical with
+StegVerse-org/LLM-adapter#433); a record the node appended itself is `INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED`. The
+tests stand the append route in with a TEST-ONLY attester (`tests/org_ledger_harness.py`, public seed) per test method;
+`setUp` stays production. The harness is test-only: no production module imports a test module (a test checks this),
+and `tests/org_ledger_harness.py` must not be vendored as production code. Run them with the pinned SDK installed: `python -m pip install -e '.[dev]'` (pyproject pins
+`stegverse-sdk`, which `node_standing` imports), then `python -m unittest tests.test_endpoint_ledger_anchor`.
+
+**Failure precedence.** `evaluate_anchored` reports the first failing stage of `FAILURE_PRECEDENCE`, in this fixed
+order: the org-ledger location and store (designation, pinned genesis, authenticated head;
+`ORG_LEDGER_LOCATION_NOT_DESIGNATED` names #431 in its six fields until #431 lands), the pinned code and the anchor
+(`EPHEMERAL_NODE_LEDGER_NOT_ANCHORED` for EPHEMERAL; for the other kinds the org-ledger reason itself, else
+`ENDPOINT_LEDGER_NOT_ANCHORED`), the identity proof, health and admission (`HEALTH_REPORT_MISSING` when there
+is no `NODE_HEALTH_REPORTED`, `NODE_NOT_ADMITTED` when the node was refused at ingress, from the unchanged evaluator),
+then transport: the ingress record, then its InTr carrier, as `INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED` only when
+health and admission pass. Every stage is `FAIL_CLOSED` with the six fields; none of them ALLOWs on its own, and
+`repository` is passed through to the evaluator and the ingress read-back.
+
+**Identity and transport (LC-KV-15 inside the wrapper).** Identity is never taken from an asserted field. The caller
+passes a `stegverse.node-identity-proof/v1`: an Ed25519 signature by the anchored `node_identity_key` over the
+deterministic `stegverse.node-identity-challenge/v1` (node, kind, genesis, current chain head, anchor receipt, pinned
+org head), verified with `llm_adapter.ed25519_verify`. A missing, stale or wrong proof is six-field `FAIL_CLOSED`
+`NODE_IDENTITY_NOT_PROVEN`. Transport is read from the node's newest ingress receipt and must be `INTERLOCK_INTR` /
+`INSTALLED` and `ADMITTED`. A caller's `transport_state` is recorded as `asserted_transport_state` and decides nothing.
+Otherwise the result is six-field `FAIL_CLOSED` `INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED`. On main
+`node_ingress_boundary.TRANSPORTS` has `INTERLOCK_INTR: NOT_YET_ENABLED`, so every production call refuses here
+today; the tests install it only inside the test.
+
+**E0.** Everything is event-triggered only. There are no clock or network reads in either core (the one I/O boundary
+is the local `git archive` read in `llm_adapter/org_ledger_location.py`), and it runs only on
+temporary ledgers until the org-ledger append route is admitted.
