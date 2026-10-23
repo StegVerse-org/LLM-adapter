@@ -84,7 +84,18 @@
     ".stegverse/node-ledger/org-ledger-head-signers.v1.json",
     "tests/org_ledger_harness.py",
     "tests/fixtures/node_receipts/org_ledger_test_genesis.json",
-    "tests/fixtures/node_receipts/contract_with_431_location_and_pinned_genesis.json"
+    "tests/fixtures/node_receipts/contract_with_431_location_and_pinned_genesis.json",
+    "llm_adapter/endpoint_ledger_designation.py",
+    "llm_adapter/supplied_epoch.py",
+    ".stegverse/node-ledger/kv-ledger-head-signers.v1.json",
+    "tests/endpoint_ledger_designation_suite_431.py",
+    "tests/fixtures/endpoint-ledger-designation/kv-chain.json",
+    "tests/fixtures/endpoint-ledger-designation/kv-on-org-git-ref.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/kv-two-providers.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/kv.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/org-git-ref.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/org-linked-receipts.json",
+    "tests/fixtures/endpoint-ledger-designation/skap.designation.json"
   ],
   "new_files": [
     {
@@ -322,6 +333,17 @@
         "https://github.com/StegVerse-org/LLM-adapter/pull/431",
         "StegVerse-Labs/.github#3330@8abd5741 (P1 rev 5, LC-KV-16 reopen)"
       ]
-    }
+    },
+    "llm_adapter/endpoint_ledger_designation.py",
+    "llm_adapter/supplied_epoch.py",
+    ".stegverse/node-ledger/kv-ledger-head-signers.v1.json",
+    "tests/endpoint_ledger_designation_suite_431.py",
+    "tests/fixtures/endpoint-ledger-designation/kv-chain.json",
+    "tests/fixtures/endpoint-ledger-designation/kv-on-org-git-ref.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/kv-two-providers.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/kv.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/org-git-ref.designation.json",
+    "tests/fixtures/endpoint-ledger-designation/org-linked-receipts.json",
+    "tests/fixtures/endpoint-ledger-designation/skap.designation.json"
   ]
 }

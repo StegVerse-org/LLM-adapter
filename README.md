@@ -782,33 +782,50 @@ enough, which closes the LC-KV-15 bypass. `llm_adapter.endpoint_ledger_anchor.ev
 
 Every endpoint has an `endpoint_kind`, which is one of `EPHEMERAL`, `PERMANENT`, `GATEWAY`, `KV`, `SKAP_VAULT` or `ORG`. `ORG` is an organization's `.github` and is never a node health root.
 
+**Rule (1)** (Lane D, #432 re-pin against continuity-vault-kit#263 @543e8c32): gateway chains and EPHEMERAL / PERMANENT
+node ledgers are never anchored on the org ledger. The anchor record lives on the endpoint's own chain; the Org records
+only its own side of the crossing, as a digest-only crossing receipt (`endpoint_ledger_designation`
+`ORG_CROSSING_EVIDENCE_KEYS`; a copied body is `ORG_CROSSING_RECEIPT_NOT_DIGEST_ONLY`). Both sides carry
+`observed_at` `SUPPLIED_HB_EPOCH:<epoch>`. That is not a ledger source, so neither `ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE` nor
+`ENDPOINT_ORG_MEMBERSHIP_REFUSED` fires on a valid both-sides crossing.
+
 - **EPHEMERAL.** A temporary StegApp, StegBrowser or StegNode generated through StegOS. It has its own ledger with
   `ledger_lifetime: BOUNDED_UNTIL_DISSOLUTION`.
   - **Anchor.** The anchor is the `NODE_LEDGER_OPENED` record that StegOS emits at generation time
     (StegVerse-Labs/StegOS `stegos/ephemeral_node_ledger_open.py`, on the #426 profile path). The record binds
     `node_id`, `node_identity_key` and the ledger's genesis hash.
-  - **Carried by the existing InTr path pair.** `INTR_MESH_PATH_TRANSFER` on the ephemeral ledger, then
-    `INTR_MESH_PATH_INGRESS` / `ORGANIZATION_INTR_DESTINATION_INGRESS` on the org ledger. The source half is retained
-    under `source-receipts/<hex>.json`.
+  - **Carried by the existing InTr path.** `INTR_MESH_PATH_TRANSFER` on the ephemeral ledger (the record and its body),
+    then the Org's own `INTR_MESH_PATH_INGRESS` / `ORGANIZATION_INTR_DESTINATION_INGRESS`, naming that record and the
+    endpoint head by digest only. Nothing is retained or copied onto the org ledger.
   - **Dissolution applies to EPHEMERAL nodes only.** On a `NODE_DISSOLUTION` event,
-    `llm_adapter.node_ledger_dissolution.dissolve` disburses the full chain to the org ledger by the same InTr pair and
-    reads the destination back. Only then does it append the one new class, `NODE_LEDGER_DISSOLVED`, after which the
-    root is inadmissible. Until the read-back succeeds the result is `FAIL_CLOSED`
-    `NODE_LEDGER_DISBURSEMENT_NOT_READ_BACK`. The module is the event-driven write side and is not imported by
+    `llm_adapter.node_ledger_dissolution.dissolve` appends the disbursement record on the ephemeral ledger, then one
+    digest-only Org crossing receipt per receipt of the chain, and reads them back (`FULL_CHAIN_RECORDED_DIGEST_ONLY`).
+    Only then does it append the one new class, `NODE_LEDGER_DISSOLVED`, after which the root is inadmissible. Until
+    the read-back succeeds the result is `FAIL_CLOSED` (`DISBURSEMENT_RECEIPT_NOT_READ_BACK` /
+    `DISBURSED_CHAIN_INCOMPLETE`). The module is the event-driven write side and is not imported by
     `endpoint_ledger_anchor` (it imports the anchor, so the reverse would be circular). The read side is
     `endpoint_ledger_anchor.dissolution_on` inside `verify_anchor`, so `evaluate_anchored` already refuses a dissolved
     EPHEMERAL root with `EPHEMERAL_NODE_LEDGER_DISSOLVED`; `DissolutionTests` drives `dissolve()` and then that refusal.
-- **PERMANENT, KV, SKAP_VAULT.** Each has its own ledger, which corresponds to the org ledger with no dissolution. It is
-  anchored by the same InTr pair carrying a `stegverse.endpoint-ledger-anchor/v1` body.
-- **GATEWAY.** There is no external ledger. The node's chain is the org-carried location
-  `node-ledger/StegVerse-org/<node_id>`, and its root is derived from the org root. No external chain is imported.
+- **PERMANENT.** Its own ledger, with no dissolution, anchored the same way with a `stegverse.endpoint-ledger-anchor/v1`
+  body.
+- **KV, SKAP_VAULT.** `STEGVERSE_KV:_StegVerse/Receipts` and `STEGVERSE_KV:_Vault/SKAP/Receipts`, designated with the
+  cvk storage-endpoint keys (`store_type`, `storage_endpoint_schema`, `provider_id`, `access_adapter`, `kv_class`,
+  `kv_request_id`, `location`) and path ids ending `:intr-destination`. They are read only through
+  `llm_adapter/endpoint_ledger_designation.py` (a byte copy of #431 @e9d45e6c); heads are signed against
+  `.stegverse/node-ledger/kv-ledger-head-signers.v1.json` (byte copy, sha256 758d7983) under the
+  `KV_RECORDED_RECEIPT_CHAIN_HEAD` digest. They are never opened on a ledger root (`ENDPOINT_INVALID`); a
+  `ledger_root` is `KV_LEDGER_DESIGNATED_ON_GIT_REF`; an Org-membership binding is `ENDPOINT_ORG_MEMBERSHIP_REFUSED`;
+  a valid designation fails closed `KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED` (no reader id is documented). #431's
+  designation suite runs here against these anchors (`test_431_designation_suite_passes_against_432_anchors`).
+- **GATEWAY.** No carrier ledger is designated, so a gateway chain is refused everywhere with six fields
+  `GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED`; nothing is opened inside the org ledger.
 
 **Common to every kind.** Each own ledger opens with a `REPOSITORY_LEDGER_INITIALIZATION` genesis binding the node,
 the kind, the key and the pinned code digests. The caller must pin the org-ledger head, and the pin must equal
 `HEAD.json`. Only receipts from the pinned producers (`.stegverse/node-ledger/pinned-code-digests.v1.json`) count, and
 a health report must re-derive from the receipts it cites. Anything else is a six-field `FAIL_CLOSED`. Its
-`failure_code` is `EPHEMERAL_NODE_LEDGER_NOT_ANCHORED` for an EPHEMERAL endpoint only. For PERMANENT, KV, SKAP_VAULT
-and GATEWAY it is the specific org-ledger code (`ORG_LEDGER_LOCATION_*`, `ORG_LEDGER_GENESIS_NOT_PINNED`,
+`failure_code` is `EPHEMERAL_NODE_LEDGER_NOT_ANCHORED` for an EPHEMERAL endpoint only (a rule (1) code is its own
+failure_code for every kind). For PERMANENT, KV and SKAP_VAULT it is the specific org-ledger code (`ORG_LEDGER_LOCATION_*`, `ORG_LEDGER_GENESIS_NOT_PINNED`,
 `ORG_LEDGER_GENESIS_MISMATCH`, `ORG_LEDGER_HEAD_*`, `MERGE_APPEND_PATH_NOT_ADMITTED`, `ORG_LEDGER_UNREADABLE`), and
 otherwise `ENDPOINT_LEDGER_NOT_ANCHORED` (`endpoint_ledger_anchor.anchor_failure_code`; `FailureCodePerKindTests`).
 

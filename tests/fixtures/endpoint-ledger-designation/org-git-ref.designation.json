@@ -1,0 +1,19 @@
+{
+  "endpoint_id": "StegVerse-org/LLM-adapter",
+  "endpoint_kind": "ORG",
+  "expected_genesis_receipt_sha256": null,
+  "genesis_class": "REPOSITORY_LEDGER_INITIALIZATION",
+  "head_signer_source": "ORG_LEDGER_HEAD_SIGNER",
+  "provider_selection": "SINGLE_PROVIDER_V1",
+  "rollback_watermark_source": null,
+  "schema": "stegverse.endpoint-ledger-designation/v1",
+  "stores": [
+    {
+      "namespace": "repository-ledger/StegVerse-org/LLM-adapter",
+      "provider": "git",
+      "ref": "refs/stegverse/organization-ledger",
+      "repository": "StegVerse-org/.github",
+      "store_type": "GIT_REF"
+    }
+  ]
+}

@@ -46,6 +46,8 @@ from llm_adapter import org_ledger_location as location
 from tests import ed25519_test_signer as signer
 from tests import org_ledger_harness as harness
 from llm_adapter import intr_transport_carrier as carrier
+from llm_adapter import endpoint_ledger_designation as eld
+from llm_adapter import supplied_epoch
 from tests.test_node_receipt_producers import BROKER, NODE, OBSERVATION, PROFILE, attestation_for, claim_for
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -60,6 +62,10 @@ FIXTURES = ROOT / "tests/fixtures/node_receipts"
 STEGOS_OPENED = json.loads((FIXTURES / "stegos_node_ledger_opened.json").read_text())
 CONTRACT_431 = FIXTURES / "contract_with_431_repository_ledger_location.json"     # #431's contract.json, genesis pin null
 CONTRACT_PINNED = harness.CONTRACT_PINNED
+DESIGNATIONS = ROOT / "tests/fixtures/endpoint-ledger-designation"
+KV_DESIGNATION = {kind: json.loads((DESIGNATIONS / f"{name}.designation.json").read_text())
+                  for kind, name in (("KV", "kv"), ("SKAP_VAULT", "skap"))}
+BOTH_ENDPOINT_CODES = ("ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE", "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
 # TEST-ONLY NODE_LEDGER_OPENED signer (a public seed; TV/TVC custody holds real keys).
 ISSUER_SEED = hashlib.sha256(b"endpoint-ledger-anchor tests: NODE_LEDGER_OPENED signer public seed").digest()
 ISSUER_REF = {"key_id": "test-node-ledger-opened-signer", "algorithm": "Ed25519", "custody": "TV/TVC",
@@ -266,37 +272,121 @@ class AnchoredEndToEndTests(_Ledgers):
                        if r["receipt_sha256"] == pair["destination_receipt_sha256"])
         self.assertEqual((ingress["transition_class"], ingress["evidence"]["boundary_evidence"]["operation"]),
                          ("INTR_MESH_PATH_INGRESS", "ORGANIZATION_INTR_DESTINATION_INGRESS"))
-        self.assertEqual(ingress["evidence"]["message"]["body"]["node_ledger_opened"], STEGOS_OPENED)
+        # rule (1): the Org's side is digest-only; the NODE_LEDGER_OPENED body is on the node's own chain only
+        self.assertEqual(set(ingress["evidence"]), eld.ORG_CROSSING_EVIDENCE_KEYS)
+        self.assertIsNone(eld.org_crossing_receipt_failure(ingress, {"endpoint_id": NODE}))
+        self.assertIsNone(supplied_epoch.record_epoch_failure(ingress))
+        own = next(r for r in hne.read_chain(self.node)[0]
+                   if r["receipt_sha256"] == ingress["evidence"]["source_repository_receipt_sha256"])
+        self.assertEqual(own["evidence"]["message"]["body"]["node_ledger_opened"], STEGOS_OPENED)
+        self.assertEqual(layer1["anchor"]["org_side"], "DIGEST_ONLY_CROSSING_RECEIPT")
+        self.assertIs(layer1["anchor"]["crossing_recorded_by_both_sides"], True)
         self.assertEqual(layer1["anchor"]["node_ledger_opened_signer_key_id"], ISSUER_REF["key_id"])
         self.assertEqual(layer1["anchor"]["org_ledger_location"], location.ORG_LEDGER_LOCATION)
         self.assertEqual(layer1["identity"]["node_id"], NODE)
 
-    def test_permanent_kv_and_skap_vault_own_ledgers_reach_layer1_allow(self):
-        for kind in ("PERMANENT", "KV", "SKAP_VAULT"):
-            with self.subTest(kind=kind):
-                self._t2 = tempfile.TemporaryDirectory()
-                self.addCleanup(self._t2.cleanup)
-                self.use(Path(self._t2.name))
-                self.open_and_anchor(kind, root=self.root)
-                self.chain_to_admission()
-                layer1 = self.evaluate(self.endpoint(kind, self.root))
-                self.assertEqual(layer1["disposition"], "ALLOW", layer1)
-                self.assertEqual((layer1["anchor"]["anchor"], layer1["anchor"]["ledger_lifetime"]),
-                                 ("INTR_PATH_RECEIPT_PAIR", "UNBOUNDED"))
-
-    def test_gateway_node_reaches_layer1_allow_on_its_org_carried_location(self):
-        self.assertEqual(anchor.open_gateway_location(self.org, NODE, KEY)["disposition"], "ALLOW")
-        self.use(anchor.gateway_root(self.org, NODE))
+    def test_permanent_own_ledger_reaches_layer1_allow(self):
+        self._t2 = tempfile.TemporaryDirectory()
+        self.addCleanup(self._t2.cleanup)
+        self.use(Path(self._t2.name))
+        self.open_and_anchor("PERMANENT", root=self.root)
         self.chain_to_admission()
-        layer1 = self.evaluate({"endpoint_kind": "GATEWAY"})
+        layer1 = self.evaluate(self.endpoint("PERMANENT", self.root))
         self.assertEqual(layer1["disposition"], "ALLOW", layer1)
-        self.assertEqual(layer1["anchor"]["location"], f"node-ledger/StegVerse-org/{NODE}")
-        # no anchor pair: the only retained source half is the InTr carrier of the node's ingress signal
-        retained = [json.loads(f.read_text()) for f in (self.org / "source-receipts").glob("*.json")]
-        self.assertEqual([r["evidence"]["endpoint_kind"] for r in retained], [carrier.ENDPOINT_KIND])
-        # the root is derived, never caller-supplied
-        self.assert_refused(self.evaluate({"endpoint_kind": "GATEWAY", "ledger_root": str(self.root)}),
-                            "ENDPOINT_INVALID", anchor.ENDPOINT_FAILURE_CODE)
+        self.assertEqual((layer1["anchor"]["anchor"], layer1["anchor"]["ledger_lifetime"]),
+                         ("INTR_PATH_RECEIPT_PAIR", "UNBOUNDED"))
+        self.assertEqual(layer1["anchor"]["org_side"], "DIGEST_ONLY_CROSSING_RECEIPT")
+
+    def test_gateway_chain_is_never_anchored_on_the_org_ledger(self):
+        """Rule (1): no gateway location is opened inside the org ledger; six fields, nothing written."""
+        before = sorted(p.relative_to(self.tree) for p in self.tree.rglob("*"))
+        opened = anchor.open_gateway_location(self.org, NODE, KEY)
+        self.assert_refused(opened, "GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED", "GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED")
+        self.assertEqual(sorted(p.relative_to(self.tree) for p in self.tree.rglob("*")), before)
+        self.assertFalse(hasattr(anchor, "gateway_root"))
+        self.chain_to_admission()
+        for endpoint in ({"endpoint_kind": "GATEWAY"}, {"endpoint_kind": "GATEWAY", "ledger_root": str(self.root)}):
+            with self.subTest(endpoint=endpoint):
+                self.assert_refused(self.anchored(endpoint), "GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED",
+                                    "GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED")
+                self.assert_refused(self.evaluate(endpoint), "GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED",
+                                    "GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED")
+
+    def test_a_valid_both_sides_crossing_fires_neither_endpoint_code(self):
+        """Coordination ruling (crossings): the endpoint's side is on its own chain, the Org records only its own
+        digest-only side. That is not a ledger source; neither ENDPOINT_* code fires."""
+        self.open_and_anchor()
+        node_chain, org_chain = hne.read_chain(self.node)[0], hne.read_chain(self.org)[0]
+        self.assertIsNone(eld.crossing_failure(node_chain, org_chain, {
+            "endpoint_id": NODE, "rollback_watermark_source": {"path_ids": [anchor.path_id(NODE)]}}))
+        crossing = next(r for r in org_chain if r["transition_class"] == anchor.DESTINATION_CLASS)
+        own = [r for r in node_chain if r["transition_class"] == anchor.SOURCE_CLASS]
+        self.assertEqual([r["receipt_sha256"] for r in own],
+                         [crossing["evidence"]["source_repository_receipt_sha256"]])
+        for r in (crossing, *own):
+            self.assertTrue(r["observed_at"].startswith("SUPPLIED_HB_EPOCH:"), r["observed_at"])
+        out = self.anchored(self.endpoint())
+        self.assertEqual(out["disposition"], "ALLOW", out)
+        for code in BOTH_ENDPOINT_CODES:
+            self.assertNotIn(code, json.dumps(out))
+
+    def test_kv_and_skap_name_stegverse_kv_and_never_anchor_on_the_org_ledger(self):
+        signers = ROOT / ".stegverse/node-ledger/kv-ledger-head-signers.v1.json"
+        self.assertEqual(hashlib.sha256(signers.read_bytes()).hexdigest()[:8], "758d7983")
+        self.assertEqual(eld.HEAD_DIGEST_NAME, "KV_RECORDED_RECEIPT_CHAIN_HEAD")
+        self.assertIn("signs KV_RECORDED_RECEIPT_CHAIN_HEAD", signers.read_text())
+        for kind, location_ in (("KV", "_StegVerse/Receipts"), ("SKAP_VAULT", "_Vault/SKAP/Receipts")):
+            with self.subTest(kind=kind):
+                designation = KV_DESIGNATION[kind]
+                endpoint_id = f"STEGVERSE_KV:{location_}"
+                self.assertEqual(anchor.kv_endpoint_id(kind), endpoint_id)
+                self.assertTrue(anchor.path_id(NODE).endswith(":intr-destination"))
+                self.assertEqual(designation["rollback_watermark_source"]["path_ids"],
+                                 [f"StegVerse-org->{endpoint_id}:intr-destination"])
+                self.assertEqual(set(designation["stores"][0]), {
+                    "store_type", "storage_endpoint_schema", "provider_id", "access_adapter", "kv_class",
+                    "kv_request_id", "location"})
+                self.assertNotIn("ref", json.dumps(designation["stores"]))
+                # never opened on a caller ledger_root (the org ledger is a git ref)
+                self.assert_refused(anchor.plan_open(NODE, kind, KEY), "ENDPOINT_INVALID", anchor.ENDPOINT_FAILURE_CODE)
+                out = anchor.verify_anchor(endpoint_id, endpoint={"endpoint_kind": kind, "designation": designation},
+                                           org_ledger_root=self.org, org_ledger_head_receipt_sha256=self.head())
+                self.assert_refused(out, "KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED",
+                                    "KV_RECEIPT_CHAIN_READER_ID_NOT_DOCUMENTED")
+                self.assertEqual((out["endpoint_id"], out["path_id"]),
+                                 (endpoint_id, f"StegVerse-org->{endpoint_id}:intr-destination"))
+                on_ref = anchor.verify_anchor(endpoint_id, endpoint={"endpoint_kind": kind, "designation": designation,
+                                                                     "ledger_root": str(self.org)},
+                                              org_ledger_root=self.org, org_ledger_head_receipt_sha256=self.head())
+                self.assert_refused(on_ref, "KV_LEDGER_DESIGNATED_ON_GIT_REF", "KV_LEDGER_DESIGNATED_ON_GIT_REF")
+                org_ref = json.loads((DESIGNATIONS / "org-git-ref.designation.json").read_text())
+                bad = anchor.verify_anchor(endpoint_id, endpoint={"endpoint_kind": kind, "designation": {
+                    **org_ref, "endpoint_kind": kind}}, org_ledger_root=self.org,
+                    org_ledger_head_receipt_sha256=self.head())
+                self.assertEqual(bad["disposition"], "FAIL_CLOSED", bad)
+                for key in SIX:
+                    self.assertTrue(isinstance(bad[key], str) and bad[key].strip(), key)
+                member = anchor.verify_anchor(endpoint_id, endpoint={"endpoint_kind": kind, "designation": {
+                    **designation, "team_slug": "kv"}}, org_ledger_root=self.org,
+                    org_ledger_head_receipt_sha256=self.head())     # LC-KV-25: never an Org member
+                self.assert_refused(member, "ENDPOINT_ORG_MEMBERSHIP_REFUSED", "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
+                self.assertEqual(member["failed_predicate"], "ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER")
+                wrong = anchor.verify_anchor(NODE, endpoint={"endpoint_kind": kind, "designation": designation},
+                                             org_ledger_root=self.org, org_ledger_head_receipt_sha256=self.head())
+                self.assert_refused(wrong, "ENDPOINT_LEDGER_DESIGNATION_INVALID", "ENDPOINT_LEDGER_DESIGNATION_INVALID")
+
+    def test_431_designation_suite_passes_against_432_anchors(self):
+        """Rerun #431's designation tests here (byte-identical module), with #431's contract designation."""
+        # byte copy of #431 @e9d45e6c tests/test_endpoint_ledger_designation.py, not collected on its own (#432's
+        # contract.json does not designate)
+        from tests import endpoint_ledger_designation_suite_431 as suite_module
+        with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431):
+            suite = unittest.defaultTestLoader.loadTestsFromModule(suite_module)
+            result = unittest.TestResult()
+            suite.run(result)
+        self.assertEqual((len(result.failures), len(result.errors), len(result.skipped)), (0, 0, 0),
+                         [str(t) for t, _ in result.failures + result.errors])
+        self.assertGreater(result.testsRun, 0)
 
     def test_the_lc_kv_15_hole_is_closed(self):
         anchor.open_ledger(self.node, NODE, "EPHEMERAL", KEY, "StegNode")   # opened, never anchored
@@ -310,8 +400,8 @@ class AnchorRefusalTests(_Ledgers):
     def test_unanchored_scratch_ledger(self):
         self.chain_to_admission()      # a scratch ledger with no genesis at all
         self.assert_refused(self.evaluate(), "ENDPOINT_GENESIS_INVALID")
-        self.assert_refused(self.evaluate(self.endpoint("KV", self.org / "nowhere")), "ENDPOINT_LEDGER_UNREADABLE",
-                            anchor.ENDPOINT_FAILURE_CODE)
+        self.assert_refused(self.evaluate(self.endpoint("KV", self.org / "nowhere")), "KV_LEDGER_DESIGNATED_ON_GIT_REF",
+                            "KV_LEDGER_DESIGNATED_ON_GIT_REF")
 
     def test_ephemeral_needs_the_stegos_record(self):
         genesis = anchor.open_ledger(self.node, NODE, "EPHEMERAL", KEY, "StegNode")["genesis"]
@@ -354,7 +444,27 @@ class AnchorRefusalTests(_Ledgers):
         anchor.open_ledger(other, NODE, "EPHEMERAL", KEY, "StegApp")   # a different genesis, never anchored
         self.use(other)
         self.chain_to_admission()
-        self.assert_refused(self.evaluate(self.endpoint(root=other)), "GENESIS_MISMATCH")
+        # the Org's digest-only crossing names a source on the first ledger, not on this one
+        self.assert_refused(self.evaluate(self.endpoint(root=other)), "UNANCHORED")
+
+    def test_anchor_naming_another_genesis(self):
+        anchor.open_ledger(self.node, NODE, "PERMANENT", KEY)
+        genesis = hne.read_chain(self.node)[0][-1]
+        body = {**anchor.anchor_body(genesis), "genesis_receipt_sha256": "sha256:" + "2" * 64}
+        source = anchor.append_source(self.node, NODE, anchor.anchor_communication_id(NODE, genesis["receipt_sha256"]), body)
+        anchor.append_destination(self.org, source)
+        self.assert_refused(self.anchored(self.endpoint("PERMANENT")), "GENESIS_MISMATCH", anchor.ENDPOINT_FAILURE_CODE)
+
+    def test_a_message_copying_org_record_is_refused(self):
+        """Rule (1): an Org record on the node's path that carries the endpoint's message is not digest-only."""
+        self.open_and_anchor()
+        source = next(r for r in hne.read_chain(self.node)[0] if r["transition_class"] == anchor.SOURCE_CLASS)
+        copied = {**anchor.crossing_evidence(anchor.path_id(NODE), "copy-1", source["receipt_sha256"],
+                                             source["receipt_sha256"]), "message": source["evidence"]["message"]}
+        anchor.append_receipt(self.org, anchor.DESTINATION_CLASS, f"{anchor.DESTINATION_CLASS}:copy-1", self.head(),
+                              copied, 40)
+        self.assert_refused(self.anchored(self.endpoint()), "ORG_CROSSING_RECEIPT_NOT_DIGEST_ONLY",
+                            "ORG_CROSSING_RECEIPT_NOT_DIGEST_ONLY")
 
     def test_foreign_producer_receipts(self):
         emit = anchor._emitter()
@@ -959,12 +1069,17 @@ class DissolutionTests(_Ledgers):
         before = self.head()
         out = self.dissolve()
         self.assertEqual((out["disposition"], out["outcome"], out["read_back"]),
-                         ("ALLOW", "DISSOLVED", "FULL_CHAIN_RETAINED"), out)
+                         ("ALLOW", "DISSOLVED", "FULL_CHAIN_RECORDED_DIGEST_ONLY"), out)
         node_chain = hne.read_chain(self.node)[0]
-        self.assertEqual(out["retained_receipts"], len(node_chain))
-        for r in node_chain:   # the full chain is at the destination, verbatim
-            self.assertEqual(anchor.read_retained(self.org, r["receipt_sha256"]), r)
+        self.assertEqual(out["recorded_receipts"], len(node_chain))
         org_chain = hne.read_chain(self.org)[0]
+        crossings = {r["evidence"]["source_repository_receipt_sha256"]: r for r in org_chain
+                     if r["transition_class"] == anchor.DESTINATION_CLASS
+                     and r["evidence"]["communication_id"].startswith("node-ledger-disbursement:")}
+        for r in node_chain:   # every receipt crossed digest-only: the Org holds its digest, never a copy
+            self.assertIn(r["receipt_sha256"], crossings)
+            self.assertIsNone(anchor.read_retained(self.org, r["receipt_sha256"]))
+            self.assertIsNone(anchor.crossing_record_failure(crossings[r["receipt_sha256"]], NODE))
         self.assertEqual([r["transition_class"] for r in org_chain][:2], ["NODE_LEDGER_DISSOLVED", "INTR_MESH_PATH_INGRESS"])
         self.assertEqual(org_chain[0]["evidence"]["node_kind"], "StegNode")
         self.assertIs(org_chain[0]["evidence"]["root_admissible_after"], False)
@@ -980,31 +1095,38 @@ class DissolutionTests(_Ledgers):
         self.assertEqual(planned["disposition"], "ALLOW", planned)
         self.assert_refused(dissolution.finalize(planned, org_ledger_root=self.org),
                             "DISBURSEMENT_RECEIPT_NOT_READ_BACK", dissolution.FAILURE_CODE)
-        dissolution.disburse(planned, org_ledger_root=self.org)
         missing = planned["disbursement_body"]["receipt_sha256s"][3]
-        (self.org / "source-receipts" / (missing[7:] + ".json")).unlink()
+        real_append = anchor.append_receipt
+
+        def skip_one(root, cls, transition_id, previous, evidence, *a, **kw):
+            if evidence.get("source_repository_receipt_sha256") == missing:   # this crossing never lands
+                return {"receipt_sha256": previous}
+            return real_append(root, cls, transition_id, previous, evidence, *a, **kw)
+        with mock.patch.object(anchor, "append_receipt", side_effect=skip_one):
+            dissolution.disburse(planned, org_ledger_root=self.org)
         out = dissolution.finalize(planned, org_ledger_root=self.org)
         self.assert_refused(out, "DISBURSED_CHAIN_INCOMPLETE", dissolution.FAILURE_CODE)
         self.assertIs(out["dissolved"], False)
         org_classes = [r["transition_class"] for r in hne.read_chain(self.org)[0]]
         self.assertNotIn("NODE_LEDGER_DISSOLVED", org_classes)
         # not stranded: the ledger is still anchored and admissible until a read-back succeeds
-        self.assertEqual(self.evaluate()["disposition"], "ALLOW")
-        anchor.retain(self.org, next(r for r in hne.read_chain(self.node)[0] if r["receipt_sha256"] == missing))
-        self.assertEqual(dissolution.finalize(planned, org_ledger_root=self.org)["outcome"], "DISSOLVED")
+        self.assertEqual(self.evaluate()["disposition"], "ALLOW", self.evaluate())
+        self.assertEqual(self.dissolve()["outcome"], "DISSOLVED")
 
     def test_only_ephemeral_dissolves(self):
-        for kind in ("PERMANENT", "KV", "SKAP_VAULT"):
+        self._t2 = tempfile.TemporaryDirectory()
+        self.addCleanup(self._t2.cleanup)
+        self.use(Path(self._t2.name))
+        self.open_and_anchor("PERMANENT", root=self.root)
+        self.assert_refused(self.dissolve(self.endpoint("PERMANENT", self.root)), "NOT_EPHEMERAL", dissolution.FAILURE_CODE)
+        self.assertEqual(self.anchored(self.endpoint("PERMANENT", self.root))["disposition"], "ALLOW")
+        for kind in ("KV", "SKAP_VAULT"):
             with self.subTest(kind=kind):
-                self._t2 = tempfile.TemporaryDirectory()
-                self.addCleanup(self._t2.cleanup)
-                self.use(Path(self._t2.name))
-                self.open_and_anchor(kind, root=self.root)
-                self.assert_refused(self.dissolve(self.endpoint(kind, self.root)), "NOT_EPHEMERAL", dissolution.FAILURE_CODE)
-                self.assertEqual(self.anchored(self.endpoint(kind, self.root))["disposition"], "ALLOW")
-        anchor.open_gateway_location(self.org, NODE, KEY)
+                endpoint = {"endpoint_kind": kind, "designation": KV_DESIGNATION[kind]}
+                self.assert_refused(self.dissolve(endpoint), "NOT_EPHEMERAL", dissolution.FAILURE_CODE)
         self.assert_refused(self.dissolve({"endpoint_kind": "GATEWAY"}), "NOT_EPHEMERAL", dissolution.FAILURE_CODE)
-        self.assertEqual(self.anchored({"endpoint_kind": "GATEWAY"})["disposition"], "ALLOW")
+        self.assert_refused(self.anchored({"endpoint_kind": "GATEWAY"}), "GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED",
+                            "GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED")
 
     def test_dissolution_is_an_event_not_a_timer(self):
         self.open_and_anchor()
@@ -1020,7 +1142,12 @@ class FailureCodePerKindTests(_Ledgers):
     NON_EPHEMERAL = ("PERMANENT", "KV", "SKAP_VAULT", "GATEWAY")
 
     def kind_endpoint(self, kind):
+        if kind in KV_DESIGNATION:
+            return {"endpoint_kind": kind, "designation": KV_DESIGNATION[kind]}
         return {"endpoint_kind": "GATEWAY"} if kind == "GATEWAY" else self.endpoint(kind)
+
+    def kind_node(self, kind):
+        return anchor.kv_endpoint_id(kind) if kind in KV_DESIGNATION else NODE
 
     def test_the_rule(self):
         for reason in anchor.ORG_LEDGER_REASONS:
@@ -1046,14 +1173,21 @@ class FailureCodePerKindTests(_Ledgers):
         stale = "sha256:" + "1" * 64
         for kind in ("EPHEMERAL",) + self.NON_EPHEMERAL:
             with self.subTest(kind=kind):
-                out = anchor.verify_anchor(NODE, endpoint=self.kind_endpoint(kind), org_ledger_root=self.org,
-                                           org_ledger_head_receipt_sha256=stale)
+                out = anchor.verify_anchor(self.kind_node(kind), endpoint=self.kind_endpoint(kind),
+                                           org_ledger_root=self.org, org_ledger_head_receipt_sha256=stale)
+                if kind == "GATEWAY":    # rule (1): refused before the org ledger is read
+                    self.assert_refused(out, "GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED",
+                                        "GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED")
+                    continue
                 self.assert_refused(out, "ORG_LEDGER_HEAD_NOT_PINNED",
                                     anchor.FAILURE_CODE if kind == "EPHEMERAL" else "ORG_LEDGER_HEAD_NOT_PINNED")
 
     @harness.with_append_route
     def test_an_unanchored_ledger_per_kind(self):
-        for kind in ("EPHEMERAL", "PERMANENT", "KV", "SKAP_VAULT"):
+        for kind in ("KV", "SKAP_VAULT"):     # never opened on a caller ledger root
+            self.assert_refused(anchor.open_ledger(self.root, NODE, kind, KEY), "ENDPOINT_INVALID",
+                                anchor.ENDPOINT_FAILURE_CODE)
+        for kind in ("EPHEMERAL", "PERMANENT"):
             with self.subTest(kind=kind):
                 self._t2 = tempfile.TemporaryDirectory()
                 self.addCleanup(self._t2.cleanup)

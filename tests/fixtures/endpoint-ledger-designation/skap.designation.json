@@ -1,0 +1,26 @@
+{
+  "endpoint_id": "STEGVERSE_KV:_Vault/SKAP/Receipts",
+  "endpoint_kind": "SKAP_VAULT",
+  "expected_genesis_receipt_sha256": null,
+  "genesis_class": "REPOSITORY_LEDGER_INITIALIZATION",
+  "head_signer_source": "KV_LEDGER_HEAD_SIGNER",
+  "provider_selection": "SINGLE_PROVIDER_V1",
+  "rollback_watermark_source": {
+    "path_ids": [
+      "StegVerse-org->STEGVERSE_KV:_Vault/SKAP/Receipts:intr-destination"
+    ],
+    "source": "ORG_LEDGER_LINKED_RECEIPTS_ENDPOINT_HEAD"
+  },
+  "schema": "stegverse.endpoint-ledger-designation/v1",
+  "stores": [
+    {
+      "access_adapter": "provider-or-file-provider",
+      "kv_class": "STEGVERSE_KV",
+      "kv_request_id": "SITE-CLOUD-KV-4347408852127319cbda574f02e03edb",
+      "location": "_Vault/SKAP/Receipts",
+      "provider_id": "google-drive",
+      "storage_endpoint_schema": "stegverse.kv.storage-endpoint-descriptor/v2",
+      "store_type": "KV_STORAGE_ENDPOINT"
+    }
+  ]
+}
