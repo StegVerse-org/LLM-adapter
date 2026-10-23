@@ -161,6 +161,50 @@
         "https://github.com/StegVerse-org/.github/issues/162#issuecomment-6368729262",
         "https://github.com/StegVerse-org/LLM-adapter/pull/429"
       ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/generate_with_stegos.py",
+      "semantic_responsibility": "Regenerates the StegOS fixtures by running real StegOS code (STEGOS_ROOT) with the network reader stubbed. Test-only.",
+      "closest_existing_implementation": "tests/fixtures (no StegOS/StegHealth-produced node fixtures exist)",
+      "decision": "CREATE_NEW",
+      "justification": "The end-to-end test must start from genuine upstream code output.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "tests/fixtures/node_receipts/README.md"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/stegos_existence_broker_receipt.json",
+      "semantic_responsibility": "Broker receipt produced by StegOS@e63f7e89 observe-reciprocal-node-existence. Test fixture.",
+      "closest_existing_implementation": "tests/fixtures (no StegOS/StegHealth-produced node fixtures exist)",
+      "decision": "CREATE_NEW",
+      "justification": "The end-to-end test must start from genuine upstream code output.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "tests/fixtures/node_receipts/README.md"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/stegos_observed_profile.json",
+      "semantic_responsibility": "Observed InTr profile carrying a test-only node_identity_key. Test fixture.",
+      "closest_existing_implementation": "tests/fixtures (no StegOS/StegHealth-produced node fixtures exist)",
+      "decision": "CREATE_NEW",
+      "justification": "The end-to-end test must start from genuine upstream code output.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "tests/fixtures/node_receipts/README.md"
+      ]
+    },
+    {
+      "path": "tests/fixtures/node_receipts/steghealth_runtime_observation.json",
+      "semantic_responsibility": "Output of StegHealth@8508a43c sovereign_runtime_observation projection on a synthetic proof. Test fixture.",
+      "closest_existing_implementation": "tests/fixtures (no StegOS/StegHealth-produced node fixtures exist)",
+      "decision": "CREATE_NEW",
+      "justification": "The end-to-end test must start from genuine upstream code output.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "tests/fixtures/node_receipts/README.md"
+      ]
     }
   ]
 }
