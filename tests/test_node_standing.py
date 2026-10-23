@@ -67,13 +67,31 @@ class HealthyNodeGrantsTypedIngressTests(unittest.TestCase):
     """A device registers, is told it is a healthy node, and gets its own instructions."""
 
     def setUp(self):
+        import os
+        import tempfile
         from llm_adapter.web.testclient import TestClient
         from llm_adapter.combined_gateway import app
+        # Healthy means evaluated from a receipted report, so each test gets its
+        # own ledger root and records the node's HEALTHY report into it.
+        root = tempfile.TemporaryDirectory()
+        previous = os.environ.get("STEGVERSE_REPO_LEDGER_ROOT")
+        os.environ["STEGVERSE_REPO_LEDGER_ROOT"] = root.name
+
+        def restore():
+            if previous is None:
+                os.environ.pop("STEGVERSE_REPO_LEDGER_ROOT", None)
+            else:
+                os.environ["STEGVERSE_REPO_LEDGER_ROOT"] = previous
+            root.cleanup()
+        self.addCleanup(restore)
         self.client = TestClient(app)
 
     def register(self, **overrides):
+        from tests.healthy_node_reports import report
         body = {"mode": "ESTABLISH_GENESIS", "node_ref": "evaluator-node", "predecessor": None}
         body.update(overrides)
+        if isinstance(body.get("node_ref"), str) and body["node_ref"]:
+            report(body["node_ref"])
         return self.client.post("/api/node-standing", json=body)
 
     def test_a_registered_node_is_told_it_is_healthy(self):
@@ -81,8 +99,10 @@ class HealthyNodeGrantsTypedIngressTests(unittest.TestCase):
         body = self.register(node_class="CONSOLE").json()
         self.assertEqual(body["disposition"], "ALLOW")
         self.assertIs(body["healthy_node_established"], True)
-        # Health is the node's own health surface, so "healthy" means here what
-        # it means at /health rather than being a separate assertion about it.
+        # Healthy is decided by the evaluator from the receipted report ...
+        self.assertEqual(body["health_evaluation"]["disposition"], "ALLOW")
+        self.assertEqual(body["health_evaluation"]["health_status"], "HEALTHY")
+        # ... and this node's own /health surface is reported alongside, deciding nothing.
         self.assertEqual(body["node_health"], self.client.get("/health").json())
         self.assertEqual(body["node_health"]["status"], "ok")
 
