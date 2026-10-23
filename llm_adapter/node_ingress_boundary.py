@@ -66,7 +66,7 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
-from . import healthy_node_evaluator, node_standing
+from . import healthy_node_evaluator, node_health_report_producer, node_standing
 
 ROOT = Path(__file__).resolve().parents[1]
 BOUNDARY = "LLM_ADAPTER_INGRESS_BOUNDARY"
@@ -207,6 +207,10 @@ def refusal_record(signal: Mapping[str, Any], error: node_standing.StandingRefus
         "refusal_stage": stage,
         "failure_code": FAILURE_CODE,
         "health_evaluation_reason": (evaluation or {}).get("reason"),
+        # The node the health gate evaluated, so this refused registration is a
+        # receipted NODE_REGISTRATION trigger for the health-report producer.
+        # It is not an issued endpoint.
+        "evaluated_node_id": (evaluation or {}).get("node_id") if stage == STAGE_HEALTH else None,
         "healthy_node_established": False,
         "node_endpoint_issued": False,
         "instructions_released": False,
@@ -231,6 +235,13 @@ def _non_allow(signal: Mapping[str, Any], transport: str, stage: str, dispositio
     error = node_standing.StandingRefused(disposition, reason)
     record = refusal_record(signal, error, transport, stage=stage, evaluation=evaluation)
     receipt = _record(REFUSED_CLASS + ":" + record["signal_sha256"], REFUSED_CLASS, record, hb_epoch)
+    production = None
+    if stage == STAGE_HEALTH:
+        # Event-driven, not polled: the refused registration receipt just
+        # appended is itself the NODE_REGISTRATION trigger. The producer emits a
+        # report only from receipted evidence and otherwise returns FAIL_CLOSED.
+        # This admission is not re-evaluated; the node registers again.
+        production = node_health_report_producer.produce(receipt["receipt_sha256"], ledger_root=_ledger().lr())
     return {
         "schema": ADMISSION_SCHEMA,
         "disposition": disposition,
@@ -244,6 +255,7 @@ def _non_allow(signal: Mapping[str, Any], transport: str, stage: str, dispositio
         "reason": reason,
         "health_evaluation": dict(evaluation) if evaluation is not None else None,
         "standing_refusal": dict(standing_refusal) if standing_refusal is not None else None,
+        "health_report_production": production,
         "healthy_node_established": False,
         "instructions_released": False,
         "ingress_record": record,

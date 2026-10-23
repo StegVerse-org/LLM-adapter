@@ -57,3 +57,42 @@ admit(signal, *, transport="HTTP", health=None, health_report_receipt_sha256=Non
 - **`health` callable.** Its result is recorded as `observed_health_unreceipted_status` and decides nothing.
 
 `POST /api/node-standing` reaches `admit` and returns 200 on ALLOW. A non-ALLOW returns 422 for FAIL_CLOSED or 403 for DENY, with the admission's six fields in `detail`. A request may cite `health_report_receipt_sha256`.
+
+## `llm_adapter.node_health_report_producer` (LC-KV-13 producer)
+
+```python
+plan(trigger_receipt_sha256, *, ledger_root, repository="StegVerse-org/LLM-adapter") -> dict     # deterministic core, read-only
+produce(trigger_receipt_sha256, *, ledger_root, repository="StegVerse-org/LLM-adapter") -> dict  # plan, then append via emit.py
+```
+
+**Triggers.** The producer fires on an event, never on a timer, cron or poll. The trigger is a receipt already on the chain:
+
+| trigger event | trigger receipt |
+|---|---|
+| `NODE_REGISTRATION` | `NODE_INGRESS_REFUSED` with `refusal_stage` CURRENT_NODE_HEALTH and `evaluated_node_id`, or `NODE_INGRESS_ADMITTED`. `admit` fires this itself after recording a health-stage refusal, and returns the result as `health_report_production`. |
+| `NODE_IDENTITY_BOUND` | `NODE_IDENTITY_BINDING` |
+| `HEALTH_CHECK_RECEIPTED` | `NODE_HEALTH_CHECK_OBSERVED` (schema `stegverse.node-health-check/v1`) |
+
+**Required receipted evidence.** All of it must be on the same chain from `HEAD.json`, with every body hash matching its address:
+- `AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE` for the node, with `disposition` ALLOW;
+- a newer `NODE_IDENTITY_BINDING` for the node, with `disposition` ALLOW and `existence_receipt_sha256` citing that existence receipt;
+- the node's newest `NODE_HEALTH_CHECK_OBSERVED`.
+
+**Emitted receipt.** The receipt has `transition_class` `NODE_HEALTH_REPORTED` and `transition_id` `NODE_HEALTH_REPORTED:<node_id>:<trigger sha>`.
+- `predecessor_state_sha256` is the previous report for the node, or sha256 of `{"node_id", "health_report": null}` if there is none.
+- `successor_state_sha256` is sha256 of the evidence.
+- `hb_reference.epoch` is the trigger's epoch, so it is not derived from a clock.
+
+The evidence fields are:
+- `schema` `stegverse.node-health-report/v1`, `node_id`;
+- `status`: `HEALTHY` only when the check says exactly HEALTHY, otherwise `UNHEALTHY`;
+- `observed_health_check_status`, kept verbatim;
+- `trigger` {event, receipt_sha256, transition_class};
+- `evidence_receipts` {authenticated_reciprocal_node_existence, node_identity_binding, health_check};
+- `previous_health_report_receipt_sha256`;
+- `transition_manifest` {schema `stegverse.node-health-report-transition/v1`, intended_action, producer, producer_version};
+- `intended_action`, `transition_is_the_disposition_of_the_intended_action`, `disposition` ALLOW;
+- `health_report_authenticated` `NOT_PROVEN_BEYOND_RECEIPTED_PREREQUISITES`;
+- `authority_effect` NONE.
+
+**Result.** `disposition` is ALLOW, with `outcome` EMITTED or NOOP_ALREADY_CURRENT, `report_status` and `health_report_receipt_sha256`. Otherwise it is FAIL_CLOSED with the six fields: `failure_code` NODE_HEALTH_REPORT_NOT_PRODUCED, a `failed_predicate` naming the missing receipted input, and a `reason`. Nothing is appended on FAIL_CLOSED.

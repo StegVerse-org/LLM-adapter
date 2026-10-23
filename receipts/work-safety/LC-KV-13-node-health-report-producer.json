@@ -1,0 +1,80 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "KV-SKAP-VAULT-FUNCTIONAL-001/LC-KV-13-producer",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "authoring_session": "lane-b-91117956 (Lane B, InTr and Mesh Destinations, StegVerse-org/.github#162)",
+  "stacked_on": "https://github.com/StegVerse-org/LLM-adapter/pull/428 (laneb/healthy-node-evaluator)",
+  "admission_order": "ADMISSION_ORDER: this producer is admitted together with or before #428, so admitting #428 never strands live nodes",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/TRANSITION_LEDGER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github#3324 (KV-SKAP-VAULT-FUNCTIONAL-001)",
+    "StegVerse-Labs/.github#3330@b663e8dd (LC-KV-13)",
+    "StegVerse-org/.github#162 (Coordination assigned the NODE_HEALTH_REPORTED producer to Lane B)"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "This appends only to this repository's own transition ledger through its existing emitter. No organization propagation, custody transition or Master Records closure is performed or claimed."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/428",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/358",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/360",
+      "https://github.com/StegVerse-org/.github/issues/162",
+      "https://github.com/StegVerse-org/.github/issues/167"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": ["StegVerse-org/LLM-adapter", "StegVerse-org/.github", "StegVerse-Labs/.github"],
+    "evidence_refs": [
+      "llm_adapter/healthy_node_evaluator.py",
+      "llm_adapter/node_ingress_boundary.py",
+      ".stegverse/transition-ledger/emit.py",
+      "StegVerse-Labs/.github:data/node-exchange/first-executable-conformance-v0.1.json"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": false,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "The repository has no producer of NODE_HEALTH_REPORTED. Coordination assigned it to Lane B. It appends through the existing emitter, so no second ledger is created."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": ["README.md", "docs/HEALTHY_NODE_EVALUATOR_INTERFACE.md", "llm_adapter/node_health_report_producer.py"]
+  },
+  "covered_paths": [
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "README.md",
+    "llm_adapter/node_health_report_producer.py",
+    "llm_adapter/node_ingress_boundary.py",
+    "tests/healthy_node_reports.py",
+    "tests/test_node_health_report_producer.py"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/node_health_report_producer.py",
+      "semantic_responsibility": "E0, event-driven producer of stegverse.node-health-report/v1 NODE_HEALTH_REPORTED receipts, made only from receipted existence, identity-binding and health-check evidence on this chain. Every input that isn't receipted gives a six-field FAIL_CLOSED.",
+      "closest_existing_implementation": "None produces NODE_HEALTH_REPORTED. tests/healthy_node_reports.report is a test-only fixture. emit.py is the write path this module reuses.",
+      "decision": "CREATE_NEW",
+      "justification": "The evaluator from #428 makes live registration fail closed until NODE_HEALTH_REPORTED receipts exist. The producer is a distinct responsibility: it derives, where the evaluator decides. Keeping it separate keeps the evaluator pure and read-only.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": ["https://github.com/StegVerse-org/LLM-adapter/pull/428", "docs/HEALTHY_NODE_EVALUATOR_INTERFACE.md"]
+    },
+    {
+      "path": "tests/test_node_health_report_producer.py",
+      "semantic_responsibility": "Producer tests: the three triggers, the receipt shape, FAIL_CLOSED for each unreceipted input, idempotence, determinism, and the end-to-end path producer -> evaluator -> admit ALLOW with its negative paths.",
+      "closest_existing_implementation": "tests/test_healthy_node_evaluator.py covers the evaluator only.",
+      "decision": "EXTEND"
+    }
+  ]
+}

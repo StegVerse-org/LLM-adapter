@@ -28,3 +28,35 @@ def report(node_id: str, status: str = hne.HEALTHY) -> dict:
     emit = _emitter()
     return emit.append(f"{hne.HEALTH_REPORT_CLASS}:{node_id}", hne.HEALTH_REPORT_CLASS,
                        emit.sha({"node_id": node_id}), emit.sha(evidence), evidence, "NONE", hb_epoch=TEST_EPOCH)
+
+
+# Receipted inputs the producer reads. These are test fixtures, standing in for
+# the real producers of AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE,
+# NODE_IDENTITY_BINDING and NODE_HEALTH_CHECK_OBSERVED. They are appended only
+# into the redirected test ledger.
+def _fixture(transition_class: str, evidence: dict) -> dict:
+    emit = _emitter()
+    evidence = {**evidence, "authority_effect": "NONE_TEST_FIXTURE"}
+    return emit.append(f"{transition_class}:{evidence.get('node_id')}", transition_class,
+                       emit.sha({"node_id": evidence.get("node_id")}), emit.sha(evidence), evidence, "NONE",
+                       hb_epoch=TEST_EPOCH)
+
+
+def existence(node_id: str, disposition: str = "ALLOW") -> dict:
+    return _fixture("AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE", {"node_id": node_id, "disposition": disposition})
+
+
+def binding(node_id: str, existence_receipt_sha256: str | None, disposition: str = "ALLOW") -> dict:
+    return _fixture("NODE_IDENTITY_BINDING", {"node_id": node_id, "disposition": disposition,
+                                              "existence_receipt_sha256": existence_receipt_sha256})
+
+
+def health_check(node_id: str, status: str = hne.HEALTHY) -> dict:
+    return _fixture("NODE_HEALTH_CHECK_OBSERVED", {"schema": "stegverse.node-health-check/v1",
+                                                   "node_id": node_id, "status": status})
+
+
+def identified(node_id: str) -> tuple[dict, dict]:
+    """Receipt the two earlier gates for node_id, in order."""
+    exists = existence(node_id)
+    return exists, binding(node_id, exists["receipt_sha256"])
