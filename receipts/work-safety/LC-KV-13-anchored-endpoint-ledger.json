@@ -100,7 +100,7 @@
   "new_files": [
     {
       "path": "llm_adapter/endpoint_ledger_anchor.py",
-      "semantic_responsibility": "Binds a layer-1 ledger root to the Org Ledger by endpoint_kind (EPHEMERAL, PERMANENT, GATEWAY, KV, SKAP_VAULT; ORG refused). EPHEMERAL is anchored by StegOS's generation-time NODE_LEDGER_OPENED record carried by the InTr path pair; PERMANENT/KV/SKAP_VAULT by the InTr pair; GATEWAY as an org-carried location. Counts only pinned-producer receipts, then calls the unchanged evaluate().",
+      "semantic_responsibility": "Binds a layer-1 ledger root by endpoint_kind under rule (1) (cvk#263 @543e8c32): no gateway or node chain is anchored on the org ledger. EPHEMERAL/PERMANENT anchor records live on the endpoint's own chain and the Org records only its own digest-only crossing receipt (SUPPLIED_HB_EPOCH both sides); KV/SKAP_VAULT are STEGVERSE_KV:<location> designations read via endpoint_ledger_designation; GATEWAY is refused GATEWAY_CARRIER_LEDGER_NOT_DESIGNATED; ORG refused. Counts only pinned-producer receipts, then calls the unchanged evaluate().",
       "closest_existing_implementation": "StegVerse-org/.github resident-runtime/intr_path_ingress.py (destination half shape and payload rule, mirrored without importing)",
       "decision": "CREATE_NEW",
       "justification": "LC-KV-15: layer 1 takes a caller-given root. Nothing binds a root to the org ledger. Importing the org module cross-repo would add a dependency.",
@@ -108,12 +108,13 @@
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/162",
         "https://github.com/StegVerse-org/LLM-adapter/pull/431",
-        "StegVerse-Labs/.github#3330:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-15.json"
+        "StegVerse-Labs/.github#3330:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-15.json",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
       ]
     },
     {
       "path": "llm_adapter/node_ledger_dissolution.py",
-      "semantic_responsibility": "EPHEMERAL only: on NODE_DISSOLUTION, disburses the full chain to the org ledger as an InTr path transfer, reads the destination back, then appends NODE_LEDGER_DISSOLVED. Event-driven write-side entrypoint (dissolve), not imported by endpoint_ledger_anchor (it imports the anchor); the read side is endpoint_ledger_anchor.dissolution_on in verify_anchor, which refuses a dissolved EPHEMERAL root (EPHEMERAL_NODE_LEDGER_DISSOLVED). Exercised end to end by DissolutionTests.",
+      "semantic_responsibility": "EPHEMERAL only: on NODE_DISSOLUTION, records the disbursement on the ephemeral ledger, then one digest-only Org crossing receipt per receipt, reads them back (FULL_CHAIN_RECORDED_DIGEST_ONLY), then appends NODE_LEDGER_DISSOLVED. Not imported by endpoint_ledger_anchor; the read side is dissolution_on in verify_anchor.",
       "closest_existing_implementation": "INTR_MESH_PATH_TRANSFER / ORGANIZATION_INTR_DESTINATION_INGRESS (reused for the transfer). No existing class closes a ledger location.",
       "decision": "CREATE_NEW",
       "justification": "Rigel: temporary node ledgers must be disbursed back to an Org Ledger at dissolution. No disbursement or closure exists.",
@@ -121,7 +122,8 @@
       "evidence_refs": [
         "https://github.com/StegVerse-org/.github/issues/162",
         "https://github.com/StegVerse-org/LLM-adapter/pull/431",
-        "StegVerse-Labs/.github#3330:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-15.json"
+        "StegVerse-Labs/.github#3330:data/sv-work-items/ladder-conformance/scoped-tasks/LC-KV-15.json",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
       ]
     },
     {
@@ -334,16 +336,148 @@
         "StegVerse-Labs/.github#3330@8abd5741 (P1 rev 5, LC-KV-16 reopen)"
       ]
     },
-    "llm_adapter/endpoint_ledger_designation.py",
-    "llm_adapter/supplied_epoch.py",
-    ".stegverse/node-ledger/kv-ledger-head-signers.v1.json",
-    "tests/endpoint_ledger_designation_suite_431.py",
-    "tests/fixtures/endpoint-ledger-designation/kv-chain.json",
-    "tests/fixtures/endpoint-ledger-designation/kv-on-org-git-ref.designation.json",
-    "tests/fixtures/endpoint-ledger-designation/kv-two-providers.designation.json",
-    "tests/fixtures/endpoint-ledger-designation/kv.designation.json",
-    "tests/fixtures/endpoint-ledger-designation/org-git-ref.designation.json",
-    "tests/fixtures/endpoint-ledger-designation/org-linked-receipts.json",
-    "tests/fixtures/endpoint-ledger-designation/skap.designation.json"
+    {
+      "path": "llm_adapter/endpoint_ledger_designation.py",
+      "semantic_responsibility": "Endpoint ledger designation (STEGVERSE_KV:<location>, cvk storage-endpoint keys, :intr-destination path ids, ENDPOINT_ORG_MEMBERSHIP_REFUSED, digest-only org crossing receipts).",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#431 @e9d45e6c llm_adapter/endpoint_ledger_designation.py (byte-identical copy)",
+      "decision": "REUSE",
+      "justification": "Byte copy so #432 reads designations with the exact #431 predicates; no cross-repo import or new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter#431 (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
+      ]
+    },
+    {
+      "path": "llm_adapter/supplied_epoch.py",
+      "semantic_responsibility": "SUPPLIED_HB_EPOCH observed_at for both-sides crossing records (clock-free).",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#431 @e9d45e6c llm_adapter/supplied_epoch.py (byte-identical copy)",
+      "decision": "REUSE",
+      "justification": "Byte copy so #432 reads designations with the exact #431 predicates; no cross-repo import or new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter#431 (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
+      ]
+    },
+    {
+      "path": ".stegverse/node-ledger/kv-ledger-head-signers.v1.json",
+      "semantic_responsibility": "KV_RECORDED_RECEIPT_CHAIN_HEAD signer file (public-key references only), sha256 758d7983.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#431 @e9d45e6c .stegverse/node-ledger/kv-ledger-head-signers.v1.json (byte-identical copy)",
+      "decision": "REUSE",
+      "justification": "Byte copy so #432 reads designations with the exact #431 predicates; no cross-repo import or new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter#431 (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
+      ]
+    },
+    {
+      "path": "tests/endpoint_ledger_designation_suite_431.py",
+      "semantic_responsibility": "#431's designation suite, rerun against #432's anchors by test_431_designation_suite_passes_against_432_anchors.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#431 @e9d45e6c tests/endpoint_ledger_designation_suite_431.py (byte-identical copy)",
+      "decision": "REUSE",
+      "justification": "Byte copy so #432 reads designations with the exact #431 predicates; no cross-repo import or new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter#431 (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
+      ]
+    },
+    {
+      "path": "tests/fixtures/endpoint-ledger-designation/kv-chain.json",
+      "semantic_responsibility": "Designation test fixture used by the #431 designation suite.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#431 @e9d45e6c tests/fixtures/endpoint-ledger-designation/kv-chain.json (byte-identical copy)",
+      "decision": "REUSE",
+      "justification": "Byte copy so #432 reads designations with the exact #431 predicates; no cross-repo import or new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter#431 (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
+      ]
+    },
+    {
+      "path": "tests/fixtures/endpoint-ledger-designation/kv-on-org-git-ref.designation.json",
+      "semantic_responsibility": "Designation test fixture used by the #431 designation suite.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#431 @e9d45e6c tests/fixtures/endpoint-ledger-designation/kv-on-org-git-ref.designation.json (byte-identical copy)",
+      "decision": "REUSE",
+      "justification": "Byte copy so #432 reads designations with the exact #431 predicates; no cross-repo import or new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter#431 (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
+      ]
+    },
+    {
+      "path": "tests/fixtures/endpoint-ledger-designation/kv-two-providers.designation.json",
+      "semantic_responsibility": "Designation test fixture used by the #431 designation suite.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#431 @e9d45e6c tests/fixtures/endpoint-ledger-designation/kv-two-providers.designation.json (byte-identical copy)",
+      "decision": "REUSE",
+      "justification": "Byte copy so #432 reads designations with the exact #431 predicates; no cross-repo import or new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter#431 (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
+      ]
+    },
+    {
+      "path": "tests/fixtures/endpoint-ledger-designation/kv.designation.json",
+      "semantic_responsibility": "Designation test fixture used by the #431 designation suite.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#431 @e9d45e6c tests/fixtures/endpoint-ledger-designation/kv.designation.json (byte-identical copy)",
+      "decision": "REUSE",
+      "justification": "Byte copy so #432 reads designations with the exact #431 predicates; no cross-repo import or new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter#431 (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
+      ]
+    },
+    {
+      "path": "tests/fixtures/endpoint-ledger-designation/org-git-ref.designation.json",
+      "semantic_responsibility": "Designation test fixture used by the #431 designation suite.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#431 @e9d45e6c tests/fixtures/endpoint-ledger-designation/org-git-ref.designation.json (byte-identical copy)",
+      "decision": "REUSE",
+      "justification": "Byte copy so #432 reads designations with the exact #431 predicates; no cross-repo import or new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter#431 (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
+      ]
+    },
+    {
+      "path": "tests/fixtures/endpoint-ledger-designation/org-linked-receipts.json",
+      "semantic_responsibility": "Designation test fixture used by the #431 designation suite.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#431 @e9d45e6c tests/fixtures/endpoint-ledger-designation/org-linked-receipts.json (byte-identical copy)",
+      "decision": "REUSE",
+      "justification": "Byte copy so #432 reads designations with the exact #431 predicates; no cross-repo import or new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter#431 (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
+      ]
+    },
+    {
+      "path": "tests/fixtures/endpoint-ledger-designation/skap.designation.json",
+      "semantic_responsibility": "Designation test fixture used by the #431 designation suite.",
+      "closest_existing_implementation": "StegVerse-org/LLM-adapter#431 @e9d45e6c tests/fixtures/endpoint-ledger-designation/skap.designation.json (byte-identical copy)",
+      "decision": "REUSE",
+      "justification": "Byte copy so #432 reads designations with the exact #431 predicates; no cross-repo import or new dependency.",
+      "canonical_owner": "StegVerse-org/LLM-adapter#431 (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/.github/issues/162",
+        "https://github.com/StegVerse-org/LLM-adapter/pull/431",
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263 @543e8c3267a4638d80130bf1052fb4cebd9b206a"
+      ]
+    }
   ]
 }
