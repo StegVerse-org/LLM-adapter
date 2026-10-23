@@ -286,6 +286,54 @@ class VerifiedInTrIsAdmittedTests(_OrgLedger):
         self.assert_unobserved(self.admit(signal("other-node"), cite), "INTR_BODY_IS_NOT_THE_SIGNAL")
 
 
+class CarrierBindingTests(_OrgLedger):
+    """Coordination ruling on #433 item (3): reuse for the same node at the same head is idempotent;
+    a carrier never admits a different node, and never outlives the node's dissolution."""
+
+    def dissolve(self, node_id, genesis="sha256:" + "d" * 64):
+        append(self.org, carrier.DISSOLVED_CLASS, f"{carrier.DISSOLVED_CLASS}:{node_id}:{genesis}",
+               {"schema": "stegverse.node-ledger-dissolution/v1", "node_id": node_id,
+                "genesis_receipt_sha256": genesis, "authority_effect": "NONE_TEST_FIXTURE"})
+
+    def test_same_node_same_head_is_idempotent(self):
+        report("intr-node")
+        cite = self.carry(signal())
+        first, second = self.admit(signal(), cite), self.admit(signal(), cite)
+        self.assertEqual((first["disposition"], second["disposition"]), ("ALLOW", "ALLOW"))
+        self.assertEqual(first["ingress_record"], second["ingress_record"])
+
+    def test_a_carrier_for_node_a_does_not_admit_node_b(self):
+        """(a) B is healthy on its own receipts; A's carrier still refuses it, six fields."""
+        report("node-a")
+        report("node-b")
+        cite = self.carry(signal("node-a"))
+        out = self.admit(signal("node-b"), cite)
+        self.assert_unobserved(out, "INTR_BODY_IS_NOT_THE_SIGNAL")
+        # Replaying A's exact signal admits A, never B: node_id comes from the carried body.
+        replay = self.admit(signal("node-a"), cite)
+        self.assertEqual(replay["disposition"], "ALLOW")
+        self.assertEqual(replay["ingress_record"]["node_endpoint"]["node_id"], "node-a")
+        admitted = [r["evidence"]["node_endpoint"]["node_id"] for r in self.ingress(boundary.ADMITTED_CLASS)]
+        self.assertEqual(admitted, ["node-a"])
+
+    def test_a_carrier_does_not_readmit_after_dissolution(self):
+        """(b) A pre-dissolution carrier is refused once NODE_LEDGER_DISSOLVED for the node is on the org ledger."""
+        report("intr-node")
+        cite = self.carry(signal(), publish=False)
+        self.dissolve("intr-node")
+        self.publish()
+        cite = {**cite, "org_ledger_head_receipt_sha256": self.head()}
+        self.assert_unobserved(self.admit(signal(), cite), "INTR_CARRIER_NODE_DISSOLVED")
+
+    def test_another_nodes_dissolution_does_not_refuse(self):
+        report("intr-node")
+        cite = self.carry(signal(), publish=False)
+        self.dissolve("someone-else")
+        self.publish()
+        out = self.admit(signal(), {**cite, "org_ledger_head_receipt_sha256": self.head()})
+        self.assertEqual(out["disposition"], "ALLOW", out.get("reason"))
+
+
 class HttpIsUnchangedTests(_OrgLedger):
     def test_http_admits_without_a_carrier_and_records_no_carrier(self):
         report("intr-node")

@@ -45,6 +45,8 @@ MESSAGE_CLASS = "ecosystem.communication"
 CAPABILITY = "intr-destination"
 ENDPOINT_KIND = "NODE_INGRESS_SIGNAL"
 SOURCE_INCLUSION = "READ_BACK_FROM_THE_ENDPOINT_LEDGER_AND_RETAINED"
+#: #432's dissolution class (endpoint_ledger_anchor.DISSOLVED_CLASS), reused by value.
+DISSOLVED_CLASS = "NODE_LEDGER_DISSOLVED"
 
 #: The six-field code and predicate for a transport that was named but not observed.
 FAILURE_CODE = "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED"
@@ -148,6 +150,15 @@ def verify(signal: Any, *, destination_receipt_sha256: Any, org_ledger_head_rece
                                                f"{sha(dict(signal))}")
     if sev.get("path_id") != path_id(signal.get("node_ref")):
         return "INTR_PATH_NOT_THE_SIGNALS", f"path {sev.get('path_id')!r} is not {path_id(signal.get('node_ref'))}"
+    # A carrier issued before the node's NODE_LEDGER_DISSOLVED does not outlive it:
+    # the chain is newest first, so anything ahead of the destination is later.
+    later = org_chain[:org_chain.index(destination)]
+    dissolved = next((r for r in later if r.get("transition_class") == DISSOLVED_CLASS
+                      and isinstance(r.get("evidence"), Mapping)
+                      and r["evidence"].get("node_id") == signal.get("node_ref")), None)
+    if dissolved is not None:
+        return "INTR_CARRIER_NODE_DISSOLVED", (f"{destination_receipt_sha256} predates NODE_LEDGER_DISSOLVED "
+                                               f"{dissolved.get('receipt_sha256')} for {signal.get('node_ref')!r}")
     return None
 
 
