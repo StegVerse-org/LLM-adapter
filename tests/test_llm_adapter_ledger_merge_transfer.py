@@ -567,7 +567,7 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
     intr_transport_carrier's own evidence builders (byte copy of #432/#433). Nothing touches the real ledger.
     """
 
-    CARRIER_SHA = "sha256:5c410dd3fddad854f41234a112574bb361ebd2c74362765292fc8480a689efa7"   # = #432/#433
+    CARRIER_SHA = "sha256:81ad9d3b42076c991443f3d79ec82c5f306eb8a8aa5f21228fe9faeb8b21aca6"   # = #432/#433
 
     def setUp(self):
         self.g = GenesisPinTransitionTests()
@@ -673,7 +673,7 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
                               contract_bytes=self.before)
                 self.assert_six(d, R.ENDPOINT_NOT_ORG_SOURCE)
                 self.assertEqual(d["failed_predicate"],
-                                 "NO_ENDPOINT_IS_AN_ORG_MEMBER_OR_A_SOURCE_OF_ORG_LEDGER_RECORDS")
+                                 "NO_ENDPOINT_IS_A_SOURCE_OF_ORG_LEDGER_RECORDS")
                 self.assertFalse(d["ledger_written"])
 
     def test_forged_or_off_chain_genesis_is_refused(self):
@@ -992,11 +992,28 @@ class GenesisPinContractPathTests(unittest.TestCase):
                                 contract_bytes=before)):
                 self.assertEqual((d["disposition"], d["failure_code"]),
                                  (M.FAIL_CLOSED, "ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE"), d)
-                self.assertEqual(d["failed_predicate"], "NO_ENDPOINT_IS_AN_ORG_MEMBER_OR_A_SOURCE_OF_ORG_LEDGER_RECORDS")
+                self.assertEqual(d["failed_predicate"], "NO_ENDPOINT_IS_A_SOURCE_OF_ORG_LEDGER_RECORDS")
                 for f in SIX:
                     self.assertTrue(isinstance(d[f], str) and d[f], f)
                 self.assertIsNone(d.get("contract_write"))
                 self.assertFalse(d["contract_written"])
+
+    def test_cvk_receipt_chain_contracts_are_endpoint_contracts_never_org_ledger_contracts(self):
+        """LC-KV-21 (P1 rev 10): cvk#263 @543e8c32's .stegverse/receipt-chains/ contracts are the endpoints' own;
+        naming one is six-field ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE and nothing is read (the checkout has no file)."""
+        empty = self.tmp / "empty-checkout"
+        empty.mkdir()
+        for rel in (".stegverse/receipt-chains/stegverse-kv-receipts.contract.json",
+                    ".stegverse/receipt-chains/skap-receipts.contract.json"):
+            self.assertIn(rel, P.ENDPOINT_CONTRACT_PATHS)
+            self.assertNotIn(rel, P.CONTRACT_PATHS)
+            for d in (P.plan(org_ledger=None, contract_path=rel, checkout=empty),
+                      R.receive({}, intr_carrier={}, org_ledger=None, contract_path=rel, checkout=empty)):
+                self.assertEqual((d["disposition"], d["failure_code"]),
+                                 (M.FAIL_CLOSED, "ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE"), d)
+                for f in SIX:
+                    self.assertTrue(isinstance(d[f], str) and d[f], f)
+                self.assertIn("own receipt-chain contract", d["required_evidence_or_repair"])
 
     def test_traversal_and_unlisted_contract_paths_are_refused_with_six_fields(self):
         checkout = self.cvk_checkout()

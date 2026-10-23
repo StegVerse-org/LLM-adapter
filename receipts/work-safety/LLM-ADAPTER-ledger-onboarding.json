@@ -182,7 +182,7 @@
     },
     {
       "path": "llm_adapter/intr_transport_carrier.py",
-      "semantic_responsibility": "Byte copy (sha256 5c410dd3) of #432/#433's InTr carrier verifier, so the pre-pin receiver reuses verify unchanged ahead of #433. 5c410dd3 adds a six-field INTR_SOURCE_EVIDENCE_INCOMPLETE refusal in place of a KeyError for a source half missing endpoint_kind or another rebuild field (LC-KV-20), mirrored byte-identically in #432 and #433.",
+      "semantic_responsibility": "Byte copy (sha256 81ad9d3b) of #432/#433's InTr carrier verifier, so the pre-pin receiver reuses verify unchanged ahead of #433. 5c410dd3 adds a six-field INTR_SOURCE_EVIDENCE_INCOMPLETE refusal in place of a KeyError for a source half missing endpoint_kind or another rebuild field (LC-KV-20), mirrored byte-identically in #432 and #433.",
       "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 and #433 llm_adapter/intr_transport_carrier.py (identical bytes)",
       "decision": "REUSE",
       "justification": "The receiver precedes GENESIS_PIN and #433 in ADMISSION_ORDER, so it brings the carrier module with it; identical bytes merge cleanly with #432/#433.",

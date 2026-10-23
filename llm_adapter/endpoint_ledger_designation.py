@@ -166,6 +166,19 @@ ORG_CROSSING_EVIDENCE_KEYS = frozenset({"schema", "path_id", "communication_id",
 ORG_CROSSING_BOUNDARY_KEYS = frozenset({"operation", "path_id", "communication_id", ENDPOINT_HEAD_KEY})
 #: keys that would make an endpoint the originator of an Org-chain record
 ORIGINATOR_KEYS = ("node_id", "node_ref", "originator", "author", "repository", "source_repository")
+#: LC-KV-25 (P1 rev 10, #163 comment 6373389075): no endpoint is a GitHub Organization member. The code and its
+#: predicate are Lane D's (StegVerse-Labs/continuity-vault-kit#263 @543e8c32 runtime/kv_receipt_ledgers.py
+#: MEMBERSHIP_CODE / org_membership_refused, predicate ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER; Lane C
+#: TVC#540/#542), and MEMBERSHIP_KEYS is that check's key set, unchanged. The binding is read only from the
+#: designation's own structural keys: no membership data source is consulted. Distinct from
+#: ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE (an endpoint emitting org-ledger records; Coordination's provisional ruling).
+MEMBERSHIP_CODE = "ENDPOINT_ORG_MEMBERSHIP_REFUSED"
+MEMBERSHIP_KEYS = frozenset({"org_member", "organization_member", "org_membership", "organization_membership",
+                             "membership", "member", "members", "team", "teams", "team_slug", "team_id",
+                             "installation", "installation_id", "app_installation", "github_app", "app_id",
+                             "app_slug", "collaborator", "collaborators", "org_role", "github_org"})
+MEMBERSHIP_GOAL = ("KV-SKAP-VAULT-FUNCTIONAL-001 (Lane D, StegVerse-Labs/continuity-vault-kit#263 @543e8c32 "
+                   "ENDPOINT_ORG_MEMBERSHIP_REFUSED; Lane C StegVerse-Labs/TVC#540/#542)")
 SIGNER_GOAL = "StegVerse-Labs/TVC#542 (kv_ledger_head_signer; ORG-LEDGER-HEAD-SIGNER-001 pattern)"
 ON_CHANGE = "on the admission of a corrected designation in the endpoint's own contract (event-triggered)"
 
@@ -185,8 +198,15 @@ CODES: Mapping[str, tuple[str, str, str, str, str]] = MappingProxyType({
         "on their KV storage endpoint, KV Storage Endpoint v2); it is never a git ref and never on "
         "refs/stegverse/organization-ledger", GOAL,
         ON_CHANGE, FAIL_CLOSED),
+    "ENDPOINT_ORG_MEMBERSHIP_REFUSED": (
+        "ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER",
+        "a designation with no org-membership, team or app-installation binding: no endpoint (KV, SKAP Vault, node "
+        "or gateway) is ever a GitHub Organization member; it reaches the Orgs only through InTr (intr-destination "
+        "path_ids)", MEMBERSHIP_GOAL,
+        "on an admitted change to the endpoint's own contract that removes the binding (event-triggered)",
+        FAIL_CLOSED),
     "ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE": (
-        "NO_ENDPOINT_IS_AN_ORG_MEMBER_OR_A_SOURCE_OF_ORG_LEDGER_RECORDS",
+        "NO_ENDPOINT_IS_A_SOURCE_OF_ORG_LEDGER_RECORDS",
         "no endpoint (KV, SKAP Vault, node or gateway, externally or ecosystem maintained) designates, writes or "
         "originates a record on refs/stegverse/organization-ledger: only endpoint_kind ORG is designated there; an "
         "endpoint keeps its own recorded receipt chain and its data crosses only through InTr, recorded at both ends, "
@@ -277,9 +297,34 @@ def _is_digest(value: Any) -> bool:
         and all(c in "0123456789abcdef" for c in value[7:])
 
 
+def org_membership_binding(designation: Any) -> str | None:
+    """Why an endpoint designation binds the endpoint as an Org member (a MEMBERSHIP_KEYS key at any depth), or None.
+
+    The ORG designation is the Org's own and is not an endpoint. Structural keys only; nothing else is read. Pure."""
+    if not isinstance(designation, Mapping) or designation.get("endpoint_kind") == ORG:
+        return None
+
+    def walk(node: Any, path: str) -> str | None:
+        items = node.items() if isinstance(node, Mapping) else enumerate(node) if isinstance(node, list) else ()
+        for k, v in items:
+            if isinstance(k, str) and k.lower() in MEMBERSHIP_KEYS:
+                return f"{path}{k} is an org-membership, team or app-installation binding"
+            hit = walk(v, f"{path}{k}.")
+            if hit:
+                return hit
+        return None
+    return walk(designation, "")
+
+
 def designation_failure(designation: Any) -> dict[str, Any] | None:
-    """Six-field refusal unless `designation` is well formed for its endpoint kind. Pure."""
+    """Six-field refusal unless `designation` is well formed for its endpoint kind. Pure.
+
+    An Org-membership, team or app-installation binding is refused first (ENDPOINT_ORG_MEMBERSHIP_REFUSED), before
+    the exact-key shape check would call it merely invalid."""
     d = designation
+    member = org_membership_binding(d)
+    if member:
+        return refusal(MEMBERSHIP_CODE, f"{d.get('endpoint_kind')} {d.get('endpoint_id')!r}: {member}")
     if not isinstance(d, Mapping) or tuple(sorted(d)) != DESIGNATION_KEYS or d.get("schema") != SCHEMA \
             or not isinstance(d.get("endpoint_id"), str) or not d["endpoint_id"] \
             or d.get("endpoint_kind") not in STORE_TYPE_OF or not isinstance(d.get("genesis_class"), str) \
@@ -609,7 +654,7 @@ def read_designated(designation: Any, *, source: Any, head_attestation: Any = No
         yield (None, failed) if failed else (chain, None)
 
 
-__all__ = ["CODES", "KV_STORAGE_ENDPOINT", "GIT_REF", "READERS", "SCHEMA", "SINGLE_PROVIDER_V1", "STORE_TYPES",
+__all__ = ["CODES", "KV_STORAGE_ENDPOINT", "GIT_REF", "MEMBERSHIP_CODE", "MEMBERSHIP_KEYS", "org_membership_binding", "READERS", "SCHEMA", "SINGLE_PROVIDER_V1", "STORE_TYPES",
            "chain_admission_failure", "chain_failure", "crossing_failure", "designation_failure", "kv_head_attestation_body",
            "kv_head_attestation_message", "kv_head_failure", "load_head_signers", "org_recorded_endpoint_heads",
            "read_designated", "refusal", "rollback_failure", "select_store", "store_location"]

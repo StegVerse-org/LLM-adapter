@@ -68,11 +68,18 @@ CONTRACT_PATHS = (CONTRACT_REL,)
 #: StegVerse-org/.github#160 comment 6372871021), and cvk#263 @706877b6 moved both to STEGVERSE_KV's own recorded
 #: receipt chains (_StegVerse/Receipts, _Vault/SKAP/Receipts; KV_RECEIPT_CHAIN_DESIGNATED_ON_ORG_LEDGER there).
 #: Naming one here is six-field FAIL_CLOSED ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE; nothing is read or planned.
+#: LC-KV-21 (P1 rev 10): cvk#263 @543e8c32 documents KV's and the SKAP Vault's own receipt-chain contracts at
+#: .stegverse/receipt-chains/ (runtime/kv_receipt_ledgers.py RECEIPT_LEDGERS contract_path; docs/kv-skap-ledger-
+#: location.md "Where the chains live"). They are allowlisted here as endpoint contracts only: naming one is the same
+#: six-field ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE, never read or planned as an org-ledger contract. The endpoint's chain is
+#: read only from its designation (llm_adapter/endpoint_ledger_designation.py, STEGVERSE_KV:<location>).
 ENDPOINT_CONTRACT_PATHS = (".stegverse/receipt-ledgers/01_KV_Ledger.contract.json",
-                           ".stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json")
+                           ".stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json",
+                           ".stegverse/receipt-chains/stegverse-kv-receipts.contract.json",
+                           ".stegverse/receipt-chains/skap-receipts.contract.json")
 ENDPOINT_REPOSITORY_PREFIXES = ("_StegVerse-org/", "STEGVERSE_KV", "_StegVerse/", "_Vault/")
 ENDPOINT_NOT_ORG_SOURCE = "ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE"
-ENDPOINT_NOT_ORG_SOURCE_PREDICATE = "NO_ENDPOINT_IS_AN_ORG_MEMBER_OR_A_SOURCE_OF_ORG_LEDGER_RECORDS"
+ENDPOINT_NOT_ORG_SOURCE_PREDICATE = "NO_ENDPOINT_IS_A_SOURCE_OF_ORG_LEDGER_RECORDS"
 CONTRACT_SCHEMA = "stegverse.repo-transition-ledger-contract/v1"
 ORG_LEDGER_REPOSITORY, ORG_LEDGER_REF = "StegVerse-org/.github", "refs/stegverse/organization-ledger"
 TRANSITION_CLASS = "REPOSITORY_LEDGER_GENESIS_PIN"
@@ -275,9 +282,12 @@ def contract_path_failure(contract_path: Any) -> str | None:
 
 def endpoint_contract_failure(contract_path: Any, contract: Any = None) -> str | None:
     """Why the target is an endpoint's ledger on the org ledger (never planned), or None. Pure."""
-    if contract_path in ENDPOINT_CONTRACT_PATHS:
+    if contract_path in ENDPOINT_CONTRACT_PATHS[:2]:
         return (f"{contract_path} designates an endpoint's ledger on {ORG_LEDGER_REF} (continuity-vault-kit#263 "
                 "@20451a0c, superseded at @706877b6 by STEGVERSE_KV's own recorded receipt chains)")
+    if contract_path in ENDPOINT_CONTRACT_PATHS:
+        return (f"{contract_path} is an endpoint's own receipt-chain contract (continuity-vault-kit#263 @543e8c32), "
+                f"read only from that endpoint's designation, never as a {ORG_LEDGER_REF} contract")
     repository = contract.get("repository") if isinstance(contract, Mapping) else None
     if isinstance(repository, str) and repository.startswith(ENDPOINT_REPOSITORY_PREFIXES):
         return f"the contract names endpoint {repository!r}, whose ledger is never on {ORG_LEDGER_REF}"

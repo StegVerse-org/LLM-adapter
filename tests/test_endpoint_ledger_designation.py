@@ -324,7 +324,7 @@ class BothSidesRecordTests(Base):
                 got = eld.crossing_failure(self.chain, [by_kv], self.kv)
                 self.assert_six(got, "ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE")
                 self.assertEqual(got["failed_predicate"],
-                                 "NO_ENDPOINT_IS_AN_ORG_MEMBER_OR_A_SOURCE_OF_ORG_LEDGER_RECORDS")
+                                 "NO_ENDPOINT_IS_A_SOURCE_OF_ORG_LEDGER_RECORDS")
         self.assertIsNone(eld.crossing_failure(self.chain, self.org_chain, self.kv))
 
     def test_a_node_ledger_is_never_designated_on_the_org_ledger(self):
@@ -370,6 +370,63 @@ class BothSidesRecordTests(Base):
         stamped = [dict(r) for r in self.chain]
         stamped[0] = self.reseal(stamped[0], observed_at="2026-10-23T19:00:00+00:00")
         self.assert_six(eld.crossing_failure(stamped, [self.org_chain[2]], self.kv), "HB_EPOCH_INVALID")
+
+
+class OrgMembershipTests(Base):
+    """LC-KV-25 (P1 rev 10): no endpoint is a GitHub Organization member. Lane D's code, predicate and key set
+    (StegVerse-Labs/continuity-vault-kit#263 @543e8c32 runtime/kv_receipt_ledgers.py org_membership_refused)."""
+    CVK_543E8C32_MEMBERSHIP_KEYS = {
+        "org_member", "organization_member", "org_membership", "organization_membership", "membership", "member",
+        "members", "team", "teams", "team_slug", "team_id", "installation", "installation_id", "app_installation",
+        "github_app", "app_id", "app_slug", "collaborator", "collaborators", "org_role", "github_org"}
+
+    def test_the_code_predicate_and_keys_are_lane_ds(self):
+        self.assertEqual(eld.MEMBERSHIP_CODE, "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
+        self.assertEqual(eld.CODES[eld.MEMBERSHIP_CODE][0], "ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER")
+        self.assertEqual(set(eld.MEMBERSHIP_KEYS), self.CVK_543E8C32_MEMBERSHIP_KEYS)
+        self.assertNotEqual(eld.CODES[eld.MEMBERSHIP_CODE][0], eld.CODES["ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE"][0])
+
+    def test_a_membership_team_or_app_installation_binding_is_refused_with_six_fields(self):
+        for name in ("kv.designation.json", "skap.designation.json"):
+            base = load(name)
+            for where, key, edit in (
+                    ("top", "org_membership", lambda d: d.update(org_membership={"org": "StegVerse-org"})),
+                    ("top", "team_slug", lambda d: d.update(team_slug="kv-team")),
+                    ("store", "installation_id", lambda d: d["stores"][0].update(installation_id="1")),
+                    ("store", "github_app", lambda d: d["stores"][0].update(github_app="kv")),
+                    ("watermark", "Members", lambda d: d["rollback_watermark_source"].update(Members=["kv"]))):
+                with self.subTest(name=name, key=key):
+                    d = copy.deepcopy(base)
+                    edit(d)
+                    got = eld.designation_failure(d)
+                    self.assert_six(got, "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
+                    self.assertEqual(got["failed_predicate"], "ENDPOINT_NOT_A_GITHUB_ORGANIZATION_MEMBER")
+                    self.assertIn(key, got["required_evidence_or_repair"])
+                    with eld.read_designated(d, source=None, org_chain=self.org_chain) as (chain, failed):
+                        self.assertIsNone(chain)
+                        self.assertEqual(failed["failure_code"], "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
+        node = {**load("org-git-ref.designation.json"), "endpoint_kind": "PERMANENT", "endpoint_id": "node-1",
+                "team": "x"}
+        self.assert_six(eld.designation_failure(node), "ENDPOINT_ORG_MEMBERSHIP_REFUSED")
+        # the Org's own designation is not an endpoint; the unbound fixtures pass
+        for name in ("kv.designation.json", "skap.designation.json", "org-git-ref.designation.json"):
+            self.assertIsNone(eld.org_membership_binding(load(name)))
+            self.assertIsNone(eld.designation_failure(load(name)))
+
+    def test_a_valid_both_sides_crossing_fires_neither_endpoint_code(self):
+        """Coordination ruling (crossings): the endpoint's side is in its own chain, the Org records only its own side,
+        digest-only. That is not a ledger source; neither code fires."""
+        self.assertIsNone(eld.crossing_failure(self.chain, self.org_chain, self.kv))
+        self.assertIsNone(eld.designation_failure(self.kv))
+        for org in self.org_chain:
+            self.assertIsNone(eld.org_crossing_receipt_failure(org, self.kv))
+        with self.lane_d_reader_stub(self.chain), \
+                mock.patch.object(eld, "load_head_signers", return_value=fixture_signers()):
+            with eld.read_designated(self.kv, source=None, org_chain=self.org_chain,
+                                     head_attestation=attest(self.kv, self.chain)) as (chain, failed):
+                text = json.dumps(failed)
+        for code in ("ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE", "ENDPOINT_ORG_MEMBERSHIP_REFUSED"):
+            self.assertNotIn(code, text)
 
 
 class DeterminismTests(unittest.TestCase):
