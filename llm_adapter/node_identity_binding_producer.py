@@ -134,6 +134,9 @@ def plan(existence_receipt_sha256: Any, identity_claim: Any, profile: Any, *, le
             or key.get("node_id") != node_id or key.get("custody") != KEY_CUSTODY
             or not isinstance(key.get("key_id"), str) or not key["key_id"]):
         return _fail("KEY_REFERENCE_INVALID", "profile node_identity_key is missing or does not name this node", node_id)
+    if key != (ev.get("observation") or {}).get("node_identity_key"):
+        return _fail("KEY_REFERENCE_INVALID", "profile node_identity_key differs from the one the existence "
+                     "read-back recorded", node_id)
     key_ref = {"algorithm": ALGORITHM, "key_id": key["key_id"],
                "public_key_sha256": "sha256:" + hashlib.sha256(public_key).hexdigest()}
 

@@ -26,6 +26,9 @@ FAIL_CLOSED, with six fields and nothing appended, when any of these is true:
 * the observation isn't an ALLOW from an independent public HTTPS read with no
   credential;
 * `node_ref` isn't a retained Node reference;
+* the observation carries no well-formed `node_identity_key` public-key reference
+  naming `node_ref`. Every node read back here seeks KV standing, so the key is
+  REQUIRED (the same rule StegOS enforces at its read-back for KV standing);
 * the chain doesn't read back.
 
 The broker hash proves integrity, not authenticity, so the receipt records
@@ -83,6 +86,12 @@ REASONS: dict[str, tuple[str, str]] = {
                             f"from {OBSERVATION_ORIGIN}, credential_used false, with a profile URL and profile_sha256"),
     "OBSERVATION_NOT_ALLOW": (TRANSITION_CLASS, "a reciprocal-existence observation whose disposition is ALLOW"),
     "NODE_REF_INVALID": (TRANSITION_CLASS, "a broker receipt whose node_ref names a retained Node (SV-NODE-...)"),
+    "NODE_IDENTITY_KEY_NOT_PUBLISHED": (
+        "NODE_IDENTITY_KEY_REFERENCE_PUBLISHED_FOR_KV_STANDING",
+        "an observation of a profile that publishes node_identity_key with exactly {algorithm: Ed25519, key_id, "
+        "node_id equal to the broker node_ref, public_key_b64: a 32-byte Ed25519 public key, custody: TV/TVC}, "
+        "a public key reference only, observed by StegOS with standing_request KV_STANDING or a declared "
+        "KV_STANDING purpose"),
 }
 
 _HEX = re.compile(r"^[0-9a-f]{64}$")
@@ -147,6 +156,12 @@ def plan(broker_receipt: Any, *, ledger_root: Any, repository: str = REPOSITORY)
         return _fail(reason, detail, node_ref)
     if not isinstance(node_ref, str) or not node_ref.startswith("SV-NODE-") or len(node_ref) <= len("SV-NODE-"):
         return _fail("NODE_REF_INVALID", f"node_ref {node_ref!r}")
+    key = result.get("node_identity_key")
+    key_failure = "node_identity_key_required_for_kv_standing" if key is None else common.node_identity_key_failure(key)
+    if key_failure is None and key["node_id"] != node_ref:
+        key_failure = "node_identity_key_node_id_not_broker_node_ref"
+    if key_failure:
+        return _fail("NODE_IDENTITY_KEY_NOT_PUBLISHED", key_failure, node_ref)
     chain, failure, detail = common.read_chain(ledger_root, repository, allow_empty=True)
     if failure:
         return _fail(failure, detail, node_ref)
@@ -181,6 +196,8 @@ def plan(broker_receipt: Any, *, ledger_root: Any, repository: str = REPOSITORY)
             "profile_sha256": result["profile_sha256"],
             "required_profile": result["required_profile"],
             "credential_used": False,
+            "standing_request": common.KV_STANDING,
+            "node_identity_key": dict(key),
         },
         "identity_established": False,
         "health_established": False,

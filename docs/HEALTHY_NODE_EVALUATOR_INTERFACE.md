@@ -111,4 +111,6 @@ Every producer has the same shape: `plan(...)` is the deterministic, read-only c
 
 **Signatures.** The signed bytes are `<schema>\n` followed by the canonical JSON of the object without `signature_b64`. `llm_adapter.ed25519_verify` verifies only; it has no signing function, and any input field named like private key material is refused.
 
-**Requirement on real inputs.** The node's public InTr profile must publish `node_identity_key`. StegOS's profile validator allows the field but doesn't require it.
+**node_identity_key is REQUIRED (KV standing).** Every node read back here seeks KV standing. The existence read-back therefore refuses, with reason `NODE_IDENTITY_KEY_NOT_PUBLISHED` (failed_predicate `NODE_IDENTITY_KEY_REFERENCE_PUBLISHED_FOR_KV_STANDING`), any observation that doesn't carry a well-formed `node_identity_key` naming the broker `node_ref`. Well-formed means exactly {algorithm Ed25519, key_id, node_id, public_key_b64 (32 bytes), custody TV/TVC}.
+- This is the same rule StegOS enforces at its own read-back for KV standing (StegVerse-Labs/StegOS `laneb/node-identity-key-reference`). StegOS requires the key when the profile declares `KV_STANDING` in `declared_purposes` or the observation is requested with `standing_request: KV_STANDING`; for every other node it stays optional.
+- The recorded key is carried in the existence evidence. The binding producer refuses a profile whose key differs from it.

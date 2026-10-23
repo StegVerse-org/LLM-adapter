@@ -3,15 +3,15 @@
 
     STEGOS_ROOT=/path/to/StegOS python3 tests/fixtures/node_receipts/generate_with_stegos.py
 
-It uses StegOS @e63f7e89 (StegVerse-Labs/StegOS). The run is:
+It uses StegOS laneb/node-identity-key-reference (StegVerse-Labs/StegOS, on e63f7e89). The run is:
 * register_reciprocal_node_existence_capability on NodeEventExecutionBroker;
 * build_request and execute;
 * the fixtures of StegOS tests/test_node_event_execution_broker.py.
 The only substitution is the HTTPS reader. A fixed profile document
 (stegos_observed_profile.json) stands in for the network read, so nothing is
-fetched. The profile adds `node_identity_key` carrying the TEST-ONLY public key
-from tests/ed25519_test_signer.py. StegOS's profile validator allows the extra
-field.
+fetched. The profile publishes `node_identity_key` carrying the TEST-ONLY public key
+from tests/ed25519_test_signer.py and declares the KV_STANDING purpose; the
+invocation also passes standing_request KV_STANDING, so StegOS enforces the key.
 """
 import json
 import os
@@ -33,7 +33,8 @@ request = broker.build_request(
     task_id="KV-SKAP-VAULT-FUNCTIONAL-001", cosv="71000000100110", materialization=_materialization(),
     retained_node=_node(), worker_claim=_claim(), runtime_admission=_runtime_admission(),
     capability_adapter=RECIPROCAL_EXISTENCE_CAPABILITY_ADAPTER,
-    invocation={"profile_url": "https://node.example.invalid/intr/profile", "required_profile": "NodeExchange:Existence"})
+    invocation={"profile_url": "https://node.example.invalid/intr/profile", "required_profile": "NodeExchange:Existence",
+                "standing_request": "KV_STANDING"})
 receipt = broker.execute(request)
 (HERE / "stegos_existence_broker_receipt.json").write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n")
 print(receipt["receipt_hash"])

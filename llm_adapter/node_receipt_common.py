@@ -21,6 +21,7 @@ import base64
 import binascii
 import importlib.util
 import json
+import re
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -109,6 +110,35 @@ def b64(value: Any) -> bytes | None:
         return base64.b64decode(value, validate=True)
     except (binascii.Error, ValueError):
         return None
+
+
+#: node_identity_key public-key reference rule, mirrored from StegOS stegos/universal_intr_public_profile.py
+#: (StegVerse-Labs/StegOS laneb/node-identity-key-reference). REQUIRED for KV standing, which is every node this
+#: repository admits through POST /api/node-standing.
+NODE_IDENTITY_KEY_FIELDS = frozenset({"algorithm", "key_id", "node_id", "public_key_b64", "custody"})
+KV_STANDING = "KV_STANDING"
+_NODE_ID = re.compile(r"^SV-NODE-[0-9A-Za-z]{8,64}$")
+_KEY_ID = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+
+
+def node_identity_key_failure(key: Any) -> str | None:
+    """Why `key` is not a well-formed public-key reference (StegOS predicate names), or None."""
+    if not isinstance(key, Mapping):
+        return "node_identity_key_object_required"
+    if set(key) != NODE_IDENTITY_KEY_FIELDS:
+        return "node_identity_key_fields_invalid"
+    if key.get("algorithm") != "Ed25519":
+        return "node_identity_key_algorithm_invalid"
+    if not isinstance(key.get("key_id"), str) or not _KEY_ID.match(key["key_id"]):
+        return "node_identity_key_key_id_invalid"
+    if not isinstance(key.get("node_id"), str) or not _NODE_ID.match(key["node_id"]):
+        return "node_identity_key_node_id_invalid"
+    if key.get("custody") != "TV/TVC":
+        return "node_identity_key_custody_invalid"
+    public = b64(key.get("public_key_b64"))
+    if public is None or len(public) != 32:
+        return "node_identity_key_public_key_invalid"
+    return None
 
 
 def credential_fields(value: Any, path: str = "$") -> list[str]:

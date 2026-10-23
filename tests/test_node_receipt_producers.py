@@ -14,6 +14,7 @@ written, and nothing is dispatched.
 from __future__ import annotations
 
 import ast
+import base64
 import copy
 import hashlib
 import json
@@ -200,6 +201,18 @@ class ExistenceReadbackTests(_Ledger):
             "broker minted a claim": (mutate(lambda r: r.update(claim_or_fence_minted_by_broker=True)),
                                       "BROKER_RECEIPT_INVALID"),
             "wrong schema": (mutate(lambda r: r.update(schema="stegos.other/v1")), "BROKER_RECEIPT_INVALID"),
+            "no node_identity_key (KV standing requires it)": (
+                mutate(lambda r: r["result"].pop("node_identity_key")), "NODE_IDENTITY_KEY_NOT_PUBLISHED"),
+            "key carries private material": (mutate(lambda r: r["result"]["node_identity_key"].update(
+                private_key_b64="AAAA")), "NODE_IDENTITY_KEY_NOT_PUBLISHED"),
+            "key names another node": (mutate(lambda r: r["result"]["node_identity_key"].update(
+                node_id="SV-NODE-ffffffffffffffffffffffff")), "NODE_IDENTITY_KEY_NOT_PUBLISHED"),
+            "key is not Ed25519": (mutate(lambda r: r["result"]["node_identity_key"].update(algorithm="RSA")),
+                                   "NODE_IDENTITY_KEY_NOT_PUBLISHED"),
+            "public key is 31 bytes": (mutate(lambda r: r["result"]["node_identity_key"].update(
+                public_key_b64=base64.b64encode(b"x" * 31).decode())), "NODE_IDENTITY_KEY_NOT_PUBLISHED"),
+            "custody is not TVC": (mutate(lambda r: r["result"]["node_identity_key"].update(custody="NODE")),
+                                   "NODE_IDENTITY_KEY_NOT_PUBLISHED"),
             "not an object": ("receipt", "BROKER_RECEIPT_INVALID"),
             "nothing": (None, "BROKER_RECEIPT_INVALID"),
         }
@@ -207,6 +220,18 @@ class ExistenceReadbackTests(_Ledger):
             with self.subTest(name):
                 self.refused_without_writing(lambda: readback.produce(receipt, ledger_root=self.root), reason,
                                              "NODE_EXISTENCE_NOT_READ_BACK")
+
+    def test_key_rule_matches_stegos_and_is_recorded(self):
+        out = readback.plan(BROKER, ledger_root=self.root)
+        self.assertEqual(out["disposition"], "ALLOW", out)
+        recorded = out["receipt_evidence"]["observation"]
+        self.assertEqual(recorded["node_identity_key"], PROFILE["node_identity_key"])
+        self.assertEqual(recorded["standing_request"], "KV_STANDING")
+        missing = reseal({**copy.deepcopy(BROKER), "result": {k: v for k, v in BROKER["result"].items()
+                                                                if k != "node_identity_key"}})
+        refused = readback.plan(missing, ledger_root=self.root)
+        self.assert_fail_closed(refused, "NODE_IDENTITY_KEY_NOT_PUBLISHED", "NODE_EXISTENCE_NOT_READ_BACK")
+        self.assertEqual(refused["failed_predicate"], "NODE_IDENTITY_KEY_REFERENCE_PUBLISHED_FOR_KV_STANDING")
 
     def test_broken_chain_fails_closed(self):
         self.exist()

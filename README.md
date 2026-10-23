@@ -30,7 +30,7 @@ Manifest validity is the SDK's to decide; the adapter delegates to `stegverse.ma
 
 **The three input producers.** Each fires on an event and is six-field FAIL_CLOSED on anything unreceipted or unverifiable. None of them reads a clock or the network in its deterministic `plan()` core.
 - `llm_adapter.node_existence_readback` reads a StegOS `observe-reciprocal-node-existence` broker receipt back into an `AUTHENTICATED_RECIPROCAL_NODE_EXISTENCE` receipt. `node_id` is the broker receipt's `node_ref`.
-- `llm_adapter.node_identity_binding_producer` writes `NODE_IDENTITY_BINDING`. It checks the node's Ed25519 signature against the key reference published in the reciprocally observed profile (verification only, in `llm_adapter.ed25519_verify`). It never holds or mints a credential.
+- `llm_adapter.node_identity_binding_producer` writes `NODE_IDENTITY_BINDING`. It checks the node's Ed25519 signature against the key reference published in the reciprocally observed profile (verification only, in `llm_adapter.ed25519_verify`). It never holds or mints a credential. The existence read-back requires the observation to carry a well-formed `node_identity_key` naming the node, because every node admitted here seeks KV standing (the same rule as StegOS).
 - `llm_adapter.node_health_check_projection` turns a StegHealth `sovereign-runtime-observation/v1`, attested by the bound node key, into `stegverse.node-health-check/v1` `NODE_HEALTH_CHECK_OBSERVED`.
 
 Until this repository's ledger location (`repository-ledger/StegVerse-org/LLM-adapter` on the org ledger ref) is onboarded, these producers run on temporary ledgers in tests only.
