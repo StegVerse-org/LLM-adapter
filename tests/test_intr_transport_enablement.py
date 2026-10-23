@@ -7,7 +7,11 @@ ORGANIZATION_INTR_DESTINATION_INGRESS at #431's location, body digest = signal
 digest) reads back and verifies is admitted. HTTP is unchanged.
 
 The organization ledger is a scratch bare git object store with fixed dates; the
-contract is #432's copy of #431's designation. No network, no clock in the core.
+contract is #432's copy of #431's designation plus the pinned org genesis
+(contract_with_431_location_and_pinned_genesis.json). Each test_ method runs inside
+tests/org_ledger_harness.append_route(), the TEST-ONLY stand-in for the admitted
+org-ledger append route (shared byte-identical with #432); without it every
+carrier is refused MERGE_APPEND_PATH_NOT_ADMITTED. No network, no clock in the core.
 """
 from __future__ import annotations
 
@@ -16,6 +20,7 @@ import glob
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -26,6 +31,7 @@ from llm_adapter import healthy_node_evaluator as hne
 from llm_adapter import intr_transport_carrier as carrier
 from llm_adapter import node_ingress_boundary as boundary
 from llm_adapter import org_ledger_location as location
+from tests import org_ledger_harness as harness
 from tests.healthy_node_reports import report
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -81,12 +87,10 @@ class _OrgLedger(unittest.TestCase):
         self.git = base / "org-object-store.git"
         self.node = base / "node-ledger"
         subprocess.run(["git", "init", "-q", "--bare", str(self.git)], check=True, env=GIT_ENV)
-        patcher = mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431)
+        patcher = mock.patch.object(location, "CONTRACT_PATH", harness.CONTRACT_PINNED)
         patcher.start()
         self.addCleanup(patcher.stop)
-        append(self.org, location.GENESIS_CLASS, "REPOSITORY_LEDGER_INITIALIZATION:test-fixture",
-               {"schema": "stegverse.repository-ledger-initialization/v1", "repository": carrier.REPOSITORY,
-                "authority_effect": "NONE_TEST_FIXTURE"}, 32)
+        harness.write_genesis(self.org)      # the genesis the contract fixture pins
         previous = os.environ.get("STEGVERSE_REPO_LEDGER_ROOT")
         os.environ["STEGVERSE_REPO_LEDGER_ROOT"] = str(self.node)
 
@@ -136,6 +140,12 @@ class _OrgLedger(unittest.TestCase):
         return {"destination_receipt_sha256": dest["receipt_sha256"], "org_ledger_head_receipt_sha256": self.head()}
 
     def admit(self, sig, cite, **kw):
+        """Inside append_route(), the route attests the store as published now (unless the cite carries one)."""
+        if isinstance(cite, dict) and "org_ledger_head_attestation" not in cite and location.load_head_signers():
+            try:
+                cite = {**cite, "org_ledger_head_attestation": harness.attest(self.git)}
+            except subprocess.CalledProcessError:
+                pass
         return boundary.admit(sig, transport=boundary.INTERLOCK_INTR, intr_carrier=cite,
                               org_ledger_git_dir=str(self.git), **kw)
 
@@ -143,7 +153,7 @@ class _OrgLedger(unittest.TestCase):
         found = [json.loads(Path(p).read_text()) for p in glob.glob(str(self.node / "receipts" / "*.json"))]
         return [r for r in found if r["transition_class"] == transition_class]
 
-    def assert_unobserved(self, out, reason=None):
+    def assert_unobserved(self, out, reason=None, refusals=1):
         self.assertEqual(out["disposition"], "FAIL_CLOSED")
         self.assertEqual(out["failed_stage"], boundary.STAGE_TRANSPORT)
         self.assertEqual(out["failure_code"], "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED")
@@ -158,11 +168,12 @@ class _OrgLedger(unittest.TestCase):
         self.assertEqual(record["failure_code"], "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED")
         self.assertIs(out["healthy_node_established"], False)
         self.assertEqual(self.ingress(boundary.ADMITTED_CLASS), [])
-        self.assertEqual(len(self.ingress(boundary.REFUSED_CLASS)), 1)
+        self.assertEqual(len(self.ingress(boundary.REFUSED_CLASS)), refusals)
         if reason:
             self.assertTrue(out["reason"].startswith(reason + ":"), out["reason"])
 
 
+@harness.with_append_route
 class UnverifiedInTrIsRefusedTests(_OrgLedger):
     def test_named_only(self):
         report("intr-node")
@@ -253,6 +264,7 @@ class UnverifiedInTrIsRefusedTests(_OrgLedger):
                          "INTR_DESTINATION_NOT_AN_INGRESS")
 
 
+@harness.with_append_route
 class VerifiedInTrIsAdmittedTests(_OrgLedger):
     def test_verified_pair_is_admitted(self):
         report("intr-node")
@@ -286,6 +298,7 @@ class VerifiedInTrIsAdmittedTests(_OrgLedger):
         self.assert_unobserved(self.admit(signal("other-node"), cite), "INTR_BODY_IS_NOT_THE_SIGNAL")
 
 
+@harness.with_append_route
 class CarrierBindingTests(_OrgLedger):
     """Coordination ruling on #433 item (3): reuse for the same node at the same head is idempotent;
     a carrier never admits a different node, and never outlives the node's dissolution."""
@@ -334,6 +347,58 @@ class CarrierBindingTests(_OrgLedger):
         self.assertEqual(out["disposition"], "ALLOW", out.get("reason"))
 
 
+class OrgLedgerStoreIsAuthenticatedTests(_OrgLedger):
+    """LC-KV-16 rev 5 mirrored from #432: a carrier is read only from an authenticated org-ledger store."""
+
+    def test_production_refuses_every_carrier_until_the_append_route_is_admitted(self):
+        self.assertEqual(location.load_head_signers(), [])
+        report("intr-node")
+        cite = self.carry(signal())
+        out = self.admit(signal(), cite)
+        self.assert_unobserved(out, "MERGE_APPEND_PATH_NOT_ADMITTED")
+        self.assertEqual(self.ingress(boundary.ADMITTED_CLASS), [])
+        with harness.append_route():
+            self.assertEqual(self.admit(signal(), cite)["disposition"], "ALLOW")
+
+    def test_a_caller_created_store_is_refused(self):
+        report("intr-node")
+        cite = self.carry(signal())
+        with harness.append_route():
+            route = harness.attest(self.git)
+            # the caller's own store: the real chain copied, plus its own carrier for the same signal
+            base = Path(self._t.name) / "caller"
+            shutil.copytree(self.tree, base / "tree")
+            self.tree, self.org, real_git = base / "tree", base / "tree/repository-ledger/StegVerse-org/LLM-adapter", self.git
+            self.git = base / "store.git"
+            subprocess.run(["git", "init", "-q", "--bare", str(self.git)], check=True, env=GIT_ENV)
+            forged = self.carry(signal())
+            cases = ((None, "absent"), (route, "the real store's, replayed"),
+                     (harness.attest(self.git, seed=b"\x01" * 32), "signed by the caller under the route's key_id"))
+            for n, (attestation, name) in enumerate(cases, 1):
+                with self.subTest(name):
+                    self.assert_unobserved(self.admit(signal(), {**forged, "org_ledger_head_attestation": attestation}),
+                                           "ORG_LEDGER_HEAD_NOT_AUTHENTICATED", refusals=n)
+            # the route's store still admits the real carrier
+            self.git = real_git
+            self.assertEqual(self.admit(signal(), cite)["disposition"], "ALLOW")
+
+    def test_a_store_with_its_own_genesis_is_refused(self):
+        report("intr-node")
+        base = Path(self._t.name) / "minted"
+        self.tree, self.org = base / "tree", base / "tree/repository-ledger/StegVerse-org/LLM-adapter"
+        self.git = base / "store.git"
+        subprocess.run(["git", "init", "-q", "--bare", str(self.git)], check=True, env=GIT_ENV)
+        append(self.org, location.GENESIS_CLASS, "REPOSITORY_LEDGER_INITIALIZATION:caller",
+               {"schema": "stegverse.repository-ledger-initialization/v1", "repository": carrier.REPOSITORY,
+                "authority_effect": "NONE_TEST_FIXTURE"}, 32)
+        cite = self.carry(signal())
+        with harness.append_route():
+            self.assert_unobserved(self.admit(signal(), cite), "ORG_LEDGER_GENESIS_MISMATCH")
+        with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431), harness.append_route():
+            self.assert_unobserved(self.admit(signal(), cite), "ORG_LEDGER_GENESIS_NOT_PINNED", refusals=2)
+
+
+@harness.with_append_route
 class HttpIsUnchangedTests(_OrgLedger):
     def test_http_admits_without_a_carrier_and_records_no_carrier(self):
         report("intr-node")
@@ -363,10 +428,24 @@ class InvariantTests(unittest.TestCase):
         digest = hashlib.sha256((ROOT / "llm_adapter/healthy_node_evaluator.py").read_bytes()).hexdigest()
         self.assertEqual(digest, EVALUATOR_SHA256)
 
-    def test_org_ledger_location_is_432s_copy(self):
-        # Byte-identical to #432's file, so the two drafts merge without a conflict.
-        self.assertEqual(hashlib.sha256((ROOT / "llm_adapter/org_ledger_location.py").read_bytes()).hexdigest(),
-                         "2ffaa91a606d18c45f239930e0e50292cb12461be22dc370fb6343037e3fce78")
+    def test_shared_modules_are_432s_copies(self):
+        # Byte-identical to #432's files (LC-KV-16 rev 5 mirror), so the two drafts merge without a conflict.
+        shared = {
+            "llm_adapter/org_ledger_location.py": "b51e6a8bd39ba6fd83044222a3858a2cb0c437020e3e9abbe97c4494d41f2681",
+            "llm_adapter/ed25519_verify.py": "ab05e39a3e40b99f02ff199b178554e0ba435c3ff387dca3f896619770770232",
+            "llm_adapter/intr_transport_carrier.py": "9f460c078f5aba3a25edfecaf7e240334d943c3bf0b0cecc5972fc59e47501bf",
+            "tests/org_ledger_harness.py": "3bbf7f7da563afd9e7a1da1ee8cdbb04219a655a3dcaff3d3a6b2190ce6db945",
+            "tests/ed25519_test_signer.py": "3173bfcfca33129cd31942783b9e3e4c9380022f308f2fc31ccdda3dc2f6fe52",
+            ".stegverse/node-ledger/org-ledger-head-signers.v1.json":
+                "3be27ff079433995d5eba111a5bb8cbe058e492938fb2b7ca299fe7bf6b69297",
+            "tests/fixtures/node_receipts/org_ledger_test_genesis.json":
+                "a2c01a2ebaa15aae048c42bb6048bdbf402e682a4c69c11def9d20d97539a6a7",
+            "tests/fixtures/node_receipts/contract_with_431_location_and_pinned_genesis.json":
+                "a0323936dc13a13561b7538c9ffb3ebaab636726cbfd312afc757588eddd2e12",
+        }
+        for path, digest in shared.items():
+            with self.subTest(path):
+                self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
 
     def test_carrier_core_reads_no_clock_network_or_process(self):
         tree = ast.parse((ROOT / "llm_adapter/intr_transport_carrier.py").read_text())

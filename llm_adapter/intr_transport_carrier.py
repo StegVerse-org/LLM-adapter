@@ -20,7 +20,10 @@ payload_sha256 rule as #432's endpoint_ledger_anchor. Nothing here mints a class
 the org chain already read back (newest first, seals checked by
 healthy_node_evaluator.read_chain), the retained source copy, and the head the
 caller pinned. `observe` is the I/O step that reads those through
-org_ledger_location.designated_org_ledger and then calls `verify`.
+org_ledger_location.designated_org_ledger and then calls `verify`. That read-back
+accepts a store only at the contract's pinned genesis and with a published
+append-route head attestation (LC-KV-16 rev 5); none is published, so every
+carrier is refused MERGE_APPEND_PATH_NOT_ADMITTED until the route is admitted.
 
 Either returns None (verified) or (reason, detail). The ingress boundary turns a
 non-None result into the six-field INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED.
@@ -53,7 +56,8 @@ FAILURE_CODE = "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED"
 PREDICATE = "INSTALLED_INTR_TRANSPORT_OBSERVED_ON_RECEIPTS"
 OWNING_GOAL = "StegVerse-org/.github#162 (LLM-ADAPTER-INTERLOCK-INTR-TRANSPORT-ENABLEMENT-001)"
 RETRY_ENTRYPOINT = ("llm_adapter.node_ingress_boundary.admit(signal, transport='INTERLOCK_INTR', "
-                    "intr_carrier={destination_receipt_sha256, org_ledger_head_receipt_sha256}, "
+                    "intr_carrier={destination_receipt_sha256, org_ledger_head_receipt_sha256, "
+                    "org_ledger_head_attestation}, "
                     "org_ledger_git_dir=<local StegVerse-org/.github object store>)")
 NEXT_ATTEMPT = ("Event-triggered: when the carrying INTR_MESH_PATH_INGRESS is on the organization ledger at "
                 "#431's location; no clock, no polling.")
@@ -176,7 +180,8 @@ def observe(signal: Any, intr_carrier: Any, org_ledger_git_dir: Any) -> tuple[di
     from llm_adapter import healthy_node_evaluator as hne, org_ledger_location as location
     if not isinstance(intr_carrier, Mapping):
         return None, ("INTR_CARRIER_NOT_CITED", "INTERLOCK_INTR was named; no carrying path pair was cited")
-    with location.designated_org_ledger(org_ledger_git_dir) as (root, failure):
+    with location.designated_org_ledger(org_ledger_git_dir, intr_carrier.get("org_ledger_head_attestation")) \
+            as (root, failure):
         if failure:
             return None, failure
         chain, chain_failure, detail = hne.read_chain(root)
@@ -195,7 +200,7 @@ def observe(signal: Any, intr_carrier: Any, org_ledger_git_dir: Any) -> tuple[di
     return {"destination_receipt_sha256": intr_carrier["destination_receipt_sha256"],
             "source_receipt_sha256": source_sha,
             "org_ledger_head_receipt_sha256": intr_carrier["org_ledger_head_receipt_sha256"],
-            "org_ledger_location": ORG_LEDGER_LOCATION,
+            "org_ledger_location": ORG_LEDGER_LOCATION, "org_ledger_head_authenticated": True,
             "carrier_classes": [SOURCE_CLASS, DESTINATION_CLASS]}, None
 
 
