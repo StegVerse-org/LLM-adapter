@@ -73,7 +73,9 @@
     "llm_adapter/ed25519_verify.py",
     "llm_adapter/healthy_node_evaluator.py",
     ".stegverse/node-ledger/org-ledger-head-signers.v1.json",
-    "tests/ed25519_test_signer.py"
+    "tests/ed25519_test_signer.py",
+    "tests/fixtures/cvk-receipt-ledger-contracts/01_KV_Ledger.contract.json",
+    "tests/fixtures/cvk-receipt-ledger-contracts/02_SKAP_Vault_Ledger.contract.json"
   ],
   "new_files": [
     {
@@ -168,7 +170,7 @@
     },
     {
       "path": "llm_adapter/intr_transport_carrier.py",
-      "semantic_responsibility": "Byte copy (sha256 9f460c07) of #432/#433's InTr carrier verifier, so the pre-pin receiver reuses verify unchanged ahead of #433.",
+      "semantic_responsibility": "Byte copy (sha256 5c410dd3) of #432/#433's InTr carrier verifier, so the pre-pin receiver reuses verify unchanged ahead of #433. 5c410dd3 adds a six-field INTR_SOURCE_EVIDENCE_INCOMPLETE refusal in place of a KeyError for a source half missing endpoint_kind or another rebuild field (LC-KV-20), mirrored byte-identically in #432 and #433.",
       "closest_existing_implementation": "StegVerse-org/LLM-adapter#432 and #433 llm_adapter/intr_transport_carrier.py (identical bytes)",
       "decision": "REUSE",
       "justification": "The receiver precedes GENESIS_PIN and #433 in ADMISSION_ORDER, so it brings the carrier module with it; identical bytes merge cleanly with #432/#433.",
@@ -241,6 +243,28 @@
       "justification": "LC-KV-19 (class A, Lane B): the pre-pin receiver and the genesis-pin planner authenticate the genesis only from the published refs/stegverse/organization-ledger read-back plus the ORG-LEDGER-HEAD-SIGNER-001 head attestation, reusing #432's org_ledger_location byte-identically; identical bytes merge cleanly with #432/#433.",
       "evidence_refs": [
         "https://github.com/StegVerse-org/LLM-adapter/pull/432"
+      ]
+    },
+    {
+      "path": "tests/fixtures/cvk-receipt-ledger-contracts/01_KV_Ledger.contract.json",
+      "semantic_responsibility": "Byte copy (sha256 81dbc78b) of StegVerse-Labs/continuity-vault-kit#263 @20451a0c .stegverse/receipt-ledgers/01_KV_Ledger.contract.json, the target of the genesis-pin contract-path parameter test.",
+      "closest_existing_implementation": "StegVerse-Labs/continuity-vault-kit#263 .stegverse/receipt-ledgers/01_KV_Ledger.contract.json (identical bytes)",
+      "decision": "REUSE",
+      "justification": "Lane D finding 5: REPOSITORY_LEDGER_GENESIS_PIN targets cvk's KV and SKAP Vault contracts through an allowlisted repo-relative path.",
+      "canonical_owner": "StegVerse-Labs/continuity-vault-kit",
+      "evidence_refs": [
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263"
+      ]
+    },
+    {
+      "path": "tests/fixtures/cvk-receipt-ledger-contracts/02_SKAP_Vault_Ledger.contract.json",
+      "semantic_responsibility": "Byte copy (sha256 153c32e6) of StegVerse-Labs/continuity-vault-kit#263 @20451a0c .stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json, the target of the genesis-pin contract-path parameter test.",
+      "closest_existing_implementation": "StegVerse-Labs/continuity-vault-kit#263 .stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json (identical bytes)",
+      "decision": "REUSE",
+      "justification": "Lane D finding 5: REPOSITORY_LEDGER_GENESIS_PIN targets cvk's KV and SKAP Vault contracts through an allowlisted repo-relative path.",
+      "canonical_owner": "StegVerse-Labs/continuity-vault-kit",
+      "evidence_refs": [
+        "https://github.com/StegVerse-Labs/continuity-vault-kit/pull/263"
       ]
     }
   ]

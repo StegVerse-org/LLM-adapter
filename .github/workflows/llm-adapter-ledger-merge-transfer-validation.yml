@@ -19,6 +19,7 @@ on:
       - "tests/ed25519_test_signer.py"
       - "tests/test_llm_adapter_ledger_merge_transfer.py"
       - "tests/fixtures/org-intr-path-transfer/**"
+      - "tests/fixtures/cvk-receipt-ledger-contracts/**"
       - ".github/workflows/llm-adapter-organization-ledger-merge-transfer.yml"
       - ".github/workflows/llm-adapter-ledger-merge-transfer-validation.yml"
 

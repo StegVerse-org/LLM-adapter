@@ -68,9 +68,21 @@ def _refuse(code: str, predicate: str, repair: str, *, retry: str = ENTRYPOINT, 
 
 
 def receive(signal: Any, *, intr_carrier: Any, org_ledger: str | None,
-            contract_bytes: bytes | None = None) -> dict[str, Any]:
-    before = contract_bytes if contract_bytes is not None else P.CONTRACT_PATH.read_bytes()
-    contract = json.loads(before)
+            contract_bytes: bytes | None = None, contract_path: str = P.CONTRACT_REL,
+            checkout: Any = None) -> dict[str, Any]:
+    bad = P.contract_path_failure(contract_path)
+    if bad:
+        return _refuse("CONTRACT_PATH_NOT_ALLOWLISTED", "CONTRACT_PATH_IS_AN_ALLOWLISTED_REPO_RELATIVE_431_CONTRACT",
+                       f"name one of {list(P.CONTRACT_PATHS)} ({bad})")
+    try:
+        before = contract_bytes if contract_bytes is not None else P.read_contract(contract_path, checkout)
+        contract = json.loads(before)
+        shape = P.contract_shape_failure(contract)
+    except (OSError, ValueError) as exc:
+        shape = f"unreadable ({type(exc).__name__})"
+    if shape:
+        return _refuse("CONTRACT_NOT_431_SHAPE", "CONTRACT_HAS_THE_431_REPOSITORY_LEDGER_LOCATION_SHAPE",
+                       f"{contract_path}: {shape}")
     loc = contract["repository_ledger_location"]
     if loc.get(P.FIELD) is not None:
         return _refuse("PRE_PIN_INGRESS_CLOSED", "EXPECTED_GENESIS_PIN_IS_NULL",
@@ -91,7 +103,8 @@ def receive(signal: Any, *, intr_carrier: Any, org_ledger: str | None,
     # LC-KV-19: the read-back must carry a published head signer's attestation (cited with the carrier).
     cited = intr_carrier if isinstance(intr_carrier, Mapping) else {}
     planned = P.plan(org_ledger=org_ledger, genesis_receipt_sha256=signal["genesis_receipt_sha256"],
-                     contract_bytes=before, org_ledger_head_attestation=cited.get("org_ledger_head_attestation"))
+                     contract_bytes=before, org_ledger_head_attestation=cited.get("org_ledger_head_attestation"),
+                     contract_path=contract_path, checkout=checkout)
     if planned["disposition"] != P.ALLOW:
         return _refuse(planned["failure_code"], planned["failed_predicate"], planned["required_evidence_or_repair"],
                        observation=planned.get("observation"),
@@ -135,10 +148,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--signal", required=True)
     p.add_argument("--carrier", required=True)
     p.add_argument("--org-ledger")
+    p.add_argument("--contract-path", default=P.CONTRACT_REL, choices=P.CONTRACT_PATHS)
+    p.add_argument("--checkout")
     p.add_argument("--out")
     a = ap.parse_args(argv)
     result = receive(json.loads(Path(a.signal).read_text()), intr_carrier=json.loads(Path(a.carrier).read_text()),
-                     org_ledger=a.org_ledger)
+                     org_ledger=a.org_ledger, contract_path=a.contract_path, checkout=a.checkout)
     text = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if a.out:
         Path(a.out).write_text(text)

@@ -51,5 +51,16 @@
     "REPOSITORY_LEDGER_GENESIS_MISMATCH",
     "EXPECTED_GENESIS_PIN_CONFLICT"
   ],
-  "authority_effect": "NONE"
+  "authority_effect": "NONE",
+  "contract_paths": {
+    "allowlist": [
+      ".stegverse/transition-ledger/contract.json",
+      ".stegverse/receipt-ledgers/01_KV_Ledger.contract.json",
+      ".stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json"
+    ],
+    "default": ".stegverse/transition-ledger/contract.json",
+    "rule": "repo-relative, on the allowlist, no traversal, and the contract must have the #431 repository_ledger_location shape; else six-field FAIL_CLOSED CONTRACT_PATH_NOT_ALLOWLISTED / CONTRACT_NOT_431_SHAPE",
+    "cvk_designation": "StegVerse-Labs/continuity-vault-kit#263 @20451a0c (01_KV_Ledger, 02_SKAP_Vault_Ledger; genesis null)",
+    "receiver_note": "the pre-pin receiver takes the same parameter; its carrier step (intr_transport_carrier, byte-identical across #431/#432/#433) is bound to this repository's location, so a cvk contract's InTr carrier is refused until a location-parameterized carrier is a registered item"
+  }
 }

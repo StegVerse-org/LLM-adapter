@@ -482,7 +482,7 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
     intr_transport_carrier's own evidence builders (byte copy of #432/#433). Nothing touches the real ledger.
     """
 
-    CARRIER_SHA = "sha256:9f460c078f5aba3a25edfecaf7e240334d943c3bf0b0cecc5972fc59e47501bf"
+    CARRIER_SHA = "sha256:5c410dd3fddad854f41234a112574bb361ebd2c74362765292fc8480a689efa7"   # = #432/#433
 
     def setUp(self):
         self.g = GenesisPinTransitionTests()
@@ -661,6 +661,32 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
         self.assert_six(R.receive(signal, intr_carrier=cite2, org_ledger=bare2, contract_bytes=self.before),
                         carrier.FAILURE_CODE)
 
+    def test_a_source_half_missing_endpoint_kind_fails_closed_not_keyerror(self):
+        """LC-KV-20: the shared carrier refuses an incomplete source half; destination_evidence never raises."""
+        signal = R.genesis_signal("sha256:" + "a" * 64, self.contract)
+        cid = "intr-path-v1:StegVerse-org/.github->StegVerse-org:genesis-pin"
+        for drop in carrier.SOURCE_REBUILD_KEYS:
+            ev = carrier.source_evidence(signal, cid)
+            ev.pop(drop)
+            core = {k: v for k, v in ev.items()
+                    if k not in ("payload_sha256", "disposition", "communication_id", "boundary_evidence")}
+            ev["payload_sha256"] = carrier.sha(core)
+            source = receipt({"schema": carrier.RECEIPT_SCHEMA, "repository": "StegVerse-org/.github",
+                              "transition_class": carrier.SOURCE_CLASS, "previous_receipt_sha256": None,
+                              "evidence": ev})
+            dest = receipt({"schema": carrier.RECEIPT_SCHEMA, "transition_class": carrier.DESTINATION_CLASS,
+                            "evidence": {"schema": carrier.DESTINATION_EVIDENCE_SCHEMA,
+                                         "addressed_location": carrier.ORG_LEDGER_LOCATION,
+                                         "source_repository_receipt_sha256": source["receipt_sha256"],
+                                         "boundary_evidence": {"operation": carrier.DESTINATION_OPERATION}}})
+            got = carrier.verify(signal, destination_receipt_sha256=dest["receipt_sha256"],
+                                 org_ledger_head_receipt_sha256=dest["receipt_sha256"], org_chain=[dest],
+                                 retained_source=source)
+            if drop == "communication_id":
+                self.assertIsNotNone(got)          # outside the payload digest; still refused, never raised
+            else:
+                self.assertEqual(got[0], "INTR_SOURCE_EVIDENCE_INCOMPLETE", (drop, got))
+
     def test_receiver_reuses_the_carrier_unchanged_and_is_wired_declaratively(self):
         got = "sha256:" + hashlib.sha256((ROOT / "llm_adapter/intr_transport_carrier.py").read_bytes()).hexdigest()
         self.assertEqual(got, self.CARRIER_SHA)        # byte copy of #432/#433's module
@@ -685,6 +711,110 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
         self.assertIn("intr-path-transfer.yml", trig["org_side_emitter"])
         self.assertIs(trig["new_organization_workflow"], False)
 
+
+
+@with_append_route
+class GenesisPinContractPathTests(unittest.TestCase):
+    """Lane D finding 5: REPOSITORY_LEDGER_GENESIS_PIN can target StegVerse-Labs/continuity-vault-kit's KV and SKAP
+    Vault ledger contracts (designated in cvk#263 @20451a0c, #431 shape, genesis null) through an allowlisted,
+    repo-relative contract path. The fixtures are byte copies of cvk#263's two contracts."""
+
+    CVK = ROOT / "tests/fixtures/cvk-receipt-ledger-contracts"
+    CVK_SHA = {"01_KV_Ledger": "81dbc78b0cb21c8ce06faadbca0b9b0521636800ca99a886c24742a2aa35af57",
+               "02_SKAP_Vault_Ledger": "153c32e62450b105805abb9e1d366bb32ece768b5caf497ca2dc54e095565c7f"}
+
+    def setUp(self):
+        self._t = tempfile.TemporaryDirectory()
+        self.addCleanup(self._t.cleanup)
+        self.tmp = Path(self._t.name)
+
+    def cvk_checkout(self):
+        checkout = self.tmp / "cvk"
+        (checkout / ".stegverse/receipt-ledgers").mkdir(parents=True)
+        for name, want in self.CVK_SHA.items():
+            raw = (self.CVK / (name + ".contract.json")).read_bytes()
+            self.assertEqual(hashlib.sha256(raw).hexdigest(), want)            # byte copy of cvk#263
+            (checkout / ".stegverse/receipt-ledgers" / (name + ".contract.json")).write_bytes(raw)
+        return checkout
+
+    def ledger_for(self, repository, name):
+        namespace = "repository-ledger/" + repository
+        work = self.tmp / (name + "-work")
+        store = work / namespace
+        (store / "receipts").mkdir(parents=True)
+        g = receipt({"schema": "stegverse.repo-transition-receipt/v1", "repository": repository,
+                     "transition_id": "REPOSITORY_LEDGER_INITIALIZATION:" + repository,
+                     "transition_class": "REPOSITORY_LEDGER_INITIALIZATION", "previous_receipt_sha256": None,
+                     "evidence": {"namespace": namespace}, "hb_reference": {"epoch": 446655631,
+                                                                            "derived_from_clock": False}})
+        (store / "receipts" / (g["receipt_sha256"][7:] + ".json")).write_text(json.dumps(g))
+        (store / "HEAD.json").write_text(json.dumps({"receipt_sha256": g["receipt_sha256"]}))
+        git(work, "init", "-q")
+        git(work, "add", ".")
+        git(work, "commit", "-q", "-m", "ledger")
+        bare = self.tmp / (name + ".git")
+        git(self.tmp, "clone", "-q", "--bare", str(work), str(bare))
+        git(self.tmp, "--git-dir", str(bare), "update-ref", M.LEDGER_REF, "HEAD")
+        tip = git(self.tmp, "--git-dir", str(bare), "rev-parse", M.LEDGER_REF)
+        tree = git(self.tmp, "--git-dir", str(bare), "rev-parse", f"{tip}:{namespace}")
+        body = {**location.head_attestation_body(g["receipt_sha256"], g["receipt_sha256"], tree),
+                "org_ledger_location": "refs/stegverse/organization-ledger:" + namespace}
+        att = {**body, "key_id": ROUTE_REF["key_id"],
+               "signature_b64": signer.sign_b64(location.head_attestation_message(body), ROUTE_SEED)}
+        return str(bare), g, att
+
+    def test_both_cvk_contracts_are_planned_through_the_allowlisted_path(self):
+        checkout = self.cvk_checkout()
+        for name in self.CVK_SHA:
+            rel = f".stegverse/receipt-ledgers/{name}.contract.json"
+            self.assertIn(rel, P.CONTRACT_PATHS)
+            before = (checkout / rel).read_bytes()
+            repository = json.loads(before)["repository"]
+            bare, g, att = self.ledger_for(repository, name)
+            d = P.plan(org_ledger=bare, genesis_receipt_sha256=g["receipt_sha256"], org_ledger_head_attestation=att,
+                       contract_path=rel, checkout=checkout)
+            self.assertEqual(d["disposition"], M.ALLOW, d)
+            self.assertEqual(d["contract_write"]["path"], rel)
+            self.assertEqual(d["consumes_receipt"]["emit_append"]["evidence"]["contract_path"], rel)
+            after = json.loads(P.apply_write(d, before))
+            self.assertEqual(after["repository_ledger_location"]["expected_genesis_receipt_sha256"], g["receipt_sha256"])
+            self.assertEqual(json.loads(before)["repository_ledger_location"]["expected_genesis_receipt_sha256"], None)
+            # the attestation binds the location: LLM-adapter's location, or the other cvk ledger's, does not verify
+            for other in (location.ORG_LEDGER_LOCATION, "refs/stegverse/organization-ledger:repository-ledger/x"):
+                forged = {**att, "org_ledger_location": other}
+                r = P.plan(org_ledger=bare, org_ledger_head_attestation=forged, contract_path=rel, checkout=checkout)
+                self.assertEqual(r["failure_code"], "ORG_LEDGER_HEAD_NOT_AUTHENTICATED")
+            # production (no published head signer) refuses MERGE_APPEND_PATH_NOT_ADMITTED for cvk too
+            from unittest import mock
+            with mock.patch.object(location, "load_head_signers", return_value=[]):
+                r = P.plan(org_ledger=bare, org_ledger_head_attestation=att, contract_path=rel, checkout=checkout)
+            self.assertEqual(r["failure_code"], "MERGE_APPEND_PATH_NOT_ADMITTED")
+            # the pre-pin receiver carries the same parameter
+            signal = R.genesis_signal(g["receipt_sha256"], json.loads(before))
+            r = R.receive(signal, intr_carrier={"org_ledger_head_attestation": att}, org_ledger=bare,
+                          contract_path=rel, checkout=checkout)
+            self.assertEqual(r["failure_code"], carrier.FAILURE_CODE)   # planned, then the LLM-adapter-bound carrier
+            self.assertNotEqual(r["failure_code"], "CONTRACT_PATH_NOT_ALLOWLISTED")
+
+    def test_traversal_and_unlisted_contract_paths_are_refused_with_six_fields(self):
+        checkout = self.cvk_checkout()
+        for bad in ("../.stegverse/receipt-ledgers/01_KV_Ledger.contract.json",
+                    ".stegverse/receipt-ledgers/../../etc/passwd", "/etc/passwd",
+                    "./.stegverse/transition-ledger/contract.json", ".stegverse//transition-ledger/contract.json",
+                    ".stegverse\\receipt-ledgers\\01_KV_Ledger.contract.json", "C:/x.json",
+                    ".stegverse/receipt-ledgers/03_Other.contract.json", "", None, 7):
+            d = P.plan(org_ledger=None, contract_path=bad, checkout=checkout)
+            self.assertEqual((d["disposition"], d["failure_code"]), (M.FAIL_CLOSED, "CONTRACT_PATH_NOT_ALLOWLISTED"), bad)
+            for f in SIX:
+                self.assertTrue(isinstance(d[f], str) and d[f], f)
+            r = R.receive({}, intr_carrier={}, org_ledger=None, contract_path=bad, checkout=checkout)
+            self.assertEqual(r["failure_code"], "CONTRACT_PATH_NOT_ALLOWLISTED", bad)
+        # an allowlisted path whose bytes lack the #431 shape is refused too
+        shaped = json.loads((checkout / P.CONTRACT_PATHS[1]).read_text())
+        shaped["repository_ledger_location"]["namespace"] = "repository-ledger/StegVerse-org/LLM-adapter"
+        d = P.plan(org_ledger=None, contract_path=P.CONTRACT_PATHS[1], contract_bytes=json.dumps(shaped).encode())
+        self.assertEqual(d["failure_code"], "CONTRACT_NOT_431_SHAPE")
+        self.assertEqual(P.contract_path_failure(P.CONTRACT_REL), None)    # the default is unchanged
 
 
 class CallerWrittenLedgerCopyTests(unittest.TestCase):

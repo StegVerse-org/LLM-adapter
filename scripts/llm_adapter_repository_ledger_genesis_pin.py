@@ -43,6 +43,14 @@ from llm_adapter import org_ledger_location as org_location  # noqa: E402  (byte
 ROOT = M.ROOT
 CONTRACT_PATH = M.CONTRACT_PATH
 CONTRACT_REL = ".stegverse/transition-ledger/contract.json"
+#: The repo-relative contracts this transition may target (Lane D finding 5). The default is this repository's; the
+#: other two are StegVerse-Labs/continuity-vault-kit's KV and SKAP Vault ledger contracts (designated in cvk#263 with
+#: the #431 repository_ledger_location shape, genesis null). Nothing outside this list is ever read or planned.
+CONTRACT_PATHS = (CONTRACT_REL,
+                  ".stegverse/receipt-ledgers/01_KV_Ledger.contract.json",
+                  ".stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json")
+CONTRACT_SCHEMA = "stegverse.repo-transition-ledger-contract/v1"
+ORG_LEDGER_REPOSITORY, ORG_LEDGER_REF = "StegVerse-org/.github", "refs/stegverse/organization-ledger"
 TRANSITION_CLASS = "REPOSITORY_LEDGER_GENESIS_PIN"
 GENESIS_CLASS = "REPOSITORY_LEDGER_INITIALIZATION"
 RECEIPT_SCHEMA = "stegverse.repo-transition-receipt/v1"
@@ -134,15 +142,89 @@ def namespace_tree_oid(git_dir: str, tip: str, namespace: str) -> str:
     return raw.decode().strip() if raw else ""
 
 
+def contract_path_failure(contract_path: Any) -> str | None:
+    """Why `contract_path` is not an allowlisted repo-relative contract path, or None. Pure."""
+    if not isinstance(contract_path, str) or not contract_path:
+        return "the contract path is not a non-empty string"
+    parts = contract_path.split("/")
+    if contract_path.startswith("/") or "\\" in contract_path or ":" in contract_path or ".." in parts \
+            or "." in parts or "" in parts:
+        return f"{contract_path!r} is not a plain repo-relative path (absolute, traversal, empty or drive segment)"
+    if contract_path not in CONTRACT_PATHS:
+        return f"{contract_path!r} is not on the allowlist {list(CONTRACT_PATHS)}"
+    return None
+
+
+def contract_shape_failure(contract: Any) -> str | None:
+    """Why `contract` does not have the #431 repository_ledger_location shape, or None. Pure."""
+    if not isinstance(contract, Mapping) or contract.get("schema") != CONTRACT_SCHEMA \
+            or not isinstance(contract.get("repository"), str):
+        return f"not a {CONTRACT_SCHEMA} contract naming its repository"
+    loc = contract.get("repository_ledger_location")
+    if not isinstance(loc, Mapping) or loc.get("repository") != ORG_LEDGER_REPOSITORY \
+            or loc.get("ref") != ORG_LEDGER_REF or loc.get("namespace") != "repository-ledger/" + contract["repository"] \
+            or FIELD not in loc:
+        return (f"repository_ledger_location must designate {ORG_LEDGER_REPOSITORY} {ORG_LEDGER_REF} "
+                f"repository-ledger/<repository> and carry {FIELD} (the #431 shape)")
+    return None
+
+
+def head_attestation_failure(attestation: Any, ledger_location: str, genesis_sha: str, head_sha: str,
+                             tree_oid: str) -> tuple[str, str] | None:
+    """LC-KV-19 head check for the contract's location. For this repository's location it is #432's
+    org_ledger_location.head_attestation_failure itself; for an allowlisted cvk location it is the same check over
+    the same published signers, message and verifier, with only org_ledger_location naming that location. Pure."""
+    if ledger_location == org_location.ORG_LEDGER_LOCATION:
+        return org_location.head_attestation_failure(attestation, genesis_sha, head_sha, tree_oid)
+    signers = org_location.load_head_signers()
+    if not signers:
+        return org_location.head_attestation_failure(attestation, genesis_sha, head_sha, tree_oid)
+    if not isinstance(attestation, Mapping):
+        return "ORG_LEDGER_HEAD_NOT_AUTHENTICATED", "no stegverse.org-ledger-head-attestation/v1 for this head"
+    body = {k: attestation.get(k) for k in org_location.HEAD_ATTESTATION_FIELDS}
+    want = {**org_location.head_attestation_body(genesis_sha, head_sha, tree_oid), "org_ledger_location": ledger_location}
+    if body != want:
+        return ("ORG_LEDGER_HEAD_NOT_AUTHENTICATED", "the attestation names another location, genesis, head or "
+                f"namespace tree than the store holds (head {head_sha}, tree {tree_oid})")
+    key = next((k for k in signers if k.get("key_id") == attestation.get("key_id")), None)
+    public = org_location._b64(key.get("public_key_b64")) if key else None
+    signature = org_location._b64(attestation.get("signature_b64"))
+    if key is None or public is None or len(public) != 32 or signature is None or len(signature) != 64 \
+            or not org_location.ed25519_verify.verify(public, org_location.head_attestation_message(body), signature):
+        return "ORG_LEDGER_HEAD_NOT_AUTHENTICATED", "the attestation is not by a published key or does not verify"
+    return None
+
+
+def read_contract(contract_path: str = CONTRACT_REL, checkout: Any = None) -> bytes:
+    """The allowlisted contract's bytes from `checkout` (default: this repository). Raises on a refused path."""
+    failure = contract_path_failure(contract_path)
+    if failure:
+        raise ValueError(failure)
+    return (Path(checkout) if checkout is not None else ROOT).joinpath(*contract_path.split("/")).read_bytes()
+
+
 def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
-         contract_bytes: bytes | None = None, org_ledger_head_attestation: Any = None) -> dict[str, Any]:
+         contract_bytes: bytes | None = None, org_ledger_head_attestation: Any = None,
+         contract_path: str = CONTRACT_REL, checkout: Any = None) -> dict[str, Any]:
     """The exact contract write and consumes receipt for REPOSITORY_LEDGER_GENESIS_PIN, or six-field FAIL_CLOSED."""
-    before = contract_bytes if contract_bytes is not None else CONTRACT_PATH.read_bytes()
-    contract = json.loads(before)
+    bad_path = contract_path_failure(contract_path)
+    if bad_path:
+        return _refuse("CONTRACT_PATH_NOT_ALLOWLISTED", "CONTRACT_PATH_IS_AN_ALLOWLISTED_REPO_RELATIVE_431_CONTRACT",
+                       f"name one of {list(CONTRACT_PATHS)} ({bad_path})", contract_path=repr(contract_path))
+    try:
+        before = contract_bytes if contract_bytes is not None else read_contract(contract_path, checkout)
+        contract = json.loads(before)
+    except (OSError, ValueError) as exc:
+        contract, before = None, b""
+        unreadable = type(exc).__name__
+    bad_shape = contract_shape_failure(contract) if contract is not None else f"unreadable ({unreadable})"
+    if bad_shape:
+        return _refuse("CONTRACT_NOT_431_SHAPE", "CONTRACT_HAS_THE_431_REPOSITORY_LEDGER_LOCATION_SHAPE",
+                       f"{contract_path}: {bad_shape}", contract_path=contract_path)
     repo, loc = contract["repository"], contract["repository_ledger_location"]
     location = f"{loc['repository']}#{loc['ref']}:{loc['namespace']}"
     genesis, obs, failure = read_genesis(org_ledger, loc["namespace"])
-    common = {"repository": repo, "ledger_location": location, "observation": obs}
+    common = {"repository": repo, "ledger_location": location, "observation": obs, "contract_path": contract_path}
     if failure == "no copy":
         return _refuse("ORGANIZATION_LEDGER_COPY_UNAVAILABLE", "ORGANIZATION_LEDGER_COPY_READ",
                        f"a local read-only copy of {loc['repository']} {loc['ref']}", **common)
@@ -167,13 +249,9 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
                        f"{loc['namespace']}/HEAD.json is rooted at {digest}", **common)
     # LC-KV-19: the read-back decides nothing by itself. Its genesis, head and namespace tree must be attested by
     # a published org-ledger head signer, or a caller-built copy could carry its own genesis and InTr pair.
-    if f"{loc['ref']}:{loc['namespace']}" != org_location.ORG_LEDGER_LOCATION:
-        return _refuse("ORG_LEDGER_LOCATION_NOT_DESIGNATED", "ORG_LEDGER_LOCATION_IS_THE_DESIGNATED_LOCATION",
-                       f"{CONTRACT_REL} repository_ledger_location must designate {org_location.ORG_LEDGER_LOCATION}",
-                       **common)
     tree_oid = namespace_tree_oid(org_ledger, obs["tip"], loc["namespace"])
-    unauthenticated = org_location.head_attestation_failure(org_ledger_head_attestation, digest, obs["namespace_head"],
-                                                        tree_oid)
+    unauthenticated = head_attestation_failure(org_ledger_head_attestation, f"{loc['ref']}:{loc['namespace']}",
+                                               digest, obs["namespace_head"], tree_oid)
     if unauthenticated:
         return _refuse(unauthenticated[0], HEAD_PREDICATE,
                        f"{unauthenticated[1]}. {HEAD_REPAIR}", **common, observed_genesis_receipt_sha256=digest,
@@ -181,7 +259,7 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
     current = loc.get(FIELD)
     if current is not None and current != digest:
         return _refuse("EXPECTED_GENESIS_PIN_CONFLICT", "EXPECTED_GENESIS_PIN_UNSET_OR_EQUAL",
-                       f"{CONTRACT_REL} {FIELD_POINTER} is {current!r}, not the observed genesis {digest}; a pin is "
+                       f"{contract_path} {FIELD_POINTER} is {current!r}, not the observed genesis {digest}; a pin is "
                        "never overwritten by this transition, so the conflict needs its own admitted change",
                        **common, observed_genesis_receipt_sha256=digest)
     result = {"schema": RESULT_SCHEMA, "transition_class": TRANSITION_CLASS, "disposition": ALLOW, **common,
@@ -196,7 +274,7 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
     after_contract["repository_ledger_location"]["expected_genesis_note"] = PINNED_NOTE.format(
         location=location, tip=obs["tip"])
     after = (json.dumps(after_contract, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
-    result["contract_write"] = {"path": CONTRACT_REL, "json_pointer": FIELD_POINTER, "value": digest,
+    result["contract_write"] = {"path": contract_path, "json_pointer": FIELD_POINTER, "value": digest,
                                 "before_sha256": _sha_bytes(before), "after_sha256": _sha_bytes(after),
                                 "after_text": after.decode("utf-8")}
     epoch = (genesis.get("hb_reference") or {}).get("epoch")
@@ -214,7 +292,7 @@ def plan(*, org_ledger: str | None, genesis_receipt_sha256: str | None = None,
                          "namespace_head_receipt_sha256": obs["namespace_head"],
                          "namespace_tree_oid": tree_oid,
                          "org_ledger_head_attestation_key_id": org_ledger_head_attestation.get("key_id"),
-                         "contract_path": CONTRACT_REL, "json_pointer": FIELD_POINTER, "value": digest},
+                         "contract_path": contract_path, "json_pointer": FIELD_POINTER, "value": digest},
             "authority_effect": "NONE",
             # the genesis's own supplied epoch orders the pin after it; None means emit.py would sample a clock,
             # so the admitted run must then supply the epoch of the triggering record
@@ -240,11 +318,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--org-ledger", help="local bare copy holding " + M.LEDGER_REF)
     p.add_argument("--genesis-receipt", help="the genesis receipt_sha256 named by the triggering record")
     p.add_argument("--head-attestation", help="stegverse.org-ledger-head-attestation/v1 json file")
+    p.add_argument("--contract-path", default=CONTRACT_REL, choices=CONTRACT_PATHS,
+                   help="allowlisted repo-relative contract (default: this repository's)")
+    p.add_argument("--checkout", help="checkout holding --contract-path (default: this repository)")
     p.add_argument("--out")
     a = ap.parse_args(argv)
     attestation = json.loads(Path(a.head_attestation).read_text()) if a.head_attestation else None
     result = plan(org_ledger=a.org_ledger, genesis_receipt_sha256=a.genesis_receipt,
-                  org_ledger_head_attestation=attestation)
+                  org_ledger_head_attestation=attestation, contract_path=a.contract_path, checkout=a.checkout)
     text = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if a.out:
         Path(a.out).write_text(text)
