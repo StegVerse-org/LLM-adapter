@@ -275,10 +275,11 @@ class IngressBoundaryTests(unittest.TestCase):
 class TransportIsNotTheBoundaryTests(unittest.TestCase):
     """The record is a property of the crossing, so the transport is a field."""
 
-    def test_http_is_installed_and_intr_is_the_next_stage(self):
+    def test_http_and_intr_are_installed_intr_gated_on_its_carrier(self):
         self.assertEqual(node_ingress_boundary.transport_state("HTTP"), "INSTALLED")
-        self.assertEqual(node_ingress_boundary.transport_state("INTERLOCK_INTR"),
-                         "NOT_YET_ENABLED")
+        # INSTALLED, but a crossing counts only with a verified InTr path pair
+        # (tests/test_intr_transport_enablement.py).
+        self.assertEqual(node_ingress_boundary.transport_state("INTERLOCK_INTR"), "INSTALLED")
 
     def test_an_unrecognised_transport_fails_closed(self):
         with self.assertRaises(node_standing.StandingRefused) as refused:

@@ -246,10 +246,16 @@ class AdmitRegressionTests(unittest.TestCase):
         out = boundary.admit(self.signal())
         self.assert_refused(out, "FAIL_CLOSED", boundary.STAGE_HEALTH, "RECEIPT_HASH_MISMATCH")
 
-    def test_transport_not_yet_enabled(self):
+    def test_named_only_intr_transport_is_refused(self):
+        """INTERLOCK_INTR is INSTALLED only for a verified carrier; naming it is refused at TRANSPORT."""
         report("regression-node")
         out = boundary.admit(self.signal(), transport=boundary.INTERLOCK_INTR)
-        self.assert_refused(out, "FAIL_CLOSED", boundary.STAGE_HEALTH, "TRANSPORT_NOT_INSTALLED")
+        self.assertEqual((out["disposition"], out["failed_stage"]), ("FAIL_CLOSED", boundary.STAGE_TRANSPORT))
+        self.assertEqual(out["failure_code"], "INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED")
+        self.assertEqual(out["ingress_record"]["transport_state"], boundary.NOT_AUTHENTICALLY_OBSERVED)
+        for key in SIX:
+            self.assertTrue(isinstance(out[key], str) and out[key].strip(), key)
+        self.assertEqual(self.admitted_records(), [])
 
     def test_refused_standing_returns_six_fields_instead_of_raising(self):
         out = boundary.admit(self.signal(mode="NOT_A_MODE"))
