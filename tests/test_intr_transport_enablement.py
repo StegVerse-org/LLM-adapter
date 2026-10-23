@@ -2,9 +2,12 @@
 
 A transport the caller merely names stays refused, six-field
 INTR_TRANSPORT_NOT_AUTHENTICALLY_OBSERVED. A crossing whose carrying pair
-(INTR_MESH_PATH_TRANSFER, then INTR_MESH_PATH_INGRESS /
-ORGANIZATION_INTR_DESTINATION_INGRESS at #431's location, body digest = signal
-digest) reads back and verifies is admitted. HTTP is unchanged.
+(INTR_MESH_PATH_TRANSFER on the sender's own ledger, then the Org's digest-only
+INTR_MESH_PATH_INGRESS / ORGANIZATION_INTR_DESTINATION_INGRESS at #431's
+location naming it by seal, body digest = signal digest) reads back and verifies
+is admitted. Nothing of the sender's record is retained on the org ledger
+(Q-PERMANENT-REPOSITORY-LEDGER, StegVerse-org/.github#167 comment 6374130335).
+HTTP is unchanged.
 
 The organization ledger is a scratch bare git object store with fixed dates; the
 contract is #432's copy of #431's designation plus the pinned org genesis
@@ -112,13 +115,16 @@ class _OrgLedger(unittest.TestCase):
     def head(self):
         return json.loads((self.org / "HEAD.json").read_text())["receipt_sha256"]
 
-    def carry(self, sig, *, body=None, location_override=None, link=True, retain=True, publish=True,
-              message_override=None):
-        """The InTr path pair for `sig`: source half retained, destination half on the org ledger."""
+    def carry(self, sig, *, body=None, location_override=None, link=True, on_sender=True, publish=True,
+              message_override=None, retain_on_org=False):
+        """The InTr path pair for `sig`: the source half on the sender's own ledger, the Org's digest-only
+        destination half on the org ledger. ``retain_on_org`` writes the withdrawn retained copy onto the org
+        ledger (only to show it is never read)."""
         source_ev = carrier.source_evidence(body if body is not None else sig, "comm-1")
-        scratch = Path(self._t.name) / "source-ledger"
-        source = append(scratch, carrier.SOURCE_CLASS, "INTR_MESH_PATH_TRANSFER:comm-1", source_ev)
-        if retain:
+        self.sender = Path(self._t.name) / "source-ledger"
+        source = append(self.sender if on_sender else Path(self._t.name) / "elsewhere", carrier.SOURCE_CLASS,
+                        "INTR_MESH_PATH_TRANSFER:comm-1", source_ev)
+        if retain_on_org:
             boundary._ledger()._put(self.org / "source-receipts" / (source["receipt_sha256"][7:] + ".json"), source)
         dest_ev = carrier.destination_evidence(source)
         if not link:
@@ -127,17 +133,14 @@ class _OrgLedger(unittest.TestCase):
         if location_override or message_override:
             dest_ev = {**dest_ev}
             if location_override:
-                dest_ev["addressed_location"] = location_override
-            if message_override:
+                dest_ev["destination_location"] = location_override
+            if message_override:      # a copied body: not the Org's digest-only record
                 dest_ev["message"] = message_override
-                dest_ev["message_sha256"] = carrier.sha(message_override)
-            core = {k: v for k, v in dest_ev.items()
-                    if k not in ("payload_sha256", "disposition", "communication_id", "boundary_evidence")}
-            dest_ev["payload_sha256"] = carrier.sha(core)
         dest = append(self.org, carrier.DESTINATION_CLASS, "INTR_MESH_PATH_INGRESS:comm-1", dest_ev)
         if publish:
             self.publish()
-        return {"destination_receipt_sha256": dest["receipt_sha256"], "org_ledger_head_receipt_sha256": self.head()}
+        return {"destination_receipt_sha256": dest["receipt_sha256"], "org_ledger_head_receipt_sha256": self.head(),
+                "source_ledger_root": str(self.sender)}
 
     def admit(self, sig, cite, **kw):
         """Inside append_route(), the route attests the store as published now (unless the cite carries one)."""
@@ -207,19 +210,27 @@ class UnverifiedInTrIsRefusedTests(_OrgLedger):
     def test_unlinked_source(self):
         report("intr-node")
         cite = self.carry(signal(), link=False)
-        self.assert_unobserved(self.admit(signal(), cite), "INTR_SOURCE_NOT_RETAINED")
+        self.assert_unobserved(self.admit(signal(), cite), "INTR_SOURCE_NOT_ON_SENDER_LEDGER")
 
-    def test_destination_message_is_not_the_source_message(self):
+    def test_a_destination_carrying_the_body_is_not_digest_only(self):
+        """Q-PERMANENT-REPOSITORY-LEDGER: an Org ingress record that copies the sender's body is refused."""
         report("intr-node")
-        swapped = {"message_class": carrier.MESSAGE_CLASS, "communication_id": "comm-1", "body": signal()}
-        swapped["body"]["extra"] = True
-        cite = self.carry(signal(), message_override=swapped)
-        self.assert_unobserved(self.admit(signal(), cite), "INTR_PAIR_NOT_LINKED")
+        copied = {"message_class": carrier.MESSAGE_CLASS, "communication_id": "comm-1", "body": signal()}
+        cite = self.carry(signal(), message_override=copied)
+        self.assert_unobserved(self.admit(signal(), cite), "INTR_DESTINATION_NOT_DIGEST_ONLY")
 
-    def test_source_not_retained(self):
+    def test_source_not_on_the_sender_ledger(self):
         report("intr-node")
-        cite = self.carry(signal(), retain=False)
-        self.assert_unobserved(self.admit(signal(), cite), "INTR_SOURCE_NOT_RETAINED")
+        cite = self.carry(signal(), on_sender=False)
+        self.assert_unobserved(self.admit(signal(), cite), "INTR_SOURCE_NOT_ON_SENDER_LEDGER")
+
+    def test_a_retained_copy_on_the_org_ledger_is_never_read(self):
+        """The withdrawn source-receipts/<hex>.json copy carries nothing: without the sender's ledger it is refused."""
+        report("intr-node")
+        cite = self.carry(signal(), on_sender=False, retain_on_org=True)
+        self.assert_unobserved(self.admit(signal(), cite), "INTR_SOURCE_NOT_ON_SENDER_LEDGER")
+        cite = {k: v for k, v in self.carry(signal(), retain_on_org=True).items() if k != "source_ledger_root"}
+        self.assert_unobserved(self.admit(signal(), cite), "INTR_SOURCE_NOT_ON_SENDER_LEDGER", refusals=2)
 
     def test_destination_not_on_the_published_ref(self):
         report("intr-node")
@@ -237,21 +248,20 @@ class UnverifiedInTrIsRefusedTests(_OrgLedger):
         cite = self.carry(signal(), publish=False)
         path = self.org / "receipts" / (cite["destination_receipt_sha256"][7:] + ".json")
         forged = json.loads(path.read_text())
-        forged["evidence"]["message"]["body"]["node_class"] = "FORGED"
+        forged["evidence"]["communication_id"] = "FORGED"
         path.write_text(json.dumps(forged))
         self.publish()
         # The designated read-back walks the chain with seals checked, so a forged half is unreadable.
         self.assert_unobserved(self.admit(signal(), cite), "ORG_LEDGER_LOCATION_UNREADABLE")
 
-    def test_unsealed_source_copy(self):
+    def test_unsealed_source_on_the_sender_ledger(self):
         report("intr-node")
-        cite = self.carry(signal(), publish=False)
-        retained = next((self.org / "source-receipts").glob("*.json"))
-        copy = json.loads(retained.read_text())
+        cite = self.carry(signal())
+        held = next((self.sender / "receipts").glob("*.json"))
+        copy = json.loads(held.read_text())
         copy["transition_id"] = "tampered"
-        retained.write_text(json.dumps(copy))
-        self.publish()
-        self.assert_unobserved(self.admit(signal(), cite), "INTR_SOURCE_NOT_RETAINED")
+        held.write_text(json.dumps(copy))
+        self.assert_unobserved(self.admit(signal(), cite), "INTR_SOURCE_NOT_ON_SENDER_LEDGER")
 
     def test_pure_verify_refuses_a_non_ingress(self):
         cite = self.carry(signal())
@@ -260,7 +270,7 @@ class UnverifiedInTrIsRefusedTests(_OrgLedger):
         genesis = chain[-1]["receipt_sha256"]
         self.assertEqual(carrier.verify(signal(), destination_receipt_sha256=genesis,
                                         org_ledger_head_receipt_sha256=cite["org_ledger_head_receipt_sha256"],
-                                        org_chain=chain, retained_source=None)[0],
+                                        org_chain=chain, source_record=None)[0],
                          "INTR_DESTINATION_NOT_AN_INGRESS")
 
 
@@ -422,7 +432,7 @@ class HttpIsUnchangedTests(_OrgLedger):
 
 class InvariantTests(unittest.TestCase):
     def test_a_source_half_missing_endpoint_kind_fails_closed_not_keyerror(self):
-        """LC-KV-20 (carrier 81ad9d3b): an incomplete retained source half is refused, never a KeyError."""
+        """LC-KV-20: an incomplete source half is refused, never a KeyError."""
         def receipt(body):
             return {**body, "receipt_sha256": carrier.sha(body)}
         sig = signal()
@@ -434,27 +444,30 @@ class InvariantTests(unittest.TestCase):
             ev["payload_sha256"] = carrier.sha(core)
             source = receipt({"schema": carrier.RECEIPT_SCHEMA, "repository": "StegVerse-org/.github",
                               "transition_class": carrier.SOURCE_CLASS, "previous_receipt_sha256": None, "evidence": ev})
+            seal = source["receipt_sha256"]
             dest = receipt({"schema": carrier.RECEIPT_SCHEMA, "transition_class": carrier.DESTINATION_CLASS,
-                            "evidence": {"schema": carrier.DESTINATION_EVIDENCE_SCHEMA,
-                                         "addressed_location": carrier.ORG_LEDGER_LOCATION,
-                                         "source_repository_receipt_sha256": source["receipt_sha256"],
-                                         "boundary_evidence": {"operation": carrier.DESTINATION_OPERATION}}})
+                            "evidence": {"schema": carrier.DESTINATION_EVIDENCE_SCHEMA, "path_id": "p",
+                                         "communication_id": "c", "destination_location": carrier.ORG_LEDGER_LOCATION,
+                                         "source_repository_receipt_sha256": seal,
+                                         "boundary_evidence": {"operation": carrier.DESTINATION_OPERATION,
+                                                               "path_id": "p", "communication_id": "c",
+                                                               carrier.ENDPOINT_HEAD_KEY: seal}}})
             got = carrier.verify(sig, destination_receipt_sha256=dest["receipt_sha256"],
                                  org_ledger_head_receipt_sha256=dest["receipt_sha256"], org_chain=[dest],
-                                 retained_source=source)
+                                 source_record=source)
             self.assertIsNotNone(got, drop)
             if drop != "communication_id":
                 self.assertEqual(got[0], "INTR_SOURCE_EVIDENCE_INCOMPLETE", (drop, got))
 
     def test_destination_evidence_refuses_with_six_fields_never_keyerror(self):
-        """Carrier 81ad9d3b: destination_evidence() on an incomplete source half returns the six-field FAIL_CLOSED."""
+        """destination_evidence() on an incomplete source half returns the six-field FAIL_CLOSED (LC-KV-20)."""
         six = ("failure_code", "failed_predicate", "required_evidence_or_repair", "retry_entrypoint",
                "owning_existing_goal", "next_attempt")
         ev = carrier.source_evidence(signal(), "intr-node-1")
         cases = [None, {}, {"evidence": "x"}, {"evidence": ev}, {"evidence": ev, "repository": "StegVerse-org/.github"}]
         for drop in carrier.SOURCE_REBUILD_KEYS:
             cases.append({"evidence": {k: v for k, v in ev.items() if k != drop},
-                          "repository": "StegVerse-org/.github", "receipt_sha256": "0" * 64})
+                          "repository": "StegVerse-org/.github", "receipt_sha256": "sha256:" + "0" * 64})
         for source in cases:
             with self.subTest(source=str(source)[:60]):
                 got = carrier.destination_evidence(source)
@@ -463,8 +476,14 @@ class InvariantTests(unittest.TestCase):
                 self.assertEqual(got["failure_code"], carrier.FAILURE_CODE)
                 for field in six:
                     self.assertTrue(isinstance(got[field], str) and got[field], field)
-        whole = {"evidence": ev, "repository": "StegVerse-org/.github", "receipt_sha256": "0" * 64}
-        self.assertNotIn("failure_code", carrier.destination_evidence(whole))
+        cases.append({"evidence": ev, "repository": "StegVerse-org/.github", "receipt_sha256": "0" * 64})
+        whole = {"evidence": ev, "repository": "StegVerse-org/.github", "receipt_sha256": "sha256:" + "0" * 64}
+        got = carrier.destination_evidence(whole)
+        self.assertNotIn("failure_code", got)
+        # digest-only: pointers and digests, never the body (Q-PERMANENT-REPOSITORY-LEDGER)
+        self.assertEqual(set(got), carrier.DESTINATION_KEYS)
+        self.assertEqual(set(got["boundary_evidence"]), carrier.DESTINATION_BOUNDARY_KEYS)
+        self.assertNotIn("message", json.dumps(got))
 
     def test_transport_table(self):
         self.assertEqual(boundary.TRANSPORTS, {"HTTP": "INSTALLED", "INTERLOCK_INTR": "INSTALLED"})
@@ -478,7 +497,7 @@ class InvariantTests(unittest.TestCase):
         shared = {
             "llm_adapter/org_ledger_location.py": "b51e6a8bd39ba6fd83044222a3858a2cb0c437020e3e9abbe97c4494d41f2681",
             "llm_adapter/ed25519_verify.py": "ab05e39a3e40b99f02ff199b178554e0ba435c3ff387dca3f896619770770232",
-            "llm_adapter/intr_transport_carrier.py": "81ad9d3b42076c991443f3d79ec82c5f306eb8a8aa5f21228fe9faeb8b21aca6",
+            "llm_adapter/intr_transport_carrier.py": "9d3e69c838d7e20533f0c5a06401b018948cb12a4201889f6b41d4b497df720f",
             "tests/org_ledger_harness.py": "3bbf7f7da563afd9e7a1da1ee8cdbb04219a655a3dcaff3d3a6b2190ce6db945",
             "tests/ed25519_test_signer.py": "3173bfcfca33129cd31942783b9e3e4c9380022f308f2fc31ccdda3dc2f6fe52",
             ".stegverse/node-ledger/org-ledger-head-signers.v1.json":
