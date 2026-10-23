@@ -6,7 +6,8 @@ ledger is published to refs/stegverse/organization-ledger of a scratch git objec
 store, the location #431's contract designates (LC-KV-16).
 
 E0 harness, in scope only: the contract carries #431's repository_ledger_location
-(fixture copy at b7a5c08b) plus the pinned org genesis #431's shape has to add
+(fixture copy of #431's contract.json) with a TEST genesis pin in the field #431's
+REPOSITORY_LEDGER_GENESIS_PIN transition writes in production
 (contract_with_431_location_and_pinned_genesis.json), and the NODE_LEDGER_OPENED
 signer list holds a TEST-ONLY public key (tests/ed25519_test_signer.py seed).
 Production has none of these yet.
@@ -530,6 +531,22 @@ class FailurePrecedenceTests(_Ledgers):
             pinless = self.evaluate()
         self.assert_refused(pinless, "ORG_LEDGER_GENESIS_NOT_PINNED")
         self.assertIn("StegVerse-org/LLM-adapter#431", pinless["next_attempt"])
+        self.assertNotIn("REPOSITORY_LEDGER_GENESIS_PIN", out["next_attempt"])   # not designated waits on #431 itself
+
+    def test_not_pinned_next_attempt_is_the_genesis_pin_transition(self):
+        with mock.patch.object(location, "CONTRACT_PATH", CONTRACT_431):
+            out = self.evaluate()
+        self.assert_refused(out, "ORG_LEDGER_GENESIS_NOT_PINNED")
+        self.assertEqual(out["next_attempt"], anchor.NEXT_PIN)
+        self.assertEqual(out["retry_entrypoint"], anchor.RETRY_PIN)
+        for needle in ("REPOSITORY_LEDGER_GENESIS_PIN", "scripts/llm_adapter_repository_ledger_genesis_pin.py plan",
+                       "receipted REPOSITORY_LEDGER_INITIALIZATION genesis record", "StegVerse-org/LLM-adapter#431",
+                       "no cron", "no polling", "no person"):
+            self.assertIn(needle, out["next_attempt"], needle)
+        self.assertIn("REPOSITORY_LEDGER_GENESIS_PIN", out["required_evidence_or_repair"])
+        self.assertIn("REPOSITORY_LEDGER_GENESIS_PIN", out["retry_entrypoint"])
+        for word in ("grant", "approved", "merge-ready", "timer elapses"):
+            self.assertNotIn(word, json.dumps(out).lower())
 
     def test_431s_null_genesis_pin_is_six_field_not_pinned(self):
         """#431 sets expected_genesis_receipt_sha256 to null (it cannot be known before observation)."""
