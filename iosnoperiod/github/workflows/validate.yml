@@ -199,7 +199,7 @@ jobs:
           PY
       - name: Test every SDK boundary crossing is recorded
         run: "$PYTHON_BIN -m unittest -v tests/test_sdk_boundary_crossing_record.py"
-      - name: Test anchored endpoint ledgers and node-ledger dissolution (LC-KV-13, NODE-LEDGER-DISSOLUTION-DISBURSEMENT-001; 0 skipped required)
+      - name: Test anchored endpoint ledgers and node-ledger dissolution (LC-KV-13, LC-KV-16, NODE-LEDGER-DISSOLUTION-DISBURSEMENT-001; 0 skipped required)
         run: |
           "$PYTHON_BIN" - <<'PY'
           import sys, unittest

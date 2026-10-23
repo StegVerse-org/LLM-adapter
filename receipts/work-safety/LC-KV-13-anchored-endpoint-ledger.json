@@ -1,6 +1,6 @@
 {
   "schema": "stegverse.work-mutation-safety/v1",
-  "task_id": "KV-SKAP-VAULT-FUNCTIONAL-001/LC-KV-13-anchored-endpoint-ledger+NODE-LEDGER-DISSOLUTION-DISBURSEMENT-001",
+  "task_id": "KV-SKAP-VAULT-FUNCTIONAL-001/LC-KV-13-anchored-endpoint-ledger+LC-KV-16+NODE-LEDGER-DISSOLUTION-DISBURSEMENT-001",
   "authority_effect": "NONE_PREFLIGHT_ONLY",
   "authoring_session": "lane-b-91117956 (Lane B, InTr and Mesh Destinations, StegVerse-org/.github#162)",
   "stacked_on": "main, carrying https://github.com/StegVerse-org/LLM-adapter/pull/430 (laneb/node-receipt-producers @3c106de4, itself on #429 and #428) by merge commit",
@@ -11,7 +11,7 @@
   ],
   "task_registry_refs": [
     "StegVerse-Labs/.github#3324 (KV-SKAP-VAULT-FUNCTIONAL-001)",
-    "StegVerse-Labs/.github#3330@578583be (LC-KV-13, LC-KV-15)",
+    "StegVerse-Labs/.github#3330@578583be (LC-KV-13, LC-KV-15); @c8b8d156 (LC-KV-16, Lane B: org ledger only at the contract location, signed NODE_LEDGER_OPENED, node_id from the proof, transport from receipts with no default)",
     "StegVerse-org/.github#162 (NODE-LEDGER-DISSOLUTION-DISBURSEMENT-001, goal STEGVERSE-CANONICAL-WORK-COORDINATION-001, class B, Lane B)"
   ],
   "master_records_review": {
@@ -75,7 +75,11 @@
     "tests/fixtures/node_receipts/generate_node_ledger_opened_with_stegos.py",
     "schemas/node-ledger-opened.v1.json",
     "schemas/node-ledger-opened-generation.v1.json",
-    "schemas/endpoint-kind.v1.json"
+    "schemas/endpoint-kind.v1.json",
+    "llm_adapter/org_ledger_location.py",
+    ".stegverse/node-ledger/node-ledger-opened-signers.v1.json",
+    "tests/fixtures/node_receipts/contract_with_431_repository_ledger_location.json",
+    "schemas/node-ledger-opened-signed.v1.json"
   ],
   "new_files": [
     {
@@ -200,6 +204,34 @@
         "StegVerse-Labs/continuity-vault-kit@037f505e:runtime/kv_interlock_endpoint.py (NODE_LEDGER_OPENED_FIELDS, ENDPOINT_KINDS, PENDING_LANE_B_SCHEMA)",
         "llm_adapter/endpoint_ledger_anchor.py"
       ]
+    },
+    {
+      "path": "llm_adapter/org_ledger_location.py",
+      "semantic_responsibility": "LC-KV-16: the one I/O boundary of evaluate_anchored. Reads the org ledger only at the contract's repository_ledger_location (#431: repository, ref refs/stegverse/organization-ledger, namespace) by a local git archive (protocol.allow=never, minimal env, timeout) into a temporary directory, with a safe regular-files-only unpack, and requires the REPOSITORY_LEDGER_INITIALIZATION genesis.",
+      "closest_existing_implementation": "StegVerse-org/.github resident-runtime/merge_transfer_gitstore.py (git-ref ledger store; not imported)",
+      "decision": "CREATE_NEW",
+      "justification": "LC-KV-16 forbids a caller-chosen org-ledger path; the pure cores ban subprocess, so the git read is isolated in its own module."
+    },
+    {
+      "path": ".stegverse/node-ledger/node-ledger-opened-signers.v1.json",
+      "semantic_responsibility": "Published public-key references (TV/TVC custody) whose Ed25519 signature over StegOS's NODE_LEDGER_OPENED record is accepted. Empty: NONE_PUBLISHED.",
+      "closest_existing_implementation": ".stegverse/node-ledger/pinned-code-digests.v1.json (pinned reference file)",
+      "decision": "CREATE_NEW",
+      "justification": "LC-KV-16: the anchor must be signed and verified against a published public-key reference; bots never hold keys."
+    },
+    {
+      "path": "schemas/node-ledger-opened-signed.v1.json",
+      "semantic_responsibility": "Schema of the signed NODE_LEDGER_OPENED envelope (stegverse.node-ledger-opened-signed/v1).",
+      "closest_existing_implementation": "schemas/node-ledger-opened-generation.v1.json",
+      "decision": "CREATE_NEW",
+      "justification": "Publishes the LC-KV-16 anchor body shape; a test pins it to the code."
+    },
+    {
+      "path": "tests/fixtures/node_receipts/contract_with_431_repository_ledger_location.json",
+      "semantic_responsibility": "Test-only byte copy of #431 @b7a5c08b's contract.json, which adds repository_ledger_location.",
+      "closest_existing_implementation": ".stegverse/transition-ledger/contract.json",
+      "decision": "CREATE_NEW",
+      "justification": "Exercises the designated-location path before #431 is admitted; production (main's contract) refuses NOT_DESIGNATED."
     }
   ]
 }

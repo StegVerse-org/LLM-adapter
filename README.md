@@ -813,7 +813,20 @@ continuity-vault-kit#258 consumes: `schema`, `transition_class`, `node_id`, `nod
 receipt) and `receipt_sha256`. `verify_node_ledger_opened_anchor` is the `ORGANIZATION_LEDGER` issuer verifier; it
 re-derives the anchor from both ledgers and refuses anything else with `NODE_LEDGER_OPENED_ANCHOR_NOT_ISSUED`. No
 `TV/TVC` verifier exists, so a `TV/TVC` anchor is refused. Schemas: `schemas/node-ledger-opened.v1.json`,
-`schemas/node-ledger-opened-generation.v1.json`, `schemas/endpoint-kind.v1.json`.
+`schemas/node-ledger-opened-generation.v1.json`, `schemas/node-ledger-opened-signed.v1.json`,
+`schemas/endpoint-kind.v1.json`.
+
+**The anchor cannot be self-minted (LC-KV-16, StegVerse-Labs/.github#3330 @c8b8d156).** The org ledger is never a
+caller-chosen path: `llm_adapter.org_ledger_location` reads the contract's `repository_ledger_location` (#431:
+`StegVerse-org/.github`, `refs/stegverse/organization-ledger`, `repository-ledger/StegVerse-org/LLM-adapter`) and takes
+only that ref and namespace, by a local `git archive` (`protocol.allow=never`, minimal env, no network) from the object
+store the caller names. No designation is `ORG_LEDGER_LOCATION_NOT_DESIGNATED`; a missing ref, namespace or genesis is
+`ORG_LEDGER_LOCATION_UNREADABLE`. An EPHEMERAL anchor body must be a `stegverse.node-ledger-opened-signed/v1` envelope
+(`schemas/node-ledger-opened-signed.v1.json`): StegOS's record plus an Ed25519 signature, verified with the stdlib
+verifier, by a key published in `.stegverse/node-ledger/node-ledger-opened-signers.v1.json` (TV/TVC custody; bots never
+hold keys; the tests use fixture keys only). None is published yet, so every production EPHEMERAL anchor is
+`NODE_LEDGER_OPENED_SIGNER_NOT_PUBLISHED`. `node_id` is not a caller argument: it is derived from the verified
+identity proof, and an optional `claimed_node_id` decides nothing and must match. Transport has no default.
 
 **Identity and transport (LC-KV-15 inside the wrapper).** Identity is never taken from an asserted field. The caller
 passes a `stegverse.node-identity-proof/v1`: an Ed25519 signature by the anchored `node_identity_key` over the
@@ -825,5 +838,6 @@ Otherwise the result is six-field `FAIL_CLOSED` `INTR_TRANSPORT_NOT_AUTHENTICALL
 `node_ingress_boundary.TRANSPORTS` has `INTERLOCK_INTR: NOT_YET_ENABLED`, so every production call refuses here
 today; the tests install it only inside the test.
 
-**E0.** Everything is event-triggered only. There are no clock or network reads in either core, and it runs only on
+**E0.** Everything is event-triggered only. There are no clock or network reads in either core (the one I/O boundary
+is the local `git archive` read in `llm_adapter/org_ledger_location.py`), and it runs only on
 temporary ledgers until the org-ledger append route is admitted.
