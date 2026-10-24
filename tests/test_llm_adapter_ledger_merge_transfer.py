@@ -693,6 +693,16 @@ class GenesisPinPrePinIngressTests(unittest.TestCase):
                                  "NO_ENDPOINT_IS_A_SOURCE_OF_ORG_LEDGER_RECORDS")
                 self.assertFalse(d["ledger_written"])
 
+    def test_a_genesis_pointer_without_node_ref_is_refused(self):
+        """node_ref is required: SIGNAL_KEYS names it and genesis_signal() sets it to EMITTER_REF, so a pointer
+        without it is not the one accepted signal (refused before any read, nothing written)."""
+        bare, genesis, signal, cite = self.carried()
+        self.assertIn("node_ref", R.SIGNAL_KEYS)
+        d = R.receive({k: v for k, v in signal.items() if k != "node_ref"}, intr_carrier=cite, org_ledger=bare,
+                      contract_bytes=self.before)
+        self.assert_six(d, "PRE_PIN_SIGNAL_CLASS_NOT_ACCEPTED")
+        self.assertFalse(d["ledger_written"])
+
     def test_forged_or_off_chain_genesis_is_refused(self):
         bare, _, signal, cite = self.carried(name="forged", tamper=True)
         self.assert_six(R.receive(signal, intr_carrier=cite, org_ledger=bare, contract_bytes=self.before),
