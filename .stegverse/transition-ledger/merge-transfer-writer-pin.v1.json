@@ -1,0 +1,75 @@
+{
+  "authority_effect": "NONE_PIN_ONLY",
+  "copied_blocks": {
+    "from": "resident-runtime/merge_transfer.py",
+    "into": "scripts/llm_adapter_ledger_merge_transfer.py",
+    "sha256": {
+      "commit_facts": "sha256:4b7ce8b30c4a1472b7821a70896b3736f902d7daafa0deb23a00375bbe4fedf8",
+      "facts_failure": "sha256:58276e1b4e98540b56dc6930bdafa31cabea890b94116de00dde6ed6356f740c",
+      "merge_evidence": "sha256:877c8169cea56d33c5cd325d7ea3c47c4dcc18c724b493fbc8982a06e87a126a",
+      "sealed": "sha256:956eb3c10b9192254dfb0687625bc48cc344df3c93134a14c87aad601c7d1ef6"
+    }
+  },
+  "files": [
+    {
+      "path": ".github/workflows/organization-ledger-merge-transfer.yml",
+      "sha256": "sha256:980585d645dd0cff29038e92985dcfc2a072404d6d42629f700e099e26dd61d6"
+    },
+    {
+      "path": ".stegverse/transition-ledger/org-contract.json",
+      "sha256": "sha256:6d373913af7bd13a53c71beffbe617aa80c284df73d4f25ec3c466547b4ceda8"
+    },
+    {
+      "path": ".stegverse/transition-ledger/contract.json",
+      "sha256": "sha256:aa97b3161aad5cabf3a5dfe8c79f1df458b923ca7bc2fddb15a839024ec7e18d"
+    },
+    {
+      "path": ".stegverse/transition-ledger/emit.py",
+      "sha256": "sha256:a77459e29cb9a7f5ec587b7d4f34e8a426adf94de68e47cf3ac756c1b0e7fbf2"
+    },
+    {
+      "path": "org-kernel/kernel.py",
+      "sha256": "sha256:ccc5692ea513eaccdbc62b781b793b7c4ef9d2b8bd8f6c4f88a0553cc0349eaf"
+    },
+    {
+      "path": "resident-runtime/aggregate_repo_transition.py",
+      "sha256": "sha256:b60e9c634bc79ade73d844764fff453c106ee02b4e2c021254d22d9e65135b4c"
+    },
+    {
+      "path": "resident-runtime/intr_destination_ingress.py",
+      "sha256": "sha256:3aad8f49daa78fd3149051d34b2c582b1a1dd4f8a38283bb9809a74e69b0953b"
+    },
+    {
+      "path": "resident-runtime/ledger_store.py",
+      "sha256": "sha256:6bd217e0df6de9fee072933bf2251f24ea4bf4ca5d1eb18b4bebe226e86534cf"
+    },
+    {
+      "path": "resident-runtime/merge_transfer.py",
+      "sha256": "sha256:032ed727358d56f33369b35e6cc50d65f6af5dc0035f0b69fe7cddb3f4f4e20e"
+    },
+    {
+      "path": "resident-runtime/merge_transfer_range.py",
+      "sha256": "sha256:5c9e44d81ff587858a19f15847e3776de4c9ccd09e2121cee95973176485e516"
+    },
+    {
+      "path": "resident-runtime/organization_egress_boundary.py",
+      "sha256": "sha256:dc70c6fee11cc2dc873659c7019c134fe6a30b1f9d61dc90c6465048fd2a913d"
+    },
+    {
+      "path": "resident-runtime/organization_ledger_readback.py",
+      "sha256": "sha256:84a3f2ec55a03d8e789d7cfe07126891144c1aa862ad16219463fef00b41dfb1"
+    }
+  ],
+  "pin_sha256": "sha256:9d9a381a54d47a2e427169717e8682982ff7cf36ebc8843a405ec31e82006e80",
+  "schema": "stegverse.llm-adapter.merge-transfer-writer-pin/v1",
+  "source_commit": "907f4305ddd4f39b16d96638744304de9ef0b67d",
+  "source_commit_observed_by": "git clone of StegVerse-org/.github main (read-only) at 907f4305, 2026-10-23; every pinned file re-hashed",
+  "source_repository": "StegVerse-org/.github",
+  "workflow_adaptations": [
+    "contents: read only; no publish step and no git push",
+    "the writer is the pinned checkout, verified by sha256; the plan never appends",
+    "the org ledger is read from an anonymous fetch of the public ref into a temporary bare copy",
+    "the run ends FAIL_CLOSED with six fields until genesis and an admitted append path are observed"
+  ],
+  "workflow_copied_from": ".github/workflows/organization-ledger-merge-transfer.yml"
+}

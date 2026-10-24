@@ -19,7 +19,15 @@ reference derived from a clock sample says so, so a supplied epoch and a derived
 one can be told apart.
 
 `observed_at` stays because this repository's ledger contract requires it, and it
-is descriptive only -- `ordering` names what the chain is ordered by.
+is descriptive only -- `ordering` names what the chain is ordered by. It is no
+longer a wall-clock read: it comes from the receipt's own `hb_reference`, as in
+StegVerse-Labs/.github#3263 (`observed_at_from_hb_reference`): a supplied epoch
+gives `SUPPLIED_HB_EPOCH:<epoch>`, so the same transition at the same supplied
+epoch writes the same receipt bytes, and a reference the emitter derived from a
+host sample says so, `HB_EPOCH_DERIVED_FROM_CLOCK:<epoch>`. A caller that must
+be byte-deterministic (the REPOSITORY_LEDGER_INITIALIZATION genesis,
+StegVerse-org/LLM-adapter#431) refuses an absent epoch before calling append
+(HB_EPOCH_NOT_SUPPLIED, StegVerse-Labs/.github#3290).
 
 The lock mechanics mirror `.github`'s repaired emitter: an advisory lock around
 the HEAD read and publication, a temporary file replaced atomically, and an fsync
@@ -88,6 +96,35 @@ def hb_reference(epoch=None):
             "sampled_unix_ns": sampled_ns, "authority_effect": "NONE"}
 
 
+def observed_at_from_hb_reference(hb):
+    """`observed_at` provenance from the receipt's own heartbeat reference, never a wall-clock read.
+
+    The same rule as StegVerse-Labs/.github#3263 resident-runtime/aggregate_repo_transition.py: a supplied epoch
+    gives ``SUPPLIED_HB_EPOCH:<epoch>``; a reference derived from a host sample says so,
+    ``HB_EPOCH_DERIVED_FROM_CLOCK:<epoch>``.
+    """
+    epoch = hb.get("epoch")
+    return ("HB_EPOCH_DERIVED_FROM_CLOCK:%s" if hb.get("derived_from_clock") is True else "SUPPLIED_HB_EPOCH:%s") % epoch
+
+
+def receipt_body(transition_id, transition_class, predecessor_state_sha256, successor_state_sha256,
+                 evidence, authority_effect, hb, previous_receipt_sha256):
+    """The receipt body append seals, from its inputs only. Pure: no clock, no store."""
+    return {"schema": "stegverse.repo-transition-receipt/v1",
+            "repository": C["repository"],
+            "transition_id": transition_id,
+            "transition_class": transition_class,
+            "predecessor_state_sha256": predecessor_state_sha256,
+            "successor_state_sha256": successor_state_sha256,
+            "evidence": evidence if evidence is not None else {},
+            "authority_effect": authority_effect,
+            "hb_reference": hb,
+            "ordering": ORDERING,
+            "observed_at": observed_at_from_hb_reference(hb),
+            "observed_at_is_descriptive_not_ordering": True,
+            "previous_receipt_sha256": previous_receipt_sha256}
+
+
 @contextmanager
 def _exclusive(root):
     """Serialize appenders so one HEAD is read and published per append."""
@@ -128,19 +165,8 @@ def append(transition_id, transition_class, predecessor_state_sha256,
     with _exclusive(root):
         head_path = root / "HEAD.json"
         prev = json.loads(head_path.read_text()).get("receipt_sha256") if head_path.is_file() else None
-        body = {"schema": "stegverse.repo-transition-receipt/v1",
-                "repository": C["repository"],
-                "transition_id": transition_id,
-                "transition_class": transition_class,
-                "predecessor_state_sha256": predecessor_state_sha256,
-                "successor_state_sha256": successor_state_sha256,
-                "evidence": evidence if evidence is not None else {},
-                "authority_effect": authority_effect,
-                "hb_reference": hb_reference(hb_epoch),
-                "ordering": ORDERING,
-                "observed_at": datetime.now(timezone.utc).isoformat(),
-                "observed_at_is_descriptive_not_ordering": True,
-                "previous_receipt_sha256": prev}
+        body = receipt_body(transition_id, transition_class, predecessor_state_sha256, successor_state_sha256,
+                            evidence, authority_effect, hb_reference(hb_epoch), prev)
         digest = sha(body)
         receipt = {**body, "receipt_sha256": digest}
         path = root / "receipts" / (digest.split(":", 1)[1] + ".json")

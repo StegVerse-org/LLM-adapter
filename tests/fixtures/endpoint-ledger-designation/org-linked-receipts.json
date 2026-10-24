@@ -1,0 +1,80 @@
+{
+  "chain": [
+    {
+      "evidence": {
+        "boundary_evidence": {
+          "endpoint_head_sha256": "sha256:5d4c499ad7d4085251d2fb3369c51930b8a20a744218e22d0392931184631e3d",
+          "operation": "ORGANIZATION_INTR_DESTINATION_INGRESS",
+          "path_id": "StegVerse-org->STEGVERSE_KV:_StegVerse/Receipts:intr-destination"
+        },
+        "path_id": "StegVerse-org->STEGVERSE_KV:_StegVerse/Receipts:intr-destination",
+        "schema": "stegverse.intr-path-ingress-evidence/v1",
+        "source_repository_receipt_sha256": "sha256:5d4c499ad7d4085251d2fb3369c51930b8a20a744218e22d0392931184631e3d"
+      },
+      "hb_reference": {
+        "authority_effect": "NONE",
+        "derived_from_clock": false,
+        "epoch": 446655700,
+        "frequency_hz": 100,
+        "heartbeat_id": "HB:446655700",
+        "period_ms": 10,
+        "progression_dependency": "OSCILLATOR_ONLY"
+      },
+      "receipt_sha256": "sha256:8097c7b6db1fb025ba3908155071c7ad46944c16f4c85f59e08eede6aa62dd15",
+      "schema": "stegverse.organization-transition-receipt/v1",
+      "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
+      "transition_class": "INTR_MESH_PATH_INGRESS"
+    },
+    {
+      "evidence": {
+        "boundary_evidence": {
+          "endpoint_head_sha256": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+          "operation": "ORGANIZATION_INTR_DESTINATION_INGRESS",
+          "path_id": "StegVerse-org->StegVerse-org/LLM-adapter:intr-destination"
+        },
+        "path_id": "StegVerse-org->StegVerse-org/LLM-adapter:intr-destination",
+        "schema": "stegverse.intr-path-ingress-evidence/v1",
+        "source_repository_receipt_sha256": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+      },
+      "hb_reference": {
+        "authority_effect": "NONE",
+        "derived_from_clock": false,
+        "epoch": 446655699,
+        "frequency_hz": 100,
+        "heartbeat_id": "HB:446655699",
+        "period_ms": 10,
+        "progression_dependency": "OSCILLATOR_ONLY"
+      },
+      "receipt_sha256": "sha256:2720763ee717103f19f91be80ce86620afcdba246ae883b090758b3bc90ed1fd",
+      "schema": "stegverse.organization-transition-receipt/v1",
+      "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
+      "transition_class": "INTR_MESH_PATH_INGRESS"
+    },
+    {
+      "evidence": {
+        "boundary_evidence": {
+          "endpoint_head_sha256": "sha256:23fac5e23384aa5bfd8f0892ca68b838ec3fd614abeb962f666ecb63e4bfc212",
+          "operation": "ORGANIZATION_INTR_DESTINATION_INGRESS",
+          "path_id": "StegVerse-org->STEGVERSE_KV:_StegVerse/Receipts:intr-destination"
+        },
+        "path_id": "StegVerse-org->STEGVERSE_KV:_StegVerse/Receipts:intr-destination",
+        "schema": "stegverse.intr-path-ingress-evidence/v1",
+        "source_repository_receipt_sha256": "sha256:23fac5e23384aa5bfd8f0892ca68b838ec3fd614abeb962f666ecb63e4bfc212"
+      },
+      "hb_reference": {
+        "authority_effect": "NONE",
+        "derived_from_clock": false,
+        "epoch": 446655698,
+        "frequency_hz": 100,
+        "heartbeat_id": "HB:446655698",
+        "period_ms": 10,
+        "progression_dependency": "OSCILLATOR_ONLY"
+      },
+      "receipt_sha256": "sha256:8a47c09ee875b7e89fb3d114fe8c4d377f926ec66668ab6a428d04a4b5a04a13",
+      "schema": "stegverse.organization-transition-receipt/v1",
+      "synthetic": "SYNTHETIC_FIXTURE_NOT_LEDGERED",
+      "transition_class": "INTR_MESH_PATH_INGRESS"
+    }
+  ],
+  "note": "SYNTHETIC: org-chain excerpt, newest first; the Org's own ingress records of KV crossings, each pointing at KV's egress record by digest (source_repository_receipt_sha256, boundary_evidence.endpoint_head_sha256) with a supplied epoch"
+}

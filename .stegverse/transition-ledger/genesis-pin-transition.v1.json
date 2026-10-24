@@ -1,0 +1,68 @@
+{
+  "schema": "stegverse.manifest-state-transition/v1",
+  "transition_class": "REPOSITORY_LEDGER_GENESIS_PIN",
+  "repository": "StegVerse-org/LLM-adapter",
+  "admission": "governed-element rule: clearly related to StegVerse-org/LLM-adapter#431 (organization-ledger onboarding), which designates the location this transition pins",
+  "trigger": {
+    "kind": "INTR_INGRESS_SIGNAL",
+    "signal_class": "REPOSITORY_LEDGER_GENESIS_OBSERVED",
+    "signal_schema": "stegverse.repository-ledger-genesis-observed/v1",
+    "record_transition_class": "REPOSITORY_LEDGER_INITIALIZATION",
+    "record_location": "StegVerse-org/.github#refs/stegverse/organization-ledger:repository-ledger/StegVerse-org/LLM-adapter",
+    "record_is_the_organizations_own_append": true,
+    "org_side_emitter": "StegVerse-org/.github .github/workflows/intr-path-transfer.yml (existing path transfer; no new workflow, no .github change)",
+    "new_organization_workflow": false,
+    "carrier_classes": [
+      "INTR_MESH_PATH_TRANSFER",
+      "INTR_MESH_PATH_INGRESS"
+    ],
+    "carrier_shapes": "llm_adapter/intr_transport_carrier.py (byte copy of #432/#433): source half retained at <namespace>/source-receipts/<hex>.json, destination half ORGANIZATION_INTR_DESTINATION_INGRESS on the namespace chain, body = the signal",
+    "receiver": {
+      "entrypoint": "scripts/llm_adapter_genesis_pin_ingress.py receive --signal <genesis-observed signal json> --carrier <{destination_receipt_sha256, org_ledger_head_receipt_sha256, org_ledger_head_attestation} json> --org-ledger <read-only copy of refs/stegverse/organization-ledger>",
+      "pre_pin_only": true,
+      "authenticates_by": "the genesis-pin planner's own chain-to-sealed-genesis verification over the published refs/stegverse/organization-ledger read-back, plus the org-ledger head attestation over that genesis, head and namespace tree by a key published in .stegverse/node-ledger/org-ledger-head-signers.v1.json (ORG-LEDGER-HEAD-SIGNER-001, TV/TVC custody; llm_adapter/org_ledger_location.py byte copy of #432's), plus intr_transport_carrier.verify; never the pin (LC-KV-19)",
+      "other_signals_while_pin_is_null": "FAIL_CLOSED PRE_PIN_SIGNAL_CLASS_NOT_ACCEPTED (six fields)",
+      "after_pin": "FAIL_CLOSED PRE_PIN_INGRESS_CLOSED; signals take the normal InTr gate (intr_transport_carrier.observe through org_ledger_location.designated_org_ledger, #433)",
+      "unattested_copy": "FAIL_CLOSED MERGE_APPEND_PATH_NOT_ADMITTED while no head signer is published; ORG_LEDGER_HEAD_NOT_AUTHENTICATED for a missing, mismatched, unpublished or badly signed attestation (six fields)"
+    },
+    "accepted_while_pin_is_null": [
+      "REPOSITORY_LEDGER_GENESIS_OBSERVED"
+    ],
+    "cron": false,
+    "polling": false,
+    "waits_on_a_person": false,
+    "dispatch": false,
+    "wiring": "DECLARED_INTR_DESTINATION_RECEIVER",
+    "wiring_note": "Coordination ruling option (b), Lane B (#162): the trigger arrives as an InTr ingress signal from the existing org path transfer. The org emitter's message builder at StegVerse-org/.github@907f4305 (resident-runtime/intr_path_transfer.py message/path_evidence) fixes the body to {schema, path_id, transfer_commit} and does not carry destination_location or endpoint_kind; carrying this signal in the carrier shape is an org-side precondition outside this repository and is not changed here. Carrying it is StegVerse-org/.github#235 (INTR-PATH-TRANSFER-TYPED-BODY-001, ADMISSION_ORDER step 2a)."
+  },
+  "entrypoint": "scripts/llm_adapter_repository_ledger_genesis_pin.py plan --org-ledger <read-only copy of refs/stegverse/organization-ledger> --genesis-receipt <sha256 named by the receipted genesis record> --head-attestation <stegverse.org-ledger-head-attestation/v1 json>",
+  "reads": "the namespace chain from repository-ledger/StegVerse-org/LLM-adapter/HEAD.json back to its sealed REPOSITORY_LEDGER_INITIALIZATION root",
+  "writes": {
+    "path": ".stegverse/transition-ledger/contract.json",
+    "json_pointer": "/repository_ledger_location/expected_genesis_receipt_sha256",
+    "value": "the observed genesis receipt_sha256, read back; never computed in advance"
+  },
+  "consumes_receipt": "a REPOSITORY_LEDGER_GENESIS_PIN repository receipt appended by .stegverse/transition-ledger/emit.py (unchanged) whose evidence.consumes_receipt_sha256 is the genesis receipt_sha256 and whose predecessor and successor state digests are the contract bytes before and after",
+  "idempotent": "a contract already pinned to the observed genesis plans no write and no receipt",
+  "refusals": [
+    "ORGANIZATION_LEDGER_COPY_UNAVAILABLE",
+    "REPOSITORY_LEDGER_GENESIS_UNOBSERVED",
+    "REPOSITORY_LEDGER_GENESIS_NOT_ON_CHAIN",
+    "REPOSITORY_LEDGER_GENESIS_MISMATCH",
+    "EXPECTED_GENESIS_PIN_CONFLICT"
+  ],
+  "authority_effect": "NONE",
+  "contract_paths": {
+    "allowlist": [
+      ".stegverse/transition-ledger/contract.json"
+    ],
+    "default": ".stegverse/transition-ledger/contract.json",
+    "rule": "repo-relative, on the allowlist, no traversal, and the contract must have the #431 repository_ledger_location shape; else six-field FAIL_CLOSED CONTRACT_PATH_NOT_ALLOWLISTED / CONTRACT_NOT_431_SHAPE",
+    "withdrawn_endpoint_contract_paths": [
+      ".stegverse/receipt-ledgers/01_KV_Ledger.contract.json",
+      ".stegverse/receipt-ledgers/02_SKAP_Vault_Ledger.contract.json"
+    ],
+    "endpoint_rule": "No endpoint (KV, SKAP Vault, node or gateway, externally or ecosystem maintained) is a GitHub Organization member or a source of org-ledger records (Rigel, relayed on StegVerse-org/.github#160 comment 6372871021). StegVerse-Labs/continuity-vault-kit#263 @20451a0c put the KV and SKAP Vault ledgers on refs/stegverse/organization-ledger; @706877b6 moved them to STEGVERSE_KV's own recorded receipt chains (_StegVerse/Receipts, _Vault/SKAP/Receipts). Naming either withdrawn path, or contract bytes naming an endpoint repository, is six-field FAIL_CLOSED ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE; nothing is read or planned. An endpoint's genesis is pinned on its own chain by its own reader (cvk runtime.kv_receipt_ledgers.read_receipt_ledger).",
+    "receiver_note": "the pre-pin receiver takes the same parameter and the same endpoint rule; its genesis pointer carries node_ref, and a pointer naming any node_ref but StegVerse-org/.github (the org's own path) is six-field FAIL_CLOSED ENDPOINT_NOT_AN_ORG_LEDGER_SOURCE"
+  }
+}
