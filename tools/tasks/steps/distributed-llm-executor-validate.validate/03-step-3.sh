@@ -1,0 +1,2 @@
+echo "authority_effect=NONE_SOURCE_VALIDATION_ONLY"
+echo "live_external_named_source_execution_observed=false"

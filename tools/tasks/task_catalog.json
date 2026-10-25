@@ -1,0 +1,1460 @@
+{
+ "schema": "stegverse.task-catalog/v1",
+ "repository": "StegVerse-org/LLM-adapter",
+ "goal_id": "G17-WORKFLOW-SURFACE-MINIMIZATION",
+ "authority": "Rigel 2026-10-24 retroactive G17 enforcement (StegVerse-org/.github#166); pattern StegVerse-Labs/StegDB#60 (eab2e773)",
+ "dispatcher": ".github/workflows/validation-dispatcher.yml",
+ "runner": "tools/tasks/run_catalog.py",
+ "runner_source": "StegVerse-Labs/StegDB tools/tasks/run_catalog.py @ eab2e773271f3e63466a710f1b4555f677882848 (sha256 f741f30557888fd8e4852a52adfc65736a08898d49ade7519f6bcc2672921e9b), copied unmodified",
+ "rule": "Every check a folded workflow job ran is one group here; its step bodies are the original run blocks byte for byte, pinned by sha256, except the repairs listed. A new check is a new group (or a step in one), never a new workflow file.",
+ "path_filters": "Dropped: every group runs on every pull_request and push to main (a superset of the original path-filtered runs). workflow_dispatch/schedule triggers are not carried (no manual dispatch, no cron).",
+ "repairs": [
+  "The dispatcher's check job fetches the exact source anonymously before run_catalog.py runs (git init; anonymous fetch --depth 1 of the PR head or pushed sha by URL; detached checkout). It adds no named remote, so each folded job's own anonymous fetch step (git init / git remote add origin / fetch / checkout) still runs byte for byte inside its group.",
+  "Step bodies that read their own workflow file (the 'Confirm ... authority boundary' / 'non-authorizing scope' assertions: permissions: {}, no actions/checkout, no actions/setup-python, no persist-credentials, cancel-in-progress) read the verbatim record under tools/tasks/folded/ instead of .github/workflows/; the assertions are unchanged and still hold.",
+  "capability-runtime.verify's OS x Python strategy matrix (ubuntu/windows/macos x 3.11/3.12) is six groups with matrix_values {os, python}; the dispatcher's check job runs each on runs-on: matrix.runs_on.",
+  "tests/test_sdk_install_constraints.py and tests/test_workflow_action_pins.py also read tools/tasks/folded/ (the verbatim records whose run blocks run_catalog.py verify pins byte for byte to the executed step bodies), so the M-P8 constraint guard and the M-P9 pin guard keep covering the folded install steps and actions.",
+  "stegverse-governance.yml's one job is a job-level `uses:` of StegVerse-org/StegVerse-SDK governance-gate.yml pinned at 1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b; a run block cannot call a reusable workflow, so the job is carried verbatim as the dispatcher job `stegverse-governance` (same pin, same with:)."
+ ],
+ "folded_from_commit": "ece815b1c5976dadb7d4cdc47ab37ae7a2a75605",
+ "groups": [
+  {
+   "id": "capability-runtime.verify.ubuntu-py3.11",
+   "source": {
+    "workflow": ".github/workflows/capability-runtime.yml",
+    "workflow_name": "capability-runtime",
+    "job": "verify",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "627db7cb0f5173a412089c99459574fc3002adb9274ac2a29b4227ce16d08213",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Resolve requested Python without token-backed setup actions (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/03-resolve-requested-python-without-token-backed-setup-actions-.sh",
+     "run_sha256": "64389ff883ff6dea077245d968210b8337850e2d82d26c52abdf42e2ab21a51e",
+     "shell": "bash",
+     "env": {
+      "PYTHON_VERSION": "${{ matrix.python }}"
+     }
+    },
+    {
+     "name": "Install runtime dependencies",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
+     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "shell": "bash"
+    },
+    {
+     "name": "Validate capability manifest",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/05-validate-capability-manifest.sh",
+     "run_sha256": "b531ef9eafa706ed797ac967ad58e679246d0cfb17e77e3bf6e65265ab108b29",
+     "shell": "bash"
+    },
+    {
+     "name": "Test capability reconstruction and portable resolution",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/06-test-capability-reconstruction-and-portable-resolution.sh",
+     "run_sha256": "5b056d5fe803a5a7187626de98f73857ecd1ff3f4820e6ee003480c9fa0aba4b",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify installed zero-touch bootstrap command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/07-verify-installed-zero-touch-bootstrap-command.sh",
+     "run_sha256": "1082eed6d0a11c0778c5c1f0a3589349a4d69e370f6bb4c688e5be18797bf717",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify invocation-scoped node status command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/08-verify-invocation-scoped-node-status-command.sh",
+     "run_sha256": "a3bd09b59e596017b42abb5ed2bfd256d15cd678f84fd6ee6565c3eaabb1becb",
+     "shell": "bash"
+    },
+    {
+     "name": "Confirm non-authorizing validation scope (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/09-confirm-non-authorizing-validation-scope-reads-its-verbatim-.sh",
+     "run_sha256": "fb7971838298c7de0079c68a6ebc7c9f651dd245db6fe245f9b0a2f96678725b",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 25,
+    "runs_on": "ubuntu-latest"
+   },
+   "matrix_values": {
+    "os": "ubuntu-latest",
+    "python": "3.11"
+   },
+   "fold_notes": [
+    "strategy matrix cell os=ubuntu-latest python=3.11"
+   ]
+  },
+  {
+   "id": "capability-runtime.verify.ubuntu-py3.12",
+   "source": {
+    "workflow": ".github/workflows/capability-runtime.yml",
+    "workflow_name": "capability-runtime",
+    "job": "verify",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "627db7cb0f5173a412089c99459574fc3002adb9274ac2a29b4227ce16d08213",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Resolve requested Python without token-backed setup actions (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/03-resolve-requested-python-without-token-backed-setup-actions-.sh",
+     "run_sha256": "64389ff883ff6dea077245d968210b8337850e2d82d26c52abdf42e2ab21a51e",
+     "shell": "bash",
+     "env": {
+      "PYTHON_VERSION": "${{ matrix.python }}"
+     }
+    },
+    {
+     "name": "Install runtime dependencies",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
+     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "shell": "bash"
+    },
+    {
+     "name": "Validate capability manifest",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/05-validate-capability-manifest.sh",
+     "run_sha256": "b531ef9eafa706ed797ac967ad58e679246d0cfb17e77e3bf6e65265ab108b29",
+     "shell": "bash"
+    },
+    {
+     "name": "Test capability reconstruction and portable resolution",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/06-test-capability-reconstruction-and-portable-resolution.sh",
+     "run_sha256": "5b056d5fe803a5a7187626de98f73857ecd1ff3f4820e6ee003480c9fa0aba4b",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify installed zero-touch bootstrap command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/07-verify-installed-zero-touch-bootstrap-command.sh",
+     "run_sha256": "1082eed6d0a11c0778c5c1f0a3589349a4d69e370f6bb4c688e5be18797bf717",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify invocation-scoped node status command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/08-verify-invocation-scoped-node-status-command.sh",
+     "run_sha256": "a3bd09b59e596017b42abb5ed2bfd256d15cd678f84fd6ee6565c3eaabb1becb",
+     "shell": "bash"
+    },
+    {
+     "name": "Confirm non-authorizing validation scope (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/09-confirm-non-authorizing-validation-scope-reads-its-verbatim-.sh",
+     "run_sha256": "fb7971838298c7de0079c68a6ebc7c9f651dd245db6fe245f9b0a2f96678725b",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 25,
+    "runs_on": "ubuntu-latest"
+   },
+   "matrix_values": {
+    "os": "ubuntu-latest",
+    "python": "3.12"
+   },
+   "fold_notes": [
+    "strategy matrix cell os=ubuntu-latest python=3.12"
+   ]
+  },
+  {
+   "id": "capability-runtime.verify.windows-py3.11",
+   "source": {
+    "workflow": ".github/workflows/capability-runtime.yml",
+    "workflow_name": "capability-runtime",
+    "job": "verify",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "627db7cb0f5173a412089c99459574fc3002adb9274ac2a29b4227ce16d08213",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Resolve requested Python without token-backed setup actions (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/03-resolve-requested-python-without-token-backed-setup-actions-.sh",
+     "run_sha256": "64389ff883ff6dea077245d968210b8337850e2d82d26c52abdf42e2ab21a51e",
+     "shell": "bash",
+     "env": {
+      "PYTHON_VERSION": "${{ matrix.python }}"
+     }
+    },
+    {
+     "name": "Install runtime dependencies",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
+     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "shell": "bash"
+    },
+    {
+     "name": "Validate capability manifest",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/05-validate-capability-manifest.sh",
+     "run_sha256": "b531ef9eafa706ed797ac967ad58e679246d0cfb17e77e3bf6e65265ab108b29",
+     "shell": "bash"
+    },
+    {
+     "name": "Test capability reconstruction and portable resolution",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/06-test-capability-reconstruction-and-portable-resolution.sh",
+     "run_sha256": "5b056d5fe803a5a7187626de98f73857ecd1ff3f4820e6ee003480c9fa0aba4b",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify installed zero-touch bootstrap command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/07-verify-installed-zero-touch-bootstrap-command.sh",
+     "run_sha256": "1082eed6d0a11c0778c5c1f0a3589349a4d69e370f6bb4c688e5be18797bf717",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify invocation-scoped node status command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/08-verify-invocation-scoped-node-status-command.sh",
+     "run_sha256": "a3bd09b59e596017b42abb5ed2bfd256d15cd678f84fd6ee6565c3eaabb1becb",
+     "shell": "bash"
+    },
+    {
+     "name": "Confirm non-authorizing validation scope (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/09-confirm-non-authorizing-validation-scope-reads-its-verbatim-.sh",
+     "run_sha256": "fb7971838298c7de0079c68a6ebc7c9f651dd245db6fe245f9b0a2f96678725b",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 25,
+    "runs_on": "windows-latest"
+   },
+   "matrix_values": {
+    "os": "windows-latest",
+    "python": "3.11"
+   },
+   "fold_notes": [
+    "strategy matrix cell os=windows-latest python=3.11"
+   ]
+  },
+  {
+   "id": "capability-runtime.verify.windows-py3.12",
+   "source": {
+    "workflow": ".github/workflows/capability-runtime.yml",
+    "workflow_name": "capability-runtime",
+    "job": "verify",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "627db7cb0f5173a412089c99459574fc3002adb9274ac2a29b4227ce16d08213",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Resolve requested Python without token-backed setup actions (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/03-resolve-requested-python-without-token-backed-setup-actions-.sh",
+     "run_sha256": "64389ff883ff6dea077245d968210b8337850e2d82d26c52abdf42e2ab21a51e",
+     "shell": "bash",
+     "env": {
+      "PYTHON_VERSION": "${{ matrix.python }}"
+     }
+    },
+    {
+     "name": "Install runtime dependencies",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
+     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "shell": "bash"
+    },
+    {
+     "name": "Validate capability manifest",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/05-validate-capability-manifest.sh",
+     "run_sha256": "b531ef9eafa706ed797ac967ad58e679246d0cfb17e77e3bf6e65265ab108b29",
+     "shell": "bash"
+    },
+    {
+     "name": "Test capability reconstruction and portable resolution",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/06-test-capability-reconstruction-and-portable-resolution.sh",
+     "run_sha256": "5b056d5fe803a5a7187626de98f73857ecd1ff3f4820e6ee003480c9fa0aba4b",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify installed zero-touch bootstrap command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/07-verify-installed-zero-touch-bootstrap-command.sh",
+     "run_sha256": "1082eed6d0a11c0778c5c1f0a3589349a4d69e370f6bb4c688e5be18797bf717",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify invocation-scoped node status command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/08-verify-invocation-scoped-node-status-command.sh",
+     "run_sha256": "a3bd09b59e596017b42abb5ed2bfd256d15cd678f84fd6ee6565c3eaabb1becb",
+     "shell": "bash"
+    },
+    {
+     "name": "Confirm non-authorizing validation scope (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/09-confirm-non-authorizing-validation-scope-reads-its-verbatim-.sh",
+     "run_sha256": "fb7971838298c7de0079c68a6ebc7c9f651dd245db6fe245f9b0a2f96678725b",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 25,
+    "runs_on": "windows-latest"
+   },
+   "matrix_values": {
+    "os": "windows-latest",
+    "python": "3.12"
+   },
+   "fold_notes": [
+    "strategy matrix cell os=windows-latest python=3.12"
+   ]
+  },
+  {
+   "id": "capability-runtime.verify.macos-py3.11",
+   "source": {
+    "workflow": ".github/workflows/capability-runtime.yml",
+    "workflow_name": "capability-runtime",
+    "job": "verify",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "627db7cb0f5173a412089c99459574fc3002adb9274ac2a29b4227ce16d08213",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Resolve requested Python without token-backed setup actions (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/03-resolve-requested-python-without-token-backed-setup-actions-.sh",
+     "run_sha256": "64389ff883ff6dea077245d968210b8337850e2d82d26c52abdf42e2ab21a51e",
+     "shell": "bash",
+     "env": {
+      "PYTHON_VERSION": "${{ matrix.python }}"
+     }
+    },
+    {
+     "name": "Install runtime dependencies",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
+     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "shell": "bash"
+    },
+    {
+     "name": "Validate capability manifest",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/05-validate-capability-manifest.sh",
+     "run_sha256": "b531ef9eafa706ed797ac967ad58e679246d0cfb17e77e3bf6e65265ab108b29",
+     "shell": "bash"
+    },
+    {
+     "name": "Test capability reconstruction and portable resolution",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/06-test-capability-reconstruction-and-portable-resolution.sh",
+     "run_sha256": "5b056d5fe803a5a7187626de98f73857ecd1ff3f4820e6ee003480c9fa0aba4b",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify installed zero-touch bootstrap command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/07-verify-installed-zero-touch-bootstrap-command.sh",
+     "run_sha256": "1082eed6d0a11c0778c5c1f0a3589349a4d69e370f6bb4c688e5be18797bf717",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify invocation-scoped node status command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/08-verify-invocation-scoped-node-status-command.sh",
+     "run_sha256": "a3bd09b59e596017b42abb5ed2bfd256d15cd678f84fd6ee6565c3eaabb1becb",
+     "shell": "bash"
+    },
+    {
+     "name": "Confirm non-authorizing validation scope (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/09-confirm-non-authorizing-validation-scope-reads-its-verbatim-.sh",
+     "run_sha256": "fb7971838298c7de0079c68a6ebc7c9f651dd245db6fe245f9b0a2f96678725b",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 25,
+    "runs_on": "macos-latest"
+   },
+   "matrix_values": {
+    "os": "macos-latest",
+    "python": "3.11"
+   },
+   "fold_notes": [
+    "strategy matrix cell os=macos-latest python=3.11"
+   ]
+  },
+  {
+   "id": "capability-runtime.verify.macos-py3.12",
+   "source": {
+    "workflow": ".github/workflows/capability-runtime.yml",
+    "workflow_name": "capability-runtime",
+    "job": "verify",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "627db7cb0f5173a412089c99459574fc3002adb9274ac2a29b4227ce16d08213",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Resolve requested Python without token-backed setup actions (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/03-resolve-requested-python-without-token-backed-setup-actions-.sh",
+     "run_sha256": "64389ff883ff6dea077245d968210b8337850e2d82d26c52abdf42e2ab21a51e",
+     "shell": "bash",
+     "env": {
+      "PYTHON_VERSION": "${{ matrix.python }}"
+     }
+    },
+    {
+     "name": "Install runtime dependencies",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
+     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "shell": "bash"
+    },
+    {
+     "name": "Validate capability manifest",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/05-validate-capability-manifest.sh",
+     "run_sha256": "b531ef9eafa706ed797ac967ad58e679246d0cfb17e77e3bf6e65265ab108b29",
+     "shell": "bash"
+    },
+    {
+     "name": "Test capability reconstruction and portable resolution",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/06-test-capability-reconstruction-and-portable-resolution.sh",
+     "run_sha256": "5b056d5fe803a5a7187626de98f73857ecd1ff3f4820e6ee003480c9fa0aba4b",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify installed zero-touch bootstrap command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/07-verify-installed-zero-touch-bootstrap-command.sh",
+     "run_sha256": "1082eed6d0a11c0778c5c1f0a3589349a4d69e370f6bb4c688e5be18797bf717",
+     "shell": "bash"
+    },
+    {
+     "name": "Verify invocation-scoped node status command",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/08-verify-invocation-scoped-node-status-command.sh",
+     "run_sha256": "a3bd09b59e596017b42abb5ed2bfd256d15cd678f84fd6ee6565c3eaabb1becb",
+     "shell": "bash"
+    },
+    {
+     "name": "Confirm non-authorizing validation scope (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/capability-runtime.verify/09-confirm-non-authorizing-validation-scope-reads-its-verbatim-.sh",
+     "run_sha256": "fb7971838298c7de0079c68a6ebc7c9f651dd245db6fe245f9b0a2f96678725b",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 25,
+    "runs_on": "macos-latest"
+   },
+   "matrix_values": {
+    "os": "macos-latest",
+    "python": "3.12"
+   },
+   "fold_notes": [
+    "strategy matrix cell os=macos-latest python=3.12"
+   ]
+  },
+  {
+   "id": "check-component-version.validate-component-version",
+   "source": {
+    "workflow": ".github/workflows/check-component-version.yml",
+    "workflow_name": "Check component version",
+    "job": "validate-component-version",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Validate component version declaration",
+     "run_file": "tools/tasks/steps/check-component-version.validate-component-version/01-validate-component-version-declaration.sh",
+     "run_sha256": "2a0288dea8cda13475944290bb6b27aabec7feea6dc2cd915e5f5613b0bd4182"
+    },
+    {
+     "name": "Preserve authority boundary",
+     "run_file": "tools/tasks/steps/check-component-version.validate-component-version/02-preserve-authority-boundary.sh",
+     "run_sha256": "3e6a0a9f91af91887463b4e4fb31ee7ba9416e65c608d705e75a3c00b506cff1"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 30,
+    "runs_on": "ubuntu-latest"
+   }
+  },
+  {
+   "id": "coinbase-skap-service-gateway.validate",
+   "source": {
+    "workflow": ".github/workflows/coinbase-skap-service-gateway.yml",
+    "workflow_name": "Coinbase SKAP Service Gateway Validation",
+    "job": "validate",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing validation environment",
+     "run_file": "tools/tasks/steps/coinbase-skap-service-gateway.validate/01-refuse-credential-bearing-validation-environment.sh",
+     "run_sha256": "ab1b830a1d48669b29aee76b8f3245f22b59db675f4f5bfe922423503d827914",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/coinbase-skap-service-gateway.validate/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Install validation dependencies",
+     "run_file": "tools/tasks/steps/coinbase-skap-service-gateway.validate/03-install-validation-dependencies.sh",
+     "run_sha256": "6346529f54de2c96b1ccb2a0709f7ac2324f00f50cb0c78c42197fa94fca7680"
+    },
+    {
+     "name": "Compile Coinbase staging source",
+     "run_file": "tools/tasks/steps/coinbase-skap-service-gateway.validate/04-compile-coinbase-staging-source.sh",
+     "run_sha256": "b9e90b34833c32f1d034f44f167329bf17f3c80f4e82c255edf929fa5e4bfc6a"
+    },
+    {
+     "name": "Validate staging and mounted HTTP boundary",
+     "run_file": "tools/tasks/steps/coinbase-skap-service-gateway.validate/05-validate-staging-and-mounted-http-boundary.sh",
+     "run_sha256": "1729db93c30aec0506f3aecbb113b0efb8b77c7008eee29d87c1a4dd1b6b1b3e"
+    },
+    {
+     "name": "Assert transport-only authority and first interlock boundary",
+     "run_file": "tools/tasks/steps/coinbase-skap-service-gateway.validate/06-assert-transport-only-authority-and-first-interlock-boundary.sh",
+     "run_sha256": "4728675c40404fca0cbfc4f5233e27d37d71ca65a3953afbe93772a3699ab303"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 30,
+    "runs_on": "ubuntu-latest"
+   }
+  },
+  {
+   "id": "distributed-llm-executor-validate.validate",
+   "source": {
+    "workflow": ".github/workflows/distributed-llm-executor-validate.yml",
+    "workflow_name": "Distributed LLM Executor Validate - No Credential Authority",
+    "job": "validate",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential authority",
+     "run_file": "tools/tasks/steps/distributed-llm-executor-validate.validate/01-refuse-credential-authority.sh",
+     "run_sha256": "402fa48ec9b9f289771ff030a32227910d217ed3759e9897dcff517292d7bd68",
+     "shell": "bash"
+    },
+    {
+     "name": "step 2",
+     "run_file": "tools/tasks/steps/distributed-llm-executor-validate.validate/02-step-2.sh",
+     "run_sha256": "3fcbe26c5c23c8f2d732e7d125510c3023c410edf1e2bda717ab8af0d1282beb"
+    },
+    {
+     "name": "step 3",
+     "run_file": "tools/tasks/steps/distributed-llm-executor-validate.validate/03-step-3.sh",
+     "run_sha256": "a4c24ef3641291c614e394619223a9446e649840de8d70364fe124620c875ea0"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 30,
+    "runs_on": "ubuntu-latest"
+   }
+  },
+  {
+   "id": "distributed-llm-workload-validate.validate",
+   "source": {
+    "workflow": ".github/workflows/distributed-llm-workload-validate.yml",
+    "workflow_name": "Distributed LLM Workload Validate - No Credential Authority",
+    "job": "validate",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential authority",
+     "run_file": "tools/tasks/steps/distributed-llm-workload-validate.validate/01-refuse-credential-authority.sh",
+     "run_sha256": "eedb3d400024fab6d21bff5a2719a3506cbc14d66de6e42d3a4594674c9796b9",
+     "shell": "bash"
+    },
+    {
+     "name": "Validate distributed LLM source contract",
+     "run_file": "tools/tasks/steps/distributed-llm-workload-validate.validate/02-validate-distributed-llm-source-contract.sh",
+     "run_sha256": "834ec1c29e8d2dba7812424d57fc7eb0c86ed1adb6e7440eca9ec762ac883abf"
+    },
+    {
+     "name": "Confirm non-authorizing validation boundary",
+     "run_file": "tools/tasks/steps/distributed-llm-workload-validate.validate/03-confirm-non-authorizing-validation-boundary.sh",
+     "run_sha256": "71a3489deb7f3deb337fbbca351908a8c7be390f4204506a2442a6fb9c2b8814"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 30,
+    "runs_on": "ubuntu-latest"
+   }
+  },
+  {
+   "id": "hil-site-receipt-compat.validate",
+   "source": {
+    "workflow": ".github/workflows/hil-site-receipt-compat.yml",
+    "workflow_name": "hil-site-receipt-compat",
+    "job": "validate",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "pull_request"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/hil-site-receipt-compat.validate/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "027b292a149e262c28d978eb8f0ddf87ebe7af372ac59a269a080ae95c1493a0",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/hil-site-receipt-compat.validate/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Install credential-free test dependencies",
+     "run_file": "tools/tasks/steps/hil-site-receipt-compat.validate/03-install-credential-free-test-dependencies.sh",
+     "run_sha256": "640dbff3809b88189368bc2494bca6fdc434bc589fc2716b4987a07cde4e4a50",
+     "shell": "bash"
+    },
+    {
+     "name": "Run HIL receipt compatibility tests",
+     "run_file": "tools/tasks/steps/hil-site-receipt-compat.validate/04-run-hil-receipt-compatibility-tests.sh",
+     "run_sha256": "4d2f563b5531acaa3a3926b968c5ab35a373b7ffda226c79aca18c2a72d46936",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 10,
+    "runs_on": "ubuntu-latest"
+   },
+   "fold_notes": [
+    "events kept as the folded workflow declared them: pull_request"
+   ]
+  },
+  {
+   "id": "hil-sovereign-receiver-source.source-contract",
+   "source": {
+    "workflow": ".github/workflows/hil-sovereign-receiver-source.yml",
+    "workflow_name": "hil-sovereign-receiver-source",
+    "job": "source-contract",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "027b292a149e262c28d978eb8f0ddf87ebe7af372ac59a269a080ae95c1493a0",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Validate sovereign HIL receiver contract",
+     "run_file": "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/03-validate-sovereign-hil-receiver-contract.sh",
+     "run_sha256": "ebe3a0b62b823463edf34c7912513ffe953584078998effd467a10f212e97eca",
+     "shell": "bash"
+    },
+    {
+     "name": "Install credential-free HIL test dependencies",
+     "run_file": "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/04-install-credential-free-hil-test-dependencies.sh",
+     "run_sha256": "640dbff3809b88189368bc2494bca6fdc434bc589fc2716b4987a07cde4e4a50",
+     "shell": "bash"
+    },
+    {
+     "name": "Test HIL intake and reconstruction contract",
+     "run_file": "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/05-test-hil-intake-and-reconstruction-contract.sh",
+     "run_sha256": "5bd409d5d2dd2f0d52e88393006fe98c60cf6ba7dfc3bc64ddad77009e98c53f",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 10,
+    "runs_on": "ubuntu-latest"
+   }
+  },
+  {
+   "id": "internal-governed-reference.governed-reference",
+   "source": {
+    "workflow": ".github/workflows/internal-governed-reference.yml",
+    "workflow_name": "Internal Governed Reference Suite",
+    "job": "governed-reference",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Run deterministic governed reference vectors",
+     "run_file": "tools/tasks/steps/internal-governed-reference.governed-reference/01-run-deterministic-governed-reference-vectors.sh",
+     "run_sha256": "84b6fd0720ae31975013c6fa8a4c122e5e762f4027478f91adf94c6a92f3c2e9"
+    },
+    {
+     "name": "Verify evidence packet boundary",
+     "run_file": "tools/tasks/steps/internal-governed-reference.governed-reference/02-verify-evidence-packet-boundary.sh",
+     "run_sha256": "99e1e80866e96427028eb1826062e9dd43b0231bacc99add9d120c17d19f3db8"
+    }
+   ],
+   "artifacts": [
+    {
+     "name": "governed-reference-evidence",
+     "path": "internal_tests/artifacts/governed-reference-results.json",
+     "if_no_files_found": "error",
+     "if": "success()"
+    }
+   ],
+   "runner": {
+    "timeout_minutes": 30,
+    "artifact_name": "governed-reference-evidence",
+    "artifact_if_no_files_found": "error",
+    "runs_on": "ubuntu-latest"
+   },
+   "fold_notes": [
+    "events kept as the folded workflow declared them: pull_request"
+   ]
+  },
+  {
+   "id": "southbound-sdk-return-validation.validate",
+   "source": {
+    "workflow": ".github/workflows/southbound-sdk-return-validation.yml",
+    "workflow_name": "Southbound SDK Return Validation",
+    "job": "validate",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Assert validation-only authority boundary",
+     "run_file": "tools/tasks/steps/southbound-sdk-return-validation.validate/01-assert-validation-only-authority-boundary.sh",
+     "run_sha256": "f6482755204bdb6eef1515dbbce2b71d9c682f9f7fdc37546aafbec8f1113468"
+    },
+    {
+     "name": "Materialize exact source anonymously",
+     "run_file": "tools/tasks/steps/southbound-sdk-return-validation.validate/02-materialize-exact-source-anonymously.sh",
+     "run_sha256": "691f1799c84c42bd512ddb2645faf1a2b73f50946436970b182aa8a3bea961fc",
+     "env": {
+      "SOURCE_REPO": "${{ github.repository }}",
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Validate generic final StegVerse-side transition",
+     "run_file": "tools/tasks/steps/southbound-sdk-return-validation.validate/03-validate-generic-final-stegverse-side-transition.sh",
+     "run_sha256": "a8a9a8591207e8d13c2a4e153e8a9459f8dc7ea289f65f103def156475fb45fb"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 30,
+    "runs_on": "ubuntu-latest"
+   },
+   "fold_notes": [
+    "events kept as the folded workflow declared them: pull_request"
+   ]
+  },
+  {
+   "id": "validate-anthropic-288-exact.exact-branch-validation",
+   "source": {
+    "workflow": ".github/workflows/validate-anthropic-288-exact.yml",
+    "workflow_name": "validate-anthropic-288-exact",
+    "job": "exact-branch-validation",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/validate-anthropic-288-exact.exact-branch-validation/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "43498580a04c31e2448b2d8500ca64ac4ac1ca11f588f2140dd8c2f708bd3f49",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact PR head anonymously as canonical branch name",
+     "run_file": "tools/tasks/steps/validate-anthropic-288-exact.exact-branch-validation/02-fetch-exact-pr-head-anonymously-as-canonical-branch-name.sh",
+     "run_sha256": "2aa6a73fceae518fad70789112eb102344c388d63baff8fa27f3c85cc3b917be",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Run exact branch validator",
+     "run_file": "tools/tasks/steps/validate-anthropic-288-exact.exact-branch-validation/03-run-exact-branch-validator.sh",
+     "run_sha256": "0c1d51acdff5905a74e1ca22084aaa0f015ac1a5d2bc785e8f2a0e4fbd69fe50",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 15,
+    "runs_on": "ubuntu-latest"
+   },
+   "fold_notes": [
+    "events kept as the folded workflow declared them: pull_request"
+   ]
+  },
+  {
+   "id": "validate-deepseek-intr.validate-deepseek-intr",
+   "source": {
+    "workflow": ".github/workflows/validate-deepseek-intr.yml",
+    "workflow_name": "validate-deepseek-intr",
+    "job": "validate-deepseek-intr",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "25c31d4669339d0603a0854bcdfcb0a29bd5b30eefdcb637c90adae9a35b53e2",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Resolve Python",
+     "run_file": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/03-resolve-python.sh",
+     "run_sha256": "785c07863f59b7ae4ba8d0598fd9e0d96018129e01d5967c70fe18bf1f68d533",
+     "shell": "bash"
+    },
+    {
+     "name": "Install validation dependencies",
+     "run_file": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/04-install-validation-dependencies.sh",
+     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df"
+    },
+    {
+     "name": "Test DeepSeek Interlock/InTr transport",
+     "run_file": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/05-test-deepseek-interlock-intr-transport.sh",
+     "run_sha256": "a311c388b6792851f2be3696c785f945929ae07c1fcbec74ec92d66a3d3fa1e3"
+    },
+    {
+     "name": "Test governed DeepSeek executor and egress binding",
+     "run_file": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/06-test-governed-deepseek-executor-and-egress-binding.sh",
+     "run_sha256": "476685de94cb46173eeec816c679144cded2b0089822e248274b7065298abd78"
+    },
+    {
+     "name": "Test DeepSeek runtime-profile TVC broker bridge",
+     "run_file": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/07-test-deepseek-runtime-profile-tvc-broker-bridge.sh",
+     "run_sha256": "e1c20c01ac9d31be913ffb6de9745fa1919d76c93e59d8558e29c56ba9164e91"
+    },
+    {
+     "name": "Validate capability declaration and envelope schema",
+     "run_file": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/08-validate-capability-declaration-and-envelope-schema.sh",
+     "run_sha256": "2f59a1111c2131bde41d3fc831cf7bbc245c1d9828f12140665fd5f3714e78e5",
+     "shell": "bash"
+    },
+    {
+     "name": "Confirm validation-only authority boundary (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/09-confirm-validation-only-authority-boundary-reads-its-verbati.sh",
+     "run_sha256": "7ed6d73f956e2de21ebeda9891aec163dd8ca27d36fe4e3eb47533c179abeaa1",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 10,
+    "runs_on": "ubuntu-latest"
+   }
+  },
+  {
+   "id": "validate-external-llm-convergence.validate",
+   "source": {
+    "workflow": ".github/workflows/validate-external-llm-convergence.yml",
+    "workflow_name": "validate-external-llm-convergence",
+    "job": "validate",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/validate-external-llm-convergence.validate/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "989a7dfde99ae67da3545636826467a501ec9718dacf309bdd92c86dec1d1eea",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/validate-external-llm-convergence.validate/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Install source validation dependencies",
+     "run_file": "tools/tasks/steps/validate-external-llm-convergence.validate/03-install-source-validation-dependencies.sh",
+     "run_sha256": "e6b33e807d1e28ce4ae6b28f20ccf499cc31e301561470411ee09ee64b5e5ef9"
+    },
+    {
+     "name": "Compile convergence modules",
+     "run_file": "tools/tasks/steps/validate-external-llm-convergence.validate/04-compile-convergence-modules.sh",
+     "run_sha256": "2bb0f8638f117b472f381c6829a8b736cccfc8deb838dd3c52cec90bba31ee07"
+    },
+    {
+     "name": "Run governed connection tests",
+     "run_file": "tools/tasks/steps/validate-external-llm-convergence.validate/05-run-governed-connection-tests.sh",
+     "run_sha256": "06f4b28c60537b425f62650a667bcc90d74a691ed8acdb02c6b5779646af3b62"
+    },
+    {
+     "name": "Confirm validation-only posture (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/validate-external-llm-convergence.validate/06-confirm-validation-only-posture-reads-its-verbatim-record-un.sh",
+     "run_sha256": "59c2ba19d8efe38c55b9fa318be3c764bc00e667cd0f35c4cc6d48c31ee1d3de"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 15,
+    "runs_on": "ubuntu-latest"
+   },
+   "fold_notes": [
+    "events kept as the folded workflow declared them: pull_request"
+   ]
+  },
+  {
+   "id": "validate-kimi-intr.validate-kimi-intr",
+   "source": {
+    "workflow": ".github/workflows/validate-kimi-intr.yml",
+    "workflow_name": "validate-kimi-intr",
+    "job": "validate-kimi-intr",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "1b90dc5b0479b2f8bbfc01aee1e177603530652721365c8d60814953c61488f8",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Resolve Python",
+     "run_file": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/03-resolve-python.sh",
+     "run_sha256": "785c07863f59b7ae4ba8d0598fd9e0d96018129e01d5967c70fe18bf1f68d533",
+     "shell": "bash"
+    },
+    {
+     "name": "Install validation dependencies",
+     "run_file": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/04-install-validation-dependencies.sh",
+     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df"
+    },
+    {
+     "name": "Test Kimi Interlock/InTr transport",
+     "run_file": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/05-test-kimi-interlock-intr-transport.sh",
+     "run_sha256": "5ad77c8c4f5162fc65aecd9b902c933c1d3eef39c9b4c8a70758e6b6a299db19"
+    },
+    {
+     "name": "Test governed Kimi executor and egress binding",
+     "run_file": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/06-test-governed-kimi-executor-and-egress-binding.sh",
+     "run_sha256": "21c445eb7309d7ca6fc76e1a869265ccf0cc05c7fc52abf92ba0abeeb0cd888a"
+    },
+    {
+     "name": "Test Kimi runtime-profile TVC broker bridge",
+     "run_file": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/07-test-kimi-runtime-profile-tvc-broker-bridge.sh",
+     "run_sha256": "4d5f05cab582d8b5a397786fe5c40eff7993b6fffd048f8eb4a61e74f41826c9"
+    },
+    {
+     "name": "Validate Kimi capability, schema and runtime profile",
+     "run_file": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/08-validate-kimi-capability-schema-and-runtime-profile.sh",
+     "run_sha256": "f2661ef99aeba6433f9654d50614efc059d39f589979a6d0c844764bcbdba78d",
+     "shell": "bash"
+    },
+    {
+     "name": "Confirm validation-only authority boundary (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/09-confirm-validation-only-authority-boundary-reads-its-verbati.sh",
+     "run_sha256": "e4b85b264973f41b9cc648ce92d5e34d5da88d8fa8431dff97421fa88c24b758",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 10,
+    "runs_on": "ubuntu-latest"
+   }
+  },
+  {
+   "id": "validate-kv-memory-context-bridge.validate",
+   "source": {
+    "workflow": ".github/workflows/validate-kv-memory-context-bridge.yml",
+    "workflow_name": "Validate KV Memory Context Bridge",
+    "job": "validate",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {
+    "PYTHONPATH": "${{ github.workspace }}"
+   },
+   "steps": [
+    {
+     "name": "step 1",
+     "run_file": "tools/tasks/steps/validate-kv-memory-context-bridge.validate/01-step-1.sh",
+     "run_sha256": "ffba3a71db5d6ee5e7ce9e8d616970c33e0371adb10a8ea1a3e1f955a478800b"
+    },
+    {
+     "name": "step 2",
+     "run_file": "tools/tasks/steps/validate-kv-memory-context-bridge.validate/02-step-2.sh",
+     "run_sha256": "4210feae793bd5e495cbdbb440705ae28cf08a1f54a1a6083174d85dbad9e096"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 30,
+    "runs_on": "ubuntu-latest"
+   }
+  },
+  {
+   "id": "validate-zai-intr.validate-zai-intr",
+   "source": {
+    "workflow": ".github/workflows/validate-zai-intr.yml",
+    "workflow_name": "validate-zai-intr",
+    "job": "validate-zai-intr",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Refuse credential-bearing environment",
+     "run_file": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/01-refuse-credential-bearing-environment.sh",
+     "run_sha256": "6aafba7685dbb2d9ba06fc1de33b2c2372244bed13818993981f4d2f966e7725",
+     "shell": "bash"
+    },
+    {
+     "name": "Fetch exact source anonymously",
+     "run_file": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/02-fetch-exact-source-anonymously.sh",
+     "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
+     "shell": "bash",
+     "env": {
+      "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
+     }
+    },
+    {
+     "name": "Resolve Python",
+     "run_file": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/03-resolve-python.sh",
+     "run_sha256": "785c07863f59b7ae4ba8d0598fd9e0d96018129e01d5967c70fe18bf1f68d533",
+     "shell": "bash"
+    },
+    {
+     "name": "Install validation dependencies",
+     "run_file": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/04-install-validation-dependencies.sh",
+     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df"
+    },
+    {
+     "name": "Test Z.ai Interlock/InTr transport",
+     "run_file": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/05-test-z-ai-interlock-intr-transport.sh",
+     "run_sha256": "cfbe15a01d2de849e1f437b3cf9134bb81df297a86d50d4e98a233e8aede28f0"
+    },
+    {
+     "name": "Test governed Z.ai executor and egress binding",
+     "run_file": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/06-test-governed-z-ai-executor-and-egress-binding.sh",
+     "run_sha256": "85f5508859690051a39d3e1a5cc4d2a22cd5c66e7355c6ba8c33eba47721493c"
+    },
+    {
+     "name": "Validate capability declaration and envelope schema",
+     "run_file": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/07-validate-capability-declaration-and-envelope-schema.sh",
+     "run_sha256": "f08ddca699d81a657eb67064c8b135cd2354f51de596305664542ad5507b1f07",
+     "shell": "bash"
+    },
+    {
+     "name": "Confirm validation-only authority boundary (reads its verbatim record under tools/tasks/folded/)",
+     "run_file": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/08-confirm-validation-only-authority-boundary-reads-its-verbati.sh",
+     "run_sha256": "586591bc98ff710f7d7c1f047623c86d7fb36eb24d1fddbd955d6bcf61865eb1",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 10,
+    "runs_on": "ubuntu-latest"
+   }
+  },
+  {
+   "id": "work-mutation-safety.validate",
+   "source": {
+    "workflow": ".github/workflows/work-mutation-safety.yml",
+    "workflow_name": "Work Mutation Safety - Non-Authorizing",
+    "job": "validate",
+    "job_name": null,
+    "commit": "ece815b",
+    "triggers_before": [
+     "pull_request"
+    ],
+    "permissions_before": {}
+   },
+   "events": [
+    "pull_request"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Anonymous public checkout without GitHub token",
+     "run_file": "tools/tasks/steps/work-mutation-safety.validate/01-anonymous-public-checkout-without-github-token.sh",
+     "run_sha256": "233d1d3dc84ef5d24ee67aa7ed2f185616730c787f0d85226016138c1ac547b2",
+     "env": {
+      "BASE_SHA": "${{ github.event.pull_request.base.sha }}",
+      "HEAD_SHA": "${{ github.event.pull_request.head.sha }}"
+     }
+    },
+    {
+     "name": "Validate fresh Work mutation safety manifest",
+     "run_file": "tools/tasks/steps/work-mutation-safety.validate/02-validate-fresh-work-mutation-safety-manifest.sh",
+     "run_sha256": "1e38c7a6a3343e121c3aff7eb3c3af0985d9ec6310cdf9eab6c53838632df776",
+     "env": {
+      "BASE_SHA": "${{ github.event.pull_request.base.sha }}",
+      "HEAD_SHA": "${{ github.event.pull_request.head.sha }}"
+     }
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 30,
+    "runs_on": "ubuntu-latest"
+   },
+   "fold_notes": [
+    "events kept as the folded workflow declared them: pull_request"
+   ]
+  },
+  {
+   "id": "workflow-surface-registry.validate",
+   "catalog_addition": "G17 registry gate (no folded source workflow)",
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Workflow files equal the registered surfaces; catalog verifies ALLOW",
+     "run_file": "tools/tasks/steps/workflow-surface-registry.validate/01-registry.sh",
+     "run_sha256": "811824e88664923006be2eeb35632d710f5504145967f61632ad9e8fbdcb35ca"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "timeout_minutes": 10,
+    "runs_on": "ubuntu-latest"
+   }
+  }
+ ],
+ "dispatcher_note": "LLMA-368: the dispatcher uses no token-backed setup action. Each job refuses a credential-bearing environment, fetches the exact source anonymously and runs run_catalog.py on the runner image's python3; each group resolves its own Python as its folded job did."
+}
