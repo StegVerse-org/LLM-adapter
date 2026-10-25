@@ -1,0 +1,1 @@
+python3 -m unittest tests/test_anthropic_intr_transport.py tests/test_external_anthropic_tvc_runtime.py tests/test_zai_tvc_runtime.py tests/test_deepseek_tvc_runtime.py tests/test_kimi_tvc_runtime.py tests/test_openai_tvc_runtime.py tests/test_external_llm_connection.py tests/test_governed_external_provider_client.py tests/test_s1_lease_provider_call.py

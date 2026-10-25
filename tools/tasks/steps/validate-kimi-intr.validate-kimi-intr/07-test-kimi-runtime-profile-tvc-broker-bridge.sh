@@ -1,0 +1,1 @@
+$PYTHON_BIN -m unittest tests/test_kimi_tvc_runtime.py

@@ -11,7 +11,10 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOW_DIRS = (ROOT / ".github/workflows", ROOT / "iosnoperiod/github/workflows")
+WORKFLOW_DIRS = (ROOT / ".github/workflows", ROOT / "iosnoperiod/github/workflows",
+                 # G17 (StegVerse-org/.github#166): verbatim records of the folded workflows,
+                 # whose run blocks tools/tasks/run_catalog.py verify pins to the executed steps.
+                 ROOT / "tools/tasks/folded")
 USES = re.compile(r"^\s*(?:- )?uses:\s*(\S+)(.*)$", re.M)
 PINNED = re.compile(r"^[^@\s]+@[0-9a-f]{40}$")
 

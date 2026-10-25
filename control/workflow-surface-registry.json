@@ -1,0 +1,333 @@
+{
+ "schema": "stegverse.workflow-surface-registry/v1",
+ "goal_id": "G17-WORKFLOW-SURFACE-MINIMIZATION",
+ "repository": "StegVerse-org/LLM-adapter",
+ "policy_issue": "StegVerse-Labs/.github#167, #168; StegVerse-org/.github#166",
+ "preferred_repository_workflow_count_max": 2,
+ "exception_repository_workflow_count_max": 3,
+ "credential_authority": "the SKAP Vault inside KV is the only PII and credential store for every user, including the StegVerse ecosystem's own; no secret or token is referenced, introduced or moved by this fold",
+ "invariants": [
+  "Every workflow file is registered in surfaces[]; an unregistered or changed one fails closed (tests/test_workflow_surface_registry.py).",
+  "A new check is a group in tools/tasks/task_catalog.json, never a new workflow file.",
+  "The stable dispatcher carries no workflow_dispatch, schedule, repository_dispatch, issues or workflow_run trigger; a kept surface is pinned by sha256 and unchanged by the fold.",
+  "validate.yml is kept and not sha256-pinned while #428-#430 edit it; it must keep permissions: {} and reference no secret."
+ ],
+ "unregistered_workflow_outcome": {
+  "disposition": "FAIL_CLOSED",
+  "failure_code": "UNREGISTERED_WORKFLOW_SURFACE",
+  "failed_predicate": "EVERY_WORKFLOW_FILE_IS_REGISTERED",
+  "required_evidence_or_repair": "register the file in control/workflow-surface-registry.json surfaces[] or fold it into tools/tasks/task_catalog.json",
+  "retry_entrypoint": "tests/test_workflow_surface_registry.py",
+  "owning_existing_goal": "G17-WORKFLOW-SURFACE-MINIMIZATION (StegVerse-Labs/.github#167/#168); StegVerse-org/.github#166",
+  "next_attempt": "the next pull request touching .github/workflows/"
+ },
+ "surfaces": [
+  {
+   "path": ".github/workflows/validation-dispatcher.yml",
+   "classification": "KEEP_STABLE_DISPATCHER",
+   "triggers": [
+    "pull_request",
+    "push"
+   ],
+   "permissions": {},
+   "job_permissions": {
+    "stegverse-governance": {
+     "contents": "read"
+    }
+   }
+  },
+  {
+   "path": ".github/workflows/validate.yml",
+   "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
+   "triggers": [
+    "push",
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "permissions": {},
+   "reason": "KEEP_EXISTING_SURFACE_UNCHANGED: the repository's global validate workflow (permissions: {}). Not folded, because the open PRs #428, #429 and #430 (LC-KV-13/14 under LLM-adapter#368) each edit it; folding or pinning it would conflict with them. Not sha256-pinned for that reason; the registry test instead asserts it keeps permissions: {} and references no secret.",
+   "verbatim_sha256": null,
+   "sha256_pinned": false
+  }
+ ],
+ "folded": [
+  {
+   "workflow": ".github/workflows/repository-hygiene.yml",
+   "name": "Repository hygiene inventory",
+   "triggers_before": [
+    "workflow_dispatch",
+    "push"
+   ],
+   "classification": "ELIMINATE",
+   "status": "DONE",
+   "reason": "ELIMINATE: its only triggers are workflow_dispatch and a push touching this file itself, and it calls the StegVerse-Labs/.github repository-hygiene reusable workflow; manual dispatch is not run by the maintenance lane and the push trigger only re-ran the inventory when this file changed. Restorable from the verbatim record.",
+   "verbatim_record": "tools/tasks/folded/repository-hygiene.yml",
+   "verbatim_sha256": "fff5f08b73cddb7a264b004f91eb34d80d073331c36a00c772a5946174ec0df6"
+  },
+  {
+   "workflow": ".github/workflows/capability-runtime.yml",
+   "name": "capability-runtime",
+   "triggers_before": [
+    "push",
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "capability-runtime.verify.ubuntu-py3.11",
+    "capability-runtime.verify.ubuntu-py3.12",
+    "capability-runtime.verify.windows-py3.11",
+    "capability-runtime.verify.windows-py3.12",
+    "capability-runtime.verify.macos-py3.11",
+    "capability-runtime.verify.macos-py3.12"
+   ],
+   "verbatim_record": "tools/tasks/folded/capability-runtime.yml",
+   "verbatim_sha256": "f0bc616cd1d3807f180b2c3f887831efd84d53d493c47daca6afe8c45f24f9f8"
+  },
+  {
+   "workflow": ".github/workflows/check-component-version.yml",
+   "name": "Check component version",
+   "triggers_before": [
+    "push",
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "check-component-version.validate-component-version"
+   ],
+   "verbatim_record": "tools/tasks/folded/check-component-version.yml",
+   "verbatim_sha256": "55c96f5fccd15e374599573ec5c0779312d9ee19b6a7c65dc6f6825cca338afe"
+  },
+  {
+   "workflow": ".github/workflows/coinbase-skap-service-gateway.yml",
+   "name": "Coinbase SKAP Service Gateway Validation",
+   "triggers_before": [
+    "push",
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "coinbase-skap-service-gateway.validate"
+   ],
+   "verbatim_record": "tools/tasks/folded/coinbase-skap-service-gateway.yml",
+   "verbatim_sha256": "0b010ecb080f8d7bf0ce90778ea660b7c64040465ab0627288cdd556f6c72893"
+  },
+  {
+   "workflow": ".github/workflows/distributed-llm-executor-validate.yml",
+   "name": "Distributed LLM Executor Validate - No Credential Authority",
+   "triggers_before": [
+    "push",
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "distributed-llm-executor-validate.validate"
+   ],
+   "verbatim_record": "tools/tasks/folded/distributed-llm-executor-validate.yml",
+   "verbatim_sha256": "ef9d4af9c16d3d8fdeead907515fae8ae202412c5e9e1e93ff602d49b31bec75"
+  },
+  {
+   "workflow": ".github/workflows/distributed-llm-workload-validate.yml",
+   "name": "Distributed LLM Workload Validate - No Credential Authority",
+   "triggers_before": [
+    "push",
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "distributed-llm-workload-validate.validate"
+   ],
+   "verbatim_record": "tools/tasks/folded/distributed-llm-workload-validate.yml",
+   "verbatim_sha256": "e99f362af07c2b11c5290ff3f2144800b5f22822a1969c87c6e2ff87c920c3ea"
+  },
+  {
+   "workflow": ".github/workflows/hil-site-receipt-compat.yml",
+   "name": "hil-site-receipt-compat",
+   "triggers_before": [
+    "pull_request"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "hil-site-receipt-compat.validate"
+   ],
+   "verbatim_record": "tools/tasks/folded/hil-site-receipt-compat.yml",
+   "verbatim_sha256": "e7cfee76bb67a092b51b04a09c38933615a2c510b2dea3046e43bd3044c229cc"
+  },
+  {
+   "workflow": ".github/workflows/hil-sovereign-receiver-source.yml",
+   "name": "hil-sovereign-receiver-source",
+   "triggers_before": [
+    "push",
+    "pull_request"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "hil-sovereign-receiver-source.source-contract"
+   ],
+   "verbatim_record": "tools/tasks/folded/hil-sovereign-receiver-source.yml",
+   "verbatim_sha256": "753c0168cc2d13fdb0af8c0d41fe59c7c9ab6eeacb8566d4169ab0fd0c326481"
+  },
+  {
+   "workflow": ".github/workflows/internal-governed-reference.yml",
+   "name": "Internal Governed Reference Suite",
+   "triggers_before": [
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "internal-governed-reference.governed-reference"
+   ],
+   "verbatim_record": "tools/tasks/folded/internal-governed-reference.yml",
+   "verbatim_sha256": "9b01586ac4ff32bcc13793232d3705f5f69f550575e76a79391a25842f91e1e9"
+  },
+  {
+   "workflow": ".github/workflows/southbound-sdk-return-validation.yml",
+   "name": "Southbound SDK Return Validation",
+   "triggers_before": [
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "southbound-sdk-return-validation.validate"
+   ],
+   "verbatim_record": "tools/tasks/folded/southbound-sdk-return-validation.yml",
+   "verbatim_sha256": "ae4451fbd1cf35ce46b10e8e4bd8b49d0666ae80c69591f1f366baf74c12bcb1"
+  },
+  {
+   "workflow": ".github/workflows/validate-anthropic-288-exact.yml",
+   "name": "validate-anthropic-288-exact",
+   "triggers_before": [
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "validate-anthropic-288-exact.exact-branch-validation"
+   ],
+   "verbatim_record": "tools/tasks/folded/validate-anthropic-288-exact.yml",
+   "verbatim_sha256": "050296c527a2c105e7fca341c618264ae92b0063685f286d7a7e4ac9d9a8cdb6"
+  },
+  {
+   "workflow": ".github/workflows/validate-deepseek-intr.yml",
+   "name": "validate-deepseek-intr",
+   "triggers_before": [
+    "push",
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "validate-deepseek-intr.validate-deepseek-intr"
+   ],
+   "verbatim_record": "tools/tasks/folded/validate-deepseek-intr.yml",
+   "verbatim_sha256": "571671082218bceebfd9800fa1e28965cccf2a102d9b6b156fcb6f6045975867"
+  },
+  {
+   "workflow": ".github/workflows/validate-external-llm-convergence.yml",
+   "name": "validate-external-llm-convergence",
+   "triggers_before": [
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "validate-external-llm-convergence.validate"
+   ],
+   "verbatim_record": "tools/tasks/folded/validate-external-llm-convergence.yml",
+   "verbatim_sha256": "a85203ddc1f07f21849fb9eee094b000f6eb11b01c628774070d9659724f795a"
+  },
+  {
+   "workflow": ".github/workflows/validate-kimi-intr.yml",
+   "name": "validate-kimi-intr",
+   "triggers_before": [
+    "push",
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "validate-kimi-intr.validate-kimi-intr"
+   ],
+   "verbatim_record": "tools/tasks/folded/validate-kimi-intr.yml",
+   "verbatim_sha256": "ddf9331cd10c564fa348a9bdf55b8ef8981db322ed43d108279a747f2b28881c"
+  },
+  {
+   "workflow": ".github/workflows/validate-kv-memory-context-bridge.yml",
+   "name": "Validate KV Memory Context Bridge",
+   "triggers_before": [
+    "push",
+    "pull_request"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "validate-kv-memory-context-bridge.validate"
+   ],
+   "verbatim_record": "tools/tasks/folded/validate-kv-memory-context-bridge.yml",
+   "verbatim_sha256": "3ac41ecfff5c45c7c510c27487b9338f47279aa3012d9812b927bd082dc587b0"
+  },
+  {
+   "workflow": ".github/workflows/validate-zai-intr.yml",
+   "name": "validate-zai-intr",
+   "triggers_before": [
+    "push",
+    "pull_request",
+    "workflow_dispatch"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "validate-zai-intr.validate-zai-intr"
+   ],
+   "verbatim_record": "tools/tasks/folded/validate-zai-intr.yml",
+   "verbatim_sha256": "7568c51c73f1153097a7a3a1b4fc833a8e2ee5804f0ceb3948a2cf86f79bf50b"
+  },
+  {
+   "workflow": ".github/workflows/work-mutation-safety.yml",
+   "name": "Work Mutation Safety - Non-Authorizing",
+   "triggers_before": [
+    "pull_request"
+   ],
+   "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+   "status": "DONE",
+   "catalog_groups": [
+    "work-mutation-safety.validate"
+   ],
+   "verbatim_record": "tools/tasks/folded/work-mutation-safety.yml",
+   "verbatim_sha256": "2adcdf12d8ff0cbdfe31b23e1cfb16b0a63cb5d953073b6a088b9fd9ab00277a"
+  },
+  {
+   "workflow": ".github/workflows/stegverse-governance.yml",
+   "name": "StegVerse governance",
+   "triggers_before": [
+    "pull_request",
+    "push"
+   ],
+   "classification": "CARRIED_AS_DISPATCHER_JOB",
+   "status": "DONE",
+   "dispatcher_job": "stegverse-governance",
+   "reason": "stegverse-governance.yml's one job is a job-level `uses:` of StegVerse-org/StegVerse-SDK governance-gate.yml pinned at 1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b; a run block cannot call a reusable workflow, so the job is carried verbatim as the dispatcher job `stegverse-governance` (same pin, same with:).",
+   "verbatim_record": "tools/tasks/folded/stegverse-governance.yml",
+   "verbatim_sha256": "1356aa495de327f230f6debf35c73ec41d3d4ab13298cbdca07410da96b36826"
+  }
+ ]
+}

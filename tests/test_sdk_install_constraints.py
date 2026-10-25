@@ -19,7 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import sdk_install_constraint as sic  # noqa: E402
 
-WORKFLOW_DIRS = (ROOT / ".github/workflows", ROOT / "iosnoperiod/github/workflows")
+WORKFLOW_DIRS = (ROOT / ".github/workflows", ROOT / "iosnoperiod/github/workflows",
+                 # G17 (StegVerse-org/.github#166): verbatim records of the folded workflows,
+                 # whose run blocks tools/tasks/run_catalog.py verify pins to the executed steps.
+                 ROOT / "tools/tasks/folded")
 STEP = re.compile(r"^\s*- (?:name|uses|run):", re.M)
 INSTALL = re.compile(r"pip install\b")
 
