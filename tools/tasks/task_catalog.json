@@ -13,7 +13,8 @@
   "Step bodies that read their own workflow file (the 'Confirm ... authority boundary' / 'non-authorizing scope' assertions: permissions: {}, no actions/checkout, no actions/setup-python, no persist-credentials, cancel-in-progress) read the verbatim record under tools/tasks/folded/ instead of .github/workflows/; the assertions are unchanged and still hold.",
   "capability-runtime.verify's OS x Python strategy matrix (ubuntu/windows/macos x 3.11/3.12) is six groups with matrix_values {os, python}; the dispatcher's check job runs each on runs-on: matrix.runs_on.",
   "tests/test_sdk_install_constraints.py and tests/test_workflow_action_pins.py also read tools/tasks/folded/ (the verbatim records whose run blocks run_catalog.py verify pins byte for byte to the executed step bodies), so the M-P8 constraint guard and the M-P9 pin guard keep covering the folded install steps and actions.",
-  "stegverse-governance.yml's one job is a job-level `uses:` of StegVerse-org/StegVerse-SDK governance-gate.yml pinned at 1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b; a run block cannot call a reusable workflow, so the job is carried verbatim as the dispatcher job `stegverse-governance` (same pin, same with:); the folded workflow's `contents: read` grant, which the called gate requests, is carried to that job only."
+  "stegverse-governance.yml's one job is a job-level `uses:` of StegVerse-org/StegVerse-SDK governance-gate.yml pinned at 1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b; a run block cannot call a reusable workflow, so the job is carried verbatim as the dispatcher job `stegverse-governance` (same pin, same with:); the folded workflow's `contents: read` grant, which the called gate requests, is carried to that job only.",
+  "Windows cells: GitHub runs `shell: bash` on windows runners with Git Bash (\"C:\\Program Files\\Git\\bin\\bash.EXE\" --noprofile --norc -e -o pipefail {0}); run_catalog.py's bare `bash` resolves to System32's WSL launcher there, so the windows groups' steps carry that same Git Bash command as their shell."
  ],
  "folded_from_commit": "ece815b1c5976dadb7d4cdc47ab37ae7a2a75605",
  "groups": [
@@ -232,13 +233,13 @@
      "name": "Refuse credential-bearing environment",
      "run_file": "tools/tasks/steps/capability-runtime.verify/01-refuse-credential-bearing-environment.sh",
      "run_sha256": "627db7cb0f5173a412089c99459574fc3002adb9274ac2a29b4227ce16d08213",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Fetch exact source anonymously",
      "run_file": "tools/tasks/steps/capability-runtime.verify/02-fetch-exact-source-anonymously.sh",
      "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
-     "shell": "bash",
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}",
      "env": {
       "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
      }
@@ -247,7 +248,7 @@
      "name": "Resolve requested Python without token-backed setup actions (reads its verbatim record under tools/tasks/folded/)",
      "run_file": "tools/tasks/steps/capability-runtime.verify/03-resolve-requested-python-without-token-backed-setup-actions-.sh",
      "run_sha256": "64389ff883ff6dea077245d968210b8337850e2d82d26c52abdf42e2ab21a51e",
-     "shell": "bash",
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}",
      "env": {
       "PYTHON_VERSION": "${{ matrix.python }}"
      }
@@ -256,37 +257,37 @@
      "name": "Install runtime dependencies",
      "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
      "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Validate capability manifest",
      "run_file": "tools/tasks/steps/capability-runtime.verify/05-validate-capability-manifest.sh",
      "run_sha256": "b531ef9eafa706ed797ac967ad58e679246d0cfb17e77e3bf6e65265ab108b29",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Test capability reconstruction and portable resolution",
      "run_file": "tools/tasks/steps/capability-runtime.verify/06-test-capability-reconstruction-and-portable-resolution.sh",
      "run_sha256": "5b056d5fe803a5a7187626de98f73857ecd1ff3f4820e6ee003480c9fa0aba4b",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Verify installed zero-touch bootstrap command",
      "run_file": "tools/tasks/steps/capability-runtime.verify/07-verify-installed-zero-touch-bootstrap-command.sh",
      "run_sha256": "1082eed6d0a11c0778c5c1f0a3589349a4d69e370f6bb4c688e5be18797bf717",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Verify invocation-scoped node status command",
      "run_file": "tools/tasks/steps/capability-runtime.verify/08-verify-invocation-scoped-node-status-command.sh",
      "run_sha256": "a3bd09b59e596017b42abb5ed2bfd256d15cd678f84fd6ee6565c3eaabb1becb",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Confirm non-authorizing validation scope (reads its verbatim record under tools/tasks/folded/)",
      "run_file": "tools/tasks/steps/capability-runtime.verify/09-confirm-non-authorizing-validation-scope-reads-its-verbatim-.sh",
      "run_sha256": "fb7971838298c7de0079c68a6ebc7c9f651dd245db6fe245f9b0a2f96678725b",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     }
    ],
    "artifacts": [],
@@ -299,7 +300,8 @@
     "python": "3.11"
    },
    "fold_notes": [
-    "strategy matrix cell os=windows-latest python=3.11"
+    "strategy matrix cell os=windows-latest python=3.11",
+    "shell: bash is GitHub's Git Bash on windows runners; a bare `bash` started from Python on Windows resolves to System32's WSL launcher, so each step names Git Bash explicitly (the command GitHub runs for shell: bash)."
    ]
   },
   {
@@ -327,13 +329,13 @@
      "name": "Refuse credential-bearing environment",
      "run_file": "tools/tasks/steps/capability-runtime.verify/01-refuse-credential-bearing-environment.sh",
      "run_sha256": "627db7cb0f5173a412089c99459574fc3002adb9274ac2a29b4227ce16d08213",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Fetch exact source anonymously",
      "run_file": "tools/tasks/steps/capability-runtime.verify/02-fetch-exact-source-anonymously.sh",
      "run_sha256": "4f02f30e905c8d477071d60cf060e0c1c7b53638bc7c5d79b478d8752312cd78",
-     "shell": "bash",
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}",
      "env": {
       "SOURCE_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"
      }
@@ -342,7 +344,7 @@
      "name": "Resolve requested Python without token-backed setup actions (reads its verbatim record under tools/tasks/folded/)",
      "run_file": "tools/tasks/steps/capability-runtime.verify/03-resolve-requested-python-without-token-backed-setup-actions-.sh",
      "run_sha256": "64389ff883ff6dea077245d968210b8337850e2d82d26c52abdf42e2ab21a51e",
-     "shell": "bash",
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}",
      "env": {
       "PYTHON_VERSION": "${{ matrix.python }}"
      }
@@ -351,37 +353,37 @@
      "name": "Install runtime dependencies",
      "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
      "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Validate capability manifest",
      "run_file": "tools/tasks/steps/capability-runtime.verify/05-validate-capability-manifest.sh",
      "run_sha256": "b531ef9eafa706ed797ac967ad58e679246d0cfb17e77e3bf6e65265ab108b29",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Test capability reconstruction and portable resolution",
      "run_file": "tools/tasks/steps/capability-runtime.verify/06-test-capability-reconstruction-and-portable-resolution.sh",
      "run_sha256": "5b056d5fe803a5a7187626de98f73857ecd1ff3f4820e6ee003480c9fa0aba4b",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Verify installed zero-touch bootstrap command",
      "run_file": "tools/tasks/steps/capability-runtime.verify/07-verify-installed-zero-touch-bootstrap-command.sh",
      "run_sha256": "1082eed6d0a11c0778c5c1f0a3589349a4d69e370f6bb4c688e5be18797bf717",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Verify invocation-scoped node status command",
      "run_file": "tools/tasks/steps/capability-runtime.verify/08-verify-invocation-scoped-node-status-command.sh",
      "run_sha256": "a3bd09b59e596017b42abb5ed2bfd256d15cd678f84fd6ee6565c3eaabb1becb",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
      "name": "Confirm non-authorizing validation scope (reads its verbatim record under tools/tasks/folded/)",
      "run_file": "tools/tasks/steps/capability-runtime.verify/09-confirm-non-authorizing-validation-scope-reads-its-verbatim-.sh",
      "run_sha256": "fb7971838298c7de0079c68a6ebc7c9f651dd245db6fe245f9b0a2f96678725b",
-     "shell": "bash"
+     "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     }
    ],
    "artifacts": [],
@@ -394,7 +396,8 @@
     "python": "3.12"
    },
    "fold_notes": [
-    "strategy matrix cell os=windows-latest python=3.12"
+    "strategy matrix cell os=windows-latest python=3.12",
+    "shell: bash is GitHub's Git Bash on windows runners; a bare `bash` started from Python on Windows resolves to System32's WSL launcher, so each step names Git Bash explicitly (the command GitHub runs for shell: bash)."
    ]
   },
   {
