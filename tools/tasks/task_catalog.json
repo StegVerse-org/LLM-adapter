@@ -13,7 +13,7 @@
   "Step bodies that read their own workflow file (the 'Confirm ... authority boundary' / 'non-authorizing scope' assertions: permissions: {}, no actions/checkout, no actions/setup-python, no persist-credentials, cancel-in-progress) read the verbatim record under tools/tasks/folded/ instead of .github/workflows/; the assertions are unchanged and still hold.",
   "capability-runtime.verify's OS x Python strategy matrix (ubuntu/windows/macos x 3.11/3.12) is six groups with matrix_values {os, python}; the dispatcher's check job runs each on runs-on: matrix.runs_on.",
   "tests/test_sdk_install_constraints.py and tests/test_workflow_action_pins.py also read tools/tasks/folded/ (the verbatim records whose run blocks run_catalog.py verify pins byte for byte to the executed step bodies), so the M-P8 constraint guard and the M-P9 pin guard keep covering the folded install steps and actions.",
-  "stegverse-governance.yml's one job is a job-level `uses:` of StegVerse-org/StegVerse-SDK governance-gate.yml pinned at 1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b; a run block cannot call a reusable workflow, so the job is carried verbatim as the dispatcher job `stegverse-governance` (same pin, same with:)."
+  "stegverse-governance.yml's one job is a job-level `uses:` of StegVerse-org/StegVerse-SDK governance-gate.yml pinned at 1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b; a run block cannot call a reusable workflow, so the job is carried verbatim as the dispatcher job `stegverse-governance` (same pin, same with:); the folded workflow's `contents: read` grant, which the called gate requests, is carried to that job only."
  ],
  "folded_from_commit": "ece815b1c5976dadb7d4cdc47ab37ae7a2a75605",
  "groups": [

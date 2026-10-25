@@ -114,6 +114,10 @@ jobs:
   # Carried verbatim from the folded stegverse-governance.yml (a reusable-workflow
   # call cannot be a run block); same pin, same inputs.
   stegverse-governance:
+    # The folded stegverse-governance.yml granted `contents: read` at workflow level;
+    # it is carried here to this job only (the called gate requests it).
+    permissions:
+      contents: read
     # Pinned to StegVerse-SDK main as resolved 2026-10-19 (LLMA-368 M-P6); move the
     # pin forward deliberately, never by following a branch.
     uses: StegVerse-org/StegVerse-SDK/.github/workflows/governance-gate.yml@1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b
