@@ -1,0 +1,1 @@
+python scripts/check_distributed_llm_workload.py

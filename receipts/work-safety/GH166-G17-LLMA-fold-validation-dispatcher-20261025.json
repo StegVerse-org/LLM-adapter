@@ -1,0 +1,816 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "GH166-G17-LLMA-FOLD-19-TO-2",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/.github/issues/166",
+    "https://github.com/StegVerse-org/.github/issues/163"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "CI workflow surface fold only; no Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/.github/issues/163#issuecomment-6392087280",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/428",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/429",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/430",
+      "https://github.com/StegVerse-org/LLM-adapter/issues/368"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter",
+      "StegVerse-org/StegDB"
+    ],
+    "evidence_refs": [
+      "StegVerse-org/StegDB:tools/tasks/run_catalog.py@eab2e773",
+      ".github/workflows",
+      "tests/test_workflow_action_pins.py",
+      "tests/test_sdk_install_constraints.py"
+    ]
+  },
+  "reuse_decision": "REUSE",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Open PRs #428-#430 edit only .github/workflows/validate.yml, which this change keeps byte for byte."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": [
+      "README.md"
+    ]
+  },
+  "covered_paths": [
+    ".github/workflows/capability-runtime.yml",
+    ".github/workflows/check-component-version.yml",
+    ".github/workflows/coinbase-skap-service-gateway.yml",
+    ".github/workflows/distributed-llm-executor-validate.yml",
+    ".github/workflows/distributed-llm-workload-validate.yml",
+    ".github/workflows/hil-site-receipt-compat.yml",
+    ".github/workflows/hil-sovereign-receiver-source.yml",
+    ".github/workflows/internal-governed-reference.yml",
+    ".github/workflows/repository-hygiene.yml",
+    ".github/workflows/southbound-sdk-return-validation.yml",
+    ".github/workflows/stegverse-governance.yml",
+    ".github/workflows/validate-anthropic-288-exact.yml",
+    ".github/workflows/validate-deepseek-intr.yml",
+    ".github/workflows/validate-external-llm-convergence.yml",
+    ".github/workflows/validate-kimi-intr.yml",
+    ".github/workflows/validate-kv-memory-context-bridge.yml",
+    ".github/workflows/validate-zai-intr.yml",
+    ".github/workflows/validation-dispatcher.yml",
+    ".github/workflows/work-mutation-safety.yml",
+    "README.md",
+    "control/workflow-surface-registry.json",
+    "tests/test_sdk_install_constraints.py",
+    "tests/test_workflow_action_pins.py",
+    "tests/test_workflow_surface_registry.py",
+    "tools/tasks/folded/capability-runtime.yml",
+    "tools/tasks/folded/check-component-version.yml",
+    "tools/tasks/folded/coinbase-skap-service-gateway.yml",
+    "tools/tasks/folded/distributed-llm-executor-validate.yml",
+    "tools/tasks/folded/distributed-llm-workload-validate.yml",
+    "tools/tasks/folded/hil-site-receipt-compat.yml",
+    "tools/tasks/folded/hil-sovereign-receiver-source.yml",
+    "tools/tasks/folded/internal-governed-reference.yml",
+    "tools/tasks/folded/repository-hygiene.yml",
+    "tools/tasks/folded/southbound-sdk-return-validation.yml",
+    "tools/tasks/folded/stegverse-governance.yml",
+    "tools/tasks/folded/validate-anthropic-288-exact.yml",
+    "tools/tasks/folded/validate-deepseek-intr.yml",
+    "tools/tasks/folded/validate-external-llm-convergence.yml",
+    "tools/tasks/folded/validate-kimi-intr.yml",
+    "tools/tasks/folded/validate-kv-memory-context-bridge.yml",
+    "tools/tasks/folded/validate-zai-intr.yml",
+    "tools/tasks/folded/work-mutation-safety.yml",
+    "tools/tasks/run_catalog.py",
+    "tools/tasks/run_plain_tests.py",
+    "tools/tasks/steps/capability-runtime.verify/01-refuse-credential-bearing-environment.sh",
+    "tools/tasks/steps/capability-runtime.verify/02-fetch-exact-source-anonymously.sh",
+    "tools/tasks/steps/capability-runtime.verify/03-resolve-requested-python-without-token-backed-setup-actions-.sh",
+    "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
+    "tools/tasks/steps/capability-runtime.verify/05-validate-capability-manifest.sh",
+    "tools/tasks/steps/capability-runtime.verify/06-test-capability-reconstruction-and-portable-resolution.sh",
+    "tools/tasks/steps/capability-runtime.verify/07-verify-installed-zero-touch-bootstrap-command.sh",
+    "tools/tasks/steps/capability-runtime.verify/08-verify-invocation-scoped-node-status-command.sh",
+    "tools/tasks/steps/capability-runtime.verify/09-confirm-non-authorizing-validation-scope-reads-its-verbatim-.sh",
+    "tools/tasks/steps/check-component-version.validate-component-version/01-validate-component-version-declaration.sh",
+    "tools/tasks/steps/check-component-version.validate-component-version/02-preserve-authority-boundary.sh",
+    "tools/tasks/steps/coinbase-skap-service-gateway.validate/01-refuse-credential-bearing-validation-environment.sh",
+    "tools/tasks/steps/coinbase-skap-service-gateway.validate/02-fetch-exact-source-anonymously.sh",
+    "tools/tasks/steps/coinbase-skap-service-gateway.validate/03-install-validation-dependencies.sh",
+    "tools/tasks/steps/coinbase-skap-service-gateway.validate/04-compile-coinbase-staging-source.sh",
+    "tools/tasks/steps/coinbase-skap-service-gateway.validate/05-validate-staging-and-mounted-http-boundary.sh",
+    "tools/tasks/steps/coinbase-skap-service-gateway.validate/06-assert-transport-only-authority-and-first-interlock-boundary.sh",
+    "tools/tasks/steps/distributed-llm-executor-validate.validate/01-refuse-credential-authority.sh",
+    "tools/tasks/steps/distributed-llm-executor-validate.validate/02-step-2.sh",
+    "tools/tasks/steps/distributed-llm-executor-validate.validate/03-step-3.sh",
+    "tools/tasks/steps/distributed-llm-workload-validate.validate/01-refuse-credential-authority.sh",
+    "tools/tasks/steps/distributed-llm-workload-validate.validate/02-validate-distributed-llm-source-contract.sh",
+    "tools/tasks/steps/distributed-llm-workload-validate.validate/03-confirm-non-authorizing-validation-boundary.sh",
+    "tools/tasks/steps/hil-site-receipt-compat.validate/01-refuse-credential-bearing-environment.sh",
+    "tools/tasks/steps/hil-site-receipt-compat.validate/02-fetch-exact-source-anonymously.sh",
+    "tools/tasks/steps/hil-site-receipt-compat.validate/03-install-credential-free-test-dependencies.sh",
+    "tools/tasks/steps/hil-site-receipt-compat.validate/04-run-hil-receipt-compatibility-tests.sh",
+    "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/01-refuse-credential-bearing-environment.sh",
+    "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/02-fetch-exact-source-anonymously.sh",
+    "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/03-validate-sovereign-hil-receiver-contract.sh",
+    "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/04-install-credential-free-hil-test-dependencies.sh",
+    "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/05-test-hil-intake-and-reconstruction-contract.sh",
+    "tools/tasks/steps/internal-governed-reference.governed-reference/01-run-deterministic-governed-reference-vectors.sh",
+    "tools/tasks/steps/internal-governed-reference.governed-reference/02-verify-evidence-packet-boundary.sh",
+    "tools/tasks/steps/southbound-sdk-return-validation.validate/01-assert-validation-only-authority-boundary.sh",
+    "tools/tasks/steps/southbound-sdk-return-validation.validate/02-materialize-exact-source-anonymously.sh",
+    "tools/tasks/steps/southbound-sdk-return-validation.validate/03-validate-generic-final-stegverse-side-transition.sh",
+    "tools/tasks/steps/validate-anthropic-288-exact.exact-branch-validation/01-refuse-credential-bearing-environment.sh",
+    "tools/tasks/steps/validate-anthropic-288-exact.exact-branch-validation/02-fetch-exact-pr-head-anonymously-as-canonical-branch-name.sh",
+    "tools/tasks/steps/validate-anthropic-288-exact.exact-branch-validation/03-run-exact-branch-validator.sh",
+    "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/01-refuse-credential-bearing-environment.sh",
+    "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/02-fetch-exact-source-anonymously.sh",
+    "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/03-resolve-python.sh",
+    "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/04-install-validation-dependencies.sh",
+    "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/05-test-deepseek-interlock-intr-transport.sh",
+    "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/06-test-governed-deepseek-executor-and-egress-binding.sh",
+    "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/07-test-deepseek-runtime-profile-tvc-broker-bridge.sh",
+    "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/08-validate-capability-declaration-and-envelope-schema.sh",
+    "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/09-confirm-validation-only-authority-boundary-reads-its-verbati.sh",
+    "tools/tasks/steps/validate-external-llm-convergence.validate/01-refuse-credential-bearing-environment.sh",
+    "tools/tasks/steps/validate-external-llm-convergence.validate/02-fetch-exact-source-anonymously.sh",
+    "tools/tasks/steps/validate-external-llm-convergence.validate/03-install-source-validation-dependencies.sh",
+    "tools/tasks/steps/validate-external-llm-convergence.validate/04-compile-convergence-modules.sh",
+    "tools/tasks/steps/validate-external-llm-convergence.validate/05-run-governed-connection-tests.sh",
+    "tools/tasks/steps/validate-external-llm-convergence.validate/06-confirm-validation-only-posture-reads-its-verbatim-record-un.sh",
+    "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/01-refuse-credential-bearing-environment.sh",
+    "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/02-fetch-exact-source-anonymously.sh",
+    "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/03-resolve-python.sh",
+    "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/04-install-validation-dependencies.sh",
+    "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/05-test-kimi-interlock-intr-transport.sh",
+    "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/06-test-governed-kimi-executor-and-egress-binding.sh",
+    "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/07-test-kimi-runtime-profile-tvc-broker-bridge.sh",
+    "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/08-validate-kimi-capability-schema-and-runtime-profile.sh",
+    "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/09-confirm-validation-only-authority-boundary-reads-its-verbati.sh",
+    "tools/tasks/steps/validate-kv-memory-context-bridge.validate/01-step-1.sh",
+    "tools/tasks/steps/validate-kv-memory-context-bridge.validate/02-step-2.sh",
+    "tools/tasks/steps/validate-zai-intr.validate-zai-intr/01-refuse-credential-bearing-environment.sh",
+    "tools/tasks/steps/validate-zai-intr.validate-zai-intr/02-fetch-exact-source-anonymously.sh",
+    "tools/tasks/steps/validate-zai-intr.validate-zai-intr/03-resolve-python.sh",
+    "tools/tasks/steps/validate-zai-intr.validate-zai-intr/04-install-validation-dependencies.sh",
+    "tools/tasks/steps/validate-zai-intr.validate-zai-intr/05-test-z-ai-interlock-intr-transport.sh",
+    "tools/tasks/steps/validate-zai-intr.validate-zai-intr/06-test-governed-z-ai-executor-and-egress-binding.sh",
+    "tools/tasks/steps/validate-zai-intr.validate-zai-intr/07-validate-capability-declaration-and-envelope-schema.sh",
+    "tools/tasks/steps/validate-zai-intr.validate-zai-intr/08-confirm-validation-only-authority-boundary-reads-its-verbati.sh",
+    "tools/tasks/steps/work-mutation-safety.validate/01-anonymous-public-checkout-without-github-token.sh",
+    "tools/tasks/steps/work-mutation-safety.validate/02-validate-fresh-work-mutation-safety-manifest.sh",
+    "tools/tasks/steps/workflow-surface-registry.validate/01-registry.sh",
+    "tools/tasks/task_catalog.json"
+  ],
+  "new_files": [
+    {
+      "decision": "CREATE_NEW",
+      "semantic_responsibility": "Single stable dispatcher for the folded validators (G17).",
+      "closest_existing_implementation": "StegVerse-org/StegDB#60 @eab2e773 (same file in the run_catalog pattern)",
+      "justification": "G17 caps each repo at two workflows; the run_catalog pattern is the documented fold (StegDB#60).",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegDB/pull/60",
+        "https://github.com/StegVerse-org/.github/issues/166"
+      ],
+      "path": ".github/workflows/validation-dispatcher.yml"
+    },
+    {
+      "decision": "CREATE_NEW",
+      "semantic_responsibility": "Declared workflow surfaces and folded records.",
+      "closest_existing_implementation": "StegVerse-org/StegDB#60 @eab2e773 (same file in the run_catalog pattern)",
+      "justification": "G17 caps each repo at two workflows; the run_catalog pattern is the documented fold (StegDB#60).",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegDB/pull/60",
+        "https://github.com/StegVerse-org/.github/issues/166"
+      ],
+      "path": "control/workflow-surface-registry.json"
+    },
+    {
+      "decision": "CREATE_NEW",
+      "semantic_responsibility": "Guard that registry, catalog, folded records and dispatcher agree.",
+      "closest_existing_implementation": "StegVerse-org/StegDB#60 @eab2e773 (same file in the run_catalog pattern)",
+      "justification": "G17 caps each repo at two workflows; the run_catalog pattern is the documented fold (StegDB#60).",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegDB/pull/60",
+        "https://github.com/StegVerse-org/.github/issues/166"
+      ],
+      "path": "tests/test_workflow_surface_registry.py"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/capability-runtime.yml",
+      "path": "tools/tasks/folded/capability-runtime.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/check-component-version.yml",
+      "path": "tools/tasks/folded/check-component-version.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/coinbase-skap-service-gateway.yml",
+      "path": "tools/tasks/folded/coinbase-skap-service-gateway.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/distributed-llm-executor-validate.yml",
+      "path": "tools/tasks/folded/distributed-llm-executor-validate.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/distributed-llm-workload-validate.yml",
+      "path": "tools/tasks/folded/distributed-llm-workload-validate.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/hil-site-receipt-compat.yml",
+      "path": "tools/tasks/folded/hil-site-receipt-compat.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/hil-sovereign-receiver-source.yml",
+      "path": "tools/tasks/folded/hil-sovereign-receiver-source.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/internal-governed-reference.yml",
+      "path": "tools/tasks/folded/internal-governed-reference.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/repository-hygiene.yml",
+      "path": "tools/tasks/folded/repository-hygiene.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/southbound-sdk-return-validation.yml",
+      "path": "tools/tasks/folded/southbound-sdk-return-validation.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/stegverse-governance.yml",
+      "path": "tools/tasks/folded/stegverse-governance.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/validate-anthropic-288-exact.yml",
+      "path": "tools/tasks/folded/validate-anthropic-288-exact.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/validate-deepseek-intr.yml",
+      "path": "tools/tasks/folded/validate-deepseek-intr.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/validate-external-llm-convergence.yml",
+      "path": "tools/tasks/folded/validate-external-llm-convergence.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/validate-kimi-intr.yml",
+      "path": "tools/tasks/folded/validate-kimi-intr.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/validate-kv-memory-context-bridge.yml",
+      "path": "tools/tasks/folded/validate-kv-memory-context-bridge.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/validate-zai-intr.yml",
+      "path": "tools/tasks/folded/validate-zai-intr.yml"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "Verbatim record of the folded workflow (git mv from .github/workflows); not executed by GitHub.",
+      "closest_existing_implementation": ".github/workflows/work-mutation-safety.yml",
+      "path": "tools/tasks/folded/work-mutation-safety.yml"
+    },
+    {
+      "decision": "REUSE",
+      "semantic_responsibility": "Catalog verifier and group runner, copied unmodified from the StegDB#60 run_catalog pattern.",
+      "closest_existing_implementation": "StegVerse-org/StegDB:tools/tasks/run_catalog.py@eab2e773",
+      "path": "tools/tasks/run_catalog.py"
+    },
+    {
+      "decision": "CREATE_NEW",
+      "semantic_responsibility": "G17 fold surface.",
+      "closest_existing_implementation": "StegVerse-org/StegDB#60 @eab2e773 (same file in the run_catalog pattern)",
+      "justification": "G17 caps each repo at two workflows; the run_catalog pattern is the documented fold (StegDB#60).",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegDB/pull/60",
+        "https://github.com/StegVerse-org/.github/issues/166"
+      ],
+      "path": "tools/tasks/run_plain_tests.py"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/capability-runtime.yml",
+      "path": "tools/tasks/steps/capability-runtime.verify/01-refuse-credential-bearing-environment.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/capability-runtime.yml",
+      "path": "tools/tasks/steps/capability-runtime.verify/02-fetch-exact-source-anonymously.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/capability-runtime.yml",
+      "path": "tools/tasks/steps/capability-runtime.verify/03-resolve-requested-python-without-token-backed-setup-actions-.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/capability-runtime.yml",
+      "path": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/capability-runtime.yml",
+      "path": "tools/tasks/steps/capability-runtime.verify/05-validate-capability-manifest.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/capability-runtime.yml",
+      "path": "tools/tasks/steps/capability-runtime.verify/06-test-capability-reconstruction-and-portable-resolution.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/capability-runtime.yml",
+      "path": "tools/tasks/steps/capability-runtime.verify/07-verify-installed-zero-touch-bootstrap-command.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/capability-runtime.yml",
+      "path": "tools/tasks/steps/capability-runtime.verify/08-verify-invocation-scoped-node-status-command.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/capability-runtime.yml",
+      "path": "tools/tasks/steps/capability-runtime.verify/09-confirm-non-authorizing-validation-scope-reads-its-verbatim-.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/check-component-version.yml",
+      "path": "tools/tasks/steps/check-component-version.validate-component-version/01-validate-component-version-declaration.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/check-component-version.yml",
+      "path": "tools/tasks/steps/check-component-version.validate-component-version/02-preserve-authority-boundary.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/coinbase-skap-service-gateway.yml",
+      "path": "tools/tasks/steps/coinbase-skap-service-gateway.validate/01-refuse-credential-bearing-validation-environment.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/coinbase-skap-service-gateway.yml",
+      "path": "tools/tasks/steps/coinbase-skap-service-gateway.validate/02-fetch-exact-source-anonymously.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/coinbase-skap-service-gateway.yml",
+      "path": "tools/tasks/steps/coinbase-skap-service-gateway.validate/03-install-validation-dependencies.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/coinbase-skap-service-gateway.yml",
+      "path": "tools/tasks/steps/coinbase-skap-service-gateway.validate/04-compile-coinbase-staging-source.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/coinbase-skap-service-gateway.yml",
+      "path": "tools/tasks/steps/coinbase-skap-service-gateway.validate/05-validate-staging-and-mounted-http-boundary.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/coinbase-skap-service-gateway.yml",
+      "path": "tools/tasks/steps/coinbase-skap-service-gateway.validate/06-assert-transport-only-authority-and-first-interlock-boundary.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/distributed-llm-executor-validate.yml",
+      "path": "tools/tasks/steps/distributed-llm-executor-validate.validate/01-refuse-credential-authority.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/distributed-llm-executor-validate.yml",
+      "path": "tools/tasks/steps/distributed-llm-executor-validate.validate/02-step-2.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/distributed-llm-executor-validate.yml",
+      "path": "tools/tasks/steps/distributed-llm-executor-validate.validate/03-step-3.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/distributed-llm-workload-validate.yml",
+      "path": "tools/tasks/steps/distributed-llm-workload-validate.validate/01-refuse-credential-authority.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/distributed-llm-workload-validate.yml",
+      "path": "tools/tasks/steps/distributed-llm-workload-validate.validate/02-validate-distributed-llm-source-contract.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/distributed-llm-workload-validate.yml",
+      "path": "tools/tasks/steps/distributed-llm-workload-validate.validate/03-confirm-non-authorizing-validation-boundary.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/hil-site-receipt-compat.yml",
+      "path": "tools/tasks/steps/hil-site-receipt-compat.validate/01-refuse-credential-bearing-environment.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/hil-site-receipt-compat.yml",
+      "path": "tools/tasks/steps/hil-site-receipt-compat.validate/02-fetch-exact-source-anonymously.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/hil-site-receipt-compat.yml",
+      "path": "tools/tasks/steps/hil-site-receipt-compat.validate/03-install-credential-free-test-dependencies.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/hil-site-receipt-compat.yml",
+      "path": "tools/tasks/steps/hil-site-receipt-compat.validate/04-run-hil-receipt-compatibility-tests.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/hil-sovereign-receiver-source.yml",
+      "path": "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/01-refuse-credential-bearing-environment.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/hil-sovereign-receiver-source.yml",
+      "path": "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/02-fetch-exact-source-anonymously.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/hil-sovereign-receiver-source.yml",
+      "path": "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/03-validate-sovereign-hil-receiver-contract.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/hil-sovereign-receiver-source.yml",
+      "path": "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/04-install-credential-free-hil-test-dependencies.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/hil-sovereign-receiver-source.yml",
+      "path": "tools/tasks/steps/hil-sovereign-receiver-source.source-contract/05-test-hil-intake-and-reconstruction-contract.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/internal-governed-reference.yml",
+      "path": "tools/tasks/steps/internal-governed-reference.governed-reference/01-run-deterministic-governed-reference-vectors.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/internal-governed-reference.yml",
+      "path": "tools/tasks/steps/internal-governed-reference.governed-reference/02-verify-evidence-packet-boundary.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/southbound-sdk-return-validation.yml",
+      "path": "tools/tasks/steps/southbound-sdk-return-validation.validate/01-assert-validation-only-authority-boundary.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/southbound-sdk-return-validation.yml",
+      "path": "tools/tasks/steps/southbound-sdk-return-validation.validate/02-materialize-exact-source-anonymously.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/southbound-sdk-return-validation.yml",
+      "path": "tools/tasks/steps/southbound-sdk-return-validation.validate/03-validate-generic-final-stegverse-side-transition.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-anthropic-288-exact.yml",
+      "path": "tools/tasks/steps/validate-anthropic-288-exact.exact-branch-validation/01-refuse-credential-bearing-environment.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-anthropic-288-exact.yml",
+      "path": "tools/tasks/steps/validate-anthropic-288-exact.exact-branch-validation/02-fetch-exact-pr-head-anonymously-as-canonical-branch-name.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-anthropic-288-exact.yml",
+      "path": "tools/tasks/steps/validate-anthropic-288-exact.exact-branch-validation/03-run-exact-branch-validator.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-deepseek-intr.yml",
+      "path": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/01-refuse-credential-bearing-environment.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-deepseek-intr.yml",
+      "path": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/02-fetch-exact-source-anonymously.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-deepseek-intr.yml",
+      "path": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/03-resolve-python.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-deepseek-intr.yml",
+      "path": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/04-install-validation-dependencies.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-deepseek-intr.yml",
+      "path": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/05-test-deepseek-interlock-intr-transport.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-deepseek-intr.yml",
+      "path": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/06-test-governed-deepseek-executor-and-egress-binding.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-deepseek-intr.yml",
+      "path": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/07-test-deepseek-runtime-profile-tvc-broker-bridge.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-deepseek-intr.yml",
+      "path": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/08-validate-capability-declaration-and-envelope-schema.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-deepseek-intr.yml",
+      "path": "tools/tasks/steps/validate-deepseek-intr.validate-deepseek-intr/09-confirm-validation-only-authority-boundary-reads-its-verbati.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-external-llm-convergence.yml",
+      "path": "tools/tasks/steps/validate-external-llm-convergence.validate/01-refuse-credential-bearing-environment.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-external-llm-convergence.yml",
+      "path": "tools/tasks/steps/validate-external-llm-convergence.validate/02-fetch-exact-source-anonymously.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-external-llm-convergence.yml",
+      "path": "tools/tasks/steps/validate-external-llm-convergence.validate/03-install-source-validation-dependencies.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-external-llm-convergence.yml",
+      "path": "tools/tasks/steps/validate-external-llm-convergence.validate/04-compile-convergence-modules.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-external-llm-convergence.yml",
+      "path": "tools/tasks/steps/validate-external-llm-convergence.validate/05-run-governed-connection-tests.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-external-llm-convergence.yml",
+      "path": "tools/tasks/steps/validate-external-llm-convergence.validate/06-confirm-validation-only-posture-reads-its-verbatim-record-un.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-kimi-intr.yml",
+      "path": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/01-refuse-credential-bearing-environment.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-kimi-intr.yml",
+      "path": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/02-fetch-exact-source-anonymously.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-kimi-intr.yml",
+      "path": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/03-resolve-python.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-kimi-intr.yml",
+      "path": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/04-install-validation-dependencies.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-kimi-intr.yml",
+      "path": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/05-test-kimi-interlock-intr-transport.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-kimi-intr.yml",
+      "path": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/06-test-governed-kimi-executor-and-egress-binding.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-kimi-intr.yml",
+      "path": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/07-test-kimi-runtime-profile-tvc-broker-bridge.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-kimi-intr.yml",
+      "path": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/08-validate-kimi-capability-schema-and-runtime-profile.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-kimi-intr.yml",
+      "path": "tools/tasks/steps/validate-kimi-intr.validate-kimi-intr/09-confirm-validation-only-authority-boundary-reads-its-verbati.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-kv-memory-context-bridge.yml",
+      "path": "tools/tasks/steps/validate-kv-memory-context-bridge.validate/01-step-1.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-kv-memory-context-bridge.yml",
+      "path": "tools/tasks/steps/validate-kv-memory-context-bridge.validate/02-step-2.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-zai-intr.yml",
+      "path": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/01-refuse-credential-bearing-environment.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-zai-intr.yml",
+      "path": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/02-fetch-exact-source-anonymously.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-zai-intr.yml",
+      "path": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/03-resolve-python.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-zai-intr.yml",
+      "path": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/04-install-validation-dependencies.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-zai-intr.yml",
+      "path": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/05-test-z-ai-interlock-intr-transport.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-zai-intr.yml",
+      "path": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/06-test-governed-z-ai-executor-and-egress-binding.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-zai-intr.yml",
+      "path": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/07-validate-capability-declaration-and-envelope-schema.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/validate-zai-intr.yml",
+      "path": "tools/tasks/steps/validate-zai-intr.validate-zai-intr/08-confirm-validation-only-authority-boundary-reads-its-verbati.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/work-mutation-safety.yml",
+      "path": "tools/tasks/steps/work-mutation-safety.validate/01-anonymous-public-checkout-without-github-token.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/work-mutation-safety.yml",
+      "path": "tools/tasks/steps/work-mutation-safety.validate/02-validate-fresh-work-mutation-safety-manifest.sh"
+    },
+    {
+      "decision": "MOVE",
+      "semantic_responsibility": "sha256-pinned step body extracted from a folded workflow job.",
+      "closest_existing_implementation": "tools/tasks/folded/workflow-surface-registry.yml",
+      "path": "tools/tasks/steps/workflow-surface-registry.validate/01-registry.sh"
+    },
+    {
+      "decision": "CREATE_NEW",
+      "semantic_responsibility": "Group catalog the dispatcher plans and runs.",
+      "closest_existing_implementation": "StegVerse-org/StegDB#60 @eab2e773 (same file in the run_catalog pattern)",
+      "justification": "G17 caps each repo at two workflows; the run_catalog pattern is the documented fold (StegDB#60).",
+      "canonical_owner": "StegVerse-org/LLM-adapter",
+      "evidence_refs": [
+        "https://github.com/StegVerse-org/StegDB/pull/60",
+        "https://github.com/StegVerse-org/.github/issues/166"
+      ],
+      "path": "tools/tasks/task_catalog.json"
+    }
+  ]
+}

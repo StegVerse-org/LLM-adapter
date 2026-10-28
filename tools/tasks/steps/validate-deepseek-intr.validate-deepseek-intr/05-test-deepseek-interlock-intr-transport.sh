@@ -1,0 +1,1 @@
+$PYTHON_BIN -m unittest tests/test_deepseek_intr_transport.py

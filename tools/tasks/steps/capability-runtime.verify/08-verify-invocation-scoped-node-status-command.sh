@@ -1,0 +1,1 @@
+$PYTHON_BIN -m llm_adapter.node_service status --root .stegdeploy/ci-portable-node

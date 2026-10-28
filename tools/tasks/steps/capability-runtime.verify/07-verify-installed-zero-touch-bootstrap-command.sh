@@ -1,0 +1,1 @@
+$PYTHON_BIN -m llm_adapter.node_bootstrap bootstrap --root .stegdeploy/ci-portable-node
