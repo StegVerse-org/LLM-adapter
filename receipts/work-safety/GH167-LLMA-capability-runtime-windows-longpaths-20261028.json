@@ -1,0 +1,57 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "GH167-LLMA-CAPABILITY-RUNTIME-WINDOWS-LONGPATHS",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/.github/issues/167",
+    "https://github.com/StegVerse-org/.github/issues/166"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "CI step body fix only; no Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/434",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/428",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/429",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/430"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
+      "tools/tasks/task_catalog.json",
+      "tools/tasks/run_catalog.py",
+      "tests/test_workflow_surface_registry.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Only the capability-runtime.verify install step body and its six catalog run_sha256 pins change; the folded verbatim record and other groups' identical install bodies are untouched. Open PRs #428-#430 do not edit these files."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Runner git configuration for the Windows install step only; no product behavior changes.",
+    "evidence_refs": [
+      "README.md",
+      "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh"
+    ]
+  },
+  "covered_paths": [
+    "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
+    "tools/tasks/task_catalog.json"
+  ],
+  "new_files": []
+}
