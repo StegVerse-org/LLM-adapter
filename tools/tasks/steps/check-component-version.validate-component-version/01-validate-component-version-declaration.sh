@@ -1,0 +1,1 @@
+python scripts/check_component_version.py

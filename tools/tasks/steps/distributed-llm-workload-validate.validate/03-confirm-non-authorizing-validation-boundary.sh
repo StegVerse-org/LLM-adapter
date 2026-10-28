@@ -1,0 +1,2 @@
+echo "authority_effect=NONE_SOURCE_VALIDATION_ONLY"
+echo "live_distributed_provider_execution_observed=false"

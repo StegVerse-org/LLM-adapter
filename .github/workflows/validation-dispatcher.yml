@@ -1,0 +1,125 @@
+name: Stable validator dispatcher
+
+# G17-WORKFLOW-SURFACE-MINIMIZATION (StegVerse-Labs/.github#167/#168), enforced
+# retroactively under Rigel's 2026-10-24 direction (StegVerse-org/.github#166).
+# StegVerse-org/LLM-adapter's stable validation surface (19 -> 2 workflow files, with
+# validate.yml). It runs the manifest tools/tasks/task_catalog.json: one matrix job per
+# catalog group, each group one job of a workflow folded here (verbatim records under
+# tools/tasks/folded/), its steps the original run blocks byte for byte, pinned by
+# sha256 and refused by `run_catalog.py verify` on any drift (StegVerse-Labs/StegDB#60
+# pattern, run_catalog.py copied unmodified). LLMA-368: no token-backed setup action;
+# every job refuses a credential-bearing environment and fetches the exact source
+# anonymously, as validate.yml does. A new check is a catalog entry, never a new
+# workflow file; control/workflow-surface-registry.json fails closed on an
+# unregistered workflow. permissions: {}; no secret is referenced.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: validation-dispatcher-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+    steps:
+      - name: Refuse credential-bearing environment
+        shell: bash
+        run: |
+          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT TVC_EPHEMERAL_GITHUB_TOKEN STEGVERSE_PROVIDER_TOKEN STEGVERSE_MASTER_RECORDS_TOKEN STEGVERSE_HIL_REVIEW_TOKEN STEGVERSE_HIL_PUBLICATION_TOKEN OPENAI_API_KEY ANTHROPIC_API_KEY ACTIONS_RUNTIME_TOKEN ACTIONS_ID_TOKEN_REQUEST_TOKEN; do
+            if [ -n "${!key:-}" ]; then
+              echo "credential_exposed:$key"
+              exit 1
+            fi
+          done
+
+      - name: Fetch exact source anonymously
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git init .
+          # No named remote: each folded group's own anonymous fetch adds `origin`.
+          git -c http.extraheader= fetch --depth 1 https://github.com/StegVerse-org/LLM-adapter.git "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+
+      - name: The catalog matches its pinned step bodies
+        shell: bash
+        run: python3 tools/tasks/run_catalog.py verify
+
+      - name: Select the catalog groups this event runs
+        id: select
+        shell: bash
+        run: echo "matrix=$(python3 tools/tasks/run_catalog.py matrix --event "$GITHUB_EVENT_NAME")" >> "$GITHUB_OUTPUT"
+
+  check:
+    needs: plan
+    name: ${{ matrix.group }}
+    runs-on: ${{ matrix.runs_on }}
+    timeout-minutes: ${{ matrix.timeout_minutes }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      CATALOG_EVENT_BEFORE: ${{ github.event.before }}
+      CATALOG_EVENT_AFTER: ${{ github.event.after }}
+      CATALOG_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      CATALOG_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      CATALOG_PR_NUMBER: ${{ github.event.pull_request.number }}
+      CATALOG_PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+      CATALOG_PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - name: Refuse credential-bearing environment
+        shell: bash
+        run: |
+          for key in GITHUB_TOKEN GH_TOKEN GITHUB_PAT TVC_EPHEMERAL_GITHUB_TOKEN STEGVERSE_PROVIDER_TOKEN STEGVERSE_MASTER_RECORDS_TOKEN STEGVERSE_HIL_REVIEW_TOKEN STEGVERSE_HIL_PUBLICATION_TOKEN OPENAI_API_KEY ANTHROPIC_API_KEY ACTIONS_RUNTIME_TOKEN ACTIONS_ID_TOKEN_REQUEST_TOKEN; do
+            if [ -n "${!key:-}" ]; then
+              echo "credential_exposed:$key"
+              exit 1
+            fi
+          done
+
+      - name: Fetch exact source anonymously
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git init .
+          # No named remote: each folded group's own anonymous fetch adds `origin`.
+          git -c http.extraheader= fetch --depth 1 https://github.com/StegVerse-org/LLM-adapter.git "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+
+      - name: Run the catalog group
+        shell: bash
+        run: |
+          set -euo pipefail
+          runner_python="$(command -v python3 || command -v python)"
+          "$runner_python" tools/tasks/run_catalog.py run --group "${{ matrix.group }}"
+
+      - name: Retain the artifact the folded job uploaded
+        if: always() && matrix.artifact_name
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ matrix.artifact_name }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/catalog-artifacts
+          if-no-files-found: ${{ matrix.artifact_if_no_files_found }}
+
+  # Carried verbatim from the folded stegverse-governance.yml (a reusable-workflow
+  # call cannot be a run block); same pin, same inputs.
+  stegverse-governance:
+    # The folded stegverse-governance.yml granted `contents: read` at workflow level;
+    # it is carried here to this job only (the called gate requests it).
+    permissions:
+      contents: read
+    # Pinned to StegVerse-SDK main as resolved 2026-10-19 (LLMA-368 M-P6); move the
+    # pin forward deliberately, never by following a branch.
+    uses: StegVerse-org/StegVerse-SDK/.github/workflows/governance-gate.yml@1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b
+    with:
+      sdk_ref: 1126f80e9fd179daf3dcfdbc45b59122f5e4cb8b

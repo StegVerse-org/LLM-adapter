@@ -631,6 +631,8 @@ StegDeploy now includes its already-materialized canonical control root in `STEG
 
 This Wave-1 repository now adopts canonical hygiene goal `HYGIENE-CAUSAL-ROOTS-001` through the shared read-only inventory workflow pinned to `739a611afd70bbe5b8e598b03180e62624fb8459`. Pre-adoption branch census: **268**. The workflow classifies only; it cannot delete refs, close PRs/issues, or treat branch age/name as retirement authority. See `docs/REPOSITORY_HYGIENE_ADOPTION_MIRROR_HANDOFF.md`.
 
+G17 workflow surface (StegVerse-org/.github#166, StegDB#60 run_catalog pattern): `.github/workflows` holds two workflows, `validate.yml` (unchanged) and `validation-dispatcher.yml`. The dispatcher runs every former validator as a sha256-pinned group of `tools/tasks/task_catalog.json` under the LLMA-368 rules (`permissions: {}`, no token-backed setup action, anonymous exact-source fetch) and carries the pinned SDK governance-gate job verbatim. Verbatim originals are kept under `tools/tasks/folded/`; the dispatch-only hygiene inventory workflow above is kept there as a verbatim ELIMINATE record (`tools/tasks/folded/repository-hygiene.yml`), so the inventory is no longer offered as a dispatchable workflow. Registry: `control/workflow-surface-registry.json`.
+
 
 ### Machine-owned HIL receiver Gateway projection
 
