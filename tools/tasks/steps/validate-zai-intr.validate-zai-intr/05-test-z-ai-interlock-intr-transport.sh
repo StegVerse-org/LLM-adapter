@@ -1,0 +1,1 @@
+$PYTHON_BIN -m unittest tests/test_zai_intr_transport.py

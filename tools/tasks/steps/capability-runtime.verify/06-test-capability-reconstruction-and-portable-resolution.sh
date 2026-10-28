@@ -1,0 +1,1 @@
+"$PYTHON_BIN" -m unittest -v tests/test_capability_runtime.py tests/test_portable_node.py tests/test_portable_node_bootstrap.py tests/test_node_bootstrap.py tests/test_node_service.py
