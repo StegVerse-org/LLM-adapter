@@ -437,7 +437,9 @@ class NodeOwnLedgerOnlyTests(_Ledger):
 
     An adapter-held organization-ledger location was an inert constant at
     node_receipt_common.py:48 (StegVerse-org/.github#167 c6510478233, class D).
-    It is gone, and these keep it gone: the adapter is an InTr endpoint, never an
+    It is gone, and these keep it gone: the adapter is only a data transport and
+    translator, never an InTr endpoint or destination (the endpoint is an external
+    machine that has established itself as a healthy node), never an
     organization-ledger party, and InTr connects only distinct organizations.
     """
 
