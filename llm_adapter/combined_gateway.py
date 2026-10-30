@@ -95,26 +95,24 @@ def establish_or_verify_node_standing(request: Request, payload: dict) -> dict:
     duplicated, and they are returned here instead of from the unauthenticated
     advertisement so that reaching them requires crossing the contract.
     """
-    try:
-        admitted = node_ingress_boundary.admit(
-            payload, transport=node_ingress_boundary.HTTP, health=health)
-    except node_standing.StandingRefused as refused:
-        body = node_standing.refusal(
-            refused, mode=payload.get("mode") if isinstance(payload, dict) else None)
-        # The boundary recorded the refusal before raising. Return its receipt so
+    admitted = node_ingress_boundary.admit(
+        payload, transport=node_ingress_boundary.HTTP, health=health,
+        health_report_receipt_sha256=(
+            payload.get("health_report_receipt_sha256") if isinstance(payload, dict) else None))
+    if admitted["disposition"] != node_ingress_boundary.ALLOW:
+        # The boundary recorded the refusal and returned it with the six fields
+        # (failure_code NODE_NOT_CURRENTLY_ADMITTED_HEALTHY). Return its receipt so
         # a refused caller cites its own refusal rather than being told nothing
         # happened -- a held or retried arrival is a transition, not a gap.
-        body = {
-            **body,
-            "ingress_recorded_at_boundary": node_ingress_boundary.BOUNDARY,
-            "ingress_transition_class": node_ingress_boundary.REFUSED_CLASS,
-            "ingress_receipt_sha256": getattr(refused, "ingress_receipt_sha256", None),
-            "ingress_transition_id": getattr(refused, "ingress_transition_id", None),
-        }
-        status = 422 if refused.disposition == node_standing.FAIL_CLOSED else 403
+        body = {key: value for key, value in admitted.items() if key != "ingress_record"}
+        if admitted.get("standing_refusal"):
+            # The verbatim standing refusal stays readable at the top level, as before.
+            body = {**admitted["standing_refusal"], **body}
+        body["node_health"] = health()
+        status = 422 if admitted["disposition"] == node_standing.FAIL_CLOSED else 403
         raise HTTPException(status_code=status, detail=body)
 
-    disposition = admitted["disposition"]
+    disposition = admitted["standing"]
     profile = admitted["continuation_profile"]
     advertised = machine_instruction_advertisement()
     instructions = advertised["machine_readable_instructions"]
@@ -127,10 +125,11 @@ def establish_or_verify_node_standing(request: Request, payload: dict) -> dict:
         "ingress_transition_id": admitted["ingress_transition_id"],
         "ingress_ordering": admitted["ingress_ordering"],
         "ingress_transport": admitted["ingress_record"]["transport"],
-        # The caller asked whether it reached a healthy node. Answer with the
-        # node's own health surface rather than a separate assertion about it,
-        # so "healthy" means the same thing here as it does at /health.
-        "healthy_node_established": True,
+        # Healthy means evaluated: true only because the boundary's healthy-node
+        # evaluator returned ALLOW from the node's current receipted HEALTHY report.
+        "healthy_node_established": admitted["healthy_node_established"],
+        "health_evaluation": admitted["health_evaluation"],
+        # This node's own /health surface, observed and deciding nothing.
         "node_health": health(),
         "instructions_released": True,
         # Instructions for the class this node declared, not every class's.

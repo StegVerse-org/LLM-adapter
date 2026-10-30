@@ -1,0 +1,95 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "KV-SKAP-VAULT-FUNCTIONAL-001/LC-KV-13+LC-KV-14",
+  "authority_effect": "NONE_PREFLIGHT_ONLY",
+  "authoring_session": "lane-b-91117956 (Lane B, InTr and Mesh Destinations, StegVerse-org/.github#162)",
+  "successor_of": {
+    "pattern": "E1 G-8 successor; the original branch is not touched",
+    "original_prs": ["https://github.com/StegVerse-org/LLM-adapter/pull/358", "https://github.com/StegVerse-org/LLM-adapter/pull/360"],
+    "original_authoring_session": "Claude Code session_017aUMzZLhYggKVCRWevwrX4",
+    "original_task_id": "SVORG-STEGOS-PORTABILITY-001"
+  },
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:docs/CANONICAL_NODE_STANDING_INGRESS_MIRROR_HANDOFF.md",
+    "StegVerse-org/LLM-adapter:docs/TRANSITION_LEDGER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "StegVerse-Labs/.github#3324 (KV-SKAP-VAULT-FUNCTIONAL-001)",
+    "StegVerse-Labs/.github#3330@b663e8dd (LC-KV-13, LC-KV-14)",
+    "StegVerse-org/.github:orchestration/task-registry.json#SVORG-STEGOS-PORTABILITY-001"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Repository-local evaluation that only reads this repository's own transition ledger. No organization propagation, custody transition or Master Records closure is performed or claimed."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/.github/issues/162",
+      "https://github.com/StegVerse-org/.github/issues/163#issuecomment-6367990604",
+      "https://github.com/StegVerse-Labs/.github/pull/3330",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/358",
+      "https://github.com/StegVerse-org/LLM-adapter/pull/360"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": ["StegVerse-org/LLM-adapter", "StegVerse-org/.github", "StegVerse-Labs/.github"],
+    "evidence_refs": [
+      "llm_adapter/node_ingress_boundary.py",
+      "llm_adapter/node_standing.py",
+      "llm_adapter/combined_gateway.py",
+      ".stegverse/transition-ledger/emit.py",
+      "StegVerse-Labs/.github:data/node-exchange/first-executable-conformance-v0.1.json"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "This extends the existing ingress boundary and reads the existing ledger written by emit.py. No second ledger or emitter is created, and the original authors' branches are untouched."
+  },
+  "readme_impact": {
+    "material_function_change": true,
+    "readme_path": "README.md",
+    "readme_updated_in_change_set": true,
+    "evidence_refs": ["README.md", "docs/HEALTHY_NODE_EVALUATOR_INTERFACE.md", "llm_adapter/node_ingress_boundary.py"]
+  },
+  "covered_paths": [
+    ".github/workflows/validate.yml",
+    "iosnoperiod/github/workflows/validate.yml",
+    "README.md",
+    "llm_adapter/combined_gateway.py",
+    "llm_adapter/healthy_node_evaluator.py",
+    "llm_adapter/node_ingress_boundary.py",
+    "tests/healthy_node_reports.py",
+    "tests/test_healthy_node_evaluator.py",
+    "tests/test_node_advertisement.py",
+    "tests/test_node_ingress_boundary.py",
+    "tests/test_node_standing.py"
+  ],
+  "new_files": [
+    {
+      "path": "llm_adapter/healthy_node_evaluator.py",
+      "semantic_responsibility": "E0 deterministic evaluator of REQUESTER_IS_CURRENTLY_ADMITTED_HEALTHY_NODE. It uses only receipted NODE_HEALTH_REPORTED reports read back on the chain from HEAD.json with hash-valid addresses, and makes no clock or network reads.",
+      "closest_existing_implementation": "node_ingress_boundary.ingress_record hard-coded healthy_node_established=True, and node_standing resolves standing without health. Neither evaluates health.",
+      "decision": "CREATE_NEW",
+      "justification": "Lane D's layer 1 consumes the evaluator separately from the ingress boundary, so it must be importable on its own and pure. Placing it inside the boundary would couple the consumer to recording side effects.",
+      "canonical_owner": "StegVerse-org/LLM-adapter (InTr lane, StegVerse-org/.github#162)",
+      "evidence_refs": ["StegVerse-Labs/.github#3330", "docs/HEALTHY_NODE_EVALUATOR_INTERFACE.md"]
+    },
+    {
+      "path": "tests/healthy_node_reports.py",
+      "semantic_responsibility": "Test-only helper that records a NODE_HEALTH_REPORTED receipt through the repository's own emitter into the redirected test ledger.",
+      "closest_existing_implementation": "tests/conftest.py redirects the ledger root but records nothing.",
+      "decision": "EXTEND"
+    },
+    {
+      "path": "tests/test_healthy_node_evaluator.py",
+      "semantic_responsibility": "Evaluator unit tests, plus admit regressions for the UNHEALTHY, missing, unreceipted and forged-hash cases.",
+      "closest_existing_implementation": "tests/test_node_ingress_boundary.py covers recording, not health evaluation.",
+      "decision": "EXTEND"
+    }
+  ]
+}

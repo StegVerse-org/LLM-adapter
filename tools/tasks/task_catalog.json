@@ -66,7 +66,7 @@
     {
      "name": "Install runtime dependencies",
      "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
-     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "run_sha256": "4dedc515b5ffc022fbc9cb8979c76e484a23ab487677bbf94d1c7263c0df9a19",
      "shell": "bash"
     },
     {
@@ -161,7 +161,7 @@
     {
      "name": "Install runtime dependencies",
      "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
-     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "run_sha256": "4dedc515b5ffc022fbc9cb8979c76e484a23ab487677bbf94d1c7263c0df9a19",
      "shell": "bash"
     },
     {
@@ -256,7 +256,7 @@
     {
      "name": "Install runtime dependencies",
      "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
-     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "run_sha256": "4dedc515b5ffc022fbc9cb8979c76e484a23ab487677bbf94d1c7263c0df9a19",
      "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
@@ -352,7 +352,7 @@
     {
      "name": "Install runtime dependencies",
      "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
-     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "run_sha256": "4dedc515b5ffc022fbc9cb8979c76e484a23ab487677bbf94d1c7263c0df9a19",
      "shell": "\"C:/Program Files/Git/bin/bash.exe\" --noprofile --norc -eo pipefail {0}"
     },
     {
@@ -448,7 +448,7 @@
     {
      "name": "Install runtime dependencies",
      "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
-     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "run_sha256": "4dedc515b5ffc022fbc9cb8979c76e484a23ab487677bbf94d1c7263c0df9a19",
      "shell": "bash"
     },
     {
@@ -543,7 +543,7 @@
     {
      "name": "Install runtime dependencies",
      "run_file": "tools/tasks/steps/capability-runtime.verify/04-install-runtime-dependencies.sh",
-     "run_sha256": "2fe26107d84d5587b1c7f06e44b9fc6bde54f789d57503f78cbebe26b384c1df",
+     "run_sha256": "4dedc515b5ffc022fbc9cb8979c76e484a23ab487677bbf94d1c7263c0df9a19",
      "shell": "bash"
     },
     {
