@@ -47,7 +47,5 @@
   "covered_paths": [
     "tests/test_node_receipt_producers.py"
   ],
-  "new_files": [
-    "receipts/work-safety/GH163-LLMA-adapter-not-intr-endpoint-docstring-20261029.json"
-  ]
+  "new_files": []
 }
