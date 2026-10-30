@@ -432,5 +432,35 @@ class EndToEndChainTests(_Ledger):
             self.assertTrue(layer1[key])
 
 
+class NodeOwnLedgerOnlyTests(_Ledger):
+    """The producers write the node's own ledger and name no organization ledger.
+
+    An adapter-held organization-ledger location was an inert constant at
+    node_receipt_common.py:48 (StegVerse-org/.github#167 c6510478233, class D).
+    It is gone, and these keep it gone: the adapter is an InTr endpoint, never an
+    organization-ledger party, and InTr connects only distinct organizations.
+    """
+
+    NODE_MODULES = ("node_receipt_common", "node_existence_readback", "node_identity_binding_producer",
+                    "node_health_check_projection", "node_health_report_producer", "healthy_node_evaluator",
+                    "node_ingress_boundary")
+
+    def test_no_organization_ledger_location_is_declared_or_read(self):
+        from llm_adapter import node_receipt_common as common
+        self.assertFalse(hasattr(common, "LEDGER_LOCATION"))
+        for name in self.NODE_MODULES:
+            source = (ROOT / "llm_adapter" / (name + ".py")).read_text()
+            self.assertNotIn("refs/stegverse/organization-ledger", source, name)
+            self.assertNotIn("LEDGER_LOCATION", source, name)
+            self.assertNotIn("repository-ledger/", source, name)
+
+    def test_append_goes_only_to_the_repository_own_ledger_root(self):
+        from llm_adapter import node_receipt_common as common
+        with tempfile.TemporaryDirectory() as elsewhere:
+            self.assertIsNone(common.append({"transition_id": "x"}, "NODE_IDENTITY_BINDING", elsewhere))
+            self.assertEqual(os.listdir(elsewhere), [])
+        self.assertEqual(self.files(), [])
+
+
 if __name__ == "__main__":
     unittest.main()
