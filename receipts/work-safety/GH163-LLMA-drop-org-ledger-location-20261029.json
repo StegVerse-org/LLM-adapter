@@ -1,0 +1,53 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "GH163-LLMA-DROP-ORG-LEDGER-LOCATION",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/.github/issues/163",
+    "https://github.com/StegVerse-org/.github/issues/167"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Removes an unused organization-ledger location constant from the adapter's node receipt helper. No Organization append or Master Records transition changes; the adapter holds only its node's own ledger."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/430",
+      "https://github.com/StegVerse-org/.github/issues/167"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "llm_adapter/node_receipt_common.py",
+      "tests/test_node_receipt_producers.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Deletes one constant and its comment from node_receipt_common.py and adds guard tests to the existing test_node_receipt_producers.py. No second module, ledger or recorder is created; nothing in the adapter read the constant."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Removal of an unused constant; no behavior or documented function changes.",
+    "evidence_refs": [
+      "README.md",
+      "llm_adapter/node_receipt_common.py"
+    ]
+  },
+  "covered_paths": [
+    "llm_adapter/node_receipt_common.py",
+    "tests/test_node_receipt_producers.py"
+  ],
+  "new_files": []
+}
