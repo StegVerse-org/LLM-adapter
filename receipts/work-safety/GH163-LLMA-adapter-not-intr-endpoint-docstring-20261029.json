@@ -1,0 +1,51 @@
+{
+  "schema": "stegverse.work-mutation-safety/v1",
+  "task_id": "GH163-LLMA-ADAPTER-NOT-INTR-ENDPOINT-DOCSTRING",
+  "authority_effect": "NONE",
+  "canonical_handoff_refs": [
+    "StegVerse-org/LLM-adapter:LLM_ADAPTER_MIRROR_HANDOFF.md"
+  ],
+  "task_registry_refs": [
+    "https://github.com/StegVerse-org/.github/issues/163",
+    "https://github.com/StegVerse-org/.github/issues/167"
+  ],
+  "master_records_review": {
+    "applicable": false,
+    "reason": "Docstring-only correction in a test: LLM-adapter is a transport/translator, never an InTr endpoint. No Organization append or Master Records transition changes."
+  },
+  "cross_task_coordination": {
+    "checked": true,
+    "refs": [
+      "https://github.com/StegVerse-org/LLM-adapter/pull/436",
+      "https://github.com/StegVerse-org/.github/issues/167"
+    ]
+  },
+  "semantic_scan": {
+    "completed": true,
+    "repositories_searched": [
+      "StegVerse-org/LLM-adapter"
+    ],
+    "evidence_refs": [
+      "tests/test_node_receipt_producers.py"
+    ]
+  },
+  "reuse_decision": "EXTEND",
+  "existing_equivalent_found": true,
+  "active_owner_collision": {
+    "checked": true,
+    "collision_found": false,
+    "reason": "Edits one docstring in the existing test_node_receipt_producers.py; repo-wide grep found no other adapter-as-InTr-endpoint phrasing. No new module or behavior."
+  },
+  "readme_impact": {
+    "material_function_change": false,
+    "no_readme_update_reason": "Docstring-only; no behavior or documented function changes.",
+    "evidence_refs": [
+      "README.md",
+      "tests/test_node_receipt_producers.py"
+    ]
+  },
+  "covered_paths": [
+    "tests/test_node_receipt_producers.py"
+  ],
+  "new_files": []
+}
