@@ -33,7 +33,7 @@ Manifest validity is the SDK's to decide; the adapter delegates to `stegverse.ma
 - `llm_adapter.node_identity_binding_producer` writes `NODE_IDENTITY_BINDING`. It checks the node's Ed25519 signature against the key reference published in the reciprocally observed profile (verification only, in `llm_adapter.ed25519_verify`). It never holds or mints a credential. The existence read-back requires the observation to carry a well-formed `node_identity_key` naming the node, because every node admitted here seeks KV standing (the same rule as StegOS).
 - `llm_adapter.node_health_check_projection` turns a StegHealth `sovereign-runtime-observation/v1`, attested by the bound node key, into `stegverse.node-health-check/v1` `NODE_HEALTH_CHECK_OBSERVED`.
 
-Until this repository's ledger location (`repository-ledger/StegVerse-org/LLM-adapter` on the org ledger ref) is onboarded, these producers run on temporary ledgers in tests only.
+These producers use only this repository's own REPOSITORY-level transition ledger (`.stegverse/transition-ledger/contract.json`). They read it through `llm_adapter.healthy_node_evaluator.read_chain` and append through `llm_adapter.node_receipt_common.append`, which delegates to `.stegverse/transition-ledger/emit.py` `append` at the root `emit.lr()` resolves. Genesis is that ledger's first append. No organization-ledger namespace, org-repo writer or org-internal InTr hop is part of this path; the earlier onboarding plan (#431) was closed unmerged. In tests the producers run on temporary ledgers only.
 
 ### Generic SDK manifest InTr ingress
 
